@@ -1,3 +1,4 @@
 #!/usr/bin/env sh
 cd studio/frontend || exit 1
-npx lint-staged --relative
+npx lint-staged --relative || exit 1
+npm run typecheck

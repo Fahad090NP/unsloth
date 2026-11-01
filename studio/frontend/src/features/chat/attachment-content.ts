@@ -1739,7 +1739,8 @@ export async function extractPdfAttachmentText(file: File): Promise<string> {
     );
     return normalizeExtractedText(pages.join("\n\n"));
   } finally {
-    await pdf.destroy();
+    // unpdf's published type omits pdf.js's runtime destroy method.
+    await (pdf as unknown as { destroy(): Promise<void> }).destroy();
   }
 }
 

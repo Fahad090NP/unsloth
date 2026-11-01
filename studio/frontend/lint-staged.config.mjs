@@ -4,5 +4,5 @@
 // Staged TypeScript is formatted by ESLint's fixers and then checked with the
 // same strict config as `npm run lint`; warnings block the commit too.
 export default {
-  "**/*.{ts,tsx}": "eslint --fix --max-warnings=0",
+  "**/*.{ts,tsx,js,jsx,mjs,cjs}": "eslint --fix --max-warnings=0",
 };

@@ -5,24 +5,17 @@
 import "./scripts/eslint-typescript6.cjs";
 
 import js from "@eslint/js";
+import gitignore from "eslint-config-flat-gitignore";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
-import { defineConfig, globalIgnores } from "eslint/config";
+import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-// The strictest typescript-eslint preset, plus the correctness rules that catch
-// production failures: floating promises, unsafe values, non-exhaustive
-// switches, lost `this`, and unhandled async work.
+// The repository's .gitignore is the single source of truth for generated
+// files; no folder names are duplicated here.
 export default defineConfig([
-  globalIgnores([
-    "dist",
-    "**/._*",
-    "node_modules",
-    "**/*.js",
-    "**/*.mjs",
-    "**/*.cjs",
-  ]),
+  gitignore(),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [
@@ -33,7 +26,7 @@ export default defineConfig([
       reactRefresh.configs.vite,
     ],
     languageOptions: {
-      ecmaVersion: 2022,
+      ecmaVersion: 2026,
       sourceType: "module",
       globals: {
         ...globals.browser,
@@ -161,6 +154,31 @@ export default defineConfig([
           ],
         },
       ],
+    },
+  },
+  {
+    files: ["**/*.{js,jsx,mjs,cjs}"],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2026,
+      sourceType: "module",
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    rules: {
+      "eqeqeq": ["error", "always"],
+      "no-console": "warn",
+      "no-implicit-coercion": "error",
+      "no-var": "error",
+      "prefer-const": "error",
+    },
+  },
+  {
+    files: ["**/*.cjs"],
+    languageOptions: {
+      sourceType: "commonjs",
     },
   },
 ]);
