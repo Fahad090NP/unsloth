@@ -71,7 +71,7 @@ test("a scheme-less sandbox src is rewritten before it reaches the DOM, and rend
     "PRECONDITION: the chat renderer still passes the url transform",
   );
   assert.ok(
-    /img: MarkdownImage,/.test(MARKDOWN_TEXT),
+    MARKDOWN_TEXT.includes('img: MarkdownImage,'),
     "registering `img` replaces Streamdown's own renderer wholesale, so the swap has to live in the " +
       "component it replaces -- an unregistered <img src> is the bug this file exists for",
   );
@@ -125,7 +125,7 @@ test("the fetch carries the header and gives the object URL back on cleanup", ()
 test("the inline-image set matches what the backend actually serves inline", () => {
   const served = BACKEND.slice(
     BACKEND.indexOf("_SANDBOX_MEDIA_TYPES = {"),
-    BACKEND.indexOf("_SANDBOX_MEDIA_TYPES = {") >= 0
+    BACKEND.includes("_SANDBOX_MEDIA_TYPES = {")
       ? BACKEND.indexOf("}", BACKEND.indexOf("_SANDBOX_MEDIA_TYPES = {"))
       : 0,
   );

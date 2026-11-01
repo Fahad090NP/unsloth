@@ -71,14 +71,14 @@ export interface HubInventory {
 
 export type HubInventoryKind = "models" | "datasets";
 
-type HubInventoryOptions = {
+interface HubInventoryOptions {
   kind?: HubInventoryKind;
   enabled?: boolean;
   includeLocal?: boolean;
   /** Also list Studio's own fine-tunes and exports (the Hub's On Device list). */
   includeUnslothModels?: boolean;
   includeUmbrellaFolders?: boolean;
-};
+}
 
 const MODEL_HUB_CACHE_SOURCES = [
   "cachedGguf",
@@ -411,7 +411,7 @@ export function useHubInventory(
       return;
     }
     const timer = window.setTimeout(pruneExpiredPendingHints, delay + 1);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); };
   }, [pendingHints, pruneExpiredPendingHints]);
 
   const cachedGgufReconciliation = useMemo(
@@ -807,7 +807,7 @@ export function useHubInventory(
     const timer = window.setTimeout(() => {
       void refreshDeviceInventory();
     }, 500);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); };
   }, [emptyRevalidationRequired, enabled, refreshDeviceInventory]);
 
   return {

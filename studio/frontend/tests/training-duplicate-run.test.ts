@@ -164,7 +164,7 @@ test("partial configs use clean defaults and malformed runs leave the draft inta
   assert.equal(store.getState().uploadedFile, "saved.jsonl");
   assert.equal(store.getState().uploadedEvalFile, "eval.jsonl");
   const before = store.getState();
-  assert.throws(() => before.restoreRunConfig({}), /no saved model/);
+  assert.throws(() => { before.restoreRunConfig({}); }, /no saved model/);
   assert.equal(store.getState(), before);
 });
 

@@ -258,7 +258,7 @@ export function SafetensorsDownloadCard({
                 label={repoId}
                 downloaded={isDownloaded}
                 canDelete={canDelete}
-                onDelete={() => setDeleteRepoOpen(true)}
+                onDelete={() => { setDeleteRepoOpen(true); }}
                 showPin={false}
                 buttonClassName="ml-0.5 size-7"
                 iconClassName="size-4"
@@ -277,7 +277,7 @@ export function SafetensorsDownloadCard({
             stopMode={downloadAction.stopMode}
             progressPercent={downloadAction.progressPercent}
             disabled={downloadAction.disabled || assets.checking}
-            onClick={() => downloading ? downloadAction.onClick() : void assets.request(downloadAction.onClick)}
+            onClick={() => { downloading ? downloadAction.onClick() : void assets.request(downloadAction.onClick); }}
             className={repoPeerActive ? "opacity-70" : undefined}
           />
         )}

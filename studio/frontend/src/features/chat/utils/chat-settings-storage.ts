@@ -559,7 +559,7 @@ export async function savePersistedChatSettingsPatch(
 export async function savePersistedChatSettingsPatchIfCurrent(
   expected: PersistedChatSettings,
   patch: PersistedChatSettings,
-  expectedAbsent: Array<keyof PersistedChatSettings> = [],
+  expectedAbsent: (keyof PersistedChatSettings)[] = [],
   expectedAbsentPaths: ChatSettingsPath[] = [],
 ): Promise<{ settings: PersistedChatSettings; applied: boolean }> {
   const result = await saveChatSettingsPatchIfCurrent(

@@ -72,7 +72,7 @@ export function fileToBase64(file: File): Promise<string> {
       const commaIndex = result.indexOf(",");
       resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
     };
-    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.onerror = () => { reject(new Error("Failed to read file")); };
     reader.readAsDataURL(file);
   });
 }

@@ -60,7 +60,7 @@ test("the budget fraction starts at the loader's default, not a full card", () =
 });
 
 test("that default is the fraction the backend actually applies", () => {
-  const declared = BUDGET_SETTINGS.match(/^VRAM_FRACTION_DEFAULT = ([0-9.]+)$/m);
+  const declared = /^VRAM_FRACTION_DEFAULT = ([0-9.]+)$/m.exec(BUDGET_SETTINGS);
   assert.ok(declared, "backend no longer declares VRAM_FRACTION_DEFAULT");
   assert.equal(Number(declared[1]), DEFAULT_VRAM_FRACTION);
 });

@@ -4,10 +4,10 @@
 import { useEffect, useState } from "react";
 import { pdfjs } from "react-pdf";
 
-export type PdfWorker = {
+export interface PdfWorker {
   worker: InstanceType<typeof pdfjs.PDFWorker>;
   loaded: Set<{ destroy(): Promise<void> }>;
-};
+}
 
 /** Own worker per viewer: unpdf's globalThis.pdfjsWorker is another PDF.js version, which PDF.js would adopt. */
 export function usePdfWorker(enabled: boolean): PdfWorker | null {

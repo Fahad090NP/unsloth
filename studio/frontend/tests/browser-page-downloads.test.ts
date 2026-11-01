@@ -49,7 +49,7 @@ function setup() {
       fire(this, new Event("click", { cancelable: true }));
     }
   }
-  const posted: Array<Record<string, unknown>> = [];
+  const posted: Record<string, unknown>[] = [];
   const navigated: string[] = [];
   runInNewContext(source, {
     document,
@@ -79,7 +79,7 @@ async function settled(done: () => boolean) {
   for (let i = 0; i < 100 && !done(); i++) await new Promise((resolve) => setTimeout(resolve, 10));
 }
 
-async function savedFile(posted: Array<Record<string, unknown>>) {
+async function savedFile(posted: Record<string, unknown>[]) {
   await settled(() => posted.length > 0);
   assert.equal(posted.length, 1);
   const [{ type, name, blob }] = posted;
@@ -121,7 +121,7 @@ test("a blob saved through a link in the page is handed over", async () => {
 
 test("a download link the page fills in its own click handler saves the new file", async () => {
   const saved: unknown[] = [];
-  const links: Array<Record<string, string>> = [{ href: "#" }, { href: URL.createObjectURL(new Blob(["old"])), download: "old.txt" }];
+  const links: Record<string, string>[] = [{ href: "#" }, { href: URL.createObjectURL(new Blob(["old"])), download: "old.txt" }];
   for (const before of links) {
     const page = setup();
     const anchor = page.link(before);
@@ -154,7 +154,7 @@ test("ordinary links still navigate, and a download the page cancels saves nothi
   await settled(() => page.navigated.length > 0);
   assert.deepEqual(page.navigated, ["https://example.com/next"]);
   const routed = setup();
-  routed.document.addEventListener("click", (event) => event.preventDefault());
+  routed.document.addEventListener("click", (event) => { event.preventDefault(); });
   routed.userClick(routed.link({ href: "data:text/plain,x", download: "x.txt" }));
   await new Promise((resolve) => setTimeout(resolve, 100));
   assert.deepEqual([routed.posted, routed.navigated], [[], []]);
@@ -194,7 +194,7 @@ function shellNavigation(active = false) {
     part("const fileAt = ", "// Read at the click"),
     "({ navigate });",
   ].join("\n");
-  const posted: Array<Record<string, unknown>> = [];
+  const posted: Record<string, unknown>[] = [];
   const window: { open?: (url?: string, target?: string) => unknown } = {};
   const base = "https://a.example/page";
   const { navigate } = runInNewContext(code, {

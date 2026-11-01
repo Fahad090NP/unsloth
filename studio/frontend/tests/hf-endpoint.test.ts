@@ -155,7 +155,7 @@ test("the ModelScope adapter gets the Unsloth session, never the Hugging Face to
     const auth = new Headers(init?.headers).get("authorization");
     sent.push(auth);
     return new Response("[]", { status: auth === "Bearer expired" ? 401 : 200 });
-  }) as typeof fetch;
+  });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
     value: { getItem: (key: string) => (key === "unsloth_auth_token" ? session : null) },

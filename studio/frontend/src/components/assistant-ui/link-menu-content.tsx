@@ -87,7 +87,7 @@ export function WebLinkMenuContent({ href }: { href: string }) {
           {t("linkMenu.openInBrowser")}
         </ContextMenuItem>
       ) : null}
-      <ContextMenuItem onSelect={() => openExternalLink(href)}>
+      <ContextMenuItem onSelect={() => { openExternalLink(href); }}>
         <ItemIcon icon={LinkSquare02Icon} />
         {t("linkMenu.openExternal")}
       </ContextMenuItem>
@@ -115,7 +115,7 @@ export function WebLinkMenuContent({ href }: { href: string }) {
           <ContextMenuSeparator />
           <ContextMenuCheckboxItem
             checked={openLinksInBrowser}
-            onCheckedChange={(value) => useBrowserPrefsStore.getState().setOpenLinksInBrowser(value)}
+            onCheckedChange={(value) => { useBrowserPrefsStore.getState().setOpenLinksInBrowser(value); }}
           >
             {t("linkMenu.alwaysInBrowser")}
           </ContextMenuCheckboxItem>
@@ -162,20 +162,20 @@ export function FileMenuContent({ file }: { file: ContextFile }) {
     void file
       .load()
       .then((blob) =>
-        openFileInBrowser({
+        { openFileInBrowser({
           blob,
           name: file.name,
           contentType: contentType || blob.type,
           key: file.sandbox ? `sandbox:${file.sandbox.sessionId}:${file.sandbox.file}` : undefined,
-        }),
+        }); },
       )
       .catch(failed("linkMenu.openFailed"));
-  const open = () => (file.open ? file.open() : openInBrowser());
+  const open = () => { file.open ? file.open() : openInBrowser(); };
   const openInNewChat = () =>
     void file
       .load()
       .then((blob) =>
-        startLibraryChat(navigate, { files: [new File([blob], file.name, { type: contentType || blob.type })] }),
+        { startLibraryChat(navigate, { files: [new File([blob], file.name, { type: contentType || blob.type })] }); },
       )
       .catch(failed("linkMenu.openFailed"));
   // A tab in the user's own browser; text is retyped so it shows as text rather than runs.
@@ -190,7 +190,7 @@ export function FileMenuContent({ file }: { file: ContextFile }) {
       .then((blob) => {
         const url = URL.createObjectURL(new Blob([blob], { type: tabType }));
         if (tab) tab.location.href = url;
-        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        window.setTimeout(() => { URL.revokeObjectURL(url); }, 60_000);
       })
       .catch(() => {
         tab?.close();

@@ -142,10 +142,10 @@ export function foldOverrideKey(key: string): string {
 }
 
 /** Keeps an explicit [] (tombstone) apart from an absent field; collapsing them leaked args. */
-export type ResolvedExtraArgs = {
+export interface ResolvedExtraArgs {
   tokens: string[];
   explicit: boolean;
-};
+}
 
 function resolvedFrom(entry: ApiModelOverride): ResolvedExtraArgs {
   const tokens = entry.llama_extra_args;

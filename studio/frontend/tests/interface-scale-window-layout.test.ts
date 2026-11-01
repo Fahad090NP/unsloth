@@ -15,9 +15,7 @@ import {
 import { readSrc } from "./helpers/kit.ts";
 
 const provider = readSrc("app/provider.tsx");
-const ratioFunction = provider.match(
-  /function logicalPerCssPx\([\s\S]*?\n\}/,
-)?.[0];
+const ratioFunction = (/function logicalPerCssPx\([\s\S]*?\n\}/.exec(provider))?.[0];
 assert.ok(ratioFunction);
 const windowStub = { devicePixelRatio: 2 };
 const logicalPerCssPx = new Function(
@@ -58,7 +56,7 @@ test("applied zoom refreshes live constraints with unchanged DPR and stops on un
   const end = provider.indexOf("\n  }, []);", observerIndex);
   assert.ok(start >= 0 && end > start);
   const effect = provider.slice(start, end + "\n  }, []);".length);
-  const minimums: Array<{ width: number; height: number }> = [];
+  const minimums: { width: number; height: number }[] = [];
   const mode = { current: "app" };
   let dispose = () => {};
   const scope = {

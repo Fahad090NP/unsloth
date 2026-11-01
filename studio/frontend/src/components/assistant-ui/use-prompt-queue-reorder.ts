@@ -17,14 +17,14 @@ const SETTLE_MS = 180;
 const EASING = "cubic-bezier(0.2, 0.8, 0.2, 1)";
 const ROW_SELECTOR = "[data-queue-item-id]";
 
-type Row = {
+interface Row {
   id: string;
   element: HTMLElement;
   top: number;
   height: number;
   movable: boolean;
-};
-type Drag = {
+}
+interface Drag {
   id: string;
   pointerId: number;
   handle: HTMLButtonElement;
@@ -40,7 +40,7 @@ type Drag = {
   moved: boolean;
   frame: number;
   lastTime: number;
-};
+}
 
 function getQueueScale(list: HTMLElement | null) {
   return list ? list.getBoundingClientRect().width / list.offsetWidth || 1 : 1;
@@ -278,7 +278,7 @@ export function usePromptQueueReorder(
 
   function onPointerMove(event: PointerEvent<HTMLButtonElement>) {
     const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (drag?.pointerId !== event.pointerId) return;
     drag.x = event.clientX;
     drag.y = event.clientY;
     if (drag.moved || Math.abs(drag.y - drag.originY) < 5) return;
@@ -295,7 +295,7 @@ export function usePromptQueueReorder(
 
   function onPointerUp(event: PointerEvent<HTMLButtonElement>) {
     const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (drag?.pointerId !== event.pointerId) return;
     if (drag.moved) {
       drag.x = event.clientX;
       drag.y = event.clientY;

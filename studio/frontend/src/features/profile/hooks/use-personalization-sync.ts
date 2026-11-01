@@ -42,21 +42,21 @@ const PUSH_DEBOUNCE_MS = 800;
 // Version 6 shows Appearance in the account menu once.
 const PERSONALIZATION_VERSION = 6;
 
-type ProfileSnapshot = {
+interface ProfileSnapshot {
   displayName: string;
   nickname: string;
   avatarDataUrl: string | null;
   avatarShape: AvatarShape;
   showGreetingSloth: boolean;
-};
+}
 
 type PersonalizationWrite = Parameters<typeof savePersonalization>[0];
-type QueuedSave = {
+interface QueuedSave {
   data: PersonalizationWrite;
   generation: number;
   serialized: string;
-};
-type RefValue<T> = { current: T };
+}
+interface RefValue<T> { current: T }
 
 function profileText(value: string): string {
   return value.slice(0, PROFILE_TEXT_MAX_LENGTH);
@@ -105,7 +105,7 @@ function drainQueuedSave(
     .finally(() => {
       saveInFlightRef.current = false;
       const queued = queuedSaveRef.current;
-      if (queued && authGenerationRef.current === queued.generation) {
+      if (authGenerationRef.current === queued?.generation) {
         drainQueuedSave(
           saveInFlightRef,
           queuedSaveRef,
@@ -245,9 +245,9 @@ export function usePersonalizationSync(enabled: boolean): void {
           // A record with <field>Saved=true still wins.
           const localGreeting =
             useUserProfileStore.getState().showGreetingSloth;
-          const remoteGreeting = remote.profile.showGreetingSloth !== false;
+          const remoteGreeting = remote.profile.showGreetingSloth;
           const keepLocalGreeting =
-            remote.greetingSlothSaved === false && localGreeting === false;
+            !remote.greetingSlothSaved && !localGreeting;
           const nextProfile: ProfileSnapshot = {
             displayName: remote.profile.displayName ?? "",
             nickname: remote.profile.nickname ?? "",
@@ -264,7 +264,7 @@ export function usePersonalizationSync(enabled: boolean): void {
             ? remote.appearance.palette
             : localPalette;
           const keepLocalPalette =
-            remote.paletteSaved === false && localPalette !== "standard";
+            !remote.paletteSaved && localPalette !== "standard";
           const nextPalette = keepLocalPalette ? localPalette : remotePalette;
           const storedRemoteCustomization = sanitizeCustomization(
             remote.appearance.customization,
@@ -282,7 +282,7 @@ export function usePersonalizationSync(enabled: boolean): void {
             useAppearanceCustomStore.getState().customization;
           const keepLocalCustomization =
             editedDuringLoad ||
-            (remote.customizationSaved === false &&
+            (!remote.customizationSaved &&
               !isDefaultCustomization(localCustomization));
           const keepLocalChatWidth =
             remote.chatWidthSaved === false ||
@@ -420,7 +420,7 @@ export function usePersonalizationSync(enabled: boolean): void {
       };
       drainSaveQueue();
     }, PUSH_DEBOUNCE_MS);
-    return () => window.clearTimeout(id);
+    return () => { window.clearTimeout(id); };
   }, [
     enabled,
     hydratedGeneration,

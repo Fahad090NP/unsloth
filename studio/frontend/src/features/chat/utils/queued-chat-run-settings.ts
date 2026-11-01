@@ -60,11 +60,11 @@ export type QueuedChatRunSettings = Pick<
   params: ChatRuntimeState["params"];
 };
 
-type PendingSettings = {
+interface PendingSettings {
   id: number;
   threadIds: Set<string>;
   settings: QueuedChatRunSettings;
-};
+}
 
 let nextPendingSettingsId = 1;
 const pendingSettings: PendingSettings[] = [];

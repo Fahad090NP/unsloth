@@ -157,13 +157,13 @@ export function KnowledgeBaseComposerButton({
           }
         >
           {isOwner && view === "embedding" ? (
-            <EmbeddingModelMenuList onBack={() => setView("source")} />
+            <EmbeddingModelMenuList onBack={() => { setView("source"); }} />
           ) : (
             <>
             {/* The way back to a panel its X hid, while retrieval carries on. */}
             {ragPanelHidden && hasFilesPanel ? (
               <>
-                <DropdownMenuItem onSelect={() => setRagPanelHidden(false)} className="gap-2.5">
+                <DropdownMenuItem onSelect={() => { setRagPanelHidden(false); }} className="gap-2.5">
                   <FileGlyph strokeWidth={1.75} />
                   <span className="truncate">Show files</span>
                   {ragPanelFileCount > 0 ? (
@@ -177,10 +177,10 @@ export function KnowledgeBaseComposerButton({
             ) : null}
             <DropdownMenuLabel className="flex items-center justify-between gap-3">
               <span className="shrink-0">Retrieve from</span>
-              {isOwner ? <EmbeddingModelMenuChip onOpen={() => setView("embedding")} /> : null}
+              {isOwner ? <EmbeddingModelMenuChip onOpen={() => { setView("embedding"); }} /> : null}
             </DropdownMenuLabel>
             <DropdownMenuItem
-              onSelect={() => setRagSource({ type: "thread" })}
+              onSelect={() => { setRagSource({ type: "thread" }); }}
               className={
                 ragSource.type === "thread"
                   ? "relative text-primary font-medium"
@@ -203,7 +203,7 @@ export function KnowledgeBaseComposerButton({
               return (
                 <DropdownMenuItem
                   key={kb.id}
-                  onSelect={() => setRagSource({ type: "kb", kbId: kb.id })}
+                  onSelect={() => { setRagSource({ type: "kb", kbId: kb.id }); }}
                   className={
                     selected ? "relative text-primary font-medium" : "relative"
                   }

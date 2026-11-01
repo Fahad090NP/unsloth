@@ -21,12 +21,12 @@ const RUNTIME = readSrc("features/chat/hooks/use-chat-model-runtime.ts");
 
 type Reply = "drop" | "padded-drop" | "rejected" | "deferred" | "loaded";
 
-type AuthApi = {
+interface AuthApi {
   authFetch: (input: string, init?: RequestInit) => Promise<Response>;
-};
-type ChatApi = {
+}
+interface ChatApi {
   loadModel: (payload: Record<string, unknown>) => Promise<Record<string, unknown>>;
-};
+}
 
 async function withLoadServer(
   reply: Reply,
@@ -65,7 +65,7 @@ async function withLoadServer(
     await run(address.port);
   } finally {
     server.closeAllConnections();
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await new Promise<void>((resolve) => server.close(() => { resolve(); }));
   }
 }
 
@@ -132,7 +132,7 @@ function realLoadModel(auth: AuthApi): ChatApi {
     "@/features/settings/low-disk-check": { checkDiskSpace: () => Promise.resolve() },
     "@/lib/model-lifecycle-events": {
       withModelLoadNotice: async (_r: string, _p: string | null, run: () => Promise<unknown>) =>
-        run(),
+        await run(),
     },
   });
 }
@@ -164,7 +164,7 @@ test("a load whose connection closed before any reply does not restore the previ
 test("a padded load cut off mid-reply does not restore the previous model either", async () => {
   const error = await loadError("padded-drop");
   assert.ok(error instanceof Error, "the truncated load must reject");
-  assert.match((error as Error).message, /Model load did not report completion/);
+  assert.match((error).message, /Model load did not report completion/);
   assert.equal(loadOutcomeUnknown(error), true);
   assert.equal(shouldRestorePreviousModel(error), false);
 });

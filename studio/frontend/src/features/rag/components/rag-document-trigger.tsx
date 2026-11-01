@@ -39,7 +39,7 @@ export function RagDocumentTrigger({
     canShowFile(filename, "application/octet-stream");
   if (browser) {
     return cloneElement(children as ReactElement<{ onClick?: () => void }>, {
-      onClick: () => openRagDocumentInBrowser(documentId, filename, page),
+      onClick: () => { openRagDocumentInBrowser(documentId, filename, page); },
     });
   }
   if (isViewableSource(filename)) {
@@ -66,6 +66,6 @@ export function RagDocumentTrigger({
     );
   }
   return cloneElement(children as ReactElement<{ onClick?: () => void }>, {
-    onClick: () => openRagDocumentExternally(documentId, filename),
+    onClick: () => { openRagDocumentExternally(documentId, filename); },
   });
 }

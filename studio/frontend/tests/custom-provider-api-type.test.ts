@@ -17,7 +17,7 @@ test("Responses survives provider requests and cache while legacy cache defaults
   const previous = globalThis.fetch;
   globalThis.fetch = (async (_url, init) => {
     bodies.push(JSON.parse(String(init?.body))); return Response.json({});
-  }) as typeof fetch;
+  });
   try {
     await api.createProviderConfig({ providerType: "custom", displayName: "Gateway", apiType: "responses" });
     await api.updateProviderConfig("gateway", { apiType: "responses" });

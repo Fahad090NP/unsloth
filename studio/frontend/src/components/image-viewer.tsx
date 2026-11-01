@@ -27,7 +27,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { create } from "zustand";
 
-export type ViewerImage = {
+export interface ViewerImage {
   key: string;
   title: string;
   fileName: string | ((contentType: string) => string);
@@ -35,16 +35,16 @@ export type ViewerImage = {
   /** Shown as is when `load` fails, e.g. a remote image whose host doesn't allow CORS reads. */
   fallbackUrl?: string;
   source?: string;
-};
+}
 
-type ImageViewerState = {
+interface ImageViewerState {
   images: ViewerImage[];
   index: number;
   open: boolean;
   show: (images: ViewerImage[], index?: number) => void;
   close: () => void;
   step: (delta: 1 | -1) => void;
-};
+}
 
 export const useImageViewerStore = create<ImageViewerState>((set, get) => ({
   images: [],
@@ -58,7 +58,7 @@ export const useImageViewerStore = create<ImageViewerState>((set, get) => ({
       open: true,
     }),
   // The body unmounts on close, so the images (and the blobs their loaders hold) can go too.
-  close: () => set({ images: [], index: 0, open: false }),
+  close: () => { set({ images: [], index: 0, open: false }); },
   step: (delta) => {
     const { images, index } = get();
     const next = index + delta;
@@ -69,7 +69,7 @@ export const useImageViewerStore = create<ImageViewerState>((set, get) => ({
 // A sign-out leaves the app mounted: the viewer must not keep showing, or holding, the last account's images.
 if (typeof window !== "undefined") {
   window.addEventListener(AUTH_SESSION_CLEARED_EVENT, () =>
-    useImageViewerStore.setState({ images: [], index: 0, open: false }),
+    { useImageViewerStore.setState({ images: [], index: 0, open: false }); },
   );
 }
 
@@ -135,8 +135,8 @@ function useImageBlob(image: ViewerImage | undefined): Loaded | null {
         if (/^image\/svg\+xml\b/i.test(blob.type)) {
           const dataUrl = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = () => resolve(String(reader.result));
-            reader.onerror = () => reject(reader.error);
+            reader.onload = () => { resolve(String(reader.result)); };
+            reader.onerror = () => { reject(reader.error); };
             reader.readAsDataURL(blob);
           });
           if (live) setLoaded({ key: image.key, url: dataUrl, blob });
@@ -159,7 +159,7 @@ function useImageBlob(image: ViewerImage | undefined): Loaded | null {
       if (url) URL.revokeObjectURL(url);
     };
   }, [image]);
-  return loaded && image && loaded.key === image.key ? loaded : null;
+  return loaded && loaded.key === image?.key ? loaded : null;
 }
 
 function ViewerBody() {
@@ -177,7 +177,7 @@ function ViewerBody() {
     height: number;
   } | null>(null);
   const [zoom, setZoom] = useState<{ key: string; value: number; fit: boolean } | null>(null);
-  const size = natural && image && natural.key === image.key ? natural : null;
+  const size = natural?.key === image?.key ? natural : null;
 
   const fitZoom = () => {
     const stage = stageRef.current;
@@ -192,23 +192,23 @@ function ViewerBody() {
     if (size && image && zoom?.key !== image.key)
       setZoom({ key: image.key, value: fitZoom(), fit: true });
   });
-  const fitted = Boolean(zoom?.fit && image && zoom.key === image.key);
+  const fitted = Boolean(zoom?.fit && zoom.key === image?.key);
   // biome-ignore lint/correctness/useExhaustiveDependencies: refit only when fit mode or the image's size changes
   useEffect(() => {
     const stage = stageRef.current;
     if (!fitted || !stage) return;
     const observer = new ResizeObserver(() =>
-      setZoom((current) => {
+      { setZoom((current) => {
         const value = fitZoom();
         return current?.fit && current.value !== value ? { ...current, value } : current;
-      }),
+      }); },
     );
     observer.observe(stage);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [fitted, size]);
-  const scale = zoom && image && zoom.key === image.key ? zoom.value : null;
+  const scale = zoom?.key === image?.key ? zoom.value : null;
   const setScale = (value: number, fit = false) =>
-    image && setZoom({ key: image.key, value, fit });
+    { image && setZoom({ key: image.key, value, fit }); };
   const zoomBy = (direction: 1 | -1) => {
     if (scale === null) return;
     const next =
@@ -229,7 +229,7 @@ function ViewerBody() {
       event.preventDefault();
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => { window.removeEventListener("keydown", onKeyDown); };
   });
 
   const download = () => {
@@ -271,12 +271,12 @@ function ViewerBody() {
             src={loaded.url}
             alt={image?.title ?? ""}
             onLoad={(event) =>
-              image &&
+              { image &&
               setNatural({
                 key: image.key,
                 width: event.currentTarget.naturalWidth || 1,
                 height: event.currentTarget.naturalHeight || 1,
-              })
+              }); }
             }
             className={cn(
               "m-auto max-w-none rounded-lg shadow-2xl",
@@ -325,14 +325,14 @@ function ViewerBody() {
             label={t("imageViewer.previous")}
             icon={ArrowLeft02Icon}
             disabled={index === 0}
-            onClick={() => step(-1)}
+            onClick={() => { step(-1); }}
             className="absolute top-1/2 left-4 size-12 -translate-y-1/2"
           />
           <RoundButton
             label={t("imageViewer.next")}
             icon={ArrowRight02Icon}
             disabled={index === images.length - 1}
-            onClick={() => step(1)}
+            onClick={() => { step(1); }}
             className="absolute top-1/2 right-4 size-12 -translate-y-1/2"
           />
         </>
@@ -342,13 +342,13 @@ function ViewerBody() {
           label={t("imageViewer.zoomOut")}
           icon={MinusSignIcon}
           disabled={scale === null || scale <= (ZOOM_STEPS[0] ?? 0.1)}
-          onClick={() => zoomBy(-1)}
+          onClick={() => { zoomBy(-1); }}
           className="size-10 bg-neutral-700 shadow-none hover:bg-neutral-600 disabled:hover:bg-neutral-700"
         />
         <button
           type="button"
           aria-label={t("imageViewer.fit")}
-          onClick={() => setScale(fitZoom(), true)}
+          onClick={() => { setScale(fitZoom(), true); }}
           className="min-w-18 cursor-pointer text-center text-ui-15 tabular-nums"
         >
           {percent}
@@ -359,7 +359,7 @@ function ViewerBody() {
           disabled={
             scale === null || scale >= (ZOOM_STEPS[ZOOM_STEPS.length - 1] ?? 5)
           }
-          onClick={() => zoomBy(1)}
+          onClick={() => { zoomBy(1); }}
           className="size-10 bg-neutral-700 shadow-none hover:bg-neutral-600 disabled:hover:bg-neutral-700"
         />
       </div>

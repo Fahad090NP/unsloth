@@ -10,7 +10,7 @@ const storage = {
   getItem: (k: string) => store.get(k) ?? null,
   setItem: (k: string, v: string) => void store.set(k, String(v)),
   removeItem: (k: string) => void store.delete(k),
-  clear: () => store.clear(),
+  clear: () => { store.clear(); },
   key: (i: number) => [...store.keys()][i] ?? null,
   get length() {
     return store.size;
@@ -125,9 +125,7 @@ test("a random pick is always a different Halloween theme", () => {
 });
 
 test("state survives a switch of account like the theme does", () => {
-  const chrome = read("../src/lib/account-transition.ts").match(
-    /ACCOUNT_CHROME_KEYS = new Set\(\[([\s\S]*?)\]\)/,
-  )?.[1];
+  const chrome = (/ACCOUNT_CHROME_KEYS = new Set\(\[([\s\S]*?)\]\)/.exec(read("../src/lib/account-transition.ts")))?.[1];
   assert.ok(chrome?.includes(`"${HALLOWEEN_STORAGE_KEY}"`));
   assert.ok(chrome?.includes(`"palette"`));
 });
@@ -140,7 +138,7 @@ test("every spooky greeting has English text, and named lines keep {name}", () =
   );
   assert.equal(keys.length, 10);
   for (const key of keys) {
-    const line = en.match(new RegExp(`\\n\\s+${key}: "([^"]+)"`))?.[1];
+    const line = (new RegExp(`\\n\\s+${key}: "([^"]+)"`).exec(en))?.[1];
     assert.ok(line, key);
     assert.equal(line.includes("{name}"), key.endsWith("Name"), key);
   }

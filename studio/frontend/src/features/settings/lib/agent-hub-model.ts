@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-type HubModelTaskMetadata = {
+interface HubModelTaskMetadata {
   id?: string | null;
   pipelineTag?: string | null;
   tags?: readonly string[] | null;
-};
+}
 
 // Admit only conversational pipelines; a missing pipeline stays eligible since many GGUF repos omit it.
 const CHAT_GENERATION_TASKS: ReadonlySet<string> = new Set([

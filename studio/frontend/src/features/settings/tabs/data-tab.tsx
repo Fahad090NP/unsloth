@@ -153,7 +153,7 @@ function LibraryDataSection() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => openDialog("library", { scrollTarget: "library-storage" })}
+          onClick={() => { openDialog("library", { scrollTarget: "library-storage" }); }}
         >
           {t("settings.library.manageStorage")}
           <HugeiconsIcon icon={ChevronRightStandardIcon} className="size-3.5" />
@@ -327,10 +327,10 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
     loadExternalImportStatus(source)
       .catch(() => null)
       .then((status) =>
-        setExternalStatus((prev) => ({
+        { setExternalStatus((prev) => ({
           ...prev,
           [source]: status?.available ? status : undefined,
-        })),
+        })); },
       );
 
   useEffect(() => {
@@ -650,7 +650,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
         <header className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setSubpage("main")}
+            onClick={() => { setSubpage("main"); }}
             aria-label={t("settings.data.backToData")}
             className="settings-back-button inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
@@ -723,7 +723,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
         <header className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setSubpage("main")}
+            onClick={() => { setSubpage("main"); }}
             aria-label={t("settings.data.backToData")}
             className="settings-back-button inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
@@ -751,7 +751,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
         <header className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setSubpage("main")}
+            onClick={() => { setSubpage("main"); }}
             aria-label={t("settings.data.backToData")}
             className="settings-back-button inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
@@ -840,7 +840,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
                 type="button"
                 data-settings-label={t(`settings.data.${label}`)}
                 aria-label={t(`settings.data.${label}`)}
-                onClick={() => setSubpage(page)}
+                onClick={() => { setSubpage(page); }}
                 className="btn-fill flex min-w-0 items-center justify-between gap-2 rounded-full px-3 py-2 text-sm transition-colors [&_svg]:-my-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span className="flex min-w-0 items-center gap-2">
@@ -868,7 +868,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setArchiveConfirmOpen(true)}
+            onClick={() => { setArchiveConfirmOpen(true); }}
           >
             <HugeiconsIcon icon={Archive03Icon} data-icon="inline-start" />
             {t("settings.data.archiveAllAction")}
@@ -1027,7 +1027,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
                   <DropdownMenuItem
                     key={action}
                     disabled={action === "train" && chatOnly}
-                    onSelect={() => setFineTuneAction(action)}
+                    onSelect={() => { setFineTuneAction(action); }}
                   >
                     <span className="flex-1">
                       {fineTuneActionLabels[action]}
@@ -1078,7 +1078,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
         >
           <Select
             value={alwaysDeleteChatFiles ? "delete" : "keep"}
-            onValueChange={(value) => setAlwaysDeleteChatFiles(value === "delete")}
+            onValueChange={(value) => { setAlwaysDeleteChatFiles(value === "delete"); }}
           >
             <SelectTrigger
               size="sm"
@@ -1128,13 +1128,13 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
               <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuItem
                   variant="destructive"
-                  onSelect={() => openClearConfirmation(false)}
+                  onSelect={() => { openClearConfirmation(false); }}
                 >
                   {t("settings.data.deleteChatsOnly")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   variant="destructive"
-                  onSelect={() => openClearConfirmation(true)}
+                  onSelect={() => { openClearConfirmation(true); }}
                 >
                   {t("settings.data.deleteChatsAndSandboxes")}
                 </DropdownMenuItem>
@@ -1154,7 +1154,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setSubpage("files")}
+            onClick={() => { setSubpage("files"); }}
           >
             {t("settings.data.manageAction")}
           </Button>
@@ -1181,7 +1181,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setArchiveConfirmOpen(false)}
+              onClick={() => { setArchiveConfirmOpen(false); }}
             >
               {t("common.cancel")}
             </Button>
@@ -1224,7 +1224,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
             <Button
               variant="outline"
               disabled={clearing}
-              onClick={() => setConfirmOpen(false)}
+              onClick={() => { setConfirmOpen(false); }}
             >
               {t("common.cancel")}
             </Button>

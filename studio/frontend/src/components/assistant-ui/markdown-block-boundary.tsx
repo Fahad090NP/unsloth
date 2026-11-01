@@ -11,12 +11,12 @@ import { markdownBlockFallback } from "./markdown-block-fallback";
  * reach the router's catcher and replace the whole app. No retry: failed dynamic imports are cached.
  */
 
-type Props = {
+interface Props {
   content: string;
   children: ReactNode;
-};
+}
 
-type State = { failed: boolean };
+interface State { failed: boolean }
 
 /**
  * Inner boundary around the renderer only, so the block's copy/download controls survive.

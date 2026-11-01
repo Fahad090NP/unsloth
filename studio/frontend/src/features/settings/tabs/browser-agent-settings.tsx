@@ -39,7 +39,7 @@ function RuleSelect({
   onChange: (value: string) => void;
 }) {
   const t = useT();
-  const options: Array<[string, string]> =
+  const options: [string, string][] =
     column === "browsing"
       ? [
           ["allow", t("browser.agentSettings.alwaysAllow")],
@@ -82,7 +82,7 @@ function PermissionsTable() {
   const [draft, setDraft] = useState<string | null>(null);
   const [invalid, setInvalid] = useState(false);
   const sites = Object.keys(permissions.sites).sort();
-  const columns: Array<[Column, string]> = [
+  const columns: [Column, string][] = [
     ["browsing", t("browser.agentSettings.browsing")],
     ["actions", t("browser.agentSettings.actions")],
     ["downloads", t("browser.agentSettings.downloads")],
@@ -113,7 +113,7 @@ function PermissionsTable() {
             size="icon"
             className="size-8"
             aria-label={t("browser.agentSettings.removeSite", { site })}
-            onClick={() => setSiteRule(site, null)}
+            onClick={() => { setSiteRule(site, null); }}
           >
             <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.75} className="size-4" />
           </Button>
@@ -129,9 +129,9 @@ function PermissionsTable() {
               isDefault={site === null}
               label={`${title}: ${name}`}
               onChange={(value) =>
-                site === null
-                  ? setDefaultRule({ [column]: value } as Partial<SiteRule>)
-                  : setSiteRule(site, { ...rule, [column]: value } as SiteRule)
+                { site === null
+                  ? setDefaultRule({ [column]: value })
+                  : setSiteRule(site, { ...rule, [column]: value }); }
               }
             />
           </div>
@@ -145,7 +145,7 @@ function PermissionsTable() {
       title={t("browser.agentSettings.permissionsTitle")}
       description={t("browser.agentSettings.permissionsDescription")}
       action={
-        <Button variant="outline" size="sm" onClick={() => setDraft("")} disabled={draft !== null}>
+        <Button variant="outline" size="sm" onClick={() => { setDraft(""); }} disabled={draft !== null}>
           <HugeiconsIcon icon={PlusSignIcon} strokeWidth={1.75} className="size-4" />
           {t("browser.agentSettings.addSite")}
         </Button>
@@ -181,7 +181,7 @@ function PermissionsTable() {
               <HugeiconsIcon icon={PlusSignIcon} data-icon="inline-start" />
               {t("browser.agentSettings.add")}
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setDraft(null)}>
+            <Button type="button" variant="ghost" size="sm" onClick={() => { setDraft(null); }}>
               {t("browser.agentSettings.cancel")}
             </Button>
           </form>
@@ -218,7 +218,7 @@ export function BrowserAgentSettings() {
           label={t("browser.agentSettings.history")}
           description={t("browser.agentSettings.historyDescription")}
         >
-          <Select value={historyAccess} onValueChange={(value) => setHistoryAccess(value as HistoryAccess)}>
+          <Select value={historyAccess} onValueChange={(value) => { setHistoryAccess(value as HistoryAccess); }}>
             <SelectTrigger className="w-40" aria-label={t("browser.agentSettings.history")}>
               <SelectValue />
             </SelectTrigger>
@@ -230,7 +230,7 @@ export function BrowserAgentSettings() {
           </Select>
         </SettingsRow>
         <SettingsRow label={t("browser.agentSettings.scripts")} description={t("browser.agentSettings.scriptsDescription")}>
-          <Select value={scriptAccess} onValueChange={(value) => setScriptAccess(value as ScriptAccess)}>
+          <Select value={scriptAccess} onValueChange={(value) => { setScriptAccess(value as ScriptAccess); }}>
             <SelectTrigger className="w-40" aria-label={t("browser.agentSettings.scripts")}>
               <SelectValue />
             </SelectTrigger>

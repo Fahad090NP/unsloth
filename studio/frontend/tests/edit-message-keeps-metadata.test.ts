@@ -19,12 +19,12 @@ import {
 import { readSrc } from "./helpers/kit.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Exported = {
+interface Exported {
   headId: string | null;
   messages: { parentId: string | null; message: Record<string, unknown> }[];
-};
+}
 
-type Module = {
+interface Module {
   extractTaggedText: (content: unknown) => string;
   updateThreadMessage: (args: {
     thread: { export: () => Exported; import: (data: Exported) => void };
@@ -33,7 +33,7 @@ type Module = {
     newText: string;
     isIncognito: boolean;
   }) => Promise<unknown>;
-};
+}
 
 const RECORD_MODULE = loadWithStubs<{
   exportedItemToRecord: (
@@ -225,7 +225,7 @@ for (const modelId of ["unsloth/gguf-model", "external::openai::gpt-x"]) {
         ...contextUsageMarkers([user, assistant]),
       };
       let exported = thread(assistant.content as unknown[]);
-      exported.messages[0].message = hydrateUser(user) as unknown as Record<string, unknown>;
+      exported.messages[0].message = hydrateUser(user);
       exported.messages[1].message.metadata = { custom: { contextUsage: usage } };
 
       await h.module.updateThreadMessage({
@@ -258,7 +258,7 @@ test("reloading and saving a user unchanged preserves its revision and timestamp
     metadata: { revision: 3, createdAtEstimated: true },
   };
   const exported = thread([]);
-  exported.messages[0].message = hydrateUser(user) as unknown as Record<string, unknown>;
+  exported.messages[0].message = hydrateUser(user);
   await h.module.updateThreadMessage({
     thread: { export: () => exported, import: () => {} },
     messageId: "u0",
@@ -475,7 +475,7 @@ test("reordering distinct calls to the same tool increments the revision", async
 test("the turn keeps its timestamp when the export carries epoch millis", async () => {
   const h = harness();
   const exported = thread([{ type: "text", text: "hi" }]);
-  (exported.messages[1].message as Record<string, unknown>).createdAt = 2000;
+  (exported.messages[1].message).createdAt = 2000;
 
   await h.module.updateThreadMessage({
     thread: { export: () => exported, import: () => {} },

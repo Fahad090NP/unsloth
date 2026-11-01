@@ -57,7 +57,7 @@ export function HfCacheModelClear({
           name: repoId,
         })}
         title={cachePath}
-        onClick={() => setOpen(true)}
+        onClick={() => { setOpen(true); }}
       >
         {t("settings.resources.storage.caches.clearOneAction")}
       </Button>

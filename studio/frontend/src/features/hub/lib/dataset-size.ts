@@ -42,13 +42,13 @@ type LoadResult<T> =
   | { value: T }
   | { miss: "permanent" | "transient" | "longlived" };
 
-type InflightSizeEntry<T> = {
+interface InflightSizeEntry<T> {
   promise: Promise<T | null>;
   controller: AbortController;
   consumers: number;
   settled: boolean;
   cancelledByConsumers: boolean;
-};
+}
 
 function readSizeCache<T>(
   cache: LruMap<string, SizeCacheEntry<T>>,
@@ -262,10 +262,10 @@ export interface ModelSizeInfo {
 }
 
 interface ModelInfoApiResponse {
-  siblings?: Array<{
+  siblings?: {
     rfilename?: string;
     size?: number;
-  }>;
+  }[];
 }
 
 type ModelSibling = NonNullable<ModelInfoApiResponse["siblings"]>[number];
@@ -379,7 +379,7 @@ function isSnapshotIgnored(
   skipConsolidated: boolean,
   skipDuplicateFormats: boolean,
   redundantBins: Set<string>,
-  precisionFolders: Set<string> = new Set(),
+  precisionFolders = new Set<string>(),
 ): boolean {
   const lower = filename.toLowerCase();
   const folder = filename.includes("/") ? filename.slice(0, filename.indexOf("/")) : "";

@@ -75,7 +75,7 @@ export function MediaHeaderActions({
     if (centre) {
       observer.observe(centre);
     }
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, []);
 
   return (

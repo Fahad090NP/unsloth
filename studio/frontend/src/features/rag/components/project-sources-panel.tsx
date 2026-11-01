@@ -62,7 +62,7 @@ export function ProjectSourcesPanel({ projectId }: { projectId: string }) {
       if (items.length === 0) return;
       invalidateProjectSources(projectId);
       void upload(items).finally(() =>
-        announceProjectSourcesUpdated(projectId),
+        { announceProjectSourcesUpdated(projectId); },
       );
     },
     [projectId, upload],
@@ -77,7 +77,7 @@ export function ProjectSourcesPanel({ projectId }: { projectId: string }) {
     (documentId: string) => {
       invalidateProjectSources(projectId);
       void retry(documentId).finally(() =>
-        announceProjectSourcesUpdated(projectId),
+        { announceProjectSourcesUpdated(projectId); },
       );
     },
     [projectId, retry],
@@ -108,13 +108,13 @@ export function ProjectSourcesPanel({ projectId }: { projectId: string }) {
   );
 
   const handleFiles = useCallback(
-    (files: File[]) => handleItems(fileItems(files)),
+    (files: File[]) => { handleItems(fileItems(files)); },
     [handleItems],
   );
 
   const handleNativeIntents = useCallback(
     (intents: NativeIntent[]) =>
-      handleItems(
+      { handleItems(
         intents.map((intent) => ({
           kind: "native" as const,
           token: intent.path.token,
@@ -122,7 +122,7 @@ export function ProjectSourcesPanel({ projectId }: { projectId: string }) {
           sizeBytes: intent.path.sizeBytes,
           modifiedMs: intent.path.modifiedMs,
         })),
-      ),
+      ); },
     [handleItems],
   );
 
@@ -179,7 +179,7 @@ export function ProjectSourcesPanel({ projectId }: { projectId: string }) {
         onChange={(e) => {
           const files = Array.from(e.target.files ?? []);
           e.target.value = "";
-          void handleItems(fileItems(files));
+          handleItems(fileItems(files));
         }}
       />
       <div className="mb-4 rounded-2xl bg-muted/30 px-5 py-4">
@@ -280,7 +280,7 @@ export function ProjectSourcesPanel({ projectId }: { projectId: string }) {
                     : () => void handleRemove(doc.id)
                 }
                 onRetry={
-                  canRetry(doc.id) ? () => handleRetry(doc.id) : undefined
+                  canRetry(doc.id) ? () => { handleRetry(doc.id); } : undefined
                 }
               />
             ))}

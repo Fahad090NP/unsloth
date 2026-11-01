@@ -254,7 +254,7 @@ function BaseModelSearchChip({
         {onSearchHub ? (
           <button
             type="button"
-            onClick={() => onSearchHub(searchTerm)}
+            onClick={() => { onSearchHub(searchTerm); }}
             className="inline-flex h-6 max-w-full cursor-pointer items-center gap-1.5 rounded-full bg-muted px-2.5 text-ui-11p5 transition-colors hover:bg-muted/80 dark:bg-[rgb(255_255_255_/_calc(0.04*var(--contrast-wash-gain,1)))]"
           >
             {content}
@@ -413,7 +413,7 @@ function ModelStatusChips({
   );
 }
 
-export type ModelInspectorRuntime = {
+export interface ModelInspectorRuntime {
   isActive: boolean;
   activeGgufVariant: string | null;
   isLoadingThisModel: boolean;
@@ -425,9 +425,9 @@ export type ModelInspectorRuntime = {
   gpuCount?: number;
   systemRamGb?: number;
   unifiedLoadBudgetGb?: number | null;
-};
+}
 
-export type ModelInspectorActions = {
+export interface ModelInspectorActions {
   onInventoryChange?: () => void;
   onSearchHub?: (query: string) => void;
   onRun?: (
@@ -435,7 +435,7 @@ export type ModelInspectorActions = {
     mediaPage: ReturnType<typeof studioPageForTask> | "audio",
   ) => void;
   runConfigPending?: boolean;
-};
+}
 
 export const ModelInspector = memo(function ModelInspector({
   model,
@@ -600,7 +600,7 @@ export const ModelInspector = memo(function ModelInspector({
   const runAction =
     runEligible && onRun
       ? (selection: HubModelRunSelection) =>
-          onRun(selection, audioPage ? "audio" : mediaPage)
+          { onRun(selection, audioPage ? "audio" : mediaPage); }
       : undefined;
   // A precision folder downloads as it loads, so it need not be on device.
   const isMlx =
@@ -615,7 +615,7 @@ export const ModelInspector = memo(function ModelInspector({
     !runsOnMediaRuntime &&
     !chatOnlyMeasured &&
     unslothSupport.status !== "unsupported"
-      ? (selection: HubModelRunSelection) => onRun(selection, mediaPage)
+      ? (selection: HubModelRunSelection) => { onRun(selection, mediaPage); }
       : undefined;
 
   const languages = parseLanguageTags(model.tags);

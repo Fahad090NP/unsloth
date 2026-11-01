@@ -94,7 +94,7 @@ function PageShell({
           <HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} className="size-4 shrink-0 text-muted-foreground" />
           <input
             value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
+            onChange={(event) => { onQueryChange(event.target.value); }}
             placeholder={t("browser.pages.search")}
             aria-label={t("browser.pages.search")}
             spellCheck={false}
@@ -251,7 +251,7 @@ function HistoryRow({
       extra={
         <MenuRow
           icon={Delete02Icon}
-          onSelect={() => useBrowserHistoryStore.getState().removeVisit(item.id)}
+          onSelect={() => { useBrowserHistoryStore.getState().removeVisit(item.id); }}
         >
           {t("browser.pages.removeFromHistory")}
         </MenuRow>
@@ -266,12 +266,12 @@ function HistoryRow({
       >
         <Checkbox
           checked={selected}
-          onCheckedChange={(checked) => onSelect(checked === true)}
+          onCheckedChange={(checked) => { onSelect(checked === true); }}
           aria-label={t("browser.pages.select", { title })}
         />
         <button
           type="button"
-          onClick={() => useBrowserStore.getState().navigate(tabId, { url: item.url })}
+          onClick={() => { useBrowserStore.getState().navigate(tabId, { url: item.url }); }}
           className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-3 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
           <span className="flex size-5 shrink-0 items-center justify-center">
@@ -301,11 +301,11 @@ function HistoryRow({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="browser-menu min-w-48">
-            <DropdownMenuItem onSelect={() => useBrowserStore.getState().openUrl(item.url, { newTab: true })}>
+            <DropdownMenuItem onSelect={() => { useBrowserStore.getState().openUrl(item.url, { newTab: true }); }}>
               <HugeiconsIcon icon={LinkSquare02Icon} strokeWidth={1.75} />
               {t("browser.pages.openPage")}
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => useBrowserHistoryStore.getState().removeVisit(item.id)}>
+            <DropdownMenuItem onSelect={() => { useBrowserHistoryStore.getState().removeVisit(item.id); }}>
               <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.75} />
               {t("browser.pages.removeFromHistory")}
             </DropdownMenuItem>
@@ -324,7 +324,7 @@ function DayCard({ label, children }: { label: string; children: ReactNode }) {
     <section className={cn("overflow-hidden rounded-2xl border border-border", CARD_WASH)}>
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => { setOpen((value) => !value); }}
         aria-expanded={open}
         aria-label={t(open ? "browser.pages.collapse" : "browser.pages.expand", { date: label })}
         className="flex h-13 w-full cursor-pointer items-center justify-between px-4 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
@@ -344,16 +344,16 @@ function DayCard({ label, children }: { label: string; children: ReactNode }) {
 /** Settings > Browser > `current`, each step back a link. */
 function PageCrumbs({ current }: { current: string }) {
   const t = useT();
-  const openSettings = (tab?: "browser") => useSettingsDialogStore.getState().openDialog(tab);
+  const openSettings = (tab?: "browser") => { useSettingsDialogStore.getState().openDialog(tab); };
   const crumb =
     "cursor-pointer rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
   return (
     <nav className="flex items-center gap-2 px-6 pt-4 text-ui-14" aria-label={current}>
-      <button type="button" className={crumb} onClick={() => openSettings()}>
+      <button type="button" className={crumb} onClick={() => { openSettings(); }}>
         {t("settings.dialog.title")}
       </button>
       <HugeiconsIcon icon={ChevronRightStandardIcon} strokeWidth={2} className="size-3.5 text-muted-foreground" />
-      <button type="button" className={crumb} onClick={() => openSettings("browser")}>
+      <button type="button" className={crumb} onClick={() => { openSettings("browser"); }}>
         {t("browser.settingsTitle")}
       </button>
       <HugeiconsIcon icon={ChevronRightStandardIcon} strokeWidth={2} className="size-3.5 text-muted-foreground" />
@@ -412,7 +412,7 @@ function SearchWithFilter({
           <HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} className="size-4.5 shrink-0 text-muted-foreground" />
           <input
             value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
+            onChange={(event) => { onQueryChange(event.target.value); }}
             placeholder={placeholder}
             aria-label={placeholder}
             spellCheck={false}
@@ -444,7 +444,7 @@ function SearchWithFilter({
               }}
             >
               {(Object.keys(RANGE_LABELS) as PresetRange[]).map((id) =>
-                filterOption(t(RANGE_LABELS[id].menu), range === id, () => setRange(id)),
+                filterOption(t(RANGE_LABELS[id].menu), range === id, () => { setRange(id); }),
               )}
               <DropdownMenuSeparator className="mx-3" />
               {filterOption(t("browser.pages.customDates"), range === "custom", () => {
@@ -537,12 +537,12 @@ function HistoryPage({ tabId }: { tabId: string }) {
     return new Set([...selection].filter((id) => ids.has(id)));
   }, [history, selection]);
   const select = (id: string, on: boolean) =>
-    setSelection((current) => {
+    { setSelection((current) => {
       const next = new Set(current);
       if (on) next.add(id);
       else next.delete(id);
       return next;
-    });
+    }); };
 
   return (
     <div className="size-full overflow-auto bg-background">
@@ -561,7 +561,7 @@ function HistoryPage({ tabId }: { tabId: string }) {
               <span className="flex-1 text-ui-15 font-medium text-foreground">
                 {t("browser.pages.selected", { count: selected.size })}
               </span>
-              <Button type="button" variant="ghost" size="sm" className="rounded-full" onClick={() => setSelection(new Set())}>
+              <Button type="button" variant="ghost" size="sm" className="rounded-full" onClick={() => { setSelection(new Set()); }}>
                 {t("browser.pages.cancel")}
               </Button>
               <Button
@@ -583,7 +583,7 @@ function HistoryPage({ tabId }: { tabId: string }) {
               <button
                 type="button"
                 disabled={history.length === 0}
-                onClick={() => setClearOpen(true)}
+                onClick={() => { setClearOpen(true); }}
                 className={cn(
                   "h-9 cursor-pointer rounded-full px-4 text-ui-14 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-50",
                   BUTTON_WASH,
@@ -609,7 +609,7 @@ function HistoryPage({ tabId }: { tabId: string }) {
                     tabId={tabId}
                     time={timeFormat.format(item.visitedAt)}
                     selected={selected.has(item.id)}
-                    onSelect={(on) => select(item.id, on)}
+                    onSelect={(on) => { select(item.id, on); }}
                   />
                 ))}
               </DayCard>
@@ -618,7 +618,7 @@ function HistoryPage({ tabId }: { tabId: string }) {
           {more ? (
             <button
               type="button"
-              onClick={() => setLimit((current) => current + HISTORY_PAGE_ROWS)}
+              onClick={() => { setLimit((current) => current + HISTORY_PAGE_ROWS); }}
               className={cn(
                 "h-9 cursor-pointer self-center rounded-full px-4 text-ui-14 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 BUTTON_WASH,
@@ -654,7 +654,7 @@ function useMissingDownloads(downloads: DownloadItem[]) {
       window.removeEventListener("focus", check);
     };
   }, [downloads, checks]);
-  return { missing, recheck: () => setChecks((count) => count + 1) };
+  return { missing, recheck: () => { setChecks((count) => count + 1); } };
 }
 
 const ROW_ACTION = cn(
@@ -678,7 +678,7 @@ function DownloadRow({
   const kind = attachmentFileKind(item.name, item.contentType);
   const source = item.url ? hostOf(item.url) : t("browser.pages.fromChat");
   const revealLabel = t(revealLabelKey());
-  const remove = () => useBrowserHistoryStore.getState().removeDownload(item.id);
+  const remove = () => { useBrowserHistoryStore.getState().removeDownload(item.id); };
   const nativeId = isTauri && !deleted ? item.nativeId : undefined;
   const reveal = nativeId
     ? () =>
@@ -807,7 +807,7 @@ function DownloadsPage() {
           <button
             type="button"
             disabled={downloads.length === 0}
-            onClick={() => useBrowserHistoryStore.getState().clearDownloads()}
+            onClick={() => { useBrowserHistoryStore.getState().clearDownloads(); }}
             className={cn(
               "h-9 cursor-pointer rounded-full px-4 text-ui-14 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-50",
               BUTTON_WASH,
@@ -861,8 +861,8 @@ function BookmarkRow({ bookmark, tabId, time }: { bookmark: Bookmark; tabId: str
         detail={bookmark.url}
         time={time}
         url={bookmark.url}
-        onOpen={() => useBrowserStore.getState().navigate(tabId, { url: bookmark.url })}
-        onRemove={() => removeBookmarkWithUndo(bookmark, t)}
+        onOpen={() => { useBrowserStore.getState().navigate(tabId, { url: bookmark.url }); }}
+        onRemove={() => { removeBookmarkWithUndo(bookmark, t); }}
         menu={{
           rows: (
             <MenuRow

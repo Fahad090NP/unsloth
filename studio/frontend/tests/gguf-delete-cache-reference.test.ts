@@ -43,18 +43,12 @@ test("the variant model declares cache_ref, so the reference survives parsing", 
 });
 
 test("a logical quant delete carries the copy its own row was listed in", () => {
-  const expanderCall = pickers.text.match(
-    /await onDeleteVariant\(v\.quant, v\.cache_ref \?\? v\.cache_path\)/,
-  );
+  const expanderCall = /await onDeleteVariant\(v\.quant, v\.cache_ref \?\? v\.cache_path\)/.exec(pickers.text);
   assert.ok(expanderCall, "the expander row must hand its listed copy to the delete");
-  const impact = pickers.text.match(
-    /impact: \{\s*repoId,\s*variant: v\.quant,\s*cachePath: v\.cache_ref \?\? v\.cache_path,\s*\}/,
-  );
+  const impact = /impact: \{\s*repoId,\s*variant: v\.quant,\s*cachePath: v\.cache_ref \?\? v\.cache_path,\s*\}/.exec(pickers.text);
   assert.ok(impact, "the confirm preview must measure the same copy the delete removes");
 
-  const pinnedCopy = pickers.text.match(
-    /const pinnedCopyPath = downloadedPinnedQuantPaths\.get\(/,
-  );
+  const pinnedCopy = /const pinnedCopyPath = downloadedPinnedQuantPaths\.get\(/.exec(pickers.text);
   assert.ok(pinnedCopy, "the pinned row must look up the copy its validation resolved");
   assert.match(
     pickers.text,

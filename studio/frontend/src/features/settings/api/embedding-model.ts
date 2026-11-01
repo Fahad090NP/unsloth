@@ -7,7 +7,7 @@ import { bumpInventoryVersion } from "@/features/hub";
 import { hubTokenHeader } from "@/features/hub/lib/hub-token-header";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
-export type EmbeddingModelSettings = {
+export interface EmbeddingModelSettings {
   embeddingModel: string;
   embeddingGgufRepo: string;
   defaultEmbeddingModel: string;
@@ -20,11 +20,11 @@ export type EmbeddingModelSettings = {
   embeddingDevice: EmbeddingDevice;
   /** RAG_EMBED_DEVICE names a device, so the choice is read-only here. */
   embeddingDeviceLocked: boolean;
-};
+}
 
 export type EmbeddingDevice = "auto" | "cpu" | "gpu";
 
-type ApiEmbeddingModelSettings = {
+interface ApiEmbeddingModelSettings {
   // biome-ignore lint/style/useNamingConvention: API schema
   embedding_model: string;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -42,7 +42,7 @@ type ApiEmbeddingModelSettings = {
   embedding_device?: EmbeddingDevice;
   // biome-ignore lint/style/useNamingConvention: API schema
   embedding_device_locked?: boolean;
-};
+}
 
 /** 409: not verifiable as an embedding model; retry with force to save anyway. */
 export class EmbeddingModelVerificationError extends Error {}
@@ -136,7 +136,7 @@ export async function updateEmbeddingDevice(
 }
 
 /** What saving a model would need fetched, and whether it is already on disk. */
-export type EmbeddingModelResolution = {
+export interface EmbeddingModelResolution {
   embeddingModel: string;
   backend: "llama" | "sentence-transformers";
   downloadRepo: string | null;
@@ -144,9 +144,9 @@ export type EmbeddingModelResolution = {
   cached: boolean;
   sizeBytes: number | null;
   error: string | null;
-};
+}
 
-type ApiEmbeddingModelResolution = {
+interface ApiEmbeddingModelResolution {
   // biome-ignore lint/style/useNamingConvention: API schema
   embedding_model: string;
   backend: "llama" | "sentence-transformers";
@@ -157,7 +157,7 @@ type ApiEmbeddingModelResolution = {
   // biome-ignore lint/style/useNamingConvention: API schema
   size_bytes: number | null;
   error: string | null;
-};
+}
 
 export async function resolveEmbeddingModel(
   embeddingModel: string,

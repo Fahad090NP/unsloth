@@ -64,7 +64,7 @@ export function exportedItemToRecord(
       createdAt: toEpochMillis(message.createdAt),
     };
   }
-  const custom = (message.metadata?.custom ?? {}) as Record<string, unknown>;
+  const custom = (message.metadata?.custom ?? {});
   return {
     id: message.id,
     threadId,
@@ -131,10 +131,10 @@ export async function syncExportedRepositoryToBackend(
   );
 }
 
-type ThreadImportExport = {
+interface ThreadImportExport {
   export: () => ExportedMessageRepository;
   import: (data: ExportedMessageRepository) => void;
-};
+}
 
 export async function deleteThreadMessage(args: {
   thread: ThreadImportExport;

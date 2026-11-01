@@ -37,12 +37,12 @@ function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null): void {
   }
 }
 
-type ModalBlockStore = {
+interface ModalBlockStore {
   getSnapshot: () => boolean;
   getTriggerElement: () => HTMLElement | null;
   setTriggerElement: (element: HTMLElement | null) => void;
   subscribe: (listener: () => void) => () => void;
-};
+}
 
 function createModalBlockStore(): ModalBlockStore {
   let triggerElement: HTMLElement | null = null;
@@ -171,7 +171,7 @@ function Tooltip({
     const releaseOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setClickOpen(false);
     };
-    const releaseNow = () => setClickOpen(false);
+    const releaseNow = () => { setClickOpen(false); };
     document.addEventListener("pointerdown", release, true);
     document.addEventListener("keydown", releaseOnEscape, true);
     window.addEventListener("blur", releaseNow);

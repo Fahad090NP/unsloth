@@ -22,7 +22,7 @@ export function subscribeGalleryChanged(kind: GalleryKind, onChanged: () => void
     if (detail?.kind === kind) onChanged();
   };
   window.addEventListener(GALLERY_CHANGED_EVENT, handler);
-  return () => window.removeEventListener(GALLERY_CHANGED_EVENT, handler);
+  return () => { window.removeEventListener(GALLERY_CHANGED_EVENT, handler); };
 }
 
 export const ARCHIVE_CHANGED_EVENT = "unsloth:archive-changed";
@@ -42,7 +42,7 @@ export function subscribeArchiveChanged(kind: GalleryKind, onChanged: () => void
     if (detail?.kind === kind) onChanged();
   };
   window.addEventListener(ARCHIVE_CHANGED_EVENT, handler);
-  return () => window.removeEventListener(ARCHIVE_CHANGED_EVENT, handler);
+  return () => { window.removeEventListener(ARCHIVE_CHANGED_EVENT, handler); };
 }
 
 /** The two fields these helpers care about; both gallery record types structurally satisfy it. */

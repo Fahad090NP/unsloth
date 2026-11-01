@@ -14,8 +14,8 @@ const MAIN = readText("../../src-tauri/src/main.rs");
 
 /** Module-scope and in-hook functions differ in indent, so match the declaration's own. */
 function hookFunction(hook: string, name: string): string {
-  const declaration = hook.match(new RegExp(`^([ ]*)function ${name}\\(`, "m"));
-  if (!declaration || declaration.index === undefined) {
+  const declaration = new RegExp(`^([ ]*)function ${name}\\(`, "m").exec(hook);
+  if (declaration?.index === undefined) {
     throw new Error(`${name} is gone from use-tauri-backend.ts`);
   }
   const close = `\n${declaration[1]}}\n`;
@@ -174,9 +174,7 @@ test("set_tray_server_status is registered, so the invoke can be answered", asyn
 
 test("the tray toggle starts clickable, for a frontend older than this binary", async () => {
   const rust = MAIN;
-  const built = rust.match(
-    /MenuItemBuilder::with_id\("toggle", "([^"]*)"\)([\s\S]{0,40}?)\.build\(app\)/,
-  );
+  const built = /MenuItemBuilder::with_id\("toggle", "([^"]*)"\)([\s\S]{0,40}?)\.build\(app\)/.exec(rust);
   assert.ok(built, "the toggle item is no longer built with a literal label");
   // A bundle predating set_tray_server_status never calls it, so the tray must not seed disabled.
   assert.doesNotMatch(

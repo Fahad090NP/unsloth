@@ -11,17 +11,17 @@ import {
 } from "@/features/hub/lib/model-identity";
 
 /** Catalog id and load path; they differ when a cached row pins a snapshot dir. */
-export type ModelPickNames = {
+export interface ModelPickNames {
   id: string;
   loadPath?: string | null;
   ggufVariant?: string | null;
-};
+}
 
-export type ResidentModelStatus = {
+export interface ResidentModelStatus {
   active_model?: string | null;
   model_identifier?: string | null;
   gguf_variant?: string | null;
-};
+}
 
 /** Each side has two names for one model; matching them avoids a needless reload. */
 export function residentModelMatchesPick(

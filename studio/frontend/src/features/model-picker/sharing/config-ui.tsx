@@ -65,7 +65,7 @@ export function SharedRunConfigActions({
         aria-label="Share"
         title="Share"
         disabled={!ready || disabled}
-        onClick={() => setSharing(true)}
+        onClick={() => { setSharing(true); }}
       >
         <HugeiconsIcon
           icon={Share01Icon}
@@ -77,7 +77,7 @@ export function SharedRunConfigActions({
         <ShareRunConfigDialog
           target={target}
           config={config}
-          onClose={() => setSharing(false)}
+          onClose={() => { setSharing(false); }}
         />
       )}
     </>

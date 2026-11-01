@@ -92,5 +92,5 @@ export function scheduleQuietIdleTask(
     callback();
   };
   handle = globalThis.setTimeout(attempt, Math.min(timeout, 16));
-  return () => globalThis.clearTimeout(handle);
+  return () => { globalThis.clearTimeout(handle); };
 }

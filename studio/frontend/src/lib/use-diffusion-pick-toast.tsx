@@ -66,7 +66,7 @@ export function useDiffusionPickToast(): PickToast {
   const [pickToast] = useState(() =>
     createPickToast({ describe: describePick, classNames: MODEL_LOAD_TOAST_CLASSNAMES }),
   );
-  useEffect(() => () => pickToast.dismissAll(), [pickToast]);
+  useEffect(() => () => { pickToast.dismissAll(); }, [pickToast]);
   return pickToast;
 }
 

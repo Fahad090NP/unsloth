@@ -151,11 +151,11 @@ export function providerTypeSupportsVision(
 }
 
 
-export type ProviderModelCapability = {
+export interface ProviderModelCapability {
   vision?: boolean;
   studio_tools?: boolean;
   thinking?: boolean;
-};
+}
 
 const REGISTRY_MODEL_CAPABILITIES = new Map<
   string,
@@ -625,7 +625,7 @@ function isCompleteProvider(provider: ExternalProviderConfig): boolean {
   return true;
 }
 
-type LegacyProviderConfig = {
+interface LegacyProviderConfig {
   id?: unknown;
   presetId?: unknown;
   name?: unknown;
@@ -633,7 +633,7 @@ type LegacyProviderConfig = {
   models?: unknown;
   createdAt?: unknown;
   updatedAt?: unknown;
-};
+}
 
 function fromUnknownProvider(value: unknown): ExternalProviderConfig | null {
   if (!value || typeof value !== "object") return null;

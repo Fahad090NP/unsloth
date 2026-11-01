@@ -112,7 +112,7 @@ function DownloadSiteRows() {
                 <span className="min-w-0 flex-1 truncate text-sm text-foreground">{origin}</span>
                 <Select
                   value={sites[origin]}
-                  onValueChange={(value) => setDownloadSite(origin, value as DownloadSiteDecision)}
+                  onValueChange={(value) => { setDownloadSite(origin, value as DownloadSiteDecision); }}
                 >
                   <SelectTrigger className="w-40" aria-label={t("browser.downloadSitesFor", { host: origin })}>
                     <SelectValue />
@@ -127,7 +127,7 @@ function DownloadSiteRows() {
                   size="icon"
                   className="size-8"
                   aria-label={t("browser.downloadSitesRemove", { host: origin })}
-                  onClick={() => setDownloadSite(origin, null)}
+                  onClick={() => { setDownloadSite(origin, null); }}
                 >
                   <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.75} className="size-4" />
                 </Button>
@@ -217,7 +217,7 @@ export function BrowserTab() {
       networkAccessRowRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
       useSettingsDialogStore.getState().consumeScrollTarget("browser-html-network");
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [scrollTarget]);
   // History and downloads open as browser tabs, so only beside a chat.
   const canOpenPages = browserPanelAvailable();
@@ -254,7 +254,7 @@ export function BrowserTab() {
         >
           <Select
             value={openLinksInBrowser ? "panel" : "default"}
-            onValueChange={(value) => setOpenLinksInBrowser(value === "panel")}
+            onValueChange={(value) => { setOpenLinksInBrowser(value === "panel"); }}
           >
             <SelectTrigger className="w-40" aria-label={t("browser.openLinksSetting")}>
               <SelectValue />
@@ -321,7 +321,7 @@ export function BrowserTab() {
           label={t("browser.defaultZoomSetting")}
           description={t("browser.defaultZoomSettingDescription")}
         >
-          <Select value={String(defaultZoom)} onValueChange={(value) => setDefaultZoom(Number(value))}>
+          <Select value={String(defaultZoom)} onValueChange={(value) => { setDefaultZoom(Number(value)); }}>
             <SelectTrigger className="w-40" aria-label={t("browser.defaultZoomSetting")}>
               <SelectValue />
             </SelectTrigger>
@@ -341,7 +341,7 @@ export function BrowserTab() {
           label={t("browser.searchEngineSetting")}
           description={t("browser.searchEngineSettingDescription")}
         >
-          <Select value={searchEngine} onValueChange={(value) => setSearchEngine(value as SearchEngineId)}>
+          <Select value={searchEngine} onValueChange={(value) => { setSearchEngine(value as SearchEngineId); }}>
             <SelectTrigger className="w-40" aria-label={t("browser.searchEngineSetting")}>
               <SelectValue />
             </SelectTrigger>
@@ -408,7 +408,7 @@ export function BrowserTab() {
         >
           <Select
             value={bookmarksToolbar}
-            onValueChange={(value) => setBookmarksToolbar(value as BookmarksToolbarMode)}
+            onValueChange={(value) => { setBookmarksToolbar(value as BookmarksToolbarMode); }}
           >
             <SelectTrigger className="w-48" aria-label={t("browser.bookmarksToolbarSetting")}>
               <SelectValue />
@@ -434,7 +434,7 @@ export function BrowserTab() {
           label={t("browser.pages.bookmarks")}
           description={t(canOpenPages ? "browser.bookmarksSettingDescription" : "browser.pagesFromChat")}
         >
-          <Button variant="outline" size="sm" disabled={!canOpenPages} onClick={() => openPage("bookmarks")}>
+          <Button variant="outline" size="sm" disabled={!canOpenPages} onClick={() => { openPage("bookmarks"); }}>
             {t("browser.manage")}
           </Button>
         </SettingsRow>
@@ -505,7 +505,7 @@ export function BrowserTab() {
           label={t("browser.downloadsSetting")}
           description={t(canOpenPages ? "browser.downloadsSettingDescription" : "browser.pagesFromChat")}
         >
-          <Button variant="outline" size="sm" disabled={!canOpenPages} onClick={() => openPage("downloads")}>
+          <Button variant="outline" size="sm" disabled={!canOpenPages} onClick={() => { openPage("downloads"); }}>
             {t("browser.manage")}
           </Button>
         </SettingsRow>
@@ -528,7 +528,7 @@ export function BrowserTab() {
         >
           <Select
             value={String(historyRetentionDays)}
-            onValueChange={(value) => setHistoryRetentionDays(Number(value))}
+            onValueChange={(value) => { setHistoryRetentionDays(Number(value)); }}
           >
             <SelectTrigger className="w-40" aria-label={t("browser.historyRetentionSetting")}>
               <SelectValue />
@@ -546,7 +546,7 @@ export function BrowserTab() {
           label={t("browser.historySetting")}
           description={t(canOpenPages ? "browser.historySettingDescription" : "browser.pagesFromChat")}
         >
-          <Button variant="outline" size="sm" disabled={!canOpenPages} onClick={() => openPage("history")}>
+          <Button variant="outline" size="sm" disabled={!canOpenPages} onClick={() => { openPage("history"); }}>
             {t("browser.manage")}
           </Button>
         </SettingsRow>
@@ -556,7 +556,7 @@ export function BrowserTab() {
             native ? "browser.native.clearDataSettingDescription" : "browser.clearDataSettingDescription",
           )}
         >
-          <Button variant="destructive" size="sm" onClick={() => setClearOpen(true)}>
+          <Button variant="destructive" size="sm" onClick={() => { setClearOpen(true); }}>
             <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.75} data-icon="inline-start" />
             {t("browser.menu.clearData")}
           </Button>
@@ -576,7 +576,7 @@ export function BrowserTab() {
           <Select
             value={screenshots ? annotationScreenshots : "never"}
             disabled={!screenshots}
-            onValueChange={(value) => setAnnotationScreenshots(value as AnnotationScreenshots)}
+            onValueChange={(value) => { setAnnotationScreenshots(value as AnnotationScreenshots); }}
           >
             <SelectTrigger className="w-44" aria-label={t("browser.annotationScreenshotsSetting")}>
               <SelectValue />

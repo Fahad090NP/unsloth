@@ -114,7 +114,7 @@ test("a partial or empty blob does not throw", () => {
 
 test("the retired key is not re-persisted after a migrated load", () => {
   const migrated = migrateTrainingConfig(wizardEraBlob(), 20);
-  const repersisted = partializeTrainingConfig(migrated as never) as Record<
+  const repersisted = partializeTrainingConfig(migrated) as Record<
     string,
     unknown
   >;

@@ -40,7 +40,7 @@ export function parseAudioFailure(
     code: body.code,
     message: typeof body.message === "string" ? body.message : "",
     onCpu: body.device === "cpu",
-    smallerVariants: variants.flatMap(({ variant, label } = {}) =>
+    smallerVariants: variants.flatMap(({ variant, label }) =>
       typeof variant === "string" && variant
         ? [
             {
@@ -91,7 +91,7 @@ export function audioFailureActions(
     if (failure.code === "out_of_memory" && smaller)
       actions.push({
         label: `Use ${smaller.label}`,
-        onClick: () => ctx.onUseVariant(smaller.variant),
+        onClick: () => { ctx.onUseVariant(smaller.variant); },
       });
     if (!ctx.deviceIsCpu && !ctx.cpuUnsupported && !failure.onCpu)
       actions.push({ label: "Load into CPU RAM", onClick: ctx.onUseCpu });

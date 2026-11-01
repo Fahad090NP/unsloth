@@ -27,7 +27,7 @@ export function createChatPinsApi(sessionSignal: AbortSignal) {
   ): Promise<T> {
     // The supported WebKit floor lacks AbortSignal.any; release listener and timer per request.
     const controller = new AbortController();
-    const abort = () => controller.abort();
+    const abort = () => { controller.abort(); };
     sessionSignal.addEventListener("abort", abort);
     if (sessionSignal.aborted) abort();
     const timer = setTimeout(abort, 10_000);
@@ -47,7 +47,7 @@ export function createChatPinsApi(sessionSignal: AbortSignal) {
     path: string,
     ids?: string[],
   ): Promise<string[] | undefined> {
-    return bounded(async (signal) => {
+    return await bounded(async (signal) => {
       const response = await authFetch(path, {
         signal,
         ...(ids === undefined

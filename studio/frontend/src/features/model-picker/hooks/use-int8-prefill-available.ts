@@ -30,7 +30,7 @@ export function usePrefillOptionAvailable(
           setAnswer({ key, available: false });
         }
       });
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [key, option, modelPath, hfToken]);
-  return answer != null && answer.key === key && answer.available;
+  return answer?.key === key && answer.available;
 }

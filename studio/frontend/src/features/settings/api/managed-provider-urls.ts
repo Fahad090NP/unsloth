@@ -8,20 +8,20 @@ import { SettingsRouteAbsentError } from "./settings-route-absent";
 
 const ROUTE = "/api/settings/managed-provider-urls";
 
-export type ManagedProviderUrlSettings = {
+export interface ManagedProviderUrlSettings {
   allowed: boolean;
   defaultAllowed: boolean;
   // UNSLOTH_STUDIO_BLOCK_PRIVATE_PROVIDER_URLS=1 overrides the switch for every account.
   lockedByEnvironment: boolean;
-};
+}
 
-type ApiManagedProviderUrlSettings = {
+interface ApiManagedProviderUrlSettings {
   allowed: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   default_allowed?: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   locked_by_environment?: boolean;
-};
+}
 
 function fromApi(
   settings: ApiManagedProviderUrlSettings,

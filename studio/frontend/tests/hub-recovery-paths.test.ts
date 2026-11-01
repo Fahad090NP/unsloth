@@ -21,7 +21,7 @@ test("clients with their own request keep their own reachability", async () => {
   const page = await readText("../src/features/hub/hub-page.tsx");
   assert.match(page, /const online = useOnlineStatus\(\);/);
   assert.ok(
-    !/useHubAvailability\(\)\.phase/.test(page),
+    !page.includes('useHubAvailability().phase'),
     "the feed's phase must not gate a client that never runs a listing",
   );
 });
@@ -86,7 +86,7 @@ test("gating the search again does not re-hide the error", async () => {
     "../src/features/hub/hooks/use-hub-paginated-search.ts",
   );
   const disabled = body(paginated, "if (!enabled) {", "\n    // Same query");
-  assert.ok(!/error: null/.test(disabled), "disabling must not erase the cause");
+  assert.ok(!disabled.includes('error: null'), "disabling must not erase the cause");
   const search = await readText("../src/features/hub/hooks/use-discover-search.ts");
   assert.match(search, /const searchError = isDiscoverTab \? rawSearchError : null;/);
 });
@@ -129,7 +129,7 @@ test("the notice outlives the backoff window, not the other way round", async ()
   const footer = body(lists, "<DiscoverFetchMoreFooter", "/>");
   assert.ok(!/failed=\{[^}]*!online/.test(footer), "a timer must not retire it");
   assert.ok(
-    !/\{\(hasMore \|\| searchError \|\| !online\) && \(/.test(lists),
+    !lists.includes('{(hasMore || searchError || !online) && ('),
     "nor take the whole footer off screen",
   );
   const network = await readText("../src/features/hub/lib/network.ts");

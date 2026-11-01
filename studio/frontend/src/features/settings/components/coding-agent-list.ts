@@ -6,7 +6,7 @@
 export const UNSLOTH_START_DOCS_URL =
   "https://unsloth.ai/docs/integrations/unsloth-start";
 
-export type AgentDetails = {
+export interface AgentDetails {
   id: string;
   name: string;
   docsUrl: string;
@@ -17,7 +17,7 @@ export type AgentDetails = {
   mark?: string;
   /** Draw the mark at 16px in the 20px slot, for marks that fill their whole box. */
   compact?: boolean;
-};
+}
 
 // names stay untranslated; `settings.agents.intro` includes them for search.
 export const SUPPORTED_AGENTS: AgentDetails[] = [

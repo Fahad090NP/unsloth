@@ -35,7 +35,7 @@ function sourceForRuntime(runtime: ModelRuntime): LoadedModelSource {
   return runtime === "tts" ? "chat" : runtime;
 }
 
-export type UseLoadedModels = {
+export interface UseLoadedModels {
   entries: LoadedModelEntry[];
   /** Polled rows even while the card is closed, so it can reopen on a load it was not told about. */
   polledEntries: LoadedModelEntry[];
@@ -43,7 +43,7 @@ export type UseLoadedModels = {
   heldByOther: boolean;
   eject: (entry: LoadedModelEntry) => Promise<void>;
   refresh: () => void;
-};
+}
 
 /**
  * `enabled` controls showing; `track` controls recording announced loads. A closed card still

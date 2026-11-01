@@ -6,7 +6,7 @@ export type ComposerSendShortcut = "enter" | "mod-enter-multiline" | "mod-enter"
 export type ComposerFollowUpBehavior = "queue" | "steer";
 export type ComposerSubmitIntent = "default" | "opposite";
 
-export type ComposerKeyEvent = {
+export interface ComposerKeyEvent {
   key: string;
   metaKey: boolean;
   ctrlKey: boolean;
@@ -15,7 +15,7 @@ export type ComposerKeyEvent = {
   repeat?: boolean;
   isComposing?: boolean;
   keyCode?: number;
-};
+}
 
 // WebKit fires compositionend before the committing keydown (keyCode 229, WebKit bug 165004).
 const IME_COMMIT_KEYDOWN_MS = 500;
@@ -35,11 +35,11 @@ export function imeKeydownBlocksComposerSubmit(
   );
 }
 
-export type InputImeState = {
+export interface InputImeState {
   open: boolean;
   endedAt: number;
   commitKeydownSeen: boolean;
-};
+}
 
 export function newInputImeState(): InputImeState {
   return { open: false, endedAt: -Infinity, commitKeydownSeen: false };
@@ -53,7 +53,7 @@ export function resetInputIme(ime: InputImeState) {
 
 export function inputImeHandlers(ime: InputImeState) {
   // compositionend can go missing (#5546); a focus change always ends the composition.
-  const reset = () => resetInputIme(ime);
+  const reset = () => { resetInputIme(ime); };
   return {
     onFocus: reset,
     onBlur: reset,

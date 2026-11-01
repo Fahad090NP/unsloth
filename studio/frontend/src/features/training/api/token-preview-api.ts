@@ -10,7 +10,7 @@ import { buildTrainingStartPayload } from "./mappers";
 /** [token id, text, trained] */
 export type PreviewToken = [number, string, boolean];
 
-export type TokenPreviewSample = {
+export interface TokenPreviewSample {
   tokens: PreviewToken[];
   /** Every ID of the row, including the ones past the displayed tokens. */
   input_ids: number[];
@@ -19,9 +19,9 @@ export type TokenPreviewSample = {
   num_hidden: number;
   truncated_from: number | null;
   text: string;
-};
+}
 
-export type TokenPreviewResponse = {
+export interface TokenPreviewResponse {
   samples: TokenPreviewSample[];
   masking: {
     applied: boolean;
@@ -32,9 +32,9 @@ export type TokenPreviewResponse = {
   final_format: string | null;
   vocab_size: number;
   example_text: string | null;
-};
+}
 
-type TokenPreviewArgs = {
+interface TokenPreviewArgs {
   config: TrainingConfigState;
   hfToken: string | null;
   text?: string;
@@ -43,7 +43,7 @@ type TokenPreviewArgs = {
   seed?: number;
   numSamples?: number;
   signal?: AbortSignal;
-};
+}
 
 /** The dataset and masking fields come from the training start payload, so the preview reads
  * the rows and markers the run would. */
@@ -91,5 +91,5 @@ export async function fetchTokenPreview({
   if (!res.ok) {
     throw new Error(await readFastApiError(res));
   }
-  return res.json();
+  return await res.json();
 }

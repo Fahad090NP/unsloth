@@ -129,5 +129,5 @@ export function failBackgroundUpload(ticket: number, error: BackgroundError) {
 export async function resetChatBackground(): Promise<boolean> {
 	uploadTicket++;
 	useBackgroundStore.setState({ busy: false });
-	return persist(null, false);
+	return await persist(null, false);
 }

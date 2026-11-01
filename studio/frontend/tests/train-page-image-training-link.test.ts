@@ -11,7 +11,7 @@ registerBundlerResolver();
 
 test("the Train header links to the Images page with its Train panel selected", () => {
   const src = readSrc("features/studio/studio-page.tsx");
-  const link = src.match(/<MediaPageLink\s+to="\/images"[\s\S]*?\/>/)?.[0];
+  const link = (/<MediaPageLink\s+to="\/images"[\s\S]*?\/>/.exec(src))?.[0];
   assert.ok(link, "no /images link in the Train header");
   assert.match(link, /label=\{t\("studio\.imageTraining"\)\}/);
   assert.match(link, /onNavigate=\{\(\) => setImagesPageMode\("train"\)\}/);

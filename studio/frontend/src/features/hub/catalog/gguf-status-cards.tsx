@@ -110,7 +110,7 @@ export function GgufDownloadingFallbackCard({
             partialsResumable,
           )}
           disabled={cancelling}
-          onClick={() => void job.cancelDownload(progress.variant)}
+          onClick={() => { job.cancelDownload(progress.variant); }}
         />
       </DownloadCard>
     </div>

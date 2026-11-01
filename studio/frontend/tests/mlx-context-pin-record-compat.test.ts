@@ -85,7 +85,7 @@ function stampedVersion(patch: Record<string, unknown>): number {
 }
 
 
-type Row = {
+interface Row {
   name: string;
   raw: Record<string, unknown>;
   normalizedPin: number | null;
@@ -95,7 +95,7 @@ type Row = {
   mlxRequest: number;
   transformersRequest: number;
   note?: string;
-};
+}
 
 const ROWS: Row[] = [
   {

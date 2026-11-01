@@ -732,8 +732,7 @@ export function useLlamaUpdateCheck({
 
     // Skip backend switches: they share this job but install no release.
     if (
-      action &&
-      action.started === false &&
+      action?.started === false &&
       !llamaUpdateAdoptsRunningJob(action.reason, actionJob)
     ) {
       // A stale click's response carries another tab's completed job; process its reload_required here.
@@ -754,7 +753,7 @@ export function useLlamaUpdateCheck({
       clearSuppression();
     }
     return await new Promise<LlamaApplyResult>((resolve) =>
-      startJobPoll(resolve),
+      { startJobPoll(resolve); },
     );
   }, [applying, startJobPoll, notifyReloadIfNeeded, clearSuppression]);
 

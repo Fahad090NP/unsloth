@@ -7,14 +7,14 @@ import type { ReactElement } from "react";
 import { Button } from "@/components/ui/button";
 import type { RecipeExecutionKind } from "../../execution-types";
 
-type RunValidateFloatingControlsProps = {
+interface RunValidateFloatingControlsProps {
   runBusy: boolean;
   runDialogKind: RecipeExecutionKind;
   validateLoading: boolean;
   executionLocked: boolean;
   onOpenRunDialog: (kind: RecipeExecutionKind) => void;
   onValidate: () => void;
-};
+}
 
 export function RunValidateFloatingControls({
   runBusy,
@@ -34,7 +34,7 @@ export function RunValidateFloatingControls({
           variant="dark"
           type="button"
           className="corner-squircle"
-          onClick={() => onOpenRunDialog(runDialogKind)}
+          onClick={() => { onOpenRunDialog(runDialogKind); }}
           disabled={runBusy}
         >
           <HugeiconsIcon icon={CookBookIcon} className="size-4" />

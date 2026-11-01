@@ -17,13 +17,13 @@ register("./thread-sampling-resolver.mjs", import.meta.url);
 await import("./helpers/store-stubs/settings-http.ts");
 await import("./helpers/store-stubs/chat-history-storage.ts");
 
-type MediaState = {
+interface MediaState {
   supportsTools: boolean;
   supportsBuiltinImageGeneration: boolean;
   localImageModelReady: boolean;
   localVideoModelReady: boolean;
   imageToolsEnabled: boolean;
-};
+}
 
 const store = await import("../src/features/chat/stores/chat-runtime-store.ts");
 const { localImageTool, imageToolAvailable, localImagePillCount, localMediaToolsForTurn } =

@@ -22,7 +22,7 @@ const openingListeners = new Set<() => void>();
 
 function setOpening(value: boolean): void {
   opening = value;
-  openingListeners.forEach((listener) => listener());
+  openingListeners.forEach((listener) => { listener(); });
 }
 
 export function useOpeningFolder(): boolean {

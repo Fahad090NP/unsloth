@@ -268,13 +268,13 @@ test("a chat dropped on a folder, its chats or its empty line is filed there", (
       index: 0,
       count: 1,
     }),
-    { section: "projects", folderId: "misc" } as SidebarDropZone,
+    { section: "projects", folderId: "misc" },
     chatRow("pinned", projectOrderScope("work"), "c1", "work", {
       index: 0,
       count: 2,
     }),
     { ...folderRow("pinned", PINNED_ORDER_SCOPE, "work"), edge: "bottom" },
-  ] as Array<SidebarDropZone & { edge?: "top" | "bottom" }>) {
+  ] as (SidebarDropZone & { edge?: "top" | "bottom" })[]) {
     const plan = plannedDrop(
       planSidebarDrop(drag, zone, zone.edge ?? "top", context()),
     );
@@ -767,7 +767,7 @@ test("a plan's key changes exactly when what it paints or says does", () => {
       ctx,
     ),
   );
-  assert.equal(planKey(a), planKey({ ...a! }));
+  assert.equal(planKey(a), planKey({ ...a }));
   assert.notEqual(planKey(a), planKey(b));
   assert.equal(planKey(null), "");
 });
@@ -823,7 +823,7 @@ test("the dragged row is known before React re-renders", async () => {
     (HOOK.match(/const dragged = sidebarDragSource\(\);/g) ?? []).length,
     2,
   );
-  assert.ok(!/const dragged = drag;/.test(HOOK));
+  assert.ok(!HOOK.includes('const dragged = drag;'));
 });
 
 // The desktop webview never forwards HTML5 drag events, so use pointer events.
@@ -1129,7 +1129,7 @@ test("a chat can be dropped after a folder that ends the Pinned list", () => {
     /<SidebarMenuItem\n\s*aria-hidden\n\s*className=\{cn\(\n\s*\/\/[^\n]*\n\s*"relative z-\[1\] h-\[calc\(8px\*var\(--ui-space-scale,1\)\)\]",\n\s*dropCueClass\(SIDEBAR_TAIL_SCOPE, "pinned"\),/,
   );
   assert.ok(
-    !/draggingRow && /.test(pinnedMenu),
+    !pinnedMenu.includes('draggingRow && '),
     "the tail is conditional on a drag again",
   );
   assert.deepEqual(
@@ -1149,7 +1149,7 @@ test("a chat can be dropped after a folder that ends the Pinned list", () => {
 test("the edge keeps scrolling while the pointer rests on it", () => {
   assert.match(HOOK, /const onFrame = \(\) => \{[^]*?frame = requestAnimationFrame\(onFrame\);\n\s*edgeScroll\(at\.y\);\n\s*if \(ghost\.current\) placeGhost\(ghost\.current, at\.y\);\n\s*track\(at\.x, at\.y\);/);
   // Unconditionally: re-aiming only on scrolled frames leaves other causes stale.
-  assert.ok(!/if \(edgeScroll\(/.test(HOOK));
+  assert.ok(!HOOK.includes('if (edgeScroll('));
   assert.match(HOOK, /setDrag\(item\);\n\s*frame = requestAnimationFrame\(onFrame\);/);
   assert.match(HOOK, /if \(frame\) cancelAnimationFrame\(frame\);/);
   assert.match(HOOK, /if \(!sidebarDragSource\(\)\) \{\n\s*frame = 0;\n\s*return;\n\s*\}/);

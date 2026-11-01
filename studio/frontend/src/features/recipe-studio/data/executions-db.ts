@@ -40,7 +40,7 @@ async function putExecution(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(record),
     },
-    { beforeRetry: () => assertSameSession(epoch) },
+    { beforeRetry: () => { assertSameSession(epoch); } },
   );
   if (!res.ok) {
     throw Object.assign(new Error(`Save execution failed (${res.status})`), {
@@ -58,12 +58,12 @@ function isTransient(error: unknown): boolean {
   );
 }
 
-type Waiter = { resolve: () => void; reject: (error: unknown) => void };
-type Queue = {
+interface Waiter { resolve: () => void; reject: (error: unknown) => void }
+interface Queue {
   record: RecipeExecutionRecord | null;
   epoch: number;
   waiters: Waiter[];
-};
+}
 
 const queues = new Map<string, Queue>();
 

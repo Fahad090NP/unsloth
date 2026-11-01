@@ -220,12 +220,12 @@ test("a message added or removed reaches every row", () => {
 test("a fingerprint that throws reaches every row", () => {
   const fake = fakeClient();
   let broken = false;
-  const client = new Proxy(fake.client as object, {
+  const client = new Proxy(fake.client, {
     ownKeys(target) {
       if (broken) throw new Error("boom");
       return Reflect.ownKeys(target);
     },
-  }) as AssistantClient;
+  });
   const gate = createRowNotificationGate(client);
   const heard = [0, 0];
   const release = heard.map((_, index) =>

@@ -120,7 +120,7 @@ import { diffusionTrainingProgress } from "./diffusion-train-progress";
 import { type LrScheduler, lrSchedulePreset } from "./diffusion-train-lr-schedule";
 
 // Fallback list for an older backend whose /info reports none, in popularity order.
-type FamilyPreset = {
+interface FamilyPreset {
   name: string;
   label: string;
   base_repos: string[];
@@ -138,7 +138,7 @@ type FamilyPreset = {
   qlora_vram_gb?: number | null;
   note?: string;
   base_specs?: DiffusionTrainableFamily["base_specs"];
-};
+}
 
 const FAMILY_PRESETS: FamilyPreset[] = [
   {
@@ -411,10 +411,9 @@ export function DiffusionTrainPanel({
   // hence the isDiT scope.
   const familyUntrainable =
     isDiT &&
-    reportedFamily?.precision_modes != null &&
-    reportedFamily.precision_modes.length === 0;
+    reportedFamily?.precision_modes?.length === 0;
   const precisionModes = useMemo<
-    Array<"nf4" | "bf16" | "int8" | "fp8" | "mxfp8" | "auto">
+    ("nf4" | "bf16" | "int8" | "fp8" | "mxfp8" | "auto")[]
   >(() => {
     if (familyUntrainable) return [];
     const reported = reportedFamily?.precision_modes?.filter(
@@ -678,7 +677,7 @@ export function DiffusionTrainPanel({
     if (!active) return;
     void poll();
     const id = window.setInterval(() => void poll(), 1500);
-    return () => window.clearInterval(id);
+    return () => { window.clearInterval(id); };
   }, [active, poll]);
 
   // The backend keeps the terminal status until the next start, so dismissal is local.
@@ -924,7 +923,7 @@ export function DiffusionTrainPanel({
         if (stopped) {
           toast.error(
             `Uploaded ${sent} of ${files.length} files into "${res.name}", then stopped: ` +
-              `${stopped}`,
+              stopped,
           );
         } else {
           toast.success(
@@ -1405,7 +1404,7 @@ export function DiffusionTrainPanel({
           <Textarea
             value={samplePromptsText}
             placeholder={instancePrompt.trim() || "a photo in mystyle"}
-            onChange={(e) => setSamplePromptsText(e.target.value)}
+            onChange={(e) => { setSamplePromptsText(e.target.value); }}
             rows={2}
             className="min-h-0 text-xs"
           />
@@ -1457,7 +1456,7 @@ export function DiffusionTrainPanel({
           </FieldLabel>
           <Select
             value={gradCheckpoint ? "on" : "off"}
-            onValueChange={(v) => setGradCheckpoint(v === "on")}
+            onValueChange={(v) => { setGradCheckpoint(v === "on"); }}
           >
             <SelectTrigger className={selectClass} aria-label="Gradient checkpointing">
               <SelectValue />
@@ -1476,7 +1475,7 @@ export function DiffusionTrainPanel({
             </FieldLabel>
             <Select
               value={bucketing ? "on" : "off"}
-              onValueChange={(v) => setBucketing(v === "on")}
+              onValueChange={(v) => { setBucketing(v === "on"); }}
             >
               <SelectTrigger className={selectClass} aria-label="Aspect ratio buckets">
                 <SelectValue />
@@ -1495,7 +1494,7 @@ export function DiffusionTrainPanel({
             </FieldLabel>
             <Select
               value={randomFlip ? "on" : "off"}
-              onValueChange={(v) => setRandomFlip(v === "on")}
+              onValueChange={(v) => { setRandomFlip(v === "on"); }}
             >
               <SelectTrigger className={selectClass} aria-label="Random flip">
                 <SelectValue />
@@ -1527,7 +1526,7 @@ export function DiffusionTrainPanel({
             </FieldLabel>
             <Select
               value={flowShiftMode}
-              onValueChange={(v) => setFlowShiftMode(v as "default" | "custom")}
+              onValueChange={(v) => { setFlowShiftMode(v as "default" | "custom"); }}
             >
               <SelectTrigger className={selectClass} aria-label="Timestep shift">
                 <SelectValue />
@@ -1592,7 +1591,7 @@ export function DiffusionTrainPanel({
             </FieldLabel>
             <Select
               value={precision}
-              onValueChange={(v) => setPrecision(v as "bf16" | "fp16" | "no")}
+              onValueChange={(v) => { setPrecision(v as "bf16" | "fp16" | "no"); }}
             >
               <SelectTrigger className={selectClass} aria-label="Precision">
                 <SelectValue />
@@ -1613,7 +1612,7 @@ export function DiffusionTrainPanel({
             <Select
               value={compileTransformer}
               onValueChange={(v) =>
-                setCompileTransformer(v as typeof compileTransformer)
+                { setCompileTransformer(v as typeof compileTransformer); }
               }
             >
               <SelectTrigger className={selectClass} aria-label="Compile transformer">
@@ -1704,7 +1703,7 @@ export function DiffusionTrainPanel({
                 value={customBase}
                 placeholder="Repo id or local folder"
                 spellCheck={false}
-                onChange={(e) => setCustomBase(e.target.value)}
+                onChange={(e) => { setCustomBase(e.target.value); }}
                 className="h-8 text-xs"
               />
             )}
@@ -1804,7 +1803,7 @@ export function DiffusionTrainPanel({
                     <HugeiconsIcon icon={PlusSignIcon} className="size-3.5" />
                     {uploading ? "Uploading..." : "Add"}
                   </Button>
-                  <FolderPickButton disabled={uploading} onPick={() => pickFolder(dataset)} />
+                  <FolderPickButton disabled={uploading} onPick={() => { pickFolder(dataset); }} />
                 </>
               )}
             </div>
@@ -1932,7 +1931,7 @@ export function DiffusionTrainPanel({
                       dataset={dataset}
                       imageCount={selectedDataset.image_count}
                       refreshKey={gridRefresh}
-                      onBrowse={() => setGridOpen(true)}
+                      onBrowse={() => { setGridOpen(true); }}
                       onChanged={() => void refreshInfo()}
                     />
                   )}
@@ -1941,7 +1940,7 @@ export function DiffusionTrainPanel({
                       <LabelingGridToggle
                         count={selectedDataset.image_count}
                         open={gridOpen}
-                        onToggle={() => setGridOpen((o) => !o)}
+                        onToggle={() => { setGridOpen((o) => !o); }}
                       />
                       {gridOpen && (
                         <DatasetLabelingGrid
@@ -1982,7 +1981,7 @@ export function DiffusionTrainPanel({
               <Input
                 value={instancePrompt}
                 placeholder="a photo in mystyle"
-                onChange={(e) => setInstancePrompt(e.target.value)}
+                onChange={(e) => { setInstancePrompt(e.target.value); }}
                 className="h-8 text-xs"
               />
             </div>
@@ -1995,7 +1994,7 @@ export function DiffusionTrainPanel({
               value={outputDir}
               placeholder="my-style"
               spellCheck={false}
-              onChange={(e) => setOutputDir(e.target.value)}
+              onChange={(e) => { setOutputDir(e.target.value); }}
               className="h-8 text-xs"
             />
           </div>
@@ -2035,7 +2034,7 @@ export function DiffusionTrainPanel({
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={() => setViewRun(null)}
+                  onClick={() => { setViewRun(null); }}
                 >
                   Back
                 </Button>
@@ -2085,7 +2084,7 @@ export function DiffusionTrainPanel({
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => exportAdapter(viewRun.catalog_path as string)}
+                    onClick={() => { exportAdapter(viewRun.catalog_path!); }}
                   >
                     Export
                   </Button>
@@ -2219,7 +2218,7 @@ export function DiffusionTrainPanel({
                   type="button"
                   variant="destructive"
                   className="w-full"
-                  onClick={() => setStopDialogOpen(true)}
+                  onClick={() => { setStopDialogOpen(true); }}
                   disabled={stopRequested}
                 >
                   {stopRequested ? "Stopping..." : "Stop training"}
@@ -2236,7 +2235,7 @@ export function DiffusionTrainPanel({
                         variant="dark"
                         type="button"
                         className="flex-1"
-                        onClick={() => void onResume(status.job_id as string)}
+                        onClick={() => void onResume(status.job_id!)}
                         disabled={resumingJobId === status.job_id}
                       >
                         {resumingJobId === status.job_id
@@ -2248,7 +2247,7 @@ export function DiffusionTrainPanel({
                       type="button"
                       variant="outline"
                       className="flex-1"
-                      onClick={() => setDismissedJobId(status.job_id)}
+                      onClick={() => { setDismissedJobId(status.job_id); }}
                     >
                       Back to settings
                     </Button>
@@ -2287,7 +2286,7 @@ export function DiffusionTrainPanel({
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => exportAdapter(status.catalog_path as string)}
+                      onClick={() => { exportAdapter(status.catalog_path!); }}
                     >
                       Export
                     </Button>
@@ -2299,7 +2298,7 @@ export function DiffusionTrainPanel({
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => void onResume(status.job_id as string)}
+                      onClick={() => void onResume(status.job_id!)}
                       disabled={
                         !liveRunSummary?.can_resume ||
                         running ||
@@ -2324,7 +2323,7 @@ export function DiffusionTrainPanel({
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => status && setDismissedJobId(status.job_id)}
+                    onClick={() => { status && setDismissedJobId(status.job_id); }}
                   >
                     Train another
                   </Button>

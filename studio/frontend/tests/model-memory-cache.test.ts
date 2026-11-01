@@ -58,7 +58,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
-}) as typeof fetch;
+});
 
 const {
   loadModelMemorySettings,
@@ -85,7 +85,7 @@ test("a 404 is an absent route, not a failed read", async () => {
   calls = [];
   const original = globalThis.fetch;
   globalThis.fetch = (async () =>
-    new Response("{}", { status: 404 })) as typeof fetch;
+    new Response("{}", { status: 404 }));
   await assert.rejects(
     loadModelMemorySettings({ force: true }),
     (error: Error) => {
@@ -94,7 +94,7 @@ test("a 404 is an absent route, not a failed read", async () => {
     },
   );
   globalThis.fetch = (async () =>
-    new Response("boom", { status: 503 })) as typeof fetch;
+    new Response("boom", { status: 503 }));
   await assert.rejects(
     loadModelMemorySettings({ force: true }),
     (error: Error) => {
@@ -134,17 +134,17 @@ test("a displaced read neither publishes nor frees the slot", async () => {
   let issued = 0;
   globalThis.fetch = (async () => {
     issued += 1;
-    return new Promise<Response>((resolve) => {
+    return await new Promise<Response>((resolve) => {
       pending.push((body) =>
-        resolve(
+        { resolve(
           new Response(JSON.stringify(body), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           }),
-        ),
+        ); },
       );
     });
-  }) as typeof fetch;
+  });
 
   const published: boolean[] = [];
   const stop = subscribeModelMemorySettings((settings) => {
@@ -204,7 +204,7 @@ test("a failed read does not wedge the in-flight slot", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = (async () => {
     throw new Error("offline");
-  }) as typeof fetch;
+  });
   await assert.rejects(loadModelMemorySettings());
   globalThis.fetch = original;
   const after = await loadModelMemorySettings();
@@ -221,7 +221,7 @@ test("only the fields actually set are sent, so the switches save independently"
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  }) as typeof fetch;
+  });
   await updateModelMemorySettings({ keepResident: true });
   globalThis.fetch = original;
   assert.deepEqual(JSON.parse(bodies[0] ?? "{}"), { keep_resident: true });

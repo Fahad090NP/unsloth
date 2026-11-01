@@ -17,11 +17,11 @@ import {
   statusTone,
 } from "./executions-view-helpers";
 
-type ExecutionSidebarProps = {
+interface ExecutionSidebarProps {
   executions: RecipeExecutionRecord[];
   selectedExecutionId: string | null;
   onSelectExecution: (id: string) => void;
-};
+}
 
 export function ExecutionSidebar({
   executions,
@@ -51,7 +51,7 @@ export function ExecutionSidebar({
               <button
                 key={execution.id}
                 type="button"
-                onClick={() => onSelectExecution(execution.id)}
+                onClick={() => { onSelectExecution(execution.id); }}
                 className={cn(
                   "w-full rounded-lg corner-squircle border border-r-2 border-border/60 bg-card/60 p-3 text-left transition-colors",
                   selectedExecutionId === execution.id

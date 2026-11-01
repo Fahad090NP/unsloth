@@ -162,7 +162,7 @@ function StorageSection() {
       sectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
       consumeScrollTarget("library-storage");
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [consumeScrollTarget, scrollTarget]);
 
   const open = (link: LibrarySearch) => {
@@ -236,7 +236,7 @@ function StorageSection() {
                       : t("settings.library.itemCount", { count: entry.count.toLocaleString() })
                   }`}
                 >
-                  <Button variant="outline" size="sm" onClick={() => open(entry.link)}>
+                  <Button variant="outline" size="sm" onClick={() => { open(entry.link); }}>
                     {t("settings.library.storageOpen")}
                   </Button>
                 </SettingsCardRow>
@@ -344,9 +344,9 @@ function LocationsSection() {
                   size="sm"
                   disabled={moving}
                   onClick={() =>
-                    location.available === false
+                    { location.available === false
                       ? setResettingAway(location)
-                      : void move(location, null)
+                      : void move(location, null); }
                   }
                 >
                   {t("settings.library.locationReset")}
@@ -357,7 +357,7 @@ function LocationsSection() {
                   variant="outline"
                   size="sm"
                   disabled={moving}
-                  onClick={() => setPicking(location)}
+                  onClick={() => { setPicking(location); }}
                 >
                   {t("settings.resources.storage.changeAction")}
                 </Button>
@@ -435,7 +435,7 @@ export function LibraryTab() {
         label={t(labelKey)}
         value={settings[key]}
         options={CHOICES[key].map(([option, text]) => [option, t(text)])}
-        onChange={(value) => settings.set({ [key]: value } as Partial<LibrarySettings>)}
+        onChange={(value) => { settings.set({ [key]: value }); }}
       />
     </SettingsRow>
   );
@@ -445,7 +445,7 @@ export function LibraryTab() {
       <Switch
         aria-label={t(labelKey)}
         checked={settings[key]}
-        onCheckedChange={(checked) => settings.set({ [key]: checked })}
+        onCheckedChange={(checked) => { settings.set({ [key]: checked }); }}
       />
     </SettingsRow>
   );
@@ -479,7 +479,7 @@ export function LibraryTab() {
             label={t("settings.library.suggestedLimit")}
             value={String(settings.suggestedLimit)}
             options={SUGGESTED_LIMITS.map((limit) => [String(limit), String(limit)])}
-            onChange={(value) => settings.set({ suggestedLimit: Number(value) })}
+            onChange={(value) => { settings.set({ suggestedLimit: Number(value) }); }}
           />
         </SettingsRow>
       </SettingsSection>
@@ -492,7 +492,7 @@ export function LibraryTab() {
           const label = t(TAB_LABELS[tab]);
           const visibility = settings.tabs[tab] ?? "always";
           const setVisibility = (next: LibraryTabVisibility) =>
-            settings.set({ tabs: { ...settings.tabs, [tab]: next } });
+            { settings.set({ tabs: { ...settings.tabs, [tab]: next } }); };
           return (
             <SettingsRow key={tab} label={label}>
               {CONTENT_TABS.has(tab) ? (
@@ -500,13 +500,13 @@ export function LibraryTab() {
                   label={label}
                   value={visibility}
                   options={TAB_VISIBILITY.map(([option, text]) => [option, t(text)])}
-                  onChange={(value) => setVisibility(value as LibraryTabVisibility)}
+                  onChange={(value) => { setVisibility(value as LibraryTabVisibility); }}
                 />
               ) : (
                 <Switch
                   aria-label={label}
                   checked={visibility !== "hidden"}
-                  onCheckedChange={(checked) => setVisibility(checked ? "always" : "hidden")}
+                  onCheckedChange={(checked) => { setVisibility(checked ? "always" : "hidden"); }}
                 />
               )}
             </SettingsRow>

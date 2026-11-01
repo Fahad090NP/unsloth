@@ -49,7 +49,7 @@ export async function cancelPromptUpsamplerDownload(): Promise<void> {
 export async function previewEnhancedPrompt(
   body: PromptUpsamplerPreviewRequest,
 ): Promise<{ enhanced_prompt: string }> {
-  return parseJson(
+  return await parseJson(
     await authFetch(PROMPT_UPSAMPLER_ROUTES.preview, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -73,7 +73,7 @@ export function useHoverFlyout(
       };
       window.addEventListener("pointermove", followAim);
       stopAimRef.current = () =>
-        window.removeEventListener("pointermove", followAim);
+        { window.removeEventListener("pointermove", followAim); };
       closeAfterGrace();
     },
     [cancel, closeAfterGrace, contentRef, dismiss, open],

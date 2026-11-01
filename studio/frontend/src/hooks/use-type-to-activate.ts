@@ -46,7 +46,7 @@ export function useTypeToActivate(): void {
       target?.focus();
     };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    return () => { window.removeEventListener("keydown", handler); };
   }, [settingsOpen]);
 }
 

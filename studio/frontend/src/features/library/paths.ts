@@ -6,7 +6,7 @@ export function parentFolder(path: string): string | undefined {
   const trimmed = /^([A-Za-z]:)?[\\/]$/.test(path) ? path : path.replace(/[\\/]+$/, "");
   const cut = Math.max(trimmed.lastIndexOf("/"), trimmed.lastIndexOf("\\"));
   if (cut < 0 || cut === trimmed.length - 1) return undefined;
-  const separator = trimmed[cut]!;
+  const separator = trimmed[cut];
   const parent = trimmed.slice(0, cut);
   if (parent === "") return separator === "/" ? "/" : undefined;
   if (/^[A-Za-z]:$/.test(parent)) return parent + separator;

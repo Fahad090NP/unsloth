@@ -57,8 +57,7 @@ export function buildValidatorColumn(
     const targetConfig = targetName ? nameToConfig?.get(targetName) : null;
     let codeLang = config.code_lang;
     if (
-      targetConfig &&
-      targetConfig.kind === "llm" &&
+      targetConfig?.kind === "llm" &&
       targetConfig.llm_type === "code"
     ) {
       const targetLang = (targetConfig.code_lang ?? "").trim();

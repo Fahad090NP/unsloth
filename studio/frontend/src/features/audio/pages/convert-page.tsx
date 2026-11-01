@@ -130,7 +130,7 @@ function ConvertInputs({
             ariaLabel="Speech or singing"
             value={convert.mode}
             onValueChange={(mode) =>
-              store.setMode(mode === "singing" ? "singing" : "speech")
+              { store.setMode(mode === "singing" ? "singing" : "speech"); }
             }
             disabled={disabled}
             fit={true}
@@ -182,7 +182,7 @@ function ConvertInputs({
                   ? "Semitones added after matching the target's pitch, e.g. +12 to sing an octave up."
                   : "Semitones. +12 is an octave up; try -12 to +12 when the target voice is much lower or higher."
               }
-              onChange={(next) => store.setPitch(Math.round(next))}
+              onChange={(next) => { store.setPitch(Math.round(next)); }}
             />
           )}
         </div>
@@ -234,7 +234,7 @@ function SourceTextField({
         value={convert.sourceText}
         disabled={transcriber.transcribing}
         aria-busy={transcriber.transcribing}
-        onChange={(event) => store.setSourceText(event.target.value)}
+        onChange={(event) => { store.setSourceText(event.target.value); }}
         placeholder="Type the words in the recording, or press Transcribe."
         className="min-h-16"
       />
@@ -368,7 +368,7 @@ function useSourceSide(clip: AudioGalleryClip | null): {
             if (savedUrl) return fetchAudioBlob(savedUrl);
             throw error;
           })
-        : fetchAudioBlob(savedUrl as string);
+        : fetchAudioBlob(savedUrl!);
     fetchSide()
       .then((blob) => {
         if (cancelled) return;
@@ -421,7 +421,7 @@ export function ConvertOutput({
           b={{ label: "Converted", src }}
           side={compareSide === "source" ? "a" : "b"}
           onSideChange={(side) =>
-            setCompareSide(side === "a" ? "source" : "converted")
+            { setCompareSide(side === "a" ? "source" : "converted"); }
           }
           playerRef={focusRef}
         />

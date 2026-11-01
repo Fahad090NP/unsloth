@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Call = { url: string; method: string; body: unknown };
+interface Call { url: string; method: string; body: unknown }
 
 function fakeServer(respond: (call: Call) => number) {
   const calls: Call[] = [];
@@ -20,7 +20,7 @@ function fakeServer(respond: (call: Call) => number) {
     const status = respond(call);
     return new Promise<Response>((resolve) => {
       release.push(() =>
-        resolve(new Response(status === 204 ? null : "{}", { status })),
+        { resolve(new Response(status === 204 ? null : "{}", { status })); },
       );
     });
   };

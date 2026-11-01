@@ -20,7 +20,7 @@ const ORIGINAL_TYPES: Record<string, string> = {
 
 function originalUpload(file: File): File | null {
   if (ORIGINAL_EXTENSIONS.test(file.name)) return file;
-  const type = file.type.split(";", 1)[0]!.trim().toLowerCase();
+  const type = file.type.split(";", 1)[0].trim().toLowerCase();
   const extension = Object.hasOwn(ORIGINAL_TYPES, type) ? ORIGINAL_TYPES[type] : undefined;
   return extension ? new File([file], `${file.name || "document"}.${extension}`, { type: file.type }) : null;
 }
@@ -46,7 +46,7 @@ export async function withAttachmentOriginal(
       : null;
   if (!upload) return complete;
   // A temporary chat keeps its files in memory, python tool or not: it promises nothing is saved.
-  if (temporary) return { ...complete, file: pending.file } as CompleteAttachment;
+  if (temporary) return { ...complete, file: pending.file };
   try {
     const original: ChatAttachmentOriginal = await uploadChatAttachmentOriginal(upload, epoch);
     return { ...complete, original } as CompleteAttachment;
@@ -59,19 +59,19 @@ export async function persistAttachmentOriginals(
   attachments: readonly CompleteAttachment[] | undefined,
   epoch: number,
 ): Promise<CompleteAttachment[]> {
-  return Promise.all(
+  return await Promise.all(
     (attachments ?? []).map(async (attachment) => {
-      const { file, ...rest } = attachment as CompleteAttachment & { file?: unknown };
+      const { file, ...rest } = attachment;
       if (file === undefined) return attachment;
       // A file was kept only because a send wanted it stored (a python turn keeps any document).
       const upload =
         file instanceof File && !attachmentOriginal(rest) ? (originalUpload(file) ?? file) : null;
-      if (!upload) return rest as CompleteAttachment;
+      if (!upload) return rest;
       try {
         const original: ChatAttachmentOriginal = await uploadChatAttachmentOriginal(upload, epoch);
         return { ...rest, original } as CompleteAttachment;
       } catch {
-        return rest as CompleteAttachment;
+        return rest;
       }
     }),
   );

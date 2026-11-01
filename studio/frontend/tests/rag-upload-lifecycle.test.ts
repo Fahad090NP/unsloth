@@ -16,7 +16,7 @@ type ScopeOverride =
   | RagDocumentScope
   | Promise<RagDocumentScope | null>
   | (() => Promise<RagDocumentScope | null>);
-type Hook = {
+interface Hook {
   documents: RagDocument[];
   uploading: boolean;
   hasIndexing: boolean;
@@ -24,7 +24,7 @@ type Hook = {
   retry: (documentId: string) => Promise<void>;
   canRetry: (documentId: string) => boolean;
   refresh: (opts?: { quiet?: boolean }) => Promise<boolean>;
-};
+}
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -48,7 +48,7 @@ function harness(
 ) {
   let refusals = options.failUploads ?? 0;
   const slots: unknown[] = [];
-  const effects: Array<() => void> = [];
+  const effects: (() => void)[] = [];
   let cursor = 0;
   const errors: string[] = [];
   const infos: string[] = [];
@@ -138,7 +138,7 @@ function harness(
         streamJobEvents:
           options.events ??
           async function* () {
-            yield { type: "complete", num_chunks: 10 } as JobEvent;
+            yield { type: "complete", num_chunks: 10 };
           },
         getJob:
           options.getJob ??
@@ -246,7 +246,7 @@ test("an ended event stream keeps the file indexing until the job completes", as
       reads += 1;
       return reads === 1
         ? { id: "job", documentId: "doc", status: "running", progress: 0.4 }
-        : completion.promise;
+        : await completion.promise;
     },
   });
   try {
@@ -352,10 +352,10 @@ test("a refused upload stays as a failed chip and Retry sends the same file agai
     const failed = hook.documents[0];
     assert.equal(failed?.status, "failed");
     assert.equal(failed?.error, "Server busy");
-    assert.equal(hook.canRetry(failed!.id), true);
+    assert.equal(hook.canRetry(failed.id), true);
     assert.deepEqual(app.errors, ["Couldn't upload report.pdf"]);
 
-    await hook.retry(failed!.id);
+    await hook.retry(failed.id);
     await flush();
     hook = app.render();
     assert.deepEqual(app.uploads, ["thread"]);
@@ -404,7 +404,7 @@ test("an upload begun without a scope stops at the chat the user left", async ()
     let hook = app.render();
     await flush();
     const materialized = deferred<RagDocumentScope>();
-    const pending = hook.upload([report()], async () => materialized.promise);
+    const pending = hook.upload([report()], async () => await materialized.promise);
     await flush();
     app.setScope({ type: "thread", threadId: "other" });
     hook = app.render();
@@ -440,7 +440,7 @@ test("a new chat's id committed after its upload finished keeps tracking the job
       await new Promise<void>((resolve, reject) => {
         indexed.promise.then(resolve);
         streamSignal?.addEventListener("abort", () =>
-          reject(new DOMException("Fetch is aborted", "AbortError")),
+          { reject(new DOMException("Fetch is aborted", "AbortError")); },
         );
       });
       done = true;
@@ -487,7 +487,7 @@ test("leaving a new chat for another one after its upload finished drops the job
       yield { type: "progress", progress: 0.4, stage: "captioning" };
       await new Promise<void>((_resolve, reject) => {
         streamSignal?.addEventListener("abort", () =>
-          reject(new DOMException("Fetch is aborted", "AbortError")),
+          { reject(new DOMException("Fetch is aborted", "AbortError")); },
         );
       });
     },
@@ -530,7 +530,7 @@ test("a scope passed to an unscoped hook keeps its job when that scope commits l
       await new Promise<void>((resolve, reject) => {
         indexed.promise.then(resolve);
         streamSignal?.addEventListener("abort", () =>
-          reject(new DOMException("Fetch is aborted", "AbortError")),
+          { reject(new DOMException("Fetch is aborted", "AbortError")); },
         );
       });
       yield { type: "complete", num_chunks: 10 };

@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 
-export type GeneratedImageOverlayState = {
+export interface GeneratedImageOverlayState {
   image: string;
   title: string;
   metadata: string;
@@ -21,13 +21,13 @@ export type GeneratedImageOverlayState = {
   openaiResponseId?: string;
   openaiReasoningItem?: unknown;
   threadId?: string | null;
-};
+}
 
-type GeneratedImageOverlayContextValue = {
+interface GeneratedImageOverlayContextValue {
   overlay: GeneratedImageOverlayState | null;
   openOverlay: (overlay: GeneratedImageOverlayState) => void;
   closeOverlay: () => void;
-};
+}
 
 const GeneratedImageOverlayContext =
   createContext<GeneratedImageOverlayContextValue | null>(null);

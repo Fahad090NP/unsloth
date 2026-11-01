@@ -3,12 +3,12 @@
 
 // Plain module so the node suite can drive it.
 
-export type ChatModelLoadedInput = {
+export interface ChatModelLoadedInput {
   checkpoint: string;
   modelLoading?: boolean;
   isExternalModel: boolean;
   residentCheckpoint: string | null | undefined;
-};
+}
 
 /** Resident, not merely picked: other loads evict chat. `undefined` (no status yet) = loaded. */
 export function chatModelLoaded({

@@ -10,12 +10,12 @@ import { isWebUrl } from "./address";
 
 async function invoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   const core = await import("@tauri-apps/api/core");
-  return core.invoke<T>(command, args);
+  return await core.invoke<T>(command, args);
 }
 
 /** `marked` is false when the file couldn't be marked as downloaded from the internet (FAT, exFAT, some
  *  network drives), null when nothing marks it. */
-export type SavedNativeDownload = { id: string; name: string; marked: boolean | null };
+export interface SavedNativeDownload { id: string; name: string; marked: boolean | null }
 
 /** Null if cancelled. A website file (`source`) is quarantine-marked so Gatekeeper/SmartScreen check it. */
 export async function saveNativeDownload(
@@ -32,7 +32,7 @@ export async function saveNativeDownload(
   // href is ASCII (punycode host, escaped path), as a header value must be.
   const href = source && isWebUrl(source) ? safeHref(source) : null;
   if (href) headers["x-unsloth-source"] = href;
-  return core.invoke<SavedNativeDownload | null>("browser_download_save", new Uint8Array(await blob.arrayBuffer()), {
+  return await core.invoke<SavedNativeDownload | null>("browser_download_save", new Uint8Array(await blob.arrayBuffer()), {
     headers,
   });
 }
@@ -57,10 +57,10 @@ export function openNativeDownload(id: string): Promise<void> {
 /** Whether each download is still where it was saved; all true outside the desktop app. */
 export async function nativeDownloadsExist(ids: string[]): Promise<boolean[]> {
   if (!isTauri || ids.length === 0) return ids.map(() => true);
-  return invoke<boolean[]>("browser_download_exists", { ids });
+  return await invoke<boolean[]>("browser_download_exists", { ids });
 }
 
-export type DownloadFolder = { path: string; custom: boolean };
+export interface DownloadFolder { path: string; custom: boolean }
 
 export function nativeDownloadFolder(): Promise<DownloadFolder> {
   return invoke<DownloadFolder>("browser_download_folder");

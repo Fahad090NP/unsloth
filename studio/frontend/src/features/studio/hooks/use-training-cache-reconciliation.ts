@@ -29,10 +29,10 @@ import { toast } from "@/lib/toast";
 import { useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 
-type ModelCacheReference = {
+interface ModelCacheReference {
   localPath: string | null;
   modelFormat: ModelInventoryFormat | null;
-};
+}
 
 function findDatasetReference(
   rows: readonly CachedDatasetRepo[],

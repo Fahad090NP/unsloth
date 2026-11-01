@@ -91,7 +91,7 @@ Object.assign(globalThis, {
   },
 });
 
-type Call = { command: string; args?: Record<string, unknown> };
+interface Call { command: string; args?: Record<string, unknown> }
 const calls: Call[] = [];
 let captureDone: ((bytes: ArrayBuffer) => void) | null = null;
 (globalThis as { nativeViewCall?: unknown }).nativeViewCall = (
@@ -411,7 +411,7 @@ test("a finished download is listed and reported after its tab closed, and warns
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId as string;
+    const tabId = useBrowserStore.getState().activeTabId!;
     useBrowserStore.getState().closeTab(tabId);
     await frame();
     const seen: { level: string; message: string }[] = [];
@@ -462,7 +462,7 @@ test("an approved download runs on the Downloads button until it lands or its sa
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId as string;
+    const tabId = useBrowserStore.getState().activeTabId!;
     g.nativeViewSeen = [];
     g.nativeViewActivity = [];
     const prompt = { kind: "downloadPrompt", tabId, site: "https://example.org/", name: "a.zip" };
@@ -500,7 +500,7 @@ test("two downloads of one address run apart: the first to land doesn't end the 
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId as string;
+    const tabId = useBrowserStore.getState().activeTabId!;
     const url = "https://example.org/same.zip";
     g.nativeViewSeen = [];
     g.nativeViewActivity = [];
@@ -534,7 +534,7 @@ test("a download that finished while its prompt was open doesn't keep spinning",
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId as string;
+    const tabId = useBrowserStore.getState().activeTabId!;
     const url = "https://example.org/big.zip";
     g.nativeViewSeen = [];
     g.nativeViewActivity = [];
@@ -574,7 +574,7 @@ test("with a Downloads button on screen, a download shows there, not as a toast"
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId as string;
+    const tabId = useBrowserStore.getState().activeTabId!;
     const seen: { level: string; message: string }[] = [];
     g.nativeViewSeen = seen;
     const event = { kind: "download", tabId, url: "https://example.com/b.zip", name: "b.zip", path: null, size: 3 };
@@ -606,7 +606,7 @@ test("a native page and its downloads begun beside a temporary chat stay tempora
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId as string;
+    const tabId = useBrowserStore.getState().activeTabId!;
     const visits: { url: string; temporary: boolean }[] = [];
     const seen: { level: string; message: string; temporary?: boolean }[] = [];
     g.nativeViewVisits = visits;
@@ -656,7 +656,7 @@ test("a native page begun beside a normal chat is kept in history though its tab
     useBrowserStore.getState().openUrl("https://example.net/", { newTab: true });
     useChatRuntimeStore.getState().setIncognito(false);
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId as string;
+    const tabId = useBrowserStore.getState().activeTabId!;
     const visits: { url: string; temporary: boolean }[] = [];
     g.nativeViewVisits = visits;
     const load = (url: string, loading: boolean) =>
@@ -698,7 +698,7 @@ test("a native page begun beside a temporary chat keeps it through a redirect an
   try {
     useBrowserStore.getState().openUrl("https://example.edu/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId as string;
+    const tabId = useBrowserStore.getState().activeTabId!;
     const visits: { url: string; temporary: boolean }[] = [];
     g.nativeViewVisits = visits;
     const load = (url: string, loading: boolean) =>
@@ -739,7 +739,7 @@ test("a temporary chat's hidden page stays temporary when it navigates while ano
   runtime.setIncognito(true);
   store.showChat("single:temporary-hidden");
   store.openUrl("https://private.example/");
-  const tabId = useBrowserStore.getState().activeTabId as string;
+  const tabId = useBrowserStore.getState().activeTabId!;
   const stop = startNativeViews();
   try {
     await frame();
@@ -774,7 +774,7 @@ test("a new address asked for beside a temporary chat stays temporary when its n
   try {
     useBrowserStore.getState().openUrl("https://example.info/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId as string;
+    const tabId = useBrowserStore.getState().activeTabId!;
     const visits: { url: string; temporary: boolean }[] = [];
     g.nativeViewVisits = visits;
     const load = (url: string, loading: boolean) =>

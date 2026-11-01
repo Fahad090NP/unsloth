@@ -73,7 +73,7 @@ export async function listTrainingRuns(
     `/api/train/runs?limit=${limit}&offset=${offset}`,
     { signal },
   );
-  return parseJson<TrainingRunListResponse>(response);
+  return await parseJson<TrainingRunListResponse>(response);
 }
 
 export async function getTrainingRun(
@@ -84,7 +84,7 @@ export async function getTrainingRun(
     `/api/train/runs/${encodeURIComponent(runId)}`,
     { signal },
   );
-  return parseJson<TrainingRunDetailResponse>(response);
+  return await parseJson<TrainingRunDetailResponse>(response);
 }
 
 export async function deleteTrainingRun(
@@ -96,7 +96,7 @@ export async function deleteTrainingRun(
     `/api/train/runs/${encodeURIComponent(runId)}${query}`,
     { method: "DELETE", signal: options?.signal },
   );
-  return parseJson<TrainingRunDeleteResponse>(response);
+  return await parseJson<TrainingRunDeleteResponse>(response);
 }
 
 export async function renameTrainingRun(
@@ -113,5 +113,5 @@ export async function renameTrainingRun(
       signal,
     },
   );
-  return parseJson<TrainingRunSummary>(response);
+  return await parseJson<TrainingRunSummary>(response);
 }

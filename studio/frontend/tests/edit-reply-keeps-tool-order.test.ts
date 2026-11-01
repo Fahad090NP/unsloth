@@ -6,14 +6,14 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Exported = {
+interface Exported {
   headId: string | null;
   messages: { parentId: string | null; message: Record<string, unknown> }[];
-};
+}
 
 type Part = Record<string, unknown>;
 
-type Module = {
+interface Module {
   extractTaggedText: (content: unknown) => string;
   updateThreadMessage: (args: {
     thread: { export: () => Exported; import: (data: Exported) => void };
@@ -22,7 +22,7 @@ type Module = {
     newText: string;
     isIncognito: boolean;
   }) => Promise<Part[]>;
-};
+}
 
 const SEARCH: Part = {
   type: "tool-call",

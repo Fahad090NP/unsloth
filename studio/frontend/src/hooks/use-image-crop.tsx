@@ -42,14 +42,14 @@ export function useImageCrop(
     },
     [onChange, picture],
   );
-  const openCrop = useCallback(() => setCropFor(value), [value]);
+  const openCrop = useCallback(() => { setCropFor(value); }, [value]);
   const cropDialog =
     value !== null && cropFor === value ? (
       <ReferenceImageEditor
         open={true}
         picture={picture}
         subject={subject}
-        onOpenChange={(open) => setCropFor(open ? value : null)}
+        onOpenChange={(open) => { setCropFor(open ? value : null); }}
         onApply={apply}
       />
     ) : null;

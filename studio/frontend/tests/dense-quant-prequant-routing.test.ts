@@ -300,7 +300,7 @@ test("a transcription row judged on RAM names RAM as the budget's device", () =>
 test("the over-budget text never shows the size below the budget it exceeds", () => {
   const text = (id: string, gpuGb: number) => {
     const fit = curatedArtifactFit(id, IMAGE_CATALOG, onCard(gpuGb, ["int8", "fp8"]));
-    assert.ok(fit?.sizeGb !== undefined && fit.fits === false);
+    assert.ok(fit?.sizeGb !== undefined && !fit.fits);
     const budget = curatedBudget(fit);
     assert.ok(budget);
     return curatedBudgetText(Math.round(fit.sizeGb), gpuGb, budget);
@@ -313,7 +313,7 @@ test("the over-budget text never shows the size below the budget it exceeds", ()
     gpuGb: 1,
     systemRamGb: 5.7,
   });
-  assert.ok(whisper?.sizeGb !== undefined && whisper.fits === false);
+  assert.ok(whisper?.sizeGb !== undefined && !whisper.fits);
   const whisperBudget = curatedBudget(whisper);
   assert.ok(whisperBudget);
   assert.equal(

@@ -14,7 +14,7 @@ function thinkingDefaultOff(modelId: string): boolean {
     .replace(/\\/g, "/")
     .split("/")
     .reduceRight<RegExpMatchArray | null>(
-      (found, seg) => found ?? seg.match(SIZE_RE),
+      (found, seg) => found ?? (SIZE_RE.exec(seg)),
       null,
     );
   if (!sizeMatch) return false;
@@ -78,15 +78,9 @@ test("all four copies of the gate pattern stay in sync", () => {
   const here = path.dirname(fileURLToPath(import.meta.url));
   const read = (rel: string) => readFileSync(path.join(here, rel), "utf8");
   const patterns = [
-    read("../src/features/chat/hooks/use-chat-model-runtime.ts").match(
-      /const sizeRe = \/(.+?)\/;/,
-    ),
-    read("../src/features/chat/lib/apply-inference-status-to-store.ts").match(
-      /const sizeRe = \/(.+?)\/;/,
-    ),
-    read("../../backend/core/inference/llama_cpp.py").match(
-      /size_re = r"(.+?)"\r?\n/,
-    ),
+    /const sizeRe = \/(.+?)\/;/.exec(read("../src/features/chat/hooks/use-chat-model-runtime.ts")),
+    /const sizeRe = \/(.+?)\/;/.exec(read("../src/features/chat/lib/apply-inference-status-to-store.ts")),
+    /size_re = r"(.+?)"\r?\n/.exec(read("../../backend/core/inference/llama_cpp.py")),
   ];
   for (const found of patterns) assert.ok(found, "size gate pattern not found");
   const expected = SIZE_RE.source;

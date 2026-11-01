@@ -27,7 +27,7 @@ function threadIdsOf(chat: SidebarItem): string[] {
 
 function remember(key: string, value: ChatContents): void {
   cache.set(key, value);
-  if (cache.size > MAX_CACHED) cache.delete(cache.keys().next().value as string);
+  if (cache.size > MAX_CACHED) cache.delete(cache.keys().next().value!);
 }
 
 function needsRead(chat: SidebarItem): boolean {
@@ -73,7 +73,7 @@ async function readContents(chats: SidebarItem[]): Promise<void> {
 export function useChatContents(chats: readonly SidebarItem[]): ReadonlyMap<string, ChatContents> {
   const [version, setVersion] = useState(0);
   useEffect(() => {
-    const listener = () => setVersion((v) => v + 1);
+    const listener = () => { setVersion((v) => v + 1); };
     listeners.add(listener);
     return () => {
       listeners.delete(listener);

@@ -187,7 +187,7 @@ export function useRagDocuments(
         error?: string | null,
         numChunks?: number | null,
       ) => {
-        if (stale()) return forget();
+        if (stale()) { forget(); return; }
         if (status !== "failed") retryItems.current.delete(documentId);
         if (status === "cancelled") {
           sigByDocId.current.delete(documentId);
@@ -217,7 +217,7 @@ export function useRagDocuments(
         // Past the shared stream budget in rag-api, streamJobEvents throws and this falls back to polling.
         try {
           for await (const ev of streamJobEvents(jobId, controller.signal)) {
-            if (stale()) return forget();
+            if (stale()) { forget(); return; }
             if (ev.type === "progress") {
               patchDoc(documentId, {
                 status: "running",
@@ -235,7 +235,7 @@ export function useRagDocuments(
               return;
             }
           }
-          if (stale()) return forget();
+          if (stale()) { forget(); return; }
           const job = await getJob(jobId, controller.signal);
           const terminal = terminalJobStatus(job.status);
           if (terminal) {
@@ -251,16 +251,16 @@ export function useRagDocuments(
         try {
           while (!stale()) {
             const job = await getJob(jobId, controller.signal);
-            if (stale()) return forget();
+            if (stale()) { forget(); return; }
             const terminal = terminalJobStatus(job.status);
             if (terminal) {
-              return finish(
+              finish(
                 terminal,
                 terminal === "failed"
                   ? (job.error ?? "Indexing failed")
                   : job.error,
                 job.numChunks,
-              );
+              ); return;
             }
             patchDoc(documentId, {
               status: job.status === "running" ? "running" : "pending",
@@ -300,8 +300,7 @@ export function useRagDocuments(
           const merged = rows.map((row) => {
             const tracked = prevById.get(row.id);
             const next =
-              tracked &&
-              tracked.progress != null &&
+              tracked?.progress != null &&
               row.status !== "completed"
                 ? { ...row, progress: tracked.progress, stage: tracked.stage }
                 : row;
@@ -396,14 +395,14 @@ export function useRagDocuments(
       // Keep synchronous so StrictMode's setup/cleanup replay cannot cancel the only refresh.
       setDocuments([]);
       if (scope) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         void (scope.type === "project"
           ? loadProjectSources(scope.projectId)
           : refresh());
       } else {
         // Left set, the composer reads the list as unknown and holds every send.
         refreshInFlight.current = false;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         setLoading(false);
       }
     } else if (prev === null && scope && !uploadInFlightRef.current) {
@@ -430,7 +429,7 @@ export function useRagDocuments(
       setWorkElsewhere(0);
       return;
     }
-    const read = () => setWorkElsewhere(projectWorkCount(workScopeId));
+    const read = () => { setWorkElsewhere(projectWorkCount(workScopeId)); };
     read();
     // Before the reconcile below, or an event fired ahead of this listener would be missed.
     window.addEventListener(PROJECT_WORK_CHANGED_EVENT, read);
@@ -457,7 +456,7 @@ export function useRagDocuments(
         void refresh({ quiet: true });
       }
     }, 4000);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopeKey, hasIndexing]);
 
@@ -474,7 +473,7 @@ export function useRagDocuments(
     subscribeProjectSourcesBroadcast();
     window.addEventListener(PROJECT_SOURCES_CHANGED_EVENT, onChanged);
     return () =>
-      window.removeEventListener(PROJECT_SOURCES_CHANGED_EVENT, onChanged);
+      { window.removeEventListener(PROJECT_SOURCES_CHANGED_EVENT, onChanged); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectScopeId]);
 
@@ -579,8 +578,8 @@ export function useRagDocuments(
         noteProjectWork(uploadingProjectId, 1);
       }
       try {
-        const fresh: Array<{ tempId: string; item: RagUploadItem }> = [];
-        const entries: Array<File | RagUploadItem> = Array.isArray(files)
+        const fresh: { tempId: string; item: RagUploadItem }[] = [];
+        const entries: (File | RagUploadItem)[] = Array.isArray(files)
           ? files
           : Array.from(files);
         for (const entry of entries) {

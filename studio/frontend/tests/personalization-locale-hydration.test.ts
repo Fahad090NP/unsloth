@@ -9,26 +9,26 @@ import test from "node:test";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 import { sanitizeCustomization } from "../src/features/settings/stores/appearance-custom-store.ts";
 
-type Slot = {
+interface Slot {
   value?: unknown;
   deps?: readonly unknown[];
   cleanup?: unknown;
   set?: boolean;
-};
+}
 
 function runCleanup(cleanup: unknown): void {
   if (typeof cleanup === "function") (cleanup as () => void)();
 }
 
-type Profile = {
+interface Profile {
   displayName: string;
   nickname: string;
   avatarDataUrl: string | null;
   avatarShape: "circle" | "rounded";
   showGreetingSloth: boolean;
-};
+}
 
-type SavedPayload = {
+interface SavedPayload {
   version: number;
   profile: Profile;
   appearance: {
@@ -37,7 +37,7 @@ type SavedPayload = {
     language: string | null;
     customization: Record<string, unknown>;
   };
-};
+}
 
 const HOOK_URL = new URL(
   "../src/features/profile/hooks/use-personalization-sync.ts",
@@ -263,7 +263,7 @@ function setup(
         // caller asking the store to bound it.
         if (localeResult === "stalled") {
           if (typeof options?.timeoutMs !== "number") {
-            return new Promise<string>(() => {});
+            return await new Promise<string>(() => {});
           }
           return "failed";
         }
@@ -294,7 +294,7 @@ function setup(
       profile = { ...profile, displayName };
     },
     render() {
-      host.flush(() => usePersonalizationSync(true));
+      host.flush(() => { usePersonalizationSync(true); });
     },
   };
 }

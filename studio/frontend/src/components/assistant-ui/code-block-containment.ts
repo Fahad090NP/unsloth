@@ -45,6 +45,6 @@ export const applyCodeBlockContainment = (
 };
 
 export const watchCodeBlockContainmentOverride = (
-  scope: Record<string, unknown> = globalThis as Record<string, unknown>,
+  scope: Record<string, unknown> = globalThis,
   apply: () => CodeBlockContainmentMode = applyCodeBlockContainment,
 ): boolean => installCodeBlockContainmentWatcher(scope, apply);

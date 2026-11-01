@@ -67,14 +67,14 @@ type SheetKind =
   | "expression"
   | "note";
 type RootSheetView = Exclude<SheetView, "root">;
-type RootGroup = {
+interface RootGroup {
   kind: RootSheetView;
   title: string;
   description: string;
   icon: typeof Database02Icon;
-};
+}
 
-type BlockSheetProps = {
+interface BlockSheetProps {
   container: HTMLDivElement | null;
   sheetView: SheetView;
   onViewChange: (sheetView: SheetView) => void;
@@ -95,13 +95,13 @@ type BlockSheetProps = {
   copied: boolean;
   onCopy: () => void;
   onImport: () => void;
-};
+}
 
 export const RECIPE_BLOCK_DND_MIME = "application/x-recipe-studio-block";
-export type RecipeBlockDragPayload = {
+export interface RecipeBlockDragPayload {
   kind: SheetKind;
   type: BlockType;
-};
+}
 
 function getSheetTitle(sheetView: SheetView): string {
   if (sheetView === "root") {
@@ -274,7 +274,7 @@ export function BlockSheet({
   const noteBlocks = useMemo(() => getBlocksForKind("note"), []);
   const seedBlocks = useMemo(() => getBlocksForKind("seed"), []);
   const isControlled = typeof open === "boolean";
-  const sheetOpen = isControlled ? (open as boolean) : uncontrolledOpen;
+  const sheetOpen = isControlled ? (open) : uncontrolledOpen;
   const normalizedSearch = search.trim().toLowerCase();
   const hasSearch = normalizedSearch.length > 0;
   const isProcessorView = sheetView === "processor";
@@ -455,7 +455,7 @@ export function BlockSheet({
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  onClick={() => onViewChange("root")}
+                  onClick={() => { onViewChange("root"); }}
                   aria-label="Back to step groups"
                   title="Back to step groups"
                 >
@@ -471,7 +471,7 @@ export function BlockSheet({
               />
               <Input
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => { setSearch(event.target.value); }}
                 placeholder="Search steps..."
                 className="corner-squircle h-9 pl-8"
                 aria-label="Search steps"
@@ -504,7 +504,7 @@ export function BlockSheet({
                         size="sm"
                         variant="ghost"
                         className="corner-squircle justify-start px-0 text-primary hover:bg-transparent hover:text-primary/80"
-                        onClick={() => onViewChange("seed")}
+                        onClick={() => { onViewChange("seed"); }}
                       >
                         Start with source data
                       </Button>
@@ -523,7 +523,7 @@ export function BlockSheet({
                     draggable={true}
                     onDragStart={buildDragStart(item.kind, item.type)}
                     trailing={getTrailing()}
-                    onClick={() => onBlockClick(item.kind, item.type)}
+                    onClick={() => { onBlockClick(item.kind, item.type); }}
                   />
                 ))}
               {isRootView &&
@@ -603,10 +603,10 @@ export function BlockSheet({
                       trailing={getTrailing()}
                       badge="Start here"
                       onClick={() =>
-                        onBlockClick(
+                        { onBlockClick(
                           featuredSeedBlock.kind,
                           featuredSeedBlock.type,
-                        )
+                        ); }
                       }
                     />
                   </div>
@@ -648,7 +648,7 @@ export function BlockSheet({
                     draggable={true}
                     onDragStart={buildDragStart(item.kind, item.type)}
                     trailing={getTrailing()}
-                    onClick={() => onBlockClick(item.kind, item.type)}
+                    onClick={() => { onBlockClick(item.kind, item.type); }}
                   />
                 ))}
               {isScopedBlockView &&
@@ -674,7 +674,7 @@ export function BlockSheet({
                     draggable={true}
                     onDragStart={buildDragStart(item.kind, item.type)}
                     trailing={getTrailing()}
-                    onClick={() => onBlockClick(item.kind, item.type)}
+                    onClick={() => { onBlockClick(item.kind, item.type); }}
                   />
                 ))}
               {isScopedBlockView &&
@@ -688,7 +688,7 @@ export function BlockSheet({
                     draggable={true}
                     onDragStart={buildDragStart(item.kind, item.type)}
                     trailing={getTrailing()}
-                    onClick={() => onBlockClick(item.kind, item.type)}
+                    onClick={() => { onBlockClick(item.kind, item.type); }}
                   />
                 ))}
               {isScopedBlockView &&
@@ -704,7 +704,7 @@ export function BlockSheet({
                       draggable={true}
                       onDragStart={buildDragStart(item.kind, item.type)}
                       trailing={getTrailing()}
-                      onClick={() => onBlockClick(item.kind, item.type)}
+                      onClick={() => { onBlockClick(item.kind, item.type); }}
                     />
                   ),
                 )}

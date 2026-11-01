@@ -38,7 +38,7 @@ export class AudioAttachmentAdapter implements AttachmentAdapter {
     const state = useChatRuntimeStore.getState();
     const checkpoint = state.params.checkpoint;
     const activeModel = state.models.find((m) => m.id === checkpoint);
-    const modelLoaded = !!checkpoint && !state.modelLoading;
+    const modelLoaded = Boolean(checkpoint) && !state.modelLoading;
     let unavailableReason: string | null = null;
     if (modelLoaded && !activeModel?.hasAudioInput) {
       // Provider models have no `models` row, so parse the id instead of showing external:: raw.

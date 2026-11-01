@@ -59,7 +59,7 @@ export function S3ConfigForm() {
         <Input
           id="s3-bucket"
           value={config.bucket}
-          onChange={(e) => update({ bucket: e.target.value })}
+          onChange={(e) => { update({ bucket: e.target.value }); }}
           placeholder={t("studio.dataset.s3.bucketPlaceholder")}
         />
       </div>
@@ -72,7 +72,7 @@ export function S3ConfigForm() {
           <Input
             id="s3-region"
             value={config.region}
-            onChange={(e) => update({ region: e.target.value })}
+            onChange={(e) => { update({ region: e.target.value }); }}
             placeholder={t("studio.dataset.s3.regionPlaceholder")}
           />
         </div>
@@ -83,7 +83,7 @@ export function S3ConfigForm() {
           <Input
             id="s3-prefix"
             value={config.prefix ?? ""}
-            onChange={(e) => update({ prefix: e.target.value })}
+            onChange={(e) => { update({ prefix: e.target.value }); }}
             placeholder={t("studio.dataset.s3.prefixPlaceholder")}
           />
         </div>
@@ -113,7 +113,7 @@ export function S3ConfigForm() {
               id="s3-access-key"
               data-reload-snapshot-sensitive
               value={config.accessKeyId ?? ""}
-              onChange={(e) => update({ accessKeyId: e.target.value })}
+              onChange={(e) => { update({ accessKeyId: e.target.value }); }}
               placeholder={t("studio.dataset.s3.accessKeyIdPlaceholder")}
             />
           </div>
@@ -128,7 +128,7 @@ export function S3ConfigForm() {
               id="s3-secret-key"
               type="password"
               value={config.secretAccessKey ?? ""}
-              onChange={(e) => update({ secretAccessKey: e.target.value })}
+              onChange={(e) => { update({ secretAccessKey: e.target.value }); }}
               placeholder={t("studio.dataset.s3.secretAccessKeyPlaceholder")}
             />
           </div>

@@ -159,7 +159,7 @@ export function ParamsSection({
             </span>
             <Input
               value={store.projectName || ""}
-              onChange={(event) => store.setProjectName(event.target.value)}
+              onChange={(event) => { store.setProjectName(event.target.value); }}
               placeholder="customer-support-lora"
               maxLength={80}
             />
@@ -266,7 +266,7 @@ export function ParamsSection({
                     : Math.min(maxStepsSliderMax, Math.max(1, store.maxSteps)),
                 ]}
                 onValueChange={([value]) =>
-                  useEpochs ? store.setEpochs(value) : store.setMaxSteps(value)
+                  { useEpochs ? store.setEpochs(value) : store.setMaxSteps(value); }
                 }
                 min={1}
                 max={useEpochs ? epochsSliderMax : maxStepsSliderMax}

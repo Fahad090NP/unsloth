@@ -33,13 +33,13 @@ export function updateFenceChunks<T>(
   return next ?? previous!;
 }
 
-export type FenceBodyMemoProps<Result extends { tokens: readonly unknown[] }> = {
+export interface FenceBodyMemoProps<Result extends { tokens: readonly unknown[] }> {
   isIncomplete: boolean | undefined;
   language: string | null;
   result: Result | null;
   source: string;
   windowing: boolean;
-};
+}
 
 export function sameFenceBodyProps<Result extends { tokens: readonly unknown[] }>(
   previous: FenceBodyMemoProps<Result>,

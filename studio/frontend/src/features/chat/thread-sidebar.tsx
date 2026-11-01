@@ -273,7 +273,7 @@ export function ThreadSidebar({
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     isActive={activeId === item.id}
-                    onClick={() => onSelect(viewForItem(item))}
+                    onClick={() => { onSelect(viewForItem(item)); }}
                   >
                     {item.isFork ? (
                       <span
@@ -287,13 +287,13 @@ export function ThreadSidebar({
                   </SidebarMenuButton>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <SidebarMenuAction showOnHover className="focus:outline-none focus-visible:ring-0" onClick={(e) => e.stopPropagation()}>
+                      <SidebarMenuAction showOnHover className="focus:outline-none focus-visible:ring-0" onClick={(e) => { e.stopPropagation(); }}>
                         <HugeiconsIcon icon={MoreHorizontalIcon} className="size-4" />
                         <span className="sr-only">More options</span>
                       </SidebarMenuAction>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="bottom" align="end" className="w-44">
-                      <DropdownMenuItem onSelect={() => openRename(item)}>
+                      <DropdownMenuItem onSelect={() => { openRename(item); }}>
                         <HugeiconsIcon icon={PencilEdit02Icon} className="mr-2 size-4" />
                         Rename
                       </DropdownMenuItem>
@@ -365,7 +365,7 @@ export function ThreadSidebar({
           </DialogHeader>
           <Input
             value={renameDraft}
-            onChange={(e) => setRenameDraft(e.target.value)}
+            onChange={(e) => { setRenameDraft(e.target.value); }}
             {...inputImeHandlers(renameImeRef.current)}
             onKeyDown={(e) => {
               if (imeOwnsInputKeydown(e, renameImeRef.current)) return;
@@ -374,7 +374,7 @@ export function ThreadSidebar({
             autoFocus
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRenamingItem(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setRenamingItem(null); }}>Cancel</Button>
             <Button
               onClick={() => void commitRename()}
               disabled={!renameDraft.trim() || renameDraft.trim() === renamingItem?.title}

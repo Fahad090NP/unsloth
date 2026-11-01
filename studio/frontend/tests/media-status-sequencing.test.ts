@@ -55,7 +55,7 @@ for (const [name, path, read, unload, writes] of PAGES) {
       "setStatusIfNewest must write the status exactly once, under the ticket guard",
     );
     // The write must be reachable past the stale branch's block.
-    if (early && !held && /\{/.test(early[0])) {
+    if (early && !held && early[0].includes('{')) {
       const open = body.indexOf("{", early.index);
       let depth = 0;
       let close = -1;

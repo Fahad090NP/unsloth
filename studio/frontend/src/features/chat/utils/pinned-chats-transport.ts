@@ -111,7 +111,7 @@ function compactReplay(operations: PinOperation[]): PinOperation[] {
 }
 
 function sameIds(left: string[] | undefined, right: string[]): boolean {
-  return left !== undefined && left.length === right.length &&
+  return left?.length === right.length &&
     left.every((id, index) => id === right[index]);
 }
 

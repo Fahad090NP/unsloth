@@ -22,7 +22,7 @@ test("it stays inside the left and right edges", () => {
   assert.equal(placeTitleTooltip({ left: 980, top: 100, bottom: 120, width: 20 }, size, viewport).left, 892);
 });
 
-type Node = { name: string; kids: Node[]; contains(other: Node | null): boolean };
+interface Node { name: string; kids: Node[]; contains(other: Node | null): boolean }
 function node(name: string, kids: Node[] = []): Node {
   const n: Node = {
     name,

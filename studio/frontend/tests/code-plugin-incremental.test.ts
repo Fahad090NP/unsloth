@@ -72,7 +72,7 @@ async function withTimeout<T>(
 ): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+    timer = setTimeout(() => { reject(new Error(message)); }, timeoutMs);
   });
   try {
     return await Promise.race([promise, timeout]);
@@ -151,12 +151,12 @@ test("aliases resolve to the language shiki tokenizes with", async () => {
   const plugin = createCodePlugin({ themes: THEMES });
   const aliased = await highlightOnce(plugin, {
     code: PYTHON,
-    language: "py" as HighlightOptions["language"],
+    language: "py",
     themes: THEMES,
   });
   const full = await reference(PYTHON, "python");
   assert.deepEqual(aliased.tokens, full.tokens);
-  assert.equal(plugin.supportsLanguage("py" as HighlightOptions["language"]), true);
+  assert.equal(plugin.supportsLanguage("py"), true);
   assert.equal(
     plugin.supportsLanguage("not-a-language" as HighlightOptions["language"]),
     false,
@@ -167,7 +167,7 @@ test("an unchanged fence is answered from cache without new tokens", async () =>
   const plugin = createCodePlugin({ themes: THEMES });
   const options: HighlightOptions = {
     code: PYTHON,
-    language: "python" as HighlightOptions["language"],
+    language: "python",
     themes: THEMES,
   };
   const first = await highlightOnce(plugin, options);
@@ -288,8 +288,8 @@ test("a failed grammar load releases pending callbacks before retry", async () =
     { name: "retry-dark", settings: 42 } as unknown as ThemeInput,
   ] as [ThemeInput, ThemeInput];
   const validThemes = [
-    { name: "retry-light", settings: [] } as unknown as ThemeInput,
-    { name: "retry-dark", settings: [] } as unknown as ThemeInput,
+    { name: "retry-light", settings: [] },
+    { name: "retry-dark", settings: [] },
   ] as [ThemeInput, ThemeInput];
   const blocks = Array.from(
     { length: 520 },
@@ -433,7 +433,7 @@ test("a single line past the throttle keeps its text and settles exact", async (
     code: grown,
     language,
     themes: THEMES,
-  })) as HighlightResult;
+  }));
   assert.deepEqual(
     throttled.tokens,
     [[{ content: grown, offset: 0 }]],
@@ -521,7 +521,7 @@ test("a changed theme definition is not answered from the old theme's cache", as
         ({
           name,
           settings: [{ settings: { foreground: "#101010", background } }],
-        }) as unknown as ThemeInput,
+        }),
     ) as [ThemeInput, ThemeInput];
 
   const first = await highlightOnce(plugin, {
@@ -621,7 +621,7 @@ test("an unchanged fence does not cancel an identical sibling's refresh", async 
   await new Promise((resolve) => setTimeout(resolve, 500));
 
   assert.deepEqual(
-    (latest as HighlightResult | null)?.tokens,
+    (latest)?.tokens,
     (await reference(grown, "python")).tokens,
     "the growing fence must still receive its refresh",
   );
@@ -714,7 +714,7 @@ test("cover reports what the cache leaves untokenized, and never tokenizes", asy
   const other = "def unrelated():\n    return 2\n";
   assert.deepEqual(plugin.cover({ code: other, language, themes: THEMES }), { uncovered: other.length, result: null });
   assert.deepEqual(
-    plugin.cover({ code: settled, language: "typescript" as HighlightOptions["language"], themes: THEMES }),
+    plugin.cover({ code: settled, language: "typescript", themes: THEMES }),
     { uncovered: settled.length, result: null },
     "another grammar's tokens are never offered",
   );
@@ -724,7 +724,7 @@ test("cover never offers a worker's seeded result as a prefix to resume from", a
   const plugin = createCodePlugin({ themes: THEMES });
   const language = "python" as HighlightOptions["language"];
   const seeded = await reference(PYTHON, "python");
-  plugin.seed({ code: PYTHON, language, themes: THEMES }, seeded as unknown as HighlightResult);
+  plugin.seed({ code: PYTHON, language, themes: THEMES }, seeded);
   const grown = `${PYTHON}value = 1\n`;
   assert.deepEqual(plugin.cover({ code: grown, language, themes: THEMES }), { uncovered: grown.length, result: null });
 });

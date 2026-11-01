@@ -7,9 +7,9 @@ import ts from "@typescript/typescript6";
 
 import { readSrc } from "./helpers/kit.ts";
 
-type Result = { source: string; language: string | null; revision?: number };
-type Props = { source: string; language: string | null; enabled: boolean; streaming: boolean };
-type Effect = { deps: unknown[]; cleanup?: () => void };
+interface Result { source: string; language: string | null; revision?: number }
+interface Props { source: string; language: string | null; enabled: boolean; streaming: boolean }
+interface Effect { deps: unknown[]; cleanup?: () => void }
 const source = readSrc("components/assistant-ui/markdown-text.tsx");
 const hookSource = source.slice(source.indexOf("function useFenceTokens("), source.indexOf("\n/**", source.indexOf("function useFenceTokens(")));
 const compiled = ts.transpileModule(hookSource, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;

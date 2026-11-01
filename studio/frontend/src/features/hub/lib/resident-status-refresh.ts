@@ -18,7 +18,7 @@ export function subscribeResidentStatusRefresh(
   refresh: () => void,
   targets: ResidentStatusRefreshTargets = browserTargets(),
 ): () => void {
-  const onFocus = () => refresh();
+  const onFocus = () => { refresh(); };
   // Focus alone misses a backgrounded tab, visibility alone a window that never hid.
   const onVisibility = () => {
     if (!targets.document.hidden) refresh();

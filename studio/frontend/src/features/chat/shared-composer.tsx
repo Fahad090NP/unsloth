@@ -284,7 +284,7 @@ export interface CompareHandle {
 
 // Inlined to avoid a new icon dep. Kept in sync with the main composer.
 function isNativeComposing(event: Event) {
-  return "isComposing" in event && (event as InputEvent).isComposing === true;
+  return "isComposing" in event && (event as InputEvent).isComposing;
 }
 
 // Mirrors thread.tsx: Chrome on WSL may never fire compositionend after IME commit.
@@ -293,8 +293,8 @@ const IME_STUCK_TIMEOUT_MS = 2500;
 function fileToBase64DataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error("Failed to read image file"));
+    reader.onload = () => { resolve(reader.result as string); };
+    reader.onerror = () => { reject(new Error("Failed to read image file")); };
     reader.readAsDataURL(file);
   });
 }
@@ -452,24 +452,24 @@ export function RegisterCompareHandle({
     };
     currentHandles[name] = {
       append: (content) =>
-        aui
+        { aui
           .thread()
-          .append({ role: "user", content, createdAt: new Date() } as never),
+          .append({ role: "user", content, createdAt: new Date() } as never); },
       appendMessage: (content) =>
-        aui
+        { aui
           .thread()
           .append({
             role: "user",
             content,
             createdAt: new Date(),
             startRun: false,
-          } as never),
+          } as never); },
       startRun: () => {
         const msgs = aui.thread().getState().messages;
         const lastId = msgs.length > 0 ? msgs[msgs.length - 1].id : null;
         aui.thread().startRun({ parentId: lastId });
       },
-      cancel: () => aui.thread().cancelRun(),
+      cancel: () => { aui.thread().cancelRun(); },
       isRunning: () => aui.thread().getState().isRunning,
       threadIds: getThreadIds,
       waitForRunEnd: () =>
@@ -510,7 +510,7 @@ export function RegisterCompareHandle({
   return null;
 }
 
-type PendingImage = { id: string; file: File };
+interface PendingImage { id: string; file: File }
 
 function PendingImageThumb({
   file,
@@ -523,7 +523,7 @@ function PendingImageThumb({
   useEffect(() => {
     const url = URL.createObjectURL(file);
     setSrc(url);
-    return () => URL.revokeObjectURL(url);
+    return () => { URL.revokeObjectURL(url); };
   }, [file]);
   if (!src)
     return <div className="size-14 animate-pulse rounded-lg bg-muted" />;
@@ -546,13 +546,13 @@ function PendingImageThumb({
   );
 }
 
-type CompareModelSelection = {
+interface CompareModelSelection {
   id: string;
   isLora: boolean;
   ggufVariant?: string;
   isDiffusion?: boolean;
   config?: PerModelConfig;
-};
+}
 
 function cleanCompareChatTemplate(
   value: string | null | undefined,
@@ -665,7 +665,7 @@ export function SharedComposer({
       writeComposerDraft(composerDraftKey(), text);
       unsavedDraftRef.current = null;
     }, 300);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [text, incognito, draftSource]);
   // Leaving Compare inside the debounce still saves what was typed.
   useEffect(
@@ -795,7 +795,7 @@ export function SharedComposer({
   const externalProvidersAll = useExternalProvidersStore((s) => s.providers);
   const externalProviders = connectionsEnabled ? externalProvidersAll : [];
   const modelLoaded = useChatRuntimeStore(
-    (s) => !!s.params.checkpoint && !s.modelLoading,
+    (s) => Boolean(s.params.checkpoint) && !s.modelLoading,
   );
   const lastModelLoadError = useChatRuntimeStore((s) => s.lastModelLoadError);
   const loadedIsMultimodal = useChatRuntimeStore((s) => s.loadedIsMultimodal);
@@ -1077,7 +1077,7 @@ export function SharedComposer({
   const audioUploadOwner = `${compareUploadInstanceId}:${model1?.id ?? ""}:${model2?.id ?? ""}`;
   const readAudioUploadDraft = useCallback(() => textRef.current, []);
   const writeAudioUploadDraft = useCallback(
-    (value: string) => setCurrentText(value),
+    (value: string) => { setCurrentText(value); },
     [setCurrentText],
   );
   const focusAudioUploadDraft = useCallback(() => {
@@ -1106,7 +1106,7 @@ export function SharedComposer({
       const any = Object.values(handles).some((h) => h.isRunning());
       setRunning(any);
     }, 200);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); };
   }, [handlesRef]);
 
   function resetPromptQueue() {
@@ -1200,7 +1200,7 @@ export function SharedComposer({
       measureEditor();
     });
     observer.observe(editor);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [measureEditor]);
   // Window capture: runs before the mention popover's own Escape closes it.
   useEffect(() => {
@@ -1216,7 +1216,7 @@ export function SharedComposer({
       }
     };
     window.addEventListener("keydown", collapseOnEscape, true);
-    return () => window.removeEventListener("keydown", collapseOnEscape, true);
+    return () => { window.removeEventListener("keydown", collapseOnEscape, true); };
   }, []);
   const showWritingToggle = text.includes("\n") || editorRows > 3;
   const toggleWritingExpanded = () => {
@@ -1398,7 +1398,7 @@ export function SharedComposer({
     }, IME_STUCK_TIMEOUT_MS);
   }
 
-  useEffect(() => () => clearStuckImeTimer(), []);
+  useEffect(() => () => { clearStuckImeTimer(); }, []);
 
   async function send() {
     if (composingRef.current || convertingImages > 0 || addingFiles > 0) {
@@ -1422,7 +1422,7 @@ export function SharedComposer({
     }
 
     const hasCompareHandles = Boolean(
-      handlesRef.current["model1"] || handlesRef.current["model2"],
+      handlesRef.current.model1 || handlesRef.current.model2,
     );
     const isGeneralizedCompare =
       hasCompareHandles && Boolean(model1?.id && model2?.id);
@@ -2105,8 +2105,8 @@ export function SharedComposer({
         return resp.status;
       }
 
-      const handle1 = handlesRef.current["model1"];
-      const handle2 = handlesRef.current["model2"];
+      const handle1 = handlesRef.current.model1;
+      const handle2 = handlesRef.current.model2;
 
       if (handle1) handle1.appendMessage(content);
       if (handle2) handle2.appendMessage(content);
@@ -2237,7 +2237,7 @@ export function SharedComposer({
         for (const handle of handles) {
           const token = reservePreStreamRun(handle.threadIds(), {
             usesLocalModel: true,
-            cancel: () => handle.cancel(),
+            cancel: () => { handle.cancel(); },
           });
           if (!token) {
             for (const reservation of reservations) {
@@ -2392,7 +2392,7 @@ export function SharedComposer({
     "openComposerMenu",
     () => {
       // The open menu inerts the composer, so closing skips the gate.
-      if (plusOpen) return setPlusMenuOpen(false);
+      if (plusOpen) { setPlusMenuOpen(false); return; }
       if (!isSurfaceInForeground(COMPOSER_INPUT_SELECTOR)) return;
       setPlusMenuOpen(true);
     },
@@ -2441,7 +2441,7 @@ export function SharedComposer({
         return;
       }
       const hasCompareHandles = Boolean(
-        handlesRef.current["model1"] || handlesRef.current["model2"],
+        handlesRef.current.model1 || handlesRef.current.model2,
       );
       const isGeneralizedCompare =
         hasCompareHandles && Boolean(model1?.id && model2?.id);
@@ -2501,7 +2501,7 @@ export function SharedComposer({
       <DropdownMenuItem
         disabled={!supportsTools}
         className={mcpEnabledForChat ? "text-primary font-medium" : undefined}
-        onSelect={() => setMcpEnabledForChat(!mcpEnabledForChat)}
+        onSelect={() => { setMcpEnabledForChat(!mcpEnabledForChat); }}
       >
         <HugeiconsIcon icon={McpServerIcon} strokeWidth={2} />
         MCP
@@ -2513,7 +2513,7 @@ export function SharedComposer({
     skills: (
       <DropdownMenuItem
         className={skillsOn ? "text-primary font-medium" : undefined}
-        onSelect={() => setSkillsOn(!skillsOn)}
+        onSelect={() => { setSkillsOn(!skillsOn); }}
       >
         <HugeiconsIcon icon={Scroll01Icon} strokeWidth={2} />
         Skills
@@ -2544,7 +2544,7 @@ export function SharedComposer({
             </DropdownMenuItem>
           ))}
           {recentLists.map((l) => (
-            <DropdownMenuItem key={`list:${l.id}`} onSelect={() => runPromptList(l.items)}>
+            <DropdownMenuItem key={`list:${l.id}`} onSelect={() => { runPromptList(l.items); }}>
               <span className="truncate">{l.name}</span>
               <PromptCountBadge count={l.items.length} />
             </DropdownMenuItem>
@@ -2552,7 +2552,7 @@ export function SharedComposer({
           {recentPrompts.length > 0 || recentLists.length > 0 ? (
             <DropdownMenuSeparator />
           ) : null}
-          <DropdownMenuItem onSelect={() => setPromptStorageOpen(true)}>
+          <DropdownMenuItem onSelect={() => { setPromptStorageOpen(true); }}>
             All saved prompts…
           </DropdownMenuItem>
         </DropdownMenuSubContent>
@@ -2618,7 +2618,7 @@ export function SharedComposer({
           Projects
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="unsloth-plus-menu w-[calc(232px*var(--ui-space-scale,1))]">
-          <DropdownMenuItem onSelect={() => setNewProjectOpen(true)}>
+          <DropdownMenuItem onSelect={() => { setNewProjectOpen(true); }}>
             <HugeiconsIcon icon={FolderAddIcon} strokeWidth={2} />
             New project
           </DropdownMenuItem>
@@ -2627,7 +2627,7 @@ export function SharedComposer({
             recentProjects.map((project) => (
               <DropdownMenuItem
                 key={project.id}
-                onSelect={() => openProject(project.id)}
+                onSelect={() => { openProject(project.id); }}
               >
                 <HugeiconsIcon icon={ProjectIcon} strokeWidth={2} />
                 <span className="truncate">{project.name}</span>
@@ -2671,7 +2671,7 @@ export function SharedComposer({
           e.preventDefault();
           setDragging(true);
         }}
-        onDragLeave={() => setDragging(false)}
+        onDragLeave={() => { setDragging(false); }}
         onDrop={(e) => {
           // Phase 1 native model drops own Tauri local-path drops. Restore browser attachment drops in
           // Tauri once Phase 1d adds token bridging.
@@ -2704,7 +2704,7 @@ export function SharedComposer({
             <PendingImageThumb
               key={id}
               file={file}
-              onRemove={() => removePendingImage(id)}
+              onRemove={() => { removePendingImage(id); }}
             />
           ))}
           {pendingAudio.map((clip) => (
@@ -2790,7 +2790,7 @@ export function SharedComposer({
                 sideOffset={0}
                 avoidCollisions={true}
                 className="unsloth-plus-menu w-[calc(244px*var(--ui-space-scale,1))]"
-                onCloseAutoFocus={(event) => event.preventDefault()}
+                onCloseAutoFocus={(event) => { event.preventDefault(); }}
               >
                 <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>
                   <HugeiconsIcon icon={AttachmentIcon} strokeWidth={2} />
@@ -2838,7 +2838,7 @@ export function SharedComposer({
                       ? "text-primary font-medium"
                       : undefined
                   }
-                  onSelect={() => setCodeToolsEnabled(!codeToolsEnabled)}
+                  onSelect={() => { setCodeToolsEnabled(!codeToolsEnabled); }}
                 >
                   {/* Scale, not width: an oversized box pushed the label out of line. */}
                   <HugeiconsIcon
@@ -2863,7 +2863,7 @@ export function SharedComposer({
                         ? "text-primary font-medium"
                         : undefined
                     }
-                    onSelect={() => setImageToolsEnabled(!imageToolsEnabled)}
+                    onSelect={() => { setImageToolsEnabled(!imageToolsEnabled); }}
                   >
                     <HugeiconsIcon icon={Image03Icon} strokeWidth={2} />
                     Images
@@ -2892,9 +2892,9 @@ export function SharedComposer({
                     ))}
                     {overflowPlusItems.length > 0 && <DropdownMenuSeparator />}
                     <DropdownMenuItem
-                      onSelect={() => useSettingsDialogStore.getState().openDialog("chat", {
+                      onSelect={() => { useSettingsDialogStore.getState().openDialog("chat", {
                         scrollTarget: "chat-composer",
-                      })}
+                      }); }}
                     >
                       <HugeiconsIcon icon={SlidersHorizontalIcon} className="size-4" />
                       {t("composerSettings.settings")}
@@ -2948,7 +2948,7 @@ export function SharedComposer({
             <button
               type="button"
               disabled={codeDisabled}
-              onClick={() => setCodeToolsEnabled(!codeToolsEnabled)}
+              onClick={() => { setCodeToolsEnabled(!codeToolsEnabled); }}
               className="composer-pill-btn"
               data-pill-label="Tools"
               data-active={codeToolsEnabled && !codeDisabled ? "true" : "false"}
@@ -2972,7 +2972,7 @@ export function SharedComposer({
               <button
                 type="button"
                 disabled={imageDisabled}
-                onClick={() => setImageToolsEnabled(!imageToolsEnabled)}
+                onClick={() => { setImageToolsEnabled(!imageToolsEnabled); }}
                 className="composer-pill-btn"
                 data-pill-label="Images"
                 data-active={
@@ -2999,7 +2999,7 @@ export function SharedComposer({
               <button
                 type="button"
                 disabled={webFetchDisabled}
-                onClick={() => setWebFetchToolsEnabled(!webFetchToolsEnabled)}
+                onClick={() => { setWebFetchToolsEnabled(!webFetchToolsEnabled); }}
                 className="composer-pill-btn"
                 data-pill-label="Fetch"
                 data-active={
@@ -3053,10 +3053,10 @@ export function SharedComposer({
                   );
                 }}
                 onScroll={(event) =>
-                  markComposerScrollEdges(event.currentTarget)
+                  { markComposerScrollEdges(event.currentTarget); }
                 }
                 onInputCapture={(event) =>
-                  markComposerScrollEdges(event.currentTarget)
+                  { markComposerScrollEdges(event.currentTarget); }
                 }
                 onCompositionStart={() => {
                   imeSessionOpenRef.current = true;
@@ -3102,7 +3102,7 @@ export function SharedComposer({
                 aria-expanded={isWritingExpanded}
                 aria-controls={inputId}
                 className="unsloth-composer-expand absolute -right-1 top-0 size-8 rounded-full bg-transparent text-muted-foreground hover:bg-transparent hover:text-muted-foreground dark:hover:bg-transparent aria-expanded:bg-transparent aria-expanded:text-muted-foreground"
-                onMouseDown={(event) => event.preventDefault()}
+                onMouseDown={(event) => { event.preventDefault(); }}
                 onClick={toggleWritingExpanded}
               >
                 <svg

@@ -28,7 +28,7 @@ import { InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { type FC, type ReactNode, useEffect, useState } from "react";
 
-type ResponseDetailsMetadata = {
+interface ResponseDetailsMetadata {
   modelId?: string;
   modelLabel?: string;
   responseModelId?: string;
@@ -42,23 +42,23 @@ type ResponseDetailsMetadata = {
   cancelId?: string;
   toolCalls?: string[];
   tools?: Record<string, boolean | undefined>;
-};
+}
 
-type ContextUsageMetadata = {
+interface ContextUsageMetadata {
   promptTokens?: number;
   completionTokens?: number;
   totalTokens?: number;
   cachedTokens?: number;
   cacheWriteTokens?: number;
   modelId?: string;
-};
+}
 
-type MessageCustomMetadata = {
+interface MessageCustomMetadata {
   responseDetails?: ResponseDetailsMetadata;
   contextUsage?: ContextUsageMetadata;
   serverTimings?: Record<string, unknown>;
   reasoningDuration?: number;
-};
+}
 
 function asNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value)
@@ -349,8 +349,8 @@ export const MessageResponseDetailsSheet: FC<{
   if (open && !mounted) setMounted(true);
   useEffect(() => {
     if (open) return;
-    const timer = window.setTimeout(() => setMounted(false), 500);
-    return () => window.clearTimeout(timer);
+    const timer = window.setTimeout(() => { setMounted(false); }, 500);
+    return () => { window.clearTimeout(timer); };
   }, [open]);
   if (!mounted && !open) return null;
   return (

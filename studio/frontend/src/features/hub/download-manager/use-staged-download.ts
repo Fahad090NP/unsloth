@@ -68,7 +68,7 @@ export function useStagedDownload({
   useEffect(() => {
     if (!publishQueue) return;
     publishStagedQueue(queueOwner, queue ? { scopeId, entries: queue } : null);
-    return () => publishStagedQueue(queueOwner, null);
+    return () => { publishStagedQueue(queueOwner, null); };
   }, [queueOwner, queue, scopeId, publishQueue]);
 
   // Every other entry is scoped: the Hub snapshot ignore list drops *.gguf.

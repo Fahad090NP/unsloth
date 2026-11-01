@@ -31,7 +31,7 @@ const inflight = new Map<string, Promise<string | null>>();
 // Mirrors the modelInfo limiter in hf-cache.ts.
 const MAX_AVATAR_CONCURRENT = 6;
 let activeFetches = 0;
-const waiting: Array<() => void> = [];
+const waiting: (() => void)[] = [];
 
 function acquire(): Promise<void> {
   if (activeFetches < MAX_AVATAR_CONCURRENT) {

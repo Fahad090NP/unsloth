@@ -119,12 +119,12 @@ function MovableRow({
         })}
         checked={pinned}
         onCheckedChange={(next) =>
-          patch({
+          { patch({
             sidebarNav: sidebarNav.map((entry) =>
               entry.id === item.id ? { ...entry, pinned: next } : entry,
             ),
             sidebarNavAuto: sidebarNavAutoAfterChoice(sidebarNavAuto, item.id),
-          })
+          }); }
         }
       />
     </Reorder.Item>
@@ -155,11 +155,11 @@ export function SidebarNavCustomizer() {
         axis="y"
         values={sidebarNav.map((item) => item.id)}
         onReorder={(ids: SidebarNavItemPref["id"][]) =>
-          patch({
+          { patch({
             sidebarNav: ids.flatMap(
               (id) => sidebarNav.find((entry) => entry.id === id) ?? [],
             ),
-          })
+          }); }
         }
         className="flex flex-col"
       >

@@ -131,13 +131,13 @@ function ensureActiveModelInStoreList(
   store.setModels([...store.models, summary]);
 }
 
-export type ApplyInferenceStatusOptions = {
+export interface ApplyInferenceStatusOptions {
   previousCheckpoint?: string;
   /** Variant before setCheckpoint synced it, so a variant-only switch reseeds. */
   previousGgufVariant?: string | null;
   seedLoadParams?: boolean;
   adoptingExistingServerModel?: boolean;
-};
+}
 
 /** The resident engine launch settings, in the store's params shape. */
 function residentEngineParams(status: InferenceStatusResponse) {
@@ -704,7 +704,7 @@ export function applyActiveModelStatusToStore(
         .replace(/\\/g, "/")
         .split("/")
         .reduceRight<RegExpMatchArray | null>(
-          (found, seg) => found ?? seg.match(sizeRe),
+          (found, seg) => found ?? (sizeRe.exec(seg)),
           null,
         );
       if (sizeMatch) {
@@ -783,7 +783,7 @@ export async function tryAdoptServerActiveModel(options?: {
     previousCheckpoint ||
     (latest.modelLoading && !options?.allowWhileModelLoading)
   ) {
-    return !!previousCheckpoint;
+    return Boolean(previousCheckpoint);
   }
   const previousGgufVariant = latest.activeGgufVariant;
   store.setCheckpoint(checkpointId, status.gguf_variant);

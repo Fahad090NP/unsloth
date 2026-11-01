@@ -5,7 +5,7 @@
 
 import { isTauri } from "@/lib/api-base";
 
-type CropTargetApi = { fromElement: (element: Element) => Promise<unknown> };
+interface CropTargetApi { fromElement: (element: Element) => Promise<unknown> }
 
 export function cropTargets(): CropTargetApi | null {
   const api = (globalThis as { CropTarget?: CropTargetApi }).CropTarget;

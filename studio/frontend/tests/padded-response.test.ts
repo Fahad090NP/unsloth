@@ -24,7 +24,7 @@ test("a body the proxy truncated is rejected, not accepted as success", () => {
   // An empty body, a pad-only body and a half payload all decode to null.
   for (const body of [null, undefined, {}, [], "", "loaded", 0]) {
     assert.throws(
-      () => assertCompletedPaddedBody(body, "Model load"),
+      () => { assertCompletedPaddedBody(body, "Model load"); },
       /Model load did not report completion/,
       JSON.stringify(body) ?? "undefined",
     );
@@ -33,7 +33,7 @@ test("a body the proxy truncated is rejected, not accepted as success", () => {
 
 test("the message names the operation and points at the model's status", () => {
   assert.throws(
-    () => assertCompletedPaddedBody(null, "Model unload"),
+    () => { assertCompletedPaddedBody(null, "Model unload"); },
     (err: unknown) => {
       const message = (err as Error).message;
       assert.match(message, /^Model unload did not report completion/);

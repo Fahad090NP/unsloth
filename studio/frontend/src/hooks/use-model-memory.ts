@@ -248,7 +248,7 @@ async function fetchEstimate(
   config: PerModelConfig | undefined,
 ): Promise<Estimate> {
   const known = cached(cacheKey) ?? IN_FLIGHT.get(cacheKey);
-  if (known) return known;
+  if (known) return await known;
 
   const run = estimateKvCache(source.repoId, source.quant, nCtx, {
     cacheTypeKv: config?.kvCacheDtype,
@@ -280,7 +280,7 @@ async function fetchEstimate(
         inheritedDevicePin: r.inherited_device_pin ?? null,
         gpuTotalBytes: r.gpu_bytes ?? null,
         gpuFloorBytes: r.gpu_floor_bytes ?? null,
-        specUnpriced: r.spec_unpriced === true,
+        specUnpriced: r.spec_unpriced,
       };
       // A 200 that sized nothing is remembered as a failure so it expires.
       remember(cacheKey, estimate, estimateIsUnsized(estimate));
@@ -294,7 +294,7 @@ async function fetchEstimate(
     .finally(() => IN_FLIGHT.delete(cacheKey));
 
   IN_FLIGHT.set(cacheKey, run);
-  return run;
+  return await run;
 }
 
 /** No source (not on disk) does nothing and reports "unknown". */

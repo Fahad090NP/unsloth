@@ -201,7 +201,7 @@ export function HubOptionMenu<T extends string>({
         side="bottom"
         sideOffset={8}
         collisionPadding={12}
-        onCloseAutoFocus={(event) => event.preventDefault()}
+        onCloseAutoFocus={(event) => { event.preventDefault(); }}
         className={cn(
           "hub-menu-instant menu-soft-surface w-max min-w-[var(--radix-popover-trigger-width)] max-w-[min(var(--radix-popover-content-available-width),calc(100vw-1rem))] ring-0",
           composer ? "hub-composer-menu gap-0" : "rounded-lg p-1",
@@ -216,7 +216,7 @@ export function HubOptionMenu<T extends string>({
           aria-activedescendant={activeOptionId}
           tabIndex={0}
           onKeyDown={handleContentKeyDown}
-          onPointerLeave={() => activateIndex(-1)}
+          onPointerLeave={() => { activateIndex(-1); }}
           className="outline-none"
         >
           {options.map((option, index) => {
@@ -232,7 +232,7 @@ export function HubOptionMenu<T extends string>({
                 onClick={() => {
                   selectIndex(index);
                 }}
-                onPointerEnter={() => activateIndex(index)}
+                onPointerEnter={() => { activateIndex(index); }}
                 className={cn(
                   "relative flex w-full min-w-0 cursor-pointer select-none items-center py-2 pl-3 text-left text-sm outline-none transition-colors",
                   composer

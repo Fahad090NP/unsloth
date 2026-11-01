@@ -206,13 +206,13 @@ test("the pdf and docx adapters refuse an oversized file at add, with a toast", 
 test("the shared ceiling refuses an oversized document and passes a normal one", () => {
   const oversized = { name: "huge.pdf", size: 60 * 1024 * 1024 } as File;
   assert.throws(
-    () => assertDocumentAttachmentSize(oversized, "PDF"),
+    () => { assertDocumentAttachmentSize(oversized, "PDF"); },
     /PDF file is too large: huge\.pdf/,
   );
   assert.doesNotThrow(() =>
-    assertDocumentAttachmentSize(
+    { assertDocumentAttachmentSize(
       { name: "ok.docx", size: 64 * 1024 } as File,
       "DOCX",
-    ),
+    ); },
   );
 });

@@ -4,10 +4,10 @@
 export type LanAccessState = "off" | "online" | "error";
 export type LanAccessOwner = "launch" | "settings" | null;
 export type LanKeylessScope = "off" | "inference" | "full";
-export type LanAccessAddress = { address: string; public: boolean };
+export interface LanAccessAddress { address: string; public: boolean }
 export type LanAccessAddressChoice = LanAccessAddress & { detected: boolean };
 
-export type LanAccessStatus = {
+export interface LanAccessStatus {
   state: LanAccessState;
   urls: string[];
   publicUrls: string[];
@@ -32,9 +32,9 @@ export type LanAccessStatus = {
   keylessLanEligible: boolean;
   keylessScope: LanKeylessScope;
   keylessTools: boolean;
-};
+}
 
-export type ApiLanAccessStatus = {
+export interface ApiLanAccessStatus {
   state: LanAccessState;
   urls?: string[] | null;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -73,7 +73,7 @@ export type ApiLanAccessStatus = {
   keyless_scope?: LanKeylessScope | string | null;
   // biome-ignore lint/style/useNamingConvention: API schema
   keyless_tools?: boolean | null;
-};
+}
 
 function normalizeAddresses(value: unknown): LanAccessAddress[] {
   if (!Array.isArray(value)) {

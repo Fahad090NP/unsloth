@@ -236,7 +236,7 @@ test("the panel's list refetches once per change, and does not resurrect a row i
   );
   assert.ok(
     !src.includes("subscribeProjectSourcesUpdated") &&
-      !/void refresh\(/.test(src),
+      !src.includes('void refresh('),
     "the panel refetches on top of the hook's own listener again",
   );
   // The row is dropped optimistically before DELETE, and there is no request sequencing.

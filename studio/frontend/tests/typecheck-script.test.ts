@@ -71,12 +71,12 @@ appendFileSync(join(__dirname, "..", "..", "..", "tsc.log"), JSON.stringify(proc
 process.exit(Number(process.env.FAKE_TSC_EXIT || 0));
 `;
 
-type Fixture = {
+interface Fixture {
   root: string;
   env: NodeJS.ProcessEnv;
   tscCalls: () => string[][];
   bunCalls: () => string[][];
-};
+}
 
 const roots: string[] = [];
 test.after(() => {

@@ -278,7 +278,7 @@ function trackSttDownloadNow(
   const timer = window.setInterval(() => {
     void poll(model, startedAt, resolvedEngine);
   }, POLL_MS);
-  trackers.start(key, () => window.clearInterval(timer));
+  trackers.start(key, () => { window.clearInterval(timer); });
   void poll(model, startedAt, resolvedEngine);
 }
 

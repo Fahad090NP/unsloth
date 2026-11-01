@@ -52,10 +52,10 @@ function TabStrip({
     const list = listRef.current;
     if (!scroller || !list) return;
     const measure = () =>
-      setEdges({
+      { setEdges({
         left: scroller.scrollLeft > 1,
         right: scroller.scrollLeft + scroller.clientWidth < scroller.scrollWidth - 1,
-      });
+      }); };
     const observer = new ResizeObserver(measure);
     observer.observe(scroller);
     observer.observe(list);
@@ -93,7 +93,7 @@ function TabStrip({
 
   function onPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     const current = drag.current;
-    if (!current || current.id !== event.pointerId) return;
+    if (current?.id !== event.pointerId) return;
     // The strip never saw a release that happened before capture, so hover must not scroll.
     if ((event.buttons & 1) === 0) {
       drag.current = null;
@@ -141,7 +141,7 @@ function TabStrip({
             key={tab.key}
             type="button"
             aria-current={tab.key === active ? "page" : undefined}
-            onClick={() => onChange(tab.key)}
+            onClick={() => { onChange(tab.key); }}
             className={cn(
               "flex h-9 shrink-0 items-center rounded-full px-3.5 text-ui-15 text-foreground/80 transition-colors hover:text-foreground",
               tab.key === active && cn(RAISED_SURFACE, "font-medium text-foreground"),

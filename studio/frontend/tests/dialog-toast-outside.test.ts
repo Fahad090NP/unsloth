@@ -9,11 +9,11 @@ import {
   stubJsxRuntime,
 } from "./helpers/module-stubs.ts";
 
-type OutsideEvent = {
+interface OutsideEvent {
   target: { closest: (selector: string) => unknown };
   defaultPrevented: boolean;
   preventDefault: () => void;
-};
+}
 
 function findByType(node: unknown, type: string): StubElement | null {
   if (Array.isArray(node)) {

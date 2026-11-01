@@ -15,7 +15,7 @@ const SERVER_OWNED_METADATA_KEYS: readonly string[] = [
 ];
 
 function withoutServerOwnership(record: MessageRecord): MessageRecord {
-  const metadata = record.metadata as Record<string, unknown> | undefined;
+  const metadata = record.metadata;
   if (!metadata) return record;
   const kept = Object.fromEntries(
     Object.entries(metadata).filter(
@@ -43,12 +43,12 @@ function withoutGeminiContinuationReplay<T>(metadata: T): T {
   return { ...record, custom: keptCustom } as T;
 }
 
-type ThreadImportExport = {
+interface ThreadImportExport {
   export: () => ExportedMessageRepository;
   import: (data: ExportedMessageRepository) => void;
-};
+}
 
-type ContentPart = { type: "text" | "reasoning" | "tool"; text: string; slot?: number };
+interface ContentPart { type: "text" | "reasoning" | "tool"; text: string; slot?: number }
 
 // Raw strings are prose without a marker; they must count as editable or slots misalign.
 function isEditablePart(part: any): boolean {
@@ -177,7 +177,7 @@ export async function updateThreadMessage(args: {
     // Append to the previous text part so a save never multiplies parts.
     const pushText = (text: string) => {
       const last = finalContent[finalContent.length - 1];
-      if (last && last.type === 'text') {
+      if (last?.type === 'text') {
         last.text = `${last.text}\n\n${text}`;
         return;
       }

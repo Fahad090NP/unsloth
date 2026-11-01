@@ -3,14 +3,14 @@
 
 import type { ThreadRecord } from "../types";
 
-export type InFlightThreadRead = {
+export interface InFlightThreadRead {
   promise: Promise<ThreadRecord | null>;
   controller: AbortController;
   readers: number;
   startedAt: number;
   // Auth session it was read under: a read never answers a later session.
   authEpoch: number;
-};
+}
 
 export const inFlightThreadReads = new Map<string, InFlightThreadRead>();
 

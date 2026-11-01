@@ -14,14 +14,14 @@ import { useDebouncedValue } from "@/hooks";
 import { useHubDatasetSearch } from "@/features/hub/hooks/use-hub-dataset-search";
 import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
 
-type HfDatasetComboboxProps = {
+interface HfDatasetComboboxProps {
   value: string;
   onValueChange: (value: string) => void;
   accessToken?: string;
   inputId?: string;
   placeholder?: string;
   className?: string;
-};
+}
 
 export function HfDatasetCombobox({
   value,
@@ -76,7 +76,7 @@ export function HfDatasetCombobox({
         filteredItems={items}
         filter={null}
         value={value.trim() ? value : null}
-        onValueChange={(next) => onValueChange(next ?? "")}
+        onValueChange={(next) => { onValueChange(next ?? ""); }}
         onInputValueChange={(next) => {
           if (selectingRef.current) {
             selectingRef.current = false;

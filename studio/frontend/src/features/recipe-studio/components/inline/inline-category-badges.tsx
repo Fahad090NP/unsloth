@@ -4,9 +4,9 @@
 import { Badge } from "@/components/ui/badge";
 import { type ReactElement, useLayoutEffect, useRef, useState } from "react";
 
-type InlineCategoryBadgesProps = {
+interface InlineCategoryBadgesProps {
   values: string[];
-};
+}
 
 export function InlineCategoryBadges({
   values,
@@ -20,8 +20,8 @@ export function InlineCategoryBadges({
 
     const badges = Array.from(container.children) as HTMLElement[];
     if (badges.length === 0) {
-      const id = requestAnimationFrame(() => setVisibleCount(0));
-      return () => cancelAnimationFrame(id);
+      const id = requestAnimationFrame(() => { setVisibleCount(0); });
+      return () => { cancelAnimationFrame(id); };
     }
 
     const containerWidth = container.clientWidth;
@@ -41,8 +41,8 @@ export function InlineCategoryBadges({
       count++;
     }
 
-    const id = requestAnimationFrame(() => setVisibleCount(count || 1));
-    return () => cancelAnimationFrame(id);
+    const id = requestAnimationFrame(() => { setVisibleCount(count || 1); });
+    return () => { cancelAnimationFrame(id); };
   }, [values]);
 
   if (values.length === 0) {

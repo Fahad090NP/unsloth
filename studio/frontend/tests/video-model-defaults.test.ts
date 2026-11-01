@@ -62,7 +62,7 @@ test("every Wan2.1 14B spelling seeds the 14B recipe, every 1.3B spelling the 1.
 });
 
 test("the other families keep their recipes", () => {
-  const cases: Array<[string, number, number]> = [
+  const cases: [string, number, number][] = [
     ["Wan-AI/Wan2.2-T2V-A14B-Diffusers", 20, 3.5],
     ["Wan-AI/Wan2.2-TI2V-5B-Diffusers", 20, 5],
     ["MiniMaxAI/MiniMax-H3", 20, 1],
@@ -141,8 +141,8 @@ test("every Cosmos3 spelling seeds the recipe its backend family reports: Nano 3
   const families = readText("../../backend/core/inference/video_families.py");
   const backend = (constant: string) => {
     const row = families.slice(families.indexOf(`name = "${constant}",`));
-    const steps = row.match(/default_steps = (\d+),/);
-    const guidance = row.match(/default_guidance = ([\d.]+),/);
+    const steps = /default_steps = (\d+),/.exec(row);
+    const guidance = /default_guidance = ([\d.]+),/.exec(row);
     assert.ok(steps && guidance, constant);
     return { steps: Number(steps[1]), guidance: Number(guidance[1]) };
   };
@@ -150,7 +150,7 @@ test("every Cosmos3 spelling seeds the recipe its backend family reports: Nano 3
   const edge = backend("cosmos3-edge");
   // The cards' Diffusers examples (nvidia/Cosmos3-Nano@e59a53c2, nvidia/Cosmos3-Edge@344d602b).
   assert.deepEqual([nano, edge], [{ steps: 35, guidance: 6 }, { steps: 20, guidance: 6 }]);
-  const spellings: Array<[string, typeof nano]> = [
+  const spellings: [string, typeof nano][] = [
     ["nvidia/Cosmos3-Nano", nano],
     ["NVIDIA/COSMOS3-NANO", nano],
     ["someone/Cosmos3_Nano", nano],

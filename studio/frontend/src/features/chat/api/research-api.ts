@@ -68,7 +68,7 @@ async function json<T>(response: Response): Promise<T> {
 export async function createResearchRun(
   input: CreateResearchRunInput,
 ): Promise<ResearchRun> {
-  return json<ResearchRun>(
+  return await json<ResearchRun>(
     await authFetch("/api/chat/research-runs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -81,7 +81,7 @@ export async function getResearchRun(
   id: string,
   signal?: AbortSignal,
 ): Promise<ResearchRun> {
-  return json<ResearchRun>(
+  return await json<ResearchRun>(
     await authFetch(`/api/chat/research-runs/${id}`, { signal }),
   );
 }
@@ -106,7 +106,7 @@ async function mutate(
   action: string,
   body?: Record<string, unknown>,
 ): Promise<ResearchRun> {
-  return json<ResearchRun>(
+  return await json<ResearchRun>(
     await authFetch(`/api/chat/research-runs/${id}/${action}`, {
       method: "POST",
       ...(body
@@ -151,7 +151,7 @@ export async function updateResearchPlan(
   plan: ResearchPlan,
   expectedRevision: number,
 ): Promise<ResearchRun> {
-  return json<ResearchRun>(
+  return await json<ResearchRun>(
     await authFetch(`/api/chat/research-runs/${id}/plan`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

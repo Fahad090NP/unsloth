@@ -49,7 +49,7 @@ test("a load resumed after a page reload records the paths it was started with",
   const resident = { repoId: "org/old", kind: "pipeline" } as const;
   const target = finishedLoadTarget<typeof resident>(resident, ready);
   assert.deepEqual(target, { ...zImage, ...zFiles, fieldFiles: zFiles });
-  assert.deepEqual(rememberLoadedImageComponents(target!, ready), zFiles);
+  assert.deepEqual(rememberLoadedImageComponents(target, ready), zFiles);
   assert.deepEqual(readImageComponents(zImage), zFiles);
   assert.equal(finishedLoadTarget(null, ready), null);
 
@@ -96,7 +96,7 @@ test("a load that finished while the page was closed records its paths before th
   rememberPendingImageLoad({ ...zImage, fieldFiles: zFiles });
   const resumed = finishedLoadTarget(null, ready);
   assert.deepEqual(resumed?.fieldFiles, zFiles);
-  assert.deepEqual(rememberLoadedImageComponents(resumed!, ready), zFiles);
+  assert.deepEqual(rememberLoadedImageComponents(resumed, ready), zFiles);
   assert.deepEqual(readImageComponents(zImage), zFiles);
 });
 

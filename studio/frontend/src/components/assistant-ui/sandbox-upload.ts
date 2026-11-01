@@ -8,7 +8,7 @@ import { sandboxRoutePrefix } from "./sandbox-files";
 /** Mirrors SANDBOX_UPLOAD_MAX_BYTES in backend/utils/upload_limits.py. */
 export const MAX_SANDBOX_UPLOAD_BYTES = 512 * 1024 * 1024;
 
-export type SandboxUploadResult = { name: string; path: string; replaced: boolean };
+export interface SandboxUploadResult { name: string; path: string; replaced: boolean }
 
 /**
  * Put one file into a chat's sandbox folder, at its root. A taken name is refused with a 409

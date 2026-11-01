@@ -146,7 +146,7 @@ export function DatasetDownloadSection({
           {canDelete && (
             <CardDeleteButton
               label={`Delete ${repoId}`}
-              onClick={() => setDeleteOpen(true)}
+              onClick={() => { setDeleteOpen(true); }}
             />
           )}
           {isDownloaded && cachePath && (

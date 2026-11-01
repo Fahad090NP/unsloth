@@ -14,7 +14,7 @@ globalThis.fetch = (async (input: RequestInfo | URL) => {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
-}) as typeof fetch;
+});
 
 const { listProviderRegistry } = await import(
   "../src/features/chat/api/providers-api.ts"

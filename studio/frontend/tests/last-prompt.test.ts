@@ -120,7 +120,7 @@ test("another account signing in does not see the previous account's prompts", a
 
 test("the same account signing in again keeps its prompts", async () => {
   const { browser, localStorage } = accountBrowser("alice");
-  withStorage(localStorage, () => saveLastPrompt("video", "alice's clip"));
+  withStorage(localStorage, () => { saveLastPrompt("video", "alice's clip"); });
   await transitionBrowserAccount("alice", "/video", () => {}, browser);
   withStorage(localStorage, () => {
     assert.equal(readLastPrompt("video"), "alice's clip");

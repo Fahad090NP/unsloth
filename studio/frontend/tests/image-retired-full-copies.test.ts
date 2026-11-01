@@ -73,10 +73,10 @@ test("a remembered retired copy is recalled as itself: the backend decides wheth
   assert.deepEqual(recalled, { repoId: "unsloth/flux-3-image-klein", kind: "pipeline" });
   // Loaded through the base (not complete on disk), the finished load is remembered as that base.
   const base = { loaded: true, repo_id: "black-forest-labs/flux-3-image-klein", model_kind: "pipeline" };
-  assert.deepEqual(retiredSnapshotAsLoaded(recalled!, base), { repoId: "black-forest-labs/flux-3-image-klein", kind: "pipeline" });
+  assert.deepEqual(retiredSnapshotAsLoaded(recalled, base), { repoId: "black-forest-labs/flux-3-image-klein", kind: "pipeline" });
   // Loaded from disk, it stays the copy.
   const own = { loaded: true, repo_id: "unsloth/flux-3-image-klein", model_kind: "pipeline" };
-  assert.equal(retiredSnapshotAsLoaded(recalled!, own), recalled);
+  assert.equal(retiredSnapshotAsLoaded(recalled, own), recalled);
 });
 
 test("a model remembered as the copy's snapshot path is recalled as that snapshot", () => {

@@ -14,7 +14,7 @@ const { subscribeModelLifecycle, withBackgroundLoadNotice } = await import(
 
 const TIMING = { pollMs: 1, readTimeoutMs: 25, stallMs: 5000 };
 
-type Seen = { runtime: string; loading: boolean; model: string | null };
+interface Seen { runtime: string; loading: boolean; model: string | null }
 
 function record(): { seen: Seen[]; settled: Promise<void>; stop: () => void } {
   const seen: Seen[] = [];

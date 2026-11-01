@@ -187,14 +187,14 @@ export function HubListHeader({
                 active={view === "two"}
                 label="Two columns"
                 icon={LayoutTwoColumnIcon}
-                onClick={() => onViewChange("two")}
+                onClick={() => { onViewChange("two"); }}
               />
               <ViewToggleButton
                 pillId={viewPillId}
                 active={view === "split"}
                 label="Split view"
                 icon={ViewSidebarLeftIcon}
-                onClick={() => onViewChange("split")}
+                onClick={() => { onViewChange("split"); }}
               />
             </div>
           )}
@@ -365,7 +365,7 @@ export const ResultCard = memo(function ResultCard({
     resourceLabel: isDataset ? "dataset" : "model",
   });
 
-  const textParts: Array<{ key: string; node: ReactNode }> = [];
+  const textParts: { key: string; node: ReactNode }[] = [];
   if (taskLabel) {
     textParts.push({
       key: "task",
@@ -394,7 +394,7 @@ export const ResultCard = memo(function ResultCard({
     <button
       type="button"
       aria-label={row.repo}
-      onClick={() => onSelect(row.id)}
+      onClick={() => { onSelect(row.id); }}
       className="hub-result-row hub-result-card group/row @container flex h-full w-full cursor-pointer items-center gap-3.5 px-4 text-left max-md:gap-3 max-md:px-3 outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
     >
       <OwnerAvatar
@@ -526,7 +526,7 @@ export const ResultSplitRow = memo(function ResultSplitRow({
       aria-label={row.repo}
       aria-current={selected || undefined}
       data-selected={selected || undefined}
-      onClick={() => onSelect(row.id)}
+      onClick={() => { onSelect(row.id); }}
       className="group/row flex h-full w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-left outline-none transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(4%*var(--contrast-wash-gain,1)),transparent)] data-[selected]:bg-[color-mix(in_oklab,var(--foreground)_calc(7%*var(--contrast-wash-gain,1)),transparent)] focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset dark:hover:bg-[rgb(255_255_255_/_calc(0.05*var(--contrast-wash-gain,1)))] dark:data-[selected]:bg-accent"
     >
       <OwnerAvatar

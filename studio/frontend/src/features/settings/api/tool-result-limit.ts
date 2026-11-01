@@ -13,15 +13,15 @@ export const TOOL_RESULT_LIMIT_CHOICES = [
   4000, 8000, 16000, 32000, 64000, 128000, 200000,
 ] as const;
 
-export type ToolResultLimitSettings = {
+export interface ToolResultLimitSettings {
   maxChars: number;
   defaultChars: number;
   minChars: number;
   maxAllowedChars: number;
   lockedByEnvironment: boolean;
-};
+}
 
-type ApiToolResultLimitSettings = {
+interface ApiToolResultLimitSettings {
   // biome-ignore lint/style/useNamingConvention: API schema
   max_chars: number;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -32,7 +32,7 @@ type ApiToolResultLimitSettings = {
   max_allowed_chars?: number;
   // biome-ignore lint/style/useNamingConvention: API schema
   locked_by_environment?: boolean;
-};
+}
 
 export function toolResultLimitFromApi(
   settings: ApiToolResultLimitSettings,

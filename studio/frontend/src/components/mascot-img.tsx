@@ -43,7 +43,7 @@ function MascotImgInner({ src, alt = "", ...rest }: MascotImgProps) {
       {...rest}
       src={effectiveSrc}
       alt={alt}
-      onError={() => setStage((s) => (s === "primary" ? "retry" : "fallback"))}
+      onError={() => { setStage((s) => (s === "primary" ? "retry" : "fallback")); }}
     />
   );
 }

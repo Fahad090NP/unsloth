@@ -113,7 +113,7 @@ test("partial append remains recoverable after reload and can be retried", () =>
   const journal = createPinnedChatsJournal(storage, "session");
   storage.fail = (method, key) =>
     method === "set" && key.endsWith(b.operationId);
-  assert.throws(() => journal.writePending([a, b]), /storage unavailable/);
+  assert.throws(() => { journal.writePending([a, b]); }, /storage unavailable/);
   const reloaded = createPinnedChatsJournal(storage, "session");
   assert.deepEqual(reloaded.readPending(), [a]);
   storage.fail = undefined;
@@ -130,7 +130,7 @@ test("partial acknowledgment retains every not-yet-removed entry for retry", () 
   journal.writePending([a, b]);
   storage.fail = (method, key) =>
     method === "remove" && key.endsWith(b.operationId);
-  assert.throws(() => journal.writePending([]), /storage unavailable/);
+  assert.throws(() => { journal.writePending([]); }, /storage unavailable/);
   const reloaded = createPinnedChatsJournal(storage, "session");
   assert.deepEqual(reloaded.readPending(), [b]);
   storage.fail = undefined;
@@ -202,7 +202,7 @@ test("fallback set failure leaves the previous durable snapshot intact", () => {
   journal.writeFallback(fallback(["base"]));
   storage.fail = (method) => method === "set";
   assert.throws(
-    () => journal.writeFallback(fallback(["base"], [a])),
+    () => { journal.writeFallback(fallback(["base"], [a])); },
     /storage unavailable/,
   );
   assert.deepEqual(
@@ -245,7 +245,7 @@ test("failed auth cleanup reports the error and can be retried", () => {
   const journal = createPinnedChatsJournal(storage, "session");
   journal.writePending([a]);
   storage.fail = (method) => method === "remove";
-  assert.throws(() => journal.clear(), /storage unavailable/);
+  assert.throws(() => { journal.clear(); }, /storage unavailable/);
   assert.equal(storage.length, 1);
   storage.fail = undefined;
   journal.clear();
@@ -298,7 +298,7 @@ test("a tab holding a pin another tab's unpin cancelled does not replay it", asy
       load: async () => server.slice(),
       compareAndSet: async (expected, next) => {
         if (!online()) throw new Error("offline");
-        return save(expected, next);
+        return await save(expected, next);
       },
       readLegacy: () => [],
       readPending: disk.readPending,

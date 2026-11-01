@@ -93,7 +93,7 @@ function sendReplyFinished(): void {
 // Called from the settings switch (a user gesture, so the prompt can show); false reverts it.
 export async function requestReplyFinishedPermission(): Promise<boolean> {
   if (isTauri) {
-    return primeNativeNotificationPermission();
+    return await primeNativeNotificationPermission();
   }
   const api = browserNotificationApi();
   if (!api) {

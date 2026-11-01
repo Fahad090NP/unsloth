@@ -165,7 +165,7 @@ function RouteBoundary({
   );
 }
 
-type ChatPageProps = { search: ChatSearch; active: boolean };
+interface ChatPageProps { search: ChatSearch; active: boolean }
 type ChatPageAttemptProps = ChatPageProps & { onRetry: () => void };
 
 function ChatPageLoadFailure({
@@ -215,7 +215,7 @@ function chatPageAttempt(): ComponentType<ChatPageAttemptProps> {
 function ChatPage(props: ChatPageProps) {
   // Kept until a failure: swapping component type would remount the page and drop its state.
   const [Page, setPage] = useState(chatPageAttempt);
-  const retry = useCallback(() => setPage(() => chatPageAttempt()), []);
+  const retry = useCallback(() => { setPage(() => chatPageAttempt()); }, []);
   return (
     <Suspense fallback={<RouteFallback />}>
       <Page {...props} onRetry={retry} />
@@ -529,13 +529,13 @@ function RootLayout() {
 
   useShortcut(
     "openSettings",
-    () => useSettingsDialogStore.getState().openDialog(),
+    () => { useSettingsDialogStore.getState().openDialog(); },
     { enabled: !isAuthFlowRoute },
   );
   useShortcut(
     "openKeyboardShortcuts",
     () =>
-      useSettingsDialogStore.getState().openDialog("keyboard-shortcuts"),
+      { useSettingsDialogStore.getState().openDialog("keyboard-shortcuts"); },
     { enabled: !isAuthFlowRoute },
   );
   const startNewChat = (options?: {
@@ -563,15 +563,15 @@ function RootLayout() {
   // Gated like the workspace chords below: /login has no shell, and /chat
   // bounces straight back off requireAuth.
   const routeShortcutEnabled = !isAuthFlowRoute && !settingsDialogOpen;
-  useShortcut("newChat", () => startNewChat(), {
+  useShortcut("newChat", () => { startNewChat(); }, {
     enabled: routeShortcutEnabled,
   });
   useShortcut(
     "newTemporaryChat",
-    () => startNewChat({ incognito: true, standalone: true }),
+    () => { startNewChat({ incognito: true, standalone: true }); },
     { enabled: routeShortcutEnabled },
   );
-  useShortcut("newStandaloneChat", () => startNewChat({ standalone: true }), {
+  useShortcut("newStandaloneChat", () => { startNewChat({ standalone: true }); }, {
     enabled: routeShortcutEnabled,
   });
 
@@ -587,7 +587,7 @@ function RootLayout() {
     mounted ? () => void triggerShortcut(id) : null;
   const isOwner = useIsAccountOwner();
   const helpAction = (action: HelpAction) =>
-    isAuthFlowRoute || !helpActionAvailable(action, isOwner) ? null : () => runHelpAction(action);
+    isAuthFlowRoute || !helpActionAvailable(action, isOwner) ? null : () => { runHelpAction(action); };
   const goTo = (to: string) => () => void navigate({ to });
   const goAction = (enabled: boolean, go: () => void) => (enabled ? go : null);
   // Go > Settings: the pages this account can open.
@@ -595,14 +595,14 @@ function RootLayout() {
     SETTINGS_TABS.map((tab) => [
       `settings-${tab}`,
       !isAuthFlowRoute && settingsTabVisible(tab, isOwner)
-        ? () => useSettingsDialogStore.getState().openDialog(tab)
+        ? () => { useSettingsDialogStore.getState().openDialog(tab); }
         : null,
     ]),
   ) as Record<SettingsMenuAction, (() => void) | null>;
   useAppMenuActions({
-    "new-chat": routeShortcutEnabled ? () => startNewChat() : null,
+    "new-chat": routeShortcutEnabled ? () => { startNewChat(); } : null,
     "new-temporary-chat": routeShortcutEnabled
-      ? () => startNewChat({ incognito: true, standalone: true })
+      ? () => { startNewChat({ incognito: true, standalone: true }); }
       : null,
     "open-folder":
       routeShortcutEnabled && pathLeasesSupported && !ragUnavailable && !openingFolder
@@ -619,11 +619,11 @@ function RootLayout() {
     "find": viaShortcut("findInPage", findMounted),
     "previous-chat": viaShortcut("previousChat", previousChatMounted),
     "next-chat": viaShortcut("nextChat", nextChatMounted),
-    "back": routeShortcutEnabled ? () => window.history.back() : null,
-    "forward": routeShortcutEnabled ? () => window.history.forward() : null,
-    "zoom-in": () => zoomInterfaceFromMenu(1),
-    "zoom-out": () => zoomInterfaceFromMenu(-1),
-    "actual-size": () => zoomInterfaceFromMenu(0),
+    "back": routeShortcutEnabled ? () => { window.history.back(); } : null,
+    "forward": routeShortcutEnabled ? () => { window.history.forward(); } : null,
+    "zoom-in": () => { zoomInterfaceFromMenu(1); },
+    "zoom-out": () => { zoomInterfaceFromMenu(-1); },
+    "actual-size": () => { zoomInterfaceFromMenu(0); },
     "help-documentation": helpAction("help-documentation"),
     "help-keyboard-shortcuts": helpAction("help-keyboard-shortcuts"),
     "help-whats-new": helpAction("help-whats-new"),

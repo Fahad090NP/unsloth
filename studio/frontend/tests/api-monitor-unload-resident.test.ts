@@ -39,7 +39,7 @@ function backend(timeline: (ResidentModel | null)[]): UnloadResidentDeps & {
     unload: async (checkpoint: string) => {
       sent.push(checkpoint);
       const landsOn = at(index);
-      if (landsOn && landsOn.checkpoint === checkpoint) {
+      if (landsOn?.checkpoint === checkpoint) {
         timeline.splice(index, timeline.length - index, null);
       }
     },

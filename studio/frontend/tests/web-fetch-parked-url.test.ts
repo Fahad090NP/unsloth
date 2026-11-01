@@ -24,7 +24,7 @@ const source = ts.createSourceFile(
 
 function walk(node: ts.Node, visit: (node: ts.Node) => void): void {
   visit(node);
-  node.forEachChild((child) => walk(child, visit));
+  node.forEachChild((child) => { walk(child, visit); });
 }
 
 function find<T extends ts.Node>(

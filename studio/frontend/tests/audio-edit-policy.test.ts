@@ -13,7 +13,7 @@ const P = await import("../src/features/audio/edit-policy.ts");
 const A = await import("../src/features/audio/edit-adapters.ts");
 
 type Input = Parameters<typeof P.editBlocker>[0];
-type Action = { id: string; label: string };
+interface Action { id: string; label: string }
 
 const S2 = "Okay, I'm Cemo and what you just heard wasn't a human voice.";
 const EDITED = S2.replace("human", "robot");

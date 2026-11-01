@@ -36,7 +36,7 @@ function params(overrides: Partial<InferenceParams> = {}): InferenceParams {
     systemPrompt: "",
     systemVariables: "",
     ...overrides,
-  } as InferenceParams;
+  };
 }
 
 function record(
@@ -47,9 +47,9 @@ function record(
 ) {
   return getRememberedParamsPatch(
     true,
-    paramsByModel as never,
+    paramsByModel,
     modelId,
-    changed as never,
+    changed,
     pickRememberedParams(full),
   );
 }
@@ -202,7 +202,7 @@ test("a model's defaults do not outrank what it is remembered with", async () =>
   const applyDefaults = (current: InferenceParams, modelId: string) =>
     mergeBackendRecommendedInference({
       current,
-      response: response as never,
+      response: response,
       modelId,
       presetSource: "builtin-default",
       loadedContextLength: response.context_length,

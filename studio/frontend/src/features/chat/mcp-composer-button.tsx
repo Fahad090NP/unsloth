@@ -48,14 +48,14 @@ import { useChatActive } from "./runtime-provider";
 import { useChatRuntimeStore } from "./stores/chat-runtime-store";
 import { useMcpServersDialogStore } from "./stores/mcp-servers-dialog-store";
 
-type McpPreset = {
+interface McpPreset {
   id: string;
   displayName: string;
   url: string;
   label?: string;
   hint?: string;
   disablesWebSearch?: boolean;
-};
+}
 
 // Keyless remote MCP presets (rate-limited free tiers).
 const MCP_PRESETS: readonly McpPreset[] = [
@@ -83,7 +83,7 @@ export function McpComposerButton({
   side?: "top" | "bottom";
 } = {}) {
   const modelLoaded = useChatRuntimeStore(
-    (s) => !!s.params.checkpoint && !s.modelLoading,
+    (s) => Boolean(s.params.checkpoint) && !s.modelLoading,
   );
   const supportsTools = useChatRuntimeStore((s) => s.supportsTools);
   const mcpEnabledForChat = useChatRuntimeStore((s) => s.mcpEnabledForChat);
@@ -293,10 +293,10 @@ export function McpComposerButton({
           disablesWebSearch: opts.disablesWebSearch,
         });
       }}
-      onPointerEnter={opts.hint ? () => setHintKey(opts.key) : undefined}
+      onPointerEnter={opts.hint ? () => { setHintKey(opts.key); } : undefined}
       onPointerLeave={
         opts.hint
-          ? () => setHintKey((k) => (k === opts.key ? null : k))
+          ? () => { setHintKey((k) => (k === opts.key ? null : k)); }
           : undefined
       }
       className={
@@ -465,12 +465,12 @@ export function McpServersDialogMount() {
   const open = useMcpServersDialogStore((s) => s.open);
   const setOpen = useMcpServersDialogStore((s) => s.setOpen);
   const chatActive = useChatActive();
-  useShortcut("openMcpServers", () => setOpen(true), { enabled: chatActive });
+  useShortcut("openMcpServers", () => { setOpen(true); }, { enabled: chatActive });
   useEffect(() => {
     if (!chatActive && open) setOpen(false);
   }, [chatActive, open, setOpen]);
   useEffect(() => {
-    return () => useMcpServersDialogStore.getState().setOpen(false);
+    return () => { useMcpServersDialogStore.getState().setOpen(false); };
   }, []);
   return (
     <ChatMcpServersDialog open={chatActive && open} onOpenChange={setOpen} />

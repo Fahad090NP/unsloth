@@ -37,7 +37,7 @@ export function KeyRevealCard({
   const handleCopy = async () => {
     if (await copyToClipboard(rawKey)) {
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      setTimeout(() => { setCopied(false); }, 1800);
     } else {
       selectToken(inputRef.current);
     }
@@ -60,7 +60,7 @@ export function KeyRevealCard({
           type="text"
           readOnly={true}
           value={rawKey}
-          onFocus={(event) => selectToken(event.currentTarget)}
+          onFocus={(event) => { selectToken(event.currentTarget); }}
           aria-label={t("settings.apiKeys.newTokenCreated")}
           className="min-w-0 flex-1 bg-transparent text-foreground outline-none"
           data-reload-snapshot-sensitive={true}

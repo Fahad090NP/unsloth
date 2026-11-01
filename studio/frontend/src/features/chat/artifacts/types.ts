@@ -53,7 +53,7 @@ export function htmlDocumentTitle(code: string): string | null {
   const title = match[1]
     .replace(/<[^>]*>/g, "")
     .replace(/&(#x[0-9a-f]+|#\d+|\w+);/gi, (entity, body: string) => {
-      if (body[0] === "#") {
+      if (body.startsWith("#")) {
         const point =
           body[1]?.toLowerCase() === "x"
             ? Number.parseInt(body.slice(2), 16)

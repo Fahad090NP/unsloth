@@ -13,10 +13,10 @@ export type InventoryResourceFormatHint =
   | null
   | undefined;
 
-export type ResolvedInventoryResource = {
+export interface ResolvedInventoryResource {
   cachedRow: CachedInventoryRow | null;
   localRow: LocalInventoryRow | null;
-};
+}
 
 function repoKey(value: string | null | undefined): string {
   return value?.trim().toLowerCase() ?? "";

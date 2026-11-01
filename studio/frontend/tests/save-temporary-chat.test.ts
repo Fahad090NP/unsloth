@@ -15,7 +15,7 @@ const storage = readSrc("features/chat/utils/chat-history-storage.ts");
 const button = readSrc("features/chat/components/temporary-chat-save.tsx");
 const page = readSrc("features/chat/chat-page.tsx");
 
-type Item = { parentId: string | null; message: { id: string } };
+interface Item { parentId: string | null; message: { id: string } }
 // parentsFirst delegates to dependency-free orderParentsFirst so the isolated scope can use it directly.
 const parentsFirst = new Function(
   "orderParentsFirst",

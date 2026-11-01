@@ -381,16 +381,16 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
                   : {}),
                 modelType: resolveTrainingModelType({
                   modelType: modelDetails.model_type,
-                  isEmbedding: !!modelDetails.is_embedding,
-                  isDecision: !!modelDetails.is_decision,
+                  isEmbedding: Boolean(modelDetails.is_embedding),
+                  isDecision: Boolean(modelDetails.is_decision),
                   isVision: modelDetails.is_vision,
                   isAudio: modelDetails.is_audio,
                 }),
                 decisionLayout: null,
                 modelFormat: "adapter",
                 isVisionModel: modelDetails.is_vision,
-                isEmbeddingModel: !!modelDetails.is_embedding,
-                isAudioModel: !!modelDetails.is_audio,
+                isEmbeddingModel: Boolean(modelDetails.is_embedding),
+                isAudioModel: Boolean(modelDetails.is_audio),
                 audioCapabilityUnknown: modelDetails.audio_type_known === false,
                 isLoadingModelDefaults: false,
                 isCheckingVision: false,
@@ -424,8 +424,8 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
                 : LR_DEFAULT_FULL;
             }
 
-            const isAudio = !!modelDetails.is_audio;
-            const isEmbedding = !!modelDetails.is_embedding;
+            const isAudio = Boolean(modelDetails.is_audio);
+            const isEmbedding = Boolean(modelDetails.is_embedding);
             const inferredModelType = resolveTrainingModelType({
               modelType: modelDetails.model_type,
               isEmbedding,
@@ -802,8 +802,8 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
         })
           .then((res) => {
             if (controller.signal.aborted) return;
-            const isImage = !!res.is_image;
-            const isAudio = !!res.is_audio;
+            const isImage = Boolean(res.is_image);
+            const isAudio = Boolean(res.is_audio);
             const current = get();
             const streamingDisabled =
               current.datasetStreaming && (isImage || isAudio);
@@ -1146,7 +1146,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
         const shouldLoadDefaults =
           selectionChanged || get().modelDefaultsAppliedFor !== selectedModel;
         if (shouldLoadDefaults) {
-          void loadAndApplyModelDefaults(selectedModel);
+          loadAndApplyModelDefaults(selectedModel);
         }
       };
 
@@ -1170,7 +1170,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
             modelFormat: options.modelFormat,
           });
           if (cacheReferenceChanged) {
-            void loadAndApplyModelDefaults(model, {
+            loadAndApplyModelDefaults(model, {
               applyTrainingDefaults: canReapplyModelDefaults(model),
             });
           }
@@ -1193,7 +1193,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
             modelLocalPath: null,
             modelFormat: null,
           });
-          void loadAndApplyModelDefaults(model, {
+          loadAndApplyModelDefaults(model, {
             applyTrainingDefaults: canReapplyModelDefaults(model),
           });
         },
@@ -1255,21 +1255,21 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
           if (state.isLoadingModelDefaults) return;
           const defaultsAlreadyApplied =
             state.modelDefaultsAppliedFor === state.selectedModel;
-          void loadAndApplyModelDefaults(state.selectedModel, {
+          loadAndApplyModelDefaults(state.selectedModel, {
             applyTrainingDefaults:
               !defaultsAlreadyApplied ||
               canReapplyModelDefaults(state.selectedModel),
           });
         },
-        setModelSubfolder: (modelSubfolder) => setUserEdit({ modelSubfolder }),
+        setModelSubfolder: (modelSubfolder) => { setUserEdit({ modelSubfolder }); },
         setTrainAsDecision: (trainAsDecision) => {
           if (get().trainAsDecision === trainAsDecision) return;
           set({ trainAsDecision });
           const { selectedModel } = get();
           // Reloading the model's defaults switches the whole recipe, as picking a Laya model does.
-          if (selectedModel) void loadAndApplyModelDefaults(selectedModel);
+          if (selectedModel) loadAndApplyModelDefaults(selectedModel);
         },
-        setProjectName: (projectName) => setUserEdit({ projectName }),
+        setProjectName: (projectName) => { setUserEdit({ projectName }); },
         setTrainingMethod: (trainingMethod) => {
           _trainingMethodEditGeneration += 1;
           const state = get();
@@ -1299,7 +1299,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
           restoreBrowseDatasetSourceInternal();
         },
         setDatasetFormat: (datasetFormat) =>
-          setUserEdit((state) => {
+          { setUserEdit((state) => {
             if (state.trainingMethod === "cpt") {
               if (isRawTextDatasetFormat(datasetFormat)) {
                 return {
@@ -1328,7 +1328,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
                 ? { trainOnCompletionsDefaultPendingFor: null }
                 : {}),
             };
-          }),
+          }); },
         setDataset: (dataset) => {
           const datasetId = dataset?.trim() || null;
           trainingDatasetCacheRejections.reset();
@@ -1522,9 +1522,9 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
             userEditRevision: state.userEditRevision + 1,
           })),
         setDatasetManualMapping: (datasetManualMapping) =>
-          setUserEdit({ datasetManualMapping }),
+          { setUserEdit({ datasetManualMapping }); },
         setDatasetAdvisorFields: (fields) =>
-          setUserEdit({
+          { setUserEdit({
             datasetSystemPrompt:
               fields.systemPrompt ?? get().datasetSystemPrompt,
             datasetLabelMapping:
@@ -1533,33 +1533,33 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
               fields.notification !== undefined
                 ? fields.notification
                 : get().datasetAdvisorNotification,
-          }),
+          }); },
         setDatasetSliceStart: (datasetSliceStart) =>
-          setUserEdit({ datasetSliceStart }),
+          { setUserEdit({ datasetSliceStart }); },
         setDatasetSliceEnd: (datasetSliceEnd) =>
-          setUserEdit({ datasetSliceEnd }),
+          { setUserEdit({ datasetSliceEnd }); },
         setUploadedEvalFile: (uploadedEvalFile) =>
-          setUserEdit({
+          { setUserEdit({
             uploadedEvalFile,
             evalSteps: uploadedEvalFile ? 0.1 : 0,
-          }),
-        setEpochs: (epochs) => setUserEdit({ epochs }),
-        setContextLength: (contextLength) => setUserEdit({ contextLength }),
+          }); },
+        setEpochs: (epochs) => { setUserEdit({ epochs }); },
+        setContextLength: (contextLength) => { setUserEdit({ contextLength }); },
         setVisionImageSize: (visionImageSize) =>
-          setUserEdit({ visionImageSize }),
+          { setUserEdit({ visionImageSize }); },
         setLearningRate: (learningRate) =>
-          setUserEdit((state) => ({
+          { setUserEdit((state) => ({
             learningRate,
             trainingMethodProvenance: {
               ...state.trainingMethodProvenance,
               learningRateManuallySet: true,
             },
-          })),
+          })); },
         setEmbeddingLearningRate: (embeddingLearningRate) =>
-          setUserEdit({ embeddingLearningRate }),
-        setOptimizerType: (optimizerType) => setUserEdit({ optimizerType }),
+          { setUserEdit({ embeddingLearningRate }); },
+        setOptimizerType: (optimizerType) => { setUserEdit({ optimizerType }); },
         setLrSchedulerType: (lrSchedulerType) =>
-          setUserEdit({ lrSchedulerType }),
+          { setUserEdit({ lrSchedulerType }); },
         setLoraRank: (loraRank) => {
           _loraParamEditGenerations.loraRank += 1;
           setUserEdit({ loraRank });
@@ -1568,16 +1568,16 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
           _loraParamEditGenerations.loraAlpha += 1;
           setUserEdit({ loraAlpha });
         },
-        setLoraDropout: (loraDropout) => setUserEdit({ loraDropout }),
+        setLoraDropout: (loraDropout) => { setUserEdit({ loraDropout }); },
         setLoraVariant: (loraVariant) => {
           _loraParamEditGenerations.loraVariant += 1;
           setUserEdit({ loraVariant });
         },
-        setBatchSize: (batchSize) => setUserEdit({ batchSize }),
+        setBatchSize: (batchSize) => { setUserEdit({ batchSize }); },
         setGradientAccumulation: (gradientAccumulation) =>
-          setUserEdit({ gradientAccumulation }),
-        setWeightDecay: (weightDecay) => setUserEdit({ weightDecay }),
-        setWarmupSteps: (warmupSteps) => setUserEdit({ warmupSteps }),
+          { setUserEdit({ gradientAccumulation }); },
+        setWeightDecay: (weightDecay) => { setUserEdit({ weightDecay }); },
+        setWarmupSteps: (warmupSteps) => { setUserEdit({ warmupSteps }); },
         setMaxSteps: (maxSteps) => {
           const state = get();
           const streamingPatch = streamingCompatiblePatch({
@@ -1590,7 +1590,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
           });
           notifyStreamingCompat(streamingPatch);
         },
-        setSaveSteps: (saveSteps) => setUserEdit({ saveSteps }),
+        setSaveSteps: (saveSteps) => { setUserEdit({ saveSteps }); },
         setEvalSteps: (evalSteps) => {
           const state = get();
           const streamingPatch = streamingCompatiblePatch({
@@ -1604,25 +1604,25 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
           notifyStreamingCompat(streamingPatch);
         },
         setEarlyStoppingPatience: (earlyStoppingPatience) =>
-          setUserEdit({ earlyStoppingPatience }),
-        setDrafterEnabled: (drafterEnabled) => setUserEdit({ drafterEnabled }),
+          { setUserEdit({ earlyStoppingPatience }); },
+        setDrafterEnabled: (drafterEnabled) => { setUserEdit({ drafterEnabled }); },
         setDrafterStrategy: (drafterStrategy) =>
-          setUserEdit({ drafterStrategy }),
+          { setUserEdit({ drafterStrategy }); },
         setDrafterDataSource: (drafterDataSource) =>
-          setUserEdit({ drafterDataSource }),
+          { setUserEdit({ drafterDataSource }); },
         setDrafterMaxExamples: (drafterMaxExamples) =>
-          setUserEdit({ drafterMaxExamples }),
-        setDrafterEpochs: (drafterEpochs) => setUserEdit({ drafterEpochs }),
+          { setUserEdit({ drafterMaxExamples }); },
+        setDrafterEpochs: (drafterEpochs) => { setUserEdit({ drafterEpochs }); },
         setDrafterLearningRate: (drafterLearningRate) =>
-          setUserEdit({ drafterLearningRate }),
+          { setUserEdit({ drafterLearningRate }); },
         setDrafterDraftSteps: (drafterDraftSteps) =>
-          setUserEdit({ drafterDraftSteps }),
+          { setUserEdit({ drafterDraftSteps }); },
         setDrafterCapability: (drafterCapability) =>
           set({ drafterCapability }),
-        setPacking: (packing) => setUserEdit((state) => ({
+        setPacking: (packing) => { setUserEdit((state) => ({
           packing,
           trainingToggleChoices: { ...state.trainingToggleChoices, packing },
-        })),
+        })); },
         setTrainOnCompletions: (trainOnCompletions) => {
           _trainOnCompletionsManuallySet = true;
           _trainOnCompletionsExplicitModel = get().selectedModel;
@@ -1634,38 +1634,38 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
           });
         },
         setGradientCheckpointing: (gradientCheckpointing) =>
-          setUserEdit({ gradientCheckpointing }),
-        setOffloadLayers: (offloadLayers) => setUserEdit({ offloadLayers }),
-        setOffloadVramGb: (offloadVramGb) => setUserEdit({ offloadVramGb }),
+          { setUserEdit({ gradientCheckpointing }); },
+        setOffloadLayers: (offloadLayers) => { setUserEdit({ offloadLayers }); },
+        setOffloadVramGb: (offloadVramGb) => { setUserEdit({ offloadVramGb }); },
         setOffloadVramGbForDevice: (gpuIndex, value) =>
-          setUserEdit((state) => ({
+          { setUserEdit((state) => ({
             offloadVramGbPerDevice: {
               ...state.offloadVramGbPerDevice,
               [String(gpuIndex)]: value,
             },
-          })),
-        setPrefetchDepth: (prefetchDepth) => setUserEdit({ prefetchDepth }),
-        setRandomSeed: (randomSeed) => setUserEdit({ randomSeed }),
-        setEnableWandb: (enableWandb) => setUserEdit({ enableWandb }),
-        setWandbToken: (wandbToken) => setUserEdit({ wandbToken }),
-        setWandbProject: (wandbProject) => setUserEdit({ wandbProject }),
+          })); },
+        setPrefetchDepth: (prefetchDepth) => { setUserEdit({ prefetchDepth }); },
+        setRandomSeed: (randomSeed) => { setUserEdit({ randomSeed }); },
+        setEnableWandb: (enableWandb) => { setUserEdit({ enableWandb }); },
+        setWandbToken: (wandbToken) => { setUserEdit({ wandbToken }); },
+        setWandbProject: (wandbProject) => { setUserEdit({ wandbProject }); },
         setEnableTensorboard: (enableTensorboard) =>
-          setUserEdit({ enableTensorboard }),
-        setTensorboardDir: (tensorboardDir) => setUserEdit({ tensorboardDir }),
-        setLogFrequency: (logFrequency) => setUserEdit({ logFrequency }),
+          { setUserEdit({ enableTensorboard }); },
+        setTensorboardDir: (tensorboardDir) => { setUserEdit({ tensorboardDir }); },
+        setLogFrequency: (logFrequency) => { setUserEdit({ logFrequency }); },
         setFinetuneVisionLayers: (finetuneVisionLayers) =>
-          setUserEdit({ finetuneVisionLayers }),
+          { setUserEdit({ finetuneVisionLayers }); },
         setFinetuneLanguageLayers: (finetuneLanguageLayers) =>
-          setUserEdit({ finetuneLanguageLayers }),
+          { setUserEdit({ finetuneLanguageLayers }); },
         setFinetuneAttentionModules: (finetuneAttentionModules) =>
-          setUserEdit({ finetuneAttentionModules }),
+          { setUserEdit({ finetuneAttentionModules }); },
         setFinetuneMLPModules: (finetuneMLPModules) =>
-          setUserEdit({ finetuneMLPModules }),
+          { setUserEdit({ finetuneMLPModules }); },
         setTargetModules: (targetModules) => {
           _targetModulesEditGeneration += 1;
           setUserEdit({ targetModules });
         },
-        setS3Config: (s3Config) => setUserEdit({ s3Config }),
+        setS3Config: (s3Config) => { setUserEdit({ s3Config }); },
         restoreRunConfig: (config) => {
           const selections = runConfigDraftSelections(config);
           const hyperparameters = mapBackendModelConfigToTrainingPatch({

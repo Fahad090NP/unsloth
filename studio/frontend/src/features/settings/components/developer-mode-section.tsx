@@ -172,7 +172,7 @@ export function DeveloperModeSection() {
             <p>{t("settings.general.developerMode.performanceEstimate")}</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+            <Button variant="outline" onClick={() => { setConfirmOpen(false); }}>
               {t("common.cancel")}
             </Button>
             <Button

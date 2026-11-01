@@ -23,7 +23,7 @@ import {
 import { AttachmentBrowserOpenContext } from "./attachment-browser-open-context";
 import { FileContextMenu } from "./link-context-menu";
 
-type Opened = { blob: Blob; plainText?: boolean };
+interface Opened { blob: Blob; plainText?: boolean }
 
 // Documents, text and videos open as tabs; images and audio keep the lightbox.
 const OPENS_IN_BROWSER: ReadonlySet<AttachmentSource["kind"]> = new Set(["document", "text", "video"]);
@@ -83,7 +83,7 @@ const OpenerProvider: FC<PropsWithChildren<{ open: () => void }>> = ({ open, chi
   useLayoutEffect(() => {
     openRef.current = open;
   });
-  const stable = useCallback(() => openRef.current(), []);
+  const stable = useCallback(() => { openRef.current(); }, []);
   return <AttachmentBrowserOpenContext.Provider value={stable}>{children}</AttachmentBrowserOpenContext.Provider>;
 };
 

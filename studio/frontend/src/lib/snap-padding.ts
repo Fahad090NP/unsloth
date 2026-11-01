@@ -77,7 +77,7 @@ export function snapRowInsets(surface: HTMLElement | null): void {
     if (!surface.isConnected || balanceRowInsets(surface)) observer.disconnect();
   });
   observer.observe(surface, { childList: true, subtree: true });
-  window.setTimeout(() => observer.disconnect(), ROW_WAIT_MS);
+  window.setTimeout(() => { observer.disconnect(); }, ROW_WAIT_MS);
 }
 
 export function useSnappedPaddingRef<T extends HTMLElement>(

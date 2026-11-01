@@ -16,11 +16,11 @@ import {
 } from "./inbox";
 
 export const DESKTOP_RUN_CONFIG_URL_WARNING_LENGTH = 2_083;
-export type SharedRunConfig = {
+export interface SharedRunConfig {
   model?: string;
   ggufVariant?: string;
   config: Partial<PerModelConfig>;
-};
+}
 export type RunConfigLinkResult =
   | { kind: "unrelated" }
   | { kind: "invalid"; error: string }

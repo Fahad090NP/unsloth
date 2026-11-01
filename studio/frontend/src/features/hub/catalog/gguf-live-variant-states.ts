@@ -5,13 +5,13 @@ import type { ManagedDownload } from "../download-manager";
 import type { GgufVariantDetail } from "../inventory";
 import { normalizeGgufVariantIdentity } from "../lib/model-identity";
 
-export type LiveGgufVariantState = {
+export interface LiveGgufVariantState {
   state: ManagedDownload["state"];
   expectedBytes: number;
   transferredBytes: number;
   measuredTransfer: boolean;
   startedAt: number;
-};
+}
 
 export function activeDownloadState(state: ManagedDownload["state"] | undefined): boolean {
   return state === "running" || state === "cancelling";
@@ -36,7 +36,7 @@ export function createLiveGgufVariantStatesSelector(repoId: string): (state: {
     states: new Map(),
   };
   return (state) => {
-    const entries: Array<[string, LiveGgufVariantState]> = [];
+    const entries: [string, LiveGgufVariantState][] = [];
     for (const job of Object.values(state.jobs)) {
       if (job.kind !== "model" || !job.variant) continue;
       if (job.repoId.trim().toLowerCase() !== repoKey) continue;

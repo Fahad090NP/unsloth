@@ -41,7 +41,7 @@ function hasFreshAuthStatus(): boolean {
 }
 
 async function fetchAuthStatus(): Promise<AuthStatus> {
-  if (authStatusRequest) return authStatusRequest;
+  if (authStatusRequest) return await authStatusRequest;
 
   const request = (async () => {
     try {
@@ -74,7 +74,7 @@ async function fetchAuthStatus(): Promise<AuthStatus> {
     authStatusRequest = null;
   });
   authStatusRequest = request;
-  return request;
+  return await request;
 }
 
 function authRedirect(to: "/login" | "/change-password"): never {

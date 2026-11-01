@@ -204,7 +204,7 @@ export function MediaGenerationPresetControl({
               id={`${kind}-generation-preset-name`}
               value={name}
               disabled={saving}
-              onChange={(event) => setDraftName(event.target.value)}
+              onChange={(event) => { setDraftName(event.target.value); }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && canSave) {
                   event.preventDefault();

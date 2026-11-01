@@ -112,7 +112,7 @@ export function RunSettingsPicker({
       }
     };
     window.addEventListener("keydown", keepPanel, true);
-    return () => window.removeEventListener("keydown", keepPanel, true);
+    return () => { window.removeEventListener("keydown", keepPanel, true); };
   }, [isNaming]);
   if (naming) {
     return (
@@ -127,9 +127,9 @@ export function RunSettingsPicker({
           autoFocus={true}
           data-run-settings-name=""
           value={naming.name}
-          onFocus={(event) => event.currentTarget.select()}
+          onFocus={(event) => { event.currentTarget.select(); }}
           onChange={(event) =>
-            onNamingChange({ ...naming, name: event.target.value })
+            { onNamingChange({ ...naming, name: event.target.value }); }
           }
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -168,7 +168,7 @@ export function RunSettingsPicker({
             variant="ghost"
             size="sm"
             className="text-muted-foreground"
-            onClick={() => onNamingChange(null)}
+            onClick={() => { onNamingChange(null); }}
           >
             Cancel
           </Button>
@@ -210,7 +210,7 @@ export function RunSettingsPicker({
           className="menu-soft-surface max-h-[min(20rem,var(--radix-dropdown-menu-content-available-height))] w-max min-w-[var(--radix-dropdown-menu-trigger-width)] max-w-[min(36rem,calc(100vw-2rem))] rounded-lg border-0 p-1 ring-0"
         >
           <DropdownMenuLabel className={SECTION}>Default</DropdownMenuLabel>
-          <DropdownMenuItem className={ITEM} onSelect={() => onPick(null)}>
+          <DropdownMenuItem className={ITEM} onSelect={() => { onPick(null); }}>
             <Check on={selected === null && customName === null} />
             <span className="min-w-0 truncate">
               Default settings for {modelName}
@@ -228,7 +228,7 @@ export function RunSettingsPicker({
             <DropdownMenuItem
               key={entry.name}
               className={cn(ITEM, "pr-1.5")}
-              onSelect={() => onPick(entry.name)}
+              onSelect={() => { onPick(entry.name); }}
               aria-keyshortcuts="F2 Delete"
               onKeyDown={(event) => {
                 if (event.key === "F2") {

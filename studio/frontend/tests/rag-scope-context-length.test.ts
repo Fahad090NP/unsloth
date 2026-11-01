@@ -75,8 +75,7 @@ test("the served window is budgeted, never the n_ctx the load asked for", () => 
 test("every runtime field the budget reads survives a queued run", () => {
   const queuedKeys = new Set(
     (
-      readText("../src/features/chat/utils/queued-chat-run-settings.ts")
-        .match(/const QUEUED_SETTING_KEYS = \[([\s\S]*?)\] as const;/)?.[1] ?? ""
+      (/const QUEUED_SETTING_KEYS = \[([\s\S]*?)\] as const;/.exec(readText("../src/features/chat/utils/queued-chat-run-settings.ts")))?.[1] ?? ""
     ).match(/"([^"]+)"/g)?.map((quoted) => quoted.slice(1, -1)) ?? [],
   );
   assert.ok(queuedKeys.size > 0);

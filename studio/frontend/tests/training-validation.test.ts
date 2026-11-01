@@ -354,7 +354,7 @@ test("training validation lets LoRA and CPT continue from a saved adapter (#1314
   };
   for (const trainingMethod of ["lora", "qlora", "cpt"] as const) {
     assert.deepEqual(
-      validateTrainingConfig({ ...adapter, trainingMethod } as never, "linux"),
+      validateTrainingConfig({ ...adapter, trainingMethod }, "linux"),
       { ok: true, errorKey: null },
     );
   }
@@ -383,7 +383,7 @@ test("training validation refuses an adapter where a fresh adapter would be buil
   );
   assert.deepEqual(
     validateTrainingConfig(
-      { ...adapter, isEmbeddingModel: true } as never,
+      { ...adapter, isEmbeddingModel: true },
       "linux",
     ),
     refused,

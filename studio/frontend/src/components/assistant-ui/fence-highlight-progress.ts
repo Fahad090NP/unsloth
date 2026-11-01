@@ -7,11 +7,11 @@ export const HIGHLIGHT_BATCH_TOKENS = 512;
 export const HIGHLIGHT_BATCH_LINES = 64;
 export const HIGHLIGHT_TOKEN_CAP = 4096;
 
-export type HighlightProgress = {
+export interface HighlightProgress {
   counts: FenceLineChunks<number>;
   cursor: number;
   located: boolean;
-};
+}
 
 type Lines = readonly { length: number }[];
 

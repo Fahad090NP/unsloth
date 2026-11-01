@@ -206,7 +206,7 @@ test("a cancelled dragstart does not leave every fence held", async () => {
   const h = environment();
   h.send("pointerdown", mouse);
   const cancelled = new Event("dragstart", { cancelable: true });
-  h.target.addEventListener("dragstart", (event) => event.preventDefault());
+  h.target.addEventListener("dragstart", (event) => { event.preventDefault(); });
   h.target.dispatchEvent(cancelled);
   h.send("pointerup", { ...mouse, buttons: 0 });
   assert.equal(h.state.held(), true, "the outcome is only known once dispatch is over");

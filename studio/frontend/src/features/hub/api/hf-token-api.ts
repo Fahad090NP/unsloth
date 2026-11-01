@@ -38,13 +38,13 @@ async function parse(response: Response): Promise<SavedHfTokenResponse> {
 }
 
 export async function loadSavedHfToken(): Promise<SavedHfTokenResponse> {
-  return parse(await authFetch("/api/settings/hugging-face-token"));
+  return await parse(await authFetch("/api/settings/hugging-face-token"));
 }
 
 export async function saveHfToken(
   token: string,
 ): Promise<SavedHfTokenResponse> {
-  return parse(
+  return await parse(
     await authFetch("/api/settings/hugging-face-token", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -56,7 +56,7 @@ export async function saveHfToken(
 export async function migrateHfToken(
   token: string,
 ): Promise<SavedHfTokenResponse> {
-  return parse(
+  return await parse(
     await authFetch("/api/settings/hugging-face-token/migrate", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -67,7 +67,7 @@ export async function migrateHfToken(
 
 
 export async function clearSavedHfToken(): Promise<SavedHfTokenResponse> {
-  return parse(
+  return await parse(
     await authFetch("/api/settings/hugging-face-token", { method: "DELETE" }),
   );
 }

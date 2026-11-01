@@ -1,12 +1,12 @@
 const DEFAULT_THREAD_ID = "__default";
 
-type PreStreamRunReservation = {
+interface PreStreamRunReservation {
   threadIds: Set<string>;
   usesLocalModel: boolean;
   cancel?: (threadIds: string[]) => void;
   cancelled: boolean;
   claimed: boolean;
-};
+}
 
 export interface LocalPreStreamRunReservation {
   token: symbol;

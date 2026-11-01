@@ -9,26 +9,26 @@ export type PendingInventoryHints = Record<
   Map<string, InventoryHint>
 >;
 
-export type InventoryHintRow = {
+export interface InventoryHintRow {
   repo_id: string;
   size_bytes: number;
   partial?: boolean;
   optimistic?: boolean;
   /** Epoch seconds from the server or milliseconds from an optimistic row. */
   last_modified?: number | null;
-};
+}
 
-export type InventoryHintReconciliation = {
+export interface InventoryHintReconciliation {
   rows: InventoryHintRow[];
   pending: PendingInventoryHints;
   staleCompletedHints: InventoryHint[];
   observedKeys: Set<string>;
-};
+}
 
-type InventoryHintCommit = {
+interface InventoryHintCommit {
   pending: PendingInventoryHints;
   completedHintsToSuppress: InventoryHint[];
-};
+}
 
 export const INVENTORY_HINT_TTL_MS = 5 * 60_000;
 

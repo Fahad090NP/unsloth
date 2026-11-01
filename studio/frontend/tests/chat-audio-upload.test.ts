@@ -356,7 +356,7 @@ test("a hung readiness refresh times out and releases the queue", async () => {
         first,
         new Promise<never>((_resolve, reject) => {
           guard = setTimeout(
-            () => reject(new Error("readiness timeout did not fire")),
+            () => { reject(new Error("readiness timeout did not fire")); },
             250,
           );
         }),

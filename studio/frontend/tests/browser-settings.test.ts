@@ -186,11 +186,11 @@ test("Save link as from a temporary chat stays unlisted when its fetch lands aft
     new Promise((resolve) =>
       setTimeout(
         () =>
-          resolve(
+          { resolve(
             new Response(new Blob(["x"]), {
               headers: { "Content-Type": "application/zip", "X-Unsloth-Browser-Filename": "data.zip" },
             }),
-          ),
+          ); },
         50,
       ),
     );
@@ -454,7 +454,7 @@ test("a site's download answer is remembered, changed and forgotten, per account
   const name = useDownloadSitesStore.persist.getOptions().name;
   assert.equal(name, accountDatabaseName("unsloth_browser_download_sites"));
   assert.notEqual(name, "unsloth_browser_download_sites");
-  assert.ok(data.has(name!));
+  assert.ok(data.has(name));
   const prefs = JSON.parse(data.get("unsloth_browser_prefs") ?? "{}") as { state?: Record<string, unknown> };
   assert.equal(prefs.state?.downloadSites, undefined);
   assert.equal(useBrowserPrefsStore.getState().askBeforeDownloading, true);
@@ -960,11 +960,11 @@ test("Save link as asks again when the file it named by the address turns out to
     new Promise((resolve) =>
       setTimeout(
         () =>
-          resolve(
+          { resolve(
             new Response(new Blob(["MZ"]), {
               headers: { "Content-Type": "application/octet-stream", "X-Unsloth-Browser-Filename": "setup.exe" },
             }),
-          ),
+          ); },
         1200,
       ),
     );
@@ -1044,7 +1044,7 @@ test("a long download name keeps its extension, and a kept copy goes with its hi
   const file = { blob: new Blob(["x"]), name: row.name, contentType: "" };
   finishDownload("save:row", { name: row.name, size: 1, contentType: "", url: null, historyId: id, failed: false }, file);
   assert.equal(keptDownloadFile(id), file);
-  useBrowserHistoryStore.getState().removeDownload(id as string);
+  useBrowserHistoryStore.getState().removeDownload(id!);
   assert.equal(keptDownloadFile(id), null);
 });
 

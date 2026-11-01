@@ -23,13 +23,13 @@ export function decideAutoRead(
   messages: readonly AutoReadMessage[],
 ): AutoReadDecision {
   const last = messages.at(-1);
-  if (!last || last.role !== "assistant") return { kind: "skip" };
+  if (last?.role !== "assistant") return { kind: "skip" };
   if (last.status?.type === "running") return { kind: "wait" };
   if (last.status?.type !== "complete") return { kind: "skip" };
   // Cut-off turns can still settle as "complete".
   if (readIncompleteInfo(last.metadata)) return { kind: "skip" };
   const hasText = last.content.some(
-    (part) => part.type === "text" && !!part.text?.trim(),
+    (part) => part.type === "text" && Boolean(part.text?.trim()),
   );
   return hasText ? { kind: "speak", messageId: last.id } : { kind: "skip" };
 }

@@ -235,7 +235,7 @@ export function ChatBackgroundControls() {
 							disabled={busy}
 							value={adjustments.scope}
 							onValueChange={(scope) =>
-								patchBackground({ scope: scope as BackgroundScope })
+								{ patchBackground({ scope: scope as BackgroundScope }); }
 							}
 						>
 							<SelectTrigger
@@ -258,7 +258,7 @@ export function ChatBackgroundControls() {
 							disabled={!value || busy}
 							value={adjustments.effect}
 							onValueChange={(effect) =>
-								patchBackground({ effect: effect as BackgroundEffect })
+								{ patchBackground({ effect: effect as BackgroundEffect }); }
 							}
 						>
 							<SelectTrigger
@@ -302,7 +302,7 @@ export function ChatBackgroundControls() {
 											role="radio"
 											aria-checked={adjustments.sizing === sizing}
 											className="relative flex w-full cursor-pointer items-center rounded-md py-2 pr-9 pl-3 text-left text-sm outline-hidden hover:bg-accent focus-visible:bg-accent"
-											onClick={() => patchBackground({ sizing })}
+											onClick={() => { patchBackground({ sizing }); }}
 										>
 											{t(sizingLabels[sizing])}
 											{adjustments.sizing === sizing && (
@@ -334,7 +334,7 @@ export function ChatBackgroundControls() {
 														aria-label={t("chatBackground.positionValue", { x, y })}
 														title={t("chatBackground.positionValue", { x, y })}
 														className="group flex aspect-square items-center justify-center rounded-full hover:bg-[color-mix(in_srgb,var(--foreground)_calc(5%*var(--contrast-wash-gain,1)),transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:bg-[color-mix(in_srgb,var(--foreground)_calc(10%*var(--contrast-wash-gain,1)),transparent)]"
-														onClick={() => patchBackground({ position })}
+														onClick={() => { patchBackground({ position }); }}
 													>
 														<span className="size-1 rounded-full bg-muted-foreground/60 group-aria-pressed:bg-foreground" />
 													</button>
@@ -374,7 +374,7 @@ export function ChatBackgroundControls() {
 									max={max}
 									step={1}
 									value={[adjustments[key]]}
-									onValueChange={([v]) => patchBackground({ [key]: v })}
+									onValueChange={([v]) => { patchBackground({ [key]: v }); }}
 								/>
 								<span className="w-12 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
 									{adjustments[key]}
@@ -388,7 +388,7 @@ export function ChatBackgroundControls() {
 							aria-label={t("chatBackground.fade")}
 							checked={adjustments.fade}
 							disabled={!value || busy}
-							onCheckedChange={(fade) => patchBackground({ fade })}
+							onCheckedChange={(fade) => { patchBackground({ fade }); }}
 						/>
 					</SettingsRow>
 				</>
@@ -426,7 +426,7 @@ function PositionField({
 						const parsed = Number.parseInt(event.target.value, 10);
 						if (Number.isFinite(parsed)) onCommit(Math.min(100, Math.max(0, parsed)));
 					}}
-					onBlur={() => setDraft(null)}
+					onBlur={() => { setDraft(null); }}
 					className="w-full min-w-0 bg-transparent tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 				/>
 				<span className="text-xs text-muted-foreground">%</span>

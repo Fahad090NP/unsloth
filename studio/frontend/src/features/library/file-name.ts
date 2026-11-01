@@ -40,7 +40,7 @@ export function libraryFileName(item: {
   if (extension && fileExtension(name) !== extension) name = `${name}.${extension}`;
   const [base, suffix] = splitName(name);
   let stem = base.trim() ? base : FALLBACK_STEM;
-  if (RESERVED_STEM.test(stem.split(".", 1)[0]!.trim())) stem = `_${stem}`;
+  if (RESERVED_STEM.test(stem.split(".", 1)[0].trim())) stem = `_${stem}`;
   const budget = MAX_NAME_BYTES - utf8.encode(suffix).length;
   if (utf8.encode(stem).length > budget) {
     let cut = "";
@@ -100,7 +100,7 @@ const EXTENSION_TYPES: Record<string, string> = {
 };
 
 function baseType(type: string): string {
-  return type.split(";", 1)[0]!.trim().toLowerCase();
+  return type.split(";", 1)[0].trim().toLowerCase();
 }
 
 export function libraryFileType(fileName: string, serverType: string): string {

@@ -14,19 +14,19 @@ import {
 import { unwrapPastedTextContent } from "../src/features/chat/utils/pasted-text.ts";
 import { readSrc } from "./helpers/kit.ts";
 
-type StoredMessage = {
+interface StoredMessage {
   id: string;
   parentId: string | null;
   createdAt: number;
   role: string;
   content: string;
-};
+}
 
-type FineTuneExport = {
+interface FineTuneExport {
   lines: string[];
   conversations: number;
   skipped: number;
-};
+}
 
 const SOURCE = readSrc(
   "features/chat/prompt-storage/prompt-storage-dialog.tsx",

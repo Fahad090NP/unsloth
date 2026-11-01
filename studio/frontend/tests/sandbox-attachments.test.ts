@@ -59,7 +59,7 @@ test("the sandbox path is the server's, and its basename derives it again", () =
   }
 });
 
-type Part = { type: string; text: string };
+interface Part { type: string; text: string }
 const kept = (name: string, sha256: string) => ({
   name,
   content: [{ type: "text", text: name }] as Part[],
@@ -68,9 +68,9 @@ const kept = (name: string, sha256: string) => ({
 
 test("kept files across the history name their sandbox copy once each", () => {
   const [a, b, c] = ["a", "b", "c"].map((x) => x.repeat(64));
-  const book = kept("book.csv", a!);
-  const deck = kept("deck?.pptx", b!);
-  const table = kept("t.parquet", c!);
+  const book = kept("book.csv", a);
+  const deck = kept("deck?.pptx", b);
+  const table = kept("t.parquet", c);
   const notes = { name: "notes.txt", content: [] as Part[] };
   const messages = [
     { attachments: [notes, book] },
@@ -84,10 +84,10 @@ test("kept files across the history name their sandbox copy once each", () => {
     { sha256: a, name: "book.csv" },
     { sha256: c, name: "t.parquet" },
   ]);
-  assert.equal(rendered[0]!.attachments[0], notes);
+  assert.equal(rendered[0].attachments[0], notes);
   assert.equal(rendered[1], messages[1]);
   const text = (m: number, i: number) =>
-    (rendered[m]!.attachments[i] as { content: Part[] }).content[0]!.text;
+    (rendered[m].attachments[i] as { content: Part[] }).content[0].text;
   assert.equal(
     text(2, 0),
     '[deck?.pptx: its text is below, so answer from it. For calculations, the python tool has the file at path = ".unsloth_attachments/bbbbbbbbbbbb/deck_.pptx"; fitz.open(path)]',
@@ -110,7 +110,7 @@ test("an .epub's note follows its content: inlined text, or an older tool-only p
   };
   const { messages } = withSandboxAttachmentPaths([{ attachments: [inlined, older] }]);
   const note = (i: number) =>
-    (messages[0]!.attachments[i] as { content: Part[] }).content[0]!.text;
+    (messages[0].attachments[i] as { content: Part[] }).content[0].text;
   assert.match(note(0), /^\[book\.epub: its text is below/);
   assert.match(note(1), /^\[old\.epub is saved at /);
 });
@@ -122,11 +122,11 @@ test("a thread past the request's limit carries its most recent files, not none"
   const { messages, sandboxAttachments } = withSandboxAttachmentPaths(all);
   assert.equal(sandboxAttachments.length, 64);
   assert.deepEqual(
-    [sandboxAttachments[0]!.name, sandboxAttachments.at(-1)!.name],
+    [sandboxAttachments[0].name, sandboxAttachments.at(-1)!.name],
     ["f7.parquet", "f0.parquet"],
   );
-  assert.equal(messages[6]!.attachments[0], all[6]!.attachments[0]);
-  assert.notEqual(messages[7]!.attachments[0], all[7]!.attachments[0]);
+  assert.equal(messages[6].attachments[0], all[6].attachments[0]);
+  assert.notEqual(messages[7].attachments[0], all[7].attachments[0]);
 });
 
 test("a document outside the kept types is uploaded only for the python tool", async () => {

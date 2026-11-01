@@ -15,7 +15,7 @@ const HUB_CARD = {
 const UNSUPPORTED = { status: "unsupported", reason: "Library: diffusers." };
 
 test("only nvidia's Cosmos3 Edge is routed to the Video page; Nano, siblings and copies stay unsupported", () => {
-  const cases: Array<[string, object]> = [
+  const cases: [string, object][] = [
     ["nvidia/Cosmos3-Edge", { ...UNSUPPORTED, supportedIn: "video" }],
     ["NVIDIA/cosmos3-edge", { ...UNSUPPORTED, supportedIn: "video" }],
     ["nvidia/Cosmos3-Nano", UNSUPPORTED],

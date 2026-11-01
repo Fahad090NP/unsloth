@@ -437,7 +437,7 @@ test("extractListSubjects reads the lead of each listed item", () => {
 
 test("the inline card is block-level, so a list item cannot flow text around it", () => {
   // List paragraphs are [&>p]:inline, so an inline card would land mid-sentence.
-  const wrapper = /data-search-image=\{entry\.id\}/.test(SEARCH_IMAGE)
+  const wrapper = SEARCH_IMAGE.includes('data-search-image={entry.id}')
     ? SEARCH_IMAGE.slice(SEARCH_IMAGE.indexOf("if (!entry) return null;"))
     : "";
   assert.match(wrapper, /className="[^"]*\bflex\b/, "wrapper must not be inline");
@@ -458,7 +458,7 @@ test("placeSubjectImages never splices a token into a code fence", () => {
   const text =
     "The Pug is small. Here is code:\n```python\nprint(1)\n\nprint(2)\n```\nDone.";
   const out = placeSubjectImages(text, images, false);
-  assert.ok(!/```python\nprint\(1\)\n\n\[\[img:/.test(out));
+  assert.ok(!out.includes('```python\nprint(1)\n\n[[img:'));
   assert.equal(
     out,
     "The Pug is small. Here is code:\n\n[[img:cccccccccccc]]\n```python\nprint(1)\n\nprint(2)\n```\nDone.",

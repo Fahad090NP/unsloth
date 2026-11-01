@@ -125,7 +125,7 @@ test("the plugin rewrites stylesheets only, after Tailwind has generated them", 
   );
 });
 
-type Complex = { compounds: string[]; combinators: string[] };
+interface Complex { compounds: string[]; combinators: string[] }
 
 function topLevel(selector: string, split: (char: string) => boolean): string[] {
   const parts: string[] = [];

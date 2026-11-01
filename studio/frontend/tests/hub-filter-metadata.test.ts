@@ -20,15 +20,14 @@ function searchHarness(request: typeof fetch) {
     const i = index++;
     const cell = cells[i];
     if (
-      !cell ||
-      deps.length !== cell.deps.length ||
+      deps.length !== cell?.deps.length ||
       deps.some((dep, j) => !Object.is(dep, cell.deps[j]))
     ) {
       cells[i] = { deps, value: create() };
     }
     return cells[i].value;
   };
-  let iterator!: AsyncGenerator<unknown>;
+  let iterator!: AsyncGenerator;
   const rows = [
     { name: "unsloth/small", safetensors: { total: 4e9 } },
     { name: "unsloth/large", safetensors: { total: 8e9 } },
@@ -72,7 +71,7 @@ function searchHarness(request: typeof fetch) {
           create: (
             task: undefined,
             signal?: AbortSignal,
-          ) => AsyncGenerator<unknown>,
+          ) => AsyncGenerator,
           signal?: AbortSignal,
         ) => create(undefined, signal),
       },
@@ -89,7 +88,7 @@ function searchHarness(request: typeof fetch) {
       "../lib/lru-map": { LruMap },
       "./use-hub-paginated-search": {
         useHubPaginatedSearch: (
-          create: (signal: AbortSignal) => AsyncGenerator<unknown>,
+          create: (signal: AbortSignal) => AsyncGenerator,
         ) => {
           iterator = create(controller.signal);
           return { results: [] };
@@ -102,7 +101,7 @@ function searchHarness(request: typeof fetch) {
     setEndpoint: (value: string) => {
       endpoint = value;
     },
-    abort: () => controller.abort(),
+    abort: () => { controller.abort(); },
     async search(next: filters.ModelSearchFilters, options: Options = {}) {
       controller.abort();
       controller = new AbortController();

@@ -16,18 +16,18 @@ import { type RunConfigRequest, runConfigInbox } from "./inbox";
 import { cancelEditedRunConfigImport } from "./receive-link";
 import { resolveRunConfigTarget } from "./target";
 
-export type RunConfigNavigation = {
+export interface RunConfigNavigation {
   id: string;
   from: string;
   started: boolean;
-};
-type LinkContext = {
+}
+interface LinkContext {
   pending: RunConfigRequest | null;
   canOpen: boolean;
   settingsHydrated: boolean;
   currentModel: string;
   location: { href: string; pathname: string; searchStr: string };
-};
+}
 
 const newChatId = (pending: RunConfigRequest) =>
   pending.newChatId === undefined ? pending.id : pending.newChatId;

@@ -16,7 +16,7 @@ type Handling = "applied" | "reported" | "ignored";
 // Every key AUTOMATIC1111 (create_infotext, extra_generation_params, the `infotext=` options) and Forge
 // write, with a value that changes the image where one exists. "ignored" is only for keys that set
 // nothing: hashes, the writer, the version. Anything not handled falls through to "reported".
-const KEYS: Array<[string, string, Handling]> = [
+const KEYS: [string, string, Handling][] = [
   // create_infotext
   ["Steps", "30", "applied"],
   ["Sampler", "Euler a", "applied"],
@@ -163,7 +163,7 @@ test("numbers past the request bounds are reported as clamped", () => {
 
 // Prompt content, not a key: A1111 attention syntax and its escaped literal brackets are kept in the
 // prompt as written and named unless the engine (sd.cpp) parses A1111 syntax itself.
-const PROMPT_CONTENT: Array<[string, string[], string[]]> = [
+const PROMPT_CONTENT: [string, string[], string[]][] = [
   ["a (red:1.2) car", ["(red:1.2)"], []],
   ["a ((red)) car, [blurry]", ["((red))", "[blurry]"], []],
   ["a \\(literal\\) car \\[x\\]", [], ["\\(", "\\)", "\\[", "\\]"]],

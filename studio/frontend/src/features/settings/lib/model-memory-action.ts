@@ -12,8 +12,8 @@ export function modelMemorySettingsAction():
   return {
     label: "Open settings",
     onClick: () =>
-      useSettingsDialogStore
+      { useSettingsDialogStore
         .getState()
-        .openDialog("resources", { scrollTarget: "resources-model-memory" }),
+        .openDialog("resources", { scrollTarget: "resources-model-memory" }); },
   };
 }

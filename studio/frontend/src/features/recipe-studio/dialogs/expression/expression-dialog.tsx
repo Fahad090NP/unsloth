@@ -21,10 +21,10 @@ import { NameField } from "../shared/name-field";
 
 const DTYPE_OPTIONS: ExpressionDtype[] = ["str", "int", "float", "bool"];
 
-type ExpressionDialogProps = {
+interface ExpressionDialogProps {
   config: ExpressionConfig;
   onUpdate: (patch: Partial<ExpressionConfig>) => void;
-};
+}
 
 export function ExpressionDialog({
   config,
@@ -49,14 +49,14 @@ export function ExpressionDialog({
     key: K,
     value: ExpressionConfig[K],
   ) => {
-    onUpdate({ [key]: value } as Partial<ExpressionConfig>);
+    onUpdate({ [key]: value });
   };
   return (
     <div className="space-y-4">
       <AvailableVariables configId={config.id} />
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="grid gap-1.5">
         <FieldLabel
@@ -67,7 +67,7 @@ export function ExpressionDialog({
         <Select
           value={config.dtype}
           onValueChange={(value) =>
-            updateField("dtype", value as ExpressionDtype)
+            { updateField("dtype", value as ExpressionDtype); }
           }
         >
           <SelectTrigger className="nodrag w-full" id={dtypeId}>
@@ -94,7 +94,7 @@ export function ExpressionDialog({
           aria-invalid={invalidExprRefs.length > 0}
           placeholder="{{ category_1 }} - {{ subcategory_1 }}"
           value={config.expr}
-          onChange={(event) => updateField("expr", event.target.value)}
+          onChange={(event) => { updateField("expr", event.target.value); }}
         />
         {invalidExprRefs.length > 0 && (
           <p className="text-xs text-destructive">

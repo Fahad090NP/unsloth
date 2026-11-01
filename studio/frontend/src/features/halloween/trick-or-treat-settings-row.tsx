@@ -25,7 +25,7 @@ export function TrickOrTreatSettingsRow() {
         data-testid="settings-trick-or-treat-sidebar"
         checked={inSidebar}
         onCheckedChange={(on) =>
-          on ? showTrickOrTreatRow() : hideTrickOrTreatRow()
+          { on ? showTrickOrTreatRow() : hideTrickOrTreatRow(); }
         }
       />
     </SettingsRow>

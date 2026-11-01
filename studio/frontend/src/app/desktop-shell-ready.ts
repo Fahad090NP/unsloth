@@ -11,7 +11,7 @@ const listeners = new Set<() => void>();
 export function setDesktopShellReady(value: boolean): void {
   if (ready === value) return;
   ready = value;
-  listeners.forEach((listener) => listener());
+  listeners.forEach((listener) => { listener(); });
 }
 
 export function useDesktopShellReady(): boolean {

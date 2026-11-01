@@ -209,7 +209,7 @@ function applyMetricHistoryFromStatus(payload: TrainingStatusResponse): {
   evalLossHistory: TrainingSeriesPoint[] | null;
 } {
   const history = payload.metric_history;
-  if (!history || !history.steps?.length) {
+  if (!history?.steps?.length) {
     return {
       lossHistory: null,
       lrHistory: null,
@@ -238,16 +238,16 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
     ...initialState,
 
     setStopRequested: (value) =>
-      set((state) => ({
+      { set((state) => ({
         stopRequested: value,
         isStarting: value ? false : state.isStarting,
         resetGeneration:
           value && !state.stopRequested
             ? state.resetGeneration + 1
             : state.resetGeneration,
-      })),
-    setHydrating: (value) => set({ isHydrating: value }),
-    setHasHydrated: (value) => set({ hasHydrated: value }),
+      })); },
+    setHydrating: (value) => { set({ isHydrating: value }); },
+    setHasHydrated: (value) => { set({ hasHydrated: value }); },
     tryBeginStarting: (startRequestId) => {
       let acquired = false;
       set((state) => {
@@ -260,11 +260,11 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
       return acquired;
     },
     setStarting: (value) =>
-      set((state) => ({
+      { set((state) => ({
         isStarting: value,
         startRequestId: value ? state.startRequestId : null,
-      })),
-    setStartError: (value) => set({ startError: value }),
+      })); },
+    setStartError: (value) => { set({ startError: value }); },
     setStartResources: (
       startModelName,
       startDatasetName,
@@ -272,18 +272,18 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
       startProjectName = null,
       startHfToken = null,
     ) =>
-      set({
+      { set({
         startModelName,
         startDatasetName,
         startHfToken,
         startProjectName,
         startFromResume,
-      }),
-    setSseConnected: (value) => set({ sseConnected: value }),
-    setLastEventId: (value) => set({ lastEventId: value }),
+      }); },
+    setSseConnected: (value) => { set({ sseConnected: value }); },
+    setLastEventId: (value) => { set({ lastEventId: value }); },
 
     resetRuntime: () =>
-      set((state) => ({
+      { set((state) => ({
         ...initialState,
         hasHydrated: state.hasHydrated,
         configureRequest: state.configureRequest,
@@ -292,10 +292,10 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
         gradNormHistory: [],
         evalLossHistory: [],
         resetGeneration: state.resetGeneration + 1,
-      })),
+      })); },
 
     setStartPending: (jobId, message, startRequestId = null) =>
-      set((state) => {
+      { set((state) => {
         if (jobId !== null && state.jobId === jobId) {
           return {
             isStarting: false,
@@ -335,10 +335,10 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
           evalLossHistory: [],
           resetGeneration: state.resetGeneration + 1,
         };
-      }),
+      }); },
 
     setRuntimeError: (message) =>
-      set((state) => ({
+      { set((state) => ({
         error: message,
         phase: "error",
         isStarting: false,
@@ -346,16 +346,16 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
         startError: null,
         sseConnected: false,
         resetGeneration: state.resetGeneration + 1,
-      })),
+      })); },
 
     setSelectedHistoryRunId: (selectedHistoryRunId) =>
-      set({ selectedHistoryRunId }),
+      { set({ selectedHistoryRunId }); },
 
     setCurrentRunViewActive: (currentRunViewActive) =>
-      set({ currentRunViewActive }),
+      { set({ currentRunViewActive }); },
 
     applyStatus: (payload) =>
-      set((state) => {
+      { set((state) => {
         const unmatchedLocalStart =
           !state.isStarting &&
           state.startRequestId !== null &&
@@ -488,10 +488,10 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
               )
             : runtimeState.evalLossHistory,
         };
-      }),
+      }); },
 
     applyMetrics: (payload: TrainingMetricsResponse) =>
-      set((state) => {
+      { set((state) => {
         if (!isTrainingProgressForJob(state.jobId, payload.job_id)) {
           return state;
         }
@@ -534,10 +534,10 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
               ? latestLearningRate
               : state.currentLearningRate,
         };
-      }),
+      }); },
 
     applyProgress: (payload: TrainingProgressPayload, eventId?: number) =>
-      set((state) => {
+      { set((state) => {
         if (!isTrainingProgressForJob(state.jobId, payload.job_id)) {
           return state;
         }
@@ -614,7 +614,7 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
               ? upsertPoint(state.evalLossHistory, step, evalLoss)
               : state.evalLossHistory,
         };
-      }),
+      }); },
   }),
 );
 

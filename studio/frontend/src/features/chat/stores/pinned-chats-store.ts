@@ -21,9 +21,9 @@ let actions: PinnedChatsActions | null = null;
 
 // Edits made before the lazy runtime binds; they survive a reload. Memory when storage is absent.
 const UNBOUND_KEY = "unsloth_chat_pin_unbound";
-let unboundMemory: Array<[string[], boolean]> = [];
+let unboundMemory: [string[], boolean][] = [];
 
-function readUnbound(): Array<[string[], boolean]> {
+function readUnbound(): [string[], boolean][] {
   try {
     if (typeof localStorage === "undefined") return unboundMemory;
     const saved: unknown = JSON.parse(localStorage.getItem(UNBOUND_KEY) ?? "[]");
@@ -41,7 +41,7 @@ function readUnbound(): Array<[string[], boolean]> {
   }
 }
 
-function writeUnbound(edits: Array<[string[], boolean]>): void {
+function writeUnbound(edits: [string[], boolean][]): void {
   unboundMemory = edits;
   try {
     if (typeof localStorage === "undefined") return;
@@ -69,8 +69,8 @@ export function setPinnedChatsActions(next: PinnedChatsActions | null): void {
 
 export const usePinnedChatsStore = create<PinnedChatsState>((set, get) => ({
   pinnedIds: [],
-  togglePin: (id) => get().setPinned([id], !get().pinnedIds.includes(id)),
-  unpin: (id) => get().setPinned([id], false),
+  togglePin: (id) => { get().setPinned([id], !get().pinnedIds.includes(id)); },
+  unpin: (id) => { get().setPinned([id], false); },
   setPinned: (ids, pinned) => {
     if (actions) {
       actions.setPinned(ids, pinned);

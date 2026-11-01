@@ -108,9 +108,9 @@ function def(
   return {
     id,
     labelKey:
-      `settings.keyboardShortcuts.actions.${id}.label` as TranslationKey,
+      `settings.keyboardShortcuts.actions.${id}.label`,
     descriptionKey:
-      `settings.keyboardShortcuts.actions.${id}.description` as TranslationKey,
+      `settings.keyboardShortcuts.actions.${id}.description`,
     defaultBinding,
     ...extra,
   };
@@ -243,7 +243,7 @@ export interface ShortcutGroup {
 function group(id: ShortcutGroupId, ids: ShortcutId[]): ShortcutGroup {
   return {
     id,
-    labelKey: `settings.keyboardShortcuts.groups.${id}` as TranslationKey,
+    labelKey: `settings.keyboardShortcuts.groups.${id}`,
     ids,
   };
 }

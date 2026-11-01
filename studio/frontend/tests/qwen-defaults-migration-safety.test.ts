@@ -481,7 +481,7 @@ test("the send barrier waits for a migration a model pick just scheduled", async
   // Raced against a deadline so a regression fails instead of hanging CI.
   const settled = await Promise.race([
     awaitPendingQwenDefaultsMigration().then(() => "settled"),
-    new Promise((resolve) => setTimeout(() => resolve("timeout"), 5000)),
+    new Promise((resolve) => setTimeout(() => { resolve("timeout"); }, 5000)),
   ]);
   assert.equal(settled, "settled", "the barrier never released");
 
@@ -585,7 +585,7 @@ test("an earlier retry settling does not clear a later retry's barrier", async (
   const holdGet = (): [Promise<Record<string, unknown>>, () => void] => {
     let release: () => void = () => undefined;
     const held = new Promise<Record<string, unknown>>((resolve) => {
-      release = () => resolve(settingsHttp.settings);
+      release = () => { resolve(settingsHttp.settings); };
     });
     return [held, release];
   };
@@ -639,7 +639,7 @@ test("the send barrier follows a retry that replaces the one it captured", async
   const holdGet = (): [Promise<Record<string, unknown>>, () => void] => {
     let release: () => void = () => undefined;
     const held = new Promise<Record<string, unknown>>((resolve) => {
-      release = () => resolve(settingsHttp.settings);
+      release = () => { resolve(settingsHttp.settings); };
     });
     return [held, release];
   };
@@ -912,7 +912,7 @@ test("a model switch during hydration still gets its own row migrated", async ()
   resetHttp({ ...stored });
   let releaseConfirm: () => void = () => undefined;
   const confirming = new Promise<Record<string, unknown>>((resolve) => {
-    releaseConfirm = () => resolve(settingsHttp.settings);
+    releaseConfirm = () => { resolve(settingsHttp.settings); };
   });
   settingsHttp.getResponses.push(stored, confirming);
   seedActiveQwen({

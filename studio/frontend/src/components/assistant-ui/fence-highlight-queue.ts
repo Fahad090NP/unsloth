@@ -13,16 +13,16 @@ export const selectionInFence = (
   return selection !== null && (inFence(selection.anchorNode) || inFence(selection.focusNode));
 };
 
-type HighlightEntry = {
+interface HighlightEntry {
   step: () => boolean;
   finish: () => void;
-};
+}
 
-export type FenceHighlightQueueOptions = {
+export interface FenceHighlightQueueOptions {
   schedule: (callback: () => void) => () => void;
   blocked: () => boolean;
   commit: (callback: () => void) => void;
-};
+}
 
 export function createFenceHighlightQueue(options: FenceHighlightQueueOptions): {
   add: (step: () => boolean, finish: () => void) => () => void;
@@ -90,7 +90,7 @@ export function createFenceHighlightQueue(options: FenceHighlightQueueOptions): 
         try {
           options.commit(() => {
             while (entries.size > 0) {
-              const entry = entries.values().next().value as HighlightEntry;
+              const entry = entries.values().next().value!;
               entries.delete(entry);
               try {
                 entry.finish();

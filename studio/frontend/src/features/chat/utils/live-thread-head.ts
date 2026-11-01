@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-type LiveThreadView = {
+interface LiveThreadView {
   subscribe?: (listener: () => void) => () => void;
   threads: () => { getState: () => { mainThreadId?: string } };
   threadListItem: () => {
     getState: () => { id?: string; remoteId?: string | null };
   };
   thread: () => {
-    getState: () => { messages: ReadonlyArray<{ id: string }>; isRunning?: boolean };
+    getState: () => { messages: readonly { id: string }[]; isRunning?: boolean };
   };
-};
+}
 
 const views = new Set<LiveThreadView>();
 const listeners = new Set<() => void>();

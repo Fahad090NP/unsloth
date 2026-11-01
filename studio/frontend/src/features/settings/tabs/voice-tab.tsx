@@ -303,7 +303,7 @@ function SttModelPicker({
           />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => { setQuery(event.target.value); }}
             data-testid="stt-model-search"
             placeholder={t(
               "settings.voice.dictation.sttModelSearchPlaceholder",
@@ -472,10 +472,10 @@ function useSystemVoices() {
   useEffect(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     const synth = window.speechSynthesis;
-    const load = () => setVoices(synth.getVoices());
+    const load = () => { setVoices(synth.getVoices()); };
     load();
     synth.addEventListener?.("voiceschanged", load);
-    return () => synth.removeEventListener?.("voiceschanged", load);
+    return () => { synth.removeEventListener?.("voiceschanged", load); };
   }, []);
 
   return voices;
@@ -1144,7 +1144,7 @@ export function VoiceTab() {
   }
 
   if (subpage === "dictionary") {
-    return <DictationDictionaryView onBack={() => setSubpage("main")} />;
+    return <DictationDictionaryView onBack={() => { setSubpage("main"); }} />;
   }
 
   return (
@@ -1258,7 +1258,7 @@ export function VoiceTab() {
             >
               <Input
                 value={sttProviderModel}
-                onChange={(event) => setSttProviderModel(event.target.value)}
+                onChange={(event) => { setSttProviderModel(event.target.value); }}
                 placeholder="whisper-1"
                 aria-label={t("settings.voice.dictation.customModelLabel")}
                 className="w-56"
@@ -1300,7 +1300,7 @@ export function VoiceTab() {
                       variant="ghost"
                       size="sm"
                       className="h-7 px-2 text-xs"
-                      onClick={() => setStatusNonce((nonce) => nonce + 1)}
+                      onClick={() => { setStatusNonce((nonce) => nonce + 1); }}
                     >
                       {t("settings.voice.dictation.sttRetry")}
                     </Button>
@@ -1578,7 +1578,7 @@ export function VoiceTab() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setSubpage("dictionary")}
+            onClick={() => { setSubpage("dictionary"); }}
           >
             {t("settings.voice.dictionary.manage")}
           </Button>
@@ -1634,9 +1634,9 @@ export function VoiceTab() {
               <Select
                 value={effectiveTtsEngine}
                 onValueChange={(value) =>
-                  setTtsEngine(
+                  { setTtsEngine(
                     value === "studio" || value === "custom" ? value : "system",
-                  )
+                  ); }
                 }
               >
                 <SelectTrigger
@@ -1700,7 +1700,7 @@ export function VoiceTab() {
                 >
                   <Input
                     value={ttsProviderModel}
-                    onChange={(e) => setTtsProviderModel(e.target.value)}
+                    onChange={(e) => { setTtsProviderModel(e.target.value); }}
                     placeholder="kokoro"
                     className="h-8 w-56 max-w-72"
                     aria-label={t("settings.voice.readAloud.customModelLabel")}
@@ -1714,7 +1714,7 @@ export function VoiceTab() {
                 >
                   <Input
                     value={ttsProviderVoice}
-                    onChange={(e) => setTtsProviderVoice(e.target.value)}
+                    onChange={(e) => { setTtsProviderVoice(e.target.value); }}
                     placeholder="alloy"
                     className="h-8 w-56 max-w-72"
                     aria-label={t("settings.voice.readAloud.voiceLabel")}
@@ -1780,7 +1780,7 @@ export function VoiceTab() {
                   <Select
                     value={ttsStudioVoiceId || "model"}
                     onValueChange={(value) =>
-                      setTtsStudioVoiceId(value === "model" ? "" : value)
+                      { setTtsStudioVoiceId(value === "model" ? "" : value); }
                     }
                   >
                     <SelectTrigger
@@ -1855,7 +1855,7 @@ export function VoiceTab() {
             {effectiveTtsEngine === "system" && (
               <SettingsRow
                 label={t("settings.voice.readAloud.pitchLabel")}
-                description={`${ttsPitch.toFixed(2)}`}
+                description={ttsPitch.toFixed(2)}
               >
                 <Slider
                   value={[ttsPitch]}

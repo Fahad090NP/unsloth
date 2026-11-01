@@ -52,7 +52,7 @@ function openTabs(urls: string[]): string[] {
 
 const tabs = () => chatTabs(useBrowserStore.getState());
 let typedAt = 0;
-const type = (id: string) => useBrowserStore.getState().updateTab(id, { typedAt: ++typedAt });
+const type = (id: string) => { useBrowserStore.getState().updateTab(id, { typedAt: ++typedAt }); };
 
 function visit(ids: string[]): readonly string[] {
   let mounted: readonly string[] = [];
@@ -119,7 +119,7 @@ test("re-editing an older draft changes eviction order", () => {
   const { useFrameMessages } = sourceCode("features/browser/tab-view.tsx", ["useFrameMessages"], {
     useBrowserStore, useCallback: (fn: unknown) => fn, useT: () => () => "", Date: { now: () => ++now },
   }) as { useFrameMessages: (id: string, origin: string) => (message: { type: "typed" }) => void };
-  const edit = (id: string) => useFrameMessages(id, "https://a.example")({ type: "typed" });
+  const edit = (id: string) => { useFrameMessages(id, "https://a.example")({ type: "typed" }); };
   for (const id of ids.slice(0, 4)) edit(id);
   const mounted = visit(ids);
   edit(ids[0]);
@@ -201,7 +201,7 @@ test("only the first private input channel from this page can report edits", () 
   const backend = readFileSync(new URL("../../backend/routes/browser.py", import.meta.url), "utf8");
   const start = backend.indexOf("      const FOLLOW_CLICK_MS = ");
   const relay = backend.slice(start, backend.indexOf("    </script>", start));
-  type Port = { onmessage?: (event: { data: unknown }) => void };
+  interface Port { onmessage?: (event: { data: unknown }) => void }
   const child = {};
   const forwarded: unknown[] = [];
   const parent = { postMessage: (data: unknown) => forwarded.push(data) };
@@ -217,7 +217,7 @@ test("only the first private input channel from this page can report edits", () 
     { addEventListener: (_: string, callback: typeof listener) => { listener = callback; } },
     document, parent, { now: () => now }, () => {}, (text: string) => text, () => "",
   );
-  const send = (source: unknown, data: unknown, ports: Port[] = []) => listener({ source, data, ports });
+  const send = (source: unknown, data: unknown, ports: Port[] = []) => { listener({ source, data, ports }); };
   send(parent, { type: "unsloth:browser-html", html: "" });
   const foreign: Port = {};
   send({}, { source: "unsloth-browser-input" }, [foreign]);
@@ -269,7 +269,7 @@ test("scripted editing cannot claim typing but keyboard editors and paste can", 
   const code = backend.slice(start, backend.indexOf("        const report = ", start));
   const listeners = new Map<string, (event: unknown) => void>();
   const notices: boolean[] = [];
-  const timers: Array<() => void> = [];
+  const timers: (() => void)[] = [];
   class Element { matches() { return true; } }
   class Document {
     execCommand() { listeners.get("input")?.({ isTrusted: true }); }

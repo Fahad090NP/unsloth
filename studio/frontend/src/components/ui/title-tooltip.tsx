@@ -17,7 +17,7 @@ const SHOW_DELAY_MS = 120;
 // An empty title is one this layer holds.
 const TITLED = '[title]:not([title=""])';
 
-type Shown = { text: string; anchor: DOMRect };
+interface Shown { text: string; anchor: DOMRect }
 
 /** Disabled buttons are `pointer-events: none`, so the hit lands on their parent. */
 function pointIn(el: Element, x: number, y: number): boolean {

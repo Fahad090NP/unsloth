@@ -12,9 +12,7 @@ const source = readSrc("features/images/images-page.tsx");
 
 test("the Memory recipe row renders on an offload with no memory mode", () => {
   // The native engine reports memory_mode null while still offloading.
-  const guard = source.match(
-    /\{image\.memory_mode \|\|\s*\n\s*\(image\.offload_policy && image\.offload_policy !== "none"\) \?/,
-  );
+  const guard = /\{image\.memory_mode \|\|\s*\n\s*\(image\.offload_policy && image\.offload_policy !== "none"\) \?/.exec(source);
   assert.ok(guard, "the Memory row must render when EITHER field conveys placement");
 });
 

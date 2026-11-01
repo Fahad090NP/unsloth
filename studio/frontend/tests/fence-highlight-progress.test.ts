@@ -159,8 +159,8 @@ test("replacement of an early line preserves every already colored unchanged suf
   const retained = retainHighlightProgress(previous, next, null);
   assert.deepEqual(retained, { counts: [[2, 2, 2]], cursor: 0, located: false });
   assert.equal(next[2], previous[2]);
-  assert.equal(highlightLineCount(retained!, 2), next[2].length);
-  const advanced = advanceHighlightProgress(next, retained!);
+  assert.equal(highlightLineCount(retained, 2), next[2].length);
+  const advanced = advanceHighlightProgress(next, retained);
   assert.deepEqual(advanced?.counts, [[514, 2, 2]]);
 });
 
@@ -173,8 +173,8 @@ test("several changed middle lines preserve disjoint colored islands and partial
   const retained = retainHighlightProgress(previous, next, progress);
   assert.deepEqual(retained, progress);
   assert.notEqual(retained?.counts, progress.counts);
-  assert.equal(highlightLineCount(retained!, 2), 512);
-  assert.equal(highlightLineCount(retained!, 5), 1000);
+  assert.equal(highlightLineCount(retained, 2), 512);
+  assert.equal(highlightLineCount(retained, 5), 1000);
   assert.equal(retained?.counts[0], progress.counts[0]);
 });
 
@@ -183,7 +183,7 @@ test("null tokens and small coverage upgraded to dense tokens regain bounded pro
   assert.deepEqual(retainHighlightProgress(null, dense, null), { counts: [EMPTY_HIGHLIGHT_COUNTS], cursor: 0, located: false });
   const retained = retainHighlightProgress([[0]], dense, null);
   assert.deepEqual(retained, { counts: [[1]], cursor: 0, located: false });
-  assert.deepEqual(advanceHighlightProgress(dense, retained!), {
+  assert.deepEqual(advanceHighlightProgress(dense, retained), {
     counts: [[513]], cursor: 0, located: true,
   });
 });
@@ -193,7 +193,7 @@ test("append starts only new lines at zero and leaves existing completed lines i
   const next = [...previous, [4]];
   const progress = retainHighlightProgress(previous, next, null);
   assert.deepEqual(progress, { counts: [[1, 1, 1, 0]], cursor: 0, located: false });
-  assert.equal(advanceHighlightProgress(next, progress!), null);
+  assert.equal(advanceHighlightProgress(next, progress), null);
   assert.equal(retainHighlightProgress(previous, previous.slice(), null), null);
 });
 

@@ -7,11 +7,11 @@ import type { ThreadRecord } from "../types";
 export type CompareVariant = "general" | "lora";
 export type CompareThreadShape = CompareVariant;
 
-export type ComparePaneThreadIds = {
+export interface ComparePaneThreadIds {
   shape: CompareThreadShape | null;
   first: string | undefined;
   second: string | undefined;
-};
+}
 
 function threadId(
   threads: ThreadRecord[],
@@ -49,7 +49,7 @@ export function compareVariantForPair(
   return checkpointIsLora ? "lora" : "general";
 }
 
-export type CheckpointCompareClassInput = {
+export interface CheckpointCompareClassInput {
   checkpoint: string | null | undefined;
   isExternal: boolean;
   /** `residentCheckpoint === undefined`: no status read has landed yet. */
@@ -57,7 +57,7 @@ export type CheckpointCompareClassInput = {
   models: readonly { id: string; isLora?: boolean }[];
   loras: readonly { id: string; exportType?: string }[];
   inventorySettled: boolean;
-};
+}
 
 /** Whether the loaded checkpoint is a LoRA; `null` only while genuinely unclassified. */
 export function checkpointCompareClass(

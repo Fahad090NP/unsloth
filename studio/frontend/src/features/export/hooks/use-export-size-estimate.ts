@@ -55,7 +55,7 @@ export function useExportSizeEstimate(
         }
         setState({ key, value: EMPTY });
       });
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [key, modelKey, token]);
 
   return state.key === key ? state.value : EMPTY;

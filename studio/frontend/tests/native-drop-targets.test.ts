@@ -90,7 +90,7 @@ test("the innermost registered ancestor wins", () => {
 // wry reports CSS pixels on macOS and GTK, device pixels only on WebView2.
 function pointSeenFor(userAgent: string): { x: number; y: number } {
   const zone = new FakeElement();
-  const seen: Array<{ x: number; y: number }> = [];
+  const seen: { x: number; y: number }[] = [];
   hit = zone;
   Object.defineProperty(globalThis, "navigator", {
     value: { userAgent },

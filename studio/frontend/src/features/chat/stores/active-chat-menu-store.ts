@@ -4,7 +4,7 @@
 import { create } from "zustand";
 import type { SidebarItem } from "../hooks/use-chat-sidebar-items";
 
-type Place = { id: string; name: string };
+interface Place { id: string; name: string }
 
 export interface ActiveChatMenu {
   item: SidebarItem;

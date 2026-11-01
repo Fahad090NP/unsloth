@@ -9,7 +9,7 @@ import test from "node:test";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 import { skillLoadCardEvent } from "../src/features/chat/api/skill-load-event.ts";
 
-type Module = {
+interface Module {
   resolveToolConfirmation: (
     sessionId: string,
     approvalId: string,
@@ -17,7 +17,7 @@ type Module = {
     fullAccess?: boolean,
   ) => Promise<boolean>;
   ToolApprovalGoneError: new (message?: string) => Error;
-};
+}
 
 function jsonResponse(status: number, body: unknown) {
   return {
@@ -114,7 +114,7 @@ test("a matched decision still resolves true", async () => {
   const { module, requests } = harness(jsonResponse(200, { resolved: true }));
   assert.equal(await module.resolveToolConfirmation("sess", "a1", "deny"), true);
   assert.equal(requests.length, 1);
-  assert.match(requests[0]!.url, /tool-confirm/);
+  assert.match(requests[0].url, /tool-confirm/);
 });
 
 // No DOM in this suite, so these read the source.
@@ -173,7 +173,7 @@ test("Full Access needs an explicit server acknowledgment, including on an older
   }
   const { module, requests } = harness(jsonResponse(200, { resolved: true, full_access_granted: true }));
   assert.equal(await module.resolveToolConfirmation("sess", "a1", "allow", true), true);
-  assert.deepEqual(JSON.parse(String(requests[0]!.init!.body)), {
+  assert.deepEqual(JSON.parse(String(requests[0].init!.body)), {
     session_id: "sess", approval_id: "a1", decision: "allow", permission_mode: "full",
   });
 });

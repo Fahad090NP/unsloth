@@ -14,14 +14,14 @@ import type { SamplerConfig } from "../../types";
 import { NameField } from "../shared/name-field";
 import { FieldLabel } from "../shared/field-label";
 
-const TIMEDELTA_UNITS: Array<"D" | "h" | "m" | "s"> = ["D", "h", "m", "s"];
+const TIMEDELTA_UNITS: ("D" | "h" | "m" | "s")[] = ["D", "h", "m", "s"];
 const NONE_VALUE = "__none";
 
-type TimedeltaDialogProps = {
+interface TimedeltaDialogProps {
   config: SamplerConfig;
   datetimeOptions: string[];
   onUpdate: (patch: Partial<SamplerConfig>) => void;
-};
+}
 
 export function TimedeltaDialog({
   config,
@@ -36,13 +36,13 @@ export function TimedeltaDialog({
     key: K,
     value: SamplerConfig[K],
   ) => {
-    onUpdate({ [key]: value } as Partial<SamplerConfig>);
+    onUpdate({ [key]: value });
   };
   return (
     <div className="space-y-4">
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-1.5">
@@ -56,7 +56,7 @@ export function TimedeltaDialog({
             type="number"
             className="nodrag"
             value={config.dt_min ?? ""}
-            onChange={(event) => updateField("dt_min", event.target.value)}
+            onChange={(event) => { updateField("dt_min", event.target.value); }}
           />
         </div>
         <div className="grid gap-1.5">
@@ -70,7 +70,7 @@ export function TimedeltaDialog({
             type="number"
             className="nodrag"
             value={config.dt_max ?? ""}
-            onChange={(event) => updateField("dt_max", event.target.value)}
+            onChange={(event) => { updateField("dt_max", event.target.value); }}
           />
         </div>
       </div>
@@ -83,7 +83,7 @@ export function TimedeltaDialog({
         <Select
           value={config.timedelta_unit ?? "D"}
           onValueChange={(value) =>
-            updateField("timedelta_unit", value as "D" | "h" | "m" | "s")
+            { updateField("timedelta_unit", value as "D" | "h" | "m" | "s"); }
           }
         >
           <SelectTrigger className="nodrag w-full" id={unitId}>
@@ -107,7 +107,7 @@ export function TimedeltaDialog({
         <Select
           value={config.reference_column_name?.trim() || NONE_VALUE}
           onValueChange={(value) =>
-            updateField("reference_column_name", value === NONE_VALUE ? "" : value)
+            { updateField("reference_column_name", value === NONE_VALUE ? "" : value); }
           }
         >
           <SelectTrigger className="nodrag w-full" id={referenceId}>

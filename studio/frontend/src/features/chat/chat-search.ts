@@ -2,12 +2,12 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 // Separate from chat-page so /chat can validate search without loading the page.
-export type ChatSearch = {
+export interface ChatSearch {
   thread?: string;
   compare?: string;
   new?: string;
   project?: string;
-};
+}
 
 export function validateChatSearch(
   search: Record<string, unknown>,

@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-type ToolHistoryPart = {
+interface ToolHistoryPart {
   type?: unknown;
   provenance?: unknown;
   [key: string]: unknown;
-};
+}
 
-export type ToolHistoryMessage = {
+export interface ToolHistoryMessage {
   content?: readonly ToolHistoryPart[];
   [key: string]: unknown;
-};
+}
 
-export type StudioToolHistoryOptions = {
+export interface StudioToolHistoryOptions {
   /** Only these tool-call parts count, to ignore builtins OpenAI serialization drops. */
   toolCallSurvives?: (part: ToolHistoryPart) => boolean;
-};
+}
 
 export function hasOnlyStudioOwnedToolHistory(
   messages: readonly ToolHistoryMessage[],

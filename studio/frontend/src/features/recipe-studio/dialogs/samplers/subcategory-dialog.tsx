@@ -14,11 +14,11 @@ import { ChipInput } from "../../components/chip-input";
 import { NameField } from "../shared/name-field";
 import { FieldLabel } from "../shared/field-label";
 
-type SubcategoryDialogProps = {
+interface SubcategoryDialogProps {
   config: SamplerConfig;
   categoryOptions: SamplerConfig[];
   onUpdate: (patch: Partial<SamplerConfig>) => void;
-};
+}
 
 export function SubcategoryDialog({
   config,
@@ -28,7 +28,7 @@ export function SubcategoryDialog({
   const parentSelectId = `${config.id}-parent-category`;
   const updateField = useCallback(
     <K extends keyof SamplerConfig>(key: K, value: SamplerConfig[K]) => {
-      onUpdate({ [key]: value } as Partial<SamplerConfig>);
+      onUpdate({ [key]: value });
     },
     [onUpdate],
   );
@@ -71,7 +71,7 @@ export function SubcategoryDialog({
     <div className="space-y-4">
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="space-y-3">
         <div className="grid gap-1.5">

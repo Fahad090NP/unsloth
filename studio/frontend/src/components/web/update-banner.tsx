@@ -65,12 +65,12 @@ export function WebUpdateBanner({
       clearTimeout(dismissTimerRef.current);
     }
     // Copying is not updating: snooze so the banner returns if the install is still behind.
-    dismissTimerRef.current = setTimeout(() => snooze(), 1200);
+    dismissTimerRef.current = setTimeout(() => { snooze(); }, 1200);
   }
 
-  const copied = status != null && copiedVersion === status.latestVersion;
+  const copied = copiedVersion === status?.latestVersion;
   // Keyed by version so a new offer collapses the panel.
-  const notesOpen = status != null && notesVersion === status.latestVersion;
+  const notesOpen = notesVersion === status?.latestVersion;
 
   return (
     <AnimatePresence>
@@ -156,7 +156,7 @@ export function WebUpdateBanner({
                 variant="ghost"
                 className="-ml-2 h-auto whitespace-nowrap rounded-full px-2.5 py-2 text-ui-13 font-medium text-foreground"
                 onClick={() =>
-                  setNotesVersion(notesOpen ? null : status.latestVersion)
+                  { setNotesVersion(notesOpen ? null : status.latestVersion); }
                 }
                 aria-expanded={notesOpen}
                 data-testid="web-update-release-notes-toggle"

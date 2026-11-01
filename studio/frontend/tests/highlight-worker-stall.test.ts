@@ -6,7 +6,7 @@ import test, { type TestContext } from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Client = {
+interface Client {
   requestFullHighlight: (
     source: string,
     language: string | null,
@@ -15,7 +15,7 @@ type Client = {
     patient?: boolean,
   ) => (() => void) | null;
   highlightWorkerState: () => string;
-};
+}
 
 class FakeWorker {
   static made: FakeWorker[] = [];

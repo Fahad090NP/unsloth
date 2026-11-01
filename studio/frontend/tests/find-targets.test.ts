@@ -57,7 +57,7 @@ test("a replaced target's late unregister leaves its successor", () => {
 });
 
 test("requests reach the bar until it stops listening", () => {
-  const asked: Array<string | null> = [];
+  const asked: (string | null)[] = [];
   const stop = onFindRequest((id) => asked.push(id));
   requestFind("browser");
   requestFind(null);

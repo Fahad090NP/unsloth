@@ -160,7 +160,7 @@ export function KeyboardShortcutsTab() {
     };
     window.addEventListener("keydown", onKeyDown, { capture: true });
     return () =>
-      window.removeEventListener("keydown", onKeyDown, { capture: true });
+      { window.removeEventListener("keydown", onKeyDown, { capture: true }); };
   }, [recording, setBinding, clearBinding, t]);
 
   // Capture phase like the recorder; stands down while recording, which owns the keyboard.
@@ -186,7 +186,7 @@ export function KeyboardShortcutsTab() {
     };
     window.addEventListener("keydown", onKeyDown, { capture: true });
     return () =>
-      window.removeEventListener("keydown", onKeyDown, { capture: true });
+      { window.removeEventListener("keydown", onKeyDown, { capture: true }); };
   }, [byKeystroke, recording, keystroke]);
 
   const toggleByKeystroke = () => {
@@ -290,7 +290,7 @@ export function KeyboardShortcutsTab() {
       <button
         key={slot}
         type="button"
-        onClick={() => startRecording(def, slot)}
+        onClick={() => { startRecording(def, slot); }}
         aria-label={`${t("settings.keyboardShortcuts.edit")}: ${label}, ${text}`}
         className={cn(
           "inline-flex h-[calc(30px*var(--ui-space-scale,1))] min-w-[calc(30px*var(--ui-space-scale,1))] items-center justify-center rounded-full px-[calc(11px*var(--ui-space-scale,1))] text-ui-13p5 tabular-nums text-muted-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -379,7 +379,7 @@ export function KeyboardShortcutsTab() {
           <Switch
             size="sm"
             checked={enabled}
-            onCheckedChange={(on) => setEnabled(def.id, on)}
+            onCheckedChange={(on) => { setEnabled(def.id, on); }}
             aria-label={label}
           />
           <Tooltip>
@@ -471,7 +471,7 @@ export function KeyboardShortcutsTab() {
                 : ""
               : query
           }
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => { setQuery(e.target.value); }}
           readOnly={byKeystroke}
           placeholder={t(
             byKeystroke

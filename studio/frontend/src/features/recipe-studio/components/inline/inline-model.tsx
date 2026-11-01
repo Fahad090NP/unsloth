@@ -9,11 +9,11 @@ import { InlineField } from "./inline-field";
 
 type InlineModelPatch = Partial<ModelProviderConfig> | Partial<ModelConfig>;
 
-type InlineModelProps = {
+interface InlineModelProps {
   config: ModelProviderConfig | ModelConfig;
   localProviderNames?: Set<string>;
   onUpdate: (patch: InlineModelPatch) => void;
-};
+}
 
 export function InlineModel(props: InlineModelProps): ReactElement {
   if (props.config.kind === "model_provider") {
@@ -34,7 +34,7 @@ export function InlineModel(props: InlineModelProps): ReactElement {
             placeholder="https://api.example.com/v1"
             value={props.config.endpoint}
             onChange={(event) =>
-              props.onUpdate({ endpoint: event.target.value })
+              { props.onUpdate({ endpoint: event.target.value }); }
             }
           />
         </InlineField>
@@ -45,10 +45,10 @@ export function InlineModel(props: InlineModelProps): ReactElement {
             placeholder="Optional"
             value={props.config.api_key ?? ""}
             onChange={(event) =>
-              props.onUpdate({
+              { props.onUpdate({
                 // biome-ignore lint/style/useNamingConvention: api schema
                 api_key: event.target.value,
-              })
+              }); }
             }
           />
         </InlineField>
@@ -89,7 +89,7 @@ export function InlineModel(props: InlineModelProps): ReactElement {
           className="nodrag h-8 w-full text-xs"
           placeholder="provider alias"
           value={modelConfig.provider}
-          onChange={(event) => handleProviderChange(event.target.value)}
+          onChange={(event) => { handleProviderChange(event.target.value); }}
         />
       </InlineField>
       <InlineField label="Model">
@@ -104,11 +104,11 @@ export function InlineModel(props: InlineModelProps): ReactElement {
             }
             ggufVariant={modelConfig.gguf_variant}
             onChange={(model, variant) =>
-              props.onUpdate({
+              { props.onUpdate({
                 model,
                 // biome-ignore lint/style/useNamingConvention: api schema
                 gguf_variant: variant ?? undefined,
-              })
+              }); }
             }
           />
         ) : (
@@ -117,11 +117,11 @@ export function InlineModel(props: InlineModelProps): ReactElement {
             placeholder="gpt-4o-mini"
             value={modelConfig.model}
             onChange={(event) =>
-              props.onUpdate({
+              { props.onUpdate({
                 model: event.target.value,
                 // biome-ignore lint/style/useNamingConvention: api schema
                 gguf_variant: undefined,
-              })
+              }); }
             }
           />
         )}
@@ -133,10 +133,10 @@ export function InlineModel(props: InlineModelProps): ReactElement {
           placeholder="0.7"
           value={modelConfig.inference_temperature ?? ""}
           onChange={(event) =>
-            props.onUpdate({
+            { props.onUpdate({
               // biome-ignore lint/style/useNamingConvention: api schema
               inference_temperature: event.target.value,
-            })
+            }); }
           }
         />
       </InlineField>

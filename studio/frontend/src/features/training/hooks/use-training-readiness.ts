@@ -31,13 +31,13 @@ export function deriveTrainingReadiness(
   isOwner: boolean,
 ): TrainingReadiness {
   const configValidation = validateTrainingConfig(state, deviceType, isOwner);
-  const hasModel = !!state.selectedModel;
+  const hasModel = Boolean(state.selectedModel);
   const hasDataset =
     state.datasetSource === "upload"
-      ? !!state.uploadedFile
+      ? Boolean(state.uploadedFile)
       : state.datasetSource === "s3"
         ? validateS3Source(state).ok
-        : !!state.dataset;
+        : Boolean(state.dataset);
   const isLoadingModel = state.isLoadingModelDefaults || state.isCheckingVision;
   const modelError = state.modelDefaultsError;
   // Without its config a decision model has no recipe or checkpoint, so the run would train the wrong one.

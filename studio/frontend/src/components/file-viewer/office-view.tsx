@@ -194,7 +194,7 @@ const SheetRow = memo(function SheetRow({
 }) {
   const cells = [];
   for (let i = start; i < end; i++) {
-    const index = columns[i]!;
+    const index = columns[i];
     const value = row?.[index];
     let className = CELL;
     if (value?.numeric) className += " text-right";
@@ -256,7 +256,7 @@ function SheetGrid({
     horizontal: true,
     count: visibleColumns.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => widths[index]! * scale,
+    estimateSize: (index) => widths[index] * scale,
     paddingStart: headerWidth * scale,
     overscan: 4,
   });
@@ -272,7 +272,7 @@ function SheetGrid({
     <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
       <table
         className="border-separate border-spacing-0 text-ui-13 tabular-nums"
-        style={{ zoom: scale, tableLayout: "fixed", width: tableWidth } as CSSProperties}
+        style={{ zoom: scale, tableLayout: "fixed", width: tableWidth }}
       >
         <colgroup>
           <col style={{ width: headerWidth }} />
@@ -287,7 +287,7 @@ function SheetGrid({
             <th className={`${HEADER} top-0 left-0 z-20`} />
             {left > 0 && <th className="p-0" />}
             {columnItems.map((item) => {
-              const index = visibleColumns[item.index]!;
+              const index = visibleColumns[item.index];
               return (
                 <th key={index} className={`${HEADER} top-0 z-10`}>
                   {columnName(index)}
@@ -354,7 +354,7 @@ function SheetView({
                   {item.name}
                 </span>
               ) : (
-                <button key={index} type="button" onClick={() => setActive(index)} className={className}>
+                <button key={index} type="button" onClick={() => { setActive(index); }} className={className}>
                   {item.name}
                 </button>
               );
@@ -435,7 +435,7 @@ function SlideImage({ image, crop }: { image: Blob; crop?: SlideBox["crop"] }) {
       if (!element) return;
       const url = URL.createObjectURL(image);
       element.src = url;
-      return () => URL.revokeObjectURL(url);
+      return () => { URL.revokeObjectURL(url); };
     },
     [image],
   );
@@ -542,7 +542,7 @@ function SlideList({ deck, width, scrollElement }: { deck: Deck; width: number; 
           className="absolute top-0 left-0 w-full"
           style={{ transform: `translateY(${item.start}px)`, paddingBottom: SLIDE_GAP }}
         >
-          <SlideFace slide={deck.slides[item.index]!} index={item.index} deck={deck} />
+          <SlideFace slide={deck.slides[item.index]} index={item.index} deck={deck} />
         </div>
       ))}
     </div>

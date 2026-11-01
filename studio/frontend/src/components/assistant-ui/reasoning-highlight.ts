@@ -3,7 +3,7 @@
 
 import type { HighlightResult } from "@streamdown/code";
 
-export type ReasoningHighlightRequest = {
+export interface ReasoningHighlightRequest {
   client: number;
   revision: number;
   source: string | { from: number; text: string };
@@ -11,13 +11,13 @@ export type ReasoningHighlightRequest = {
   lines: number[];
   full?: boolean;
   speculative?: boolean;
-};
+}
 
 export type ReasoningHighlightCommand =
   | ReasoningHighlightRequest
   | { cancel: number };
 
-export type ReasoningHighlightReady = { ready: true };
+export interface ReasoningHighlightReady { ready: true }
 
 /** A client sends its complete source once, then only newly appended bytes. */
 export function reasoningHighlightSource(
@@ -28,13 +28,13 @@ export function reasoningHighlightSource(
     ? source
     : previous.slice(0, source.from) + source.text;
 }
-export type ReasoningHighlightReply = {
+export interface ReasoningHighlightReply {
   client: number;
   revision: number;
   lines: { line: number; tokens: HighlightResult["tokens"][number] }[];
   result?: HighlightResult | null;
   failed?: true;
-};
+}
 
 export type ReasoningHighlightMessage =
   | ReasoningHighlightReady

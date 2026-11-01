@@ -108,7 +108,7 @@ function useResearchActivityScroll(runId: string) {
         element.scrollHeight - element.scrollTop - element.clientHeight,
       );
     const updateAtBottom = (value: boolean) =>
-      setIsAtBottom((current) => (current === value ? current : value));
+      { setIsAtBottom((current) => (current === value ? current : value)); };
     const requestTick = () => {
       if (animationFrame === null) animationFrame = requestAnimationFrame(tick);
     };
@@ -267,7 +267,7 @@ function useResearchActivityScroll(runId: string) {
     };
   }, [runId]);
 
-  const scrollToLatest = useCallback(() => scrollToLatestRef.current(), []);
+  const scrollToLatest = useCallback(() => { scrollToLatestRef.current(); }, []);
   return { viewportRef, isAtBottom, scrollToLatest };
 }
 
@@ -474,7 +474,7 @@ const ActivityRow = memo(function ActivityRow({
     <Collapsible
       open={open}
       onOpenChange={(nextOpen) =>
-        setActivityOpen(runId, activity.id, nextOpen)
+        { setActivityOpen(runId, activity.id, nextOpen); }
       }
     >
       <div
@@ -583,14 +583,14 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
         <Button
           className="mt-3 w-full"
           size="sm"
-          onClick={() => setOpen(runId, true)}
+          onClick={() => { setOpen(runId, true); }}
         >
           Review plan
         </Button>
       </section>
       <Dialog
         open={open}
-        onOpenChange={(nextOpen) => setOpen(runId, nextOpen)}
+        onOpenChange={(nextOpen) => { setOpen(runId, nextOpen); }}
       >
         <DialogContent className="max-h-[min(680px,calc(100dvh-6rem))] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 data-open:animate-none sm:max-w-3xl [&>[data-slot=dialog-close]]:right-6 [&>[data-slot=dialog-close]]:top-6">
           <DialogHeader className="border-b border-border/70 px-7 pb-4 pt-6 pr-16">
@@ -609,7 +609,7 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
                   maxLength={200}
                   className="min-h-10 py-2 font-medium"
                   onChange={(event) =>
-                    setDraft(runId, { ...draft, title: event.target.value })
+                    { setDraft(runId, { ...draft, title: event.target.value }); }
                   }
                 />
                 {draft.steps.map((step, index) => (
@@ -635,7 +635,7 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
                       <Button
                         variant="ghost"
                         size="icon-xs"
-                        onClick={() => move(index, -1)}
+                        onClick={() => { move(index, -1); }}
                         disabled={index === 0}
                         aria-label={`Move step ${index + 1} up`}
                       >
@@ -644,7 +644,7 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
                       <Button
                         variant="ghost"
                         size="icon-xs"
-                        onClick={() => move(index, 1)}
+                        onClick={() => { move(index, 1); }}
                         disabled={index === draft.steps.length - 1}
                         aria-label={`Move step ${index + 1} down`}
                       >
@@ -749,12 +749,12 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
           <DialogFooter className="shrink-0 flex-col gap-3 border-t border-border/70 bg-background px-7 py-4 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="outline"
-              onClick={() => setEditing(runId, !editing)}
+              onClick={() => { setEditing(runId, !editing); }}
             >
               <HugeiconsIcon icon={Edit03Icon} /> {editing ? "Preview plan" : "Edit plan"}
             </Button>
             <div className="flex flex-col-reverse gap-2 sm:flex-row">
-              <Button variant="ghost" onClick={() => setOpen(runId, false)}>
+              <Button variant="ghost" onClick={() => { setOpen(runId, false); }}>
                 Review later
               </Button>
               <Button
@@ -836,8 +836,7 @@ export function ResearchActivityPanel({
   const { viewportRef, isAtBottom, scrollToLatest } =
     useResearchActivityScroll(runId);
   const hydrating = Boolean(
-    session &&
-      session.connection === "connecting" &&
+    session?.connection === "connecting" &&
       session.lastAppliedSeq < session.run.lastEventSeq,
   );
 
@@ -847,8 +846,8 @@ export function ResearchActivityPanel({
 
   useEffect(() => {
     if (!session || terminalStatuses.has(session.run.status)) return;
-    const timer = window.setInterval(() => setElapsedNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
+    const timer = window.setInterval(() => { setElapsedNow(Date.now()); }, 1000);
+    return () => { window.clearInterval(timer); };
   }, [session?.run.status]);
 
   if (!session) {
@@ -1039,7 +1038,7 @@ export function ResearchActivitySheet({
         <ResearchActivityPanel
           key={runId}
           runId={runId}
-          onClose={() => onOpenChange(false)}
+          onClose={() => { onOpenChange(false); }}
           variant="sheet"
         />
       </SheetContent>

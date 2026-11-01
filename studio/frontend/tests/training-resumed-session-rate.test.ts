@@ -62,7 +62,7 @@ test("the session start step travels from the SSE frame into the store", async (
     body,
     signal: new AbortController().signal,
     onEvent: ({ payload: parsed, id }) =>
-      useTrainingRuntimeStore.getState().applyProgress(parsed, id ?? undefined),
+      { useTrainingRuntimeStore.getState().applyProgress(parsed, id ?? undefined); },
   });
 
   const state = useTrainingRuntimeStore.getState();

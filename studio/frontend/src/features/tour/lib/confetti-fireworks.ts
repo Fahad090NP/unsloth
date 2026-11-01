@@ -7,11 +7,11 @@ import type { CreateTypes as ConfettiInstance } from "canvas-confetti";
 
 import { prefersReducedMotion } from "@/features/settings";
 
-type FireworksOpts = {
+interface FireworksOpts {
   durationMs?: number;
   intervalMs?: number;
   zIndex?: number;
-};
+}
 
 // CSP blocks canvas-confetti's blob: worker, so reuse one canvas with useWorker: false; stacking
 // comes from its style.zIndex.

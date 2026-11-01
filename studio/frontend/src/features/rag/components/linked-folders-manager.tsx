@@ -100,7 +100,7 @@ function FolderReport({ folder }: { folder: LinkedFolder }) {
           <button
             type="button"
             aria-expanded={open}
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => { setOpen((value) => !value); }}
             className="self-start text-destructive underline-offset-2 hover:underline"
           >
             {open ? "Hide" : "Show"} {failureCount} file
@@ -193,10 +193,10 @@ export function LinkedFoldersManager({
           <DropdownMenuItem
             variant="destructive"
             onSelect={() =>
-              setRemoveIndexFolder({
+              { setRemoveIndexFolder({
                 id: folder.id,
                 name: folder.displayName,
-              })
+              }); }
             }
           >
             Unlink and remove indexed files
@@ -256,7 +256,7 @@ export function LinkedFoldersManager({
               const failed =
                 folder.status === "error" || job?.status === "failed";
               const detail = running
-                ? jobSummary(job as FolderSyncJob)
+                ? jobSummary(job)
                 : failed
                   ? (job?.status === "failed" ? job.error : folder.error) ||
                     "Sync failed"

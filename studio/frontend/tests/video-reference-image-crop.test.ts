@@ -212,7 +212,7 @@ test("a crop export over the request field cap is rejected locally", () => {
 });
 
 test("Cancel closes without invoking Apply while Apply performs both actions", () => {
-  const applied: Array<{ dataUrl: string; crop: unknown }> = [];
+  const applied: { dataUrl: string; crop: unknown }[] = [];
   const openChanges: boolean[] = [];
   const actions = createReferenceImageEditorActions({
     onApply: (dataUrl, crop) => applied.push({ dataUrl, crop }),

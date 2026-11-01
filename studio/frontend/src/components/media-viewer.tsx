@@ -113,7 +113,7 @@ export function ScaleMenu({
       <DropdownMenuContent align="end" className={cn("w-40", contentClassName)}>
         <DropdownMenuRadioGroup
           value={String(value)}
-          onValueChange={(next) => onChange(next === "fit" ? "fit" : Number(next))}
+          onValueChange={(next) => { onChange(next === "fit" ? "fit" : Number(next)); }}
         >
           {scales.map((scale) => (
             <DropdownMenuRadioItem key={scale} value={String(scale)}>

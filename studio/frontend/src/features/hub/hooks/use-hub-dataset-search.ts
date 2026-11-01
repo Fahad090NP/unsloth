@@ -27,7 +27,7 @@ interface CardDataWithInfo {
         download_size?: number;
         dataset_size?: number;
       }
-    | Array<{ splits?: DatasetInfoSplit[] }>;
+    | { splits?: DatasetInfoSplit[] }[];
 }
 
 function extractTotalExamples(
@@ -426,12 +426,12 @@ export function useHubDatasetSearch(
     sortDirection = "desc",
   } = options ?? {};
   const hasQuery = query.trim().length > 0;
-  const useCuratedOnly = !hasQuery && !!modelType;
+  const useCuratedOnly = !hasQuery && Boolean(modelType);
   const hfEndpoint = useHfEndpoint();
   const createIter = useCallback(
     (signal: AbortSignal) => {
       if (useCuratedOnly) {
-        return (async function* empty() {})() as AsyncGenerator<unknown>;
+        return (async function* empty() {})() as AsyncGenerator;
       }
       return listDatasets({
         search: hasQuery ? { query } : {},
@@ -439,7 +439,7 @@ export function useHubDatasetSearch(
         fetch: makeDatasetSortFetch(sortBy, sortDirection, signal),
         hubUrl: getHfEndpoint(),
         ...(accessToken ? { credentials: { accessToken } } : {}),
-      }) as AsyncGenerator<unknown>;
+      }) as AsyncGenerator;
     },
     [useCuratedOnly, hasQuery, query, accessToken, sortBy, sortDirection, hfEndpoint],
   );

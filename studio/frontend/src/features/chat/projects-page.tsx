@@ -380,7 +380,7 @@ export function ProjectsPage({
     }
     measure();
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    return () => { window.removeEventListener("resize", measure); };
   }, [hasLoaded]);
 
   useEffect(() => {
@@ -395,7 +395,7 @@ export function ProjectsPage({
       { rootMargin: "300px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    return () => { io.disconnect(); };
     // IntersectionObserver does not re-fire on a steady intersection, so re-observe.
   }, [hasMore, visibleCount]);
 
@@ -603,7 +603,7 @@ export function ProjectsPage({
             </span>
             <Input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => { setQuery(e.target.value); }}
               onKeyDown={(e) => {
                 if (e.key === "Escape" && query) {
                   e.preventDefault();
@@ -687,7 +687,7 @@ export function ProjectsPage({
               </DropdownMenuSub>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="dark" data-tour="projects-new" onClick={() => setCreating(true)}>
+          <Button variant="dark" data-tour="projects-new" onClick={() => { setCreating(true); }}>
             <HugeiconsIcon icon={PlusSignIcon} data-icon="inline-start" />
             {t("projectsPage.newProject")}
           </Button>
@@ -727,7 +727,7 @@ export function ProjectsPage({
               <Button
                 variant="outline"
                 className="mt-2 border-none bg-background shadow-[0_2px_8px_-2px_rgba(0,0,0,0.16)] dark:bg-card dark:shadow-none"
-                onClick={() => setCreating(true)}
+                onClick={() => { setCreating(true); }}
               >
                 <HugeiconsIcon icon={ProjectIcon} strokeWidth={1.75} className="size-icon" />
                 {t("projectsPage.createFirst")}
@@ -736,7 +736,7 @@ export function ProjectsPage({
           ) : (
             <>
               <p className="text-sm">{t("projectsPage.noMatches")}</p>
-              <Button variant="ghost" size="sm" onClick={() => setQuery("")}>
+              <Button variant="ghost" size="sm" onClick={() => { setQuery(""); }}>
                 {t("projectsPage.clearSearch")}
               </Button>
             </>
@@ -750,7 +750,7 @@ export function ProjectsPage({
             <button
               type="button"
               onClick={() =>
-                onToggleOrder ? onToggleOrder() : setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
+                { onToggleOrder ? onToggleOrder() : setSortDir((dir) => (dir === "desc" ? "asc" : "desc")); }
               }
               title={t((orderedDesc ?? sortDir === "desc") ? "projectsPage.newestFirst" : "projectsPage.oldestFirst")}
               className="flex shrink-0 cursor-pointer items-center gap-1 text-left transition-colors hover:text-foreground sm:w-40"
@@ -784,7 +784,7 @@ export function ProjectsPage({
                     its pin and menu presentational children: one control where there are four. */}
                 <button
                   type="button"
-                  onClick={() => openProject(project.id)}
+                  onClick={() => { openProject(project.id); }}
                   className="flex min-w-0 cursor-pointer items-center gap-3 rounded-md text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   <span className="mr-1 flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-foreground/70 transition-colors group-hover/project-row:bg-primary/10 group-hover/project-row:text-primary">
@@ -823,7 +823,7 @@ export function ProjectsPage({
                 {/* biome-ignore lint/a11y/noStaticElementInteractions: a wider mouse target for the chevron */}
                 <span
                   aria-hidden="true"
-                  onClick={() => toggleProjectChats(project.id)}
+                  onClick={() => { toggleProjectChats(project.id); }}
                   className="-my-4 min-w-0 flex-1 cursor-pointer self-stretch"
                 />
               </span>
@@ -863,7 +863,7 @@ export function ProjectsPage({
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); }}
                       aria-label={t("projectsPage.projectOptions")}
                       className="absolute right-0 flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-[rgb(0_0_0_/_calc(0.05*var(--contrast-wash-gain,1)))] hover:text-foreground data-[state=open]:bg-[rgb(0_0_0_/_calc(0.05*var(--contrast-wash-gain,1)))] dark:hover:bg-[rgb(255_255_255_/_calc(0.1*var(--contrast-wash-gain,1)))] dark:data-[state=open]:bg-[rgb(255_255_255_/_calc(0.1*var(--contrast-wash-gain,1)))]"
                     >
@@ -874,16 +874,16 @@ export function ProjectsPage({
                     side="bottom"
                     align="end"
                     sideOffset={0}
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); }}
+                    onKeyDown={(e) => { e.stopPropagation(); }}
                     className="app-user-menu menu-soft-surface menu-flat-destructive ring-0 w-52 font-heading rounded-xl border-0"
                   >
                     <ProjectMenuItems
                       project={project}
-                      onNewChat={() => newChatInProject(project.id)}
-                      onEdit={() => setEditing(project)}
-                      onDelete={() => openProjectDelete(project)}
-                      onNewSection={() => setSectionFor(project)}
+                      onNewChat={() => { newChatInProject(project.id); }}
+                      onEdit={() => { setEditing(project); }}
+                      onDelete={() => { openProjectDelete(project); }}
+                      onNewSection={() => { setSectionFor(project); }}
                     />
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -896,7 +896,7 @@ export function ProjectsPage({
                 ) : chats === "error" ? (
                   <button
                     type="button"
-                    onClick={() => loadProjectChats(project.id)}
+                    onClick={() => { loadProjectChats(project.id); }}
                     className="cursor-pointer self-start py-1 pl-5 text-left text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                   >
                     {t("projectsPage.loadChatsFailed")}
@@ -918,7 +918,7 @@ export function ProjectsPage({
                       >
                         <button
                           type="button"
-                          onClick={() => openChat(chat, project.id)}
+                          onClick={() => { openChat(chat, project.id); }}
                           className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-full text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
                           <span className="min-w-0 truncate">{chat.title}</span>
@@ -961,7 +961,7 @@ export function ProjectsPage({
                             <DropdownMenuTrigger asChild>
                               <button
                                 type="button"
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => { e.stopPropagation(); }}
                                 aria-label={t("projectsPage.chatOptions")}
                                 className="absolute right-0 flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition hover:bg-[rgb(0_0_0_/_calc(0.05*var(--contrast-wash-gain,1)))] hover:text-foreground focus-visible:opacity-100 group-hover/chat-row:opacity-100 pointer-coarse:opacity-100 data-[state=open]:bg-[rgb(0_0_0_/_calc(0.05*var(--contrast-wash-gain,1)))] data-[state=open]:opacity-100 dark:hover:bg-[rgb(255_255_255_/_calc(0.1*var(--contrast-wash-gain,1)))] dark:data-[state=open]:bg-[rgb(255_255_255_/_calc(0.1*var(--contrast-wash-gain,1)))]"
                               >
@@ -972,8 +972,8 @@ export function ProjectsPage({
                               side="bottom"
                               align="end"
                               sideOffset={0}
-                              onClick={(e) => e.stopPropagation()}
-                              onKeyDown={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); }}
+                              onKeyDown={(e) => { e.stopPropagation(); }}
                               className="app-user-menu menu-soft-surface menu-flat-destructive ring-0 w-52 font-heading rounded-xl border-0"
                             >
                               <DropdownMenuItem
@@ -987,14 +987,14 @@ export function ProjectsPage({
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onSelect={() =>
-                                  chatUnread
+                                  { chatUnread
                                     ? clearThreadsUnread(chatThreadIds)
                                     : markThreadsUnread(
                                         chatThreadIds,
                                         Object.fromEntries(
                                           chatThreadIds.map((id) => [id, chat.id]),
                                         ),
-                                      )
+                                      ); }
                                 }
                               >
                                 <HugeiconsIcon icon={chatUnread ? ViewIcon : ViewOffSlashIcon} strokeWidth={1.75} className="size-icon" />
@@ -1022,9 +1022,9 @@ export function ProjectsPage({
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     onSelect={() =>
-                                      useSettingsDialogStore
+                                      { useSettingsDialogStore
                                         .getState()
-                                        .openDialog("data")
+                                        .openDialog("data"); }
                                     }
                                   >
                                     {t("projectsPage.exportAllChats")}
@@ -1040,9 +1040,9 @@ export function ProjectsPage({
                               <DropdownMenuItem
                                 variant="destructive"
                                 onSelect={() =>
-                                  confirmDeleteChats
+                                  { confirmDeleteChats
                                     ? openChatDelete(chat)
-                                    : void deleteChat(chat, alwaysDeleteChatFiles)
+                                    : void deleteChat(chat, alwaysDeleteChatFiles); }
                                 }
                               >
                                 <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.75} className="size-icon" />
@@ -1057,7 +1057,7 @@ export function ProjectsPage({
                     {staleProjectIds.has(project.id) && (
                       <button
                         type="button"
-                        onClick={() => loadProjectChats(project.id, true)}
+                        onClick={() => { loadProjectChats(project.id, true); }}
                         className="cursor-pointer self-start py-1 text-left text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                       >
                         {t("projectsPage.refreshChatsFailed")}
@@ -1095,7 +1095,7 @@ export function ProjectsPage({
         onOpenChange={(open) => {
           if (!open) setEditing(null);
         }}
-        onDelete={(project) => openProjectDelete(project)}
+        onDelete={(project) => { openProjectDelete(project); }}
       />
 
       <Dialog
@@ -1110,7 +1110,7 @@ export function ProjectsPage({
           </DialogHeader>
           <Input
             value={chatNameDraft}
-            onChange={(e) => setChatNameDraft(e.target.value)}
+            onChange={(e) => { setChatNameDraft(e.target.value); }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -1124,7 +1124,7 @@ export function ProjectsPage({
             className="focus-visible:border-input focus-visible:ring-0"
           />
           <DialogFooter className="flex-wrap gap-2 sm:justify-end">
-            <Button type="button" variant="ghost" onClick={() => setRenamingChat(null)}>
+            <Button type="button" variant="ghost" onClick={() => { setRenamingChat(null); }}>
               {t("common.cancel")}
             </Button>
             <Button
@@ -1163,7 +1163,7 @@ export function ProjectsPage({
             onCheckedChange={setDeleteFilesOnDelete}
           />
           <DialogFooter className="flex-wrap gap-2 sm:justify-end">
-            <Button type="button" variant="ghost" onClick={() => setDeletingChat(null)}>
+            <Button type="button" variant="ghost" onClick={() => { setDeletingChat(null); }}>
               {t("common.cancel")}
             </Button>
             <Button
@@ -1194,7 +1194,7 @@ export function ProjectsPage({
           </p>
           <Select
             value={importTargetId ?? "__recents__"}
-            onValueChange={(v) => setImportTargetId(v === "__recents__" ? null : v)}
+            onValueChange={(v) => { setImportTargetId(v === "__recents__" ? null : v); }}
           >
             <SelectTrigger>
               <SelectValue placeholder={t("projectsPage.selectDestination")} />
@@ -1207,7 +1207,7 @@ export function ProjectsPage({
             </SelectContent>
           </Select>
           <DialogFooter className="flex-wrap gap-2 sm:justify-end">
-            <Button type="button" variant="ghost" onClick={() => setImportFile(null)}>{t("common.cancel")}</Button>
+            <Button type="button" variant="ghost" onClick={() => { setImportFile(null); }}>{t("common.cancel")}</Button>
             <Button type="button" onClick={() => void commitImport()}>{t("projectsPage.import")}</Button>
           </DialogFooter>
         </DialogContent>
@@ -1238,7 +1238,7 @@ export function ProjectsPage({
             }
           />
           <DialogFooter className="flex-wrap gap-2 sm:justify-end">
-            <Button type="button" variant="ghost" onClick={() => setDeleting(null)}>
+            <Button type="button" variant="ghost" onClick={() => { setDeleting(null); }}>
               {t("common.cancel")}
             </Button>
             <Button type="button" variant="destructive" onClick={() => void commitDelete()}>

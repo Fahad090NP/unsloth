@@ -5,13 +5,13 @@ import type { ModelConfigHandoffRequest } from "../model-config/model-config-han
 import type { PerModelConfig } from "../model-config/per-model-config";
 import type { SharedRunConfig } from "./links";
 
-export type RunConfigImport = {
+export interface RunConfigImport {
   changes: Partial<PerModelConfig>;
   model?: string;
   ggufVariant?: string;
-};
+}
 
-export type RunConfigRequest = {
+export interface RunConfigRequest {
   id: string;
   value: SharedRunConfig;
   selectedModel?: string;
@@ -19,7 +19,7 @@ export type RunConfigRequest = {
   draftKey?: string;
   replaceHistory?: boolean;
   newChatId?: ModelConfigHandoffRequest["newChatId"];
-};
+}
 
 export function createRunConfigInbox() {
   let pending: RunConfigRequest | null = null;
@@ -39,7 +39,7 @@ export function createRunConfigInbox() {
   };
   return {
     getSnapshot: () => pending,
-    begin: (id: string) => publish(null, id),
+    begin: (id: string) => { publish(null, id); },
     recordEdit: (draftKey: string) => {
       if (requestId !== null) editedDrafts.add(draftKey);
     },
@@ -50,7 +50,7 @@ export function createRunConfigInbox() {
         listeners.delete(listener);
       };
     },
-    submit: (request: RunConfigRequest) => publish(request),
+    submit: (request: RunConfigRequest) => { publish(request); },
     retainEditor: (
       draftKey: string,
       onCancel?: (request: RunConfigRequest) => void,

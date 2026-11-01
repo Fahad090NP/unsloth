@@ -69,13 +69,13 @@ import { CollapsibleSectionTriggerButton } from "../shared/collapsible-section-t
 import { HfDatasetCombobox } from "../../components/shared/hf-dataset-combobox";
 import { FieldLabel } from "../shared/field-label";
 
-const SAMPLING_OPTIONS: Array<{ value: SeedSamplingStrategy; label: string }> =
+const SAMPLING_OPTIONS: { value: SeedSamplingStrategy; label: string }[] =
   [
     { value: "ordered", label: "Ordered" },
     { value: "shuffle", label: "Shuffle" },
   ];
 
-const SELECTION_OPTIONS: Array<{ value: SeedSelectionType; label: string }> = [
+const SELECTION_OPTIONS: { value: SeedSelectionType; label: string }[] = [
   { value: "none", label: "None" },
   { value: "index_range", label: "Index range" },
   { value: "partition_block", label: "Partition block" },
@@ -95,11 +95,11 @@ const GIT_SUFFIX_RE = /\.git$/i;
 const GITHUB_REPO_INPUT_SPLIT_RE = /[\s,]+/;
 const GITHUB_REPO_PART_RE = /^[A-Za-z0-9_.-]+$/;
 
-type SeedDialogProps = {
+interface SeedDialogProps {
   config: SeedConfig;
   onUpdate: (patch: Partial<SeedConfig>) => void;
   open: boolean;
-};
+}
 
 function normalizeGithubRepoInput(value: string): string {
   let raw = value.trim().replace(GITHUB_TRAILING_PUNCTUATION_RE, "");
@@ -266,7 +266,7 @@ export function GithubRepoSeedForm({
                 <button
                   type="button"
                   className="rounded-full px-1 text-muted-foreground hover:bg-background hover:text-foreground"
-                  onClick={() => removeRepo(index)}
+                  onClick={() => { removeRepo(index); }}
                   aria-label={`Remove ${repo}`}
                 >
                   ×
@@ -278,9 +278,9 @@ export function GithubRepoSeedForm({
             id={repoInputId}
             className="min-w-36 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
             value={repoDraft}
-            onChange={(event) => setRepoDraft(event.target.value)}
+            onChange={(event) => { setRepoDraft(event.target.value); }}
             onKeyDown={handleRepoKeyDown}
-            onBlur={() => addRepos(repoDraft)}
+            onBlur={() => { addRepos(repoDraft); }}
             onPaste={(event) => {
               const pasted = event.clipboardData.getData("text");
               if (pasted) {
@@ -329,7 +329,7 @@ export function GithubRepoSeedForm({
           type="password"
           className="nodrag"
           value={config.github_token ?? ""}
-          onChange={(e) => onUpdate({ github_token: e.target.value })}
+          onChange={(e) => { onUpdate({ github_token: e.target.value }); }}
           placeholder={
             usingEnvToken
               ? "Using server GH_TOKEN / GITHUB_TOKEN"
@@ -367,7 +367,7 @@ export function GithubRepoSeedForm({
             min={1}
             max={5000}
             value={githubLimitString(config.github_limit)}
-            onChange={(e) => onUpdate({ github_limit: e.target.value })}
+            onChange={(e) => { onUpdate({ github_limit: e.target.value }); }}
             placeholder="100"
             aria-describedby={limitHelpId}
           />
@@ -422,7 +422,7 @@ export function GithubRepoSeedForm({
               id={includeCommentsId}
               checked={includeComments}
               onCheckedChange={(v) =>
-                onUpdate({ github_include_comments: v === true })
+                { onUpdate({ github_include_comments: v === true }); }
               }
             />
             <span>Include issue/PR comments</span>
@@ -442,7 +442,7 @@ export function GithubRepoSeedForm({
               disabled={!includeComments}
               value={config.github_max_comments_per_item ?? "30"}
               onChange={(e) =>
-                onUpdate({ github_max_comments_per_item: e.target.value })
+                { onUpdate({ github_max_comments_per_item: e.target.value }); }
               }
               aria-describedby={commentsHelpId}
             />
@@ -560,14 +560,14 @@ function resolveChunking(config: SeedConfig): {
 }
 
 async function fileToBase64Payload(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       const value = String(reader.result ?? "");
       const parts = value.split(",");
       resolve(parts.length > 1 ? parts[1] : value);
     };
-    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.onerror = () => { reject(new Error("Failed to read file")); };
     reader.readAsDataURL(file);
   });
 }
@@ -971,7 +971,7 @@ export function SeedDialog({
                     accessToken={config.hf_token?.trim() || undefined}
                     placeholder="org/repo"
                     onValueChange={(nextValue) =>
-                      onUpdate({
+                      { onUpdate({
                         hf_repo_id: nextValue,
                         hf_subset: "",
                         hf_split: "",
@@ -979,7 +979,7 @@ export function SeedDialog({
                         seed_columns: [],
                         seed_drop_columns: [],
                         seed_preview_rows: [],
-                      })
+                      }); }
                     }
                   />
                   <Button
@@ -1007,7 +1007,7 @@ export function SeedDialog({
                   placeholder="hf_..."
                   value={config.hf_token ?? ""}
                   onChange={(event) =>
-                    onUpdate({ hf_token: event.target.value })
+                    { onUpdate({ hf_token: event.target.value }); }
                   }
                 />
               </div>
@@ -1125,7 +1125,7 @@ export function SeedDialog({
 
           <Collapsible
             open={advancedOpen}
-            onOpenChange={(openState) => onUpdate({ advancedOpen: openState })}
+            onOpenChange={(openState) => { onUpdate({ advancedOpen: openState }); }}
           >
             <CollapsibleTrigger asChild={true}>
               <CollapsibleSectionTriggerButton
@@ -1143,9 +1143,9 @@ export function SeedDialog({
                 <Select
                   value={config.sampling_strategy}
                   onValueChange={(value) =>
-                    onUpdate({
+                    { onUpdate({
                       sampling_strategy: value as SeedSamplingStrategy,
-                    })
+                    }); }
                   }
                 >
                   <SelectTrigger className="nodrag w-full" id={samplingId}>
@@ -1170,7 +1170,7 @@ export function SeedDialog({
                 <Select
                   value={config.selection_type}
                   onValueChange={(value) =>
-                    onUpdate({ selection_type: value as SeedSelectionType })
+                    { onUpdate({ selection_type: value as SeedSelectionType }); }
                   }
                 >
                   <SelectTrigger className="nodrag w-full" id={selectionId}>
@@ -1203,10 +1203,10 @@ export function SeedDialog({
                         String(DEFAULT_CHUNK_SIZE)
                       }
                       onChange={(event) =>
-                        onUpdate({
+                        { onUpdate({
                           unstructured_chunk_size: event.target.value,
                           seed_total_rows: undefined,
-                        })
+                        }); }
                       }
                     />
                   </div>
@@ -1225,10 +1225,10 @@ export function SeedDialog({
                         String(DEFAULT_CHUNK_OVERLAP)
                       }
                       onChange={(event) =>
-                        onUpdate({
+                        { onUpdate({
                           unstructured_chunk_overlap: event.target.value,
                           seed_total_rows: undefined,
-                        })
+                        }); }
                       }
                     />
                   </div>
@@ -1247,7 +1247,7 @@ export function SeedDialog({
                       inputMode="numeric"
                       value={config.selection_start ?? ""}
                       onChange={(event) =>
-                        onUpdate({ selection_start: event.target.value })
+                        { onUpdate({ selection_start: event.target.value }); }
                       }
                     />
                   </div>
@@ -1261,7 +1261,7 @@ export function SeedDialog({
                       inputMode="numeric"
                       value={config.selection_end ?? ""}
                       onChange={(event) =>
-                        onUpdate({ selection_end: event.target.value })
+                        { onUpdate({ selection_end: event.target.value }); }
                       }
                     />
                   </div>
@@ -1277,7 +1277,7 @@ export function SeedDialog({
                       inputMode="numeric"
                       value={config.selection_index ?? ""}
                       onChange={(event) =>
-                        onUpdate({ selection_index: event.target.value })
+                        { onUpdate({ selection_index: event.target.value }); }
                       }
                     />
                   </div>
@@ -1291,9 +1291,9 @@ export function SeedDialog({
                       inputMode="numeric"
                       value={config.selection_num_partitions ?? ""}
                       onChange={(event) =>
-                        onUpdate({
+                        { onUpdate({
                           selection_num_partitions: event.target.value,
-                        })
+                        }); }
                       }
                     />
                   </div>

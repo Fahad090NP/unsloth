@@ -35,7 +35,7 @@ export function DeferredTextarea({
       onChange={(e) => {
         const next = e.target.value;
         setDraft(next);
-        startTransition(() => onValueChange(next));
+        startTransition(() => { onValueChange(next); });
       }}
       onBlur={(e) => {
         // Blur is a discrete event, so this lands before a Generate click reads a still-pending transition.

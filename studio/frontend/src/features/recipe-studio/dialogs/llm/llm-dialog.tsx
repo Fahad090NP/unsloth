@@ -12,13 +12,13 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 
-type LlmDialogProps = {
+interface LlmDialogProps {
   config: LlmConfig;
   modelConfigAliases: string[];
   modelProviderOptions: string[];
   toolProfileAliases: string[];
   onUpdate: (patch: Partial<LlmConfig>) => void;
-};
+}
 
 export function LlmDialog({
   config,

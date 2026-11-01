@@ -86,7 +86,7 @@ function CopyableCommand({
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
-    timerRef.current = setTimeout(() => setCopied(false), 2000);
+    timerRef.current = setTimeout(() => { setCopied(false); }, 2000);
   };
 
   return (
@@ -288,13 +288,13 @@ export function UpdateStudioInstructions({
             active={!windows}
             label="MacOS / Linux"
             pillGroup={`${pillId}-shell`}
-            onClick={() => setShellOverride("unix")}
+            onClick={() => { setShellOverride("unix"); }}
           />
           <ShellToggleButton
             active={windows}
             label="Windows"
             pillGroup={`${pillId}-shell`}
-            onClick={() => setShellOverride("windows")}
+            onClick={() => { setShellOverride("windows"); }}
           />
         </div>
       </div>

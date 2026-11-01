@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import remend from "remend";
-import { type BlockProps } from "streamdown";
+import type { BlockProps } from "streamdown";
 import {
   parseMarkdownBlockDetails,
   parseMarkdownIntoBlocks,
@@ -102,7 +102,7 @@ function isCodeBlock(block: string): boolean {
     return false;
   }
   const backtick = BACKTICK_OPENER_RE.exec(block);
-  return backtick === null || !backtick[1].includes("`");
+  return !backtick?.[1].includes("`");
 }
 // Must admit exactly what `LINK_DEFINITION_RE` admits, or the wider cap becomes unreachable.
 const LINK_REFERENCE_RE =
@@ -311,7 +311,7 @@ type EmphasisMathState =
   | "inlineDollar"
   | "blockDollar";
 
-type RepairParity = {
+interface RepairParity {
   bold: boolean;
   boldCandidate: boolean;
   boldFence: boolean;
@@ -337,7 +337,7 @@ type RepairParity = {
   strikethrough: boolean;
   displayMath: boolean;
   inlineMath: boolean;
-};
+}
 
 // Three open states are excluded because `hasNeutralRepairParity` refuses to commit inside them.
 type RetainedLatexState = "none" | "inlineLatex";
@@ -848,10 +848,10 @@ const hasNeutralRepairParity = (parity: RepairParity): boolean =>
     parity.inlineMath,
   ].includes(true);
 
-export type IncrementalMarkdownRender = {
+export interface IncrementalMarkdownRender {
   markdown: string;
   parseMarkdownIntoBlocks: (markdown: string) => string[];
-};
+}
 
 const INCOMPLETE_LINK_REPAIR = "](streamdown:incomplete-link)";
 const LINK_REPAIR_MEMO_ENTRIES = 256;
@@ -923,7 +923,7 @@ export function repairStreamingMarkdown(source: string): string {
     : repaired;
 }
 
-type RetainedContext = {
+interface RetainedContext {
   multilineKatex: boolean;
   bold: boolean;
   singleAsterisk: boolean;
@@ -932,7 +932,7 @@ type RetainedContext = {
   firstSingleAsterisk: "inlineCode" | "normal" | null;
   firstSingleUnderscore: "inlineCode" | "normal" | null;
   firstBoldOrSingleUnderscore: "bold" | "singleUnderscore" | null;
-};
+}
 
 const createRetainedContext = (): RetainedContext => ({
   multilineKatex: false,
@@ -1007,14 +1007,14 @@ function repairTailKeepingLinks(
 }
 
 // Mirrors remend rather than CommonMark: a mid-line ``` closes the fence for remend.
-type OpenFenceState = {
+interface OpenFenceState {
   index: number;
   fenceOpen: boolean;
   bodyStart: number;
   // The FIRST ` $ or ~ in the fence body, or -1. Any of them disqualifies the splice, because remend's
   // three fence notions disagree and the synthetic opener cannot reproduce all of them.
   firstBodyMarker: number;
-};
+}
 
 const initialOpenFenceState = (): OpenFenceState => ({
   index: 0,
@@ -1104,7 +1104,7 @@ function repairOpenFenceTail(
   if (
     cut < 0 ||
     cut + 1 <= bodyStart ||
-    tail.indexOf("\n", cut + 1) < 0 ||
+    !tail.includes("\n", cut + 1) ||
     firstBodyMarker >= 0
   ) {
     return null;
@@ -1141,19 +1141,19 @@ const advanceContext = (
     context.firstBoldOrSingleUnderscore ?? parity.firstBoldOrSingleUnderscore,
 });
 
-type CommitBoundary = {
+interface CommitBoundary {
   count: number;
   length: number;
   parity: RepairParity | null;
   repairBroke: boolean;
-};
+}
 
 // `advanceContext` only adds facts, so each commit's context is stored to allow a rewind.
-type CommitPoint = {
+interface CommitPoint {
   blockCount: number;
   length: number;
   context: RetainedContext;
-};
+}
 
 // CommonMark treats LF, CR and CRLF alike, so normalising cannot change the render.
 function normalizeLineEndings(text: string): string {
@@ -1165,7 +1165,7 @@ function normalizeLineEndings(text: string): string {
  * ones, so do not use it for short prefixes.
  */
 export const hasPrefix = (a: string, b: string): boolean =>
-  a.length >= b.length && a.slice(0, b.length) === b;
+  a.length >= b.length && a.startsWith(b);
 
 function sharedPrefixLength(left: string, right: string): number {
   const limit = Math.min(left.length, right.length);
@@ -1251,7 +1251,7 @@ export class IncrementalMarkdownCache {
   private committedLength = 0;
   private commitPoints: CommitPoint[] = [];
   private context = createRetainedContext();
-  private fenceTracker = new OpenFenceTracker();
+  private readonly fenceTracker = new OpenFenceTracker();
   private openFenceHead: string | null = null;
   private openFenceHeadInert = false;
   private fullDocumentMode = false;

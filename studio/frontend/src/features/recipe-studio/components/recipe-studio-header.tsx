@@ -27,7 +27,7 @@ import {
 
 type StatusTone = "success" | "error";
 
-type RecipeStudioHeaderProps = {
+interface RecipeStudioHeaderProps {
   activeView: RecipeStudioView;
   saveLoading: boolean;
   saveTone: StatusTone;
@@ -38,7 +38,7 @@ type RecipeStudioHeaderProps = {
   onWorkflowNameChange: (value: string) => void;
   onViewChange: (view: RecipeStudioView) => void;
   onSaveRecipe: () => void;
-};
+}
 
 const STATUS_MESSAGE_CLASS: Record<StatusTone, string> = {
   success: "Saved",
@@ -100,7 +100,7 @@ export function RecipeStudioHeader({
           {editingWorkflowName ? (
             <Input
               value={workflowName}
-              onChange={(event) => onWorkflowNameChange(event.target.value)}
+              onChange={(event) => { onWorkflowNameChange(event.target.value); }}
               onBlur={closeWorkflowNameEditor}
               onKeyDown={handleWorkflowNameKeyDown}
               autoFocus={true}
@@ -110,7 +110,7 @@ export function RecipeStudioHeader({
           ) : (
             <button
               type="button"
-              onClick={() => setEditingWorkflowName(true)}
+              onClick={() => { setEditingWorkflowName(true); }}
               className="max-w-[min(22rem,50vw)] truncate text-sm font-semibold text-foreground hover:text-primary"
               title={workflowName}
               aria-label={`Edit recipe name: ${workflowName}`}

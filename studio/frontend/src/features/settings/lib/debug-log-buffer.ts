@@ -78,7 +78,7 @@ export async function withRequestTimeout<T>(
 ): Promise<T> {
   const local = new AbortController();
   if (signal?.aborted) local.abort();
-  const relay = () => local.abort();
+  const relay = () => { local.abort(); };
   signal?.addEventListener("abort", relay);
   let timer: ReturnType<typeof setTimeout> | undefined;
   const running = task(local.signal);

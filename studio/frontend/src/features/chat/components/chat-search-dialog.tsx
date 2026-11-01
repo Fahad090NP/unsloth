@@ -232,14 +232,14 @@ export function ChatSearchDialog() {
   useEffect(() => {
     if (!isOpen) return;
     const timer = setTimeout(
-      () => setRowLimit(Number.POSITIVE_INFINITY),
+      () => { setRowLimit(Number.POSITIVE_INFINITY); },
       FULL_ROW_REVEAL_MS,
     );
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [isOpen]);
 
   // Only the composer passes: an editor in other fields may chord on Cmd-K.
-  useShortcut("searchChats", () => useChatSearchStore.getState().open(), {
+  useShortcut("searchChats", () => { useChatSearchStore.getState().open(); }, {
     skipInTextFields: true,
     textFieldException: COMPOSER_INPUT_SELECTOR,
   });
@@ -355,9 +355,9 @@ export function ChatSearchDialog() {
 
   const activate = (row: Row) => {
     // The list can trail the input by a render; only open rows the live query matches.
-    if (query === activeQuery) return go(row.open)();
+    if (query === activeQuery) { go(row.open)(); return; }
     const live = matchAll(query);
-    if (live[row.kind].some((match) => match.key === row.key)) return go(row.open)();
+    if (live[row.kind].some((match) => match.key === row.key)) { go(row.open)(); return; }
     if (moved) return;
     const first = groupsFor(live, queryTokens(query).length > 0).find(
       (group) => group.rows.length > 0,
@@ -464,8 +464,8 @@ export function ChatSearchDialog() {
               type="button"
               role="tab"
               aria-selected={entry === tab}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => switchTab(entry)}
+              onMouseDown={(e) => { e.preventDefault(); }}
+              onClick={() => { switchTab(entry); }}
               // cmdk runs the highlighted row on Enter; a focused tab must only switch.
               onKeyDown={(e) => {
                 if (e.key === "Enter") e.stopPropagation();
@@ -482,7 +482,7 @@ export function ChatSearchDialog() {
           ))}
         </div>
         <CommandList
-          onPointerMove={() => setMoved(true)}
+          onPointerMove={() => { setMoved(true); }}
           className={cn(
             "cmd-native-scrollbar hover-scrollbar p-1",
             compactList ? "max-h-[calc(420px*var(--ui-space-scale,1))]" : "h-[calc(420px*var(--ui-space-scale,1))] max-h-[60dvh]",
@@ -503,7 +503,7 @@ export function ChatSearchDialog() {
                     <CommandPrimitive.Item
                       key={row.key}
                       value={row.key}
-                      onSelect={() => activate(row)}
+                      onSelect={() => { activate(row); }}
                       className={ROW_CLASS}
                     >
                       <RowGlyph icon={row.icon} />

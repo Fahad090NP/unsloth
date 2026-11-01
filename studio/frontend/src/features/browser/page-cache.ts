@@ -32,7 +32,7 @@ export function pageBytes(page: BrowserPage): number {
   return page.kind === "raw" ? page.blob.size : page.html.length * 2;
 }
 
-type Cached = { page: BrowserPage; bytes: number };
+interface Cached { page: BrowserPage; bytes: number }
 
 export class PageCache<Key extends object> {
   private readonly pages = new Map<Key, Cached>();

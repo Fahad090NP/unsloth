@@ -734,7 +734,7 @@ test("a browser that only read an entry does not write it back", async () => {
     const keys = new Set<string>();
     for (const put of settingsHttp.puts) {
       for (const id of Object.keys(
-        (put.inferenceParamsByModel ?? {}) as object,
+        (put.inferenceParamsByModel ?? {}),
       )) {
         keys.add(id);
       }

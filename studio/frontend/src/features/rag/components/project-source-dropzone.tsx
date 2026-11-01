@@ -219,7 +219,7 @@ export function ProjectSourceDropzone({
       },
       Math.max(0, Math.min(...expiries) - EXPIRY_GRACE_MS - Date.now()),
     );
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [staged, commit]);
 
   const addSources = useCallback(
@@ -268,7 +268,7 @@ export function ProjectSourceDropzone({
       addPending(1);
       const settled = await Promise.allSettled(
         supported.map(registerNativeAttachmentPath),
-      ).finally(() => addPending(-1));
+      ).finally(() => { addPending(-1); });
       if (!mounted.current || claimed !== generation.current) return;
       const staged = settled.flatMap((result) =>
         result.status === "fulfilled" ? [stagedFromIntent(result.value)] : [],
@@ -296,7 +296,7 @@ export function ProjectSourceDropzone({
       }
       void addNativePaths(paths);
     },
-    onDragOver: (over) => setDragging(over && !disabled),
+    onDragOver: (over) => { setDragging(over && !disabled); },
   });
 
   const endDrag = useCallback(() => {
@@ -396,7 +396,7 @@ export function ProjectSourceDropzone({
                     aria-label={`Remove ${entry.name}`}
                     disabled={disabled}
                     onClick={() =>
-                      commit(staged.filter((row) => row.id !== entry.id))
+                      { commit(staged.filter((row) => row.id !== entry.id)); }
                     }
                     className="shrink-0 rounded-full text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
                   >

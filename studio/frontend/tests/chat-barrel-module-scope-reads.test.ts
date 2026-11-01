@@ -202,7 +202,7 @@ function inRuntimeHeritage(node: ts.Node): boolean {
     current = parent;
     parent = parent.parent;
   }
-  if (!parent || parent.expression !== current) return false;
+  if (parent?.expression !== current) return false;
   const clause = parent.parent;
   if (!clause || !ts.isHeritageClause(clause)) return false;
   if (clause.token !== ts.SyntaxKind.ExtendsKeyword) return false;
@@ -501,7 +501,7 @@ function eagerReads(
   names: Set<string>,
   options: ScanOptions = {},
   // A namespace object exists from instantiation; only `chat.K` reads a possibly uninitialized export.
-  namespaces: Set<string> = new Set(),
+  namespaces = new Set<string>(),
 ): string[] {
   if (names.size === 0 && !options.helpers?.size) return [];
 
@@ -535,7 +535,7 @@ function eagerReads(
     const inner = ts.isBlock(fn.body) ? collectTargets(fn.body.statements, targets) : targets;
     const suspendsAt = firstSuspensionPos(fn.body);
     if (suspendsAt === null) visit(fn.body, false, inner);
-    else visitUntil(fn.body, suspendsAt, (n, d) => visit(n, d, inner));
+    else visitUntil(fn.body, suspendsAt, (n, d) => { visit(n, d, inner); });
   };
 
   const enterGetters = (
@@ -695,10 +695,10 @@ function eagerReads(
     }
     if (!deferred && ts.isNewExpression(node) && ts.isIdentifier(node.expression)) {
       // A derived class runs its base constructor first; each level gets its own super() arguments.
-      const chain: Array<{
+      const chain: {
         cls: ts.ClassLikeDeclaration;
         args: readonly ts.Expression[] | undefined;
-      }> = [];
+      }[] = [];
       let current = targets.classes.get(node.expression.text);
       let anchor: ts.Identifier | undefined = node.expression;
       let args: readonly ts.Expression[] | undefined = node.arguments ?? [];
@@ -837,7 +837,7 @@ function eagerReads(
     });
   };
   if (options.entry) enterCallable(options.entry, moduleTargets, options.entryArgs);
-  else source.forEachChild((child) => visit(child, false, moduleTargets));
+  else source.forEachChild((child) => { visit(child, false, moduleTargets); });
   return found;
 }
 
@@ -1076,7 +1076,7 @@ function proneExportSets(
   for (let changed = true; changed; ) {
     changed = false;
     for (const file of files) {
-      const own = out.get(file) as ProneExports;
+      const own = out.get(file)!;
       for (const hop of hops.get(file) ?? []) {
         // An unresolved hop could publish anything, so it carries every name.
         const inner: ProneExports | undefined =
@@ -1196,9 +1196,9 @@ function barrelInitClosure(files: string[]): Set<string> {
   );
 
   const seen = new Set<string>();
-  const stack = [entry as string];
+  const stack = [entry];
   while (stack.length > 0) {
-    const node = stack.pop() as string;
+    const node = stack.pop()!;
     for (const next of edges(node)) {
       if (!seen.has(next)) {
         seen.add(next);
@@ -1346,7 +1346,7 @@ test("no module-scope read of a chat barrel value", () => {
 });
 
 test("the scan catches every shape the regex version missed", () => {
-  const cases: Array<[string, string]> = [
+  const cases: [string, string][] = [
     ["plain const", `import { K } from "${BARREL}";\nconst a = [K];\n`],
     [
       "default re-evaluated on a later argument-less call",
@@ -1583,7 +1583,7 @@ test("the scan catches every shape the regex version missed", () => {
 });
 
 test("deferred reads and non-references are left alone", () => {
-  const cases: Array<[string, string]> = [
+  const cases: [string, string][] = [
     ["arrow body", `import { K } from "${BARREL}";\nconst f = () => [K];\n`],
     [
       "namespace object merely stored",
@@ -1814,7 +1814,7 @@ test("barrel bindings are tracked through local re-export bridges", () => {
     });
 
   assert.deepEqual(
-    [...names(consumer, sources.get(consumer) as string)],
+    [...names(consumer, sources.get(consumer)!)],
     ["K"],
     "importing through the bridge must be treated as importing from the barrel",
   );
@@ -1860,7 +1860,7 @@ test("a bridge's own exports are not treated as barrel bindings", () => {
   const bearing = barrelBearingModules(sources, resolve);
   assert.deepEqual([...(bearing.get(bridge) ?? [])], ["K"], "only K comes from the barrel");
 
-  const names = barrelValueNames(parse(consumer, sources.get(consumer) as string), (spec, exported) => {
+  const names = barrelValueNames(parse(consumer, sources.get(consumer)!), (spec, exported) => {
     if (spec === BARREL) return true;
     const target = resolve(spec, consumer);
     const carried = target === null ? undefined : bearing.get(target);
@@ -1878,8 +1878,8 @@ test("an eager call into an imported helper is followed across modules", () => {
     [safe, `import { K } from "${BARREL}";\nexport function read() { return 1; }\n`],
   ]);
   const build = (target: string) => {
-    const source = parse(target, sources.get(target) as string);
-    const fn = exportedFunctions(source).get("read") as ts.FunctionLikeDeclaration;
+    const source = parse(target, sources.get(target)!);
+    const fn = exportedFunctions(source).get("read")!;
     return { file: target, source, fn, names: barrelValueNames(source) };
   };
   const consumerText = `import { read } from "./helper";\nconst v = read();\n`;
@@ -1944,8 +1944,8 @@ test("an imported helper is entered with the caller's arguments, default import 
     [dflt, `import { K } from "${BARREL}";\nexport default function read() { return K; }\n`],
   ]);
   const build = (target: string, name: string) => {
-    const source = parse(target, sources.get(target) as string);
-    const fn = exportedFunctions(source).get(name) as ts.FunctionLikeDeclaration;
+    const source = parse(target, sources.get(target)!);
+    const fn = exportedFunctions(source).get(name)!;
     assert.ok(fn, `${target} must export ${name}`);
     return { file: target, source, fn, names: barrelValueNames(source) };
   };

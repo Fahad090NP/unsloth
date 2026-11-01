@@ -41,7 +41,7 @@ export function convertPitchSupport(
   if (!pitch || effectiveConvertStyle(caps, mode, style) === "target") {
     return { show: false, auto: false, shiftWithAuto: false };
   }
-  const auto = pitch.auto === true;
+  const auto = pitch.auto;
   return {
     show: true,
     auto,
@@ -99,7 +99,7 @@ export const CONVERT_SOURCE_TEXT_MISSING = "Add what's said in the recording.";
 export const CONVERT_INPUTS_MISSING =
   "Add the recording to convert and the target voice.";
 
-type ConvertBlocker = { kind: ConvertBlockerKind; reason: string };
+interface ConvertBlocker { kind: ConvertBlockerKind; reason: string }
 
 function inputBlocker(
   selection: AudioSourceSelection | null,

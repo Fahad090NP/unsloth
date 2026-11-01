@@ -32,10 +32,10 @@ import {
   toApiProvider,
 } from "./helpers";
 
-type ToolProfileDialogProps = {
+interface ToolProfileDialogProps {
   config: ToolProfileConfig;
   onUpdate: (patch: Partial<ToolProfileConfig>) => void;
-};
+}
 
 function EmptyState({
   title,
@@ -156,7 +156,7 @@ function McpServerCard({
             type="button"
             size="icon-sm"
             variant="ghost"
-            onClick={() => onRemoveProvider(index)}
+            onClick={() => { onRemoveProvider(index); }}
           >
             <HugeiconsIcon icon={Delete02Icon} className="size-4" />
           </Button>
@@ -176,7 +176,7 @@ function McpServerCard({
               value={provider.name}
               placeholder="context7"
               onChange={(event) =>
-                onUpdateProviderAt(index, { name: event.target.value })
+                { onUpdateProviderAt(index, { name: event.target.value }); }
               }
             />
           </div>
@@ -184,13 +184,13 @@ function McpServerCard({
           <Tabs
             value={provider.provider_type}
             onValueChange={(value) =>
-              onUpdateProviderAt(index, {
+              { onUpdateProviderAt(index, {
                 // biome-ignore lint/style/useNamingConvention: ui schema
                 provider_type:
                   value === "stdio" || value === "sse"
                     ? value
                     : "streamable_http",
-              })
+              }); }
             }
           >
               <TabsList className="w-full">
@@ -209,7 +209,7 @@ function McpServerCard({
                   value={provider.command ?? ""}
                   placeholder="npx"
                   onChange={(event) =>
-                    onUpdateProviderAt(index, { command: event.target.value })
+                    { onUpdateProviderAt(index, { command: event.target.value }); }
                   }
                 />
               </div>
@@ -221,7 +221,7 @@ function McpServerCard({
                     type="button"
                     size="xs"
                     variant="outline"
-                    onClick={() => onAddProviderArg(index)}
+                    onClick={() => { onAddProviderArg(index); }}
                   >
                     <HugeiconsIcon icon={PlusSignIcon} className="size-3.5" />
                     Add arg
@@ -234,14 +234,14 @@ function McpServerCard({
                       value={arg}
                       placeholder={argIndex === 0 ? "-y" : "argument"}
                       onChange={(event) =>
-                        onUpdateProviderArg(index, argIndex, event.target.value)
+                        { onUpdateProviderArg(index, argIndex, event.target.value); }
                       }
                     />
                     <Button
                       type="button"
                       size="icon-sm"
                       variant="ghost"
-                      onClick={() => onRemoveProviderArg(index, argIndex)}
+                      onClick={() => { onRemoveProviderArg(index, argIndex); }}
                     >
                       <HugeiconsIcon icon={Delete02Icon} className="size-4" />
                     </Button>
@@ -256,7 +256,7 @@ function McpServerCard({
                     type="button"
                     size="xs"
                     variant="outline"
-                    onClick={() => onAddProviderEnv(index)}
+                    onClick={() => { onAddProviderEnv(index); }}
                   >
                     <HugeiconsIcon icon={PlusSignIcon} className="size-3.5" />
                     Add env
@@ -272,9 +272,9 @@ function McpServerCard({
                       value={item.key}
                       placeholder="KEY"
                       onChange={(event) =>
-                        onUpdateProviderEnv(index, envIndex, {
+                        { onUpdateProviderEnv(index, envIndex, {
                           key: event.target.value,
-                        })
+                        }); }
                       }
                     />
                     <Input
@@ -283,16 +283,16 @@ function McpServerCard({
                       value={item.value}
                       placeholder="value"
                       onChange={(event) =>
-                        onUpdateProviderEnv(index, envIndex, {
+                        { onUpdateProviderEnv(index, envIndex, {
                           value: event.target.value,
-                        })
+                        }); }
                       }
                     />
                     <Button
                       type="button"
                       size="icon-sm"
                       variant="ghost"
-                      onClick={() => onRemoveProviderEnv(index, envIndex)}
+                      onClick={() => { onRemoveProviderEnv(index, envIndex); }}
                     >
                       <HugeiconsIcon icon={Delete02Icon} className="size-4" />
                     </Button>
@@ -309,7 +309,7 @@ function McpServerCard({
                   value={provider.endpoint ?? ""}
                   placeholder="https://example.com/mcp"
                   onChange={(event) =>
-                    onUpdateProviderAt(index, { endpoint: event.target.value })
+                    { onUpdateProviderAt(index, { endpoint: event.target.value }); }
                   }
                 />
               </div>
@@ -324,10 +324,10 @@ function McpServerCard({
                     value={provider.api_key_env ?? ""}
                     placeholder="TOOL_SERVER_API_KEY"
                     onChange={(event) =>
-                      onUpdateProviderAt(index, {
+                      { onUpdateProviderAt(index, {
                         // biome-ignore lint/style/useNamingConvention: api schema
                         api_key_env: event.target.value,
-                      })
+                      }); }
                     }
                   />
                 </div>
@@ -342,10 +342,10 @@ function McpServerCard({
                     value={provider.api_key ?? ""}
                     placeholder="token"
                     onChange={(event) =>
-                      onUpdateProviderAt(index, {
+                      { onUpdateProviderAt(index, {
                         // biome-ignore lint/style/useNamingConvention: api schema
                         api_key: event.target.value,
-                      })
+                      }); }
                     }
                   />
                 </div>
@@ -613,7 +613,7 @@ export function ToolProfileDialog({
     <Tabs
       value={activeTab}
       onValueChange={(value) =>
-        setActiveTab(value === "servers" ? "servers" : "profile")
+        { setActiveTab(value === "servers" ? "servers" : "profile"); }
       }
       className="w-full"
     >
@@ -626,7 +626,7 @@ export function ToolProfileDialog({
         <NameField
           label="Tool access name"
           value={config.name}
-          onChange={(value) => onUpdate({ name: value })}
+          onChange={(value) => { onUpdate({ name: value }); }}
         />
 
         {!hasProviders ? (
@@ -638,7 +638,7 @@ export function ToolProfileDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setActiveTab("servers")}
+              onClick={() => { setActiveTab("servers"); }}
             >
               <HugeiconsIcon icon={PlusSignIcon} data-icon="inline-start" />
               Add servers first
@@ -726,18 +726,18 @@ export function ToolProfileDialog({
                 values={config.allow_tools ?? []}
                 suggestions={availableTools}
                 onAdd={(value) =>
-                  onUpdate({
+                  { onUpdate({
                     // biome-ignore lint/style/useNamingConvention: api schema
                     allow_tools: addUnique(config.allow_tools ?? [], value),
-                  })
+                  }); }
                 }
                 onRemove={(toolIndex) =>
-                  onUpdate({
+                  { onUpdate({
                     // biome-ignore lint/style/useNamingConvention: api schema
                     allow_tools: (config.allow_tools ?? []).filter(
                       (_, currentIndex) => currentIndex !== toolIndex,
                     ),
-                  })
+                  }); }
                 }
                 placeholder="Type tool name and press Enter"
               />
@@ -761,10 +761,10 @@ export function ToolProfileDialog({
                       className="nodrag"
                       value={config.max_tool_call_turns ?? ""}
                       onChange={(event) =>
-                        onUpdate({
+                        { onUpdate({
                           // biome-ignore lint/style/useNamingConvention: api schema
                           max_tool_call_turns: event.target.value,
-                        })
+                        }); }
                       }
                     />
                   </div>
@@ -777,10 +777,10 @@ export function ToolProfileDialog({
                       className="nodrag"
                       value={config.timeout_sec ?? ""}
                       onChange={(event) =>
-                        onUpdate({
+                        { onUpdate({
                           // biome-ignore lint/style/useNamingConvention: api schema
                           timeout_sec: event.target.value,
-                        })
+                        }); }
                       }
                     />
                   </div>
@@ -832,10 +832,10 @@ export function ToolProfileDialog({
                 error={provider.name.trim() ? providerErrors[provider.name.trim()] : undefined}
                 open={openProviders[provider.id] ?? !isProviderConfigured(provider)}
                 onOpenChange={(open) =>
-                  setOpenProviders((current) => ({
+                  { setOpenProviders((current) => ({
                     ...current,
                     [provider.id]: open,
-                  }))
+                  })); }
                 }
                 onUpdateProviderAt={updateProviderAt}
                 onRemoveProvider={removeProvider}

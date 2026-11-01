@@ -3,12 +3,12 @@
 
 import type { SelectedModelView } from "../types";
 
-export type ModelDownloadState = {
+export interface ModelDownloadState {
   isDownloaded: boolean;
   isPartial: boolean;
   partialTransport: string | null;
   partialResumable: boolean;
-};
+}
 
 export function modelDownloadState(
   model: SelectedModelView,

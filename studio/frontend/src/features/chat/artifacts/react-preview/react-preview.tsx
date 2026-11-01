@@ -90,7 +90,7 @@ export function ReactPreview({
           setState({ key: `${lang}\u0000${source}`, prepared: { status: "unavailable", reason: "failed" } });
         }
       });
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [source, lang, title, reloadNonce]);
 
   const prepared = state?.key === key ? state.prepared : null;

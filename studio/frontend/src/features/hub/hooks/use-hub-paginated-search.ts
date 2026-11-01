@@ -40,7 +40,7 @@ const MIN_FETCH_INTERVAL_MS = 350;
 const STALE_AFTER_MS = 5 * 60 * 1000;
 
 export async function pullBatch<T>(
-  iter: AsyncGenerator<unknown>,
+  iter: AsyncGenerator,
   mapItem: (raw: unknown) => T | null,
   size: number,
 ) {
@@ -82,7 +82,7 @@ function isDocumentHidden(): boolean {
 }
 
 export function useHubPaginatedSearch<T>(
-  createIter: (signal: AbortSignal) => AsyncGenerator<unknown>,
+  createIter: (signal: AbortSignal) => AsyncGenerator,
   mapItem: (raw: unknown) => T | null,
   options?: { enabled?: boolean },
 ): HfPaginatedState<T> & {
@@ -107,7 +107,7 @@ export function useHubPaginatedSearch<T>(
     stateRef.current = state;
   }, [state]);
 
-  const iterRef = useRef<AsyncGenerator<unknown> | null>(null);
+  const iterRef = useRef<AsyncGenerator | null>(null);
   const versionRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
 

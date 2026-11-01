@@ -243,10 +243,10 @@ const initialState: ExportRuntimeState = {
 export const useExportRuntimeStore = create<ExportRuntimeStore>()((set, get) => ({
   ...initialState,
 
-  setConnected: (value) => set({ connected: value }),
+  setConnected: (value) => { set({ connected: value }); },
 
   appendLog: (entry, seq) =>
-    set((state) => {
+    { set((state) => {
       // SSE and the poll fallback both feed logs, so dedupe by seq.
       if (
         typeof seq === "number" &&
@@ -265,14 +265,14 @@ export const useExportRuntimeStore = create<ExportRuntimeStore>()((set, get) => 
         lastSeq: typeof seq === "number" ? seq : state.lastSeq,
         stage: entry.stream === "status" ? entry.line : state.stage,
       };
-    }),
+    }); },
 
   appendLogs: (entries) =>
-    set((state) => {
+    { set((state) => {
       const fresh =
         state.lastSeq === null
           ? entries
-          : entries.filter((e) => e.seq > (state.lastSeq as number));
+          : entries.filter((e) => e.seq > (state.lastSeq!));
       if (fresh.length === 0) return state;
 
       const merged = state.logLines.concat(
@@ -292,10 +292,10 @@ export const useExportRuntimeStore = create<ExportRuntimeStore>()((set, get) => 
         lastSeq: fresh[fresh.length - 1].seq,
         stage,
       };
-    }),
+    }); },
 
   applyBackendStatus: (status) =>
-    set((state) => {
+    { set((state) => {
       const base = { hasHydrated: true, backendActive: status.is_export_active };
       // Recover a run started before this store existed (reload or another tab).
       if (status.is_export_active && !state.isExporting && !state.ownsRun) {
@@ -309,7 +309,7 @@ export const useExportRuntimeStore = create<ExportRuntimeStore>()((set, get) => 
       if (!status.is_export_active && state.isExporting && !state.ownsRun) {
         // A standalone load_checkpoint must never settle as a finished export.
         const wasExport =
-          !!status.last_op_kind && status.last_op_kind !== "load_checkpoint";
+          Boolean(status.last_op_kind) && status.last_op_kind !== "load_checkpoint";
         if (status.last_op_status === "error") {
           return {
             ...base,
@@ -342,15 +342,15 @@ export const useExportRuntimeStore = create<ExportRuntimeStore>()((set, get) => 
         return state;
       }
       return base;
-    }),
+    }); },
 
   reset: () =>
-    set((state) => ({
+    { set((state) => ({
       ...initialState,
       hasHydrated: state.hasHydrated,
       backendActive: state.backendActive,
       runId: state.runId,
-    })),
+    })); },
 
   requestCancel: async () => {
     if (!get().isExporting) return;

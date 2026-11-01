@@ -86,7 +86,7 @@ function useSweep(count: number): number {
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); };
   }, [count]);
   return pos;
 }

@@ -3,9 +3,9 @@
 
 import type { ReactElement } from "react";
 
-type ExecutionRawTabProps = {
+interface ExecutionRawTabProps {
   rawExecution: Record<string, unknown> | null;
-};
+}
 
 export function ExecutionRawTab({
   rawExecution,

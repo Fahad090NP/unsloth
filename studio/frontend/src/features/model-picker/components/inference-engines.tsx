@@ -92,7 +92,7 @@ export function EngineInstall({
     setError("");
     try {
       if (operation === "install") {
-        useAfterInstall.current = !!onUse;
+        useAfterInstall.current = Boolean(onUse);
         setAutoConfirm(false);
       }
       if (operation === "cancel") {
@@ -157,7 +157,7 @@ export function EngineInstall({
                 size="sm"
                 variant="outline"
                 disabled={busy || !canInstall}
-                onClick={() => setConfirm(true)}
+                onClick={() => { setConfirm(true); }}
               >
                 {engine.installed
                   ? t(
@@ -230,7 +230,7 @@ export function EngineInstall({
                 : t("managedEngines.install")}
             </Button>
             {!centered && (
-              <Button size="sm" variant="ghost" onClick={() => setConfirm(false)}>
+              <Button size="sm" variant="ghost" onClick={() => { setConfirm(false); }}>
                 {t("common.cancel")}
               </Button>
             )}
@@ -384,7 +384,7 @@ export function InferenceEnginePicker({
               <SelectItem
                 key={engine.engine}
                 value={engine.engine}
-                disabled={!!engine.unsupported_reason}
+                disabled={Boolean(engine.unsupported_reason)}
               >
                 {names[engine.engine]}
                 {engine.installed
@@ -433,13 +433,13 @@ export function InferenceEnginePicker({
                       checked={checked}
                       disabled={checked && selectedGpuIds.length === 1}
                       onCheckedChange={(next) =>
-                        onGpuChange(
+                        { onGpuChange(
                           next
                             ? [...selectedGpuIds, device.index]
                             : selectedGpuIds.filter(
                                 (id) => id !== device.index,
                               ),
-                        )
+                        ); }
                       }
                     />
                   </label>
@@ -452,7 +452,7 @@ export function InferenceEnginePicker({
                     <Select
                       value={parallelism}
                       onValueChange={(value) =>
-                        onParallelismChange(value as typeof parallelism)
+                        { onParallelismChange(value as typeof parallelism); }
                       }
                     >
                       <SelectTrigger
@@ -493,7 +493,7 @@ export function InferenceEnginePicker({
               <Select
                 value={precision}
                 onValueChange={(value) =>
-                  onPrecisionChange(value as typeof precision)
+                  { onPrecisionChange(value as typeof precision); }
                 }
               >
                 <SelectTrigger
@@ -528,7 +528,7 @@ export function InferenceEnginePicker({
               <Select
                 value={kvCacheDtype}
                 onValueChange={(value) =>
-                  onKvCacheDtypeChange(value as typeof kvCacheDtype)
+                  { onKvCacheDtypeChange(value as typeof kvCacheDtype); }
                 }
               >
                 <SelectTrigger
@@ -561,9 +561,9 @@ export function InferenceEnginePicker({
                     : String(gpuMemoryUtilization)
                 }
                 onValueChange={(value) =>
-                  onGpuMemoryUtilizationChange(
+                  { onGpuMemoryUtilizationChange(
                     value === "auto" ? null : Number(value),
-                  )
+                  ); }
                 }
               >
                 <SelectTrigger

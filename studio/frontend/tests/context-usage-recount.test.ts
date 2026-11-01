@@ -10,20 +10,20 @@ import * as messageOrder from "../src/features/chat/utils/message-order.ts";
 import * as contextUsageReasoning from "../src/features/chat/utils/context-usage-reasoning.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Usage = {
+interface Usage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
   cachedTokens: number;
   estimated?: boolean;
-};
+}
 
-type RefreshModule = {
+interface RefreshModule {
   refreshContextUsage: (options?: { invalidate?: boolean; afterModelLoad?: boolean }) => Promise<void>;
   setActiveBranchReader: (
     reader: () => readonly ThreadMessage[] | null,
   ) => void;
-};
+}
 
 function message(
   id: string,
@@ -209,7 +209,7 @@ test("an old reasoning count is discarded and the queued setting is counted", as
     h.world.requests.map((request) => request.enable_thinking),
     [false, true],
   );
-  assert.equal((h.state.contextUsage as Usage | null)?.totalTokens, 52);
+  assert.equal((h.state.contextUsage)?.totalTokens, 52);
 });
 
 for (const invalidate of [false, true]) {
@@ -243,7 +243,7 @@ test("a prompt setting change during a count obtains a replacement without anoth
   await setImmediate();
   assert.equal(h.world.requests.length, 2);
   assert.equal(h.world.requests[1]?.enable_tools, true);
-  assert.equal((h.state.contextUsage as Usage | null)?.totalTokens, 52);
+  assert.equal((h.state.contextUsage)?.totalTokens, 52);
 });
 
 test("a settings change while building history restarts the count before sending", async () => {
@@ -409,7 +409,7 @@ test("a model reload counts again even with identical configuration", async () =
   await h.refreshContextUsage({ afterModelLoad: true });
   await h.refreshContextUsage();
   assert.equal(h.world.requests.length, 2);
-  assert.equal((h.state.contextUsage as Usage | null)?.totalTokens, 52);
+  assert.equal((h.state.contextUsage)?.totalTokens, 52);
 });
 
 test("overlapping post-load triggers share the same count", async () => {
@@ -471,7 +471,7 @@ test("MCP changes during an in-flight count cannot publish the old schemas", asy
   await first;
   await setImmediate();
   assert.equal(h.world.requests.length, 2);
-  assert.equal((h.state.contextUsage as Usage | null)?.totalTokens, 52);
+  assert.equal((h.state.contextUsage)?.totalTokens, 52);
 });
 
 test("a plain queued trigger cannot undo an in-flight explicit invalidation", async () => {
@@ -487,7 +487,7 @@ test("a plain queued trigger cannot undo an in-flight explicit invalidation", as
   await first;
   await setImmediate();
   assert.equal(h.world.requests.length, 2);
-  assert.equal((h.state.contextUsage as Usage | null)?.totalTokens, 52);
+  assert.equal((h.state.contextUsage)?.totalTokens, 52);
 });
 
 test("exact usage restored during storage loading prevents a count and settings replay", async () => {

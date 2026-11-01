@@ -129,8 +129,7 @@ export function useLlamaUpdateChangelog({
           }
           const parsed = parseChangelog(await response.json());
           if (
-            !parsed ||
-            parsed.installedTag !== installedTag ||
+            parsed?.installedTag !== installedTag ||
             parsed.latestTag !== latestTag
           ) {
             throw new Error("Changelog response no longer matches this update");

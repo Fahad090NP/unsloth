@@ -112,11 +112,11 @@ async function bounded<T>(
  * A failed read is not evidence the runtime is empty: an unreadable source keeps its last
  * rows, a readable one is always replaced (even by an empty answer).
  */
-export type LoadedModelsRead = {
+export interface LoadedModelsRead {
   entries: LoadedModelEntry[];
   unreadable: LoadedModelSource[];
   heldByOther: boolean;
-};
+}
 
 export async function readLoadedModels(
   previous: readonly LoadedModelEntry[] = [],
@@ -150,14 +150,14 @@ export async function readLoadedModels(
   ]);
   const heldByOther = heldByAnotherAccount([
     inference as { yours?: boolean } | null,
-    diffusion as { yours?: boolean } | null,
+    diffusion,
     video as { yours?: boolean } | null,
   ]);
   return { entries, unreadable, heldByOther };
 }
 
 async function ejectChatRow(entry: LoadedModelEntry): Promise<EjectOutcome> {
-  if (entry.servingCheckpoint) return ejectServingRow(entry);
+  if (entry.servingCheckpoint) return await ejectServingRow(entry);
   const decision = await confirmStopRunningChatsIfNeeded(
     "Unloading this model",
     "unloadOne",
@@ -277,10 +277,10 @@ export async function ejectLoadedModel(
 ): Promise<EjectOutcome> {
   switch (entry.source) {
     case "chat":
-      return ejectChatRow(entry);
+      return await ejectChatRow(entry);
     case "image": {
       const before = await bounded(getDiffusionStatus);
-      return ejectRuntimeRow(
+      return await ejectRuntimeRow(
         entry,
         before.loaded ? before.repo_id : null,
         async () => {
@@ -292,7 +292,7 @@ export async function ejectLoadedModel(
     }
     case "video": {
       const before = await bounded(getVideoStatus);
-      return ejectRuntimeRow(
+      return await ejectRuntimeRow(
         entry,
         before.loaded ? before.repo_id : null,
         async () => {
@@ -334,7 +334,7 @@ export async function ejectLoadedModel(
         );
       }
       const resident = sttEngineStatus(before, engine);
-      return ejectRuntimeRow(
+      return await ejectRuntimeRow(
         entry,
         resident?.loaded_model ?? null,
         async () => {

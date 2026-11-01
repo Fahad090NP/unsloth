@@ -29,8 +29,8 @@ const AUTHED = {
 const UNAUTHED = { chat_only: false };
 const DETECTING = { chat_only: true, hardware_detecting: true, version: "2026.1.1" };
 
-let calls: Array<string | null> = [];
-let replies: Array<Record<string, unknown> | null> = [];
+let calls: (string | null)[] = [];
+let replies: (Record<string, unknown> | null)[] = [];
 let fallback: Record<string, unknown> | null = UNAUTHED;
 globalThis.fetch = (async (_url: string, init?: { headers?: Record<string, string> }) => {
   calls.push(init?.headers?.Authorization ?? null);

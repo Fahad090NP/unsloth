@@ -18,10 +18,8 @@ export function hasChatFullAccess(
   runId?: string,
 ): boolean {
   const ownRun = runId && Object.hasOwn(grants, runId) ? grants[runId] : undefined;
-  return !!(
-    (ownRun && (!ownRun.threadId || ownRun.threadId === threadId)) ||
-    (threadId && Object.values(grants).some((grant) => grant.threadId === threadId))
-  );
+  return Boolean((ownRun && (!ownRun.threadId || ownRun.threadId === threadId)) ||
+    (threadId && Object.values(grants).some((grant) => grant.threadId === threadId)));
 }
 
 type BasePermissionMode = "auto" | "ask" | "off";

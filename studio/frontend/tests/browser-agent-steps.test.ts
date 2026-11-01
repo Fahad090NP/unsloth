@@ -13,16 +13,16 @@ const CHAT = "new";
 
 const globals = globalThis as Record<string, unknown>;
 const policy = { allowedDomains: [], blockedDomains: [] };
-type Posted = { action_id: string; result: { ok: boolean; url?: string; text?: string; note?: string; error?: string } };
+interface Posted { action_id: string; result: { ok: boolean; url?: string; text?: string; note?: string; error?: string } }
 const posted: Posted[] = [];
 globals.__authFetch = async (_url: string, init: { body: string }) => {
   posted.push(JSON.parse(init.body));
   return new Response(null, { status: 200 });
 };
 useBrowserStore.subscribe(({ tabs }) => {
-  for (const tab of tabs) if (tab.loading) queueMicrotask(() => useBrowserStore.getState().updateTab(tab.id, { loading: false }));
+  for (const tab of tabs) if (tab.loading) queueMicrotask(() => { useBrowserStore.getState().updateTab(tab.id, { loading: false }); });
 });
-const steps: Array<{ kind: string; detail: string } | null> = [];
+const steps: ({ kind: string; detail: string } | null)[] = [];
 const search = { role: "button", name: "Search", tag: "button", type: "", href: "", autocomplete: "", formMethod: "get", formAction: "", formHasPassword: false, submits: false };
 globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
   steps.push(agentChat(CHAT).step);
@@ -73,7 +73,7 @@ test("Back through a router's own history goes back in the page", async () => {
   const tabId = agentChat(CHAT).tabId ?? "";
   const store = useBrowserStore.getState();
   store.updateTab(tabId, { pageHistory: { back: true, forward: false } });
-  const sent: Array<Record<string, unknown>> = [];
+  const sent: Record<string, unknown>[] = [];
   globals.__frameCommand = (id: string, command: Record<string, unknown>) => {
     sent.push(command);
     store.updateTab(id, { displayUrl: "https://example.com/list" });
@@ -99,7 +99,7 @@ test("Back prefers the page's own history over the tab entry behind it", async (
   const index = tab()?.index ?? 0;
   assert.ok(index > 0, "a stored entry is behind the page");
   store.updateTab(tabId, { pageHistory: { back: true, forward: false } });
-  const sent: Array<Record<string, unknown>> = [];
+  const sent: Record<string, unknown>[] = [];
   globals.__frameCommand = (id: string, command: Record<string, unknown>) => {
     sent.push(command);
     store.updateTab(id, { displayUrl: "https://example.com/two#list" });

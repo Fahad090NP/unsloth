@@ -6,9 +6,9 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type AuthApi = {
+interface AuthApi {
   authFetch: (input: string, init?: RequestInit) => Promise<Response>;
-};
+}
 
 test("authFetch sends the browser timezone", async () => {
   const originalFetch = globalThis.fetch;

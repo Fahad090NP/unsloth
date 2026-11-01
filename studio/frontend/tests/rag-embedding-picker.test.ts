@@ -18,16 +18,16 @@ const KB_BUTTON = read("../src/features/rag/components/knowledge-base-composer-b
 const SECTION = read("../src/features/settings/components/documents-rag-section.tsx");
 const PICKER = read("../src/features/settings/components/embedding-model-picker.tsx");
 
-type Plan = {
+interface Plan {
   embeddingModel: string;
   backend: "llama" | "sentence-transformers";
   downloadRepo: string | null;
   cached: boolean;
   error: string | null;
-};
+}
 
 function switcher(options: { plan?: Plan | Error; current?: boolean; saveError?: Error }) {
-  const saves: Array<{ model: string; ggufRepo: unknown; backend: unknown }> = [];
+  const saves: { model: string; ggufRepo: unknown; backend: unknown }[] = [];
   const store = {
     beginSave: () => 1,
     isSaveCurrent: () => options.current ?? true,

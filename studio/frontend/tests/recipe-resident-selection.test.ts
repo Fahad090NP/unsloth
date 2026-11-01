@@ -6,7 +6,7 @@ import test from "node:test";
 import { isOllamaModelId } from "../src/features/hub/lib/model-identity.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Selection = { target: string; ggufVariant: string; aliases: string[] };
+interface Selection { target: string; ggufVariant: string; aliases: string[] }
 
 const chat = {
   status: {} as Record<string, unknown>,

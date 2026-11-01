@@ -61,7 +61,7 @@ const remoteOfflineUntilByOrigin = new Map<string, number>();
 const lastFailureByOrigin = new Map<string, HubFailure>();
 
 function isNavigatorOffline(): boolean {
-  return typeof navigator !== "undefined" && navigator.onLine === false;
+  return typeof navigator !== "undefined" && !navigator.onLine;
 }
 
 function emitNetworkStatusChange(): void {
@@ -345,7 +345,7 @@ export async function fetchWithTimeout(
     timedOut = true;
     controller.abort();
   }, timeoutMs);
-  const abortFromParent = () => controller.abort();
+  const abortFromParent = () => { controller.abort(); };
 
   if (parentSignal?.aborted) {
     abortFromParent();

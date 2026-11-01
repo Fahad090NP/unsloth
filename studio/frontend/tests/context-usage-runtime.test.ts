@@ -118,10 +118,10 @@ function harness(name = "ThreadContextUsageRecount") {
     },
     browserToolSelections: [] as unknown[],
   };
-  const writes: Array<savedUsage.BranchContextUsage | null> = [];
-  const refs: Array<{ current: unknown }> = [];
-  const previousDeps: Array<readonly unknown[]> = [];
-  let pendingEffects: Array<() => unknown> = [];
+  const writes: (savedUsage.BranchContextUsage | null)[] = [];
+  const refs: { current: unknown }[] = [];
+  const previousDeps: (readonly unknown[])[] = [];
+  let pendingEffects: (() => unknown)[] = [];
   let hookIndex = 0;
   let branchReader: (() => readonly ThreadMessage[] | null) | null = null;
   const aui = {

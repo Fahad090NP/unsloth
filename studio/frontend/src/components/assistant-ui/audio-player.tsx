@@ -36,8 +36,8 @@ export const AudioPlayer: FC<AudioPlayerProps> = ({
     }
     // The file may carry a codec the webview cannot decode, so flip only once playback starts.
     audio.play().then(
-      () => setIsPlaying(true),
-      () => setIsPlaying(false),
+      () => { setIsPlaying(true); },
+      () => { setIsPlaying(false); },
     );
   };
 
@@ -88,7 +88,7 @@ export const AudioPlayer: FC<AudioPlayerProps> = ({
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
-        onError={() => setIsPlaying(false)}
+        onError={() => { setIsPlaying(false); }}
         preload="metadata"
       />
       <Button

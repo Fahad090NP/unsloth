@@ -7,7 +7,7 @@ import test from "node:test";
 import type { ThreadRecord } from "../src/features/chat/types";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Storage = {
+interface Storage {
   registerNewThreadIdSource: (
     source: () => string | null | undefined,
   ) => () => void;
@@ -16,7 +16,7 @@ type Storage = {
   ) => Promise<{ thread: ThreadRecord | undefined; cacheable: boolean }>;
   listStoredChatMessages: (threadId: string) => Promise<unknown[]>;
   saveStoredChatThread: (thread: ThreadRecord) => Promise<ThreadRecord>;
-};
+}
 
 const NEW_ID = "__LOCALID_unsent";
 

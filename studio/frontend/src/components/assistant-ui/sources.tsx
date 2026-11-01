@@ -67,7 +67,7 @@ function SourceIcon({
       src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
       alt=""
       className={cn(`${sizeClass} shrink-0 rounded-sm`, className)}
-      onError={() => setHasError(true)}
+      onError={() => { setHasError(true); }}
       {...(props as ComponentProps<"img">)}
     />
   );
@@ -117,7 +117,7 @@ function Source({
           }
           onClick?.(e);
         }}
-        {...(props as ComponentProps<"a">)}
+        {...(props)}
       />
     </Badge>
   );
@@ -277,7 +277,7 @@ const SourcesGroupView = memo<{
     if (!container) return;
     const observer = new ResizeObserver(measure);
     observer.observe(container);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [measure]);
 
   if (sources.length === 0) return null;
@@ -316,7 +316,7 @@ const SourcesGroupView = memo<{
         {shouldCollapse && !expanded && (
           <button
             type="button"
-            onClick={() => setExpanded(true)}
+            onClick={() => { setExpanded(true); }}
             className={cn(
               badgeVariants({ variant: "outline", size: "default" }),
               "btn-fill rounded-full cursor-pointer border-transparent text-muted-foreground hover:text-chat-icon-fg-hover!",
@@ -328,7 +328,7 @@ const SourcesGroupView = memo<{
         {shouldCollapse && expanded && (
           <button
             type="button"
-            onClick={() => setExpanded(false)}
+            onClick={() => { setExpanded(false); }}
             className={cn(
               badgeVariants({ variant: "outline", size: "default" }),
               "btn-fill rounded-full cursor-pointer border-transparent text-muted-foreground hover:text-chat-icon-fg-hover!",

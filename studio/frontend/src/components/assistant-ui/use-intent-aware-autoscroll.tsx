@@ -40,7 +40,7 @@ const STABILIZER_MAX_PX = 64;
 
 export type ScrollToBottom = (behavior?: ScrollBehavior) => void;
 
-type AutoScrollContextValue = {
+interface AutoScrollContextValue {
   scrollToBottom: ScrollToBottom;
   getIsAtBottom: () => boolean;
   subscribe: (listener: () => void) => () => void;
@@ -56,7 +56,7 @@ type AutoScrollContextValue = {
    */
   adjustForContentInsertedAbove: (deltaPx: number) => boolean;
   notifyContentResized: () => void;
-};
+}
 
 const noopContext: AutoScrollContextValue = {
   scrollToBottom: () => {

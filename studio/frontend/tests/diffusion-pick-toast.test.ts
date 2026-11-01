@@ -11,11 +11,11 @@ const { calls } = await import("./helpers/toast-stub.mjs");
 const { createPickToast } = await import("../src/lib/diffusion-pick-toast.ts");
 const { readSrc } = await import("./helpers/kit.ts");
 
-type Raise = {
+interface Raise {
   kind: string;
   id?: string;
   options?: { id?: string; description?: unknown; onDismiss?: () => void };
-};
+}
 
 function make() {
   calls.length = 0;

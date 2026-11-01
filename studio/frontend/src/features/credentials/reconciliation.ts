@@ -109,7 +109,7 @@ export async function reconcileLegacyProviderKeys<
 
 
 export async function settleTasksIfCurrent(
-  tasks: Array<() => Promise<unknown>>,
+  tasks: (() => Promise<unknown>)[],
   isCurrent?: () => boolean,
 ): Promise<void> {
   if (isCurrent && !isCurrent()) return;

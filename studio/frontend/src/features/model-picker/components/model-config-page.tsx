@@ -127,7 +127,7 @@ import {
   loadManagedLlamaFlags,
   subscribeLlamaFlagCatalog,
 } from "../api/llama-flags";
-import { type MemoryEstimate, type MlxOffloadablePart } from "../api/memory-estimate";
+import type { MemoryEstimate, MlxOffloadablePart } from "../api/memory-estimate";
 import { fetchMlxDrafters } from "../api/mlx-drafters";
 import {
   resolveEstimateContext,
@@ -955,7 +955,7 @@ function GpuMemorySettings({
   const splitScale = splitIsPercent ? 100 : splitTotal;
   const tensorSplit = config.tensorSplit ?? null;
   const splitIsCustom =
-    tensorSplit != null && tensorSplit.length === orderedGpuIds.length;
+    tensorSplit?.length === orderedGpuIds.length;
   const splitShares = showSplit
     ? distributeByWeight(
         splitScale,
@@ -1033,7 +1033,7 @@ function GpuMemorySettings({
         <Select
           value={mode}
           onValueChange={(v) =>
-            update(
+            { update(
               v === "manual"
                 ? { gpuMemoryMode: "manual" }
                 : {
@@ -1044,7 +1044,7 @@ function GpuMemorySettings({
                     selectedGpuIndexKind: undefined,
                     tensorSplit: null,
                   },
-            )
+            ); }
           }
         >
           <SelectTrigger
@@ -1073,7 +1073,7 @@ function GpuMemorySettings({
             min={GPU_LAYERS_AUTO}
             max={gpuLayersMax}
             onChange={(v) =>
-              update(v < 0 ? { gpuLayers: v, tensorSplit: null } : { gpuLayers: v })
+              { update(v < 0 ? { gpuLayers: v, tensorSplit: null } : { gpuLayers: v }); }
             }
             format={(v) => (v < 0 ? "Auto" : undefined)}
             info={
@@ -1090,7 +1090,7 @@ function GpuMemorySettings({
               value={Math.min(nCpuMoe, moeLayersMax)}
               min={0}
               max={moeLayersMax}
-              onChange={(v) => update({ nCpuMoe: v })}
+              onChange={(v) => { update({ nCpuMoe: v }); }}
               info={
                 <>
                   Keep the experts of this many MoE layers on the CPU
@@ -1120,7 +1120,7 @@ function GpuMemorySettings({
               <button
                 type="button"
                 className="ml-auto shrink-0 rounded px-1 text-ui-12 text-muted-foreground hover:text-foreground"
-                onClick={() => update({ tensorSplit: null })}
+                onClick={() => { update({ tensorSplit: null }); }}
               >
                 Reset split
               </button>
@@ -1145,7 +1145,7 @@ function GpuMemorySettings({
                       min={0}
                       max={splitScale}
                       step={1}
-                      onChange={(v) => setSplitShare(d.index, v)}
+                      onChange={(v) => { setSplitShare(d.index, v); }}
                       derived={!splitIsCustom}
                       ariaLabel={
                         splitIsPercent
@@ -1171,7 +1171,7 @@ function GpuMemorySettings({
                       className="rounded px-1 text-ui-12 text-muted-foreground hover:text-foreground disabled:opacity-30"
                       aria-label={`Move GPU ${d.index} earlier`}
                       disabled={position === 0}
-                      onClick={() => moveGpu(d.index, -1)}
+                      onClick={() => { moveGpu(d.index, -1); }}
                     >
                       ↑
                     </button>
@@ -1180,7 +1180,7 @@ function GpuMemorySettings({
                       className="rounded px-1 text-ui-12 text-muted-foreground hover:text-foreground disabled:opacity-30"
                       aria-label={`Move GPU ${d.index} later`}
                       disabled={position >= orderedGpuIds.length - 1}
-                      onClick={() => moveGpu(d.index, 1)}
+                      onClick={() => { moveGpu(d.index, 1); }}
                     >
                       ↓
                     </button>
@@ -1189,7 +1189,7 @@ function GpuMemorySettings({
                 <Switch
                   className="shrink-0"
                   checked={isGpuChecked(d.index)}
-                  onCheckedChange={() => toggleGpu(d.index)}
+                  onCheckedChange={() => { toggleGpu(d.index); }}
                   disabled={isGpuChecked(d.index) && singleGpuInUse}
                 />
               </div>
@@ -1298,7 +1298,7 @@ function MlxOffloadSettings({
             min={MLX_OFFLOAD_SLIDER_AUTO}
             max={100}
             step={5}
-            onChange={(v) => update({ [key]: mlxOffloadFromSlider(v) })}
+            onChange={(v) => { update({ [key]: mlxOffloadFromSlider(v) }); }}
             format={(v) => (v < 0 ? "Auto" : `${v}%`)}
             info={hint}
           />
@@ -1346,7 +1346,7 @@ function useStoredPerModelConfig(
 ) {
   const [version, setVersion] = useState(0);
   useEffect(() => {
-    const bump = () => setVersion((v) => v + 1);
+    const bump = () => { setVersion((v) => v + 1); };
     window.addEventListener(PER_MODEL_CONFIG_UPDATED_EVENT, bump);
     window.addEventListener("storage", bump);
     return () => {
@@ -1409,7 +1409,7 @@ function ParallelSlotsRow({
       inputRef.current?.scrollIntoView({ block: "center" });
       inputRef.current?.focus({ preventScroll: true });
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [focusOnMount]);
   return (
     <div className={ROW_CLASS}>
@@ -1467,7 +1467,7 @@ function MlxSpeculativeRows({
     fetchMlxDrafters(modelPath, controller.signal)
       .then((found) => !controller.signal.aborted && setDrafters(found))
       .catch(() => {});
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [modelPath]);
   const mode = mlxSpeculativeMode(
     config.speculativeType ??
@@ -1490,7 +1490,7 @@ function MlxSpeculativeRows({
         <Select
           value={mode}
           onValueChange={(v) =>
-            update({
+            { update({
               speculativeType: v,
               specDraftNMax: DRAFT_N_MAX_SPEC_TYPES.has(v)
                 ? config.specDraftNMax
@@ -1498,7 +1498,7 @@ function MlxSpeculativeRows({
               specDraftModel: DRAFTER_MODEL_SPEC_TYPES.has(v)
                 ? config.specDraftModel
                 : null,
-            })
+            }); }
           }
         >
           <SelectTrigger
@@ -1566,11 +1566,11 @@ function MlxSpeculativeRows({
           <Select
             value={config.specDraftModel ?? "auto"}
             onValueChange={(v) =>
-              update(
+              { update(
                 pinSpeculativeMode(config, mode, {
                   specDraftModel: v === "auto" ? null : v,
                 }),
-              )
+              ); }
             }
           >
             <SelectTrigger
@@ -1650,7 +1650,7 @@ function MlxAdvancedSettings({
         <Select
           value={config.mlxKvQuant ?? MLX_KV_QUANT_AUTO}
           onValueChange={(v) =>
-            update({ mlxKvQuant: v === MLX_KV_QUANT_AUTO ? null : (v as MlxKvQuant) })
+            { update({ mlxKvQuant: v === MLX_KV_QUANT_AUTO ? null : (v as MlxKvQuant) }); }
           }
         >
           <SelectTrigger
@@ -1793,7 +1793,7 @@ function LoadModeRow({
         <Select
           value={config.loadMode ?? LOAD_MODE_DEFAULT}
           onValueChange={(v) =>
-            update({ loadMode: v === LOAD_MODE_DEFAULT ? null : v })
+            { update({ loadMode: v === LOAD_MODE_DEFAULT ? null : v }); }
           }
         >
           <SelectTrigger
@@ -1883,7 +1883,7 @@ function GgufAdvancedSettings({
         <Select
           value={config.kvCacheDtype ?? KV_CACHE_DTYPE_DEFAULT}
           onValueChange={(v) =>
-            update({ kvCacheDtype: v === KV_CACHE_DTYPE_DEFAULT ? null : v })
+            { update({ kvCacheDtype: v === KV_CACHE_DTYPE_DEFAULT ? null : v }); }
           }
         >
           <SelectTrigger
@@ -1932,7 +1932,7 @@ function GgufAdvancedSettings({
             className="shrink-0"
             aria-label="Vision"
             checked={!config.disableVision}
-            onCheckedChange={(checked) => update({ disableVision: !checked })}
+            onCheckedChange={(checked) => { update({ disableVision: !checked }); }}
           />
         </div>
       )}
@@ -1952,7 +1952,7 @@ function GgufAdvancedSettings({
         <Select
           value={config.speculativeType ?? speculativeFallback}
           onValueChange={(v) =>
-            update({
+            { update({
               speculativeType: v,
               specDraftNMax: DRAFT_N_MAX_SPEC_TYPES.has(v)
                 ? config.specDraftNMax
@@ -1961,7 +1961,7 @@ function GgufAdvancedSettings({
               specDraftCacheDtype: SEPARATE_DRAFT_MODEL_SPEC_TYPES.has(v)
                 ? config.specDraftCacheDtype
                 : null,
-            })
+            }); }
           }
         >
           <SelectTrigger
@@ -2028,9 +2028,9 @@ function GgufAdvancedSettings({
           <Select
             value={config.specDraftCacheDtype ?? KV_CACHE_DTYPE_DEFAULT}
             onValueChange={(v) =>
-              update({
+              { update({
                 specDraftCacheDtype: v === KV_CACHE_DTYPE_DEFAULT ? null : v,
-              })
+              }); }
             }
           >
             <SelectTrigger
@@ -2170,7 +2170,7 @@ function GgufAdvancedSettings({
             className="shrink-0"
             aria-label="Tensor Parallelism"
             checked={config.tensorParallel}
-            onCheckedChange={(checked) => update({ tensorParallel: checked })}
+            onCheckedChange={(checked) => { update({ tensorParallel: checked }); }}
           />
         </div>
       )}
@@ -2358,12 +2358,12 @@ function ExtraArgsRow({
   );
   const external = formatExtraArgs(config.llamaExtraArgs);
   // Comparing against the edit's own source stops a re-quote per keystroke.
-  const text = edit && edit.source === external ? edit.text : external;
+  const text = edit?.source === external ? edit.text : external;
 
   // Re-read on invalidation: a llama.cpp update replaces the binary while the panel stays open.
   const [catalogEpoch, setCatalogEpoch] = useState(0);
   useEffect(
-    () => subscribeLlamaFlagCatalog(() => setCatalogEpoch((epoch) => epoch + 1)),
+    () => subscribeLlamaFlagCatalog(() => { setCatalogEpoch((epoch) => epoch + 1); }),
     [],
   );
   useEffect(() => {
@@ -2455,7 +2455,7 @@ function ExtraArgsRow({
         <div className="panel-text-surface h-20 w-full overflow-hidden corner-squircle">
           <textarea
             value={text}
-            onChange={(event) => commit(event.target.value)}
+            onChange={(event) => { commit(event.target.value); }}
             spellCheck={false}
             placeholder="--rope-scaling yarn --yarn-orig-ctx 32768"
             aria-label="Extra llama-server arguments"
@@ -2621,8 +2621,7 @@ export function ModelConfigPage({
     () => readExtraArgsEditForDraft(draftKey),
   );
   const sharedExtraArgsCurrent =
-    sharedExtraArgsEdit != null &&
-    sharedExtraArgsEdit.source === formatExtraArgs(configState.llamaExtraArgs);
+    sharedExtraArgsEdit?.source === formatExtraArgs(configState.llamaExtraArgs);
   const sharedExtraArgsRefused =
     sharedExtraArgsCurrent && sharedExtraArgsEdit.loadable === false;
   const sharedExtraArgsCleared =
@@ -2855,7 +2854,7 @@ export function ModelConfigPage({
   useEffect(
     () =>
       subscribeLlamaFlagCatalog(() =>
-        setHiddenCatalogEpoch((epoch) => epoch + 1),
+        { setHiddenCatalogEpoch((epoch) => epoch + 1); },
       ),
     [],
   );
@@ -2933,7 +2932,7 @@ export function ModelConfigPage({
     const rememberAtStart = rememberRef.current;
     const localAtStart = configAtStart.llamaExtraArgs;
     // Last-resort release so a request that never settles cannot disable Load forever.
-    const release = setTimeout(() => setExtraArgsHydrating(false), 15000);
+    const release = setTimeout(() => { setExtraArgsHydrating(false); }, 15000);
     Promise.all([
       fetchLoadModelOverride(loadId, configId, target.ggufVariant, keys).then(
         (row) => panelOverrideRow(row, target.isGguf),
@@ -3280,10 +3279,10 @@ export function ModelConfigPage({
           nCtx: resolveEstimateContext(
             runtimeConfig.customContextLength ?? null,
             activeLoadedContext,
-            (target.isGguf === true &&
+            (target.isGguf &&
               runtimeGpuMemoryMode === "manual" &&
               (runtimeConfig.gpuLayers ?? GPU_LAYERS_AUTO) < 0) ||
-              (target.isGguf === true && activePresetSource === "builtin-default"),
+              (target.isGguf && activePresetSource === "builtin-default"),
           ),
           cacheTypeKv: runtimeConfig.kvCacheDtype,
           maxSeqLength: target.isGguf
@@ -3521,7 +3520,7 @@ export function ModelConfigPage({
   // undefined: follow what is stored. Shared, or the other editor saves this set's values elsewhere.
   const pickedSet = draftSnapshot?.pickedSet;
   const setPickedSet = useCallback(
-    (next: string | null | undefined) => setModelConfigDraftPickedSet(draftKey, next),
+    (next: string | null | undefined) => { setModelConfigDraftPickedSet(draftKey, next); },
     [draftKey],
   );
   const [naming, setNaming] = useState<RunSettingsNaming | null>(null);
@@ -3954,9 +3953,9 @@ export function ModelConfigPage({
   // Renames the selected set; an edited Default not saved yet gets named before it is created.
   const editName =
     selectedSet !== null
-      ? () => setNaming({ mode: "rename", name: selectedSet, target: selectedSet })
+      ? () => { setNaming({ mode: "rename", name: selectedSet, target: selectedSet }); }
       : customName !== null
-        ? () => setNaming({ mode: "new", name: customName })
+        ? () => { setNaming({ mode: "new", name: customName }); }
         : null;
 
   const submitNaming = () => {
@@ -4137,7 +4136,7 @@ export function ModelConfigPage({
       />
       <div className="space-y-5">
         {!target.isGguf && !targetIsMlx && !targetIsNpu && !classifiedIsDiffusion && !target.meta.isLora && !target.meta.audioType && (
-          <InferenceEnginePicker parallelism={config.engineParallelism ?? "tensor"} onParallelismChange={engineParallelism => update({ engineParallelism })} precision={config.enginePrecision ?? "auto"} onPrecisionChange={enginePrecision => update({ enginePrecision })} kvCacheDtype={config.engineKvCacheDtype ?? "auto"} onKvCacheDtypeChange={engineKvCacheDtype => update({ engineKvCacheDtype })} gpuMemoryUtilization={config.engineGpuMemoryUtilization ?? null} onGpuMemoryUtilizationChange={engineGpuMemoryUtilization => update({ engineGpuMemoryUtilization })} seed={config.engineSeed ?? null} onSeedChange={engineSeed => update({ engineSeed })} value={config.engine ?? "auto"} onChange={engine => update({ engine })} onReadyChange={setEngineReady} onUse={handleRun} gpuIds={config.selectedGpuIds} onGpuChange={ids => update({ selectedGpuIds: ids, selectedGpuIndexKind: "physical" })} />
+          <InferenceEnginePicker parallelism={config.engineParallelism ?? "tensor"} onParallelismChange={engineParallelism => { update({ engineParallelism }); }} precision={config.enginePrecision ?? "auto"} onPrecisionChange={enginePrecision => { update({ enginePrecision }); }} kvCacheDtype={config.engineKvCacheDtype ?? "auto"} onKvCacheDtypeChange={engineKvCacheDtype => { update({ engineKvCacheDtype }); }} gpuMemoryUtilization={config.engineGpuMemoryUtilization ?? null} onGpuMemoryUtilizationChange={engineGpuMemoryUtilization => { update({ engineGpuMemoryUtilization }); }} seed={config.engineSeed ?? null} onSeedChange={engineSeed => { update({ engineSeed }); }} value={config.engine ?? "auto"} onChange={engine => { update({ engine }); }} onReadyChange={setEngineReady} onUse={handleRun} gpuIds={config.selectedGpuIds} onGpuChange={ids => { update({ selectedGpuIds: ids, selectedGpuIndexKind: "physical" }); }} />
         )}
         {/* LoRA adapters keep the precision they were trained in, so they get no switch. */}
         {!target.isGguf && !targetIsMlx && !targetIsNpu && !classifiedIsDiffusion && !target.meta.isLora && !target.meta.audioType && (config.engine ?? "auto") === "auto" && (
@@ -4154,7 +4153,7 @@ export function ModelConfigPage({
               className="shrink-0"
               aria-label="Load in 4-bit"
               checked={config.loadIn4bit !== false}
-              onCheckedChange={(checked) => update({ loadIn4bit: checked })}
+              onCheckedChange={(checked) => { update({ loadIn4bit: checked }); }}
             />
           </div>
         )}
@@ -4209,7 +4208,7 @@ export function ModelConfigPage({
               nativeContextLength={nativeContextLength}
               activeLoadedContext={activeLoadedContext}
               inputRef={contextInputRef}
-              onChange={(v) => update({ customContextLength: v === 0 ? null : v })}
+              onChange={(v) => { update({ customContextLength: v === 0 ? null : v }); }}
               renderWarning={(v) =>
                 isActiveModel &&
                 loadedMaxContextLength != null &&
@@ -4246,7 +4245,7 @@ export function ModelConfigPage({
                 showDraftTokens={showDraftTokens}
                 showSpecDraftCacheDtype={showSpecDraftCacheDtype}
                 speculativeFallback={speculativeFallback}
-                onEditTemplate={() => setTemplateOpen(true)}
+                onEditTemplate={() => { setTemplateOpen(true); }}
                 layerCount={stagedDims?.layerCount ?? null}
                 moeLayerCount={stagedDims?.moeLayerCount ?? null}
                 isDiffusion={resolvedIsDiffusion}
@@ -4283,7 +4282,7 @@ export function ModelConfigPage({
                   : undefined
               }
               onChange={(value) =>
-                update(contextPinPatch(value, pinsContextLength))
+                { update(contextPinPatch(value, pinsContextLength)); }
               }
             />
             {!targetIsNpu && (
@@ -4300,22 +4299,22 @@ export function ModelConfigPage({
                     servedByMlx={servedByMlx}
                     int8PrefillAvailable={int8PrefillAvailable}
                     onInt8PrefillChange={(checked) =>
-                      checked
+                      { checked
                         ? setInt8PrefillConfirmOpen(true)
-                        : update({ mlxInt8Prefill: false })
+                        : update({ mlxInt8Prefill: false }); }
                     }
                     anePrefillAvailable={anePrefillAvailable}
                     onAnePrefillChange={(checked) =>
-                      checked
+                      { checked
                         ? setAnePrefillConfirmOpen(true)
-                        : update({ mlxAnePrefill: false })
+                        : update({ mlxAnePrefill: false }); }
                     }
                     offloadable={memoryEstimate.estimate?.mlxOffloadable ?? []}
                     offloadDecided={mlxOffloadDecidedNow}
                     offloadNotes={mlxOffloadNotes}
                     speculativeFallback={speculativeFallback}
                     modelPath={target.id}
-                    onEditTemplate={() => setTemplateOpen(true)}
+                    onEditTemplate={() => { setTemplateOpen(true); }}
                     templateOutcome={chatTemplateOutcome}
                   />
                 )}
@@ -4349,7 +4348,7 @@ export function ModelConfigPage({
           naming={naming}
           // Until the server copy is read: a pick before then could not forget a row it has not seen.
           disabled={sharedVariantUnresolved || extraArgsHydrating || budgetSettling}
-          onPick={(name) => pickSet(name)}
+          onPick={(name) => { pickSet(name); }}
           onNamingChange={setNaming}
           onNamingSubmit={submitNaming}
           onDelete={setPendingDelete}
@@ -4374,7 +4373,7 @@ export function ModelConfigPage({
               extraArgsHydrating ||
               budgetSettling
             }
-            onCheckedChange={(checked) => setAlwaysLoad(checked === true)}
+            onCheckedChange={(checked) => { setAlwaysLoad(checked === true); }}
           />
           <label
             htmlFor={alwaysLoadId}
@@ -4446,7 +4445,7 @@ export function ModelConfigPage({
               extraArgsHydrating ||
               budgetSettling
             }
-            onClick={() => pickSet(pinnedSet)}
+            onClick={() => { pickSet(pinnedSet); }}
           >
             Reset
           </Button>
@@ -4476,7 +4475,7 @@ export function ModelConfigPage({
         defaultTemplate={resolvedDefaultTemplate}
         defaultLoading={resolvedDefaultLoading}
         readOnly={!target.isGguf && !servedByMlx}
-        onSave={(override) => update({ chatTemplateOverride: override })}
+        onSave={(override) => { update({ chatTemplateOverride: override }); }}
       />
       <AlertDialog
         open={int8PrefillConfirmOpen}

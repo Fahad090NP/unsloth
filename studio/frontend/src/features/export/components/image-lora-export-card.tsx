@@ -147,7 +147,7 @@ export function ImageLoraExportCard({ preselect }: { preselect?: string }) {
             <Input
               id="image-lora-save"
               value={saveDirectory}
-              onChange={(e) => setSaveDirectory(e.target.value)}
+              onChange={(e) => { setSaveDirectory(e.target.value); }}
             />
           </div>
         </div>

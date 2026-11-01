@@ -660,7 +660,7 @@ test("a rejected pick leaves a working auto preference named", async () => {
 function settledWithin(request: unknown): Promise<unknown> {
   return Promise.race([
     request,
-    new Promise((resolve) => setTimeout(() => resolve("pending"), 200)),
+    new Promise((resolve) => setTimeout(() => { resolve("pending"); }, 200)),
   ]);
 }
 

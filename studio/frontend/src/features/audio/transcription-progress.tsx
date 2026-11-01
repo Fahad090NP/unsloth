@@ -29,8 +29,8 @@ export function TranscriptionProgress({
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     if (finishedAt !== null) return;
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
+    const timer = window.setInterval(() => { setNow(Date.now()); }, 1000);
+    return () => { window.clearInterval(timer); };
   }, [finishedAt]);
   const seconds = Math.max(
     0,

@@ -29,9 +29,9 @@ const VARIANTS = [
   { quant: "BF16", filename: "Qwen3-8B-BF16.gguf", size_bytes: 15.26 * GiB },
 ];
 
-type Card = {
+interface Card {
   GgufDownloadCard: (props: Record<string, unknown>) => StubElement;
-};
+}
 
 function loadCard(
   useState?: (initial: unknown) => [unknown, (next: unknown) => void],

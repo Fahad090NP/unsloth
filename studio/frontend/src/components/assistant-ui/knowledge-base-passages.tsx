@@ -84,7 +84,7 @@ function PassageItem({
         <button
           type="button"
           aria-expanded={expanded}
-          onClick={() => setExpanded((v) => !v)}
+          onClick={() => { setExpanded((v) => !v); }}
           className="self-start text-xs underline-offset-2 hover:text-foreground hover:underline"
         >
           {expanded ? "Show less" : "Show more"}
@@ -129,7 +129,7 @@ export function KnowledgeBasePassages({
       {shownCount < total ? (
         <button
           type="button"
-          onClick={() => setShowAll(true)}
+          onClick={() => { setShowAll(true); }}
           className="self-start text-xs underline-offset-2 hover:text-foreground hover:underline"
         >
           Show {total - shownCount} more passage

@@ -80,7 +80,7 @@ export function QuantPicker({
               key={q.value}
               type="button"
               aria-pressed={active}
-              onClick={() => toggle(q.value)}
+              onClick={() => { toggle(q.value); }}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors",
                 active
@@ -114,7 +114,7 @@ export function QuantPicker({
           </span>
           <button
             type="button"
-            onClick={() => onChange([])}
+            onClick={() => { onChange([]); }}
             className="text-ui-11 text-muted-foreground/70 hover:text-foreground transition-colors"
           >
             Clear all

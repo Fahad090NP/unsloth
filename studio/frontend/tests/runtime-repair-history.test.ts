@@ -41,7 +41,7 @@ test("blocked storage never prevents a runtime repair", () => {
     get: () => { throw new Error("storage blocked"); },
   });
   try {
-    assert.doesNotThrow(() => recordRuntimeRepair("llama_runtime_incomplete"));
+    assert.doesNotThrow(() => { recordRuntimeRepair("llama_runtime_incomplete"); });
     assert.equal(wasRuntimeRepairedRecently("llama_runtime_incomplete"), false);
   } finally {
     Object.defineProperty(globalThis, "localStorage", { configurable: true, value: original });

@@ -57,14 +57,14 @@ export function PinnedPageRow({
   const navigate = useNavigate();
   const onChat = useRouterState({ select: (state) => state.location.pathname.startsWith("/chat") });
   const tab = usePinnedTab(page.id);
-  const active = useBrowserStore((state) => state.open && tab !== undefined && state.activeTabId === tab.id);
+  const active = useBrowserStore((state) => state.open && state.activeTabId === tab?.id);
   const [renaming, setRenaming] = useState(false);
   // Rename moves focus to the field; the closing menu mustn't take it back to its trigger.
   const keepFocus = useRef(false);
   const title = tab?.customTitle || page.title || page.url;
 
   const open = () => {
-    const show = () => useBrowserStore.getState().openPinned(page.id, page.url, page.title);
+    const show = () => { useBrowserStore.getState().openPinned(page.id, page.url, page.title); };
     if (onChat) {
       if (browserPanelAvailable()) show();
       else openExternalLink(page.url);
@@ -149,7 +149,7 @@ export function PinnedPageRow({
               <button
                 ref={triggerRef}
                 type="button"
-                onClick={(event) => event.stopPropagation()}
+                onClick={(event) => { event.stopPropagation(); }}
                 aria-label={t("browser.tabMenu.pageOptions")}
                 className={ACTION}
               >
@@ -195,8 +195,8 @@ function RenameField({
       maxLength={MAX_TAB_TITLE_CHARS}
       aria-label={label}
       data-pinned-rename={id}
-      onFocus={(event) => event.currentTarget.select()}
-      onBlur={(event) => finish(event.currentTarget.value)}
+      onFocus={(event) => { event.currentTarget.select(); }}
+      onBlur={(event) => { finish(event.currentTarget.value); }}
       onKeyDown={(event) => {
         if (event.key === "Enter") finish(event.currentTarget.value);
         else if (event.key === "Escape") finish(null);

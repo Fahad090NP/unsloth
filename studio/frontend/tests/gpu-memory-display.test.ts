@@ -46,7 +46,7 @@ test("mixed inventory measures dedicated usage against dedicated capacity only",
   const used = resolveGpuVramUsedGb(display.usageGpu);
   assert.equal(total, 16);
   assert.equal(used, 1);
-  assert.equal((used! / total) * 100, 6.25);
+  assert.equal((used / total) * 100, 6.25);
   assert.equal(input.devices.length, 2);
   assert.equal(gpuMemoryTotalsGb(input.devices).total, 41.69);
 });

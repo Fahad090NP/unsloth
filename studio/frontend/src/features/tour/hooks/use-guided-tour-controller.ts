@@ -12,9 +12,9 @@ import type { TourStep } from "../types";
 
 export const TOUR_OPEN_EVENT = "omx:tour:open";
 
-export type TourOpenDetail = {
+export interface TourOpenDetail {
   id?: string;
-};
+}
 
 // Pages can mount controllers behind a gate or disable them while loading; the menu must not
 // offer a tour nothing answers.
@@ -63,7 +63,7 @@ export function useGuidedTourController({
   const [open, setOpen] = useState(false);
   const [hasRuntime, setHasRuntime] = useState(false);
 
-  useEffect(() => setHasRuntime(true), []);
+  useEffect(() => { setHasRuntime(true); }, []);
 
   useEffect(() => {
     if (!hasRuntime || !enabled) return;
@@ -92,7 +92,7 @@ export function useGuidedTourController({
   // Keyed on `enabled` alone so an inactive page drops the tour instead of restarting it.
   useEffect(() => {
     if (!enabled) return;
-    return () => setOpen(false);
+    return () => { setOpen(false); };
   }, [enabled]);
 
   const onSkip = useCallback(() => {

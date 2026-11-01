@@ -43,8 +43,7 @@ export function getImageInputUnavailableReason({
   if (isExternalModel) {
     const explicitlyNonVision =
       externalSupportsVision === false ||
-      (activeModel &&
-        activeModel.isVision === false &&
+      (activeModel?.isVision === false &&
         !activeModel.isAudio &&
         !activeModel.hasAudioInput);
     if (explicitlyNonVision) {

@@ -3,19 +3,19 @@
 
 /** What a Markdown block shows when it cannot render: its own source, fence scaffolding removed. */
 
-export type MarkdownBlockFallback = {
+export interface MarkdownBlockFallback {
   text: string;
   language: string | null;
   fenced: boolean;
-};
+}
 
-type OpeningFence = {
+interface OpeningFence {
   /** The opening run, whose CHARACTER and LENGTH both constrain the close. */
   marker: string;
   info: string;
   body: string;
   indent: number;
-};
+}
 
 /** Scanned, not regex-matched: the regex backtracked quadratically on an unterminated opening run. */
 function openingFence(content: string): OpeningFence | null {

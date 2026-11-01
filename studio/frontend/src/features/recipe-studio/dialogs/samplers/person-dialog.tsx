@@ -14,10 +14,10 @@ import type { SamplerConfig } from "../../types";
 import { NameField } from "../shared/name-field";
 import { FieldLabel } from "../shared/field-label";
 
-type PersonDialogProps = {
+interface PersonDialogProps {
   config: SamplerConfig;
   onUpdate: (patch: Partial<SamplerConfig>) => void;
-};
+}
 
 export function PersonDialog({
   config,
@@ -32,7 +32,7 @@ export function PersonDialog({
     key: K,
     value: SamplerConfig[K],
   ) => {
-    onUpdate({ [key]: value } as Partial<SamplerConfig>);
+    onUpdate({ [key]: value });
   };
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export function PersonDialog({
     <div className="space-y-4">
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="grid gap-3">
         <div className="rounded-lg border border-border/60 px-3 py-2">
@@ -69,7 +69,7 @@ export function PersonDialog({
               className="nodrag"
               value={config.person_locale ?? ""}
               onChange={(event) =>
-                updateField("person_locale", event.target.value)
+                { updateField("person_locale", event.target.value); }
               }
             />
           </div>
@@ -82,7 +82,7 @@ export function PersonDialog({
             <Select
               value={config.person_sex?.trim() ? config.person_sex : "any"}
               onValueChange={(value) =>
-                updateField("person_sex", value === "any" ? "" : value)
+                { updateField("person_sex", value === "any" ? "" : value); }
               }
             >
               <SelectTrigger className="nodrag w-full" id={sexId}>
@@ -106,7 +106,7 @@ export function PersonDialog({
               className="nodrag"
               value={config.person_age_range ?? ""}
               onChange={(event) =>
-                updateField("person_age_range", event.target.value)
+                { updateField("person_age_range", event.target.value); }
               }
               placeholder="18-70"
             />
@@ -122,7 +122,7 @@ export function PersonDialog({
               className="nodrag"
               value={config.person_city ?? ""}
               onChange={(event) =>
-                updateField("person_city", event.target.value)
+                { updateField("person_city", event.target.value); }
               }
             />
           </div>

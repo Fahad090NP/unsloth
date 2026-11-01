@@ -391,7 +391,7 @@ export function OnDeviceFoldersDialog({
                   instead (Download to menu).{" "}
                   <button
                     type="button"
-                    onClick={() => setDownloadDir(null)}
+                    onClick={() => { setDownloadDir(null); }}
                     className="font-medium text-foreground underline-offset-2 hover:underline"
                   >
                     Use the Models folder
@@ -674,7 +674,7 @@ function FolderRow({
                   id={switchId}
                   size="sm"
                   checked={Boolean(folder.recursive)}
-                  onCheckedChange={(checked) => onRecursive(folder, checked)}
+                  onCheckedChange={(checked) => { onRecursive(folder, checked); }}
                   disabled={pending !== null}
                   aria-label={`Also scan sub-folders of ${name}`}
                 />
@@ -691,7 +691,7 @@ function FolderRow({
               <button
                 type="button"
                 aria-label={`Open ${name} in file manager`}
-                onClick={() => onOpen(folder)}
+                onClick={() => { onOpen(folder); }}
                 className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <HugeiconsIcon
@@ -711,7 +711,7 @@ function FolderRow({
             <button
               type="button"
               aria-label={`Remove ${name}`}
-              onClick={() => onRemove(folder)}
+              onClick={() => { onRemove(folder); }}
               disabled={pending !== null}
               className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
             >

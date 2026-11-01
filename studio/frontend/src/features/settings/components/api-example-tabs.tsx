@@ -115,9 +115,9 @@ export function ApiExampleTabNav({
             entry.searchLabel ? t(entry.searchLabel) : undefined
           }
           onClick={() =>
-            entry.id === "agents"
+            { entry.id === "agents"
               ? useSettingsDialogStore.getState().openDialog("agents")
-              : onChange(entry.id)
+              : onChange(entry.id); }
           }
           className={cn(
             "flex h-9 shrink-0 items-center gap-2 rounded-full px-3.5 font-heading text-ui-15 text-foreground/80 transition-colors hover:text-foreground",
@@ -148,7 +148,7 @@ function pinUntilUserScrolls(
   el: HTMLElement,
   target: SettingsScrollTarget,
 ): () => void {
-  const observer = new ResizeObserver(() => scrollIntoPane(el));
+  const observer = new ResizeObserver(() => { scrollIntoPane(el); });
   observer.observe(el.parentElement ?? el);
   const release = () => {
     observer.disconnect();

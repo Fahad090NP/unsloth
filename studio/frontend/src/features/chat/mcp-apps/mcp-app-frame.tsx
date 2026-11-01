@@ -198,16 +198,16 @@ export function McpAppFrame(props: McpAppFrameProps) {
       // The card shows what an Allow will post; a very long call says how much is not shown.
       const preview = toolArgsForReview(args);
       const [allow, always] = await new Promise<[boolean, boolean]>((done) =>
-        setQueue([
+        { setQueue([
           ...pendingRef.current,
           {
             name,
             argsPreview: preview,
             scope,
             toolKey,
-            decide: (a, b) => done([a, b]),
+            decide: (a, b) => { done([a, b]); },
           },
-        ]),
+        ]); },
       );
       if (!allow) {
         return { content: [{ type: "text", text: DECLINED }], isError: true };
@@ -244,7 +244,7 @@ export function McpAppFrame(props: McpAppFrameProps) {
             },
           };
         case "tools/call":
-          return callTool(params.name, params.arguments);
+          return await callTool(params.name, params.arguments);
         case "resources/read": {
           if (typeof params.uri !== "string" || !params.uri) {
             throw new RpcError("resources/read requires a uri", INVALID_PARAMS);
@@ -273,7 +273,7 @@ export function McpAppFrame(props: McpAppFrameProps) {
           }
           // Widget is untrusted and Desktop has no popup blocker, so ask first.
           const opened = await new Promise<boolean>((done) =>
-            setQueue([
+            { setQueue([
               ...pendingRef.current,
               {
                 name: url,
@@ -281,9 +281,9 @@ export function McpAppFrame(props: McpAppFrameProps) {
                 scope: "",
                 toolKey: "",
                 link: url,
-                decide: (allow) => done(allow),
+                decide: (allow) => { done(allow); },
               },
-            ]),
+            ]); },
           );
           return opened ? {} : { isError: true };
         }
@@ -323,16 +323,16 @@ export function McpAppFrame(props: McpAppFrameProps) {
           }
         }
         run.then(
-          (result) => port.postMessage({ jsonrpc: "2.0", id: data.id, result }),
+          (result) => { port.postMessage({ jsonrpc: "2.0", id: data.id, result }); },
           (err: unknown) =>
-            port.postMessage({
+            { port.postMessage({
               jsonrpc: "2.0",
               id: data.id,
               error: {
                 code: err instanceof RpcError ? err.code : INTERNAL_ERROR,
                 message: err instanceof Error ? err.message : String(err),
               },
-            }),
+            }); },
         );
       } else if (data.method === "ui/notifications/initialized") {
         // Nothing may be sent before `initialized`; tool-input precedes the result.
@@ -480,14 +480,14 @@ export function McpAppFrame(props: McpAppFrameProps) {
             </pre>
           ) : null}
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <Button size="xs" onClick={() => answer(true)}>
+            <Button size="xs" onClick={() => { answer(true); }}>
               {asking.link ? "Open" : "Allow"}
             </Button>
             {asking.link ? null : (
               <Button
                 size="xs"
                 variant="outline"
-                onClick={() => answer(true, true)}
+                onClick={() => { answer(true, true); }}
               >
                 Always allow
               </Button>
@@ -495,7 +495,7 @@ export function McpAppFrame(props: McpAppFrameProps) {
             <Button
               size="xs"
               variant="destructive"
-              onClick={() => answer(false)}
+              onClick={() => { answer(false); }}
             >
               {asking.link ? "Cancel" : "Deny"}
             </Button>

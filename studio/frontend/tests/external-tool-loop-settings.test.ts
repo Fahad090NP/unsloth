@@ -20,7 +20,7 @@ const SHEET = ts.createSourceFile(
   ts.ScriptKind.TSX,
 );
 
-type Gates = { isExternalModel: boolean; showStudioToolLoopControls: boolean };
+interface Gates { isExternalModel: boolean; showStudioToolLoopControls: boolean }
 
 function find<T extends ts.Node>(
   root: ts.Node,

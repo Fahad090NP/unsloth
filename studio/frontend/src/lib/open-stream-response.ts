@@ -21,5 +21,5 @@ export async function openStreamResponse(
   if (response.status !== 405) {
     return response;
   }
-  return fetcher(url, { ...init, method: "GET" }, options);
+  return await fetcher(url, { ...init, method: "GET" }, options);
 }

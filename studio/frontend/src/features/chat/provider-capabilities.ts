@@ -31,14 +31,14 @@ export interface ProviderCapabilities {
   presencePenalty: boolean;
 }
 
-export type ExternalReasoningCapabilities = {
+export interface ExternalReasoningCapabilities {
   supportsReasoning: boolean;
   reasoningStyle: "enable_thinking" | "reasoning_effort" | "enable_thinking_effort";
   reasoningAlwaysOn: boolean;
   supportsReasoningOff: boolean;
   reasoningEffortLevels: readonly ReasoningEffortLevel[];
   defaultEffort?: ReasoningEffortLevel | null;
-};
+}
 
 /** Clamp DOWNWARD to the nearest offered level; only below everything falls up.
  *  "none" is skipped unless asked for (matches llama_cpp.py). Legacy "xhigh" maps to "max". */
@@ -58,7 +58,7 @@ export function clampReasoningEffortToLevels(
     return candidate;
   }
   const rank = REASONING_EFFORT_SCALE.indexOf(
-    candidate as (typeof REASONING_EFFORT_SCALE)[number],
+    candidate,
   );
   if (rank !== -1) {
     const offered = REASONING_EFFORT_SCALE.filter((level) =>
@@ -130,11 +130,11 @@ export function resolveExternalReasoningEffort(opts: {
 
 export const EXTERNAL_MAX_OUTPUT_TOKENS = 32768;
 
-const EXTERNAL_MAX_OUTPUT_TOKENS_BY_MODEL: Array<{
+const EXTERNAL_MAX_OUTPUT_TOKENS_BY_MODEL: {
   providerType: string;
   prefixes: readonly string[];
   cap: number;
-}> = [
+}[] = [
   // Responses API rejects over-limit max_output_tokens. First match wins: `-chat-latest` first,
   // bare family prefixes last.
   {
@@ -322,8 +322,8 @@ function _inferProviderFromOpenrouterId(
 /** Mistral excluded: its connector is Agents-API only and errors on /v1/chat/completions. */
 export function providerSupportsBuiltinWebSearch(
   providerType: string | null | undefined,
-  modelId?: string | null | undefined,
-  baseUrl?: string | null | undefined,
+  modelId?: string | null  ,
+  baseUrl?: string | null  ,
 ): boolean {
   // Gemini 3 image models support Search grounding; older image ids and compat proxies do not.
   if (providerType === "gemini") {
@@ -734,11 +734,11 @@ function isOpenRouterMandatoryReasoningModel(modelId: string): boolean {
   const canonical = normalized.startsWith("~") ? normalized.slice(1) : normalized;
   return OPENROUTER_MANDATORY_REASONING_MODELS.has(canonical);
 }
-type ReasoningCaps = {
+interface ReasoningCaps {
   supportsReasoning: boolean;
   supportsReasoningOff: boolean;
   reasoningEffortLevels: ExternalReasoningCapabilities["reasoningEffortLevels"];
-};
+}
 
 const DEFAULT_EXTERNAL_REASONING_CAPABILITIES: ExternalReasoningCapabilities = {
   supportsReasoning: false,
@@ -1122,11 +1122,11 @@ function resolveProviderReasoning(
   return null;
 }
 
-type ReasoningWire = {
+interface ReasoningWire {
   levels: readonly ReasoningEffortLevel[] | null;
   aliases?: Partial<Record<ReasoningEffortLevel, ReasoningEffortLevel>>;
   off: "unified" | "none-level";
-};
+}
 
 const LOCAL_SERVER_WIRE: ReasoningWire = {
   levels: ["low", "medium", "high"],

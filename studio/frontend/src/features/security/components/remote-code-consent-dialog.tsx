@@ -71,8 +71,8 @@ function SnippetLine({
 
   let body;
   if (hasSpan) {
-    const start = row.matchStart as number;
-    const end = row.matchEnd as number;
+    const start = row.matchStart!;
+    const end = row.matchEnd!;
     body = (
       <>
         {row.text.slice(0, start)}
@@ -297,7 +297,7 @@ export function RemoteCodeConsentDialog() {
         <AlertDialogFooter>
           <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
           {blocked ? null : (
-            <AlertDialogAction variant="dark" onClick={() => resolve(true)}>
+            <AlertDialogAction variant="dark" onClick={() => { resolve(true); }}>
               {t("remoteCode.enableAndContinue")}
             </AlertDialogAction>
           )}

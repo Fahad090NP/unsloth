@@ -4,12 +4,12 @@
 import { motion } from "motion/react";
 import type { Rect } from "../types";
 
-type SpotlightOverlayProps = {
+interface SpotlightOverlayProps {
   rect: Rect | null;
   vw: number;
   vh: number;
   maskId: string;
-};
+}
 
 export function SpotlightOverlay({ rect, vw, vh, maskId }: SpotlightOverlayProps) {
   const hole = rect ?? { x: vw / 2 - 140, y: vh / 2 - 90, w: 280, h: 180 };

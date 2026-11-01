@@ -8,7 +8,7 @@ export function watchInputModality(win: Window): void {
   const set = (modality: "pointer" | "keyboard") => {
     if (root.dataset.inputModality !== modality) root.dataset.inputModality = modality;
   };
-  win.addEventListener("pointerdown", () => set("pointer"), { capture: true, passive: true });
+  win.addEventListener("pointerdown", () => { set("pointer"); }, { capture: true, passive: true });
   win.addEventListener(
     "keydown",
     (event) => {

@@ -40,7 +40,7 @@ export function DesktopRepairControl(): ReactElement | null {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setConfirmOpen(true)}
+          onClick={() => { setConfirmOpen(true); }}
           className="text-destructive hover:text-destructive"
         >
           {t("settings.general.repairInstall.action")}
@@ -62,7 +62,7 @@ export function DesktopRepairControl(): ReactElement | null {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+            <Button variant="outline" onClick={() => { setConfirmOpen(false); }}>
               {t("common.cancel")}
             </Button>
             <Button

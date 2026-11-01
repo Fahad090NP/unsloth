@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 const stored = new Map<string, string>();
-const listeners: Array<(event: { key: string | null }) => void> = [];
+const listeners: ((event: { key: string | null }) => void)[] = [];
 (globalThis as { window?: unknown }).window = {
   localStorage: {
     getItem: (key: string) => stored.get(key) ?? null,

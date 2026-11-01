@@ -63,10 +63,10 @@ export function sanitizeAdjustments(
 			? Math.max(0, Math.min(max, Math.round(v)))
 			: fallback;
 	return {
-		scope: SCOPES.includes(input.scope as BackgroundScope)
+		scope: SCOPES.includes(input.scope!)
 			? input.scope!
 			: "chats",
-		effect: EFFECTS.includes(input.effect as BackgroundEffect)
+		effect: EFFECTS.includes(input.effect!)
 			? input.effect!
 			: "None",
 		visibility: bounded(input.visibility, 100, 70),
@@ -79,7 +79,7 @@ export function sanitizeAdjustments(
 					? DEFAULT_ADJUSTMENTS.outline
 					: 0
 				: bounded(input.outline, 100, DEFAULT_ADJUSTMENTS.outline),
-		sizing: IMAGE_SIZING.includes(input.sizing as ImageSizing)
+		sizing: IMAGE_SIZING.includes(input.sizing!)
 			? input.sizing!
 			: "cover",
 		zoom: Math.max(100, bounded(input.zoom, 300, 100)),

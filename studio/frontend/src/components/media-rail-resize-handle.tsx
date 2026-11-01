@@ -58,7 +58,7 @@ export function MediaRailResizeHandle({
     update();
     const observer = new ResizeObserver(update);
     observer.observe(block);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [kind, placement, rail.scale]);
   // The cap can fall below the stored minimum (high interface scale near the breakpoint).
   const max = cap === null ? rail.max : Math.max(0, Math.min(rail.max, cap));
@@ -74,7 +74,7 @@ export function MediaRailResizeHandle({
       scale={rail.scale}
       clamp={(px) => Math.min(rail.clamp(px), max)}
       // Commits what is shown; a capped pull past the edge keeps the stored preference.
-      setWidth={(px) => rail.setWidth(Math.min(px, max))}
+      setWidth={(px) => { rail.setWidth(Math.min(px, max)); }}
       resetWidth={rail.resetWidth}
       // The rail does not collapse; click does nothing, drag and arrow keys resize.
       onToggle={() => {}}

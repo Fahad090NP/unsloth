@@ -153,7 +153,7 @@ export function LanguageSelect() {
             ) : null}
             <div
               onScroll={(event) =>
-                setScrolled(event.currentTarget.scrollTop > 0)
+                { setScrolled(event.currentTarget.scrollTop > 0); }
               }
               className={cn(
                 "hover-scrollbar max-h-64 overflow-y-auto overscroll-contain",

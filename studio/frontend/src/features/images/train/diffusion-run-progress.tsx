@@ -17,8 +17,8 @@ export function DiffusionRunProgress({ progress, status, active }: {
   useEffect(() => {
     if (!waiting || !active) return;
     setNow(Date.now());
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
+    const timer = setInterval(() => { setNow(Date.now()); }, 1000);
+    return () => { clearInterval(timer); };
   }, [waiting, active, status?.job_id]);
   const elapsed = typeof status?.started_at === "number"
     ? Math.max(0, Math.floor(now / 1000 - status.started_at)) : null;

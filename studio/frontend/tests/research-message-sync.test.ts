@@ -32,7 +32,7 @@ const STORED_REPORT = {
 const STORED = [STORED_PROMPT, STORED_REPORT];
 
 function drifted(record: MessageRecord, patch: object): MessageRecord {
-  return { ...record, ...patch } as MessageRecord;
+  return { ...record, ...patch };
 }
 
 test("the client's drifted copy of a research report is replaced by the stored one", () => {

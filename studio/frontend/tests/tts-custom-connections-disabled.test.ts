@@ -10,30 +10,30 @@ import { loadWithStubs } from "./helpers/module-stubs.ts";
 
 import { readSrc } from "./helpers/kit.ts";
 
-type Adapter = {
+interface Adapter {
   StudioSpeechSynthesisAdapter: new () => { speak: (text: string) => unknown };
   generateCustomTtsAudio: (
     text: string,
     signal?: AbortSignal,
   ) => Promise<string>;
-};
+}
 
-type AuthApi = {
+interface AuthApi {
   authFetch: (
     input: string,
     init?: RequestInit,
     options?: { beforeRetry?: () => void },
   ) => Promise<Response>;
-};
+}
 
-type StubProvider = {
+interface StubProvider {
   id: string;
   hasApiKey: boolean;
   baseUrl?: string;
   providerType?: string;
   backendProviderType?: string;
   updatedAt?: number;
-};
+}
 
 function load(
   connectionsEnabled: boolean,
@@ -205,7 +205,7 @@ test("custom TTS rechecks the global switch after legacy-key encryption", async 
   const { adapter, posted, setConnectionsEnabled } = load(true, {
     providers: [{ id: "conn-1", hasApiKey: false }],
     legacyKey: "sk-legacy",
-    encrypt: async () => encryption,
+    encrypt: async () => await encryption,
   });
 
   const pending = adapter.generateCustomTtsAudio("secret assistant reply");
@@ -234,7 +234,7 @@ test("custom TTS does not send a captured legacy key after the connection change
       },
     ],
     legacyKey: "sk-legacy",
-    encrypt: async () => encryption,
+    encrypt: async () => await encryption,
   });
 
   const pending = adapter.generateCustomTtsAudio("secret assistant reply");
@@ -258,9 +258,9 @@ test("custom TTS does not send a captured legacy key after the connection change
 test("custom TTS rechecks the connection switch before an authenticated retry", async () => {
   let disableConnections = () => {};
   const loaded = load(true, {
-    beforeAuthenticatedRetry: () => disableConnections(),
+    beforeAuthenticatedRetry: () => { disableConnections(); },
   });
-  disableConnections = () => loaded.setConnectionsEnabled(false);
+  disableConnections = () => { loaded.setConnectionsEnabled(false); };
 
   await assert.rejects(
     loaded.adapter.generateCustomTtsAudio("secret assistant reply"),

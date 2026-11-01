@@ -46,7 +46,7 @@ export const useEmbeddingPinsStore = create<EmbeddingPinsState>()((set, get) => 
   },
 }));
 
-onPinsRestored("embedding", () => useEmbeddingPinsStore.setState({ pinned: readPins() }));
+onPinsRestored("embedding", () => { useEmbeddingPinsStore.setState({ pinned: readPins() }); });
 
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (event) => {

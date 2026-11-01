@@ -71,20 +71,20 @@ export function LinkContextMenu({
             {tabId ? (
               <MenuRow
                 icon={ArrowUpRight01Icon}
-                onSelect={() => navigate(tabId, { url })}
+                onSelect={() => { navigate(tabId, { url }); }}
               >
                 {t("browser.suggestedMenu.open")}
               </MenuRow>
             ) : null}
             <MenuRow
               icon={PlusSignIcon}
-              onSelect={() => openUrl(url, { newTab: true })}
+              onSelect={() => { openUrl(url, { newTab: true }); }}
             >
               {t("browser.suggestedMenu.openInNewTab")}
             </MenuRow>
             <MenuRow
               icon={LinkSquare02Icon}
-              onSelect={() => openExternalLink(url)}
+              onSelect={() => { openExternalLink(url); }}
             >
               {t("browser.openExternal")}
             </MenuRow>

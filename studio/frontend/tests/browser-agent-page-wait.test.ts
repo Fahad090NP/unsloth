@@ -9,7 +9,7 @@ const QUIET = 350;
 
 /** A page on a fake clock: requests open from `start` to `end`, DOM changes at `mutations`. The status
  *  call answers as page-agent.ts does, counting open requests started at or after `since`. */
-function page(requests: Array<{ start: number; end: number }>, mutations: number[] = []) {
+function page(requests: { start: number; end: number }[], mutations: number[] = []) {
   let now = 0;
   const wait = (since: number, maxMs: number, changingMaxMs: number): PageWait => ({
     maxMs, changingMaxMs, quietMs: QUIET,

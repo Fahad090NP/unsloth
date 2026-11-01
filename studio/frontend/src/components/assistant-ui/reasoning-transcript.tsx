@@ -72,14 +72,14 @@ import { cn } from "@/lib/utils";
 // Twice the live box's tallest cap (18rem in reasoning.tsx).
 const BOUNDED_TAIL_PX = 576;
 
-type Reserve = { element: HTMLDivElement; from: number; to: number };
+interface Reserve { element: HTMLDivElement; from: number; to: number }
 type Reading = ReasoningReadingAnchor & {
   key: string;
   row: Element;
   offset: number;
 };
 
-type Props = {
+interface Props {
   initialAnchor?: ReasoningReadingAnchor;
   documents: readonly string[];
   indexKey: string;
@@ -88,7 +88,7 @@ type Props = {
   streaming: boolean;
   /** In the live tail box: rows grow upward in a fixed box, so no thread correction applies. */
   bounded?: boolean;
-};
+}
 
 const hiddenTranscripts = new WeakSet<Element>();
 const blindTranscripts = new WeakSet<Element>();
@@ -125,7 +125,7 @@ const resettleRows = (root: HTMLElement): void => {
   }
 };
 
-type Spent = { characters: number; rows: number };
+interface Spent { characters: number; rows: number }
 type Widener = (characters: number, rows: number) => Spent | null;
 
 const NOTHING_SPENT: Spent = { characters: 0, rows: 0 };
@@ -435,14 +435,14 @@ const Fragment = memo(function Fragment({
   );
 });
 
-type ChunkProps = {
+interface ChunkProps {
   slices: readonly ChunkSlice[];
   fragments: readonly ReasoningFragment[];
   closed: boolean;
   estimate: number;
   messageId: string;
   messageHasRenderableRenderHtmlTool: boolean;
-};
+}
 
 const Chunk = memo(function Chunk({
   slices,
@@ -663,7 +663,7 @@ export function ReasoningTranscript({
     commitStartedAt = performance.now();
     commitEdge.current.before();
   }, []);
-  const afterCommit = useCallback(() => commitEdge.current.after(), []);
+  const afterCommit = useCallback(() => { commitEdge.current.after(); }, []);
   const mountedAt = useRef(0);
   useLayoutEffect(() => {
     mountedAt.current = performance.now();
@@ -746,11 +746,11 @@ export function ReasoningTranscript({
         : rows;
       const value = limitRef.current;
       if (streamingRef.current) setLimit(value);
-      else startTransition(() => setLimit(value));
+      else startTransition(() => { setLimit(value); });
       return spent;
     };
     requestWiden(widen);
-    return () => cancelWiden(widen);
+    return () => { cancelWiden(widen); };
   }, [covered, setLimit]);
 
   useLayoutEffect(() => {
@@ -1119,7 +1119,7 @@ export function ReasoningTranscript({
         ? undefined
         : new IntersectionObserver(
             (entries) =>
-              setNearby(entries.at(-1)?.isIntersecting ?? nearby.current),
+              { setNearby(entries.at(-1)?.isIntersecting ?? nearby.current); },
             { root: scroll, rootMargin: "100% 0px" },
           );
     proximity?.observe(element);

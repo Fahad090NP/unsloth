@@ -57,7 +57,7 @@ import { LEARNING_RECIPES } from "../learning-recipes";
 import { GuidedTour, useGuidedTourController } from "@/features/tour";
 import { buildDataRecipesTourSteps } from "../tour";
 
-type TemplateCard = {
+interface TemplateCard {
   title: string;
   description: string;
   icon: typeof CookBookIcon;
@@ -66,7 +66,7 @@ type TemplateCard = {
   surfaceClassName: string;
   shineColor: string[];
   learningRecipeId?: string;
-};
+}
 
 const TEMPLATE_CARDS: TemplateCard[] = [
   {
@@ -258,7 +258,7 @@ function LearningRecipeCards({
             key={template.title}
             type="button"
             disabled={isDisabled}
-            onClick={() => onSelect(template)}
+            onClick={() => { onSelect(template); }}
             className={`group shadow-border relative overflow-hidden rounded-2xl bg-gradient-to-br dark:bg-[rgb(255_255_255_/_calc(0.05*var(--contrast-wash-gain,1)))] text-left transition-transform ${template.surfaceClassName} enabled:cursor-pointer enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70`}
           >
             <ShineBorder
@@ -514,7 +514,7 @@ export function DataRecipesPage(): ReactElement {
                   <button
                     type="button"
                     className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                    onClick={() => openRecipe(recipe)}
+                    onClick={() => { openRecipe(recipe); }}
                   >
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border/70 bg-muted/20">
                       <HugeiconsIcon

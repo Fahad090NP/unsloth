@@ -52,7 +52,7 @@ test("a pre-split dictation backend reports through the legacy fields", () => {
   const rows = describeSttStatus({
     loaded_model: "large-v3",
     device: "cuda",
-  } as SttStatusResponse);
+  });
   assert.equal(rows.length, 1);
   assert.equal(rows[0].name, "large-v3");
   assert.equal(rows[0].sttEngine, "transformers");
@@ -64,7 +64,7 @@ test("a current backend does not double the dictation row", () => {
     loaded_model: "large-v3",
     device: "cuda",
     transformers: { loaded_model: "large-v3", device: "cuda" },
-  } as SttStatusResponse);
+  });
   assert.equal(rows.length, 1);
 });
 
@@ -80,7 +80,7 @@ test("a dictation backend without the mtmd engine skips it", () => {
   const rows = describeSttStatus({
     transformers: { loaded_model: null, device: null },
     gguf: { loaded_model: "ggml-base.en", device: "whisper.cpp" },
-  } as SttStatusResponse);
+  });
   assert.deepEqual(
     rows.map((row) => row.sttEngine),
     ["gguf"],
@@ -92,7 +92,7 @@ test("an engine block explicitly nulled is skipped, not read as legacy", () => {
     loaded_model: "large-v3",
     device: "cuda",
     transformers: null,
-  } as SttStatusResponse);
+  });
   assert.equal(rows.length, 1);
   assert.equal(rows[0].name, "large-v3");
 });

@@ -42,7 +42,7 @@ import { cn } from "@/lib/utils";
 // Matches the composer's IME watchdog.
 const IME_STUCK_TIMEOUT_MS = 2500;
 
-type PromptQueueListProps = {
+interface PromptQueueListProps {
   entry: PromptQueueUIEntry;
   items: PromptQueueUIItem[];
   onEdit: (id: string, prompt: string) => boolean;
@@ -50,7 +50,7 @@ type PromptQueueListProps = {
   onMove: (id: string, targetId: string) => boolean;
   onSteer: (id: string) => boolean;
   onResume: () => void;
-};
+}
 
 const MENU_OR_TRIGGER = "[data-slot='dropdown-menu-content'], [data-queue-menu]";
 // A focused row button shows its label below it, over the next 32px row; it must not take that row's clicks.
@@ -85,7 +85,7 @@ export function PromptQueueList({
       pointerDownRef.current = { target: event.target, at: event.timeStamp };
     };
     document.addEventListener("pointerdown", note, true);
-    return () => document.removeEventListener("pointerdown", note, true);
+    return () => { document.removeEventListener("pointerdown", note, true); };
   }, []);
   const instructionsId = useId();
   const editingItem = items.find(
@@ -220,13 +220,13 @@ export function PromptQueueList({
                         value={draft}
                         rows={2}
                         onChange={(event) =>
-                          setDraft(event.currentTarget.value)
+                          { setDraft(event.currentTarget.value); }
                         }
-                        onCompositionStart={() => setComposing(true)}
-                        onCompositionUpdate={() => setComposing(true)}
-                        onCompositionEnd={() => setComposing(false)}
+                        onCompositionStart={() => { setComposing(true); }}
+                        onCompositionUpdate={() => { setComposing(true); }}
+                        onCompositionEnd={() => { setComposing(false); }}
                         // Blur commits or cancels any composition first, so this reset is safe.
-                        onBlur={() => setComposing(false)}
+                        onBlur={() => { setComposing(false); }}
                         onKeyDown={(event) => {
                           // The candidate window owns this key; cancelling here would discard the draft.
                           if (
@@ -315,7 +315,7 @@ export function PromptQueueList({
                       aria-describedby={instructionsId}
                       className="h-7 w-4 shrink-0 touch-none cursor-grab text-muted-foreground/50 hover:bg-transparent hover:text-muted-foreground/50 active:cursor-grabbing pointer-coarse:h-11 pointer-coarse:w-8 dark:hover:bg-transparent"
                       disabled={!canMove}
-                      onPointerDown={(event) => onPointerDown(event, item.id)}
+                      onPointerDown={(event) => { onPointerDown(event, item.id); }}
                       onPointerMove={onPointerMove}
                       onPointerUp={onPointerUp}
                       onPointerCancel={cancelDrag}
@@ -410,7 +410,7 @@ export function PromptQueueList({
                       sideOffset={6}
                       className="w-56 rounded-lg border border-border/60 p-1 shadow-lg"
                       // Opening the menu must not select an item on pointer release.
-                      onPointerUpCapture={(event) => event.preventDefault()}
+                      onPointerUpCapture={(event) => { event.preventDefault(); }}
                       // A queued send focuses the composer, so stay open; other focus moves dismiss.
                       onFocusOutside={(event) => {
                         const { target, relatedTarget, timeStamp } =
@@ -453,13 +453,13 @@ export function PromptQueueList({
                       <DropdownMenuItem
                         onSelect={() => {
                           void copyToClipboard(item.prompt).then((copied) =>
-                            setAnnouncement(
+                            { setAnnouncement(
                               t(
                                 copied
                                   ? "promptQueue.announceCopied"
                                   : "promptQueue.announceCopyFailed",
                               ),
-                            ),
+                            ); },
                           );
                         }}
                       >

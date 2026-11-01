@@ -50,10 +50,10 @@ const speakVoicePanel: AudioToolPanel<SpeakVoiceValue> = {
             ariaLabel="Voice"
             value={value.source}
             onValueChange={(source) =>
-              onChange({
+              { onChange({
                 ...value,
                 source: source === "saved" ? "saved" : "builtin",
-              })
+              }); }
             }
             disabled={disabled}
             fit={true}
@@ -70,8 +70,8 @@ const speakVoicePanel: AudioToolPanel<SpeakVoiceValue> = {
         <VoicePicker
           selectedId={value.voiceId}
           disabled={disabled}
-          onSelect={(voice) => onChange({ ...value, voiceId: voice.id })}
-          onDeselect={() => onChange({ ...value, voiceId: null })}
+          onSelect={(voice) => { onChange({ ...value, voiceId: voice.id }); }}
+          onDeselect={() => { onChange({ ...value, voiceId: null }); }}
         />
       ) : ctx.voiceOption && builtinVoiceSpecs(specs, value, ctx).length > 0 ? (
         <AudioOptionFields
@@ -80,7 +80,7 @@ const speakVoicePanel: AudioToolPanel<SpeakVoiceValue> = {
             value.builtin === null ? {} : { [ctx.voiceOption]: value.builtin }
           }
           onChange={(_name, builtin) =>
-            onChange({ ...value, builtin: builtin ?? null })
+            { onChange({ ...value, builtin: builtin ?? null }); }
           }
           disabled={disabled}
           family={ctx.audioFamily}
@@ -134,7 +134,7 @@ const supertonicLanguagePanel: AudioToolPanel<string> = {
       <Select
         value={value || DEFAULT_LANGUAGE}
         onValueChange={(next) =>
-          onChange(next === DEFAULT_LANGUAGE ? "" : next)
+          { onChange(next === DEFAULT_LANGUAGE ? "" : next); }
         }
         disabled={disabled}
       >

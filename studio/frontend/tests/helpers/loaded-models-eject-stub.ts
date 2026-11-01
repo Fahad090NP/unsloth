@@ -4,7 +4,7 @@
 // Stubs the chat, images and video barrels and the embedder; /unload 409s like the backend while a chat
 // is generating unless forced.
 
-type UnloadPayload = { model_path: string; force_cancel_active?: boolean };
+interface UnloadPayload { model_path: string; force_cancel_active?: boolean }
 
 export const state = {
   active: null as string | null,

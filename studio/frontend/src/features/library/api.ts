@@ -95,7 +95,7 @@ function jsonInit(method: string, body: unknown): RequestInit {
 
 export async function getLibrary(): Promise<LibrarySnapshot> {
   const response = await ensureOk(await authFetch("/api/library"));
-  return response.json();
+  return await response.json();
 }
 
 export async function getLibraryFavorites(): Promise<string[]> {
@@ -157,7 +157,7 @@ export async function addLibraryItemToProject(
   const response = await ensureOk(
     await sendWrite("/api/library/items/project", jsonInit("POST", { id, projectId })),
   );
-  return response.json();
+  return await response.json();
 }
 
 export async function revealLibraryItem(id: string): Promise<void> {
@@ -223,7 +223,7 @@ function uploadGroups(files: File[]): File[][] {
       groups.push([]);
       bytes = 0;
     }
-    groups[groups.length - 1]!.push(file);
+    groups[groups.length - 1].push(file);
     bytes += file.size;
   }
   return groups;
@@ -287,7 +287,7 @@ export async function createLibraryFolder(
   const response = await ensureOk(
     await sendWrite("/api/library/folders", jsonInit("POST", { name, parentId })),
   );
-  return response.json();
+  return await response.json();
 }
 
 export function updateLibraryFolder(
@@ -353,7 +353,7 @@ export async function fetchLibraryStreamUrl(item: LibraryItem): Promise<string> 
 export async function fetchLibraryThumbnail(item: LibraryItem): Promise<Blob> {
   const params = new URLSearchParams({ id: item.id, v: itemVersion(item) });
   const response = await ensureOk(await authFetch(`/api/library/items/thumbnail?${params}`));
-  return response.blob();
+  return await response.blob();
 }
 
 export async function fetchLibraryText(

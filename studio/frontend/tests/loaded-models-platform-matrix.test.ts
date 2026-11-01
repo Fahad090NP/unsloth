@@ -258,7 +258,7 @@ test("each dictation engine reports its own row", () => {
     transformers: { loaded_model: "large-v3", device: "cuda" },
     mtmd: { loaded_model: "qwen3-asr-0.6b", device: "llama.cpp" },
     gguf: { loaded_model: "ggml-base.en", device: "whisper.cpp" },
-  } as SttStatusResponse);
+  });
   assert.deepEqual(
     rows.map((row) => row.detail),
     ["Transformers · cuda", "llama.cpp", "whisper.cpp"],
@@ -274,7 +274,7 @@ test("dictation on Apple and on CPU-only hosts", () => {
   for (const device of ["mps", "cpu"]) {
     const rows = describeSttStatus({
       transformers: { loaded_model: "small", device },
-    } as SttStatusResponse);
+    });
     assert.equal(rows[0].detail, `Transformers · ${device}`, device);
   }
 });
@@ -284,7 +284,7 @@ test("an engine holding nothing contributes no row", () => {
     transformers: { loaded_model: null, device: null },
     mtmd: { loaded_model: null, device: null },
     gguf: { loaded_model: null, device: null },
-  } as SttStatusResponse);
+  });
   assert.deepEqual(rows, []);
 });
 
@@ -317,7 +317,7 @@ test("a host holding all four runtimes lists them in a fixed order", () => {
     ),
     describeSttStatus({
       transformers: { loaded_model: "large-v3", device: "cuda" },
-    } as SttStatusResponse),
+    }),
   ]);
   assert.deepEqual(
     rows.map((row) => row.source),
@@ -339,7 +339,7 @@ test("a whisper model in chat and in dictation is two rows, not one", () => {
     ),
     describeSttStatus({
       transformers: { loaded_model: "openai/whisper-large-v3", device: "cuda" },
-    } as SttStatusResponse),
+    }),
   ]);
   assert.equal(rows.length, 2);
   assert.deepEqual(

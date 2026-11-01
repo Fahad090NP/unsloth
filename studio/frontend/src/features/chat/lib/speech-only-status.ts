@@ -3,11 +3,11 @@
 
 // Own module so node tests can import it without the chat runtime store.
 
-export type SpeechOnlyStatusInput = {
+export interface SpeechOnlyStatusInput {
   active_model?: string | null;
   is_audio?: boolean;
   audio_type?: string | null;
-};
+}
 
 /** Speech models are answered by synthesis, so chat must never adopt one. */
 export function isSpeechOnlyStatus(status: SpeechOnlyStatusInput): boolean {

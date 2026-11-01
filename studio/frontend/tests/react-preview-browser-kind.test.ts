@@ -47,12 +47,12 @@ test("a React preview is one of the chat's pages: reopening focuses it, a chat s
   const store = useBrowserStore.getState();
   for (const tab of useBrowserStore.getState().tabs) store.closeTab(tab.id);
   const open = () =>
-    store.openFile({
+    { store.openFile({
       blob: new Blob(["export default () => null"], { type: REACT_PREVIEW_TYPE }),
       name: "app.tsx",
       contentType: REACT_PREVIEW_TYPE,
       key: `${REACT_PREVIEW_KEY_PREFIX}fence:t:m:abc`,
-    });
+    }); };
   open();
   open();
   assert.equal(useBrowserStore.getState().tabs.length, 1);

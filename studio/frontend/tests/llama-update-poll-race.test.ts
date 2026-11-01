@@ -7,7 +7,7 @@ import * as lifecycle from "../src/lib/llama-job-lifecycle.ts";
 import type * as HookModule from "../src/hooks/use-llama-update-check.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Deferred = { resolve: (body: unknown) => void };
+interface Deferred { resolve: (body: unknown) => void }
 
 function harness() {
   const applying: boolean[] = [];

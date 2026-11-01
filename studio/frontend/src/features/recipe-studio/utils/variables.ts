@@ -5,10 +5,10 @@ import type { NodeConfig } from "../types";
 
 export type AvailableVariableSource = "column" | "seed";
 
-export type AvailableVariableEntry = {
+export interface AvailableVariableEntry {
   name: string;
   source: AvailableVariableSource;
-};
+}
 
 function getStructuredRefs(llmName: string, outputFormat: string): string[] {
   try {

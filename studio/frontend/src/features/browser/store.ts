@@ -53,14 +53,14 @@ export type AttachToChat = (file: File) => Promise<boolean>;
 
 export type FileViewMode = "preview" | "source";
 
-export type FileViewState = {
+export interface FileViewState {
   mode: FileViewMode;
   consoleOpen: boolean;
   errorCount: number;
   wrap: boolean;
   /** A PDF page to scroll to; a new object asks again for the same page. */
   pageTarget: { page: number } | null;
-};
+}
 
 export const DEFAULT_FILE_VIEW: FileViewState = {
   mode: "preview",
@@ -70,7 +70,7 @@ export const DEFAULT_FILE_VIEW: FileViewState = {
   pageTarget: null,
 };
 
-export type BrowserTab = {
+export interface BrowserTab {
   id: string;
   history: BrowserEntry[];
   index: number;
@@ -96,9 +96,9 @@ export type BrowserTab = {
   pinnedId: string | null;
   /** The chat the tab belongs to (`BrowserState.chat`); the panel shows only that chat's tabs. */
   chat: string;
-};
+}
 
-type ChatBrowser = { open: boolean; activeTabId: string | null; fullView: boolean };
+interface ChatBrowser { open: boolean; activeTabId: string | null; fullView: boolean }
 
 /** The chat on screen before the chat page names it (chat-page.tsx `shownChatKey`). */
 export const NEW_CHAT = "new";
@@ -108,7 +108,7 @@ export function chatKeyOfThread(threadId: string): string {
   return `single:${threadId}`;
 }
 
-export type OpenFileInput = {
+export interface OpenFileInput {
   blob: Blob;
   name: string;
   contentType?: string;
@@ -116,7 +116,7 @@ export type OpenFileInput = {
   key?: string;
   /** 1-based PDF page to show; reopening the tab jumps to it. */
   page?: number;
-};
+}
 
 // Blobs live outside the store; documents can be 50 MB.
 const files = new Map<string, Blob>();
@@ -125,7 +125,7 @@ export function browserFile(fileId: string): Blob | undefined {
   return files.get(fileId);
 }
 
-type PageDownload = { blob: Blob; name: string; contentType: string };
+interface PageDownload { blob: Blob; name: string; contentType: string }
 const pageDownloads = new Map<string, PageDownload>();
 
 export function setPageDownload(tabId: string, download: PageDownload | null): void {
@@ -179,7 +179,7 @@ export function clearPageCache(): void {
   pageCache.clear();
 }
 
-export type ScrollPosition = { x: number; y: number };
+export interface ScrollPosition { x: number; y: number }
 
 const scrollPositions = new WeakMap<BrowserEntry, ScrollPosition & { url: string }>();
 
@@ -272,7 +272,7 @@ const COMPARE_CHUNK_BYTES = 1024 * 1024;
 
 // In slices, a word at a time: a 50 MB file never holds the UI thread or both copies whole.
 async function sameBytes(a: Blob | undefined, b: Blob): Promise<boolean> {
-  if (!a || a.size !== b.size) return false;
+  if (a?.size !== b.size) return false;
   for (let start = 0; start < b.size; start += COMPARE_CHUNK_BYTES) {
     const end = start + COMPARE_CHUNK_BYTES;
     let x: ArrayBuffer;
@@ -307,7 +307,7 @@ function releaseFiles(tabs: BrowserTab[]): void {
   for (const id of files.keys()) if (!live.has(id)) files.delete(id);
 }
 
-type BrowserState = {
+interface BrowserState {
   open: boolean;
   /** Every chat's tabs; the panel lists `chatTabs`, the shown chat's. */
   tabs: BrowserTab[];
@@ -403,7 +403,7 @@ type BrowserState = {
   setFullView: (fullView: boolean) => void;
   setChatDock: (dock: ChatDock) => void;
   splitWithChatOn: (side: ChatSide) => void;
-};
+}
 
 const patchTab = (tabs: BrowserTab[], tabId: string, update: (tab: BrowserTab) => BrowserTab) =>
   tabs.map((tab) => (tab.id === tabId ? update(tab) : tab));
@@ -595,15 +595,15 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
     sendAnnotations: null,
     attachToChat: null,
     annotateTabId: null,
-    setAnnotating: (annotateTabId) => set({ annotateTabId }),
+    setAnnotating: (annotateTabId) => { set({ annotateTabId }); },
     fileViews: {},
     setFileView: (tabId, patch) =>
-      set((state) => {
+      { set((state) => {
         const current = state.fileViews[tabId] ?? DEFAULT_FILE_VIEW;
         const next = { ...current, ...patch };
         if ((Object.keys(next) as (keyof FileViewState)[]).every((key) => next[key] === current[key])) return state;
         return { fileViews: { ...state.fileViews, [tabId]: next } };
-      }),
+      }); },
     openPanel: () => {
       if (chatTabs(get()).length === 0) {
         get().newTab();
@@ -611,8 +611,8 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       }
       set((state) => ({ open: true, openSequence: state.openSequence + 1 }));
     },
-    closePanel: () => set({ open: false, fullView: false, annotateTabId: null }),
-    togglePanel: () => (get().open ? get().closePanel() : get().openPanel()),
+    closePanel: () => { set({ open: false, fullView: false, annotateTabId: null }); },
+    togglePanel: () => { get().open ? get().closePanel() : get().openPanel(); },
     newTab: () => {
       openTab(createTab({ kind: "newtab" }));
       get().focusAddress();
@@ -638,15 +638,15 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       openTab({ ...createTab(webEntry(url)), pinnedId, title, loading: true });
     },
     setTabPinned: (tabId, pinnedId) =>
-      set((state) => ({ tabs: patchTab(state.tabs, tabId, (tab) => ({ ...tab, pinnedId })) })),
+      { set((state) => ({ tabs: patchTab(state.tabs, tabId, (tab) => ({ ...tab, pinnedId })) })); },
     renamingTabId: null,
-    setRenamingTab: (renamingTabId) => set({ renamingTabId }),
+    setRenamingTab: (renamingTabId) => { set({ renamingTabId }); },
     renameTab: (tabId, title) => {
       const customTitle = title?.trim().slice(0, MAX_TAB_TITLE_CHARS) || null;
       set((state) => ({ tabs: patchTab(state.tabs, tabId, (tab) => ({ ...tab, customTitle })) }));
     },
     setMuted: (tabId, muted) =>
-      set((state) => ({ tabs: patchTab(state.tabs, tabId, (tab) => (tab.muted === muted ? tab : { ...tab, muted })) })),
+      { set((state) => ({ tabs: patchTab(state.tabs, tabId, (tab) => (tab.muted === muted ? tab : { ...tab, muted })) })); },
     closeOtherTabs: (tabId) => {
       for (const tab of chatTabs(get())) if (tab.id !== tabId) get().closeTab(tab.id);
     },
@@ -749,7 +749,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       }));
     },
     leaveDownload: (tabId, entry) =>
-      set((state) => ({
+      { set((state) => ({
         tabs: patchTab(state.tabs, tabId, (tab) => {
           const previous = tab.history[tab.index - 1];
           if (currentEntry(tab) !== entry || !previous || sentFrom.get(entry) !== previous) return tab;
@@ -757,17 +757,17 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
           pageCache.delete(entry);
           return moveTo({ ...tab, history }, tab.index - 1);
         }),
-      })),
+      })); },
     goBack: (tabId) =>
-      set((state) => ({
+      { set((state) => ({
         tabs: patchTab(state.tabs, tabId, (tab) => (tab.index > 0 ? moveTo(tab, tab.index - 1) : tab)),
-      })),
+      })); },
     goForward: (tabId) =>
-      set((state) => ({
+      { set((state) => ({
         tabs: patchTab(state.tabs, tabId, (tab) =>
           tab.index < tab.history.length - 1 ? moveTo(tab, tab.index + 1) : tab,
         ),
-      })),
+      })); },
     reload: (tabId) => {
       const tab = get().tabs.find((candidate) => candidate.id === tabId);
       if (tab) pageCache.delete(currentEntry(tab));
@@ -783,9 +783,9 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         }),
       }));
     },
-    activateTab: (tabId) => set({ activeTabId: tabId, annotateTabId: null }),
+    activateTab: (tabId) => { set({ activeTabId: tabId, annotateTabId: null }); },
     moveTab: (tabId, index) =>
-      set((state) => {
+      { set((state) => {
         // `index` is in the strip, which lists only the shown chat's tabs.
         const strip = chatTabs(state);
         const from = strip.findIndex((tab) => tab.id === tabId);
@@ -797,7 +797,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         const at = tabs.indexOf(target);
         tabs.splice(to > from ? at + 1 : at, 0, moved);
         return { tabs };
-      }),
+      }); },
     closeTab: (tabId) => {
       const { tabs, activeTabId, chat } = get();
       const closing = tabs.find((tab) => tab.id === tabId);
@@ -828,31 +828,31 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       set({ tabs: remaining, activeTabId: next(activeTabId), annotateTabId, renamingTabId, fileViews });
     },
     updateTab: (tabId, patch) =>
-      set((state) => {
+      { set((state) => {
         const tab = state.tabs.find((candidate) => candidate.id === tabId);
         const keys = Object.keys(patch) as (keyof typeof patch)[];
         if (!tab || keys.every((key) => tab[key] === patch[key])) return state;
         return { tabs: patchTab(state.tabs, tabId, (current) => ({ ...current, ...patch })) };
-      }),
-    focusAddress: () => set((state) => ({ focusAddressSequence: state.focusAddressSequence + 1 })),
-    bookmarkPage: () => set((state) => ({ bookmarkSequence: state.bookmarkSequence + 1 })),
+      }); },
+    focusAddress: () => { set((state) => ({ focusAddressSequence: state.focusAddressSequence + 1 })); },
+    bookmarkPage: () => { set((state) => ({ bookmarkSequence: state.bookmarkSequence + 1 })); },
     openInternal: (page) => {
       const openKey = `internal:${page}`;
       if (focusExisting(openKey)) return;
       openTab(createTab({ kind: "internal", page }, openKey));
     },
     setZoom: (tabId, zoom) =>
-      set((state) => ({
+      { set((state) => ({
         tabs: patchTab(state.tabs, tabId, (tab) => ({ ...tab, zoom: Math.min(5, Math.max(0.25, zoom)) })),
-      })),
-    setDevice: (device) => set({ device }),
-    setFullView: (fullView) => set({ fullView, chatDock: "composer" }),
-    setChatDock: (chatDock) => set({ chatDock }),
-    splitWithChatOn: (chatSide) => set({ fullView: false, chatSide }),
+      })); },
+    setDevice: (device) => { set({ device }); },
+    setFullView: (fullView) => { set({ fullView, chatDock: "composer" }); },
+    setChatDock: (chatDock) => { set({ chatDock }); },
+    splitWithChatOn: (chatSide) => { set({ fullView: false, chatSide }); },
   };
 });
 
-useBrowserStore.subscribe((state) => setShownBrowserChat(state.chat));
+useBrowserStore.subscribe((state) => { setShownBrowserChat(state.chat); });
 
 const adoptListeners = new Set<(from: string, to: string) => void>();
 

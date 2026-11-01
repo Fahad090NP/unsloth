@@ -12,17 +12,17 @@ import {
   storeAuthTokens,
 } from "./session";
 
-type RefreshResponse = {
+interface RefreshResponse {
   access_token: string;
   refresh_token: string;
   must_change_password: boolean;
-};
+}
 
-type AuthFetchOptions = {
+interface AuthFetchOptions {
   retryNetworkErrors?: boolean;
   /** Synchronous policy check run immediately before any retry sends bytes. */
   beforeRetry?: () => void;
-};
+}
 
 let isRedirecting = false;
 let refreshInflight: Promise<RefreshOutcome> | null = null;
@@ -168,13 +168,13 @@ async function nativeBackendIsAlive(): Promise<boolean> {
   }
   // Single flight: one 10s probe rather than one per panel. Not cached beyond the call.
   if (nativeHealthInflight !== null && nativeHealthInflight.port === port) {
-    return nativeHealthInflight.probe;
+    return await nativeHealthInflight.probe;
   }
   const probe = (async () => {
     try {
       const { invoke } = await import("@tauri-apps/api/core");
       return (
-        (await invoke<boolean>("check_backend_present", { port })) === true
+        await invoke<boolean>("check_backend_present", { port })
       );
     } catch {
       return false;
@@ -206,13 +206,13 @@ async function nativeBackendIsGone(): Promise<boolean> {
   }
   // Single flight, like the presence probe: a hub losing the backend fails every panel at once.
   if (nativeGoneInflight !== null && nativeGoneInflight.port === port) {
-    return nativeGoneInflight.probe;
+    return await nativeGoneInflight.probe;
   }
   const probe = (async () => {
     try {
       const { invoke } = await import("@tauri-apps/api/core");
       return (
-        (await invoke<boolean>("check_backend_is_gone", { port })) === true
+        await invoke<boolean>("check_backend_is_gone", { port })
       );
     } catch {
       return false;
@@ -235,7 +235,7 @@ async function asTransportFailure(err: unknown): Promise<unknown> {
   if (
     !isTauri &&
     typeof navigator !== "undefined" &&
-    navigator.onLine === false
+    !navigator.onLine
   ) {
     return Object.assign(
       new Error(
@@ -289,7 +289,7 @@ async function retryWithTauriAutoAuth(
   clearAuthTokens();
   const { tauriAutoAuth } = await import("./tauri-auto-auth");
   if (await tauriAutoAuth()) {
-    return retryWithCurrentToken(input, init, retryNetworkErrors, beforeRetry);
+    return await retryWithCurrentToken(input, init, retryNetworkErrors, beforeRetry);
   }
   return null;
 }
@@ -373,7 +373,7 @@ export async function refreshSessionOutcome(): Promise<RefreshOutcome> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return "rejected";
   if (refreshInflight && refreshInflightToken === refreshToken) {
-    return refreshInflight;
+    return await refreshInflight;
   }
 
   const promise = runRefresh(refreshToken);
@@ -476,7 +476,7 @@ export async function authFetch(
   }
 
   if (!getAuthToken()) clearAuthTokens();
-  return retryWithCurrentToken(
+  return await retryWithCurrentToken(
     resolvedInput,
     init,
     options?.retryNetworkErrors ?? true,
@@ -503,7 +503,7 @@ export async function logout(): Promise<void> {
   // An expired access token 401s before revoke runs, so rotate via the refresh token and retry.
   try {
     let response = await postLogout(getAuthToken());
-    if (response && response.status === 401 && getRefreshToken()) {
+    if (response?.status === 401 && getRefreshToken()) {
       const refreshed = await refreshSession();
       if (refreshed) response = await postLogout(getAuthToken());
     }

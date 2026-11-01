@@ -18,19 +18,19 @@ export function openTarget(target: Target, onFailed: (name: string) => void): ((
     // The app refuses to open programs and scripts (browser_download_open); Show in folder still works.
     if (isDangerousDownload(target.name)) return undefined;
     const id = target.nativeId;
-    return () => void openNativeDownload(id).catch(() => onFailed(target.name));
+    return () => void openNativeDownload(id).catch(() => { onFailed(target.name); });
   }
   const kept = keptDownloadFile(target.keptId);
   if (kept) {
     return () =>
-      useBrowserStore.getState().openFile({ ...kept, key: `download:${target.keptId}` });
+      { useBrowserStore.getState().openFile({ ...kept, key: `download:${target.keptId}` }); };
   }
   const url = target.url;
-  return url ? () => useBrowserStore.getState().openUrl(url, { newTab: true }) : undefined;
+  return url ? () => { useBrowserStore.getState().openUrl(url, { newTab: true }); } : undefined;
 }
 
 export function revealTarget(target: Target, onFailed: (name: string) => void): (() => void) | undefined {
   if (!isTauri || !target.nativeId) return undefined;
   const id = target.nativeId;
-  return () => void revealNativeDownload(id).catch(() => onFailed(target.name));
+  return () => void revealNativeDownload(id).catch(() => { onFailed(target.name); });
 }

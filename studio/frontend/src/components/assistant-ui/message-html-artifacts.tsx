@@ -26,7 +26,7 @@ import { type FC, useMemo } from "react";
 const PART_SEPARATOR = "\u0000";
 
 const visibleTextBlob = memoOnArray(
-  (content: ReadonlyArray<{ type: string; text?: unknown }>) =>
+  (content: readonly { type: string; text?: unknown }[]) =>
     content
       .filter((part) => part.type === "text" && "text" in part)
       .map((part) => (part as { text: string }).text)

@@ -57,7 +57,7 @@ test("the backend's reason is what the user is shown", async () => {
     respond(
       404,
       JSON.stringify({ detail: "This chat has no folder yet" }),
-    )) as typeof fetch;
+    ));
   await assert.rejects(revealSandbox("thread-1"), {
     message: "This chat has no folder yet",
   });
@@ -65,7 +65,7 @@ test("the backend's reason is what the user is shown", async () => {
 
 test("a body that is not JSON leaves the status as the only thing to report", async () => {
   globalThis.fetch = (async () =>
-    respond(500, "<html>502</html>")) as typeof fetch;
+    respond(500, "<html>502</html>"));
   await assert.rejects(revealSandbox("thread-1"), {
     message: "Request failed (500)",
   });
@@ -77,7 +77,7 @@ test("an old backend with no reveal route rejects rather than resolving silently
     respond(
       405,
       JSON.stringify({ detail: "Method Not Allowed" }),
-    )) as typeof fetch;
+    ));
   await assert.rejects(revealSandbox("thread-1"), {
     message: "Method Not Allowed",
   });
@@ -92,7 +92,7 @@ test("a successful reveal resolves without reading the body", async () => {
       ok: true,
       status: 200,
       json: refuse,
-    }) as unknown as Response) as typeof fetch;
+    }) as unknown as Response);
   await revealSandbox("thread-1");
 });
 
@@ -154,7 +154,7 @@ test("a sandbox holding files is told apart from one that was never written", as
       ok: true,
       status: 200,
       json: async () => ({ path: "/s/thread-1", files: [{ name: "a.csv" }] }),
-    }) as unknown as Response) as typeof fetch;
+    }) as unknown as Response);
   assert.equal(await sandboxHasFiles("thread-1"), true);
 
   globalThis.fetch = (async () =>
@@ -162,7 +162,7 @@ test("a sandbox holding files is told apart from one that was never written", as
       ok: true,
       status: 200,
       json: async () => ({ path: "/s/thread-1", files: [] }),
-    }) as unknown as Response) as typeof fetch;
+    }) as unknown as Response);
   assert.equal(await sandboxHasFiles("thread-1"), false);
 });
 
@@ -173,7 +173,7 @@ test("a probe that could not be answered is reported, not read as an empty folde
       ok: false,
       status: 500,
       json: async () => ({}),
-    }) as unknown as Response) as typeof fetch;
+    }) as unknown as Response);
   await assert.rejects(sandboxHasFiles("thread-1"), {
     message: "Could not read the chat's folder (500)",
   });

@@ -9,14 +9,14 @@ import { readFastApiError } from "@/lib/format-fastapi-error";
 import type { HubSource } from "@/lib/hf-endpoint";
 import { loadDownloadTransportSettings } from "./download-transport";
 
-export type HubSettings = {
+export interface HubSettings {
   hfEndpoint: string;
   datasetsServerFollowsEndpoint: boolean;
   source: HubSource;
   activeSource: HubSource;
-};
+}
 
-type ApiHubSettings = {
+interface ApiHubSettings {
   // biome-ignore lint/style/useNamingConvention: API schema
   hf_endpoint: string;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -24,7 +24,7 @@ type ApiHubSettings = {
   source: HubSource;
   // biome-ignore lint/style/useNamingConvention: API schema
   active_source: HubSource;
-};
+}
 
 function fromApi(settings: ApiHubSettings): HubSettings {
   return {

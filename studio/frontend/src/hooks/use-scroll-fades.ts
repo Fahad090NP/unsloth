@@ -24,17 +24,17 @@ export function useScrollFades() {
     if (!node) {
       return;
     }
-    const observer = new ResizeObserver(() => update(node));
+    const observer = new ResizeObserver(() => { update(node); });
     observer.observe(node);
     if (node.firstElementChild) {
       observer.observe(node.firstElementChild);
     }
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [node, update]);
 
   return {
     attach: setNode,
-    onScroll: (e: UIEvent<HTMLElement>) => update(e.currentTarget),
+    onScroll: (e: UIEvent<HTMLElement>) => { update(e.currentTarget); },
     className: cn(scrolled && "is-scrolled", moreBelow && "is-bottom-faded"),
   };
 }

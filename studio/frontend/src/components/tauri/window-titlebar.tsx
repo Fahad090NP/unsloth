@@ -102,9 +102,9 @@ function CaptionGlyph({
 }): ReactElement {
   const [scale, setScale] = useState(() => window.devicePixelRatio || 1);
   useEffect(() => {
-    const update = () => setScale(window.devicePixelRatio || 1);
+    const update = () => { setScale(window.devicePixelRatio || 1); };
     window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    return () => { window.removeEventListener("resize", update); };
   }, []);
   const pixels = Math.round(10 * scale);
   const strokePixels = Math.max(1, Math.round(scale));
@@ -547,14 +547,14 @@ export function WindowTitlebar({
         >
           <WindowControlButton
             label={t("desktopShell.minimize")}
-            onClick={() => runWindowAction((appWindow) => appWindow.minimize())}
+            onClick={() => { runWindowAction((appWindow) => appWindow.minimize()); }}
           >
             <CaptionGlyph kind="minimize" />
           </WindowControlButton>
           <WindowControlButton
             label={maximized ? t("desktopShell.restore") : t("desktopShell.maximize")}
             onClick={() =>
-              runWindowAction((appWindow) => appWindow.toggleMaximize())
+              { runWindowAction((appWindow) => appWindow.toggleMaximize()); }
             }
           >
             <CaptionGlyph kind={maximized ? "restore" : "maximize"} />
@@ -562,7 +562,7 @@ export function WindowTitlebar({
           <WindowControlButton
             label={t("desktopShell.close")}
             // No optimistic overlay: a quit confirmation may still be asking; Rust raises the overlay.
-            onClick={() => runWindowAction((appWindow) => appWindow.close())}
+            onClick={() => { runWindowAction((appWindow) => appWindow.close()); }}
             className="hover:bg-[#c42b1c] hover:text-white active:bg-[#c42b1c]/90"
           >
             <CaptionGlyph kind="close" />

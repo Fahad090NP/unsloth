@@ -116,9 +116,9 @@ export function useSeparateGeneration({
   }, [toolPanels, storedToolValues, model]);
   const handleToolValueChange = useCallback(
     (panelId: string, value: unknown) =>
-      useAudioCloneStore
+      { useAudioCloneStore
         .getState()
-        .setToolValue(toolValueKey(model, "separate", panelId), value),
+        .setToolValue(toolValueKey(model, "separate", panelId), value); },
     [model],
   );
   const toolRequest = useMemo(
@@ -139,8 +139,8 @@ export function useSeparateGeneration({
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (source?.kind !== "input" || !source.expiresAt) return;
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
-    return () => window.clearInterval(timer);
+    const timer = window.setInterval(() => { setNow(Date.now()); }, 60_000);
+    return () => { window.clearInterval(timer); };
   }, [source]);
   const sourceExpired =
     sourceStatus.phase === "expired" ||
@@ -321,7 +321,7 @@ export function useSeparateGeneration({
     generationError,
     setGenerationError,
     lastResult,
-    clearLastResult: () => setLastResult(null),
+    clearLastResult: () => { setLastResult(null); },
   };
 }
 

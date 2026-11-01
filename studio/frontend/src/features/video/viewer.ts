@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 
-export type Playback = { time: number; playing: boolean; muted: boolean; volume: number };
+export interface Playback { time: number; playing: boolean; muted: boolean; volume: number }
 
 type PlayerState = Pick<
   HTMLMediaElement,
@@ -40,5 +40,5 @@ export async function fetchWithFreshLink(url: string, mint: () => Promise<string
   const response = await fetch(url);
   if (response.status !== 401 && response.status !== 403) return response;
   void response.body?.cancel();
-  return fetch(await mint());
+  return await fetch(await mint());
 }

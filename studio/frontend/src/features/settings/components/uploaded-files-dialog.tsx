@@ -112,7 +112,7 @@ function ChatImageThumb({
       }
     });
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, []);
 
   useEffect(() => {
@@ -311,7 +311,7 @@ function chatAttachmentRow(att: ChatAttachmentRecord): UploadedFileRow {
           return null;
         }
         const url = URL.createObjectURL(blob);
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        setTimeout(() => { URL.revokeObjectURL(url); }, 60_000);
         return url;
       });
     },
@@ -329,11 +329,11 @@ function chatAttachmentRow(att: ChatAttachmentRecord): UploadedFileRow {
   };
 }
 
-type SourceLoad<T> = {
+interface SourceLoad<T> {
   status: "loading" | "ready" | "error";
   data: T;
   error: string | null;
-};
+}
 
 function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
@@ -415,13 +415,13 @@ export function UploadedFilesView() {
   function retryRagFiles() {
     setRagFiles((current) => ({ ...current, status: "loading", error: null }));
     void listAllDocuments().then(
-      (data) => setRagFiles({ status: "ready", data, error: null }),
+      (data) => { setRagFiles({ status: "ready", data, error: null }); },
       (error: unknown) =>
-        setRagFiles((current) => ({
+        { setRagFiles((current) => ({
           ...current,
           status: "error",
           error: errorMessage(error, "Failed to load RAG documents"),
-        })),
+        })); },
     );
   }
 
@@ -561,7 +561,7 @@ export function UploadedFilesView() {
               <button
                 type="button"
                 onClick={() =>
-                  row.threadId ? goToChat(row) : void handleOpen(row)
+                  { row.threadId ? goToChat(row) : void handleOpen(row); }
                 }
                 title={
                   row.threadId ? `Go to ${row.location}` : `Open ${row.name}`
@@ -597,7 +597,7 @@ export function UploadedFilesView() {
               {row.threadId ? (
                 <button
                   type="button"
-                  onClick={() => goToChat(row)}
+                  onClick={() => { goToChat(row); }}
                   title={`Go to ${row.location}`}
                   className="order-3 w-full truncate pl-10 text-left text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline sm:order-none sm:w-36 sm:pl-0"
                 >
@@ -632,7 +632,7 @@ export function UploadedFilesView() {
                   <button
                     type="button"
                     disabled={loadingMore}
-                    onClick={() => setConfirmingDelete(row)}
+                    onClick={() => { setConfirmingDelete(row); }}
                     aria-label={`Delete ${row.name}`}
                     title="Delete"
                     className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-wait disabled:opacity-50"

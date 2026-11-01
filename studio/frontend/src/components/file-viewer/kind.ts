@@ -4,7 +4,7 @@
 export type DocumentKind = "pdf" | "docx" | "sheet" | "slides";
 
 /** A 1-based PDF page to scroll to; each new object scrolls again. */
-export type PageTarget = { page: number };
+export interface PageTarget { page: number }
 
 const EXTENSION_KINDS: Record<string, DocumentKind> = {
   pdf: "pdf",
@@ -37,7 +37,7 @@ function extensionOf(name: string): string {
 }
 
 function mimeOf(contentType: string): string {
-  return contentType.split(";", 1)[0]!.trim().toLowerCase();
+  return contentType.split(";", 1)[0].trim().toLowerCase();
 }
 
 export function documentKind(name: string, contentType = ""): DocumentKind | null {
@@ -54,7 +54,7 @@ const DELIMITERS: Record<string, "," | "\t"> = {
 export function sheetDelimiter(name: string, contentType = ""): "," | "\t" | null {
   const extension = extensionOf(name);
   const key = lookUp(EXTENSION_KINDS, extension) ? extension : mimeOf(contentType);
-  return Object.hasOwn(DELIMITERS, key) ? DELIMITERS[key]! : null;
+  return Object.hasOwn(DELIMITERS, key) ? DELIMITERS[key] : null;
 }
 
 const MARKDOWN_EXTENSIONS = new Set(["md", "markdown", "mdx"]);

@@ -7,7 +7,7 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Plugin = {
+interface Plugin {
   name: string;
   type: string;
   language: string;
@@ -15,7 +15,7 @@ type Plugin = {
     initialize(config: Record<string, unknown>): void;
     render(id: string, source: string): Promise<{ svg: string }>;
   };
-};
+}
 
 function harness(options: { failFirstLoad?: boolean } = {}) {
   const calls: unknown[][] = [];

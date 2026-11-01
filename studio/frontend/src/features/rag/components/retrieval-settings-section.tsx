@@ -65,7 +65,7 @@ function SliderRow({
         max={max}
         step={step}
         disabled={disabled}
-        onValueChange={([v]) => onChange(v)}
+        onValueChange={([v]) => { onChange(v); }}
         aria-label={label}
       />
     </div>
@@ -100,7 +100,7 @@ export function RetrievalSettingsSection() {
         </span>
         <Select
           value={ragMode}
-          onValueChange={(value) => setRagMode(value as RagMode)}
+          onValueChange={(value) => { setRagMode(value as RagMode); }}
         >
           <SelectTrigger
             icon={ChevronDownStandardIcon}
@@ -132,7 +132,7 @@ export function RetrievalSettingsSection() {
           min={1}
           max={20}
           step={1}
-          onValueChange={([value]) => setRagTopK(value)}
+          onValueChange={([value]) => { setRagTopK(value); }}
           aria-label="Number of passages to retrieve"
         />
       </div>

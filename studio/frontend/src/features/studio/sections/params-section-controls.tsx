@@ -70,7 +70,7 @@ export function ParamsSliderRow({
       <div className="flex items-center gap-3">
         <Slider
           value={[value]}
-          onValueChange={([nextValue]) => onChange(nextValue)}
+          onValueChange={([nextValue]) => { onChange(nextValue); }}
           min={min}
           max={max}
           step={step}
@@ -79,7 +79,7 @@ export function ParamsSliderRow({
         <input
           type="number"
           value={format ? format(value) : value}
-          onChange={(event) => onChange(Number(event.target.value))}
+          onChange={(event) => { onChange(Number(event.target.value)); }}
           min={min}
           max={max}
           step={step}

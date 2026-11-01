@@ -4,10 +4,10 @@
 /** 422 `detail` arrays would stringify as `[object Object]` (#5409). Falls back through: array
  * detail -> string detail -> message -> null. */
 
-export type FastApiValidationError = {
+export interface FastApiValidationError {
   loc?: unknown[];
   msg?: string;
-};
+}
 
 export function formatFastApiDetail(detail: unknown): string | null {
   if (typeof detail === "string" && detail) return detail;
@@ -68,7 +68,7 @@ export function formatApiErrorBody(body: unknown): string | null {
 
 export async function readFastApiError(
   response: Response,
-  fallbackPrefix: string = "Request failed",
+  fallbackPrefix = "Request failed",
 ): Promise<string> {
   try {
     const formatted = formatApiErrorBody(await response.json());

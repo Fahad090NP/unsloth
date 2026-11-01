@@ -92,10 +92,10 @@ class ParsedRun {
   }
 }
 
-export type SegmentedAssistantText = {
+export interface SegmentedAssistantText {
   appendText(delta: string): void;
   runs(rawText: string, boundaries: readonly number[]): ContentPart[][];
-};
+}
 
 function sameBoundaries(
   left: readonly number[],

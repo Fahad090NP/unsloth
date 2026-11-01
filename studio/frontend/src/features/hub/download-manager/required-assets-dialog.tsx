@@ -117,7 +117,7 @@ function DownloadChoice({
             <CheckboxPrimitive.Root
               id={choiceId}
               checked={includeAssets}
-              onCheckedChange={(checked) => setIncludeAssets(checked === true)}
+              onCheckedChange={(checked) => { setIncludeAssets(checked === true); }}
               className="relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 leading-none outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <svg

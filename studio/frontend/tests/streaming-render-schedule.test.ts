@@ -900,7 +900,7 @@ test("a reply dense with `]:` and no definition does not pay per occurrence", ()
     markdownRenderScope(dense + " ".repeat(i));
     runs.push(performance.now() - t0);
   }
-  const median = runs.sort((a, b) => a - b)[2]!;
+  const median = runs.sort((a, b) => a - b)[2];
   assert.ok(median < 100,
     `500k of \`]:\` cost ${median.toFixed(1)}ms; the per-occurrence window scan is back`);
 
@@ -912,7 +912,7 @@ test("a reply dense with `]:` and no definition does not pay per occurrence", ()
     markdownRenderScope(invalid + " ".repeat(i));
     invalidRuns.push(performance.now() - t0);
   }
-  const invalidMedian = invalidRuns.sort((a, b) => a - b)[2]!;
+  const invalidMedian = invalidRuns.sort((a, b) => a - b)[2];
   assert.ok(invalidMedian < 100,
     `500k of \`[]:\` cost ${invalidMedian.toFixed(1)}ms; invalid candidates are being rescanned`);
 });
@@ -931,7 +931,7 @@ test("unclosed backtick runs of many widths do not rescan the paragraph", () => 
     assert.equal(markdownRenderScope(reply + " ".repeat(i)), "document");
     samples.push(performance.now() - t0);
   }
-  const median = samples.sort((a, b) => a - b)[2]!;
+  const median = samples.sort((a, b) => a - b)[2];
   assert.ok(median < 100, `321k of backtick runs cost ${median.toFixed(1)}ms`);
 });
 
@@ -958,7 +958,7 @@ test("a run of `[` before a reference does not walk the widened label budget", (
     markdownRenderScope(run + " ".repeat(i));
     runs.push(performance.now() - t0);
   }
-  const median = runs.sort((a, b) => a - b)[2]!;
+  const median = runs.sort((a, b) => a - b)[2];
   assert.ok(median < 150,
     `500k of \`[\` cost ${median.toFixed(1)}ms; the reference probe is walking every start position`);
 });
@@ -973,7 +973,7 @@ test("a reply whose every `]` is escaped does not rescan the tail per seam", () 
     markdownRenderScope(escaped + " ".repeat(i));
     runs.push(performance.now() - t0);
   }
-  const median = runs.sort((a, b) => a - b)[2]!;
+  const median = runs.sort((a, b) => a - b)[2];
   assert.ok(median < 150,
     `500k of \`\\][\` cost ${median.toFixed(1)}ms; an exhausted lookahead is being re-asked per seam`);
 });
@@ -987,7 +987,7 @@ test("a seam whose reference label is past the cap is rejected once, not per `[`
     markdownRenderScope(packed + " ".repeat(i));
     runs.push(performance.now() - t0);
   }
-  const median = runs.sort((a, b) => a - b)[2]!;
+  const median = runs.sort((a, b) => a - b)[2];
   assert.ok(median < 150,
     `500k of packed \`[\` cost ${median.toFixed(1)}ms; the window is re-tested from every \`[\``);
   const label = "L".repeat(400);

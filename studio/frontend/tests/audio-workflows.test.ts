@@ -85,7 +85,7 @@ test("a clip without a workflow falls back to its audio type", () => {
 
 test("the music audio types match the backend's list", () => {
   const backend = readText("../../backend/core/inference/audio_workflows.py");
-  const block = backend.match(/MUSIC_AUDIO_TYPES[^=]*=\s*frozenset\(\s*[({]([^)}]*)[)}]/);
+  const block = /MUSIC_AUDIO_TYPES[^=]*=\s*frozenset\(\s*[({]([^)}]*)[)}]/.exec(backend);
   assert.ok(block, "MUSIC_AUDIO_TYPES literal not found in audio_workflows.py");
   const names = new Set(
     [...block[1].matchAll(/"([^"]+)"|([A-Z_]+_AUDIO_TYPE)/g)].map(

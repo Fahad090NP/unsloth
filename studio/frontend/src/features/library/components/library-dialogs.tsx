@@ -40,7 +40,7 @@ export function NameDialog({ open, title, onOpenChange, ...form }: NameDialogPro
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <NameForm {...form} busy={busy} setBusy={setBusy} onClose={() => onOpenChange(false)} />
+        <NameForm {...form} busy={busy} setBusy={setBusy} onClose={() => { onOpenChange(false); }} />
       </DialogContent>
     </Dialog>
   );
@@ -67,7 +67,7 @@ function NameForm({
     const frame = requestAnimationFrame(() =>
       input.current?.setSelectionRange(0, dot > 0 ? dot : initialValue.length),
     );
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); };
   }, [initialValue]);
 
   const trimmed = value.trim();
@@ -96,7 +96,7 @@ function NameForm({
         autoFocus
         value={value}
         maxLength={255}
-        onChange={(event) => setValue(event.target.value)}
+        onChange={(event) => { setValue(event.target.value); }}
         aria-label={t("library.list.name")}
       />
       <DialogFooter className="mt-5">
@@ -129,7 +129,7 @@ export function ConfirmDeleteDialog({
   const t = useT();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent onOverlayClick={() => onOpenChange(false)}>
+      <AlertDialogContent onOverlayClick={() => { onOpenChange(false); }}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>

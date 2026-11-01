@@ -3,7 +3,7 @@
 
 export type CanvasConsoleLevel = "error" | "warn" | "info" | "log" | "debug";
 
-export type CanvasConsoleEntry = {
+export interface CanvasConsoleEntry {
   // Only throws/rejections raise the banner; console.error is often a library's non-fatal noise.
   kind: "error" | "console";
   level: CanvasConsoleLevel;
@@ -11,13 +11,13 @@ export type CanvasConsoleEntry = {
   line: number;
   column: number;
   stack: string;
-};
+}
 
-export type CanvasConsoleState = {
+export interface CanvasConsoleState {
   code: string;
   entries: readonly CanvasConsoleEntry[];
   capped: boolean;
-};
+}
 
 export const CANVAS_CONSOLE_ENTRIES_TRACKED = 200;
 export const CANVAS_CONSOLE_ENTRY_MAX_CHARS = 2048;

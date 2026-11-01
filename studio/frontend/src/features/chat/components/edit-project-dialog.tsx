@@ -85,12 +85,12 @@ export function EditProjectDialog({
   const [folderBusy, setFolderBusy] = useState(false);
   const nameImeRef = useRef(newInputImeState());
   const nameImeHandlers = {
-    onFocus: () => inputImeHandlers(nameImeRef.current).onFocus(),
-    onBlur: () => inputImeHandlers(nameImeRef.current).onBlur(),
+    onFocus: () => { inputImeHandlers(nameImeRef.current).onFocus(); },
+    onBlur: () => { inputImeHandlers(nameImeRef.current).onBlur(); },
     onCompositionStart: () =>
-      inputImeHandlers(nameImeRef.current).onCompositionStart(),
+      { inputImeHandlers(nameImeRef.current).onCompositionStart(); },
     onCompositionEnd: (event: { timeStamp: number }) =>
-      inputImeHandlers(nameImeRef.current).onCompositionEnd(event),
+      { inputImeHandlers(nameImeRef.current).onCompositionEnd(event); },
   };
   // Reseed on render, not in an effect: the fields are drafts of whichever project is open, and
   // a stale one would save the last project's text over this one.
@@ -187,7 +187,7 @@ export function EditProjectDialog({
           </span>
           <input
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => { setName(e.target.value); }}
             onKeyDown={(e) => {
               if (
                 imeOwnsInputKeydown(e, nameImeRef.current, {
@@ -225,7 +225,7 @@ export function EditProjectDialog({
           <Textarea
             id="edit-project-instructions"
             value={instructions}
-            onChange={(e) => setInstructions(e.target.value)}
+            onChange={(e) => { setInstructions(e.target.value); }}
             disabled={busy || folderBusy}
             rows={4}
             placeholder="How should the model answer in this project?"

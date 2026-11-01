@@ -85,7 +85,7 @@ export function isLegacyClippedTitle(
   userText: string,
 ): boolean {
   if (!couldBeLegacyClippedTitle(title)) return false;
-  const kept = (title as string).slice(0, LEGACY_FALLBACK_TITLE_MAX);
+  const kept = (title!).slice(0, LEGACY_FALLBACK_TITLE_MAX);
   const cleaned = firstLineOf(userText);
   return (
     cleaned.length > LEGACY_FALLBACK_TITLE_MAX &&

@@ -227,7 +227,7 @@ export function KeylessApiAccessSection({
             checked={scope !== "off"}
             disabled={busy}
             onCheckedChange={(on) =>
-              request(on ? "inference" : "off", "inference")
+              { request(on ? "inference" : "off", "inference"); }
             }
             aria-label="Chat and inference"
           />
@@ -240,7 +240,7 @@ export function KeylessApiAccessSection({
           <Switch
             checked={scope === "full"}
             disabled={busy}
-            onCheckedChange={(on) => request(on ? "full" : "inference", "full")}
+            onCheckedChange={(on) => { request(on ? "full" : "inference", "full"); }}
             aria-label="Everything else"
           />
         </SettingsRow>
@@ -274,7 +274,7 @@ export function KeylessApiAccessSection({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPending(null)}>
+            <Button variant="outline" onClick={() => { setPending(null); }}>
               Cancel
             </Button>
             <Button

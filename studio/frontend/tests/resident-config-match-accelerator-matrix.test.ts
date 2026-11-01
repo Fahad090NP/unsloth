@@ -84,7 +84,7 @@ const ACCELERATORS: Record<string, Record<string, unknown>> = {
   },
 };
 
-type FieldCase = {
+interface FieldCase {
   key: string;
   statusKey: string;
   same: unknown;
@@ -92,7 +92,7 @@ type FieldCase = {
   /** The backend compares offload knobs only under Manual, MoE count only with a layer pin. */
   live?: { config: Record<string, unknown>; status: Record<string, unknown> };
   wrap?: (value: unknown) => unknown;
-};
+}
 
 const offloadRequest = (part: "ple" | "experts") => (requested: unknown) => ({
   [part]: { applied: null, requested, reason: null },

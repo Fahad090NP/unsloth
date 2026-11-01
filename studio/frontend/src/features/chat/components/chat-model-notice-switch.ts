@@ -21,10 +21,10 @@ import {
 import { resolveOnlyRememberedGgufVariant } from "../../model-picker/model-config/per-model-config";
 import { isExternalModelId } from "../external-providers";
 
-export type ChatModelSwitchTarget = {
+export interface ChatModelSwitchTarget {
   modelId: string;
   ggufVariant?: string | null;
-};
+}
 
 // External and Ollama ids are opaque and case-sensitive: folding them would merge distinct models.
 function isExactOnlyIdentity(id: string): boolean {
@@ -68,11 +68,11 @@ export function chatModelIsResident(
   );
 }
 
-export type LoadedChatModelSlot = {
+export interface LoadedChatModelSlot {
   id: string;
   quant?: string | null;
   checkpoint?: string;
-};
+}
 
 /** The loaded slot already serving a chat's model, or null. Another quant of the same repo is a different load. */
 export function chatModelLoadedTarget(
@@ -104,7 +104,7 @@ export function chatModelLoadedTarget(
   return null;
 }
 
-export type ChatModelAutoSwitch = { threadId?: string; settled: boolean };
+export interface ChatModelAutoSwitch { threadId?: string; settled: boolean }
 
 /** Settles once the open chat is on its model, so a later pick inside it is never undone. */
 export function stepChatModelAutoSwitch(
@@ -156,11 +156,11 @@ export function chatModelSelectableId(
   return null;
 }
 
-type ChatModelThreadSnapshot = {
+interface ChatModelThreadSnapshot {
   id: string;
   modelId?: string | null;
   modelGgufVariant?: string | null;
-};
+}
 
 export function resolveChatModelSwitchTarget(
   target: ChatModelSwitchTarget,

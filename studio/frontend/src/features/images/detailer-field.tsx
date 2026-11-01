@@ -49,13 +49,13 @@ export function useDetailerSegmenter(modelCapable: boolean, modelKey: string): S
       }
     };
     window.addEventListener(SEGMENTER_STATUS_EVENT, onStatus);
-    return () => window.removeEventListener(SEGMENTER_STATUS_EVENT, onStatus);
+    return () => { window.removeEventListener(SEGMENTER_STATUS_EVENT, onStatus); };
   }, [modelCapable, modelKey, read]);
   const downloading = modelCapable && status?.download.downloading === true;
   useEffect(() => {
     if (!downloading) return;
     const id = window.setInterval(read, 2000);
-    return () => window.clearInterval(id);
+    return () => { window.clearInterval(id); };
   }, [downloading, read]);
   return status;
 }
@@ -121,7 +121,7 @@ export function DetailerField({
 }) {
   if (!available) return null;
   const set = <K extends keyof DetailerOptions>(key: K, value: DetailerOptions[K]) =>
-    onOptionsChange({ ...options, [key]: value });
+    { onOptionsChange({ ...options, [key]: value }); };
   return (
     <div className="flex flex-col gap-2 pt-2" data-testid="images-detailer">
       <div className="flex items-center justify-between">
@@ -139,7 +139,7 @@ export function DetailerField({
               className="h-8 text-xs"
               placeholder={DETAILER_DEFAULTS.targets}
               value={options.targets}
-              onChange={(e) => set("targets", e.target.value)}
+              onChange={(e) => { set("targets", e.target.value); }}
             />
           </Row>
           <Row label="Detailer prompt" hint={DETAILER_PROMPT_HINT}>
@@ -148,7 +148,7 @@ export function DetailerField({
               className="min-h-14 text-xs"
               placeholder="Same as the image's prompt"
               value={options.prompt}
-              onChange={(e) => set("prompt", e.target.value)}
+              onChange={(e) => { set("prompt", e.target.value); }}
             />
           </Row>
           <Row label="Detailer negative prompt" hint="Negative prompt for the redraw. Empty uses the image's negative prompt; [SEP] works as in the prompt.">
@@ -157,7 +157,7 @@ export function DetailerField({
               className="min-h-10 text-xs"
               placeholder="Same as the image's negative prompt"
               value={options.negativePrompt}
-              onChange={(e) => set("negativePrompt", e.target.value)}
+              onChange={(e) => { set("negativePrompt", e.target.value); }}
             />
           </Row>
           <ParamSlider
@@ -168,7 +168,7 @@ export function DetailerField({
             min={0.05}
             max={1}
             step={0.05}
-            onChange={(v) => set("denoise", v)}
+            onChange={(v) => { set("denoise", v); }}
           />
           <ParamSlider
             inline={true}
@@ -178,7 +178,7 @@ export function DetailerField({
             min={1}
             max={6}
             step={0.1}
-            onChange={(v) => set("cropFactor", v)}
+            onChange={(v) => { set("cropFactor", v); }}
           />
           <ParamSlider
             inline={true}
@@ -188,7 +188,7 @@ export function DetailerField({
             min={256}
             max={1536}
             step={8}
-            onChange={(v) => set("guideSize", v)}
+            onChange={(v) => { set("guideSize", v); }}
           />
           <ParamSlider
             inline={true}
@@ -198,7 +198,7 @@ export function DetailerField({
             min={256}
             max={2048}
             step={8}
-            onChange={(v) => set("maxSize", v)}
+            onChange={(v) => { set("maxSize", v); }}
           />
           <ParamSlider
             inline={true}
@@ -208,7 +208,7 @@ export function DetailerField({
             min={0}
             max={32}
             step={1}
-            onChange={(v) => set("feather", v)}
+            onChange={(v) => { set("feather", v); }}
           />
           <ParamSlider
             inline={true}
@@ -218,7 +218,7 @@ export function DetailerField({
             min={-32}
             max={64}
             step={1}
-            onChange={(v) => set("dilation", v)}
+            onChange={(v) => { set("dilation", v); }}
           />
           <ParamSlider
             inline={true}
@@ -228,7 +228,7 @@ export function DetailerField({
             min={1}
             max={128}
             step={1}
-            onChange={(v) => set("dropSize", v)}
+            onChange={(v) => { set("dropSize", v); }}
           />
           <ParamSlider
             inline={true}
@@ -238,13 +238,13 @@ export function DetailerField({
             min={0.05}
             max={0.95}
             step={0.05}
-            onChange={(v) => set("confidence", v)}
+            onChange={(v) => { set("confidence", v); }}
           />
           <Row label="Detailer CFG" hint="Guidance for each redraw. Empty uses the image's guidance.">
             <OptionalNumberInput
               ariaLabel="Detailer CFG"
               value={options.guidance}
-              onChange={(v) => set("guidance", v)}
+              onChange={(v) => { set("guidance", v); }}
             />
           </Row>
           <Row label="Detailer steps" hint="Steps for each redraw. Empty uses the image's steps.">

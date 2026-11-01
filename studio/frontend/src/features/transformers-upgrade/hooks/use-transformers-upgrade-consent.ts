@@ -21,7 +21,7 @@ export async function confirmTransformersUpgradeIfNeeded({
   forceCancelActive,
 }: ConfirmArgs): Promise<boolean> {
   if (!upgrade) return true;
-  return useTransformersUpgradeDialogStore
+  return await useTransformersUpgradeDialogStore
     .getState()
     .requestConsent(modelName, upgrade, {
       trustRemoteCodeFallback: Boolean(trustRemoteCodeFallback),

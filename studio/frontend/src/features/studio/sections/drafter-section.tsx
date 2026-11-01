@@ -59,7 +59,7 @@ export function DrafterSection(): ReactElement | null {
   }
 
   const capability =
-    store.capability && store.capability.model_name === store.selectedModel
+    store.capability?.model_name === store.selectedModel
       ? store.capability
       : null;
   const supported = capability?.supported === true;
@@ -94,7 +94,7 @@ export function DrafterSection(): ReactElement | null {
                 aria-label={t("studio.params.drafterTrain")}
                 checked={store.enabled && supported}
                 disabled={!supported}
-                onCheckedChange={(value) => store.setEnabled(!!value)}
+                onCheckedChange={(value) => { store.setEnabled(Boolean(value)); }}
               />
             </ParamsRow>
             <span
@@ -110,9 +110,9 @@ export function DrafterSection(): ReactElement | null {
                 <Select
                   value={store.dataSource}
                   onValueChange={(value) =>
-                    store.setDataSource(
+                    { store.setDataSource(
                       value === "regenerate" ? "regenerate" : "dataset",
-                    )
+                    ); }
                   }
                 >
                   <SelectTrigger className="w-56">
@@ -136,7 +136,7 @@ export function DrafterSection(): ReactElement | null {
                   max="100000"
                   value={store.maxExamples}
                   onChange={(event) =>
-                    store.setMaxExamples(Number(event.target.value))
+                    { store.setMaxExamples(Number(event.target.value)); }
                   }
                   className="w-28 font-mono"
                 />
@@ -149,7 +149,7 @@ export function DrafterSection(): ReactElement | null {
                   max="20"
                   value={store.epochs}
                   onChange={(event) =>
-                    store.setEpochs(Number(event.target.value))
+                    { store.setEpochs(Number(event.target.value)); }
                   }
                   className="w-28 font-mono"
                 />
@@ -181,7 +181,7 @@ export function DrafterSection(): ReactElement | null {
                   max="8"
                   value={store.draftSteps}
                   onChange={(event) =>
-                    store.setDraftSteps(Number(event.target.value))
+                    { store.setDraftSteps(Number(event.target.value)); }
                   }
                   className="w-28 font-mono"
                 />

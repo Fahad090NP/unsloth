@@ -102,7 +102,7 @@ export function catalogRetryUrl(
   previousUrl: string | null = null,
 ): string | null {
   const message = error instanceof Error ? error.message : String(error ?? "");
-  const found = message.match(CHUNK_URL_PATTERN)?.[0] ?? previousUrl;
+  const found = (CHUNK_URL_PATTERN.exec(message))?.[0] ?? previousUrl;
   if (found === null) return null;
   let url: URL;
   try {

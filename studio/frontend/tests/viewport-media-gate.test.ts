@@ -271,7 +271,7 @@ test("resize refreshes gates before app listeners even while existing media list
   listeners.push(() => observed.push(attributes.get(SM)!));
   for (const next of [true, false, true]) {
     matches = next;
-    listeners.forEach((listener) => listener());
+    listeners.forEach((listener) => { listener(); });
   }
   assert.deepEqual(observed, [true, false, true]);
   assert.equal(lists[0].matches, false);

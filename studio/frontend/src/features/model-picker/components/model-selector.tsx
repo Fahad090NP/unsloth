@@ -233,7 +233,7 @@ function ModelSelectorTrigger({
               aria-hidden={true}
               title="Eject model"
               data-eject-hit={true}
-              onPointerDown={(event) => event.stopPropagation()}
+              onPointerDown={(event) => { event.stopPropagation(); }}
               onClick={(event) => {
                 event.stopPropagation();
                 onEject();
@@ -600,7 +600,7 @@ function ModelSelectorContent({
     setConfigStandalone(configRequest.standalone === true);
   }
   useEffect(() => {
-    if (!configRequest || adoptedConfigRequestId !== configRequest.requestId) {
+    if (adoptedConfigRequestId !== configRequest?.requestId) {
       return;
     }
     onConfigRequestAdopted?.(configRequest.requestId);
@@ -677,7 +677,7 @@ function ModelSelectorContent({
               }
               focusField={configFocus ?? undefined}
               onRun={(config, isDiffusion) =>
-                onSelect(
+                { onSelect(
                   visibleConfigTarget.configId ?? visibleConfigTarget.id,
                   {
                     ...visibleConfigTarget.meta,
@@ -685,7 +685,7 @@ function ModelSelectorContent({
                     isDiffusion,
                     forceReload: true,
                   },
-                )
+                ); }
               }
               loadedConfig={visibleLoadedConfig}
               loadedContextLength={
@@ -869,8 +869,7 @@ export function ModelSelector({
   const triggerGgufVariant =
     loadedGgufVariantOverride !== undefined
       ? selected &&
-        loadedModelIdOverride &&
-        selected.toLowerCase() === loadedModelIdOverride.toLowerCase()
+        selected.toLowerCase() === loadedModelIdOverride?.toLowerCase()
         ? loadedGgufVariantOverride
         : null
       : activeGgufVariant;
@@ -976,7 +975,7 @@ export function ModelSelector({
         className={className}
         triggerLabelClassName={triggerLabelClassName}
         dataTour={triggerDataTour}
-        onEject={onEject ? () => handleEject() : undefined}
+        onEject={onEject ? () => { handleEject(); } : undefined}
         loadedCount={loadedCount}
         loadedNames={loadedNames}
         placeholder={placeholder}

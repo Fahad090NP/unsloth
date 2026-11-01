@@ -4,7 +4,7 @@
 import { authFetch } from "@/features/auth";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
-export type OpenAIAutoSwitchSettings = {
+export interface OpenAIAutoSwitchSettings {
   enabled: boolean;
   autoUnloadIdleSeconds: number;
   defaultEnabled: boolean;
@@ -19,9 +19,9 @@ export type OpenAIAutoSwitchSettings = {
   // Lets the UI say a veto (residency) is holding a saved TTL off.
   mediaIdleUnloadActive: boolean;
   mediaAutoSwitchModel: boolean;
-};
+}
 
-type ApiOpenAIAutoSwitchSettings = {
+interface ApiOpenAIAutoSwitchSettings {
   enabled: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   auto_unload_idle_seconds: number;
@@ -41,7 +41,7 @@ type ApiOpenAIAutoSwitchSettings = {
   media_idle_unload_active?: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   media_auto_switch_model?: boolean;
-};
+}
 
 let cachedSettings: OpenAIAutoSwitchSettings | null = null;
 let inFlightSettings: Promise<OpenAIAutoSwitchSettings> | null = null;
@@ -136,11 +136,11 @@ export async function loadOpenAIAutoSwitchSettings() {
     }
     // The response predates the write and callers apply it directly, so refetch instead.
   }
-  return settings as OpenAIAutoSwitchSettings;
+  return settings!;
 }
 
 /** A partial write: omitted fields, `enabled` included, keep their stored value. */
-export type OpenAIAutoSwitchUpdate = {
+export interface OpenAIAutoSwitchUpdate {
   enabled?: boolean;
   autoUnloadIdleSeconds?: number;
   autoUnloadKeepKv?: boolean;
@@ -148,7 +148,7 @@ export type OpenAIAutoSwitchUpdate = {
   autoUnloadApiOnly?: boolean;
   mediaAutoUnloadIdleSeconds?: number;
   mediaAutoSwitchModel?: boolean;
-};
+}
 
 const UPDATE_KEYS = {
   autoUnloadIdleSeconds: "auto_unload_idle_seconds",
@@ -188,7 +188,7 @@ export async function updateOpenAIAutoSwitchSettings(
   const settings = fromApi(await res.json());
   if (generation !== cacheGeneration) {
     // A Model Memory write landed mid-PUT; caching this reply would pin a stale idleUnloadActive.
-    return loadOpenAIAutoSwitchSettings();
+    return await loadOpenAIAutoSwitchSettings();
   }
   return cacheSettings(settings, generation);
 }

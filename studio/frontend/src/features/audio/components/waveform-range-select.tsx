@@ -98,7 +98,7 @@ export function WaveformRangeSelect({
     return pxToSeconds(clientX - box.left, box.width, timeline);
   };
 
-  const commit = (next: WaveRange[]) => onChange(normalizeRanges(next, limits));
+  const commit = (next: WaveRange[]) => { onChange(normalizeRanges(next, limits)); };
 
   const focusChip = (index: number) => {
     const chips =
@@ -110,7 +110,7 @@ export function WaveformRangeSelect({
   const remove = (index: number) => {
     commit(removeRange(ranges, index));
     setFocused(null);
-    requestAnimationFrame(() => focusChip(index));
+    requestAnimationFrame(() => { focusChip(index); });
   };
 
   const onRangeKey = (
@@ -145,7 +145,7 @@ export function WaveformRangeSelect({
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const current = drag.current;
-    if (!current || current.pointerId !== event.pointerId) return;
+    if (current?.pointerId !== event.pointerId) return;
     const at = secondsAt(event.clientX);
     if (current.kind === "create") {
       if (!current.active) {
@@ -172,7 +172,7 @@ export function WaveformRangeSelect({
 
   const endDrag = (event: PointerEvent<HTMLDivElement>, cancelled: boolean) => {
     const current = drag.current;
-    if (!current || current.pointerId !== event.pointerId) return;
+    if (current?.pointerId !== event.pointerId) return;
     drag.current = null;
     const moved = current.kind === "edge" || current.active;
     if (moved) {
@@ -223,7 +223,7 @@ export function WaveformRangeSelect({
                 ready && "pointer-events-auto cursor-grab",
               )}
               style={{ left: `${left}%`, width: `${width}%` }}
-              onPointerDown={(event) => startEdgeDrag(event, index, "both")}
+              onPointerDown={(event) => { startEdgeDrag(event, index, "both"); }}
             >
               {(["start", "end"] as const).map((edge) => {
                 const value = edge === "start" ? range.start_s : range.end_s;
@@ -236,7 +236,7 @@ export function WaveformRangeSelect({
                     aria-valuemin={0}
                     aria-valuemax={Math.round(timeline * 10) / 10}
                     aria-valuenow={Math.round(value * 10) / 10}
-                    aria-valuetext={`${formatRangeTime(value)}`}
+                    aria-valuetext={formatRangeTime(value)}
                     aria-disabled={!ready}
                     className={cn(
                       "absolute inset-y-0 flex w-[calc(12px*var(--ui-space-scale,1))] cursor-ew-resize items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -244,10 +244,10 @@ export function WaveformRangeSelect({
                         ? "left-0 -translate-x-1/2 rounded-l-md"
                         : "right-0 translate-x-1/2 rounded-r-md",
                     )}
-                    onPointerDown={(event) => startEdgeDrag(event, index, edge)}
-                    onKeyDown={(event) => onRangeKey(event, index, edge)}
-                    onFocus={() => setFocused(index)}
-                    onBlur={() => setFocused(null)}
+                    onPointerDown={(event) => { startEdgeDrag(event, index, edge); }}
+                    onKeyDown={(event) => { onRangeKey(event, index, edge); }}
+                    onFocus={() => { setFocused(index); }}
+                    onBlur={() => { setFocused(null); }}
                   >
                     <span className="h-1/2 w-[3px] rounded-full bg-foreground" />
                   </div>
@@ -266,8 +266,8 @@ export function WaveformRangeSelect({
         className={cn(ready && "touch-none select-none")}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={(event) => endDrag(event, false)}
-        onPointerCancel={(event) => endDrag(event, true)}
+        onPointerUp={(event) => { endDrag(event, false); }}
+        onPointerCancel={(event) => { endDrag(event, true); }}
         onClickCapture={(event) => {
           if (!suppressClick.current) return;
           suppressClick.current = false;
@@ -309,9 +309,9 @@ export function WaveformRangeSelect({
                     "rounded-l-full py-0.5 pl-2.5 pr-1 font-mono text-ui-11p5 tabular-nums text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     focused === index && "underline underline-offset-2",
                   )}
-                  onKeyDown={(event) => onRangeKey(event, index, "both")}
-                  onFocus={() => setFocused(index)}
-                  onBlur={() => setFocused(null)}
+                  onKeyDown={(event) => { onRangeKey(event, index, "both"); }}
+                  onFocus={() => { setFocused(index); }}
+                  onBlur={() => { setFocused(null); }}
                 >
                   {formatRange(range)}
                 </button>
@@ -320,7 +320,7 @@ export function WaveformRangeSelect({
                   disabled={disabled}
                   aria-label={`Remove range ${index + 1}`}
                   className="flex items-center rounded-r-full py-1 pl-0.5 pr-2 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                  onClick={() => remove(index)}
+                  onClick={() => { remove(index); }}
                 >
                   <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
                 </button>
@@ -343,7 +343,7 @@ export function WaveformRangeSelect({
               const at = updated.findIndex(
                 (range) => range.start_s === next.start_s,
               );
-              requestAnimationFrame(() => focusChip(at));
+              requestAnimationFrame(() => { focusChip(at); });
             }}
           >
             <HugeiconsIcon icon={PlusSignIcon} className="size-3" />

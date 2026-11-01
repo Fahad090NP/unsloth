@@ -33,9 +33,7 @@ test("the running composer shows one action: Queue with a draft, else Stop", asy
   );
   assert.doesNotMatch(controls, /\{!queueDisabled \?/);
 
-  const stopButton = controls.match(
-    /<Button[\s\S]*?aria-label="Stop generating"[\s\S]*?>/,
-  );
+  const stopButton = /<Button[\s\S]*?aria-label="Stop generating"[\s\S]*?>/.exec(controls);
   assert.ok(stopButton, "the running composer must render a stop button");
   assert.match(
     stopButton[0],

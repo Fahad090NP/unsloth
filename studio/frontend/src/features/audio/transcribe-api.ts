@@ -59,7 +59,7 @@ export async function transcribeSourceWithProgress(
   if (!response.ok)
     throw new AudioApiError(await readFastApiError(response), response.status);
   if (!response.body) throw new Error("The transcription response was empty.");
-  return readTranscriptStream(response.body, onProgress);
+  return await readTranscriptStream(response.body, onProgress);
 }
 
 export function fetchSttCapabilities(

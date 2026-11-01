@@ -17,7 +17,7 @@ export function bootstrapPersistedCredentials(): Promise<void> {
     syncProviders: (providers) =>
       syncExternalProvidersFromBackend(providers, isCurrent),
     setProviders: (providers) =>
-      useExternalProvidersStore.getState().setProviders(providers),
+      { useExternalProvidersStore.getState().setProviders(providers); },
     isCurrent,
   });
 }

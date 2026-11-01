@@ -24,11 +24,11 @@ const realAdd = document.addEventListener.bind(document);
 const realRemove = document.removeEventListener.bind(document);
 document.addEventListener = ((type: string, fn: never, opts: never) => {
   listenerCounts[type] = (listenerCounts[type] ?? 0) + 1;
-  return realAdd(type, fn, opts);
+  realAdd(type, fn, opts);
 }) as typeof document.addEventListener;
 document.removeEventListener = ((type: string, fn: never, opts: never) => {
   listenerCounts[type] = (listenerCounts[type] ?? 0) - 1;
-  return realRemove(type, fn, opts);
+  realRemove(type, fn, opts);
 }) as typeof document.removeEventListener;
 
 // The guard swallows in the capture phase, so a swallowed click never reaches this one.
@@ -152,7 +152,7 @@ function Harness(): ReactElement {
             supported = true;
             return true;
           },
-        } as FocusOptions);
+        });
         probe.remove();
         return supported;
       },

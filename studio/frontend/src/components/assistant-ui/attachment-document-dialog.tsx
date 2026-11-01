@@ -157,7 +157,7 @@ export const AttachmentViewer: FC<{
   );
 };
 
-type Loaded = { blob?: Blob; text?: string; plain?: string; truncated?: boolean; error?: boolean };
+interface Loaded { blob?: Blob; text?: string; plain?: string; truncated?: boolean; error?: boolean }
 
 const DocumentBody: FC<{
   name: string;
@@ -283,7 +283,7 @@ const DocumentDialog: FC<
         <ScaleMenu
           value={scale}
           scales={ATTACHMENT_PAGE_SCALES}
-          onChange={(value) => setScale(Number(value))}
+          onChange={(value) => { setScale(Number(value)); }}
         />
       }
     >

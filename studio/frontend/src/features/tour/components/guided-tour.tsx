@@ -19,7 +19,7 @@ import { computeCardPos, padded, pickPlacement } from "../lib/layout";
 import { SpotlightOverlay } from "./spotlight-overlay";
 import type { Placement, Rect, TourStep } from "../types";
 
-type GuidedTourProps = { open: boolean; onOpenChange: (open: boolean) => void; steps: TourStep[]; onSkip: () => void; onComplete: () => void; celebrate?: boolean };
+interface GuidedTourProps { open: boolean; onOpenChange: (open: boolean) => void; steps: TourStep[]; onSkip: () => void; onComplete: () => void; celebrate?: boolean }
 
 export function GuidedTour({
   open,
@@ -86,7 +86,7 @@ export function GuidedTour({
     }
     onResize();
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    return () => { window.removeEventListener("resize", onResize); };
   }, [open]);
 
   useEffect(() => {
@@ -153,10 +153,10 @@ export function GuidedTour({
         });
       }
 
-      raf = window.requestAnimationFrame(() => read(el!));
+      raf = window.requestAnimationFrame(() => { read(el!); });
       t = window.setTimeout(schedule, 240);
 
-      ro = new ResizeObserver(() => schedule());
+      ro = new ResizeObserver(() => { schedule(); });
       ro.observe(el);
       window.addEventListener("scroll", schedule, { capture: true, passive: true });
       window.addEventListener("resize", schedule, { passive: true });
@@ -270,8 +270,8 @@ export function GuidedTour({
               </DialogPrimitive.Overlay>
 
               <DialogPrimitive.Content
-                onPointerDownOutside={(e) => e.preventDefault()}
-                onInteractOutside={(e) => e.preventDefault()}
+                onPointerDownOutside={(e) => { e.preventDefault(); }}
+                onInteractOutside={(e) => { e.preventDefault(); }}
                 className={cn(
                   "fixed z-[52] outline-none",
                   "w-[min(420px,calc(100vw-1.5rem))]",
@@ -342,7 +342,7 @@ export function GuidedTour({
                         variant="ghost"
                         size="icon-sm"
                         className="text-foreground/60 hover:text-foreground hover:bg-[rgb(0_0_0_/_calc(0.05*var(--contrast-wash-gain,1)))] dark:text-zinc-300/70 dark:hover:text-zinc-100 dark:hover:bg-[rgb(255_255_255_/_calc(0.1*var(--contrast-wash-gain,1)))]"
-                        onClick={() => requestClose("skip")}
+                        onClick={() => { requestClose("skip"); }}
                         aria-label={t("tour.skipTour")}
                       >
                         <HugeiconsIcon icon={Cancel01Icon} className="size-4" />
@@ -353,7 +353,7 @@ export function GuidedTour({
                       <Button
                         variant="ghost"
                         className="text-foreground/60 hover:text-foreground hover:bg-[rgb(0_0_0_/_calc(0.05*var(--contrast-wash-gain,1)))] dark:text-zinc-300/70 dark:hover:text-zinc-100 dark:hover:bg-[rgb(255_255_255_/_calc(0.1*var(--contrast-wash-gain,1)))]"
-                        onClick={() => requestClose("skip")}
+                        onClick={() => { requestClose("skip"); }}
                       >
                         {t("tour.skip")}
                       </Button>
@@ -363,7 +363,7 @@ export function GuidedTour({
                           variant="outline"
                           className="text-foreground hover:text-foreground dark:text-zinc-100"
                           disabled={idx === 0}
-                          onClick={() => setIdx((i) => Math.max(0, i - 1))}
+                          onClick={() => { setIdx((i) => Math.max(0, i - 1)); }}
                         >
                           <HugeiconsIcon icon={ChevronLeftStandardIcon} className="size-4" />
                           {t("tour.back")}
@@ -372,7 +372,7 @@ export function GuidedTour({
                           <Button
                             variant="dark"
                             className="bg-control-accent text-control-accent-foreground hover:bg-control-accent/90"
-                            onClick={() => requestClose("complete")}
+                            onClick={() => { requestClose("complete"); }}
                           >
                             <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" />
                             {t("common.done")}
@@ -381,7 +381,7 @@ export function GuidedTour({
                           <Button
                             variant="dark"
                             className="bg-control-accent text-control-accent-foreground hover:bg-control-accent/90"
-                            onClick={() => setIdx((i) => Math.min(total - 1, i + 1))}
+                            onClick={() => { setIdx((i) => Math.min(total - 1, i + 1)); }}
                           >
                             {t("tour.next")}
                             <HugeiconsIcon icon={ChevronRightStandardIcon} className="size-4" />

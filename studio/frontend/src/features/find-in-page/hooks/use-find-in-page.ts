@@ -368,8 +368,8 @@ export function useFindInPage(
     [apply, reindex, search],
   );
 
-  const next = useCallback(() => step(1), [step]);
-  const previous = useCallback(() => step(-1), [step]);
+  const next = useCallback(() => { step(1); }, [step]);
+  const previous = useCallback(() => { step(-1); }, [step]);
 
   return { ...results, next, previous };
 }

@@ -8,22 +8,22 @@ import * as abortSignals from "../src/features/hub/lib/abort-signals.ts";
 import { skillLoadCardEvent } from "../src/features/chat/api/skill-load-event.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Row = { id: string; title: string };
-type Module = {
+interface Row { id: string; title: string }
+interface Module {
   getChatThread: (
     threadId: string,
     options?: { bounded?: boolean; timeoutMs?: number; signal?: AbortSignal; share?: boolean },
   ) => Promise<Row | null>;
   updateChatThread: (threadId: string, patch: object, options?: { expectedTitle?: string; preserveTitleModifiedAt?: boolean }) => Promise<Row>;
   saveChatMessage: (message: { id: string; threadId: string }) => Promise<unknown>;
-};
+}
 
-type Pending = {
+interface Pending {
   url: string;
   init?: RequestInit;
   resolve: (status: number, body: unknown) => void;
   reject: (error: unknown) => void;
-};
+}
 
 function harness() {
   const pending: Pending[] = [];
@@ -44,17 +44,17 @@ function harness() {
               url,
               init,
               resolve: (status, body) =>
-                resolve({
+                { resolve({
                   status,
                   ok: status >= 200 && status < 300,
                   headers: { get: () => null },
                   async json() {
                     return body;
                   },
-                }),
+                }); },
               reject,
             };
-            init?.signal?.addEventListener("abort", () => reject(init.signal?.reason), { once: true });
+            init?.signal?.addEventListener("abort", () => { reject(init.signal?.reason); }, { once: true });
             pending.push(entry);
           }),
       },

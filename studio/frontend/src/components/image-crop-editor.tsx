@@ -263,8 +263,7 @@ export function ReferenceImageEditor({
       !selection ||
       !sourceSize ||
       !picture ||
-      !decoded ||
-      decoded.dataUrl !== picture.originalDataUrl
+      decoded?.dataUrl !== picture.originalDataUrl
     ) {
       return;
     }
@@ -399,7 +398,7 @@ export function ReferenceImageEditor({
               type="button"
               variant="ghost"
               className="sm:mr-auto"
-              onClick={() => editorActions.apply(picture.originalDataUrl, null)}
+              onClick={() => { editorActions.apply(picture.originalDataUrl, null); }}
             >
               Use full image
             </Button>

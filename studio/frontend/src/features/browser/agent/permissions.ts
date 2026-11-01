@@ -10,8 +10,8 @@ export type ActionsRule = "ask" | "allow";
 export type DownloadsRule = "ask" | "allow" | "block";
 /** Clicks and drags on a target with no role, name or link (a canvas), asked once per site per chat. */
 export type UnlabelledRule = "ask" | "allow";
-export type SiteRule = { browsing: BrowsingRule; actions: ActionsRule; downloads: DownloadsRule; unlabelled: UnlabelledRule };
-export type AgentPermissions = { defaults: SiteRule; sites: Record<string, SiteRule> };
+export interface SiteRule { browsing: BrowsingRule; actions: ActionsRule; downloads: DownloadsRule; unlabelled: UnlabelledRule }
+export interface AgentPermissions { defaults: SiteRule; sites: Record<string, SiteRule> }
 export type HistoryAccess = "ask" | "allow" | "never";
 /** No "allow": approving each script is the only check a script passes. */
 export type ScriptAccess = "ask" | "never";

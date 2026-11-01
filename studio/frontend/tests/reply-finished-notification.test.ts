@@ -24,7 +24,7 @@ const STORE = new URL(
   import.meta.url,
 ).href;
 
-type Env = {
+interface Env {
   tauri: boolean;
   enabled: boolean;
   hidden?: boolean;
@@ -33,15 +33,15 @@ type Env = {
   answer?: "granted" | "denied";
   pluginGranted?: boolean;
   backend?: boolean;
-};
+}
 
-type Control = {
+interface Control {
   sent: { title: string; body?: string }[];
   granted: boolean;
   mode: string;
   requests: number;
   backend?: boolean;
-};
+}
 
 let generation = 0;
 
@@ -51,7 +51,7 @@ function memoryStorage(): Storage {
     get length() {
       return items.size;
     },
-    clear: () => items.clear(),
+    clear: () => { items.clear(); },
     getItem: (key) => items.get(key) ?? null,
     key: (index) => [...items.keys()][index] ?? null,
     removeItem: (key) => void items.delete(key),

@@ -123,14 +123,14 @@ export function audioTaskFor(repoId: string): AudioTask | null {
 
 export function ggufSiblingFor(repoId: string): string | null {
   const group = groupForRepoId(repoId, AUDIO_CATALOG);
-  if (!group || group.task !== "tts") return null;
+  if (group?.task !== "tts") return null;
   const gguf = group.artifacts.find((a) => a.format === "gguf");
   return gguf && gguf.repoId !== repoId ? gguf.repoId : null;
 }
 
 export function macTtsCatalogChoiceIsRunnable(repoId: string): boolean {
   const group = groupForRepoId(repoId, AUDIO_CATALOG);
-  if (!group || group.task !== "tts") return false;
+  if (group?.task !== "tts") return false;
   return (
     group.artifacts.some((artifact) => artifact.format === "gguf") ||
     (usesNativeAudioRuntime(repoId) && !musicGenerationRequiresCuda(repoId))

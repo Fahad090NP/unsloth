@@ -286,7 +286,7 @@ export const ModelCard = memo(function ModelCard({
     <button
       type="button"
       aria-label={row.repo}
-      onClick={() => onSelect(row.id)}
+      onClick={() => { onSelect(row.id); }}
       style={cardAccentStyle}
       className="hub-model-card hub-trending-card group/card flex h-full w-full cursor-pointer flex-col overflow-hidden px-3 py-3.5 text-left outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
     >

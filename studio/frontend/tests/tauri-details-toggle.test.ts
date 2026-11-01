@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function source(path: string): Promise<string> {
-  return readFile(
+  return await readFile(
     new URL(`../src/components/tauri/${path}`, import.meta.url),
     "utf8",
   );

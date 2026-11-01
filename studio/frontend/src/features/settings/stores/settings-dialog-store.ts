@@ -261,7 +261,7 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
   mediaApiRequested: null,
   trainingApiRequested: null,
   openDialog: (requestedTab, options) =>
-    set((state) => {
+    { set((state) => {
       const { tab, target } = resolveScrollRequest(requestedTab, options?.scrollTarget);
       const next = tab ?? state.activeTab;
       const pending = requestsFor(state, next);
@@ -277,9 +277,9 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
         audioApiRequested: pending.audioApiRequested,
         ...focusForOpen(state, options?.focusFallback, options?.opener),
       };
-    }),
+    }); },
   openArchivedChats: () =>
-    set((state) => ({
+    { set((state) => ({
       open: true,
       activeTab: "data",
       scrollTarget: null,
@@ -289,9 +289,9 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
       connectionRequested: null,
       audioApiRequested: null,
       ...focusForOpen(state),
-    })),
+    })); },
   openArchivedMedia: (shelf) =>
-    set((state) => ({
+    { set((state) => ({
       open: true,
       activeTab: "data",
       scrollTarget: null,
@@ -301,9 +301,9 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
       connectionRequested: null,
       audioApiRequested: null,
       ...focusForOpen(state),
-    })),
+    })); },
   openConnectionSettings: (providerId) =>
-    set((state) => ({
+    { set((state) => ({
       open: true,
       activeTab: "connections",
       scrollTarget: null,
@@ -313,9 +313,9 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
       connectionRequested: providerId,
       audioApiRequested: null,
       ...focusForOpen(state),
-    })),
+    })); },
   openAudioApi: (request) =>
-    set((state) => ({
+    { set((state) => ({
       open: true,
       activeTab: "api-keys",
       scrollTarget: "api-keys-audio-api",
@@ -325,11 +325,11 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
       connectionRequested: null,
       audioApiRequested: request,
       ...focusForOpen(state),
-    })),
-  consumeAudioApiRequest: () => set({ audioApiRequested: null }),
-  consumeArchivedChatsRequest: () => set({ archivedRequested: null }),
+    })); },
+  consumeAudioApiRequest: () => { set({ audioApiRequested: null }); },
+  consumeArchivedChatsRequest: () => { set({ archivedRequested: null }); },
   openLogs: (family, sourcePath) =>
-    set((state) => ({
+    { set((state) => ({
       open: true,
       activeTab: "debugging",
       scrollTarget: null,
@@ -340,12 +340,12 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
       connectionRequested: null,
       audioApiRequested: null,
       ...focusForOpen(state),
-    })),
+    })); },
   consumeLogFamilyRequest: () =>
-    set({ logFamilyRequested: null, logSourcePathRequested: null }),
-  consumeConnectionRequest: () => set({ connectionRequested: null }),
+    { set({ logFamilyRequested: null, logSourcePathRequested: null }); },
+  consumeConnectionRequest: () => { set({ connectionRequested: null }); },
   openDecisionTry: (model) =>
-    set((state) => ({
+    { set((state) => ({
       open: true,
       activeTab: "api-keys",
       scrollTarget: "api-keys-decision-api",
@@ -355,10 +355,10 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
       connectionRequested: null,
       decisionTryRequested: model,
       ...focusForOpen(state),
-    })),
-  consumeDecisionTryRequest: () => set({ decisionTryRequested: null }),
+    })); },
+  consumeDecisionTryRequest: () => { set({ decisionTryRequested: null }); },
   openMediaApi: (request) =>
-    set((state) => ({
+    { set((state) => ({
       open: true,
       activeTab: "api-keys",
       scrollTarget: "api-keys-media-api",
@@ -370,10 +370,10 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
       mediaApiRequested: request,
       trainingApiRequested: null,
       ...focusForOpen(state),
-    })),
-  consumeMediaApiRequest: () => set({ mediaApiRequested: null }),
+    })); },
+  consumeMediaApiRequest: () => { set({ mediaApiRequested: null }); },
   openTrainingApi: (request) =>
-    set((state) => ({
+    { set((state) => ({
       open: true,
       activeTab: "api-keys",
       scrollTarget: "api-keys-training-api",
@@ -385,15 +385,15 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
       mediaApiRequested: null,
       trainingApiRequested: request,
       ...focusForOpen(state),
-    })),
-  consumeTrainingApiRequest: () => set({ trainingApiRequested: null }),
+    })); },
+  consumeTrainingApiRequest: () => { set({ trainingApiRequested: null }); },
   consumeScrollTarget: (target) =>
-    set((state) => ({
+    { set((state) => ({
       scrollTarget: state.scrollTarget === target ? null : state.scrollTarget,
-    })),
+    })); },
   // Do NOT clear `opener`: onCloseAutoFocus reads it on the render after `open: false`.
   closeDialog: () =>
-    set({
+    { set({
       open: false,
       scrollTarget: null,
       archivedRequested: null,
@@ -404,7 +404,7 @@ export const useSettingsDialogStore = create<SettingsDialogState>((set) => ({
       decisionTryRequested: null,
       mediaApiRequested: null,
       trainingApiRequested: null,
-    }),
+    }); },
   setActiveTab: (tab) => {
     try {
       window.localStorage.setItem(ACTIVE_TAB_KEY, tab);

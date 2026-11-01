@@ -151,8 +151,8 @@ function errorText(error: unknown): string | undefined {
 function useMinuteClock(): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
-    return () => window.clearInterval(timer);
+    const timer = window.setInterval(() => { setNow(Date.now()); }, 30_000);
+    return () => { window.clearInterval(timer); };
   }, []);
   return now;
 }
@@ -392,7 +392,7 @@ export function TasksPage() {
   }
 
   useEffect(() => {
-    void refresh().finally(() => setListed(true));
+    void refresh().finally(() => { setListed(true); });
     // Other tabs/devices send no event: re-read on storage marks, show and focus.
     const onStorage = (event: StorageEvent) => {
       if (event.key === SCHEDULED_TASKS_WRITTEN_KEY) void refresh();
@@ -444,13 +444,13 @@ export function TasksPage() {
             </span>
             <Input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => { setQuery(event.target.value); }}
               placeholder={t("scheduledTasks.search")}
               aria-label={t("scheduledTasks.search")}
               className="h-control w-full rounded-full border-none bg-muted pl-10 pr-4 shadow-none dark:bg-card"
             />
           </div>
-          <Button variant="dark" onClick={() => setEditing(null)}>
+          <Button variant="dark" onClick={() => { setEditing(null); }}>
             <HugeiconsIcon icon={PlusSignIcon} strokeWidth={1.75} className="size-icon" />
             {t("scheduledTasks.newTask")}
           </Button>
@@ -489,7 +489,7 @@ export function TasksPage() {
           <Button
             variant="outline"
             className="mt-3 border-none bg-background shadow-[0_2px_8px_-2px_rgba(0,0,0,0.16)] dark:bg-card dark:shadow-none"
-            onClick={() => setEditing(null)}
+            onClick={() => { setEditing(null); }}
           >
             <HugeiconsIcon icon={PlusSignIcon} strokeWidth={1.75} className="size-icon" />
             {t("scheduledTasks.createFirst")}
@@ -526,8 +526,8 @@ export function TasksPage() {
                     <DropdownMenuCheckboxItem
                       key={status}
                       checked={shown.includes(status)}
-                      onCheckedChange={(on) => toggleStatus(status, on)}
-                      onSelect={(event) => event.preventDefault()}
+                      onCheckedChange={(on) => { toggleStatus(status, on); }}
+                      onSelect={(event) => { event.preventDefault(); }}
                     >
                       {t(STATUS_LABEL[status])}
                     </DropdownMenuCheckboxItem>
@@ -547,8 +547,8 @@ export function TasksPage() {
                 task={task}
                 now={now}
                 unseen={task.id in unseenTasks}
-                onEdit={() => setEditing(task)}
-                onDelete={() => setDeleting(task)}
+                onEdit={() => { setEditing(task); }}
+                onDelete={() => { setDeleting(task); }}
               />
             ))
           )}
@@ -559,12 +559,12 @@ export function TasksPage() {
         <TaskDialog
           key={editing?.id ?? "new"}
           task={editing}
-          onClose={() => setEditing(undefined)}
-          onDelete={(task) => setDeleting(task)}
+          onClose={() => { setEditing(undefined); }}
+          onDelete={(task) => { setDeleting(task); }}
         />
       )}
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
-        <AlertDialogContent onOverlayClick={() => setDeleting(null)}>
+        <AlertDialogContent onOverlayClick={() => { setDeleting(null); }}>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("scheduledTasks.deleteDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>

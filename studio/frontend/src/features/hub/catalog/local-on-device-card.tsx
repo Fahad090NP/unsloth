@@ -135,7 +135,7 @@ function BaseModelReference({
   baseModelHubId?: string | null;
   baseModelSummary?: string | null;
 }) {
-  const canOpenHub = baseModelSource === "huggingface" && !!baseModelHubId;
+  const canOpenHub = baseModelSource === "huggingface" && Boolean(baseModelHubId);
   const hfEndpoint = useHfEndpoint();
   const hubUrl = `${hfEndpoint}/${baseModelHubId}`;
   return (
@@ -319,7 +319,7 @@ export function LocalOnDeviceCard({
     repoId: repoId ?? modelId,
     hfToken,
     enabled:
-      online && source === "hf_cache" && needsVariantSelection && !!repoId,
+      online && source === "hf_cache" && needsVariantSelection && Boolean(repoId),
     errorFallback: "Failed to check for updates",
   });
   const variantKey = currentVariantState.key;
@@ -334,7 +334,7 @@ export function LocalOnDeviceCard({
   }));
 
   const canDelete =
-    (isCacheRow ? !!repoId : DELETABLE_LOCAL_SOURCES.has(source) && !!path) &&
+    (isCacheRow ? Boolean(repoId) : DELETABLE_LOCAL_SOURCES.has(source) && Boolean(path)) &&
     !isActive &&
     !isLoading &&
     !runPending;
@@ -432,7 +432,7 @@ export function LocalOnDeviceCard({
   const canUpdate =
     online &&
     source === "hf_cache" &&
-    !!repoId &&
+    Boolean(repoId) &&
     !isActive &&
     !isLoading &&
     !runPending &&
@@ -469,7 +469,7 @@ export function LocalOnDeviceCard({
             : "Model";
   const formatTone =
     modelFormat === "adapter" ? "adapter" : isGguf ? "gguf" : "checkpoint";
-  const showOldCacheHint = source === "hf_cache" && !!unsupportedReason;
+  const showOldCacheHint = source === "hf_cache" && Boolean(unsupportedReason);
   const selectedVariantReady =
     !needsVariantSelection ||
     (selectedVariant?.downloaded === true && selectedVariant.partial !== true);
@@ -604,13 +604,13 @@ export function LocalOnDeviceCard({
                 <CardUpdateButton
                   label={`Update ${repoId}`}
                   emphasized={true}
-                  onClick={() => setUpdateOpen(true)}
+                  onClick={() => { setUpdateOpen(true); }}
                 />
               )}
               {canDelete && (
                 <CardDeleteButton
                   label={`Delete ${isCacheRow ? repoId : displayName}`}
-                  onClick={() => setDeleteOpen(true)}
+                  onClick={() => { setDeleteOpen(true); }}
                 />
               )}
               {(isCacheRow ? repoId : path) && (
@@ -630,7 +630,7 @@ export function LocalOnDeviceCard({
               label={`Configure and run ${displayName.trim() || "this model"}`}
               loading={runPending}
               onClick={() =>
-                onRun(
+                { onRun(
                   needsVariantSelection && selectedVariant
                     ? {
                         ggufVariant: selectedVariant.quant,
@@ -642,7 +642,7 @@ export function LocalOnDeviceCard({
                             : selectedVariant.size_bytes,
                       }
                     : {},
-                )
+                ); }
               }
             />
           )}

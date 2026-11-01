@@ -62,7 +62,7 @@ test("a blank line is one line tall, not nothing", () => {
 
 test("the line component is memoized, which is the whole point of it", () => {
   assert.ok(
-    /const FenceLine = memo\(function FenceLine\(/.test(DEFER),
+    DEFER.includes('const FenceLine = memo(function FenceLine('),
     "FenceLine must be memoized",
   );
   assert.ok(
@@ -177,7 +177,7 @@ test("the window decision is not reimplemented in the component", () => {
 test("the text is never removed from the document, only its colour", () => {
   const body = DEFER.slice(DEFER.indexOf("export const FenceBody = memo("));
   assert.ok(
-    /tokens\.map\(\(line, index\) => \(/.test(body),
+    body.includes('tokens.map((line, index) => ('),
     "every line must still be rendered; only what is INSIDE a line changes",
   );
   assert.ok(
@@ -188,7 +188,7 @@ test("the text is never removed from the document, only its colour", () => {
 
 test("one scroll listener serves every windowed fence on the page", () => {
   assert.ok(
-    /const windowedFences = new Set<\(\) => void>\(\);/.test(DEFER),
+    DEFER.includes('const windowedFences = new Set<() => void>();'),
     "the registry must be shared",
   );
   assert.ok(
@@ -197,7 +197,7 @@ test("one scroll listener serves every windowed fence on the page", () => {
     "capturing, so the nested reasoning pane's scroller is seen too, and passive",
   );
   assert.ok(
-    /windowFrame = requestAnimationFrame\(remeasureWindows\);/.test(DEFER),
+    DEFER.includes('windowFrame = requestAnimationFrame(remeasureWindows);'),
     "and coalesced into a frame: scroll fires faster than the screen updates",
   );
 });
@@ -205,7 +205,7 @@ test("one scroll listener serves every windowed fence on the page", () => {
 test("the scrolling ancestor is resolved from outside the code block", () => {
   // overflow-x: auto forces overflow-y to auto too, so walking up from <code> stops at the fence.
   assert.ok(
-    /const scroller = scrollerOf\(outer\);/.test(DEFER),
+    DEFER.includes('const scroller = scrollerOf(outer);'),
     "resolve from the fence's outermost element, not from the code element",
   );
 });
@@ -213,7 +213,7 @@ test("the scrolling ancestor is resolved from outside the code block", () => {
 test("the body reproduces streamdown's language class and incomplete flag", () => {
   const body = DEFER.slice(DEFER.indexOf("export const FenceBody = memo("));
   assert.ok(
-    /const languageClass = language === null \? null : `language-\$\{language\}`;/.test(DEFER),
+    DEFER.includes('const languageClass = language === null ? null : `language-${language}`;'),
     "the first word of the info string, which is what remark-rehype emits",
   );
   assert.ok(
@@ -221,22 +221,22 @@ test("the body reproduces streamdown's language class and incomplete flag", () =
     "the body div carries it, as streamdown's does",
   );
   assert.ok(
-    /<pre className=\{joinClasses\(languageClass, PRE_CLASS\)\}/.test(body),
+    body.includes('<pre className={joinClasses(languageClass, PRE_CLASS)}'),
     "and so does the pre",
   );
   assert.ok(
-    /data-incomplete=\{isIncomplete \|\| undefined\}/.test(body),
+    body.includes('data-incomplete={isIncomplete || undefined}'),
     "an open fence carries data-incomplete, and a settled one carries no attribute at all",
   );
 });
 
 test("a print colours the whole fence, and the window comes back afterwards", () => {
   assert.ok(
-    /let printing = false;/.test(DEFER),
+    DEFER.includes('let printing = false;'),
     "the print state has to be module-global: a print is a document-wide event",
   );
   assert.ok(
-    /window\.addEventListener\("afterprint", \(\) => setPrinting\(false\)\);/.test(DEFER),
+    DEFER.includes('window.addEventListener("afterprint", () => setPrinting(false));'),
     "and it must revert, or one Ctrl+P un-windows every huge fence for the life of the tab. " +
       "Unlike the reach latch this costs nothing to undo, because the tokens are already cached",
   );
@@ -246,7 +246,7 @@ test("a print colours the whole fence, and the window comes back afterwards", ()
     "both doors: beforeprint for Ctrl+P, the media query for page.pdf() and devtools emulation",
   );
   assert.ok(
-    /flushSync\(remeasureWindows\);/.test(DEFER),
+    DEFER.includes('flushSync(remeasureWindows);'),
     "synchronously, because there is no next paint before the print snapshot",
   );
   assert.ok(
@@ -260,11 +260,11 @@ test("a block is scanned for a mermaid fence once per render, not twice", () => 
   const walks = body.match(/findMermaidFence\(props\.content\)/g) ?? [];
   assert.equal(walks.length, 1, "the walk must happen once and both answers come off it");
   assert.ok(
-    !/isMermaidFenceOpener\(/.test(MARKDOWN_TEXT),
+    !MARKDOWN_TEXT.includes('isMermaidFenceOpener('),
     "the second walk's wrapper must be gone, not merely unused",
   );
   assert.ok(
-    /const mermaidSource = mermaidSourceOf\(props\.content, mermaidFence\);/.test(body),
+    body.includes('const mermaidSource = mermaidSourceOf(props.content, mermaidFence);'),
     "the source must be derived from the walk that already ran",
   );
 });
@@ -287,7 +287,7 @@ test("a fence source is highlighted once per revision, not twice", () => {
       "its first paint",
   );
   assert.ok(
-    /useLayoutEffect\(\(\) => \{/.test(hook),
+    hook.includes('useLayoutEffect(() => {'),
     "the surviving effect runs before paint",
   );
 });
@@ -329,14 +329,14 @@ test("paint containment is limited to large completed full-token bodies", () => 
     `const ${declaration.getText(parsed)}; exports.render = FenceBody;`,
     { compilerOptions: { target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React } },
   );
-  type Token = { content: string };
-  type BodyProps = {
+  interface Token { content: string }
+  interface BodyProps {
     isIncomplete: boolean | undefined;
     language: string | null;
     result: { tokens: Token[][] } | null;
     source: string;
     windowing: boolean;
-  };
+  }
   const context = {
     exports: {} as { render: React.ComponentType<BodyProps> },
     React,

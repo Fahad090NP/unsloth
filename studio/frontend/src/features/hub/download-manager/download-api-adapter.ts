@@ -178,7 +178,7 @@ export async function apiTransportStatusWithRetry(
     return await request();
   } catch {
     await wait(TRANSPORT_STATUS_RETRY_DELAY_MS);
-    return request();
+    return await request();
   }
 }
 

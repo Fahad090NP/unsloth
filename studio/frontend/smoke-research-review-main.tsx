@@ -77,7 +77,7 @@ function Harness() {
           {openRunId && (
             <ResearchActivityPanel
               runId={openRunId}
-              onClose={() => useResearchRunStore.getState().closePanel()}
+              onClose={() => { useResearchRunStore.getState().closePanel(); }}
             />
           )}
         </div>
@@ -89,11 +89,11 @@ function Harness() {
 Object.assign(window, {
   __review: {
     state: () => useResearchRunStore.getState(),
-    closePanel: () => useResearchRunStore.getState().closePanel(),
+    closePanel: () => { useResearchRunStore.getState().closePanel(); },
     setError: () =>
-      useResearchRunStore
+      { useResearchRunStore
         .getState()
-        .setConnectionError(run.id, "Existing connection error"),
+        .setConnectionError(run.id, "Existing connection error"); },
     setDraft: () => {
       useResearchRunStore.getState().setPlanReviewEditing(run.id, true);
       useResearchRunStore.getState().setPlanReviewDraft(run.id, {
@@ -102,12 +102,12 @@ Object.assign(window, {
       });
     },
     complete: () =>
-      ingestResearchUpdate({
+      { ingestResearchUpdate({
         ...run,
         status: "completed",
         report: "Finished report",
         updatedAt: 2,
-      }),
+      }); },
   },
 });
 createRoot(document.getElementById("root")!).render(<Harness />);

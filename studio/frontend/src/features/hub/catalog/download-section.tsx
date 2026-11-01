@@ -106,7 +106,7 @@ export function DownloadSection({
       isLoadingThisModel={isLoadingThisModel}
       cachePath={cachePath}
       knownBytes={knownBytes}
-      onRun={onRun ? () => onRun({}) : undefined}
+      onRun={onRun ? () => { onRun({}); } : undefined}
       runPending={runPending}
       onChange={onChange}
     />

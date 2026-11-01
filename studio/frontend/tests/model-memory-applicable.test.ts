@@ -42,7 +42,7 @@ globalThis.fetch = (async () =>
   new Response(JSON.stringify(nextBody), {
     status: 200,
     headers: { "Content-Type": "application/json" },
-  })) as typeof fetch;
+  }));
 
 const { loadModelMemorySettings } = await import(
   "../src/features/settings/api/model-memory.ts"

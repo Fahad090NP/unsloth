@@ -9,7 +9,7 @@ import {
 } from "../../hooks/floating-panel-position.ts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-export type DragPosition = { left: number; top: number };
+export interface DragPosition { left: number; top: number }
 
 const MARGIN = 8;
 
@@ -20,7 +20,7 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-export type Viewport = { width: number; height: number };
+export interface Viewport { width: number; height: number }
 
 export function clampToViewport(
   position: DragPosition,
@@ -80,7 +80,7 @@ function store(key: string, position: DragPosition | null): void {
   }
 }
 
-export type UseDragPosition = {
+export interface UseDragPosition {
   position: DragPosition | null;
   /** Callback ref: the reclamp effect must re-run when the node appears. */
   panelRef: (node: HTMLDivElement | null) => void;
@@ -90,10 +90,10 @@ export type UseDragPosition = {
   justDragged: () => boolean;
   element: HTMLDivElement | null;
   nudge: (event: React.KeyboardEvent<HTMLElement>) => boolean;
-};
+}
 
 
-type Fit = { width: number; height: number; viewport: Viewport };
+interface Fit { width: number; height: number; viewport: Viewport }
 
 export function useDragPosition(storageKey: string): UseDragPosition {
   // User's spot; clamps never write back, so a shrink or 0x0 minimize cannot lose it.
@@ -276,7 +276,7 @@ export function useDragPosition(storageKey: string): UseDragPosition {
   const onMove = useCallback(
     (event: PointerEvent) => {
       const session = sessionRef.current;
-      if (!session || session.pointerId !== event.pointerId) return;
+      if (session?.pointerId !== event.pointerId) return;
       // Released somewhere unseen: end the drag.
       if (event.buttons === 0) {
         settle();

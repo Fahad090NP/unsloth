@@ -21,16 +21,16 @@ export const MAX_OBSERVED_INVENTORY_KEYS_PER_KIND = 1024;
 
 type ObservedInventoryKeys = Record<InventoryHint["kind"], Set<string>>;
 
-export type PendingHintReconciliationCommit = {
+export interface PendingHintReconciliationCommit {
   kind: InventoryHint["kind"];
   protectedObservedKeys?: ReadonlySet<string>;
   reconciliation: Pick<
     InventoryHintReconciliation,
     "pending" | "staleCompletedHints" | "observedKeys"
   >;
-};
+}
 
-type InventoryHintState = {
+interface InventoryHintState {
   pending: PendingInventoryHints;
   observedKeys: ObservedInventoryKeys;
   pruneExpiredHints: () => void;
@@ -39,7 +39,7 @@ type InventoryHintState = {
     baseline: PendingInventoryHints,
     reconciliations: readonly PendingHintReconciliationCommit[],
   ) => InventoryHint[];
-};
+}
 
 const INVENTORY_HINT_EQUALITY_FIELDS = {
   kind: true,

@@ -9,9 +9,9 @@ import { useRecipeStudioStore } from "../../stores/recipe-studio";
 import { RECIPE_STUDIO_REFERENCE_BADGE_TONES } from "../../utils/ui-tones";
 import { getAvailableVariableEntries } from "../../utils/variables";
 
-type AvailableVariablesProps = {
+interface AvailableVariablesProps {
   configId: string;
-};
+}
 
 const USER_EXPANDED_FIELDS = [
   "first_name",
@@ -71,7 +71,7 @@ export function AvailableVariables({
             <button
               key={`${v.source}:${v.name}`}
               type="button"
-              onClick={() => setShowUserFields((prev) => !prev)}
+              onClick={() => { setShowUserFields((prev) => !prev); }}
               className="cursor-pointer"
               aria-expanded={showUserFields}
               aria-label={

@@ -57,7 +57,7 @@ function LazyContextMenu({
         new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2, clientX: point.x, clientY: point.y }),
       ),
     );
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); };
   }, [live]);
   if (live) {
     return (
@@ -74,7 +74,7 @@ function LazyContextMenu({
       className="select-text"
       {...triggerProps}
       onContextMenu={(event: ReactMouseEvent<HTMLElement>) => {
-        triggerProps.onContextMenu?.(event as ReactMouseEvent<HTMLSpanElement>);
+        triggerProps.onContextMenu?.(event);
         if (event.defaultPrevented) return;
         event.preventDefault();
         replayRef.current = { x: event.clientX, y: event.clientY };
@@ -103,13 +103,13 @@ export function WebLinkContextMenu({
   );
 }
 
-export type ContextFile = {
+export interface ContextFile {
   name: string;
   contentType?: string;
   load: () => Promise<Blob>;
   open?: () => void;
   sandbox?: { sessionId: string; file: string };
-};
+}
 
 export function loadSandboxFile(sessionId: string, file: string): Promise<Blob> {
   return authFetch(sandboxFilePath(sessionId, file)).then((response) => {

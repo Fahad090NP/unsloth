@@ -4,13 +4,13 @@
 import type { Edge } from "@xyflow/react";
 import { INFRA_NODE_KINDS, type NodeConfig } from "../types";
 
-export type GraphWarning = {
+export interface GraphWarning {
   nodeId?: string;
   nodeName?: string;
   global?: boolean;
   message: string;
   severity: "error" | "warning";
-};
+}
 
 function checkDataSourceRequired(allConfigs: NodeConfig[]): GraphWarning[] {
   const hasLlm = allConfigs.some((c) => c.kind === "llm");

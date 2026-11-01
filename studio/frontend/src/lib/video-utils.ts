@@ -67,10 +67,10 @@ function bmffBoxPayloads(data: Uint8Array, wanted: string): Uint8Array[] {
   while (data.length - offset >= 8) {
     const size32 = view.getUint32(offset);
     const type = String.fromCharCode(
-      data[offset + 4]!,
-      data[offset + 5]!,
-      data[offset + 6]!,
-      data[offset + 7]!,
+      data[offset + 4],
+      data[offset + 5],
+      data[offset + 6],
+      data[offset + 7],
     );
     let headerSize = 8;
     let boxSize = size32;
@@ -92,7 +92,7 @@ function bmffBoxPayloads(data: Uint8Array, wanted: string): Uint8Array[] {
   return payloads;
 }
 
-type BmffTracks = { audio: boolean; video: boolean };
+interface BmffTracks { audio: boolean; video: boolean }
 
 function tracksInMoov(moov: Uint8Array, found: BmffTracks): void {
   for (const trak of bmffBoxPayloads(moov, "trak")) {
@@ -100,10 +100,10 @@ function tracksInMoov(moov: Uint8Array, found: BmffTracks): void {
       for (const hdlr of bmffBoxPayloads(mdia, "hdlr")) {
         if (hdlr.length < 12) continue;
         const handler = String.fromCharCode(
-          hdlr[8]!,
-          hdlr[9]!,
-          hdlr[10]!,
-          hdlr[11]!,
+          hdlr[8],
+          hdlr[9],
+          hdlr[10],
+          hdlr[11],
         );
         if (handler === "soun") found.audio = true;
         else if (handler === "vide") found.video = true;
@@ -142,10 +142,10 @@ async function read3gpTracks(file: File): Promise<BmffTracks> {
     );
     const size32 = view.getUint32(0);
     const type = String.fromCharCode(
-      header[4]!,
-      header[5]!,
-      header[6]!,
-      header[7]!,
+      header[4],
+      header[5],
+      header[6],
+      header[7],
     );
     let headerSize = 8;
     let boxSize = size32;
@@ -182,7 +182,7 @@ export function isMpegTransportStreamBytes(head: Uint8Array): boolean {
     [0, 188],
     [4, 192],
   ].some(([start, packet]) =>
-    [0, 1, 2].every((index) => head[start! + index * packet!] === 0x47),
+    [0, 1, 2].every((index) => head[start + index * packet] === 0x47),
   );
 }
 

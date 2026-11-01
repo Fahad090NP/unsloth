@@ -102,7 +102,7 @@ export function useDefaultChatTemplate(
         });
       });
 
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [cacheKey, modelId, ggufVariant, token, nativePathToken]);
 
   if (cacheKey == null) {
@@ -167,7 +167,7 @@ export function useModelMaxPositionEmbeddings(
         });
       });
 
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [cacheKey, modelId, token]);
 
   if (cacheKey == null) {

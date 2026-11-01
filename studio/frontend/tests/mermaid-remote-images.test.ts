@@ -35,7 +35,7 @@ const HOSTILE = [
 for (const source of HOSTILE) {
   test(`no remote image survives: ${JSON.stringify(source.split("\n").slice(-1)[0]).slice(0, 70)}`, () => {
     const out = stripRemoteDiagramImages(source);
-    assert.equal(/attacker\.example/.test(out) && !/#lt;/.test(out), false, out);
+    assert.equal(out.includes('attacker.example') && !out.includes('#lt;'), false, out);
     // Idempotent.
     assert.equal(stripRemoteDiagramImages(out), out);
   });
@@ -177,7 +177,7 @@ test("every surface that draws a diagram uses the guarded plugin", () => {
 test("a sequence actor cannot take its properties from an element on the page", () => {
   const source = "sequenceDiagram\n  participant Alice\n  details Alice: payload\n  Alice->>Bob: hi";
   const out = stripRemoteDiagramImages(source);
-  assert.equal(/details/.test(out), false, out);
+  assert.equal(out.includes('details'), false, out);
   assert.match(out, /Alice->>Bob: hi/);
   // A flowchart node that happens to be called details is left alone.
   const flow = "flowchart LR\n  details[Details: here] --> B";
@@ -194,7 +194,7 @@ test("an init directive or front matter that could fetch is dropped, theme colou
     '%%{init: {"themeVariables": {"xyChart": {"plotColorPalette": "url(https://attacker.example/x)"}}}}%%\nxychart-beta\n  bar [1, 2]',
     "---\nconfig:\n  themeVariables:\n    xyChart:\n      plotColorPalette: url(https://attacker.example/x)\n---\nxychart-beta\n  bar [1, 2]",
   ];
-  for (const source of hostile) assert.equal(/attacker\.example/.test(stripRemoteDiagramImages(source)), false);
+  for (const source of hostile) assert.equal(stripRemoteDiagramImages(source).includes('attacker.example'), false);
   const themed = '%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ff0000"}}}%%\nflowchart LR\n  A --> B';
   assert.equal(stripRemoteDiagramImages(themed), themed);
   const titled = "---\ntitle: Pipeline\n---\nflowchart LR\n  A --> B";

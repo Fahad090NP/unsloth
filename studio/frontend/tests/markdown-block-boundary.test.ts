@@ -278,9 +278,9 @@ function wrappersAroundBlockContent(): string[] {
       ts.isJsxElement(node)
         ? [...open, node.openingElement.tagName.getText(source)]
         : open;
-    node.forEachChild((child) => visit(child, next));
+    node.forEachChild((child) => { visit(child, next); });
   };
-  source.forEachChild((node) => visit(node, []));
+  source.forEachChild((node) => { visit(node, []); });
   return wrappers;
 }
 
@@ -303,9 +303,9 @@ function wrappersAround(tag: string): string[][] {
     const next = ts.isJsxElement(node)
       ? [...open, node.openingElement.tagName.getText(source)]
       : open;
-    node.forEachChild((child) => visit(child, next));
+    node.forEachChild((child) => { visit(child, next); });
   };
-  source.forEachChild((node) => visit(node, []));
+  source.forEachChild((node) => { visit(node, []); });
   return found;
 }
 

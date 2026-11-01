@@ -6,19 +6,19 @@ import { readFastApiError } from "@/lib/format-fastapi-error";
 
 const HELPER_PRECACHE_EVENT = "unsloth-helper-precache-change";
 
-export type HelperPrecacheSettings = {
+export interface HelperPrecacheSettings {
   enabled: boolean;
   defaultEnabled: boolean;
   disabledByEnv: boolean;
-};
+}
 
-type ApiHelperPrecacheSettings = {
+interface ApiHelperPrecacheSettings {
   enabled: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   default_enabled: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   disabled_by_env: boolean;
-};
+}
 
 let cachedHelperPrecache: HelperPrecacheSettings | null = null;
 let inFlightHelperPrecache: Promise<HelperPrecacheSettings> | null = null;
@@ -30,7 +30,7 @@ export function subscribeHelperPrecacheSettings(
     listener((event as CustomEvent<HelperPrecacheSettings>).detail);
   };
   window.addEventListener(HELPER_PRECACHE_EVENT, handleChange);
-  return () => window.removeEventListener(HELPER_PRECACHE_EVENT, handleChange);
+  return () => { window.removeEventListener(HELPER_PRECACHE_EVENT, handleChange); };
 }
 
 function fromApi(settings: ApiHelperPrecacheSettings): HelperPrecacheSettings {
@@ -68,7 +68,7 @@ export async function loadHelperPrecacheSettings() {
     .finally(() => {
       inFlightHelperPrecache = null;
     });
-  return inFlightHelperPrecache;
+  return await inFlightHelperPrecache;
 }
 
 export async function updateHelperPrecacheSettings(

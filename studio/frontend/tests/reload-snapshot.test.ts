@@ -87,7 +87,7 @@ interface ElementSpec {
 
 interface ShadowStub {
   mode: string;
-  children: Array<Record<string, unknown>>;
+  children: Record<string, unknown>[];
   appendChild(child: Record<string, unknown>): Record<string, unknown>;
 }
 
@@ -121,7 +121,7 @@ interface StubElement {
   parent: StubElement | null;
   readonly parentElement: StubElement | null;
   readonly nextElementSibling: StubElement | null;
-  attributes: Array<{ name: string }>;
+  attributes: { name: string }[];
   closest(selector: string): StubElement | null;
   getBoundingClientRect(): {
     top: number;
@@ -167,7 +167,7 @@ function createElement(spec: ElementSpec, parent: StubElement | null = null) {
     attributeOverrides: {
       ...(spec.attributes ?? {}),
       ...(spec.autocomplete ? { autocomplete: spec.autocomplete } : {}),
-    } as Record<string, string>,
+    },
     get attributes() {
       return Object.keys(element.attributeOverrides).map((name) => ({ name }));
     },
@@ -317,9 +317,9 @@ function createEnvironment(options: {
 }) {
   const storage = options.storage ?? new Map<string, string>();
   const listeners = new Map<string, Listener[]>();
-  const animationFrames: Array<() => void> = [];
-  const fontFaces: Array<{ family: string; source: string }> = [];
-  const appended: Array<{ innerHTML: string; removed: boolean }> = [];
+  const animationFrames: (() => void)[] = [];
+  const fontFaces: { family: string; source: string }[] = [];
+  const appended: { innerHTML: string; removed: boolean }[] = [];
   let scrollRestoreCalls = 0;
   let attributeObserver: ((records: { attributeName: string }[]) => void) | null = null;
   let observingAttributes = false;
@@ -595,7 +595,7 @@ function createEnvironment(options: {
           root?.style as
             | { values?: Record<string, string> }
             | undefined
-        )?.values ?? {}) as Record<string, string>,
+        )?.values ?? {}),
         rootVisibility: (root?.style as { visibility?: string } | undefined)
           ?.visibility,
       };

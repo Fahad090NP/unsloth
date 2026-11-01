@@ -32,7 +32,7 @@ function shippedConfigs(): { name: string; config: BackendModelConfig }[] {
         const text = readFileSync(new URL(entry.name, dir), "utf8");
         found.push({
           name: `${prefix}${entry.name}`,
-          config: (yaml.load(text) ?? {}) as BackendModelConfig,
+          config: (yaml.load(text) ?? {}),
         });
       }
     }

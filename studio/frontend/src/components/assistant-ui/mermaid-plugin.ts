@@ -57,7 +57,7 @@ const lazyInstance: MermaidInstance = {
       loadStock().then((plugin) => plugin.getMermaid()),
       import("./mermaid-guard.ts"),
     ]);
-    return instance.render(id, stripRemoteDiagramImages(source));
+    return await instance.render(id, stripRemoteDiagramImages(source));
   },
 };
 

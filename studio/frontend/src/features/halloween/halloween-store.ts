@@ -36,7 +36,7 @@ export function msUntilSeasonChange(now: Date = new Date()): number {
 // setTimeout overflows past ~24.8 days and sleep stalls timers, so re-arm in bounded steps.
 const SEASON_CHECK_MAX_MS = 6 * 60 * 60 * 1000;
 
-type HalloweenState = {
+interface HalloweenState {
   spookyGreetings: boolean;
   decorations: boolean;
   // Year the row was hidden; it stays hidden for that October.
@@ -44,7 +44,7 @@ type HalloweenState = {
   restorePalette: ColorThemeId | null;
   setSpookyGreetings: (on: boolean) => void;
   setDecorations: (on: boolean) => void;
-};
+}
 
 export const useHalloweenStore = create<HalloweenState>()(
   persist(

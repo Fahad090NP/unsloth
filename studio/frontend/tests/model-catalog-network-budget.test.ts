@@ -20,7 +20,7 @@ const WORKFLOW = fileURLToPath(
 
 function constant(name: string): number {
   const source = readFileSync(CHECK, "utf8");
-  const match = source.match(new RegExp(`const ${name} = ([^;]+);`));
+  const match = new RegExp(`const ${name} = ([^;]+);`).exec(source);
   assert.ok(match, `model-catalog.check.ts no longer defines ${name}`);
   // The literals are written for readers (7 * 60 * 1000, 20_000), so evaluate rather than parse.
   return Number(new Function(`return (${match[1].replaceAll("_", "")})`)());
@@ -42,7 +42,7 @@ test("the whole network pass is bounded, not just each request", () => {
 
 test("the overall budget leaves room inside the workflow timeout", () => {
   const workflow = readFileSync(WORKFLOW, "utf8");
-  const timeout = workflow.match(/timeout-minutes:\s*(\d+)/);
+  const timeout = /timeout-minutes:\s*(\d+)/.exec(workflow);
   assert.ok(timeout, "the network-check workflow no longer declares timeout-minutes");
   const jobBudgetMs = Number(timeout[1]) * 60 * 1000;
 

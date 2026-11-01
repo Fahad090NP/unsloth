@@ -4,16 +4,16 @@
 import { authFetch } from "@/features/auth";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
-export type CurrentDatePromptSettings = {
+export interface CurrentDatePromptSettings {
   enabled: boolean;
   defaultEnabled: boolean;
-};
+}
 
-type ApiCurrentDatePromptSettings = {
+interface ApiCurrentDatePromptSettings {
   enabled: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   default_enabled: boolean;
-};
+}
 
 function fromApi(
   settings: ApiCurrentDatePromptSettings,

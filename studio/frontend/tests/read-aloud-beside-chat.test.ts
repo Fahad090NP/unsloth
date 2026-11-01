@@ -172,7 +172,7 @@ test("read-aloud and memory copy is clear in every language", () => {
     assert.match(block, /modelLoaded:[^\n]*\{model\}/, file);
     // "Unsloth", never "Studio" alone or "Unsloth Studio": Desktop shows these strings too
     // (tests/studio/test_tauri_branding_contract.py).
-    const engine = block.match(/engineStudio: "([^"]*)"/)?.[1] ?? "";
+    const engine = (/engineStudio: "([^"]*)"/.exec(block))?.[1] ?? "";
     assert.match(engine, /Unsloth/, file);
     assert.doesNotMatch(engine, /Studio/, file);
   }

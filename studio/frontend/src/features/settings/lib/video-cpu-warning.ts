@@ -5,12 +5,12 @@
 
 const GIB = 1024 ** 3;
 
-export type VideoCpuRamCheck = {
+export interface VideoCpuRamCheck {
   /** "below" warns; "unknown" (no reading) says nothing either way. */
   status: "below" | "ok" | "unknown";
   hostGib: number | null;
   minGib: number;
-};
+}
 
 /** Host RAM against the backend's minimum, both rounded to whole GiB for display. */
 export function videoCpuRamCheck(

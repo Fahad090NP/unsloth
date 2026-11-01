@@ -45,7 +45,7 @@ function getSingleColumnSnapshot(): boolean {
 function subscribeSingleColumn(callback: () => void): () => void {
   const mql = window.matchMedia(SINGLE_COLUMN_QUERY);
   mql.addEventListener("change", callback);
-  return () => mql.removeEventListener("change", callback);
+  return () => { mql.removeEventListener("change", callback); };
 }
 
 export interface ModelsCatalogState {
@@ -354,7 +354,7 @@ export const ModelsCatalog = memo(function ModelsCatalog({
       current === nextActive ? current : nextActive,
     );
     const timer = linger
-      ? window.setTimeout(() => setStreamingActive(false), 1400)
+      ? window.setTimeout(() => { setStreamingActive(false); }, 1400)
       : null;
     return () => {
       if (timer !== null) {

@@ -271,7 +271,7 @@ export function useAudioModelSlot({
         return;
       }
       const releaseLifecycle = () =>
-        useChatRuntimeStore.getState().endModelLoading(lifecycleLease);
+        { useChatRuntimeStore.getState().endModelLoading(lifecycleLease); };
       // A load kept beside the chat model leaves its chats running, as Chat's own keep-others load does.
       const keepsChat = useChatRuntimeStore.getState().keepModelsLoaded;
       const stopDecision = keepsChat
@@ -879,7 +879,7 @@ export function useAudioModelSlot({
 
     const deferred = deferredSttLoad.current;
     deferredSttLoad.current = null;
-    if (deferred && selectedSttRepoRef.current === deferred.repoId) {
+    if (selectedSttRepoRef.current === deferred?.repoId) {
       void (async () => {
         try {
           const status = await fetchSttStatus(

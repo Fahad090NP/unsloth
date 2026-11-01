@@ -32,7 +32,7 @@ export function validateSubcategoryConfigs(
     }
     const parent = nameToConfig.get(parentName);
     const parentValues =
-      parent && parent.kind === "sampler" && parent.sampler_type === "category"
+      parent?.kind === "sampler" && parent.sampler_type === "category"
         ? (parent.values ?? [])
         : [];
     const mapping = config.subcategory_mapping ?? {};
@@ -65,8 +65,7 @@ export function validateTimedeltaConfigs(
     }
     const parent = nameToConfig.get(reference);
     if (
-      !parent ||
-      parent.kind !== "sampler" ||
+      parent?.kind !== "sampler" ||
       parent.sampler_type !== "datetime"
     ) {
       errors.push(
@@ -156,7 +155,7 @@ export function validateValidatorConfigs(
     if (config.kind !== "validator") {
       continue;
     }
-    const target = (config as ValidatorConfig).target_columns[0]?.trim();
+    const target = (config).target_columns[0]?.trim();
     if (!target) {
       continue;
     }

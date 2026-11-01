@@ -64,7 +64,7 @@ test("a stored override is dropped unless it is a usable value", () => {
 });
 
 test("a documented per-model cap bounds the connection override", () => {
-  const cases: Array<[string, string, number]> = [
+  const cases: [string, string, number][] = [
     ["openai", "gpt-5.6", 128000],
     ["openai", "gpt-5.3", 16384],
     ["gemini", "gemini-3-pro", 65536],
@@ -86,7 +86,7 @@ test("a documented per-model cap bounds the connection override", () => {
 
 test("every OpenAI family the picker admits carries its documented cap", () => {
   // A missing or too-generous row turns a raised Max Tokens into a failed request.
-  const caps: Array<[string, number]> = [
+  const caps: [string, number][] = [
     ["gpt-5.6-sol", 128000],
     ["gpt-5.5", 128000],
     ["gpt-5.4", 65536],
@@ -120,7 +120,7 @@ test("every OpenAI family the picker admits carries its documented cap", () => {
 
 test("the dated Anthropic ids carry their documented cap", () => {
   // Opus 4.1 and Opus 4 cap at 32,000, under the 32,768 fallback.
-  const caps: Array<[string, number]> = [
+  const caps: [string, number][] = [
     ["claude-opus-4-5-20251101", 64000],
     ["claude-sonnet-4-5-20250929", 64000],
     ["claude-haiku-4-5-20251001", 64000],
@@ -135,7 +135,7 @@ test("the dated Anthropic ids carry their documented cap", () => {
 });
 
 test("a model with no documented cap takes the connection override", () => {
-  const undocumented: Array<[string, string | null]> = [
+  const undocumented: [string, string | null][] = [
     ["openrouter", "minimax/minimax-m3"],
     ["openai", "o3"],
     ["vllm", "some/local-model"],
@@ -192,7 +192,7 @@ test("a live Max Tokens is only lowered when the cap is actually known", () => {
   assert.equal(resolveExternalMaxTokensClamp({ ...base, maxTokens: 32768 }), null);
 
   const once = resolveExternalMaxTokensClamp(base);
-  assert.equal(resolveExternalMaxTokensClamp({ ...base, maxTokens: once as number }), null);
+  assert.equal(resolveExternalMaxTokensClamp({ ...base, maxTokens: once! }), null);
 });
 
 // deliberately not a Custom row: that one type round-trips the same with or without the gate

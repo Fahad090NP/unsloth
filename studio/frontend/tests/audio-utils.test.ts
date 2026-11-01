@@ -15,9 +15,7 @@ import { readText } from "./helpers/kit.ts";
 test("chat audio uses the backend's raw upload limit", () => {
   const backendLimits = readText("../../backend/utils/upload_limits.py");
   const limitMb = Number(
-    backendLimits.match(
-      /STT_AUDIO_RAW_MAX_BYTES\s*=\s*(\d+)\s*\*\s*_BYTES_PER_MB/,
-    )?.[1],
+    (/STT_AUDIO_RAW_MAX_BYTES\s*=\s*(\d+)\s*\*\s*_BYTES_PER_MB/.exec(backendLimits))?.[1],
   );
 
   assert.ok(Number.isInteger(limitMb));

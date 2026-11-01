@@ -3,7 +3,7 @@
 
 import type { RecipePayload } from "@/features/recipe-studio";
 
-export type RecipeRecord = {
+export interface RecipeRecord {
   id: string;
   name: string;
   payload: RecipePayload;
@@ -11,13 +11,13 @@ export type RecipeRecord = {
   updatedAt: number;
   learningRecipeId?: string;
   learningRecipeTitle?: string;
-};
+}
 
-export type SaveRecipeInput = {
+export interface SaveRecipeInput {
   id?: string | null;
   baseUpdatedAt?: number;
   name: string;
   payload: RecipePayload;
   learningRecipeId?: string;
   learningRecipeTitle?: string;
-};
+}

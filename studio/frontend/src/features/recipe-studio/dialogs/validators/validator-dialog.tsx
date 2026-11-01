@@ -42,10 +42,10 @@ import { CollapsibleSectionTriggerButton } from "../shared/collapsible-section-t
 import { FieldLabel } from "../shared/field-label";
 import { NameField } from "../shared/name-field";
 
-type ValidatorDialogProps = {
+interface ValidatorDialogProps {
   config: ValidatorConfig;
   onUpdate: (patch: Partial<ValidatorConfig>) => void;
-};
+}
 
 const NONE_VALUE = "__none__";
 
@@ -115,7 +115,7 @@ export function ValidatorDialog({
         label="Check name"
         hint="Name used for this check in the canvas and run results."
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="grid gap-1.5">
         <FieldLabel
@@ -193,9 +193,9 @@ export function ValidatorDialog({
                 filter={null}
                 value={selectedOxcMode}
                 onValueChange={(value) =>
-                  onUpdate({
+                  { onUpdate({
                     oxc_validation_mode: normalizeOxcValidationMode(value),
-                  })
+                  }); }
                 }
                 itemToStringValue={(value) => value}
                 autoHighlight={true}
@@ -232,9 +232,9 @@ export function ValidatorDialog({
                 filter={null}
                 value={selectedOxcCodeShape}
                 onValueChange={(value) =>
-                  onUpdate({
+                  { onUpdate({
                     oxc_code_shape: normalizeOxcCodeShape(value),
-                  })
+                  }); }
                 }
                 itemToStringValue={(value) => value}
                 autoHighlight={true}
@@ -262,7 +262,7 @@ export function ValidatorDialog({
       )}
       <Collapsible
         open={advancedOpen}
-        onOpenChange={(open) => onUpdate({ advancedOpen: open })}
+        onOpenChange={(open) => { onUpdate({ advancedOpen: open }); }}
       >
         <CollapsibleTrigger asChild={true}>
           <CollapsibleSectionTriggerButton
@@ -281,7 +281,7 @@ export function ValidatorDialog({
               id={batchSizeId}
               className="nodrag"
               value={config.batch_size}
-              onChange={(event) => onUpdate({ batch_size: event.target.value })}
+              onChange={(event) => { onUpdate({ batch_size: event.target.value }); }}
             />
           </div>
         </CollapsibleContent>

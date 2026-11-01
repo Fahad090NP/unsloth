@@ -34,7 +34,7 @@ export function NegativePromptField({
       <div className="flex items-center gap-1">
         <button
           type="button"
-          onClick={() => onOpenChange(!open)}
+          onClick={() => { onOpenChange(!open); }}
           aria-expanded={open}
           className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
@@ -45,7 +45,7 @@ export function NegativePromptField({
           // The labelled button above is the accessible toggle; this is decoration.
           aria-hidden={true}
           tabIndex={-1}
-          onClick={() => onOpenChange(!open)}
+          onClick={() => { onOpenChange(!open); }}
           className="inline-flex"
         >
           <HugeiconsIcon
@@ -65,7 +65,7 @@ export function NegativePromptField({
           maxLength={NEGATIVE_PROMPT_MAX_LENGTH}
           placeholder="What to avoid (optional)"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => { onChange(e.target.value); }}
         />
       )}
     </div>

@@ -7,14 +7,14 @@ import { loadWithStubs, stubJsxRuntime } from "./helpers/module-stubs.ts";
 
 // Menu fetches overlap, so an answer from before a KB delete must not land after a later one.
 
-type Rows = Array<{ id: string; name: string }>;
+type Rows = { id: string; name: string }[];
 
 function harness() {
   const slots: unknown[] = [];
   let cursor = 0;
-  const effects: Array<() => unknown> = [];
-  const pending: Array<(rows: Rows) => void> = [];
-  const listeners: Array<() => void> = [];
+  const effects: (() => unknown)[] = [];
+  const pending: ((rows: Rows) => void)[] = [];
+  const listeners: (() => void)[] = [];
   const sources: unknown[] = [];
   const state = {
     ragEnabled: true,
@@ -114,7 +114,7 @@ test("a list fetched before a delete cannot land after the one fetched after it"
   const app = harness();
   app.render();
   assert.equal(app.pending.length, 1);
-  app.listeners.forEach((onChanged) => onChanged());
+  app.listeners.forEach((onChanged) => { onChanged(); });
   assert.equal(app.pending.length, 2);
 
   // Both answers arrive before the next render, so React batches them.

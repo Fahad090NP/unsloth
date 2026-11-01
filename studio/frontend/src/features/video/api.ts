@@ -34,7 +34,7 @@ export interface VideoGenerationDefaults {
   duration_presets: number[];
   resolution_multiple: number;
   // (width, height) presets the UI offers; the default comes first.
-  resolution_presets: Array<[number, number]>;
+  resolution_presets: [number, number][];
   // Bounds a size off the presets must fit; absent on backends that accept only the presets.
   custom_size_min_pixels?: number | null;
   custom_size_max_pixels?: number | null;
@@ -263,28 +263,28 @@ async function parseJson<T>(response: Response): Promise<T> {
 export async function getVideoStatus(
   signal?: AbortSignal,
 ): Promise<VideoStatus> {
-  return parseJson(await authFetch("/api/inference/video/status", { signal }));
+  return await parseJson(await authFetch("/api/inference/video/status", { signal }));
 }
 
 export async function getVideoLoadProgress(
   signal?: AbortSignal,
 ): Promise<VideoLoadProgress> {
-  return parseJson(
+  return await parseJson(
     await authFetch("/api/inference/video/load-progress", { signal }),
   );
 }
 
 export async function getVideoGenerateProgress(): Promise<VideoGenerateProgress> {
-  return parseJson(await authFetch("/api/inference/video/generate-progress"));
+  return await parseJson(await authFetch("/api/inference/video/generate-progress"));
 }
 
 export async function loadVideoModel(body: VideoLoadRequest): Promise<VideoStatus> {
   // This POST only starts the load; load-progress settles the notice. See images.
-  return withBackgroundLoadNotice(
+  return await withBackgroundLoadNotice(
     "video",
     body.model_path,
     async () =>
-      parseLoadJson<VideoStatus>(
+      await parseLoadJson<VideoStatus>(
         await authFetch("/api/inference/video/load", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -298,7 +298,7 @@ export async function loadVideoModel(body: VideoLoadRequest): Promise<VideoStatu
 export async function getVideoDownloadPlan(
   body: VideoLoadRequest,
 ): Promise<DiffusionDownloadPlan> {
-  return parseJson(
+  return await parseJson(
     await authFetch("/api/inference/video/download-plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -311,7 +311,7 @@ export async function getVideoDownloadPlan(
 export async function generateVideo(
   body: VideoGenerateRequest,
 ): Promise<VideoGenerateResponse> {
-  return parseJson(
+  return await parseJson(
     await authFetch("/api/inference/video/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -322,13 +322,13 @@ export async function generateVideo(
 
 /** Best-effort: stops at the next step boundary; the caller maps the sentinel to a 409. */
 export async function cancelVideoGeneration(): Promise<{ cancelled: boolean }> {
-  return parseJson(
+  return await parseJson(
     await authFetch("/api/inference/video/generate/cancel", { method: "POST" }),
   );
 }
 
 export async function unloadVideoModel(): Promise<VideoStatus> {
-  return parseJson(await authFetch("/api/inference/video/unload", { method: "POST" }));
+  return await parseJson(await authFetch("/api/inference/video/unload", { method: "POST" }));
 }
 
 export interface VideoGalleryPage {
@@ -342,7 +342,7 @@ export async function getVideoGallery(
   limit = 50,
   archived = false,
 ): Promise<VideoGalleryPage> {
-  return parseJson(
+  return await parseJson(
     await authFetch(
       `/api/inference/video/gallery?offset=${offset}&limit=${limit}&archived=${archived}`,
     ),
@@ -352,7 +352,7 @@ export async function getVideoGallery(
 /** Pin/unpin or archive/restore one clip; omitted flags are left alone. Returns the new record. */
 /** `afterId` null = front. The server also decides the pin. */
 export async function moveGalleryVideo(id: string, afterId: string | null): Promise<GalleryVideo> {
-  return parseJson(
+  return await parseJson(
     await authFetch(`/api/inference/video/gallery/${id}/move`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -365,7 +365,7 @@ export async function addGalleryVideoToProject(
   id: string,
   projectId: string,
 ): Promise<{ path: string; already: boolean }> {
-  return parseJson(
+  return await parseJson(
     await authFetch(`/api/inference/video/gallery/${id}/project`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -378,7 +378,7 @@ export async function setGalleryVideoFlags(
   id: string,
   flags: { pinned?: boolean; archived?: boolean },
 ): Promise<GalleryVideo> {
-  return parseJson(
+  return await parseJson(
     await authFetch(`/api/inference/video/gallery/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -434,5 +434,5 @@ export async function fetchGalleryVideoExport(
     `/api/inference/video/gallery/${id}/export?format=${format}`,
   );
   if (!res.ok) throw new Error(await readFastApiError(res));
-  return res.blob();
+  return await res.blob();
 }

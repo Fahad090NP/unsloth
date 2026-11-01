@@ -449,8 +449,8 @@ export function TranscribeFooter({
       return;
     }
     setStartedAt((value) => value ?? Date.now());
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
+    const timer = window.setInterval(() => { setNow(Date.now()); }, 1000);
+    return () => { window.clearInterval(timer); };
   }, [working]);
   const elapsed =
     startedAt === null ? 0 : Math.max(0, Math.floor((now - startedAt) / 1000));

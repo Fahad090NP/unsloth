@@ -386,7 +386,7 @@ export function DownloadedList({
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(virtualRowsWrapper.parentElement ?? scrollElement);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [virtualRowsWrapper, scrollElement]);
   const rowHeightPx = compact
     ? RESULT_SPLIT_ROW_HEIGHT_PX

@@ -11,11 +11,11 @@ import {
 
 // A small hook host; a StrictMode mount runs effects, cleanups, then effects again, as React 19 does.
 
-type Effect = {
+interface Effect {
   deps?: unknown[];
   cleanup?: (() => void) | void;
   run?: () => (() => void) | void;
-};
+}
 
 class Host {
   slots: unknown[] = [];
@@ -55,7 +55,7 @@ class Host {
 }
 
 const sameDeps = (a?: unknown[], b?: unknown[]) =>
-  Boolean(a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i])));
+  Boolean(a && a.length === b?.length && a.every((v, i) => Object.is(v, b[i])));
 
 let current: Host;
 const react = {
@@ -100,7 +100,7 @@ globalThis.window = { setTimeout, clearTimeout } as unknown as Window &
 const KB = { id: "kb-1", name: "Product docs", documentCount: 0 };
 const ITEM = { kind: "native", token: "tok-notes", name: "notes.md" };
 
-function harness(rows: Array<typeof KB> = [KB]) {
+function harness(rows: typeof KB[] = [KB]) {
   const state = { uploading: false };
   const uploads: unknown[][] = [];
   const abandoned: unknown[][] = [];

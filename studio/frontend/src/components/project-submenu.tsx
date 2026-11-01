@@ -71,7 +71,7 @@ export function useProjectSubmenu({
         alignOffset={-4}
         className="unsloth-plus-menu sidebar-row-menu w-48"
       >
-        <DropdownMenuItem onClick={() => setCreatingProject(true)}>
+        <DropdownMenuItem onClick={() => { setCreatingProject(true); }}>
           <HugeiconsIcon icon={FolderAddIcon} strokeWidth={1.75} className="size-icon" />
           <span>{t("library.project.newProject")}</span>
         </DropdownMenuItem>
@@ -103,6 +103,6 @@ export function useProjectSubmenu({
     />
   ) : null;
 
-  const close = useCallback(() => setCreatingProject(false), []);
+  const close = useCallback(() => { setCreatingProject(false); }, []);
   return { submenu, dialog, close };
 }

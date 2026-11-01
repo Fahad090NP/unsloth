@@ -11,7 +11,7 @@ const CAPABILITY_TTL_MS = 30_000;
 export type SandboxSetupAction = "linux-install" | "windows-setup";
 export type SandboxSetupOperation = SandboxSetupAction | "windows-runtime";
 
-export type SandboxCapability = {
+export interface SandboxCapability {
   pythonOsIsolated: boolean;
   terminalOsIsolated: boolean;
   backend: string;
@@ -23,7 +23,7 @@ export type SandboxCapability = {
   // "no_elevation": owner is local but there is no passwordless sudo or desktop prompt.
   setupBlocked: "not_owner" | "not_local" | "no_elevation" | null;
   needsConsent: boolean;
-};
+}
 
 export type SandboxSetupState =
   | "idle"
@@ -32,7 +32,7 @@ export type SandboxSetupState =
   | "declined"
   | "failed";
 
-export type SandboxSetupJob = {
+export interface SandboxSetupJob {
   id: string | null;
   operation: string | null;
   state: SandboxSetupState;
@@ -43,9 +43,9 @@ export type SandboxSetupJob = {
   steps: string[];
   manualCommand: string;
   note: string;
-};
+}
 
-type ApiCapability = {
+interface ApiCapability {
   // biome-ignore lint/style/useNamingConvention: API schema
   python_os_isolated?: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -63,9 +63,9 @@ type ApiCapability = {
   setup_blocked?: string | null;
   // biome-ignore lint/style/useNamingConvention: API schema
   needs_consent?: boolean;
-};
+}
 
-type ApiSetupJob = {
+interface ApiSetupJob {
   id?: string | null;
   operation?: string | null;
   state?: SandboxSetupState;
@@ -81,7 +81,7 @@ type ApiSetupJob = {
   // biome-ignore lint/style/useNamingConvention: API schema
   manual_command?: string | null;
   note?: string | null;
-};
+}
 
 function setupActionFromApi(
   value: string | null | undefined,
@@ -238,12 +238,12 @@ export async function startSandboxSetup(
       consent_dacl_fallback: consentDaclFallback,
     }),
   });
-  return checkedSetup(res, fallbackMessage);
+  return await checkedSetup(res, fallbackMessage);
 }
 
 export async function loadSandboxSetup(
   fallbackMessage: string,
 ): Promise<SandboxSetupJob> {
   const res = await authFetch(SETUP_ROUTE);
-  return checkedSetup(res, fallbackMessage);
+  return await checkedSetup(res, fallbackMessage);
 }

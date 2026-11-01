@@ -51,7 +51,7 @@ function renderedMath(html: string): string[] {
   );
 }
 
-const SHELL_VARIABLE_REPLIES: Array<[string, string[]]> = [
+const SHELL_VARIABLE_REPLIES: [string, string[]][] = [
   [
     "Add the bin folder to $PATH, then check $HOME/.bashrc.",
     ["$PATH, then check $HOME/.bashrc."],
@@ -102,7 +102,7 @@ test("shell variables never flash as maths while a reply streams", () => {
   }
 });
 
-const MATH_REPLIES: Array<[string, string[]]> = [
+const MATH_REPLIES: [string, string[]][] = [
   ["$x$", ["x"]],
   ["In triangle $ABC$, the side $AB = 5$.", ["ABC", "AB = 5"]],
   ["The slope is $dy/dx$ and the line is $ax + b$.", ["dy/dx", "ax + b"]],

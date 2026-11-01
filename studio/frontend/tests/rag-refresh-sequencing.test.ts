@@ -15,7 +15,7 @@ const THREAD_DOCUMENTS_BAR = readSrc("features/rag/components/thread-documents-b
 const USE_LINKED_FOLDERS = readSrc("features/rag/components/use-linked-folders.ts");
 const USE_RAG_DOCUMENTS = readSrc("features/rag/components/use-rag-documents.ts");
 
-type Row = { id: string; status: string };
+interface Row { id: string; status: string }
 
 function makeRefresher(published: Row[][]) {
   let seq = 0;

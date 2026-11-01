@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type MentionToken = { start: number; end: number; query: string };
+export interface MentionToken { start: number; end: number; query: string }
 
 // The @name token around the caret; accepting replaces all of it, not just up to the caret.
 export function mentionTokenAt(text: string, caret: number): MentionToken | null {
@@ -24,13 +24,13 @@ export function replaceMentionToken(
   };
 }
 
-type MentionSkill = {
+interface MentionSkill {
   name: string;
   description: string;
   valid: boolean;
   shadowed: boolean;
   enabled: boolean;
-};
+}
 
 export function mentionableSkills<T extends MentionSkill>(skills: readonly T[]): T[] {
   return skills.filter((skill) => skill.valid && !skill.shadowed && skill.enabled);

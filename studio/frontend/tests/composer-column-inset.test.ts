@@ -111,7 +111,7 @@ test("a measured column box wins over the computed one", () => {
 test("the dock pads from the measured inset, not a fixed gutter", () => {
   const css = readSrc("index.css");
   assert.match(css, DOCK_INNER_RULE);
-  assert.ok(!NARROW_DOCK_RULE.test(css));
+  assert.ok(!css.includes('data-thread-narrow]) .unsloth-composer-dock-inner'));
   const thread = readSrc("components/assistant-ui/thread.tsx");
   assert.ok(!thread.includes('"unsloth-composer-dock-inner relative px-5'));
 });

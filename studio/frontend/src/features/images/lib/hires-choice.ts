@@ -133,7 +133,7 @@ export function hiresRecordUsedNegative(r: HiresRecord): boolean {
 /** The Upscale workflow's `upscale_model`: only an id the status still lists (the selector shows Lanczos otherwise). */
 export function upscaleModelRequest(
   id: string | null | undefined,
-  models: Array<{ id: string }> | null | undefined,
+  models: { id: string }[] | null | undefined,
 ): string | undefined {
   return id && models?.some((m) => m.id === id) ? id : undefined;
 }
@@ -255,7 +255,7 @@ export function parseHiresInfotext(
   const cfg = num(take("hires cfg scale"));
   // `Hires resize: WxH` (A1111's explicit size; Studio writes it for a capped target) maps to the factor that
   // reaches it from Size; the backend's own cap lands on the same size again.
-  const wh = resizeKey === undefined ? null : fields[resizeKey].trim().match(/^(\d+)\s*x\s*(\d+)$/i);
+  const wh = resizeKey === undefined ? null : (/^(\d+)\s*x\s*(\d+)$/i.exec(fields[resizeKey].trim()));
   if (scale === undefined && wh && typeof size.width === "number" && typeof size.height === "number" && size.width > 0 && size.height > 0) {
     const rw = Number(wh[1]);
     const rh = Number(wh[2]);
@@ -267,7 +267,7 @@ export function parseHiresInfotext(
     };
     if (factor >= 1 && factor <= 4 && (reaches(2048) || reaches(Math.max(rw, rh)))) {
       scale = factor;
-      delete fields[resizeKey as string];
+      delete fields[resizeKey!];
     }
   }
   // Without a factor or a usable size, Studio cannot size the pass: leave it all unapplied.

@@ -368,7 +368,7 @@ export function ResourcesTab() {
       });
       consumeScrollTarget(target);
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [consumeScrollTarget, scrollTarget]);
 
   const metrics = useMemo(() => {
@@ -816,7 +816,7 @@ export function ResourcesTab() {
               size="sm"
               className="h-7 shrink-0 px-2 text-xs"
               onClick={() =>
-                dismissDriverWarning(driverWarning.driver_version as string)
+                { dismissDriverWarning(driverWarning.driver_version!); }
               }
             >
               {t("settings.resources.gpu.dismissNotice")}
@@ -1136,7 +1136,7 @@ export function ResourcesTab() {
                   <Checkbox
                     checked={detailMetrics.has(metric)}
                     onCheckedChange={(checked) =>
-                      setDetailMetric(metric, checked === true)
+                      { setDetailMetric(metric, checked === true); }
                     }
                     aria-label={label}
                   />

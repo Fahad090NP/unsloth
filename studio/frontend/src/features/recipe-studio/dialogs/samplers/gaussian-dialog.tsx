@@ -14,10 +14,10 @@ import type { SamplerConfig } from "../../types";
 import { NameField } from "../shared/name-field";
 import { FieldLabel } from "../shared/field-label";
 
-type GaussianDialogProps = {
+interface GaussianDialogProps {
   config: SamplerConfig;
   onUpdate: (patch: Partial<SamplerConfig>) => void;
-};
+}
 
 export function GaussianDialog({
   config,
@@ -30,7 +30,7 @@ export function GaussianDialog({
     <div className="space-y-4">
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-1.5">
@@ -44,7 +44,7 @@ export function GaussianDialog({
             type="number"
             className="nodrag"
             value={config.mean ?? ""}
-            onChange={(event) => onUpdate({ mean: event.target.value })}
+            onChange={(event) => { onUpdate({ mean: event.target.value }); }}
           />
         </div>
         <div className="grid gap-1.5">
@@ -58,7 +58,7 @@ export function GaussianDialog({
             type="number"
             className="nodrag"
             value={config.std ?? ""}
-            onChange={(event) => onUpdate({ std: event.target.value })}
+            onChange={(event) => { onUpdate({ std: event.target.value }); }}
           />
         </div>
       </div>
@@ -71,10 +71,10 @@ export function GaussianDialog({
         <Select
           value={config.convert_to ?? "none"}
           onValueChange={(value) =>
-            onUpdate({
+            { onUpdate({
               // biome-ignore lint/style/useNamingConvention: api schema
               convert_to: value === "none" ? undefined : (value as "int" | "float" | "str"),
-            })
+            }); }
           }
         >
           <SelectTrigger className="nodrag w-full" id={convertId}>

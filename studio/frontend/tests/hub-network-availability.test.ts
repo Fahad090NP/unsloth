@@ -156,7 +156,7 @@ test("the failure never leaks the request URL or its query", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = (async () => {
     throw new TypeError("Failed to fetch");
-  }) as typeof fetch;
+  });
   try {
     await assert.rejects(
       fetchWithTimeout(
@@ -185,10 +185,10 @@ test("a caller-driven abort does not blacklist the origin", async () => {
   reset();
   const original = globalThis.fetch;
   const controller = new AbortController();
-  globalThis.fetch = (async () => {
+  globalThis.fetch = async () => {
     controller.abort();
     throw new DOMException("aborted", "AbortError");
-  }) as unknown as typeof fetch;
+  };
   try {
     await assert.rejects(
       fetchWithTimeout(`${HF}/api/models`, { signal: controller.signal }, 1_000),
@@ -211,7 +211,7 @@ test("a slow optional asset does not take the whole origin down", async () => {
   globalThis.fetch = ((_input: unknown, init: { signal?: AbortSignal }) =>
     new Promise((_resolve, reject) => {
       init?.signal?.addEventListener("abort", () =>
-        reject(new DOMException("aborted", "AbortError")),
+        { reject(new DOMException("aborted", "AbortError")); },
       );
     })) as unknown as typeof fetch;
   try {
@@ -240,7 +240,7 @@ test("a connectivity failure still does", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = (async () => {
     throw new TypeError("Failed to fetch");
-  }) as typeof fetch;
+  });
   try {
     await assert.rejects(fetchWithTimeout(`${HF}/api/models`, {}, 1_000));
     assert.equal(getHubPhase(HF), "unavailable", "this is the case worth backing off");
@@ -257,7 +257,7 @@ test("a relay that cannot reach its endpoint counts as the endpoint unreachable"
   const original = globalThis.fetch;
   let upstream = false;
   globalThis.fetch = (async () =>
-    new Response("{}", { status: 502, headers: upstream ? { "X-Hub-Upstream": "1" } : {} })) as typeof fetch;
+    new Response("{}", { status: 502, headers: upstream ? { "X-Hub-Upstream": "1" } : {} }));
   try {
     await assert.rejects(fetchWithTimeout(`${relay}/api/models`, {}, 1_000));
     assert.equal(getLastHubFailure("http://127.0.0.1:8888")?.kind, "network-opaque");
@@ -289,7 +289,7 @@ test("a successful response clears a prior failure", async () => {
     retryable: true,
   });
   const original = globalThis.fetch;
-  globalThis.fetch = (async () => new Response("{}", { status: 200 })) as typeof fetch;
+  globalThis.fetch = (async () => new Response("{}", { status: 200 }));
   try {
     await fetchWithTimeout(`${HF}/api/models`, {}, 1_000);
     assert.equal(getHubPhase(HF), "available");

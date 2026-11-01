@@ -10,7 +10,7 @@ register("./helpers/settings-api-resolver.mjs", import.meta.url);
 
 const { uploadToSandbox } = await import("../src/components/assistant-ui/sandbox-upload.ts");
 
-type Sent = { url: string; form: FormData };
+interface Sent { url: string; form: FormData }
 
 function capture(status: number, body: unknown): Sent[] {
   const sent: Sent[] = [];

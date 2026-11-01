@@ -120,7 +120,7 @@ const mergeTokensIntoBlocks = (tokens: Token[]): string[] => {
       mergedBlocks[mergedBlocksLen - 1] += currentBlock;
       appendDollarPairs(lastBlockDollars, currentBlock);
 
-      const trackedTag = htmlStack.at(-1) as string;
+      const trackedTag = htmlStack.at(-1)!;
       const newOpenTags = countNonSelfClosingOpenTags(currentBlock, trackedTag);
       const newCloseTags = countClosingTags(currentBlock, trackedTag);
 
@@ -136,7 +136,7 @@ const mergeTokensIntoBlocks = (tokens: Token[]): string[] => {
     }
 
     if (token.type === "html" && token.block) {
-      const openingTagMatch = currentBlock.match(openingTagPattern);
+      const openingTagMatch = openingTagPattern.exec(currentBlock);
       if (openingTagMatch) {
         const tagName = openingTagMatch[1];
         const openTags = countNonSelfClosingOpenTags(currentBlock, tagName);

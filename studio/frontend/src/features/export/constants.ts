@@ -63,7 +63,7 @@ export const QUANT_OPTIONS: {
  */
 export type MergedBackend = "plain" | "compressed" | "torchao";
 
-export type MergedFormatOption = {
+export interface MergedFormatOption {
   value: string;
   label: string;
   bits: number;
@@ -74,7 +74,7 @@ export type MergedFormatOption = {
   needsCalibration?: boolean;
   hint: string;
   formatType?: string;
-};
+}
 
 /** Kept as a string alias for back-compat with callers that typed the old union. */
 export type MergedFormat = string;

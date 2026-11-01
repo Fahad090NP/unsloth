@@ -73,7 +73,7 @@ export function ModelsHeader({
         data-tour="hub-device"
         className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 max-sm:justify-start sm:flex-1"
       >
-        <HfTokenIndicator onOpenSettings={() => openSettings("general")} />
+        <HfTokenIndicator onOpenSettings={() => { openSettings("general"); }} />
         <TransportToggle />
         {isDataset ? null : <DownloadLocationPicker />}
         <StatPill

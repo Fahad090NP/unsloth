@@ -91,7 +91,7 @@ function collectBlocks(
     default:
       if ("children" in node) {
         for (const child of node.children) {
-          collectBlocks(child as RootContent, out, inList);
+          collectBlocks(child, out, inList);
         }
       }
   }
@@ -130,7 +130,7 @@ function htmlText(html: string): string {
       },
     )
     .replace(/&(#x[\da-f]+|#\d+|[a-z][a-z\d]*);/gi, (ref, body: string) => {
-      if (body[0] !== "#") return decodeNamedCharacterReference(body) || ref;
+      if (!body.startsWith("#")) return decodeNamedCharacterReference(body) || ref;
       const hex = body[1] === "x" || body[1] === "X";
       const code = Number.parseInt(body.slice(hex ? 2 : 1), hex ? 16 : 10);
       return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : ref;

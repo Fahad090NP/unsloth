@@ -629,7 +629,7 @@ async function encodeExport(
     drawInfoStamp(ctx, canvas.width, canvas.height, infoStampText(image));
   }
   const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, `image/${format}`, 0.95),
+    { canvas.toBlob(resolve, `image/${format}`, 0.95); },
   );
   if (!blob) {
     throw new Error(`could not encode ${format}`);
@@ -966,7 +966,7 @@ function AdvancedTextField({
           spellCheck={false}
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onValueChange(e.target.value)}
+          onChange={(e) => { onValueChange(e.target.value); }}
           className="min-h-9 overflow-hidden rounded-[18px] py-[calc((var(--spacing)*9-2px-1lh)/2)] font-mono text-xs leading-5"
         />
       ) : (
@@ -975,7 +975,7 @@ function AdvancedTextField({
           spellCheck={false}
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onValueChange(e.target.value)}
+          onChange={(e) => { onValueChange(e.target.value); }}
           className="h-9 font-mono text-xs"
         />
       )}
@@ -998,7 +998,7 @@ function AdvancedSelect({
   desc?: string;
   value: string;
   onValueChange: (v: string) => void;
-  options: Array<[string, string]>;
+  options: [string, string][];
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -1123,7 +1123,7 @@ function MaskCanvas({
     const mask = maskRef.current;
     if (!disp || !mask) return;
     const r = radius();
-    const layers: Array<[CanvasRenderingContext2D | null, string]> = [
+    const layers: [CanvasRenderingContext2D | null, string][] = [
       [disp.getContext("2d"), "rgba(244,114,114,0.55)"],
       [mask.getContext("2d"), "#ffffff"],
     ];
@@ -1196,13 +1196,13 @@ function MaskCanvas({
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => resolve(img);
+    img.onload = () => { resolve(img); };
     img.onerror = reject;
     img.src = src;
   });
 }
 
-type ExtendSides = { left: boolean; right: boolean; top: boolean; bottom: boolean };
+interface ExtendSides { left: boolean; right: boolean; top: boolean; bottom: boolean }
 
 function scaleToCanvas(source: CanvasImageSource, w: number, h: number): HTMLCanvasElement {
   const dst = document.createElement("canvas");
@@ -1331,7 +1331,7 @@ function RecipePopover({
   }, [active]);
   const viaConnection = image.model_kind === "connection";
   return (
-    <Popover open={active && open} onOpenChange={(o) => setOpen(active && o)}>
+    <Popover open={active && open} onOpenChange={(o) => { setOpen(active && o); }}>
       <PopoverTrigger asChild>
         <Button size="sm" variant="ghost" className="gap-1.5">
           <HugeiconsIcon icon={InformationCircleIcon} className="size-4" />
@@ -1444,7 +1444,7 @@ function RecipePopover({
           ) : null}
         </div>
         <div className="shrink-0 border-t border-border/60 px-3 py-2.5">
-          <Button size="sm" className="w-full gap-1.5" onClick={() => onRestore(image)}>
+          <Button size="sm" className="w-full gap-1.5" onClick={() => { onRestore(image); }}>
             <HugeiconsIcon icon={UndoIcon} className="size-4" />
             Restore these settings
           </Button>
@@ -1454,7 +1454,7 @@ function RecipePopover({
               size="sm"
               variant="ghost"
               className="mt-1 w-full gap-1.5"
-              onClick={() => onRestore(image, true)}
+              onClick={() => { onRestore(image, true); }}
             >
               Restore with the enhanced prompt
             </Button>
@@ -1558,12 +1558,12 @@ function reportLoadFailure(failure: unknown, fallback: string): void {
 
 type Busy = "loading" | "unloading" | "generating" | null;
 // baseRepo: only a reload of a resident model the page did not load sends one, to rebuild the same companions.
-type ImageLoadOptions = { kind: "gguf" | "single_file" | "pipeline"; filename?: string; displayRepoId?: string; baseRepo?: string };
+interface ImageLoadOptions { kind: "gguf" | "single_file" | "pipeline"; filename?: string; displayRepoId?: string; baseRepo?: string }
 type LastLoad = { repoId: string } & ImageLoadOptions & Pick<RememberedImageModel, "textEncoderFiles" | "vaeFile"> & {
   fieldFiles?: ImageComponentFiles;
 };
 
-type PickRevert = {
+interface PickRevert {
   prev: string | null;
   steps: number;
   guidance: number;
@@ -1572,7 +1572,7 @@ type PickRevert = {
   // A field the user changed after the pick is theirs, not ours to put back.
   appliedSteps?: number;
   appliedGuidance?: number;
-};
+}
 
 type LoadAdvanced = Pick<
   DiffusionLoadRequest,
@@ -1617,7 +1617,7 @@ class StripTileActionsBox {
     this.actions = actions;
   }
   get(): StripTileActions {
-    return this.actions as StripTileActions;
+    return this.actions!;
   }
 }
 
@@ -1657,9 +1657,9 @@ const GalleryStripTile = memo(function GalleryStripTile({
       data-image-id={id}
       data-reorder-id={id}
       draggable={true}
-      onDragStart={(event: DragEvent<HTMLElement>) => actions.get().tileProps(id).onDragStart(event)}
-      onDragEnd={() => actions.get().tileProps(id).onDragEnd()}
-      onKeyDown={(event: ReactKeyboardEvent<HTMLElement>) => actions.get().tileProps(id).onKeyDown(event)}
+      onDragStart={(event: DragEvent<HTMLElement>) => { actions.get().tileProps(id).onDragStart(event); }}
+      onDragEnd={() => { actions.get().tileProps(id).onDragEnd(); }}
+      onKeyDown={(event: ReactKeyboardEvent<HTMLElement>) => { actions.get().tileProps(id).onKeyDown(event); }}
       // Desktop only: a browser's own image menu works on these thumbnails, so keep it there.
       // Portalled children (the New project dialog) bubble here too: leave their menu alone.
       onContextMenu={(event) => {
@@ -1672,7 +1672,7 @@ const GalleryStripTile = memo(function GalleryStripTile({
       {cueEdge && <StripDropLine edge={cueEdge} />}
       <button
         type="button"
-        onClick={() => actions.get().select(id)}
+        onClick={() => { actions.get().select(id); }}
         className="relative size-full overflow-hidden rounded-lg bg-muted/40 outline-none ring-1 ring-transparent transition-shadow hover:ring-border focus-visible:ring-2 focus-visible:ring-ring"
       >
         {src ? (
@@ -1696,7 +1696,7 @@ const GalleryStripTile = memo(function GalleryStripTile({
         <GalleryPinBadge
           noun="image"
           className="bottom-0.5 left-0.5"
-          onUnpin={() => actions.get().togglePin(id, false)}
+          onUnpin={() => { actions.get().togglePin(id, false); }}
         />
       )}
       <div className="absolute right-0.5 top-0.5">
@@ -1705,17 +1705,17 @@ const GalleryStripTile = memo(function GalleryStripTile({
           noun="image"
           active={active}
           open={menuOpen}
-          onOpenChange={(open) => actions.get().setMenuId(open ? id : null)}
+          onOpenChange={(open) => { actions.get().setMenuId(open ? id : null); }}
           pinned={Boolean(image.pinned)}
           archived={Boolean(image.archived)}
           favorite={favorite}
-          onToggleFavorite={() => actions.get().toggleFavorite(`image:${id}`)}
-          onTogglePin={() => actions.get().togglePin(id, !image.pinned)}
-          onToggleArchive={() => actions.get().archive(id)}
-          onDelete={() => actions.get().remove(id)}
-          onDownload={() => actions.get().download(image)}
+          onToggleFavorite={() => { actions.get().toggleFavorite(`image:${id}`); }}
+          onTogglePin={() => { actions.get().togglePin(id, !image.pinned); }}
+          onToggleArchive={() => { actions.get().archive(id); }}
+          onDelete={() => { actions.get().remove(id); }}
+          onDownload={() => { actions.get().download(image); }}
           onAddToProject={(projectId) => actions.get().addToProject(id, projectId)}
-          leadingItems={<EditImageMenuItem onClick={() => actions.get().editImage(image)} />}
+          leadingItems={<EditImageMenuItem onClick={() => { actions.get().editImage(image); }} />}
         />
       </div>
     </div>
@@ -1788,7 +1788,7 @@ export function ImagesPage({
   }, []);
   const setPrompt = useCallback(
     (next: SetStateAction<string>) =>
-      setPromptFor(useImageWorkflowStore.getState().workflow, next),
+      { setPromptFor(useImageWorkflowStore.getState().workflow, next); },
     [setPromptFor],
   );
   const [negativePrompt, setNegativePrompt] = useState("");
@@ -1862,7 +1862,7 @@ export function ImagesPage({
   const [textMask, setTextMask] = useState<AppliedMask | null>(null);
   const onTextMask = useCallback(
     (mask: { dataUrl: string; additive: boolean }) =>
-      setTextMask((prev) => ({ ...mask, key: (prev?.key ?? 0) + 1 })),
+      { setTextMask((prev) => ({ ...mask, key: (prev?.key ?? 0) + 1 })); },
     [],
   );
   // Extend (outpaint): how far to grow each dimension and which sides; reuses the inpaint backend at generate time.
@@ -2074,7 +2074,7 @@ export function ImagesPage({
   // Bumped when the archive changes elsewhere (Settings restore or delete), which the strip may not show.
   const [archiveChangeKey, setArchiveChangeKey] = useState(0);
   useEffect(
-    () => subscribeArchiveChanged("images", () => setArchiveChangeKey((k) => k + 1)),
+    () => subscribeArchiveChanged("images", () => { setArchiveChangeKey((k) => k + 1); }),
     [],
   );
   useEffect(() => {
@@ -2242,7 +2242,7 @@ export function ImagesPage({
   const pickToast = useDiffusionPickToast();
 
   const cancelLoadRef = useRef<() => void>(() => {});
-  const cancelLoadFromToast = useCallback(() => cancelLoadRef.current(), []);
+  const cancelLoadFromToast = useCallback(() => { cancelLoadRef.current(); }, []);
   // In-flight requests compare against this and discard their result after a cancel.
   const cancelSeq = useRef(0);
   // The compensating unload carries no identity, so it must not fire once a newer load owns the page.
@@ -2396,10 +2396,10 @@ export function ImagesPage({
   });
   const shiftValue = shiftState.key === samplerModelKey ? shiftState.value : EMPTY_SHIFT;
   const setShiftValue = useCallback(
-    (value: ShiftValue) => setShiftState({ key: samplerModelKey, value }),
+    (value: ShiftValue) => { setShiftState({ key: samplerModelKey, value }); },
     [samplerModelKey],
   );
-  const embeddingsEnabled = !external && status?.loaded === true && !!status.textual_inversion;
+  const embeddingsEnabled = !external && status?.loaded === true && Boolean(status.textual_inversion);
   // Detailer (face fix): off by default; its options persist, the switch does not.
   const [detailerOn, setDetailerOn] = useState(false);
   const [detailerOptions, setDetailerOptionsState] = useState<DetailerOptions>(readDetailerOptions);
@@ -2439,7 +2439,7 @@ export function ImagesPage({
       : null;
   const setEnhanceOverride = useCallback(
     (on: boolean | null) =>
-      setEnhanceOverrideState(on === null ? null : { family: enhanceFamilyKey, on }),
+      { setEnhanceOverrideState(on === null ? null : { family: enhanceFamilyKey, on }); },
     [enhanceFamilyKey],
   );
   const enhanceOn = resolveEnhancePrompt({
@@ -2667,7 +2667,7 @@ export function ImagesPage({
       { root, rootMargin: "0px 600px" },
     );
     for (const tile of root.querySelectorAll("[data-image-id]")) io.observe(tile);
-    return () => io.disconnect();
+    return () => { io.disconnect(); };
   }, [images, ensureThumb]);
 
   // The preview is what the user looks at, so the selected image is fetched whether or not its tile is on screen.
@@ -2874,7 +2874,7 @@ export function ImagesPage({
   useGalleryImageDropSource(
     useCallback(async (id: string) => {
       const image = imagesRef.current.find((item) => item.id === id);
-      return image ? fetchGalleryBlob(image.url) : null;
+      return image ? await fetchGalleryBlob(image.url) : null;
     }, []),
   );
 
@@ -3239,7 +3239,7 @@ export function ImagesPage({
         });
         return false;
       }
-      return applyImportedRecipe(recipe);
+      return await applyImportedRecipe(recipe);
     },
     [applyImportedRecipe],
   );
@@ -3392,7 +3392,7 @@ export function ImagesPage({
           setBusy((prev) => (prev === "loading" ? "unloading" : prev));
           void pending
             .catch(() => {})
-            .finally(() => setBusy((prev) => (prev === "unloading" ? null : prev)));
+            .finally(() => { setBusy((prev) => (prev === "unloading" ? null : prev)); });
         } else {
           setBusy((prev) => (prev === "loading" ? null : prev));
         }
@@ -4288,7 +4288,7 @@ export function ImagesPage({
       if (!advanced.engine && sendsEngine(opts.kind, opts.filename)) {
         advanced = { ...advanced, engine: engineFor(repoId, opts, advanced) ?? "auto" };
       }
-      if (source !== "hub" && !downloadOnly) return handleLoadRef.current(repoId, opts, advanced);
+      if (source !== "hub" && !downloadOnly) return await handleLoadRef.current(repoId, opts, advanced);
       const pickToastId = downloadOnly ? undefined : pickToast.show(opts.displayRepoId ?? repoId);
       // Read before the await: a pick made meanwhile replaces quantRevert. Download-only owns no slot.
       const ownRevert = downloadSnapshot || downloadOnly ? null : quantRevert.current;
@@ -4385,7 +4385,7 @@ export function ImagesPage({
         toast.info("No downloads were planned for this selection");
         return true;
       }
-      return handleLoadRef.current(repoId, opts, advanced, pickToastId);
+      return await handleLoadRef.current(repoId, opts, advanced, pickToastId);
     },
     [stage, currentLoadAdvanced, pickComponentFiles, requestDownloadPlan, modelSelectionAction, pickGuard, revertPick, pickToast, engineFor, offerLoadAnyway, dismissLoadAnyway],
   );
@@ -4452,7 +4452,7 @@ export function ImagesPage({
       const isCurrent = () => isMounted.current &&
         (downloadOnly || pickGuard.holds(token));
       const revert: PickRevert = quantRevert.current ?? { prev: quant, steps, guidance };
-      return runGgufRepoPick({
+      return await runGgufRepoPick({
         isCurrent,
         resolve: () =>
           resolveDiffusionGgufFilename(repoId, {
@@ -4954,7 +4954,7 @@ export function ImagesPage({
     width: number;
     height: number;
   } | null>(null);
-  const sourceDims = sourceRead && sourceRead.src === initImage ? sourceRead : null;
+  const sourceDims = sourceRead?.src === initImage ? sourceRead : null;
   useEffect(() => {
     if (!initImage) return;
     let live = true;
@@ -4976,8 +4976,8 @@ export function ImagesPage({
   const officialPresets = useMemo(() => presetsWithin(sizeLimits), [sizeLimits]);
   const showOfficialPresets = sizeLimits.maxSide > MAX_OUTPUT_DEFAULT && officialPresets.length > 0;
   const unifiedEditActive = workflow === "edit" && unifiedEdit;
-  const onLocalizedLayer = useCallback((dataUrl: string | null) => setLocalizedLayer(dataUrl), []);
-  const onLocalizedColors = useCallback((names: string[]) => setLocalizedColors(names), []);
+  const onLocalizedLayer = useCallback((dataUrl: string | null) => { setLocalizedLayer(dataUrl); }, []);
+  const onLocalizedColors = useCallback((names: string[]) => { setLocalizedColors(names); }, []);
 
   const renderAdditionalImages = (numberOf: (i: number) => number, hint: string) => (
     <>
@@ -4987,7 +4987,7 @@ export function ImagesPage({
             <ImageDropzone
               value={img}
               onChange={(v) =>
-                setReferenceImages((prev) => prev.map((p, j) => (j === i ? (v ?? "") : p)))
+                { setReferenceImages((prev) => prev.map((p, j) => (j === i ? (v ?? "") : p))); }
               }
               removeLabel={`Remove image ${numberOf(i)}`}
               cropSubject={`Image ${numberOf(i)}`}
@@ -4997,7 +4997,7 @@ export function ImagesPage({
               variant="secondary"
               size="sm"
               className="w-full"
-              onClick={() => setReferenceImages((prev) => prev.filter((_, j) => j !== i))}
+              onClick={() => { setReferenceImages((prev) => prev.filter((_, j) => j !== i)); }}
             >
               <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
               Remove image {numberOf(i)}
@@ -5018,7 +5018,7 @@ export function ImagesPage({
           size="sm"
           className="w-fit self-start"
           disabled={!initImage}
-          onClick={() => setReferenceImages((prev) => [...prev, ""])}
+          onClick={() => { setReferenceImages((prev) => [...prev, ""]); }}
         >
           Add image
         </Button>
@@ -5042,7 +5042,7 @@ export function ImagesPage({
       >
         <Select
           value={String(referenceResolution)}
-          onValueChange={(v) => setReferenceResolution(Number(v))}
+          onValueChange={(v) => { setReferenceResolution(Number(v)); }}
         >
           <SelectTrigger aria-label="Reference detail">
             <SelectValue />
@@ -5068,7 +5068,7 @@ export function ImagesPage({
           value={aspect}
           onValueChange={changeAspect}
           open={active && aspectOpen}
-          onOpenChange={(o) => setAspectOpen(active && o)}
+          onOpenChange={(o) => { setAspectOpen(active && o); }}
           portrait={portrait}
           onFlip={flipDimensions}
         />
@@ -5092,7 +5092,7 @@ export function ImagesPage({
             label="Width"
             value={width}
             open={active && widthOpen}
-            onOpenChange={(o) => setWidthOpen(active && o)}
+            onOpenChange={(o) => { setWidthOpen(active && o); }}
             onChange={changeWidth}
             options={dimOptions(sizeLimits)}
             snap={(n) => snapDim(n, sizeLimits)}
@@ -5102,7 +5102,7 @@ export function ImagesPage({
             label="Height"
             value={height}
             open={active && heightOpen}
-            onOpenChange={(o) => setHeightOpen(active && o)}
+            onOpenChange={(o) => { setHeightOpen(active && o); }}
             onChange={changeHeight}
             options={dimOptions(sizeLimits)}
             snap={(n) => snapDim(n, sizeLimits)}
@@ -5748,7 +5748,7 @@ export function ImagesPage({
         label="On model selection"
         hint="Choose Download only to prepare the selected model and its required assets without loading it. Applies to the next model you select; progress and cancellation appear in Downloads."
         value={modelSelectionAction}
-        onValueChange={(v) => setModelSelectionAction(v as typeof modelSelectionAction)}
+        onValueChange={(v) => { setModelSelectionAction(v as typeof modelSelectionAction); }}
         options={[
           ["load", "Download and load"],
           ["download", "Download only"],
@@ -5764,7 +5764,7 @@ export function ImagesPage({
           }
           badge={<ResolvedBadge status={status} controlKey="engine" />}
           value={engineChoice}
-          onValueChange={(v) => setEngineChoice(v as EngineChoice)}
+          onValueChange={(v) => { setEngineChoice(v as EngineChoice); }}
           options={ENGINE_OPTIONS}
         />
       )}
@@ -5773,7 +5773,7 @@ export function ImagesPage({
         hint="Auto picks per model: GGUF compiles at load; a dense model keeps the first two images exact and eager, then compiles from the 3rd (~2x from there). eager = fused kernels, no compile. default/max add torch.compile (max also TF32 + fused QKV, plus the step cache on 20+ step models)."
         badge={<ResolvedBadge status={status} controlKey="speed_mode" />}
         value={speedMode}
-        onValueChange={(v) => setSpeedMode(v as typeof speedMode)}
+        onValueChange={(v) => { setSpeedMode(v as typeof speedMode); }}
         options={[
           ["auto", "Auto"],
           ["off", "Off (bit-exact)"],
@@ -5790,7 +5790,7 @@ export function ImagesPage({
           hint="How the model computes. Auto picks the fastest precision the hardware supports (INT8 on every capable GPU, then FP8 where the card has it) and quantises the transformer onto low-precision tensor cores. A GGUF pick reaches it by loading the FULL base model instead of the GGUF, and falls back to the GGUF as-is when the device, VRAM or disk can't take it; an official pipeline is already dense and is quantised in place, falling back to plain BF16. Off runs the checkpoint as-is."
           badge={<ResolvedBadge status={status} controlKey="transformer_quant" />}
           value={transformerQuant}
-          onValueChange={(v) => setTransformerQuant(v as typeof transformerQuant)}
+          onValueChange={(v) => { setTransformerQuant(v as typeof transformerQuant); }}
           options={[
             ["auto", "Auto (fastest for GPU)"],
             ["none", "Off (run the checkpoint as-is)"],
@@ -5823,7 +5823,7 @@ export function ImagesPage({
         hint={`Shrinks the text encoder to save memory, at some cost to image quality. Default lets the model choose, which on Qwen-Image 2.1 means its hosted FP8 encoder (8.75 GB rather than 16.3); pick Dense (bf16) to pin the released encoder. FP8 (storage) is the safe pick and the only one that works with CPU offload. FP8 (compute) needs an RTX 40 series or newer.${nvfp4Diffusion ? " NVFP4 is the smallest." : ""} The loaded build below reports what was applied.`}
         badge={<ResolvedBadge status={status} controlKey="text_encoder_quant" />}
         value={textEncoderQuant}
-        onValueChange={(v) => setTextEncoderQuant(v as typeof textEncoderQuant)}
+        onValueChange={(v) => { setTextEncoderQuant(v as typeof textEncoderQuant); }}
         options={withNvfp4Option(
           [
             ["auto", "Default"],
@@ -5857,7 +5857,7 @@ export function ImagesPage({
         hint="Attention kernel. Auto upgrades to cuDNN fused attention on NVIDIA when a speed profile is active. sage is INT8 attention (SageAttention 2; without a local install Unsloth fetches the Hugging Face kernels-hub build, which runs on Ampere, Ada and Hopper GPUs, and any other GPU keeps the default): fast (10-40%) but can black-frame some families (Qwen, Wan), so it never engages automatically."
         badge={<ResolvedBadge status={status} controlKey="attention_backend" />}
         value={attentionBackend}
-        onValueChange={(v) => setAttentionBackend(v as typeof attentionBackend)}
+        onValueChange={(v) => { setAttentionBackend(v as typeof attentionBackend); }}
         options={[
           ["auto", "Auto"],
           ["native", "Native SDPA"],
@@ -5871,7 +5871,7 @@ export function ImagesPage({
         hint="auto measures free VRAM. fast keeps everything resident. balanced streams the transformer. low_vram offloads every component (lowest VRAM, slower)."
         badge={<ResolvedBadge status={status} controlKey="memory_mode" />}
         value={memoryMode}
-        onValueChange={(v) => setMemoryMode(v as typeof memoryMode)}
+        onValueChange={(v) => { setMemoryMode(v as typeof memoryMode); }}
         options={[
           ["auto", "Auto"],
           ["fast", "Fast (resident)"],
@@ -5902,7 +5902,7 @@ export function ImagesPage({
         hint="Static skip extrapolates middle steps on a fixed schedule (12+ steps) and keeps the compile and CUDA graph. Auto uses it for text-to-image, at or above the step count it was measured at, on the models where it stayed close to the full render: Qwen-Image, Qwen-Image-2.1, FLUX.1 Krea dev, FLUX.2 klein base 4B on every speed tier but Off/Eager, and FLUX.1 dev and HunyuanImage 2.1 on Max only. First-Block-Cache reuses the transformer tail across steps (~1.4x, larger quality cost); Auto turns it on for other many-step models on Max only. UNSLOTH_DIFFUSION_AUTO_STEP_SKIP=0 stops Auto from picking Static skip."
         badge={<ResolvedBadge status={status} controlKey="transformer_cache" />}
         value={transformerCache}
-        onValueChange={(v) => setTransformerCache(v as typeof transformerCache)}
+        onValueChange={(v) => { setTransformerCache(v as typeof transformerCache); }}
         options={[
           ["auto", "Auto"],
           ["off", "Off"],
@@ -5940,7 +5940,7 @@ export function ImagesPage({
         </span>
         <Switch
           checked={livePreview && !livePreviewUnavailable}
-          onCheckedChange={(on) => setLivePreviewOff(!on)}
+          onCheckedChange={(on) => { setLivePreviewOff(!on); }}
           disabled={livePreviewUnavailable}
           aria-label="Live preview"
         />
@@ -5960,7 +5960,7 @@ export function ImagesPage({
               </span>
               <Switch
                 checked={sdChoice.promptWeighting}
-                onCheckedChange={(on) => setSdChoice((c) => ({ ...c, promptWeighting: on }))}
+                onCheckedChange={(on) => { setSdChoice((c) => ({ ...c, promptWeighting: on })); }}
                 aria-label="Prompt weighting"
               />
             </div>
@@ -5973,7 +5973,7 @@ export function ImagesPage({
               min={1}
               max={sdCaps.clip_skip.max}
               step={1}
-              onChange={(v) => setSdChoice((c) => ({ ...c, clipSkip: v }))}
+              onChange={(v) => { setSdChoice((c) => ({ ...c, clipSkip: v })); }}
             />
           )}
           {sdCaps.cfg_rescale && (
@@ -5990,7 +5990,7 @@ export function ImagesPage({
               min={0}
               max={sdCaps.cfg_rescale.max}
               step={0.05}
-              onChange={(v) => setSdChoice((c) => ({ ...c, cfgRescale: v }))}
+              onChange={(v) => { setSdChoice((c) => ({ ...c, cfgRescale: v })); }}
               disabled={controlnetEngaged}
             />
           )}
@@ -6003,14 +6003,14 @@ export function ImagesPage({
                 min={0}
                 max={1}
                 step={0.01}
-                onChange={(v) => setSdChoice((c) => ({ ...c, variationStrength: v }))}
+                onChange={(v) => { setSdChoice((c) => ({ ...c, variationStrength: v })); }}
               />
               {sdChoice.variationStrength > 0 && (
                 <Field label="Variation seed" hint="Leave empty for a random variation seed each run.">
                   <Input
                     placeholder="Random if empty"
                     value={sdChoice.variationSeed}
-                    onChange={(e) => setSdChoice((c) => ({ ...c, variationSeed: e.target.value }))}
+                    onChange={(e) => { setSdChoice((c) => ({ ...c, variationSeed: e.target.value })); }}
                     aria-label="Variation seed"
                   />
                 </Field>
@@ -6073,7 +6073,7 @@ export function ImagesPage({
                 hubCapability="image-gen"
                 placeholder="Select image model"
                 open={active && selectorOpen}
-                onOpenChange={(o) => setSelectorOpen(active && o)}
+                onOpenChange={(o) => { setSelectorOpen(active && o); }}
               />
             )}
             {pageMode !== "train" && busy === "loading" && (
@@ -6101,7 +6101,7 @@ export function ImagesPage({
               dataTour="images-mode"
               ariaLabel="Page mode"
               value={pageMode}
-              onValueChange={(v) => setPageMode(v as "create" | "train")}
+              onValueChange={(v) => { setPageMode(v as "create" | "train"); }}
               fit={true}
               className="h-[calc(34px*var(--ui-space-scale,1))] [&>button]:h-[calc(34px*var(--ui-space-scale,1))] [&>button]:px-7 @[68rem]:[&>button]:px-14 [[data-media-header-tight]_&]:[&>button]:px-4 @max-[30rem]:[&>button]:px-2.5 @max-[30rem]:[&>button>[data-pill-tab-label]]:sr-only"
               tabs={[
@@ -6130,7 +6130,7 @@ export function ImagesPage({
               // For a GGUF load repo_id is a checkpoint path, not a trainable base.
               status?.base_repo ?? status?.repo_id ?? null
             }
-            onTrainingComplete={() => setLoraRefreshKey((k) => k + 1)}
+            onTrainingComplete={() => { setLoraRefreshKey((k) => k + 1); }}
             onDeploy={handleDeployAdapter}
             familyName={trainFamilyName}
             onFamilyNameChange={setTrainFamilyName}
@@ -6183,7 +6183,7 @@ export function ImagesPage({
                     onSave={imagePresets.savePreset}
                     onDelete={imagePresets.deletePreset}
                     onImportFromImage={() => importFileRef.current?.click()}
-                    onPasteParameters={() => setPasteOpen(true)}
+                    onPasteParameters={() => { setPasteOpen(true); }}
                   />
                 </div>
               )}
@@ -6279,7 +6279,7 @@ export function ImagesPage({
                         variant="secondary"
                         size="sm"
                         className="flex-1"
-                        onClick={() => handleInitChange(null)}
+                        onClick={() => { handleInitChange(null); }}
                       >
                         <HugeiconsIcon icon={ImageAdd02Icon} className="size-3.5" />
                         Replace image
@@ -6361,7 +6361,7 @@ export function ImagesPage({
                         ["bottom", "Bottom"],
                         ["left", "Left"],
                         ["right", "Right"],
-                      ] as Array<[keyof ExtendSides, string]>
+                      ] as [keyof ExtendSides, string][]
                     ).map(([key, label]) => {
                       const on = extendSides[key];
                       return (
@@ -6369,7 +6369,7 @@ export function ImagesPage({
                           key={key}
                           type="button"
                           aria-pressed={on}
-                          onClick={() => setExtendSides((s) => ({ ...s, [key]: !s[key] }))}
+                          onClick={() => { setExtendSides((s) => ({ ...s, [key]: !s[key] })); }}
                           className={cn(
                             // No border in either mode: the fill alone marks the state, and a ring would not survive
                             // mouse focus anyway (index.css blanks it).
@@ -6487,7 +6487,7 @@ export function ImagesPage({
                         variant="secondary"
                         size="sm"
                         className="w-full"
-                        onClick={() => handleInitChange(null)}
+                        onClick={() => { handleInitChange(null); }}
                       >
                         <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
                         Remove source image
@@ -6544,7 +6544,7 @@ export function ImagesPage({
                               type="button"
                               aria-label={c.name}
                               aria-pressed={localizedColor === c.value}
-                              onClick={() => setLocalizedColor(c.value)}
+                              onClick={() => { setLocalizedColor(c.value); }}
                               className={cn(
                                 "size-7 rounded-full border-2",
                                 localizedColor === c.value ? "border-foreground" : "border-transparent",
@@ -6570,7 +6570,7 @@ export function ImagesPage({
                         size="sm"
                         className="flex-1"
                         disabled={!localizedLayer}
-                        onClick={() => setLocalizedResetKey((k) => k + 1)}
+                        onClick={() => { setLocalizedResetKey((k) => k + 1); }}
                       >
                         Clear
                       </Button>
@@ -6580,7 +6580,7 @@ export function ImagesPage({
                         size="sm"
                         className="flex-1"
                         onClick={() =>
-                          setPrompt((p) => withLocalizedHint(p, localizedMode, localizedColors))
+                          { setPrompt((p) => withLocalizedHint(p, localizedMode, localizedColors)); }
                         }
                       >
                         <HugeiconsIcon icon={PlusSignIcon} data-icon="inline-start" />
@@ -6600,7 +6600,7 @@ export function ImagesPage({
                   <div className="flex items-center gap-2">
                     <Select
                       value={editSizing}
-                      onValueChange={(v) => setEditSizing(v as EditSizing)}
+                      onValueChange={(v) => { setEditSizing(v as EditSizing); }}
                     >
                       <SelectTrigger aria-label="Output size" className="flex-1">
                         <SelectValue />
@@ -6613,7 +6613,7 @@ export function ImagesPage({
                     {editSizing === "source" && (
                       <Select
                         value={String(matchResolution)}
-                        onValueChange={(v) => setMatchResolution(Number(v))}
+                        onValueChange={(v) => { setMatchResolution(Number(v)); }}
                       >
                         <SelectTrigger aria-label="Match size" className="w-[calc(120px*var(--ui-space-scale,1))]">
                           <SelectValue />
@@ -6645,7 +6645,7 @@ export function ImagesPage({
                     variant="secondary"
                     size="sm"
                     className="w-full"
-                    onClick={() => setPrompt((p) => withTransparencyPrompt(p))}
+                    onClick={() => { setPrompt((p) => withTransparencyPrompt(p)); }}
                   >
                     Ask for a transparent background
                   </Button>
@@ -6772,9 +6772,9 @@ export function ImagesPage({
                           autoCorrect="off"
                           className="h-8 flex-1 text-xs"
                           onChange={(e) =>
-                            setLoras((prev) =>
+                            { setLoras((prev) =>
                               prev.map((p, j) => (j === i ? { ...p, id: e.target.value } : p)),
-                            )
+                            ); }
                           }
                         />
                         <Button
@@ -6783,7 +6783,7 @@ export function ImagesPage({
                           size="icon"
                           className="size-8 shrink-0"
                           aria-label={`Remove LoRA ${i + 1}`}
-                          onClick={() => setLoras((prev) => prev.filter((_, j) => j !== i))}
+                          onClick={() => { setLoras((prev) => prev.filter((_, j) => j !== i)); }}
                         >
                           <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
                         </Button>
@@ -6795,7 +6795,7 @@ export function ImagesPage({
                         max={2}
                         step={0.05}
                         onChange={(v) =>
-                          setLoras((prev) => prev.map((p, j) => (j === i ? { ...p, weight: v } : p)))
+                          { setLoras((prev) => prev.map((p, j) => (j === i ? { ...p, weight: v } : p))); }
                         }
                       />
                     </div>
@@ -6826,7 +6826,7 @@ export function ImagesPage({
                       variant="ghost"
                       size="sm"
                       title="Add a custom models folder. Image LoRAs exported from Unsloth in it show up here."
-                      onClick={() => setLoraFoldersOpen(true)}
+                      onClick={() => { setLoraFoldersOpen(true); }}
                     >
                       <HugeiconsIcon icon={FolderAddIcon} className="size-3.5" />
                       Folders
@@ -6836,7 +6836,7 @@ export function ImagesPage({
                 <OnDeviceFoldersDialog
                   open={loraFoldersOpen}
                   onOpenChange={setLoraFoldersOpen}
-                  onInventoryChange={() => setLoraRefreshKey((k) => k + 1)}
+                  onInventoryChange={() => { setLoraRefreshKey((k) => k + 1); }}
                 />
               </Field>
             )}
@@ -6950,7 +6950,7 @@ export function ImagesPage({
                 <div className="flex items-center gap-2">
                   <Select
                     value={samplerChoice.sampler}
-                    onValueChange={(v) => changeSamplerChoice({ sampler: v })}
+                    onValueChange={(v) => { changeSamplerChoice({ sampler: v }); }}
                   >
                     <SelectTrigger className="h-8 flex-1 text-xs" aria-label="Sampler">
                       <SelectValue />
@@ -6965,7 +6965,7 @@ export function ImagesPage({
                   </Select>
                   <Select
                     value={samplerChoice.scheduleType}
-                    onValueChange={(v) => changeSamplerChoice({ scheduleType: v })}
+                    onValueChange={(v) => { changeSamplerChoice({ scheduleType: v }); }}
                   >
                     <SelectTrigger className="h-8 w-32 text-xs" aria-label="Schedule type">
                       <SelectValue />
@@ -7013,7 +7013,7 @@ export function ImagesPage({
                     <Input
                       placeholder="Random if empty"
                       value={seed}
-                      onChange={(e) => setSeed(e.target.value)}
+                      onChange={(e) => { setSeed(e.target.value); }}
                       className="flex-1"
                     />
                     <div className="flex shrink-0 items-center">
@@ -7025,7 +7025,7 @@ export function ImagesPage({
                       aria-label="Random seed"
                       title="Random seed each run"
                       disabled={seed === ""}
-                      onClick={() => setSeed("")}
+                      onClick={() => { setSeed(""); }}
                     >
                       <Shuffle className="size-4" strokeWidth={1.5} />
                     </Button>
@@ -7182,10 +7182,10 @@ export function ImagesPage({
                 },
                 onDownload: () => void handleQuickDownload(viewerImage),
                 reveal: revealLabel
-                  ? { label: revealLabel, onClick: () => revealInFolder(`image:${viewerImage.id}`) }
+                  ? { label: revealLabel, onClick: () => { revealInFolder(`image:${viewerImage.id}`); } }
                   : undefined,
                 favorite: isFavorite(`image:${viewerImage.id}`),
-                onToggleFavorite: () => toggleFavorite(`image:${viewerImage.id}`),
+                onToggleFavorite: () => { toggleFavorite(`image:${viewerImage.id}`); },
                 onAddToProject: (projectId) => addGalleryImageToProject(viewerImage.id, projectId),
                 onDelete: () => {
                   setViewerId(null);
@@ -7266,7 +7266,7 @@ export function ImagesPage({
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => useSettingsDialogStore.getState().openDialog("library")}
+                        onClick={() => { useSettingsDialogStore.getState().openDialog("library"); }}
                         className="justify-between gap-4 text-muted-foreground"
                       >
                         Info stamp
@@ -7280,7 +7280,7 @@ export function ImagesPage({
                     pinned={Boolean(selected.pinned)}
                     archived={Boolean(selected.archived)}
                     favorite={isFavorite(`image:${selected.id}`)}
-                    onToggleFavorite={() => toggleFavorite(`image:${selected.id}`)}
+                    onToggleFavorite={() => { toggleFavorite(`image:${selected.id}`); }}
                     onTogglePin={() =>
                       void handleTogglePin(selected.id, !selected.pinned)
                     }

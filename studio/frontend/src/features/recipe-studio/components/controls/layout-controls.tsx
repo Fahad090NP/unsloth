@@ -10,11 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { buildFitViewOptions } from "../../utils/graph/fit-view";
 
-type LayoutControlsProps = {
+interface LayoutControlsProps {
   direction: "LR" | "TB";
   onLayout: () => void;
   onToggleDirection: () => void;
-};
+}
 
 export function LayoutControls({
   direction,

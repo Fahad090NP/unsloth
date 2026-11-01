@@ -12,7 +12,7 @@ import {
   videoSizeLimits,
 } from "../src/features/video/video-size.ts";
 
-const LTX2_PRESETS: Array<[number, number]> = [
+const LTX2_PRESETS: [number, number][] = [
   [768, 512],
   [1216, 704],
   [704, 1216],

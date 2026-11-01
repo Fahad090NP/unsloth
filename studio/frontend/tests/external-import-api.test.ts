@@ -26,7 +26,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     status: nextStatus,
     headers: { "Content-Type": "application/json" },
   });
-}) as typeof fetch;
+});
 
 const { importExternalChats, loadExternalImportStatus } = await import(
   "../src/features/settings/api/external-import.ts"

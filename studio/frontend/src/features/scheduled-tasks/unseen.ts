@@ -78,7 +78,7 @@ export const useUnseenScheduledRuns = create<UnseenState>()((set, get) => {
   return {
     ...(typeof window === "undefined" ? NOTHING_UNSEEN : load()),
     markFinished: (runs, onPage) =>
-      change((current) => {
+      { change((current) => {
         const tasks = { ...current.tasks };
         const threads = new Set(current.threads);
         for (const run of runs) {
@@ -87,18 +87,18 @@ export const useUnseenScheduledRuns = create<UnseenState>()((set, get) => {
         }
         // The newest only: a result never opened must not grow the record without end.
         return { tasks, page: current.page || !onPage, threads: [...threads].slice(-200) };
-      }),
-    clearTask: (taskId) => change((current) => withoutTask(current, taskId)),
+      }); },
+    clearTask: (taskId) => { change((current) => withoutTask(current, taskId)); },
     clearThread: (threadId) =>
-      change((current) => {
+      { change((current) => {
         const read = current.threads.includes(threadId)
           ? { ...current, threads: current.threads.filter((id) => id !== threadId) }
           : current;
         const task = Object.keys(read.tasks).find((id) => read.tasks[id] === threadId);
         return withoutTask(read, task) ?? (read === current ? null : read);
-      }),
+      }); },
     clearPage: () =>
-      change((current) => (current.page ? { ...current, page: false } : null)),
+      { change((current) => (current.page ? { ...current, page: false } : null)); },
   };
 });
 

@@ -3,13 +3,13 @@
 
 /** Creation inputs captured at Send, since attachments and view switches can delay
  *  initialize(). Per send, because a blank thread id can be reused across views. */
-export type ThreadCreationClaim = {
+export interface ThreadCreationClaim {
   projectId: string | null;
   incognito: boolean;
   modelId: string;
   modelGgufVariant: string | null;
   createdAt: number;
-};
+}
 
 const claimsByThreadId = new Map<string, ThreadCreationClaim & { claimedAt: number }>();
 

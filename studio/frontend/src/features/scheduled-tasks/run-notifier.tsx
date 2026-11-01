@@ -217,7 +217,7 @@ export function ScheduledTaskRunNotifier() {
             toast.success(translate("scheduledTasks.toast.finished", { title: run.taskTitle }), {
               action: {
                 label: translate("scheduledTasks.toast.open"),
-                onClick: () => openChat(threadId),
+                onClick: () => { openChat(threadId); },
               },
             });
           } else {
@@ -322,7 +322,7 @@ export function ScheduledTaskRunNotifier() {
         key={ask.id}
         run={ask}
         // By id: Load and run closes the dialog too, and both must not drop the next prompt.
-        onDone={() => setAsking((current) => current.filter((run) => run.id !== ask.id))}
+        onDone={() => { setAsking((current) => current.filter((run) => run.id !== ask.id)); }}
       />
     </Suspense>
   );

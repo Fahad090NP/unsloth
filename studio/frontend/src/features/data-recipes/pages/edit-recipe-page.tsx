@@ -10,9 +10,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getCachedRecipe, getRecipe, primeRecipeCache, saveRecipe } from "../data/recipes-db";
 import type { RecipeRecord } from "../types";
 
-type EditRecipePageProps = {
+interface EditRecipePageProps {
   recipeId: string;
-};
+}
 
 type LoadState =
   | { status: "loading" }

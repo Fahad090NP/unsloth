@@ -168,7 +168,7 @@ function Harness(): ReactElement {
         {panelMounted ? (
           <ResearchActivityPanel
             runId={RUN_ID}
-            onClose={() => setPanelMounted(false)}
+            onClose={() => { setPanelMounted(false); }}
           />
         ) : null}
       </div>

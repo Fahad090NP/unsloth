@@ -4,17 +4,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-type ObserverInit = {
+interface ObserverInit {
   attributes?: boolean;
   attributeFilter?: string[];
   childList?: boolean;
   subtree?: boolean;
-};
+}
 
-type FakeObserver = {
+interface FakeObserver {
   targets: { target: unknown; init: ObserverInit }[];
   deliver: () => void;
-};
+}
 
 class FakeElement {
   private readonly attributes = new Map<string, string>();
@@ -41,7 +41,7 @@ const body = { children };
 class FakeMutationObserver {
   private readonly entry: FakeObserver;
   constructor(callback: () => void) {
-    this.entry = { targets: [], deliver: () => callback() };
+    this.entry = { targets: [], deliver: () => { callback(); } };
     observers.push(this.entry);
   }
   observe(target: unknown, init: ObserverInit) {

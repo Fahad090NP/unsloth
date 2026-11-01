@@ -26,7 +26,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
-}) as typeof fetch;
+});
 
 const {
   awaitsCompanions,

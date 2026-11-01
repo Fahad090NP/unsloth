@@ -65,7 +65,7 @@ function stalled(init?: RequestInit): Response {
   const body = new ReadableStream<Uint8Array>({
     start(controller) {
       controller.enqueue(new TextEncoder().encode('{"settings": {'));
-      signal?.addEventListener("abort", () => controller.error(signal.reason));
+      signal?.addEventListener("abort", () => { controller.error(signal.reason); });
     },
   });
   return new Response(body, { status: 200 });
@@ -74,7 +74,7 @@ function stalled(init?: RequestInit): Response {
 type Handler = (url: string, init?: RequestInit) => Promise<Response>;
 let handle: Handler = async () => json({});
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
-  handle(String(input), init)) as typeof fetch;
+  handle(String(input), init));
 
 /** The pins routes over an in-memory list; `down` makes every request fail like authFetch would. */
 function pinsServer() {
@@ -244,7 +244,7 @@ async function queueTwoEditsWhileDown(
 ) {
   await runtime.sync.refresh();
   server.down = true;
-  return Promise.allSettled([
+  return await Promise.allSettled([
     runtime.sync.setPinned(["a"], true),
     runtime.sync.setPinned(["b"], true),
   ]);

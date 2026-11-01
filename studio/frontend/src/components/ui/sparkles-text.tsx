@@ -12,7 +12,7 @@ import {
 
 import { cn } from "@/lib/utils";
 
-type SparkleItem = {
+interface SparkleItem {
   id: string;
   x: string;
   y: string;
@@ -20,7 +20,7 @@ type SparkleItem = {
   delay: number;
   scale: number;
   lifespan: number;
-};
+}
 
 function Sparkle({ id, x, y, color, delay, scale }: SparkleItem): ReactElement {
   return (
@@ -102,7 +102,7 @@ export function SparklesText({
     initializeStars();
     const interval = setInterval(updateStars, 100);
 
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); };
   }, [colors.first, colors.second, sparklesCount]);
 
   return (
@@ -111,8 +111,8 @@ export function SparklesText({
       {...props}
       style={
         {
-          "--sparkles-first-color": `${colors.first}`,
-          "--sparkles-second-color": `${colors.second}`,
+          "--sparkles-first-color": colors.first,
+          "--sparkles-second-color": colors.second,
         } as CSSProperties
       }
     >

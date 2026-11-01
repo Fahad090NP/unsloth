@@ -117,8 +117,8 @@ export function startLlamaCppAutoReload(intervalMs = 10_000): () => void {
     }
   }
 
-  const unsubscribe = useExternalProvidersStore.subscribe(() => probeAll(true));
-  const timer = setInterval(() => probeAll(false), intervalMs);
+  const unsubscribe = useExternalProvidersStore.subscribe(() => { probeAll(true); });
+  const timer = setInterval(() => { probeAll(false); }, intervalMs);
   probeAll(false);
   return () => {
     stopped = true;

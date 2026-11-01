@@ -16,21 +16,21 @@ const BLOCKQUOTE_PREFIX_RE = /^(?:[ \t]*>[ \t]?)+/;
 const MAX_AMBIGUOUS_LINE = 120;
 const FENCE_BLOCK_RE = /^ {0,3}(?:`{3,}|~{3,})/;
 
-type MarkdownNode = {
+interface MarkdownNode {
   readonly type: string;
   readonly position?: {
     readonly start: { readonly offset?: number };
     readonly end: { readonly offset?: number };
   };
   readonly children?: readonly MarkdownNode[];
-};
+}
 
 // Match Streamdown (GFM + math); plain CommonMark differs on footnotes and dollar signs.
 function parse(text: string): MarkdownNode {
   return fromMarkdown(text, {
     extensions: [gfm(), math({ singleDollarTextMath: true })],
     mdastExtensions: [gfmFromMarkdown(), mathFromMarkdown()],
-  }) as MarkdownNode;
+  });
 }
 
 function ambiguousMarkerIndex(text: string): number {
@@ -40,9 +40,9 @@ function ambiguousMarkerIndex(text: string): number {
   if (line.length > MAX_AMBIGUOUS_LINE) {
     return -1;
   }
-  const blockquotePrefix = line.match(BLOCKQUOTE_PREFIX_RE)?.[0] ?? "";
+  const blockquotePrefix = (BLOCKQUOTE_PREFIX_RE.exec(line))?.[0] ?? "";
   const content = line.slice(blockquotePrefix.length);
-  const marker = content.match(AMBIGUOUS_BREAK_ITEM_RE)?.[1];
+  const marker = (AMBIGUOUS_BREAK_ITEM_RE.exec(content))?.[1];
   return marker === undefined
     ? -1
     : lineStart + blockquotePrefix.length + content.indexOf(marker);

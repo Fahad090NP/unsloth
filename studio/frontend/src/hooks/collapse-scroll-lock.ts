@@ -4,7 +4,7 @@
 export const USER_SCROLL_EVENTS = ["wheel", "touchstart"] as const;
 export const USER_DISCRETE_EVENTS = ["pointerdown", "keydown"] as const;
 
-export type GestureTarget = {
+export interface GestureTarget {
   addEventListener(
     type: string,
     listener: () => void,
@@ -15,7 +15,7 @@ export type GestureTarget = {
     listener: () => void,
     options?: EventListenerOptions,
   ): void;
-};
+}
 
 export type CollapseScrollContainer = GestureTarget & {
   readonly scrollTop: number;

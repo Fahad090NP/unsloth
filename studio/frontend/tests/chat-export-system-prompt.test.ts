@@ -37,7 +37,7 @@ import { unwrapPastedTextContent } from "../src/features/chat/utils/pasted-text.
 import { composeChatInstructions } from "../src/features/chat/utils/agents-md.ts";
 import { readSrc } from "./helpers/kit.ts";
 
-type Exporters = {
+interface Exporters {
   buildFineTuneJsonl: (format: string) => Promise<{ lines: string[] }>;
   exportConversationRawJsonl: (threadId: string) => Promise<void>;
   exportConversationMessagesJsonl: (threadId: string) => Promise<void>;
@@ -50,7 +50,7 @@ type Exporters = {
     projectId: string,
     title: string,
   ) => Promise<string>;
-};
+}
 
 const DIALOG = readSrc("features/chat/prompt-storage/prompt-storage-dialog.tsx");
 const ADAPTER = readSrc("features/chat/api/chat-adapter.ts");

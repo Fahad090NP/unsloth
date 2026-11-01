@@ -45,7 +45,7 @@ export function SpeakConnectionRail({
           data-type-to-activate="prompt"
           id="audio-prompt"
           value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
+          onChange={(event) => { setPrompt(event.target.value); }}
           placeholder="Type the sentence to speak…"
           className="min-h-28"
         />
@@ -58,7 +58,7 @@ export function SpeakConnectionRail({
         <Input
           id="audio-connection-voice"
           value={connection.voice}
-          onChange={(event) => setVoice(event.target.value)}
+          onChange={(event) => { setVoice(event.target.value); }}
           placeholder="alloy"
         />
       </Field>
@@ -70,7 +70,7 @@ export function SpeakConnectionRail({
         <Textarea
           id="audio-instructions"
           value={instructions}
-          onChange={(event) => setInstructions(event.target.value)}
+          onChange={(event) => { setInstructions(event.target.value); }}
           placeholder="Warm, measured delivery with a calm conversational tone…"
           className="min-h-24"
         />

@@ -124,7 +124,7 @@ export function SpookyDecorations() {
       setVisitors((list) => [...list, v]);
       if (ms !== undefined) {
         later(ms + 500, () =>
-          setVisitors((list) => list.filter((x) => x.id !== v.id)),
+          { setVisitors((list) => list.filter((x) => x.id !== v.id)); },
         );
       }
     };
@@ -207,7 +207,7 @@ export function SpookyDecorations() {
               {
                 top: v.top,
                 transform: v.flip ? "scaleX(-1)" : undefined,
-              } as CSSProperties
+              }
             }
           >
             {v.bats.map((b, i) => (

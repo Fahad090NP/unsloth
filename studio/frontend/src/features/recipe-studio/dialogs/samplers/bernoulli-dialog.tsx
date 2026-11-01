@@ -7,10 +7,10 @@ import type { SamplerConfig } from "../../types";
 import { NameField } from "../shared/name-field";
 import { FieldLabel } from "../shared/field-label";
 
-type BernoulliDialogProps = {
+interface BernoulliDialogProps {
   config: SamplerConfig;
   onUpdate: (patch: Partial<SamplerConfig>) => void;
-};
+}
 
 export function BernoulliDialog({
   config,
@@ -21,7 +21,7 @@ export function BernoulliDialog({
     <div className="space-y-4">
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="grid gap-1.5">
         <FieldLabel
@@ -37,7 +37,7 @@ export function BernoulliDialog({
           step="0.01"
           className="nodrag"
           value={config.p ?? ""}
-          onChange={(event) => onUpdate({ p: event.target.value })}
+          onChange={(event) => { onUpdate({ p: event.target.value }); }}
         />
       </div>
     </div>

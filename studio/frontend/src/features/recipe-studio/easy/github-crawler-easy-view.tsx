@@ -12,7 +12,7 @@ import { FieldLabel } from "../dialogs/shared/field-label";
 import type { ModelConfig, NodeConfig, SeedConfig } from "../types";
 import { PlayIcon } from "lucide-react";
 
-type GithubCrawlerEasyViewProps = {
+interface GithubCrawlerEasyViewProps {
   configs: Record<string, NodeConfig>;
   rows: number;
   setRows: (rows: number) => void;
@@ -21,7 +21,7 @@ type GithubCrawlerEasyViewProps = {
   runLoading: boolean;
   runErrors: string[];
   onSwitchToAdvanced: () => void;
-};
+}
 
 export function GithubCrawlerEasyView({
   configs,
@@ -200,7 +200,7 @@ export function GithubCrawlerEasyView({
               <Input
                 className="nodrag font-mono text-xs"
                 value={modelValue}
-                onChange={(event) => handleModelChange(event.target.value)}
+                onChange={(event) => { handleModelChange(event.target.value); }}
                 placeholder="unsloth/gemma-4-E2B-it-GGUF"
                 disabled={!modelConfig}
               />

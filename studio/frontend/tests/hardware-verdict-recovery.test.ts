@@ -150,7 +150,7 @@ test("the poll is mounted on every route that gates on the verdict", async () =>
   ]) {
     const src = await readFile(new URL(page, import.meta.url), "utf8");
     assert.ok(
-      !/fetchDeviceType\(/.test(src),
+      !src.includes('fetchDeviceType('),
       `${page} re-reads the verdict itself instead of reading the store`,
     );
   }

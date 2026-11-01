@@ -54,14 +54,14 @@ const INERT_COMPONENTS = {
   table: StaticMarkdownTable,
 };
 
-type MarkdownPreviewProps = {
+interface MarkdownPreviewProps {
   markdown: string;
   className?: string;
   plain?: boolean;
   inert?: boolean;
   /** Parse on the next idle callback so the UI stays interactive for large documents. */
   defer?: boolean;
-};
+}
 
 function MarkdownPreviewImpl({
   markdown,
@@ -86,7 +86,7 @@ function MarkdownPreviewImpl({
     if (!defer) {
       return;
     }
-    return scheduleIdleTask(() => setReadyMarkdown(markdown), 200);
+    return scheduleIdleTask(() => { setReadyMarkdown(markdown); }, 200);
   }, [defer, markdown]);
   const markdownClassName =
     "w-full max-w-none min-w-0 space-y-2 [overflow-wrap:anywhere] [&_*]:max-w-none [&_p]:w-full [&_ul]:w-full [&_ol]:w-full [&_li]:w-full [&_h1]:w-full [&_h2]:w-full [&_h3]:w-full [&_h4]:w-full [&_h5]:w-full [&_h6]:w-full [&_pre]:w-full [&_table]:w-full [&_p]:break-words [&_li]:break-words [&_code]:break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words";

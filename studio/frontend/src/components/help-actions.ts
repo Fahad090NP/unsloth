@@ -64,6 +64,6 @@ export function runHelpAction(action: HelpAction): void {
       return;
     case "help-send-feedback":
       openLink("https://github.com/unslothai/unsloth/issues");
-      return;
+      
   }
 }

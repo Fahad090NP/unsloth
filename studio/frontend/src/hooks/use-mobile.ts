@@ -47,7 +47,7 @@ function subscribeCompact(callback: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   const mql = window.matchMedia(COMPACT_QUERY);
   mql.addEventListener("change", callback);
-  return () => mql.removeEventListener("change", callback);
+  return () => { mql.removeEventListener("change", callback); };
 }
 
 export function useIsCompact(): boolean {

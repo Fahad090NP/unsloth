@@ -5,13 +5,13 @@
 
 import { parseExternalModelId } from "../external-providers";
 
-export type QwenThinkingParams = {
+export interface QwenThinkingParams {
   temperature: number;
   topP: number;
   topK: number;
   minP: number;
   presencePenalty?: number;
-};
+}
 
 // Boundary-anchored so "Qwen3.80" or "Qwen3.8B" do not match.
 const PRESENCE_BUMP_QWEN = /(?:^|[^a-z0-9])qwen3\.(?:5|6|8)(?:$|[^a-z0-9])/;

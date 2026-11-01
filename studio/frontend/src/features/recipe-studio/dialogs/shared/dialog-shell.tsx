@@ -8,10 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import type { ReactElement } from "react";
 
-type DialogShellProps = {
+interface DialogShellProps {
   title?: string;
   description?: string;
-};
+}
 
 export function DialogShell({
   title = "Edit step",

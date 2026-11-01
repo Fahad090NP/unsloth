@@ -291,7 +291,7 @@ function useVideoModels(
 // and "wan2.1_t2v_14b" hit the same row.
 const DEFAULT_GEN = { steps: 8, guidance: 1 };
 
-const MODEL_DEFAULTS: Array<{ match: string; steps: number; guidance: number }> = [
+const MODEL_DEFAULTS: { match: string; steps: number; guidance: number }[] = [
   { match: "minimax-h3", steps: 20, guidance: 1 },
   { match: "cosmos3-nano", steps: 35, guidance: 6 },
   { match: "cosmos3-edge", steps: 20, guidance: 6 },
@@ -350,7 +350,7 @@ function defaultsFor(repoId: string, family?: string): { steps: number; guidance
     return { steps: 8, guidance: 1 };
   }
   // An HF-cache snapshot path ends in a commit hash, so its name is the models--<owner>--<name> folder.
-  const snapshot = repoId.replace(/\\/g, "/").match(/models--[^/]+?--([^/]+)\/snapshots\/[^/]+\/?$/);
+  const snapshot = /models--[^/]+?--([^/]+)\/snapshots\/[^/]+\/?$/.exec(repoId.replace(/\\/g, "/"));
   const modelName = snapshot ? fold(snapshot[1]) : name;
   return (
     MODEL_DEFAULTS.find((d) =>
@@ -371,7 +371,7 @@ function defaultsKeyFor(repoId: string, familyOverride: string): string {
 }
 
 // Replaced by status.defaults.resolution_presets once loaded.
-const FALLBACK_RESOLUTION_PRESETS: Array<[number, number]> = [
+const FALLBACK_RESOLUTION_PRESETS: [number, number][] = [
   [768, 512],
   [1216, 704],
   [704, 1216],
@@ -450,10 +450,10 @@ async function downloadVideo(
   format: VideoExportFormat = "mp4",
 ): Promise<string | undefined> {
   if (format === "mp4") {
-    return downloadUrlStreaming(src, exportFilename(video, format));
+    return await downloadUrlStreaming(src, exportFilename(video, format));
   }
   const blob = await fetchGalleryVideoExport(video.id, format);
-  return downloadFile(blob, exportFilename(video, format), blob.type);
+  return await downloadFile(blob, exportFilename(video, format), blob.type);
 }
 
 function formatTimestamp(iso: string): string {
@@ -726,7 +726,7 @@ function AdvancedSelect({
   badge?: ReactNode;
   value: string;
   onValueChange: (v: string) => void;
-  options: Array<[string, string]>;
+  options: [string, string][];
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -811,7 +811,7 @@ class VideoStripTileActionsBox {
     this.actions = actions;
   }
   get(): VideoStripTileActions {
-    return this.actions as VideoStripTileActions;
+    return this.actions!;
   }
 }
 
@@ -842,9 +842,9 @@ const VideoStripTile = memo(function VideoStripTile({
       data-clip-id={id}
       data-reorder-id={id}
       draggable={true}
-      onDragStart={(event: DragEvent<HTMLElement>) => actions.get().tileProps(id).onDragStart(event)}
-      onDragEnd={() => actions.get().tileProps(id).onDragEnd()}
-      onKeyDown={(event: ReactKeyboardEvent<HTMLElement>) => actions.get().tileProps(id).onKeyDown(event)}
+      onDragStart={(event: DragEvent<HTMLElement>) => { actions.get().tileProps(id).onDragStart(event); }}
+      onDragEnd={() => { actions.get().tileProps(id).onDragEnd(); }}
+      onKeyDown={(event: ReactKeyboardEvent<HTMLElement>) => { actions.get().tileProps(id).onKeyDown(event); }}
       className={cn("group relative h-16 w-24 shrink-0", dragging && "opacity-40")}
     >
       {cueEdge && <StripDropLine edge={cueEdge} />}
@@ -852,7 +852,7 @@ const VideoStripTile = memo(function VideoStripTile({
       <TooltipTrigger asChild={true}>
       <button
         type="button"
-        onClick={() => actions.get().select(id)}
+        onClick={() => { actions.get().select(id); }}
         className="relative flex size-full flex-col justify-end overflow-hidden rounded-lg bg-muted/40 outline-none ring-1 ring-transparent transition-shadow hover:ring-border focus-visible:ring-2 focus-visible:ring-ring"
       >
         {thumbnail ? (
@@ -860,7 +860,7 @@ const VideoStripTile = memo(function VideoStripTile({
             src={thumbnail}
             alt=""
             draggable={false}
-            onError={() => actions.get().posterError(id)}
+            onError={() => { actions.get().posterError(id); }}
             className="absolute inset-0 size-full object-cover"
           />
         ) : thumbnailFailed ? (
@@ -899,7 +899,7 @@ const VideoStripTile = memo(function VideoStripTile({
         <GalleryPinBadge
           noun="video"
           className="left-0.5 top-0.5 z-30"
-          onUnpin={() => actions.get().togglePin(id, false)}
+          onUnpin={() => { actions.get().togglePin(id, false); }}
         />
       )}
       <div className="absolute right-0.5 top-0.5 z-30">
@@ -910,11 +910,11 @@ const VideoStripTile = memo(function VideoStripTile({
           pinned={Boolean(video.pinned)}
           archived={Boolean(video.archived)}
           favorite={favorite}
-          onToggleFavorite={() => actions.get().toggleFavorite(`video:${id}`)}
-          onTogglePin={() => actions.get().togglePin(id, !video.pinned)}
-          onToggleArchive={() => actions.get().archive(id)}
-          onDelete={() => actions.get().remove(id)}
-          onDownload={() => actions.get().download(video)}
+          onToggleFavorite={() => { actions.get().toggleFavorite(`video:${id}`); }}
+          onTogglePin={() => { actions.get().togglePin(id, !video.pinned); }}
+          onToggleArchive={() => { actions.get().archive(id); }}
+          onDelete={() => { actions.get().remove(id); }}
+          onDownload={() => { actions.get().download(video); }}
           onAddToProject={(projectId) => actions.get().addToProject(id, projectId)}
         />
       </div>
@@ -937,7 +937,7 @@ function RecipePopover({
     if (!active) setOpen(false);
   }, [active]);
   return (
-    <Popover open={active && open} onOpenChange={(o) => setOpen(active && o)}>
+    <Popover open={active && open} onOpenChange={(o) => { setOpen(active && o); }}>
       <PopoverTrigger asChild>
         <Button size="sm" variant="ghost" className="gap-1.5">
           <HugeiconsIcon icon={InformationCircleIcon} className="size-4" />
@@ -1005,7 +1005,7 @@ function RecipePopover({
           <RecipeRow label="Seed" value={String(video.seed)} mono />
         </div>
         <div className="shrink-0 border-t border-border/60 px-3 py-2.5">
-          <Button size="sm" className="w-full gap-1.5" onClick={() => onRestore(video)}>
+          <Button size="sm" className="w-full gap-1.5" onClick={() => { onRestore(video); }}>
             Restore these settings
           </Button>
         </div>
@@ -1043,20 +1043,20 @@ function RecipeRow({
 
 type Busy = "loading" | "unloading" | "generating" | null;
 type H3Task = NonNullable<VideoLoadRequest["h3_task"]>;
-type VideoLoadOptions = {
+interface VideoLoadOptions {
   kind: "gguf" | "single_file" | "pipeline";
   filename?: string;
   h3Task?: H3Task;
   displayRepoId?: string;
-};
+}
 /** Carries the deferred loadOrStage arguments so the H3 partition choice only adds `h3Task`. */
-type PendingH3Load = {
+interface PendingH3Load {
   repoId: string;
   opts: VideoLoadOptions;
   source: ModelSelectorChangeMeta["source"];
   token: number;
   familyOverrideRequired: boolean;
-};
+}
 
 const H3_BF16_REPO = "MiniMaxAI/MiniMax-H3";
 
@@ -1073,7 +1073,7 @@ function isH3PipelinePick(repoId: string, kind: VideoLoadOptions["kind"], family
 
 // What a pick optimistically replaced, so a load that never takes can put it all back. The
 // quant label and the recipe move together at pick time, so they roll back together.
-type PickRevert = {
+interface PickRevert {
   prev: string | null;
   steps: number;
   guidance: number;
@@ -1084,7 +1084,7 @@ type PickRevert = {
   appliedGuidance?: number;
   modelSeeded?: boolean;
   familySeeded?: boolean;
-};
+}
 type VideoLoadAdvanced = Pick<
   VideoLoadRequest,
   | "memory_mode"
@@ -1227,9 +1227,9 @@ function VideoGenerator({
   // True while a staged keyframe sizes the canvas ("Match source"); else resolutionIntent does.
   const [matchSource, setMatchSource] = useState(false);
   const [resolutionIntent, setResolutionIntent] = useState<[number, number]>(
-    FALLBACK_RESOLUTION_PRESETS[0]!,
+    FALLBACK_RESOLUTION_PRESETS[0],
   );
-  const [aspect, setAspect] = useState(() => matchAspect(...FALLBACK_RESOLUTION_PRESETS[0]!).key);
+  const [aspect, setAspect] = useState(() => matchAspect(...FALLBACK_RESOLUTION_PRESETS[0]).key);
   const [portrait, setPortrait] = useState(false);
   // MiniMax-H3 keyframes as data URLs: the frame the clip starts from, the frame it ends on, or both.
   const [firstFrame, setFirstFrame] = useState<string | null>(null);
@@ -1239,12 +1239,12 @@ function VideoGenerator({
   const [referenceImages, setReferenceImages] = useState<StagedReferenceImage[]>([]);
   const [cropPictureIndex, setCropPictureIndex] = useState<number | null>(null);
   const [referenceVideos, setReferenceVideos] = useState<
-    Array<{
+    {
       video: ReferenceMedia;
       audio: ReferenceMedia | null;
       trimStartSeconds: number | null;
       trimEndSeconds: number | null;
-    }>
+    }[]
   >([]);
   const [referenceAudios, setReferenceAudios] = useState<ReferenceMedia[]>([]);
   const [referenceImageSize, setReferenceImageSize] = useState<"match" | "max">("match");
@@ -1379,7 +1379,7 @@ function VideoGenerator({
 
   // A ref keeps onClick stable; the toast is built before handleCancelLoad exists.
   const cancelLoadRef = useRef<() => void>(() => {});
-  const cancelLoadFromToast = useCallback(() => cancelLoadRef.current(), []);
+  const cancelLoadFromToast = useCallback(() => { cancelLoadRef.current(); }, []);
   // Requests awaiting a response compare against this and discard their result.
   const cancelSeq = useRef(0);
   // The compensating unload carries no identity, so it must not fire once a newer load owns the page.
@@ -1456,7 +1456,7 @@ function VideoGenerator({
   const shownId = selected?.id;
   useEffect(() => {
     const last = handback.current;
-    if (viewer || !last || last.id !== shownId) return;
+    if (viewer || last?.id !== shownId) return;
     const inline = previewRef.current;
     if (!selectedSrc || !inline) return;
     handback.current = null;
@@ -1468,7 +1468,7 @@ function VideoGenerator({
     else inline.pause();
   }, [viewer, shownId, selectedSrc]);
 
-  const resolutionPresets = useMemo<Array<[number, number]>>(() => {
+  const resolutionPresets = useMemo<[number, number][]>(() => {
     const presets = status?.defaults?.resolution_presets;
     if (presets && presets.length > 0) {
       return presets.map((p) => [p[0], p[1]] as [number, number]);
@@ -1492,9 +1492,9 @@ function VideoGenerator({
     status?.defaults?.duration_presets ?? FALLBACK_DURATION_TARGETS;
 
   // Frame counts closest to ~1s/2s/3s/5s at the current fps, deduped.
-  const durationOptions = useMemo<Array<{ frames: number; seconds: number }>>(() => {
+  const durationOptions = useMemo<{ frames: number; seconds: number }[]>(() => {
     const seen = new Set<number>();
-    const out: Array<{ frames: number; seconds: number }> = [];
+    const out: { frames: number; seconds: number }[] = [];
     for (const t of durationTargets) {
       const desired = t * fps;
       const k = Math.max(1, Math.round((desired - frameOffset) / frameStep));
@@ -1959,7 +1959,7 @@ function VideoGenerator({
       { root, rootMargin: "0px 600px" },
     );
     for (const card of root.querySelectorAll("[data-clip-id]")) io.observe(card);
-    return () => io.disconnect();
+    return () => { io.disconnect(); };
   }, [videos, ensureThumbnail, pruneThumbnails]);
 
   // The preview player is what the user watches, so the selected clip is fetched whether or not its card is on screen.
@@ -2490,7 +2490,7 @@ function VideoGenerator({
           setBusy((prev) => (prev === "loading" ? "unloading" : prev));
           void pending
             .catch(() => {})
-            .finally(() => setBusy((prev) => (prev === "unloading" ? null : prev)));
+            .finally(() => { setBusy((prev) => (prev === "unloading" ? null : prev)); });
         } else {
           setBusy((prev) => (prev === "loading" ? null : prev));
         }
@@ -2997,7 +2997,7 @@ function VideoGenerator({
       const owns = () => token === undefined || pickGuard.holds(token);
       if (!owns()) return true;
       const advanced = currentLoadAdvanced(opts.kind, familyOverrideRequired);
-      if (source !== "hub") return handleLoadRef.current(repoId, opts, advanced);
+      if (source !== "hub") return await handleLoadRef.current(repoId, opts, advanced);
       const pickToastId = pickToast.show(opts.displayRepoId ?? repoId);
       // Read before the await: a newer pick replaces quantRevert.
       const ownRevert = quantRevert.current;
@@ -3067,7 +3067,7 @@ function VideoGenerator({
         }
         return false;
       }
-      return handleLoadRef.current(repoId, opts, advanced, pickToastId);
+      return await handleLoadRef.current(repoId, opts, advanced, pickToastId);
     },
     [stage, pickGuard, currentLoadAdvanced, pickToast, offerLoadAnyway, dismissLoadAnyway],
   );
@@ -3090,7 +3090,7 @@ function VideoGenerator({
       const token = pickGuard.claim();
       const isCurrent = () => isMounted.current && pickGuard.holds(token);
       const revert: PickRevert = quantRevert.current ?? { prev: quant, steps, guidance };
-      return runGgufRepoPick({
+      return await runGgufRepoPick({
         isCurrent,
         resolve: () =>
           resolveDiffusionGgufFilename(repoId, {
@@ -3724,7 +3724,7 @@ function VideoGenerator({
         hint="auto measures free VRAM. fast keeps everything resident. balanced streams the transformer. low_vram offloads every component (lowest VRAM, slower)."
         badge={<ResolvedBadge status={status} controlKey="memory_mode" />}
         value={memoryMode}
-        onValueChange={(v) => setMemoryMode(v as typeof memoryMode)}
+        onValueChange={(v) => { setMemoryMode(v as typeof memoryMode); }}
         options={[
           ["auto", "Auto"],
           ["fast", "Fast (resident)"],
@@ -3737,7 +3737,7 @@ function VideoGenerator({
         hint="Auto compiles every model at load: a clip takes minutes to denoise, so the one-time compile always pays for itself within a single run. eager = fused kernels, no compile. max adds TF32 + fused QKV, plus the step cache on 20+ step models."
         badge={<ResolvedBadge status={status} controlKey="speed_mode" />}
         value={speedMode}
-        onValueChange={(v) => setSpeedMode(v as typeof speedMode)}
+        onValueChange={(v) => { setSpeedMode(v as typeof speedMode); }}
         options={[
           ["auto", "Auto"],
           ["off", "Off (bit-exact)"],
@@ -3754,7 +3754,7 @@ function VideoGenerator({
           hint="How the model computes. Auto picks the fastest precision the hardware supports (INT8 on every capable GPU, then FP8 where the card has it) by quantising the transformer onto low-precision tensor cores, and keeps plain bf16 when the device or memory plan can't take it. Off always runs bf16."
           badge={<ResolvedBadge status={status} controlKey="transformer_quant" />}
           value={transformerQuant}
-          onValueChange={(v) => setTransformerQuant(v as typeof transformerQuant)}
+          onValueChange={(v) => { setTransformerQuant(v as typeof transformerQuant); }}
           options={[
             ["auto", "Auto (fastest for GPU)"],
             ["none", "Off (bf16)"],
@@ -3785,7 +3785,7 @@ function VideoGenerator({
         hint="Attention kernel. Auto upgrades to cuDNN fused attention on NVIDIA when a speed profile is active. sage is INT8 attention (SageAttention 2; without a local install Unsloth fetches the Hugging Face kernels-hub build, which runs on Ampere, Ada and Hopper GPUs, and any other GPU keeps the default): fast (10-40%) but can black-frame some families (Qwen, Wan), so it never engages automatically."
         badge={<ResolvedBadge status={status} controlKey="attention_backend" />}
         value={attentionBackend}
-        onValueChange={(v) => setAttentionBackend(v as typeof attentionBackend)}
+        onValueChange={(v) => { setAttentionBackend(v as typeof attentionBackend); }}
         options={[
           ["auto", "Auto"],
           ["native", "Native SDPA"],
@@ -3817,7 +3817,7 @@ function VideoGenerator({
         hint="Static skip extrapolates middle steps on a fixed schedule (12+ steps) and keeps the compile and CUDA graph; Wan2.2 A14B and LTX-2 run uncached. Auto uses it for text-to-video (no keyframes or references), at or above the step count it was measured at, on Wan2.2 TI2V 5B on every speed tier but Off/Eager, and on HunyuanVideo 1.5 and MiniMax-H3 on Max only. First-Block-Cache reuses the transformer tail across steps (larger quality cost); Auto turns it on for other many-step models on Max only. UNSLOTH_DIFFUSION_AUTO_STEP_SKIP=0 stops Auto from picking Static skip."
         badge={<ResolvedBadge status={status} controlKey="transformer_cache" />}
         value={transformerCache}
-        onValueChange={(v) => setTransformerCache(v as typeof transformerCache)}
+        onValueChange={(v) => { setTransformerCache(v as typeof transformerCache); }}
         options={[
           ["auto", "Auto"],
           ["off", "Off"],
@@ -3832,7 +3832,7 @@ function VideoGenerator({
         </span>
         <Switch
           checked={livePreview}
-          onCheckedChange={(on) => setLivePreviewOff(!on)}
+          onCheckedChange={(on) => { setLivePreviewOff(!on); }}
           aria-label="Live preview"
         />
       </div>
@@ -3898,7 +3898,7 @@ function VideoGenerator({
               type="button"
               variant="outline"
               className="h-auto items-start justify-start whitespace-normal rounded-xl p-4 text-left"
-              onClick={() => chooseH3Task("fl2va")}
+              onClick={() => { chooseH3Task("fl2va"); }}
             >
               <span className="grid gap-1">
                 <span className="font-medium">Text and frames</span>
@@ -3911,7 +3911,7 @@ function VideoGenerator({
               type="button"
               variant="outline"
               className="h-auto items-start justify-start whitespace-normal rounded-xl p-4 text-left"
-              onClick={() => chooseH3Task("ref2va")}
+              onClick={() => { chooseH3Task("ref2va"); }}
             >
               <span className="grid gap-1">
                 <span className="font-medium">References</span>
@@ -3967,7 +3967,7 @@ function VideoGenerator({
               hubCapability="video-gen"
               placeholder="Select video model"
               open={active && selectorOpen}
-              onOpenChange={(o) => setSelectorOpen(active && o)}
+              onOpenChange={(o) => { setSelectorOpen(active && o); }}
             />
             )}
             {/* The load's own cancel, beside the selector rather than inside it: the selector's eject needs
@@ -4009,7 +4009,7 @@ function VideoGenerator({
               dataTour="video-mode"
               ariaLabel="Page mode"
               value={pageMode}
-              onValueChange={(v) => setPageMode(v as "create" | "train")}
+              onValueChange={(v) => { setPageMode(v as "create" | "train"); }}
               fit={true}
               className="h-[calc(34px*var(--ui-space-scale,1))] [&>button]:h-[calc(34px*var(--ui-space-scale,1))] [&>button]:px-7 @[68rem]:[&>button]:px-14 [[data-media-header-tight]_&]:[&>button]:px-4 @max-[30rem]:[&>button]:px-2.5 @max-[30rem]:[&>button>[data-pill-tab-label]]:sr-only"
               tabs={[
@@ -4036,7 +4036,7 @@ function VideoGenerator({
             active={active && pageMode === "train"}
             loadedFamily={null}
             loadedBaseRepo={null}
-            onTrainingComplete={() => useImageWorkflowStore.getState().noteTrainingComplete()}
+            onTrainingComplete={() => { useImageWorkflowStore.getState().noteTrainingComplete(); }}
             onDeploy={(args) => {
               useImageWorkflowStore.getState().requestDeploy(args);
               void navigateToImages({ to: "/images" });
@@ -4192,7 +4192,7 @@ function VideoGenerator({
                         type="button"
                         aria-label={`Edit crop for picture ${index + 1}`}
                         className="group h-full w-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-                        onClick={() => setCropPictureIndex(index)}
+                        onClick={() => { setCropPictureIndex(index); }}
                       >
                         <img
                           src={image.dataUrl}
@@ -4213,9 +4213,9 @@ function VideoGenerator({
                             aria-label={`Remove picture ${index + 1}`}
                             className="absolute right-1.5 top-1.5 size-7 bg-background/85 shadow-sm backdrop-blur-sm"
                             onClick={() =>
-                              setReferenceImages((prev) =>
+                              { setReferenceImages((prev) =>
                                 prev.filter((_, current) => current !== index),
-                              )
+                              ); }
                             }
                           >
                             <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
@@ -4292,7 +4292,7 @@ function VideoGenerator({
                           value={entry.trimStartSeconds ?? ""}
                           placeholder="0"
                           onChange={(event) =>
-                            setReferenceVideos((prev) =>
+                            { setReferenceVideos((prev) =>
                               prev.map((item, i) =>
                                 i === index
                                   ? {
@@ -4304,7 +4304,7 @@ function VideoGenerator({
                                     }
                                   : item,
                               ),
-                            )
+                            ); }
                           }
                         />
                       </div>
@@ -4326,7 +4326,7 @@ function VideoGenerator({
                               : "15"
                           }
                           onChange={(event) =>
-                            setReferenceVideos((prev) =>
+                            { setReferenceVideos((prev) =>
                               prev.map((item, i) =>
                                 i === index
                                   ? {
@@ -4338,7 +4338,7 @@ function VideoGenerator({
                                     }
                                   : item,
                               ),
-                            )
+                            ); }
                           }
                         />
                       </div>
@@ -4355,9 +4355,9 @@ function VideoGenerator({
                       value={entry.audio}
                       label="Replace its soundtrack (optional)"
                       onChange={(next) =>
-                        setReferenceVideos((prev) =>
+                        { setReferenceVideos((prev) =>
                           prev.map((item, i) => (i === index ? { ...item, audio: next } : item)),
-                        )
+                        ); }
                       }
                     />
                   </div>
@@ -4394,11 +4394,11 @@ function VideoGenerator({
                       value={audio}
                       label={`Audio ${index + 1}`}
                       onChange={(next) =>
-                        setReferenceAudios((prev) =>
+                        { setReferenceAudios((prev) =>
                           next
                             ? prev.map((item, i) => (i === index ? next : item))
                             : prev.filter((_, i) => i !== index),
-                        )
+                        ); }
                       }
                     />
                   </div>
@@ -4429,7 +4429,7 @@ function VideoGenerator({
                 >
                   <Select
                     value={referenceImageSize}
-                    onValueChange={(v) => setReferenceImageSize(v as "match" | "max")}
+                    onValueChange={(v) => { setReferenceImageSize(v as "match" | "max"); }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -4454,9 +4454,9 @@ function VideoGenerator({
                 if (!open) setCropPictureIndex(null);
               }}
               onApply={(dataUrl, crop) =>
-                setReferenceImages((prev) =>
+                { setReferenceImages((prev) =>
                   applyReferenceImageCrop(prev, cropPictureIndex, dataUrl, crop),
-                )
+                ); }
               }
             />
           )}
@@ -4615,7 +4615,7 @@ function VideoGenerator({
             <Input
               placeholder="Random if empty"
               value={seed}
-              onChange={(e) => setSeed(e.target.value)}
+              onChange={(e) => { setSeed(e.target.value); }}
             />
           </Field>
 
@@ -4693,10 +4693,10 @@ function VideoGenerator({
                 },
                 onDownload: () => void handleQuickDownload(viewerVideo),
                 reveal: revealLabel
-                  ? { label: revealLabel, onClick: () => revealInFolder(`video:${viewerVideo.id}`) }
+                  ? { label: revealLabel, onClick: () => { revealInFolder(`video:${viewerVideo.id}`); } }
                   : undefined,
                 favorite: isFavorite(`video:${viewerVideo.id}`),
-                onToggleFavorite: () => toggleFavorite(`video:${viewerVideo.id}`),
+                onToggleFavorite: () => { toggleFavorite(`video:${viewerVideo.id}`); },
                 onAddToProject: (projectId) => addGalleryVideoToProject(viewerVideo.id, projectId),
                 onDelete: () => {
                   viewerVideoRef.current?.pause();
@@ -4719,8 +4719,8 @@ function VideoGenerator({
                   viewerPositioned.current = true;
                   if (viewer.from.playing) void playWithMutedFallback(video);
                 }}
-                onTimeUpdate={(event) => recordViewer(event.currentTarget)}
-                onVolumeChange={(event) => recordViewer(event.currentTarget)}
+                onTimeUpdate={(event) => { recordViewer(event.currentTarget); }}
+                onVolumeChange={(event) => { recordViewer(event.currentTarget); }}
                 onError={(event) => {
                   const from = readPlayback(event.currentTarget, viewer.from, viewerPositioned.current);
                   viewerPositioned.current = false;
@@ -4764,7 +4764,7 @@ function VideoGenerator({
                       void e.currentTarget.play();
                     }
                   }}
-                  onError={() => remintSrc(selected)}
+                  onError={() => { remintSrc(selected); }}
                   className="media-stage-shadow max-h-full max-w-full object-contain shadow-sm"
                 />
                 {selected.has_audio && (
@@ -4822,7 +4822,7 @@ function VideoGenerator({
                     pinned={Boolean(selected.pinned)}
                     archived={Boolean(selected.archived)}
                     favorite={isFavorite(`video:${selected.id}`)}
-                    onToggleFavorite={() => toggleFavorite(`video:${selected.id}`)}
+                    onToggleFavorite={() => { toggleFavorite(`video:${selected.id}`); }}
                     onTogglePin={() =>
                       void handleTogglePin(selected.id, !selected.pinned)
                     }
@@ -4925,7 +4925,7 @@ function VideoGenerator({
                   <TooltipTrigger asChild={true}>
                     <button
                       type="button"
-                      onClick={() => setClearConfirmOpen(true)}
+                      onClick={() => { setClearConfirmOpen(true); }}
                       className="btn-fill flex h-16 w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-lg text-muted-foreground transition-colors hover:text-destructive"
                     >
                       <HugeiconsIcon icon={Delete02Icon} className="size-4" />

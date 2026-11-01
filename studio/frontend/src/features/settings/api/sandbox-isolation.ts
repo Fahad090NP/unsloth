@@ -9,21 +9,21 @@ import { SettingsRouteAbsentError } from "./settings-route-absent";
 const ROUTE = "/api/settings/sandbox";
 const PREPARE_ROUTE = "/api/settings/sandbox/prepare";
 
-export type SandboxToolStatus = {
+export interface SandboxToolStatus {
   backend: string;
   available: boolean;
   reason: string;
   limitations: string[];
   protectionState: string | null;
   remediation: string;
-};
+}
 
 export type TerminalShell = "bash" | "cmd_isolated" | "cmd_fallback";
 
 // MXC needs x64 or ARM64 Windows 11 build 26100 or newer.
 export type RuntimeUnsupported = "arch" | "build";
 
-export type WindowsSandboxStatus = {
+export interface WindowsSandboxStatus {
   runtimeInstalled: boolean;
   runtimeUnsupported: RuntimeUnsupported | null;
   allowDaclFallback: boolean;
@@ -40,18 +40,18 @@ export type WindowsSandboxStatus = {
   // Set only when a Windows update adds the built-in container: this PC's build and the first with it.
   windowsBuild: string | null;
   builtinContainerBuild: string | null;
-};
+}
 
-export type SandboxSetupPlan = {
+export interface SandboxSetupPlan {
   action: "linux-install" | "windows-setup" | null;
   elevation: string | null;
   manualCommand: string;
   reason: string;
   canRun: boolean;
-};
+}
 
 // null off Linux and on backends without the setting.
-export type SandboxMemoryStatus = {
+export interface SandboxMemoryStatus {
   // null: no cap.
   limitGb: number | null;
   savedGb: number;
@@ -59,9 +59,9 @@ export type SandboxMemoryStatus = {
   minGb: number;
   maxGb: number;
   lockedByEnvironment: boolean;
-};
+}
 
-export type SandboxStatus = {
+export interface SandboxStatus {
   platform: string;
   python: SandboxToolStatus;
   terminal: SandboxToolStatus;
@@ -71,13 +71,13 @@ export type SandboxStatus = {
   setup: SandboxSetupPlan | null;
   checkedAt: number;
   restored?: number;
-};
+}
 
-export type SandboxSettingsUpdate = {
+export interface SandboxSettingsUpdate {
   allowDaclFallback?: boolean;
   persistentReadGrants?: boolean;
   memoryLimitGb?: number;
-};
+}
 
 export type HostPrepState =
   | "idle"
@@ -86,7 +86,7 @@ export type HostPrepState =
   | "declined"
   | "failed";
 
-export type HostPrepJob = {
+export interface HostPrepJob {
   id: string | null;
   state: HostPrepState;
   startedAt: number | null;
@@ -94,9 +94,9 @@ export type HostPrepJob = {
   exitCode: number | null;
   outputTail: string[];
   steps: string[];
-};
+}
 
-type ApiToolStatus = {
+interface ApiToolStatus {
   backend?: string;
   available?: boolean;
   reason?: string;
@@ -104,9 +104,9 @@ type ApiToolStatus = {
   // biome-ignore lint/style/useNamingConvention: API schema
   protection_state?: string | null;
   remediation?: string | null;
-};
+}
 
-type ApiSetupPlan = {
+interface ApiSetupPlan {
   action?: string | null;
   elevation?: string | null;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -114,9 +114,9 @@ type ApiSetupPlan = {
   reason?: string | null;
   // biome-ignore lint/style/useNamingConvention: API schema
   can_run?: boolean;
-};
+}
 
-type ApiWindowsStatus = {
+interface ApiWindowsStatus {
   // biome-ignore lint/style/useNamingConvention: API schema
   runtime_installed?: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -143,9 +143,9 @@ type ApiWindowsStatus = {
   windows_build?: string | null;
   // biome-ignore lint/style/useNamingConvention: API schema
   builtin_container_build?: string | null;
-};
+}
 
-type ApiMemoryStatus = {
+interface ApiMemoryStatus {
   // biome-ignore lint/style/useNamingConvention: API schema
   limit_gb?: number | null;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -158,9 +158,9 @@ type ApiMemoryStatus = {
   max_gb?: number;
   // biome-ignore lint/style/useNamingConvention: API schema
   locked_by_environment?: boolean;
-};
+}
 
-type ApiSandboxStatus = {
+interface ApiSandboxStatus {
   platform?: string;
   python?: ApiToolStatus;
   terminal?: ApiToolStatus;
@@ -173,9 +173,9 @@ type ApiSandboxStatus = {
   checked_at?: number;
   // biome-ignore lint/style/useNamingConvention: API schema
   grants_restored?: number | null;
-};
+}
 
-type ApiHostPrepJob = {
+interface ApiHostPrepJob {
   id?: string | null;
   state?: HostPrepState;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -187,7 +187,7 @@ type ApiHostPrepJob = {
   // biome-ignore lint/style/useNamingConvention: API schema
   output_tail?: string[];
   steps?: string[];
-};
+}
 
 function toolFromApi(tool: ApiToolStatus | undefined): SandboxToolStatus {
   return {

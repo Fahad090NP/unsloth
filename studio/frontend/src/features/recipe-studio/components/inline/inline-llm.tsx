@@ -21,10 +21,10 @@ import { useRecipeStudioStore } from "../../stores/recipe-studio";
 import type { LlmConfig } from "../../types";
 import { InlineField } from "./inline-field";
 
-type InlineLlmProps = {
+interface InlineLlmProps {
   config: LlmConfig;
   onUpdate: (patch: Partial<LlmConfig>) => void;
-};
+}
 
 const CODE_LANG_OPTIONS = [
   "python",
@@ -81,10 +81,10 @@ export function InlineLlm({ config, onUpdate }: InlineLlmProps): ReactElement {
             filter={null}
             value={config.model_alias || null}
             onValueChange={(value) =>
-              onUpdate({
+              { onUpdate({
                 // biome-ignore lint/style/useNamingConvention: api schema
                 model_alias: value ?? "",
-              })
+              }); }
             }
             onInputValueChange={(value) => {
               aliasInputRef.current = value;
@@ -126,10 +126,10 @@ export function InlineLlm({ config, onUpdate }: InlineLlmProps): ReactElement {
             filter={null}
             value={config.tool_alias || null}
             onValueChange={(value) =>
-              onUpdate({
+              { onUpdate({
                 // biome-ignore lint/style/useNamingConvention: api schema
                 tool_alias: value ?? "",
-              })
+              }); }
             }
             itemToStringValue={(value) => value}
             autoHighlight={true}
@@ -165,10 +165,10 @@ export function InlineLlm({ config, onUpdate }: InlineLlmProps): ReactElement {
           <Select
             value={config.code_lang?.trim() || "python"}
             onValueChange={(value) =>
-              onUpdate({
+              { onUpdate({
                 // biome-ignore lint/style/useNamingConvention: api schema
                 code_lang: value,
-              })
+              }); }
             }
           >
             <SelectTrigger className="nodrag h-8 w-full text-xs">

@@ -6,7 +6,7 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type View = { remoteId?: string; messages: { id: string }[]; incognito: boolean };
+interface View { remoteId?: string; messages: { id: string }[]; incognito: boolean }
 
 // rerun the mocked effect only when dependencies change, matching React
 function recorder(temporary: Set<string>) {
@@ -80,13 +80,13 @@ test("a temporary chat saved after a branch switch records the branch on screen"
   assert.deepEqual(writes, [["t", "a2"]]);
 });
 
-type DeleteModule = {
+interface DeleteModule {
   deleteChatItems: (
     items: { type: "single"; id: string }[],
     activeId: string | undefined,
     onSelect: () => void,
   ) => Promise<void>;
-};
+}
 
 function sidebar(deleteResult: () => Promise<string[]>) {
   const cleared: string[] = [];

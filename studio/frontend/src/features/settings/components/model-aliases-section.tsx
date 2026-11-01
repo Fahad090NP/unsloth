@@ -117,7 +117,7 @@ export function ModelAliasesSection() {
               placeholder={t("settings.general.modelAliases.namePlaceholder")}
               aria-label={t("settings.general.modelAliases.nameAriaLabel")}
               disabled={saved === null || isSaving}
-              onChange={(event) => update(index, { name: event.target.value })}
+              onChange={(event) => { update(index, { name: event.target.value }); }}
               className="h-8 w-40"
             />
             <Input
@@ -126,7 +126,7 @@ export function ModelAliasesSection() {
               placeholder={t("settings.general.modelAliases.modelPlaceholder")}
               aria-label={t("settings.general.modelAliases.modelAriaLabel")}
               disabled={saved === null || isSaving}
-              onChange={(event) => update(index, { model: event.target.value })}
+              onChange={(event) => { update(index, { model: event.target.value }); }}
               className="h-8 min-w-0 flex-1"
             />
             <Button
@@ -135,7 +135,7 @@ export function ModelAliasesSection() {
               aria-label={t("settings.general.modelAliases.removeAriaLabel")}
               disabled={saved === null || isSaving}
               onClick={() =>
-                setDraft((rows) => rows.filter((_, i) => i !== index))
+                { setDraft((rows) => rows.filter((_, i) => i !== index)); }
               }
             >
               <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
@@ -148,7 +148,7 @@ export function ModelAliasesSection() {
             size="sm"
             disabled={saved === null || isSaving}
             onClick={() =>
-              setDraft((rows) => [...rows, { name: "", model: "" }])
+              { setDraft((rows) => [...rows, { name: "", model: "" }]); }
             }
           >
             <HugeiconsIcon icon={PlusSignIcon} className="mr-1.5 size-3.5" />

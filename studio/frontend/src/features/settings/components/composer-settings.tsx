@@ -49,7 +49,7 @@ export function ComposerSettings({ embedded = false }: { embedded?: boolean }) {
       ref.current?.scrollIntoView({ block: "start", behavior: "smooth" });
       useSettingsDialogStore.getState().consumeScrollTarget("chat-composer");
     });
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); };
   }, [scrollTarget]);
 
   return (
@@ -72,11 +72,11 @@ export function ComposerSettings({ embedded = false }: { embedded?: boolean }) {
             <Select
               value={prefs.sendShortcut}
               onValueChange={(value) =>
-                prefs.setSendShortcut(
+                { prefs.setSendShortcut(
                   value === "mod-enter" || value === "mod-enter-multiline"
                     ? value
                     : "enter",
-                )
+                ); }
               }
             >
               <SelectTrigger
@@ -113,7 +113,7 @@ export function ComposerSettings({ embedded = false }: { embedded?: boolean }) {
                   key={behavior}
                   type="button"
                   aria-pressed={prefs.followUpBehavior === behavior}
-                  onClick={() => prefs.setFollowUpBehavior(behavior)}
+                  onClick={() => { prefs.setFollowUpBehavior(behavior); }}
                   className={cn(
                     "relative inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-ui-12 font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                     prefs.followUpBehavior === behavior

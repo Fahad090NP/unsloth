@@ -45,7 +45,7 @@ function storage(values: Map<string, string>): Storage {
     removeItem: (key: string) => {
       values.delete(key);
     },
-    clear: () => values.clear(),
+    clear: () => { values.clear(); },
   };
 }
 

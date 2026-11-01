@@ -37,7 +37,7 @@ export type LoadedModelSource =
 
 export type SttEngine = "transformers" | "mtmd" | "gguf" | "audiocpp";
 
-export type LoadedModelEntry = {
+export interface LoadedModelEntry {
   /** Stable across polls, so a row does not remount mid-eject. */
   id: string;
   kind: LoadedModelKind;
@@ -54,13 +54,13 @@ export type LoadedModelEntry = {
   sttEngine?: SttEngine;
   inactive?: boolean;
   loading?: boolean;
-};
+}
 
-export type SttEngineStatus = {
+export interface SttEngineStatus {
   loaded_model?: string | null;
   device?: string | null;
   loading?: boolean;
-};
+}
 
 export type SttStatusResponse = SttEngineStatus & {
   transformers?: SttEngineStatus | null;
@@ -493,13 +493,13 @@ const PENDING_KINDS: Record<LoadedModelSource, LoadedModelKind> = {
   embedding: "embedding",
 };
 
-export type EmbeddingStatusResponse = {
+export interface EmbeddingStatusResponse {
   // biome-ignore lint/style/useNamingConvention: API schema
   embedding_model?: string;
   loaded?: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   backend_loaded?: boolean;
-};
+}
 
 export function describeEmbeddingStatus(
   status: EmbeddingStatusResponse | null,

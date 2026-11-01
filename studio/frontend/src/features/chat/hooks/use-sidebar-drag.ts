@@ -412,7 +412,7 @@ export function useSidebarDrag(options: UseSidebarDragOptions): SidebarDragApi {
     showPlan(null);
   }, [cancelSpring, showPlan]);
 
-  useEffect(() => () => clear(), [clear]);
+  useEffect(() => () => { clear(); }, [clear]);
 
   const aim = useCallback(
     (

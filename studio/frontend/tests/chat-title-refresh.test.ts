@@ -39,7 +39,7 @@ function message(
     role,
     content,
     createdAt: index,
-  } as MessageRecord;
+  };
 }
 
 const text = (value: string) => [{ type: "text", text: value }] as MessageRecord["content"];

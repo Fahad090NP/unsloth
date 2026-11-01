@@ -45,14 +45,14 @@ const { definePDFJSModule } = await import("unpdf");
 const { readRtfAttachmentContent } =
   await import("../src/features/chat/rtf.ts");
 
-type StubNode = {
+interface StubNode {
   nodeType: number;
   nodeValue?: string;
   tagName?: string;
   childNodes: StubNode[];
   parent?: StubNode;
   remove?: () => void;
-};
+}
 
 function textNode(value: string): StubNode {
   return { nodeType: 3, nodeValue: value, childNodes: [] };
@@ -810,7 +810,7 @@ test("readAttachmentText refuses an oversized docx part outside word/*.xml", asy
   }
 });
 
-function relationships(entries: Array<[string, string]>): Uint8Array {
+function relationships(entries: [string, string][]): Uint8Array {
   return strToU8(
     `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${entries
       .map(
@@ -883,7 +883,7 @@ test("readAttachmentText refuses a relationship target in any XML attribute form
   const huge = strToU8("a".repeat(11 * 1024 * 1024));
   const type =
     "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
-  const forms: Array<[string, string, string]> = [
+  const forms: [string, string, string][] = [
     [
       "single-quoted attributes",
       "payload.bin",
@@ -933,7 +933,7 @@ test("readAttachmentText ignores a relationship inside non-element markup", asyn
   const huge = strToU8("a".repeat(11 * 1024 * 1024));
   const type =
     "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
-  const wrappers: Array<[string, (tag: string) => string]> = [
+  const wrappers: [string, (tag: string) => string][] = [
     ["a comment", (tag) => `<!--${tag}-->`],
     ["a CDATA section", (tag) => `<![CDATA[${tag}]]>`],
     ["a processing instruction", (tag) => `<?guard ${tag}?>`],

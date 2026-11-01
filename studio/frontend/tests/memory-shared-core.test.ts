@@ -47,9 +47,9 @@ test("the two size formatters take DIFFERENT units, and say so in their names", 
 test("no formatter renders a number that does not exist", () => {
   // Figures come off the wire; NaN or negative must not read as measurements.
   for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, -5, undefined]) {
-    assert.equal(formatGiB(bad as number), "0 GiB");
-    assert.equal(formatBytesGiB(bad as number), "0.00 GiB");
-    assert.equal(formatKvRate(bad as number), "0 KiB");
+    assert.equal(formatGiB(bad!), "0 GiB");
+    assert.equal(formatBytesGiB(bad!), "0.00 GiB");
+    assert.equal(formatKvRate(bad!), "0 KiB");
   }
 });
 
@@ -170,7 +170,7 @@ test("an absent or unusable budget falls back rather than refusing everything", 
       classifyGgufFit(bytes, {
         gpuGb: 24,
         systemRamGb: 64,
-        budgetFraction: bad as number,
+        budgetFraction: bad!,
       }),
       withDefault,
       `budgetFraction=${String(bad)} must fall back to the shared default`,

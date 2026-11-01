@@ -936,12 +936,12 @@ test("a Hub or external id is still switched on the id alone", () => {
 test("another tab's change leaves no model until a fresh read lands", () => {
   const seen: unknown[] = [];
   const reader = createChatModelHistoryReader("t1", (model) => seen.push(model));
-  reader.applyInitial({ id: "t1", modelId: "unsloth/A" } as never);
+  reader.applyInitial({ id: "t1", modelId: "unsloth/A" });
   reader.invalidate();
   // The opening read that was still in flight no longer answers.
-  reader.applyInitial({ id: "t1", modelId: "unsloth/A" } as never);
+  reader.applyInitial({ id: "t1", modelId: "unsloth/A" });
   // The fresh read lands even when it names the same model.
-  reader.applyUpdate({ id: "t1", modelId: "unsloth/A" } as never);
+  reader.applyUpdate({ id: "t1", modelId: "unsloth/A" });
   assert.deepEqual(
     seen.map((m) => (m as { modelId?: string } | null)?.modelId ?? null),
     ["unsloth/A", null, "unsloth/A"],

@@ -38,7 +38,7 @@ const fire = (
   for (const fn of listeners.get(type) ?? []) fn({ type, ...event });
 };
 const fireStorage = (key: string | null, newValue: string | null = "value") =>
-  fire("storage", { key, newValue });
+  { fire("storage", { key, newValue }); };
 
 const {
   buildChatSearchIndex,

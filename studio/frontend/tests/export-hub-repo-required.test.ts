@@ -109,7 +109,7 @@ function startButton(overrides: Partial<Props>): string {
   const html = renderToStaticMarkup(
     React.createElement(ExportRunPanel, { ...props, ...overrides }),
   );
-  const button = html.match(/<button\b[^>]*>Start Export<\/button>/)?.[0];
+  const button = (/<button\b[^>]*>Start Export<\/button>/.exec(html))?.[0];
   assert.ok(button, "Start Export is not rendered");
   return button;
 }

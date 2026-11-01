@@ -26,7 +26,7 @@ export class TrainingDownloadDiscovery {
   private epoch = 0;
   private disposed = false;
   private abort = new AbortController();
-  private ports: {
+  private readonly ports: {
     fetch: (signal: AbortSignal) => Promise<readonly ActiveModelDownload[]>;
     session: () => string;
     adopt: (job: ActiveModelDownload) => void;

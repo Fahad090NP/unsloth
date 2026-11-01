@@ -8,10 +8,10 @@ import type { MarkdownNoteConfig } from "../../types";
 import { FieldLabel } from "../shared/field-label";
 import { NameField } from "../shared/name-field";
 
-type MarkdownNoteDialogProps = {
+interface MarkdownNoteDialogProps {
   config: MarkdownNoteConfig;
   onUpdate: (patch: Partial<MarkdownNoteConfig>) => void;
-};
+}
 
 export function MarkdownNoteDialog({
   config,
@@ -26,7 +26,7 @@ export function MarkdownNoteDialog({
 
   return (
     <div className="space-y-4">
-      <NameField value={config.name} onChange={(value) => onUpdate({ name: value })} />
+      <NameField value={config.name} onChange={(value) => { onUpdate({ name: value }); }} />
       <div className="grid gap-3">
         <FieldLabel
           label="Note style"
@@ -39,7 +39,7 @@ export function MarkdownNoteDialog({
             type="color"
             className="nodrag h-9 w-14 cursor-pointer rounded-md border border-border/60 bg-transparent p-1"
             value={config.note_color ?? "#FDE68A"}
-            onChange={(event) => onUpdate({ note_color: event.target.value })}
+            onChange={(event) => { onUpdate({ note_color: event.target.value }); }}
           />
           <div className="flex-1 space-y-1">
             <div className="flex items-center justify-between">
@@ -52,7 +52,7 @@ export function MarkdownNoteDialog({
               step={1}
               value={[opacity]}
               onValueChange={([value]) =>
-                onUpdate({ note_opacity: String(Math.round(value)) })
+                { onUpdate({ note_opacity: String(Math.round(value)) }); }
               }
             />
           </div>
@@ -69,7 +69,7 @@ export function MarkdownNoteDialog({
           className="corner-squircle nodrag min-h-[calc(180px*var(--ui-space-scale,1))]"
           placeholder="## Note"
           value={config.markdown}
-          onChange={(event) => onUpdate({ markdown: event.target.value })}
+          onChange={(event) => { onUpdate({ markdown: event.target.value }); }}
         />
       </div>
     </div>

@@ -53,7 +53,7 @@ test("it is not a modal, so it holds an id and a finite duration", () => {
   assert.equal(calls[0].options?.id, IGPU_CARVEOUT_TOAST_ID);
   assert.ok(
     Number.isFinite(calls[0].options?.duration) &&
-      (calls[0].options?.duration as number) > 5000,
+      (calls[0].options?.duration!) > 5000,
     "long enough to read an action, short enough to leave on its own",
   );
 });
@@ -100,7 +100,7 @@ test("a later load carrying no advice takes the previous notice down", () => {
 
 test("the action posts the allocation it was dismissed at", async () => {
   reset();
-  const seen: Array<{ url: string; body: unknown; method?: string }> = [];
+  const seen: { url: string; body: unknown; method?: string }[] = [];
   setAuthFetchHandler((url, init) => {
     seen.push({
       url,
@@ -138,7 +138,7 @@ test("a failing dismissal is swallowed rather than rejected", async () => {
   });
   showCarveoutAdvice(ADVICE);
   const action = calls[0].options?.action as { onClick: () => void };
-  assert.doesNotThrow(() => action.onClick());
+  assert.doesNotThrow(() => { action.onClick(); });
   await new Promise((resolve) => setTimeout(resolve, 0));
 });
 

@@ -42,8 +42,7 @@ export function reconcileTensorSplit(
   }
   if (
     !savedIds ||
-    !resolvedIds ||
-    savedIds.length !== resolvedIds.length ||
+    savedIds.length !== resolvedIds?.length ||
     !savedIds.every((id, index) => id === resolvedIds[index])
   )
     return null;

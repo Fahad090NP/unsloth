@@ -8,7 +8,7 @@ import {
 } from "@/features/hub";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
-export type HuggingFaceCacheSettings = {
+export interface HuggingFaceCacheSettings {
   cacheHome: string;
   hubCache: string;
   xetCache: string;
@@ -19,9 +19,9 @@ export type HuggingFaceCacheSettings = {
   writable: boolean;
   freeBytes: number | null;
   environmentVariable: string | null;
-};
+}
 
-type ApiHuggingFaceCacheSettings = {
+interface ApiHuggingFaceCacheSettings {
   // biome-ignore lint/style/useNamingConvention: API schema
   cache_home: string;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -38,7 +38,7 @@ type ApiHuggingFaceCacheSettings = {
   free_bytes: number | null;
   // biome-ignore lint/style/useNamingConvention: API schema
   environment_variable: string | null;
-};
+}
 
 function fromApi(value: ApiHuggingFaceCacheSettings): HuggingFaceCacheSettings {
   return {

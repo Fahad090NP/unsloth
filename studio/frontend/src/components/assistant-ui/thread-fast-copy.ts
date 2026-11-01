@@ -24,25 +24,25 @@ export type ThreadCopyDecision =
   | { readonly kind: "native"; readonly reason: NativeCopyReason };
 
 /** Structural copy event so the gate can be unit tested without a DOM. */
-export type CopyEventLike = {
+export interface CopyEventLike {
   readonly defaultPrevented: boolean;
   readonly target: unknown;
   readonly clipboardData: {
     setData(format: string, data: string): void;
   } | null;
-};
+}
 
-export type SelectionLike = {
+export interface SelectionLike {
   readonly isCollapsed: boolean;
   readonly rangeCount: number;
   getRangeAt(index: number): { readonly commonAncestorContainer: unknown };
   toString(): string;
-};
+}
 
-export type ThreadViewportLike = {
+export interface ThreadViewportLike {
   contains(node: unknown): boolean;
   querySelector(selectors: string): unknown;
-};
+}
 
 /** Chromium wraps a control's value in control-dependent block breaks, so the copy is refused. */
 const FORM_CONTROL = "input, textarea, select";
@@ -158,8 +158,8 @@ function restoreStyleAttribute(element: Element, had: string | null): void {
 }
 
 /** Returns the undo list so the caller can guarantee the restore runs even if `toString()` throws. */
-function patchClipboardDeltas(root: Element): Array<() => void> {
-  const undo: Array<() => void> = [];
+function patchClipboardDeltas(root: Element): (() => void)[] {
+  const undo: (() => void)[] = [];
 
   // The clipboard carries SOURCE text. Include the root itself: querySelectorAll("*") excludes it,
   // and text-transform inherits, so getComputedStyle(root) covers ancestors.
@@ -172,7 +172,7 @@ function patchClipboardDeltas(root: Element): Array<() => void> {
     // Restore the raw attribute: removeProperty leaves `style=""` or rewrites the serialisation.
     const had = element.getAttribute("style");
     element.style.setProperty("text-transform", "none", "important");
-    undo.push(() => restoreStyleAttribute(element, had));
+    undo.push(() => { restoreStyleAttribute(element, had); });
   }
 
   // The alt holder must not have a box: next to a block image it gets an anonymous block and a
@@ -202,7 +202,7 @@ function patchClipboardDeltas(root: Element): Array<() => void> {
  * Only the direction: holders are inserted before images, so element-offset endpoints would
  * shift, while cloned live Ranges already track the DOM.
  */
-type SelectionDirection = { readonly backward: boolean };
+interface SelectionDirection { readonly backward: boolean }
 
 function captureDirection(selection: Selection): SelectionDirection {
   const { anchorNode, anchorOffset, focusNode, focusOffset } = selection;
@@ -338,15 +338,15 @@ export function attachThreadFastCopy(viewport: HTMLElement): () => void {
       event,
       selection,
       viewport,
-      engineClipboardIsMapped(view as Window & typeof globalThis),
+      engineClipboardIsMapped(view),
     );
     if (decision.kind !== "fast") return;
 
     let text: string;
     try {
       text = faithfulSelectionText(
-        selection as Selection,
-        scopeElement(selection as Selection, viewport),
+        selection!,
+        scopeElement(selection!, viewport),
       );
     } catch {
       // The patch failed; let the browser copy (slow and right beats fast and wrong).
@@ -360,7 +360,7 @@ export function attachThreadFastCopy(viewport: HTMLElement): () => void {
   };
 
   viewport.addEventListener("copy", onCopy);
-  return () => viewport.removeEventListener("copy", onCopy);
+  return () => { viewport.removeEventListener("copy", onCopy); };
 }
 
 function scopeElement(selection: Selection, viewport: HTMLElement): Element {

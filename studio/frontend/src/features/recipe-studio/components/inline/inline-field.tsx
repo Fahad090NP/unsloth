@@ -4,11 +4,11 @@
 import { cn } from "@/lib/utils";
 import type { ReactElement, ReactNode } from "react";
 
-type InlineFieldProps = {
+interface InlineFieldProps {
   label: string;
   className?: string;
   children: ReactNode;
-};
+}
 
 export function InlineField({
   label,

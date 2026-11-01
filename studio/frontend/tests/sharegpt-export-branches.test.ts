@@ -14,21 +14,21 @@ import {
 } from "../src/features/chat/utils/ndjson.ts";
 import { readSrc } from "./helpers/kit.ts";
 
-type StoredMessage = {
+interface StoredMessage {
   id: string;
   parentId: string | null;
   createdAt: number;
   role: string;
   content: string;
-};
+}
 
-type Exporters = {
+interface Exporters {
   exportConversationShareGPT: (threadId: string) => Promise<void>;
   buildThreadContent: (
     threadId: string,
     format: string,
   ) => Promise<string | null>;
-};
+}
 
 const SOURCE = readSrc(
   "features/chat/prompt-storage/prompt-storage-dialog.tsx",
@@ -106,7 +106,7 @@ async function withLiveBranch<T>(
   ids: string[] | null,
   run: () => Promise<T>,
 ): Promise<T> {
-  if (!ids) return run();
+  if (!ids) return await run();
   const unregister = liveThreadHead.registerLiveThreadView({
     threads: () => ({ getState: () => ({ mainThreadId: "thread" }) }),
     threadListItem: () => ({ getState: () => ({ id: "thread", remoteId: "thread" }) }),
@@ -127,7 +127,7 @@ async function shareGptExport(
 ) {
   const downloads: string[] = [];
   const exporters = loadExporters(stored, downloads);
-  return withLiveBranch(liveBranch, async () => {
+  return await withLiveBranch(liveBranch, async () => {
     await exporters.exportConversationShareGPT("thread");
     const bulk = await exporters.buildThreadContent("thread", "sharegpt");
     return { downloads, bulk };
@@ -213,7 +213,7 @@ test("ShareGPT exports nothing from the replaced branch while an edited first pr
 test("ShareGPT keeps the picked branch when the chat is switched during the export", async () => {
   const downloads: string[] = [];
   let unregister = () => {};
-  const exporters = loadExporters(regenerated, downloads, () => unregister());
+  const exporters = loadExporters(regenerated, downloads, () => { unregister(); });
   unregister = liveThreadHead.registerLiveThreadView({
     threads: () => ({ getState: () => ({ mainThreadId: "thread" }) }),
     threadListItem: () => ({ getState: () => ({ id: "thread", remoteId: "thread" }) }),

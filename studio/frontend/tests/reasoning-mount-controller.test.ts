@@ -188,7 +188,7 @@ test("the controller and flag modules are plain TypeScript", () => {
   }
 });
 
-type GridInput = { key: string; text: string; document: number; start: number; code?: { source: string; incomplete: boolean; language: string | null; lines: { line: number; column: number; text: string }[] } };
+interface GridInput { key: string; text: string; document: number; start: number; code?: { source: string; incomplete: boolean; language: string | null; lines: { line: number; column: number; text: string }[] } }
 const prose = (key: string, chars: number, start = 0): GridInput => ({ key, text: "x".repeat(chars), document: 0, start });
 const code = (fence: number, line: number, chars: number): GridInput => ({
   key: `0:0:${fence}:code:${line}:0`,

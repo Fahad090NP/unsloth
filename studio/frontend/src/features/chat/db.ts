@@ -53,9 +53,9 @@ export function useLiveQuery<T>(
   useEffect(() => {
     const sub = liveQuery(() => querierRef.current()).subscribe({
       next: setValue,
-      error: (err) => console.error("useLiveQuery:", err),
+      error: (err) => { console.error("useLiveQuery:", err); },
     });
-    return () => sub.unsubscribe();
+    return () => { sub.unsubscribe(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   return value;

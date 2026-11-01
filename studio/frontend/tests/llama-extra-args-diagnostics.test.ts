@@ -843,7 +843,7 @@ test("Model Memory reports the flags its settings remove", () => {
   assert.match(keep("--load-mode mmap")[0], /Keep model in GPU memory/);
   assert.match(noReserve("--no-mmap")[0], /Don't reserve system RAM/);
   assert.equal(
-    noReserve("--direct-io").some((message) => /will be removed/.test(message)),
+    noReserve("--direct-io").some((message) => message.includes('will be removed')),
     false,
   );
   assert.match(
@@ -855,7 +855,7 @@ test("Model Memory reports the flags its settings remove", () => {
   );
   assert.equal(
     diagnoseExtraArgs("--mlock", CATALOG, {}).some((d) =>
-      /will be removed/.test(d.message),
+      d.message.includes('will be removed'),
     ),
     false,
   );

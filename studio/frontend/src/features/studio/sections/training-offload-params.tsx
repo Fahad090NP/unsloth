@@ -89,7 +89,7 @@ export function OffloadLayersParams(): ReactElement {
                 if (count !== null) store.setOffloadLayers(count);
               }}
               // An empty or zero box keeps the last count; Off is chosen from the select.
-              onBlur={() => setCountDraft(null)}
+              onBlur={() => { setCountDraft(null); }}
               className="w-20 font-mono"
             />
           )}
@@ -156,7 +156,7 @@ export function OffloadLayersParams(): ReactElement {
           <Select
             value={String(store.prefetchDepth)}
             onValueChange={(value) =>
-              store.setPrefetchDepth(value === "auto" ? "auto" : Number(value))
+              { store.setPrefetchDepth(value === "auto" ? "auto" : Number(value)); }
             }
           >
             <SelectTrigger className="w-28">

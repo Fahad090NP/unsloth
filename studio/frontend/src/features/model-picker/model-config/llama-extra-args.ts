@@ -51,12 +51,12 @@ const OPTIONAL_SECOND_VALUE_FLAGS = new Set([
   "--control-vector-scaled",
 ]);
 
-export type ExtraArgsParse = {
+export interface ExtraArgsParse {
   tokens: string[];
   unterminatedQuote: '"' | "'" | null;
   /** Quoted token indices: `--chat-template '- hello'` must not read the value as a flag. */
   quotedIndices: ReadonlySet<number>;
-};
+}
 
 /** Port of CPython list2cmdline (used by Popen): backslash runs before a quote double. */
 export function windowsCommandLength(tokens: readonly string[]): number {
@@ -459,10 +459,10 @@ export function extraArgFlags(tokens: readonly string[]): string[] {
 import type { LlamaFlagCatalog } from "../api/llama-flags";
 
 /** `error` blocks the load, `warning` is unverifiable, `note` is correct usage worth stating. */
-export type ExtraArgsDiagnostic = {
+export interface ExtraArgsDiagnostic {
   level: "error" | "warning" | "note";
   message: string;
-};
+}
 
 /** Hard-coded since the backend always denies these, even before the async catalogue loads. */
 const MANAGED_CONTROL_FLAGS: Record<string, string> = {
@@ -715,7 +715,7 @@ const REQUEST_SCOPED_FLAGS = new Set([
   "--n-predict",
 ]);
 
-export type ExtraArgsContext = {
+export interface ExtraArgsContext {
   gpuSelectionActive?: boolean;
   manualGpuMemory?: boolean;
   /** Only manual mode with a resolved count >= 0 rewrites --tensor-split; at Auto it is dropped. */
@@ -723,7 +723,7 @@ export type ExtraArgsContext = {
   batchFloor?: number;
   keepResident?: boolean;
   noRamReserve?: boolean;
-};
+}
 
 export function diagnoseExtraArgs(
   input: string,

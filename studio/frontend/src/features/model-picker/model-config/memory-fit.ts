@@ -89,7 +89,7 @@ export interface MemoryFitCapacity {
 }
 
 function reclaimableBytes(value: number | undefined): number {
-  return Number.isFinite(value) && (value as number) > 0 ? (value as number) : 0;
+  return Number.isFinite(value) && (value!) > 0 ? (value!) : 0;
 }
 
 export function resolveReclaimableMemoryCredit(
@@ -223,7 +223,7 @@ function autoContextFigures(
   if (nativeFit !== "exceeds") {
     return native;
   }
-  const shrink = Math.max(0, estimate.gpuBytes - (estimate.gpuFloorBytes as number));
+  const shrink = Math.max(0, estimate.gpuBytes - (estimate.gpuFloorBytes!));
   return {
     gpuBytes: estimate.gpuBytes - shrink,
     totalBytes: estimate.totalBytes - shrink,

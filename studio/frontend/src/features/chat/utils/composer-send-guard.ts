@@ -3,7 +3,7 @@
 
 /** Refuses stale writes that put a just-sent message back in the composer (IME, autocorrect,
  *  draft autosave). Retired by user input, never by a clock: queue latency is unbounded. */
-export type SentTextGuard = {
+export interface SentTextGuard {
   readonly texts: readonly string[];
   /** Draft key the send cleared, so another thread's identical draft still restores. */
   readonly draftKey: string | null;
@@ -11,7 +11,7 @@ export type SentTextGuard = {
   /** An IME composition was open at the send; if not, a composition write is typing (WebKitGTK
    *  on Wayland commits every keystroke as one, #10012). */
   readonly compositionOpen: boolean;
-};
+}
 
 export function armSentTextGuard(
   texts: readonly string[],

@@ -149,7 +149,7 @@ test("the probe stops at its page cap instead of scanning the whole gallery", as
   let pages = 0;
   const counted = async (offset: number) => {
     pages += 1;
-    return pager(listing, 10)(offset);
+    return await pager(listing, 10)(offset);
   };
   assert.equal(await hasUnknownRecord(judging(new Set(listing.map((i) => i.id))), counted, 10, 3), false);
   assert.equal(pages, 3);
@@ -284,7 +284,7 @@ test("a baseline frozen before the request is not softened by a page loaded duri
 test("a page fetch re-reads its offset when the shelf shortens mid request", async () => {
   let shelf = ["e", "d", "c", "b", "a"];
   let loaded = ["e", "d"];
-  let epoch = 0;
+  const epoch = 0;
   const requested: number[] = [];
   const result = await fetchNextPage(
     () => loaded.length,

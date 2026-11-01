@@ -40,7 +40,7 @@ export async function savePromptEntry(entry: PromptEntry): Promise<PromptEntry> 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(entry),
   });
-  return parseJsonOrThrow<PromptEntry>(res);
+  return await parseJsonOrThrow<PromptEntry>(res);
 }
 
 export async function deletePromptEntry(id: string): Promise<void> {
@@ -71,7 +71,7 @@ export async function savePromptList(list: PromptListEntry): Promise<PromptListE
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(list),
   });
-  return parseJsonOrThrow<PromptListEntry>(res);
+  return await parseJsonOrThrow<PromptListEntry>(res);
 }
 
 export async function deletePromptList(id: string): Promise<void> {

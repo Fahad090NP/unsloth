@@ -60,7 +60,7 @@ test("pending transcript mutations use the current view and deletion callback", 
       },
       useRef: (initial: unknown) => refs[refIndex++] ??= { current: initial },
       useCallback: (callback: unknown) => callback,
-      useLayoutEffect: (effect: () => void) => effect(),
+      useLayoutEffect: (effect: () => void) => { effect(); },
       useEffect: () => {},
       listTranscripts: async (archived: boolean) => {
         requests.push(archived);
@@ -145,7 +145,7 @@ test("a failed view switch does not leave the other view's rows on screen", asyn
     },
     useRef: (initial: unknown) => refs[refIndex++] ??= { current: initial },
     useCallback: (callback: unknown) => callback,
-    useLayoutEffect: (effect: () => void) => effect(),
+    useLayoutEffect: (effect: () => void) => { effect(); },
     useEffect: () => {},
     listTranscripts: async (archived: boolean) => {
       if (failNext) throw new Error("Could not load transcripts.");

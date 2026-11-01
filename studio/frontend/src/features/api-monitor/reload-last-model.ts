@@ -4,22 +4,22 @@
 // Reads the durable last-local-load record, not the monitor ring buffer: that one is bounded,
 // clearable and can be disabled.
 
-export type LastLoadRecord = {
+export interface LastLoadRecord {
   id: string;
   kind: "gguf" | "model";
   ggufVariant: string | null;
-};
+}
 
 export type ReloadTarget<C = unknown> = LastLoadRecord & { config: C | null };
 
-export type ReloadDeps<C = unknown> = {
+export interface ReloadDeps<C = unknown> {
   readLastLoad: () => Promise<LastLoadRecord | null>;
   resolveConfig: (
     id: string,
     ggufVariant: string | null,
   ) => { config: C } | null;
   loadTarget: (target: ReloadTarget<C>) => Promise<void>;
-};
+}
 
 export const RELOAD_MISSING_HISTORY_MESSAGE =
   "No previously loaded model found. Load a model from the picker first.";

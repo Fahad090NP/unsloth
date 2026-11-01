@@ -71,11 +71,11 @@ export interface SystemInfoResponse {
   /** GiB VRAM / GiB available RAM per lower-cased repo id. Absent on older backends. */
   diffusers_offload_tiers?: Record<
     string,
-    Array<{
+    {
       gpu_gb: number;
       system_ram_gb: number;
       requires_quantised_streaming?: boolean;
-    }>
+    }[]
   >;
   uptime_seconds: number | null;
   cpu: {
@@ -211,10 +211,10 @@ export async function fetchSystemInfo({
   refreshMemory = false,
 }: { force?: boolean; refreshMemory?: boolean } = {}): Promise<SystemInfoResponse | null> {
   if (systemFetchPromise) {
-    if (!refreshMemory) return systemFetchPromise;
+    if (!refreshMemory) return await systemFetchPromise;
     // An in-flight snapshot may predate the resident model.
     await systemFetchPromise;
-    return fetchSystemInfo({ force, refreshMemory });
+    return await fetchSystemInfo({ force, refreshMemory });
   }
   if (!force && !refreshMemory && cachedSystem) return cachedSystem;
 
@@ -229,7 +229,7 @@ export async function fetchSystemInfo({
       const data = await res.json();
 
       cachedSystem = { ...(data as SystemInfoResponse), status: "ready" };
-      systemSubscribers.forEach((subscriber) => subscriber(cachedSystem!));
+      systemSubscribers.forEach((subscriber) => { subscriber(cachedSystem!); });
       return cachedSystem;
     } catch {
       return null;
@@ -240,7 +240,7 @@ export async function fetchSystemInfo({
     }
   })();
 
-  return systemFetchPromise;
+  return await systemFetchPromise;
 }
 
 interface UseSystemInfoOptions {

@@ -70,21 +70,21 @@ function setPinnedGlobal(next: boolean) {
   try {
     window.localStorage.setItem(PINNED_KEY, String(next));
   } catch {}
-  listeners.forEach((cb) => cb());
+  listeners.forEach((cb) => { cb(); });
 }
 
 export function holdSidebarPinned() {
   if (!held) beforeHold = pinnedValue;
   held = true;
   pinnedValue = true;
-  listeners.forEach((cb) => cb());
+  listeners.forEach((cb) => { cb(); });
 }
 
 export function releaseSidebarPinned() {
   if (!held) return;
   held = false;
   pinnedValue = chosen ? beforeHold : loadPinned();
-  listeners.forEach((cb) => cb());
+  listeners.forEach((cb) => { cb(); });
 }
 
 export function useSidebarPin() {
@@ -94,8 +94,8 @@ export function useSidebarPin() {
     () => false,
   );
 
-  const setPinned = useCallback((value: boolean) => setPinnedGlobal(value), []);
-  const togglePinned = useCallback(() => setPinnedGlobal(!pinnedValue), []);
+  const setPinned = useCallback((value: boolean) => { setPinnedGlobal(value); }, []);
+  const togglePinned = useCallback(() => { setPinnedGlobal(!pinnedValue); }, []);
 
   return { pinned, setPinned, togglePinned };
 }

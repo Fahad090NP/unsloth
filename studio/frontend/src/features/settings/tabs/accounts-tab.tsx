@@ -221,7 +221,7 @@ function OwnerAccountsTab() {
           />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => { setQuery(event.target.value); }}
             placeholder={t("settings.accounts.search")}
             aria-label={t("settings.accounts.search")}
             className="h-control pl-9"
@@ -400,7 +400,7 @@ function OwnerAccountsTab() {
                           align="end"
                           className="w-max max-w-[calc(100vw-2rem)]"
                         >
-                          <DropdownMenuItem onSelect={() => setOwnerPasswordOpen(true)}>
+                          <DropdownMenuItem onSelect={() => { setOwnerPasswordOpen(true); }}>
                             <HugeiconsIcon
                               icon={Key01Icon}
                               className="size-4"
@@ -555,7 +555,7 @@ function OwnerAccountsTab() {
           <Input
             id="owner-sign-in-name"
             value={aliasDraft}
-            onChange={(event) => setAliasDraft(event.target.value)}
+            onChange={(event) => { setAliasDraft(event.target.value); }}
             onKeyDown={(event) => {
               if (event.key === "Enter") saveSignInName();
             }}
@@ -666,7 +666,7 @@ function OwnerAccountsTab() {
                 <Input
                   id="new-account-username"
                   value={username}
-                  onChange={(event) => setUsername(event.target.value)}
+                  onChange={(event) => { setUsername(event.target.value); }}
                   autoComplete="off"
                   autoCapitalize="none"
                   spellCheck={false}
@@ -757,7 +757,7 @@ function OwnerAccountsTab() {
               <Textarea
                 id="account-model-allowlist"
                 value={allowlistText}
-                onChange={(event) => setAllowlistText(event.target.value)}
+                onChange={(event) => { setAllowlistText(event.target.value); }}
                 placeholder={"unsloth/Qwen3-4B-GGUF\nunsloth/*"}
                 autoComplete="off"
                 autoCapitalize="none"

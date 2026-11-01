@@ -134,7 +134,7 @@ export function subscribeKnowledgeBasesChanged(
 ): () => void {
   if (typeof window === "undefined") return () => undefined;
   window.addEventListener(KNOWLEDGE_BASES_CHANGED_EVENT, onChanged);
-  return () => window.removeEventListener(KNOWLEDGE_BASES_CHANGED_EVENT, onChanged);
+  return () => { window.removeEventListener(KNOWLEDGE_BASES_CHANGED_EVENT, onChanged); };
 }
 
 export function createKnowledgeBase(payload: {

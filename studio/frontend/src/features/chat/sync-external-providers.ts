@@ -232,7 +232,7 @@ export async function syncExternalProvidersFromBackend(
     existingById.set(provider.id, provider);
   }
 
-  const backfillTasks: Array<() => Promise<unknown>> = [];
+  const backfillTasks: (() => Promise<unknown>)[] = [];
   const syncedProviders = configRows
     .filter((config) => config.is_enabled)
     .map((config) => {

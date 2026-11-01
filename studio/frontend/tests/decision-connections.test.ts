@@ -18,7 +18,7 @@ test("System One connections stay decision-only after a reload", async () => {
   const previous = globalThis.fetch;
   globalThis.fetch = (async (_url, init) => {
     bodies.push(JSON.parse(String(init?.body))); return Response.json({});
-  }) as typeof fetch;
+  });
   try {
     await api.createProviderConfig({ providerType: "custom", displayName: "Decider", apiType: "systemone" });
   } finally {

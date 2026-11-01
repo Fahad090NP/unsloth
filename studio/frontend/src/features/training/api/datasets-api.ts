@@ -9,7 +9,7 @@ import type {
   UploadDatasetResponse,
 } from "../types/datasets";
 
-type CheckDatasetFormatArgs = {
+interface CheckDatasetFormatArgs {
   datasetName: string;
   hfToken: string | null;
   subset?: string | null;
@@ -18,7 +18,7 @@ type CheckDatasetFormatArgs = {
   preferLocalCache?: boolean;
   localPath?: string | null;
   signal?: AbortSignal;
-};
+}
 
 export class DatasetFormatError extends Error {
   readonly errorCode: string | null;
@@ -86,8 +86,8 @@ export async function checkDatasetFormat({
       dataset_name: datasetName,
       subset: subset || undefined,
       train_split: split || "train",
-      is_vlm: !!isVlm,
-      prefer_local_cache: !!preferLocalCache,
+      is_vlm: Boolean(isVlm),
+      prefer_local_cache: Boolean(preferLocalCache),
       local_path: localPath || undefined,
     }),
   });
@@ -96,7 +96,7 @@ export async function checkDatasetFormat({
     throw await readDatasetFormatError(res);
   }
 
-  return res.json();
+  return await res.json();
 }
 
 export function uploadTrainingDataset(
@@ -129,10 +129,10 @@ async function uploadTrainingDatasetForm(
     throw new Error(await readFastApiError(res, "Upload failed"));
   }
 
-  return res.json();
+  return await res.json();
 }
 
-type AiAssistMappingArgs = {
+interface AiAssistMappingArgs {
   columns: string[];
   samples: Record<string, unknown>[];
   datasetName?: string | null;
@@ -140,9 +140,9 @@ type AiAssistMappingArgs = {
   modelName?: string | null;
   modelType?: "text" | "vision" | "audio" | "embeddings" | "decision" | null;
   signal?: AbortSignal;
-};
+}
 
-export type AiAssistMappingResponse = {
+export interface AiAssistMappingResponse {
   success: boolean;
   suggested_mapping?: Record<string, string> | null;
   warning?: string | null;
@@ -151,7 +151,7 @@ export type AiAssistMappingResponse = {
   dataset_type?: string | null;
   is_conversational?: boolean | null;
   user_notification?: string | null;
-};
+}
 
 export async function aiAssistMapping({
   columns,
@@ -182,5 +182,5 @@ export async function aiAssistMapping({
     throw new Error(await readFastApiError(res, "AI assist failed"));
   }
 
-  return res.json();
+  return await res.json();
 }

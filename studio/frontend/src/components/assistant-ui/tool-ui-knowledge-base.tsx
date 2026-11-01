@@ -184,7 +184,7 @@ const KnowledgeBaseToolUIImpl: ToolCallMessagePartComponent = ({
                 {shown.length < documents.length ? (
                   <button
                     type="button"
-                    onClick={() => setShowAll(true)}
+                    onClick={() => { setShowAll(true); }}
                     className="self-start text-xs underline-offset-2 hover:text-foreground hover:underline"
                   >
                     Show {documents.length - shown.length} more
@@ -194,7 +194,7 @@ const KnowledgeBaseToolUIImpl: ToolCallMessagePartComponent = ({
                   <button
                     type="button"
                     aria-expanded={showPassages}
-                    onClick={() => setShowPassages((v) => !v)}
+                    onClick={() => { setShowPassages((v) => !v); }}
                     className="self-start text-xs underline-offset-2 hover:text-foreground hover:underline"
                   >
                     {showPassages

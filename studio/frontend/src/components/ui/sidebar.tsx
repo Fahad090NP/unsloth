@@ -44,7 +44,7 @@ const noop = () => {}
 const SIDEBAR_WIDTH = `${SIDEBAR_WIDTH_DEFAULT}px`
 const SIDEBAR_WIDTH_ICON = "3rem"
 
-type SidebarContextProps = {
+interface SidebarContextProps {
   state: "expanded" | "collapsed"
   open: boolean
   setOpen: (open: boolean) => void
@@ -115,7 +115,7 @@ function SidebarProvider({
   const [_open, _setOpen] = React.useState(defaultOpen)
 
   // Pin mode drives open entirely from `pinned`; otherwise controlled/uncontrolled.
-  const open = hasPinMode ? !!pinnedProp : (openProp ?? _open)
+  const open = hasPinMode ? Boolean(pinnedProp) : (openProp ?? _open)
 
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
@@ -136,9 +136,9 @@ function SidebarProvider({
   )
 
   const toggleSidebar = React.useCallback(() => {
-    if (isMobile) return setOpenMobile((open) => !open)
-    if (hasPinMode && togglePinnedProp) return togglePinnedProp()
-    return setOpen((open) => !open)
+    if (isMobile) { setOpenMobile((open) => !open); return; }
+    if (hasPinMode && togglePinnedProp) { togglePinnedProp(); return; }
+    setOpen((open) => !open);
   }, [isMobile, setOpen, setOpenMobile, hasPinMode, togglePinnedProp])
 
   // Not behind an open dialog (Settings leaves the app un-hidden); the mobile drawer is itself one.
@@ -160,9 +160,9 @@ function SidebarProvider({
       setPeekingState(true)
       return
     }
-    retractRef.current = window.setTimeout(() => setPeekingState(false), 120)
+    retractRef.current = window.setTimeout(() => { setPeekingState(false); }, 120)
   }, [])
-  React.useEffect(() => () => window.clearTimeout(retractRef.current), [])
+  React.useEffect(() => () => { window.clearTimeout(retractRef.current); }, [])
   React.useEffect(() => {
     if (pinned || isMobile) setPeekingState(false)
   }, [pinned, isMobile])
@@ -336,11 +336,11 @@ function Sidebar({
         data-side={side}
         data-held-out={heldOut || undefined}
         // Hover spans panel and edge; only leaving both retracts it.
-        onPointerEnter={holdsOut ? () => setPeeking(true) : undefined}
-        onPointerLeave={holdsOut ? () => setPeeking(false) : undefined}
+        onPointerEnter={holdsOut ? () => { setPeeking(true); } : undefined}
+        onPointerLeave={holdsOut ? () => { setPeeking(false); } : undefined}
         // Without this the strip's blur retracts the panel around the focus that just landed in it.
-        onFocus={holdsOut ? () => setPeeking(true) : undefined}
-        onBlur={holdsOut ? () => setPeeking(false) : undefined}
+        onFocus={holdsOut ? () => { setPeeking(true); } : undefined}
+        onBlur={holdsOut ? () => { setPeeking(false); } : undefined}
         className={cn(
           hasPinMode
             ? cn(

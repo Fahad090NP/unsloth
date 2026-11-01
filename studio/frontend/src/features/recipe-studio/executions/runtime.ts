@@ -78,7 +78,7 @@ function normalizeSourceProgress(input: unknown): RecipeSourceProgress | null {
   if (!raw) {
     return null;
   }
-  return raw as RecipeSourceProgress;
+  return raw;
 }
 
 export function applyExecutionStatusSnapshot(
@@ -104,9 +104,9 @@ export function applyExecutionStatusSnapshot(
           (value): value is string => typeof value === "string" && value.trim().length > 0,
         )
       : execution.completed_columns,
-    progress: (normalizeObject(status.progress) as RecipeExecutionRecord["progress"]) ?? null,
+    progress: (normalizeObject(status.progress)) ?? null,
     column_progress:
-      (normalizeObject(status.column_progress) as RecipeExecutionRecord["column_progress"]) ??
+      (normalizeObject(status.column_progress)) ??
       null,
     batch,
     source_progress: normalizeSourceProgress(status.source_progress),

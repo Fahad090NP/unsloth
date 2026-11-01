@@ -60,7 +60,7 @@ export function useThinkingCodeColour(
       { root: viewportOf(element), rootMargin: "100% 0px" },
     );
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [surface, settled, reached, coloured]);
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export function useThinkingCodeColour(
       { root: viewportOf(element) },
     );
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [surface, settled]);
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export function useThinkingCodeColour(
       },
       Math.max(0, state.startedAt + LIVE_COLOUR_MS - performance.now()),
     );
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [settled, visible, caughtUp, source, language, colour]);
 
   useEffect(() => {

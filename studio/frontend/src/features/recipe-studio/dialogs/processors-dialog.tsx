@@ -13,13 +13,13 @@ import { buildDefaultSchemaTransform } from "../utils/processors";
 import { AvailableVariables } from "./shared/available-variables";
 import { FieldLabel } from "./shared/field-label";
 import { RecipeDialogContent } from "./shared/recipe-dialog-content";
-type ProcessorsDialogProps = {
+interface ProcessorsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   processors: RecipeProcessorConfig[];
   onProcessorsChange: (processors: RecipeProcessorConfig[]) => void;
   container?: HTMLDivElement | null;
-};
+}
 
 export function ProcessorsDialog({
   open,
@@ -102,7 +102,7 @@ export function ProcessorsDialog({
                   id={nameId}
                   className="nodrag"
                   value={schemaProcessor.name}
-                  onChange={(event) => updateSchema({ name: event.target.value })}
+                  onChange={(event) => { updateSchema({ name: event.target.value }); }}
                 />
               </div>
               <div className="grid gap-1.5">
@@ -116,7 +116,7 @@ export function ProcessorsDialog({
                   className="corner-squircle nodrag min-h-[calc(220px*var(--ui-space-scale,1))]"
                   value={schemaProcessor.template}
                   onChange={(event) =>
-                    updateSchema({ template: event.target.value })
+                    { updateSchema({ template: event.target.value }); }
                   }
                 />
                 <p className="text-xs text-muted-foreground">
@@ -130,7 +130,7 @@ export function ProcessorsDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => { onOpenChange(false); }}
           >
             Done
           </Button>

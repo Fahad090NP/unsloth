@@ -75,9 +75,9 @@ const htmlLiteralStates = new WeakMap<
   TokenizeContext,
   { eventIndex: number; openTags: string[] }
 >();
-type LatexBracketState = { eventIndex: number; openDelimiters: string[] };
+interface LatexBracketState { eventIndex: number; openDelimiters: string[] }
 const latexBracketStates = new WeakMap<TokenizeContext, LatexBracketState>();
-const escapedMathNodes = new WeakSet<object>();
+const escapedMathNodes = new WeakSet();
 
 function isInHtmlLiteral(context: TokenizeContext): boolean {
   let state = htmlLiteralStates.get(context);
@@ -187,11 +187,11 @@ function braceBalance(value: string): number {
   return depth;
 }
 
-type MathBodyProtection = {
+interface MathBodyProtection {
   readonly parts: string[];
   readonly textGroups: boolean[];
   textCommandPending: boolean;
-};
+}
 
 function consumeMathCommand(
   value: string,
@@ -398,20 +398,20 @@ const escapedMathFromMarkdown: FromMarkdownExtension = {
   },
 };
 
-type MarkdownNode = {
+interface MarkdownNode {
   readonly type: string;
   readonly position?: {
     readonly start: { readonly offset?: number };
     readonly end: { readonly offset?: number };
   };
   readonly children?: readonly MarkdownNode[];
-};
+}
 
-type EscapedMathRange = {
+interface EscapedMathRange {
   readonly start: number;
   readonly end: number;
   readonly value: string;
-};
+}
 
 function hasLikelyMathCloser(markdown: string, offset: number): boolean {
   const limit = Math.min(markdown.length, offset + MAX_BODY_LENGTH + 1);

@@ -46,7 +46,7 @@ test("the monitor reloads on first contact and each reconnect only", async () =>
   const storage = new Map<string, string>([["unsloth_auth_token", "t"]]);
   const saved = { models: ["manual", "alpha"], available_models: ["alpha"] };
   let served: string[] | null = ["alpha", "beta"];
-  const puts: Array<{ models: string[]; available_models: string[] }> = [];
+  const puts: { models: string[]; available_models: string[] }[] = [];
   let calls = 0;
   const originals = [globalThis.window, globalThis.localStorage, globalThis.fetch] as const;
   Object.defineProperty(globalThis, "window", {
@@ -79,7 +79,7 @@ test("the monitor reloads on first contact and each reconnect only", async () =>
       return Response.json([{ id: "p", base_url: "http://llama/v1", ...saved }]);
     }
     throw new Error(`unexpected ${url}`);
-  }) as typeof fetch;
+  });
 
   const { startLlamaCppAutoReload } = await vite.ssrLoadModule(
     "/src/features/chat/llama-cpp-auto-reload.ts",

@@ -146,7 +146,7 @@ test("callers that already folded the two flags get the same answer", () => {
     const preFolded = {
       memory_total_gb: device.memory_total_gb,
       shared_memory: sharesHostMemory({
-        sharedMemory: device.shared_memory === true,
+        sharedMemory: device.shared_memory,
         unifiedMemory: (device as { unified_memory?: boolean }).unified_memory === true,
       }),
       shared_memory_host_backed_gb: (

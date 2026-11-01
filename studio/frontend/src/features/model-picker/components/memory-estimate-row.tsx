@@ -237,7 +237,7 @@ export function MemoryEstimateRow({
     <div className="flex flex-col border-b border-border pb-5">
       <button
         type="button"
-        onClick={() => onExpandedChange(!expanded)}
+        onClick={() => { onExpandedChange(!expanded); }}
         aria-expanded={expanded}
         aria-controls={contentId}
         aria-label={`Estimated Memory Usage: ${expanded ? "Hide" : "Show"} breakdown`}

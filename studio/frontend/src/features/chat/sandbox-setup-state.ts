@@ -9,7 +9,7 @@ import type {
 
 export const SANDBOX_SETUP_POLL_MS = 2000;
 
-export type SandboxSetupView = {
+export interface SandboxSetupView {
   checking: boolean;
   loadFailed: boolean;
   install: "linux" | "windows" | null;
@@ -24,7 +24,7 @@ export type SandboxSetupView = {
   note: string;
   /** Why High is unavailable, shown only when the popup has nothing else to offer. */
   reason: string;
-};
+}
 
 export function sandboxSetupView({
   capability,

@@ -16,10 +16,10 @@ type NativeCommand =
   | { command: "start"; color: string }
   | { command: "stop" }
   | { command: "forget"; id: number }
-  | { command: "number"; numbers: Array<[number, number]> }
+  | { command: "number"; numbers: [number, number][] }
   | { command: "poll" };
 
-type Answer = { installed: boolean; events: unknown[] };
+interface Answer { installed: boolean; events: unknown[] }
 
 function nativeCommand(command: FrameCommand): NativeCommand | null {
   switch (command.command) {

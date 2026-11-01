@@ -25,7 +25,7 @@ import { copyToClipboard } from "@/lib/copy-to-clipboard";
 import { toastError, toastSuccess } from "@/shared/toast";
 import type { RecipeExecutionRecord } from "../../execution-types";
 
-type PublishExecutionDialogProps = {
+interface PublishExecutionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   execution: RecipeExecutionRecord | null;
@@ -36,7 +36,7 @@ type PublishExecutionDialogProps = {
     private: boolean;
     artifact_path?: string | null;
   }) => Promise<{ url: string }>;
-};
+}
 
 function getExecutionRecordCount(execution: RecipeExecutionRecord | null): number | null {
   if (!execution) {
@@ -202,7 +202,7 @@ export function PublishExecutionDialog({
                   <HugeiconsIcon icon={ChevronRightStandardIcon} className="size-4" />
                 </a>
               </Button>
-              <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              <Button variant="ghost" onClick={() => { onOpenChange(false); }}>
                 Done
               </Button>
             </DialogFooter>
@@ -241,7 +241,7 @@ export function PublishExecutionDialog({
                   id="publish-repo-id"
                   placeholder="your-name/customer-support-synth"
                   value={repoId}
-                  onChange={(event) => setRepoId(event.target.value)}
+                  onChange={(event) => { setRepoId(event.target.value); }}
                   disabled={publishing}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -257,7 +257,7 @@ export function PublishExecutionDialog({
                   id="publish-description"
                   className="corner-squircle"
                   value={description}
-                  onChange={(event) => setDescription(event.target.value)}
+                  onChange={(event) => { setDescription(event.target.value); }}
                   disabled={publishing}
                   rows={4}
                   placeholder={defaultDescription || "What is this dataset for?"}
@@ -293,7 +293,7 @@ export function PublishExecutionDialog({
                     className="pl-9"
                     placeholder="hf_..."
                     value={hfToken}
-                    onChange={(event) => setHfToken(event.target.value)}
+                    onChange={(event) => { setHfToken(event.target.value); }}
                     disabled={publishing}
                   />
                 </div>
@@ -333,7 +333,7 @@ export function PublishExecutionDialog({
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => { onOpenChange(false); }}
                 disabled={publishing}
               >
                 Cancel

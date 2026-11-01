@@ -70,7 +70,7 @@ export function ColorThemeSelect() {
     <DropdownMenuItem
       key={id}
       onSelect={() =>
-        isHalloweenThemeId(id) ? pickHalloweenTheme(id) : setPalette(id)
+        { isHalloweenThemeId(id) ? pickHalloweenTheme(id) : setPalette(id); }
       }
       data-palette-value={id}
       aria-checked={palette === id}

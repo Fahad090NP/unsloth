@@ -13,7 +13,7 @@ import {
 type AudioTask = "tts" | "stt";
 
 const taskFor = (repoId: string): AudioTask | null =>
-  (groupForRepoId(repoId, AUDIO_CATALOG)?.task as AudioTask | undefined) ??
+  (groupForRepoId(repoId, AUDIO_CATALOG)?.task) ??
   null;
 
 // Mirrors audioModelsForTask in catalog.ts, which uses the "@/" alias and cannot be imported.
@@ -70,7 +70,7 @@ test("a TTS group's GGUF sibling is what resolves for a safetensors pick", () =>
   // On Mac, safetensors loads through MLX, which has no TTS decoder, so the GGUF build is swapped in.
   const ggufSibling = (repoId: string) => {
     const group = groupForRepoId(repoId, AUDIO_CATALOG);
-    if (!group || group.task !== "tts") return null;
+    if (group?.task !== "tts") return null;
     const gguf = group.artifacts.find((a) => a.format === "gguf");
     return gguf && gguf.repoId !== repoId ? gguf.repoId : null;
   };

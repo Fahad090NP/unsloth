@@ -67,10 +67,7 @@ function rebuiltProviderTypes(providerType: string): unknown[] {
     layoutDirection,
     auxNodePositions,
   );
-  const providers = built.payload.recipe.mcp_providers as Record<
-    string,
-    unknown
-  >[];
+  const providers = built.payload.recipe.mcp_providers;
   assert.equal(providers.length, 1);
   const toolConfig = Object.values(configs).find(
     (config) => config.kind === "tool_config",

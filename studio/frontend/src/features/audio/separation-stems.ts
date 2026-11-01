@@ -70,7 +70,7 @@ export interface SeparationGroup {
 function settingsStems(clip: AudioGalleryClip): string[] | null {
   const stems = clip.settings?.stems;
   return Array.isArray(stems) && stems.every((s) => typeof s === "string")
-    ? (stems as string[])
+    ? (stems)
     : null;
 }
 
@@ -94,7 +94,7 @@ export function groupSeparationClips(
     const list = byId.get(key) ?? [];
     const roleOf = (clip: AudioGalleryClip) => clip.role || clip.id;
     const ordered = orderStems(list.map(roleOf)).map(
-      (role) => list.find((clip) => roleOf(clip) === role) as AudioGalleryClip,
+      (role) => list.find((clip) => roleOf(clip) === role)!,
     );
     const first = ordered[0];
     const expected = Math.max(

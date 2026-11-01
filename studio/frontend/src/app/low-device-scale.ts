@@ -10,10 +10,10 @@ export const LOW_DEVICE_SCALE_ATTRIBUTE = "data-low-device-scale";
 
 const COMPOSITED_SCROLLING_DEVICE_SCALE = 1.5;
 
-type FlagRoot = {
+interface FlagRoot {
   toggleAttribute: (name: string, force: boolean) => boolean;
   removeAttribute: (name: string) => void;
-};
+}
 
 export function isLowDeviceScale(
   devicePixelRatio: number,

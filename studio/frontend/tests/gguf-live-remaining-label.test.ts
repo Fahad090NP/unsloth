@@ -140,7 +140,7 @@ test("an XET fallback does not price the retry against the dead run's bytes", ()
         download_remaining_bytes: 3.5 * GB,
       }),
     ],
-    states as never,
+    states,
   );
 
   assert.equal(row.download_remaining_bytes, 0.4 * GB);
@@ -173,7 +173,7 @@ test("a retry that has not measured a byte yet keeps the backend remainder", () 
         download_remaining_bytes: 0.5 * GB,
       }),
     ],
-    states as never,
+    states,
   );
 
   assert.equal(row.download_remaining_bytes, 0.5 * GB);
@@ -207,7 +207,7 @@ test("the retry prices itself off the first reading that does measure", () => {
         download_remaining_bytes: 0.5 * GB,
       }),
     ],
-    states as never,
+    states,
   );
 
   assert.equal(row.download_remaining_bytes, 0.4 * GB);

@@ -29,7 +29,7 @@ export function useAnimatedThemeToggle(duration = 400) {
       attributes: true,
       attributeFilter: ["class"],
     })
-    return () => observer.disconnect()
+    return () => { observer.disconnect(); }
   }, [])
 
   const toggleTheme = useCallback(async () => {

@@ -49,7 +49,7 @@ export function InstructionsField({
         id="audio-instructions"
         value={audioInstructions}
         onChange={(event) =>
-          setAudioInstructions(event.target.value)
+          { setAudioInstructions(event.target.value); }
         }
         placeholder={
           instructionsKind === "music"
@@ -82,7 +82,7 @@ export function MossLanguageField({
       <Input
         id="audio-language"
         value={audioLanguage}
-        onChange={(event) => setAudioLanguage(event.target.value)}
+        onChange={(event) => { setAudioLanguage(event.target.value); }}
         placeholder="English"
       />
     </Field>

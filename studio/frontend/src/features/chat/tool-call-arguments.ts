@@ -181,7 +181,7 @@ export function toolCallArgumentsText(
 }
 
 type JsonTextNode =
-  | { kind: "object"; entries: Array<{ key: string; value: JsonTextNode }> }
+  | { kind: "object"; entries: { key: string; value: JsonTextNode }[] }
   | { kind: "array"; items: JsonTextNode[] }
   | { kind: "scalar"; raw: string; value: unknown };
 
@@ -259,7 +259,7 @@ class JsonTextParser {
 
   private parseObject(): JsonTextNode {
     this.offset += 1;
-    const entries: Array<{ key: string; value: JsonTextNode }> = [];
+    const entries: { key: string; value: JsonTextNode }[] = [];
     this.skipWhitespace();
     if (this.text[this.offset] === "}") {
       this.offset += 1;

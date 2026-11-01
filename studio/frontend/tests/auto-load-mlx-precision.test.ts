@@ -16,7 +16,7 @@ const start = source.indexOf("async function resolveAutoLoadCandidate(");
 assert.ok(start >= 0, "resolveAutoLoadCandidate is no longer defined in chat-adapter.ts");
 const declaration = source.slice(start, source.indexOf("\n}", start) + 2);
 
-type Candidate = { kind: string; ggufVariant: string | null };
+interface Candidate { kind: string; ggufVariant: string | null }
 const resolve = new Function(
   `${ts.transpileModule(declaration, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },

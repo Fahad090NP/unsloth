@@ -74,7 +74,7 @@ test("a failed read cancels the send, and a textless tool-only type falls back t
     new URL("../src/components/assistant-ui/attachment-preview.tsx", import.meta.url),
     "utf8",
   );
-  const webPage = new RegExp(/const WEB_PAGE_NAME = \/(.+)\/i;/.exec(preview)![1]!, "i");
+  const webPage = new RegExp(/const WEB_PAGE_NAME = \/(.+)\/i;/.exec(preview)![1], "i");
   assert.ok(webPage.test("page.html"));
   assert.ok(!webPage.test("page.xhtml"), "extracted .xhtml text must not render as markup");
 });
@@ -104,8 +104,7 @@ test("Desktop reads the same server-document types the composer does", () => {
     "utf8",
   );
   const rust = [
-    ...(policy
-      .match(/SERVER_DOCUMENT_ATTACHMENT_EXTS: &\[&str\] = &\[([^\]]+)\]/)?.[1]
+    ...((/SERVER_DOCUMENT_ATTACHMENT_EXTS: &\[&str\] = &\[([^\]]+)\]/.exec(policy))?.[1]
       .matchAll(/"([^"]+)"/g) ?? []),
   ].map((match) => `.${match[1]}`);
   assert.deepEqual(rust.sort(), split(SERVER_DOCUMENT_ATTACHMENT_EXTENSIONS).sort());

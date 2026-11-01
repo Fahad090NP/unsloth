@@ -111,14 +111,14 @@ export function Q4nxConvertCard() {
                 label="GGUF repo"
                 placeholder="unsloth/Qwen3-0.6B-GGUF"
                 value={repoId}
-                onChange={(e) => setRepoId(e.target.value)}
+                onChange={(e) => { setRepoId(e.target.value); }}
               />
               <Field
                 id="q4nx-file"
                 label="GGUF file"
                 placeholder="Qwen3-0.6B-Q4_1.gguf"
                 value={filename}
-                onChange={(e) => setFilename(e.target.value)}
+                onChange={(e) => { setFilename(e.target.value); }}
               />
             </>
           ) : (
@@ -127,7 +127,7 @@ export function Q4nxConvertCard() {
               label="GGUF file path"
               placeholder="/path/to/model.Q4_1.gguf"
               value={ggufPath}
-              onChange={(e) => setGgufPath(e.target.value)}
+              onChange={(e) => { setGgufPath(e.target.value); }}
             />
           )}
           <Field
@@ -135,13 +135,13 @@ export function Q4nxConvertCard() {
             label="Original model (config and tokenizer)"
             placeholder="unsloth/Qwen3-0.6B"
             value={effectiveBase}
-            onChange={(e) => setBaseModel(e.target.value)}
+            onChange={(e) => { setBaseModel(e.target.value); }}
           />
           <Field
             id="q4nx-save"
             label="Save directory"
             value={saveDirectory}
-            onChange={(e) => setSaveDirectory(e.target.value)}
+            onChange={(e) => { setSaveDirectory(e.target.value); }}
           />
         </div>
         <div className="flex items-center justify-between gap-3">

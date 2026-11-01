@@ -29,7 +29,7 @@ function inference(overrides: Record<string, unknown>): Inference {
     loading: [],
     loaded: [],
     ...overrides,
-  } as Inference;
+  };
 }
 
 const SNAPSHOT =

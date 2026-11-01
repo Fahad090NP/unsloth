@@ -32,11 +32,11 @@ const CONNECTED = "unsloth_pinned_connected_models";
 
 const EMBEDDING = "unsloth_embedding_pins";
 
-type Server = {
+interface Server {
   pinned: string[] | null;
   connected: string[] | null;
   embedding?: string[] | null;
-};
+}
 
 function serve(server: Server): { puts: Record<string, unknown>[] } {
   const puts: Record<string, unknown>[] = [];

@@ -26,7 +26,7 @@ import { useBrowserPrefsStore } from "./prefs-store";
 import { SiteFavicon } from "./site-favicon";
 import { useBrowserStore } from "./store";
 
-type Site = { title: string; url: string; icon?: string };
+interface Site { title: string; url: string; icon?: string }
 
 // Unsloth's sites have no /favicon.ico, so they use Studio's own sticker.
 const UNSLOTH_SITES: Site[] = [
@@ -126,7 +126,7 @@ function SuggestedSite({ site, tabId }: { site: Site; tabId: string }) {
   const t = useT();
   const { navigate } = useBrowserStore.getState();
   const remove = () =>
-    useBrowserPrefsStore.getState().hideSuggestion(siteKey(site.url));
+    { useBrowserPrefsStore.getState().hideSuggestion(siteKey(site.url)); };
   return (
     <LinkContextMenu
       url={site.url}
@@ -141,7 +141,7 @@ function SuggestedSite({ site, tabId }: { site: Site; tabId: string }) {
         <button
           type="button"
           title={`${site.title}\n${site.url}`}
-          onClick={() => navigate(tabId, { url: site.url })}
+          onClick={() => { navigate(tabId, { url: site.url }); }}
           className="flex w-full min-w-0 cursor-pointer flex-col items-center gap-4 rounded-xl px-2 pb-4 pt-5 transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(4%*var(--contrast-wash-gain,1)),transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-data-[state=open]/site:bg-[color-mix(in_oklab,var(--foreground)_calc(4%*var(--contrast-wash-gain,1)),transparent)]"
         >
           <SiteIcon site={site} />
@@ -235,7 +235,7 @@ function BrowserUseToggle() {
         id={id}
         checked={enabled && !disabled}
         disabled={disabled}
-        onCheckedChange={(on) => useBrowserAgentStore.getState().setEnabled(on)}
+        onCheckedChange={(on) => { useBrowserAgentStore.getState().setEnabled(on); }}
       />
     </label>
   );
@@ -283,13 +283,13 @@ export function NewTabPage({ tabId }: { tabId: string }) {
   const recents = useMemo(() => recentPages(history), [history]);
   // A recent stands for its page, so taking it off takes every visit to that page.
   const removeFromHistory = (url: string) =>
-    useBrowserHistoryStore
+    { useBrowserHistoryStore
       .getState()
       .removeVisits(
         new Set(
           history.filter((item) => item.url === url).map((item) => item.id),
         ),
-      );
+      ); };
   const pages = Math.max(1, Math.ceil(recents.length / RECENTS_PER_PAGE));
   const shownPage = Math.min(page, pages - 1);
   const shown = recents.slice(
@@ -331,13 +331,13 @@ export function NewTabPage({ tabId }: { tabId: string }) {
                 label={t("browser.recentNewer")}
                 icon={ChevronUpStandardIcon}
                 disabled={shownPage === 0}
-                onClick={() => setPage(shownPage - 1)}
+                onClick={() => { setPage(shownPage - 1); }}
               />
               <PageButton
                 label={t("browser.recentOlder")}
                 icon={ChevronDownStandardIcon}
                 disabled={shownPage >= pages - 1}
-                onClick={() => setPage(shownPage + 1)}
+                onClick={() => { setPage(shownPage + 1); }}
               />
             </div>
           }
@@ -353,7 +353,7 @@ export function NewTabPage({ tabId }: { tabId: string }) {
               extra={
                 <MenuRow
                   icon={Delete02Icon}
-                  onSelect={() => removeFromHistory(item.url)}
+                  onSelect={() => { removeFromHistory(item.url); }}
                 >
                   {t("browser.pages.removeFromHistory")}
                 </MenuRow>
@@ -362,7 +362,7 @@ export function NewTabPage({ tabId }: { tabId: string }) {
               <button
                 type="button"
                 title={item.url}
-                onClick={() => navigate(tabId, { url: item.url })}
+                onClick={() => { navigate(tabId, { url: item.url }); }}
                 className={cn(
                   "flex min-w-0 cursor-pointer items-center gap-4 rounded-md px-3 py-3 text-start transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(4%*var(--contrast-wash-gain,1)),transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-[color-mix(in_oklab,var(--foreground)_calc(4%*var(--contrast-wash-gain,1)),transparent)]",
                 )}
@@ -402,17 +402,17 @@ export function NewTabPage({ tabId }: { tabId: string }) {
             <ToolButton
               icon={StarIcon}
               label={t("browser.pages.bookmarks")}
-              onClick={() => openInternal("bookmarks")}
+              onClick={() => { openInternal("bookmarks"); }}
             />
             <ToolButton
               icon={Clock01Icon}
               label={t("browser.pages.history")}
-              onClick={() => openInternal("history")}
+              onClick={() => { openInternal("history"); }}
             />
             <ToolButton
               icon={Download01Icon}
               label={t("browser.pages.downloads")}
-              onClick={() => openInternal("downloads")}
+              onClick={() => { openInternal("downloads"); }}
             />
           </div>
         </section>

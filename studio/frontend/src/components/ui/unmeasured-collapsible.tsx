@@ -9,12 +9,12 @@
 import { cn } from "@/lib/utils";
 import * as React from "react";
 
-type UnmeasuredCollapsibleContextValue = {
+interface UnmeasuredCollapsibleContextValue {
   open: boolean;
   disabled?: boolean;
   contentId: string;
   onOpenToggle: () => void;
-};
+}
 
 const UnmeasuredCollapsibleContext =
   React.createContext<UnmeasuredCollapsibleContextValue | null>(null);
@@ -173,7 +173,7 @@ const UnmeasuredCollapsibleContent = React.forwardRef<
         setMounted(true);
         let inner = 0;
         const outer = requestAnimationFrame(() => {
-          inner = requestAnimationFrame(() => setExpanded(true));
+          inner = requestAnimationFrame(() => { setExpanded(true); });
         });
         return () => {
           cancelAnimationFrame(outer);
@@ -190,7 +190,7 @@ const UnmeasuredCollapsibleContent = React.forwardRef<
         return undefined;
       }
       const node = nodeRef.current;
-      const finish = () => setMounted(false);
+      const finish = () => { setMounted(false); };
       const onTransitionEnd = (event: TransitionEvent) => {
         if (event.target === node && event.propertyName === "grid-template-rows") {
           finish();

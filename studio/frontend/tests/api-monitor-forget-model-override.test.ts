@@ -35,19 +35,19 @@ const { modelStorageKey } = await import(
 );
 const { setAuthFetchHandler } = await import("./helpers/store-stubs/auth.ts");
 
-type Trace = {
+interface Trace {
   deps: Parameters<typeof forgetModelOverride>[1];
   removedRemote: [string, string | null][];
   removedLocal: (readonly string[])[];
   errors: string[];
   reloads: number;
   sequence: string[];
-};
+}
 
-type Answer = {
+interface Answer {
   overrides: Readonly<Record<string, unknown>>;
   removedKeys: readonly string[];
-};
+}
 
 function answer(removedKeys: readonly string[] = []): Answer {
   return { overrides: {}, removedKeys };

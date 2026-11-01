@@ -37,7 +37,7 @@ export const useSandboxSetupDialogStore = create<{
   setOpen: (open: boolean) => void;
 }>((set) => ({
   open: false,
-  setOpen: (open) => set({ open }),
+  setOpen: (open) => { set({ open }); },
 }));
 
 const NOTE_CLASS = "text-xs leading-relaxed";
@@ -154,7 +154,7 @@ function SandboxSetupContent({
           setJob(null);
         });
     }, SANDBOX_SETUP_POLL_MS);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); };
   }, [job, t, finish]);
 
   const view = sandboxSetupView({ capability, job, consent, loadFailed });
@@ -224,7 +224,7 @@ function SandboxSetupContent({
               <Checkbox
                 checked={consent}
                 disabled={view.running}
-                onCheckedChange={(checked) => setConsent(checked === true)}
+                onCheckedChange={(checked) => { setConsent(checked === true); }}
               />
               {t("settings.sandbox.optInLabel")}
             </label>
@@ -315,7 +315,7 @@ function SandboxSetupContent({
             onOpenChange(false);
             // Deferred past the dialog's focus restore; inside Settings it only scrolls.
             setTimeout(
-              () => openSettings("sandbox", { scrollTarget: "sandbox-os" }),
+              () => { openSettings("sandbox", { scrollTarget: "sandbox-os" }); },
               0,
             );
           }}

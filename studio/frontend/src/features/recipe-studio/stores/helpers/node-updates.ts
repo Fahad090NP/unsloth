@@ -11,21 +11,21 @@ import type {
 import { nodeDataFromConfig } from "../../utils";
 import { getConfigUiMode } from "../../components/inline/inline-policy";
 
-export type NodeUpdateState = {
+export interface NodeUpdateState {
   configs: Record<string, NodeConfig>;
   nodes: RecipeNode[];
   nextId: number;
   nextY: number;
-};
+}
 
-export type NodeUpdateResult = {
+export interface NodeUpdateResult {
   configs: Record<string, NodeConfig>;
   nodes: RecipeNode[];
   nextId: number;
   nextY: number;
   activeConfigId: string;
   dialogOpen: boolean;
-};
+}
 
 export function updateNodeData(
   nodes: RecipeNode[],

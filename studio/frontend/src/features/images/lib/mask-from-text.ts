@@ -147,7 +147,7 @@ function parseBox(v: unknown): [number, number, number, number] | null {
 export function parseSegmentResult(raw: unknown): SegmentResult {
   const body = obj(raw);
   const mask = str(body.mask);
-  if (!mask || !mask.startsWith("data:image/")) {
+  if (!mask?.startsWith("data:image/")) {
     throw new Error("The segmenter returned no mask.");
   }
   const instances: SegmentInstance[] = [];
@@ -198,7 +198,7 @@ export function segmenterDownloadNotice(
   const detail = [segmenterPrecisionLabel(status.precision), size].filter(Boolean).join(", ");
   return {
     text: `Mask from text uses ${label}${detail ? ` (${detail})` : ""}, which is not downloaded yet.`,
-    needsLicense: status.gated === true,
+    needsLicense: status.gated,
   };
 }
 
@@ -234,9 +234,9 @@ function roundHalfEven(value: number): number {
 /** ComfyUI's SAM 3 prompt syntax (comfy/text_encoders/sam3_clip.py ``_parse_prompts``): parentheses dropped, comma
  *  separated concepts, an optional trailing ``:N`` for the most detections of that concept (rounded, at least 1,
  *  default 1). For the hint and validation only: the backend parses the prompt it runs. */
-export function parseMaskPrompt(text: string): Array<[string, number]> {
+export function parseMaskPrompt(text: string): [string, number][] {
   const cleaned = text.replace(/[()]/g, "");
-  const out: Array<[string, number]> = [];
+  const out: [string, number][] = [];
   for (const raw of cleaned.split(",")) {
     const part = raw.trim();
     if (!part) continue;

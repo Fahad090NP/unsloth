@@ -14,12 +14,12 @@ const { parseAssistantContent } = await import(
   "../src/features/chat/utils/parse-assistant-content.ts"
 );
 
-type Part = {
+interface Part {
   type: string;
   text?: string;
   toolName?: string;
   toolCallId?: string;
-};
+}
 
 function recoverBody(content: Part[]): Part[] {
   const { raw, reasoningOpen, carried } = generationRawContent(content);
@@ -95,7 +95,7 @@ test("an unfinished reply keeps its calls and its open reasoning", () => {
 
 test("a publish cannot swap a body that has cards for one that lost them", () => {
   const stripped = TURN.filter((part) => part.type !== "tool-call");
-  const kept = recoveredContentToImport(TURN, stripped) as Part[];
+  const kept = recoveredContentToImport(TURN, stripped);
 
   assert.deepEqual(
     kept.filter((part) => part.type === "tool-call").map((p) => p.toolCallId),

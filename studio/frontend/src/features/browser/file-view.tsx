@@ -42,7 +42,7 @@ function useObjectUrl(blob: Blob, enabled: boolean, svg: boolean): string | null
     // Created and revoked in the effect, so StrictMode never shows a revoked URL.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setUrl(next);
-    return () => URL.revokeObjectURL(next);
+    return () => { URL.revokeObjectURL(next); };
   }, [blob, enabled, svg]);
   return url;
 }
@@ -241,7 +241,7 @@ export function FileView({
           <img
             src={src}
             alt={name}
-            onError={() => setFailed(true)}
+            onError={() => { setFailed(true); }}
             style={{ zoom: scale }}
             className="max-h-full max-w-full object-contain"
           />
@@ -249,12 +249,12 @@ export function FileView({
       );
     }
     if (media === "video") {
-      return <VideoFile src={src} name={name} tabId={tabId} onError={() => setFailed(true)} />;
+      return <VideoFile src={src} name={name} tabId={tabId} onError={() => { setFailed(true); }} />;
     }
     return (
       <div className="m-auto w-full max-w-lg px-6">
         {/* biome-ignore lint/a11y/useMediaCaption: user audio has no captions */}
-        <audio src={src} controls onError={() => setFailed(true)} className="w-full" />
+        <audio src={src} controls onError={() => { setFailed(true); }} className="w-full" />
       </div>
     );
   }

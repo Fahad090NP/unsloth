@@ -79,7 +79,7 @@ test("a setter write round-trips through localStorage", () => {
   useSettingsPanelPrefsStore.getState().setFineTuneAction("export");
   const raw = store.get(KEY);
   assert.ok(raw, "nothing was written");
-  assert.equal(JSON.parse(raw as string).state.fineTuneAction, "export");
+  assert.equal(JSON.parse(raw).state.fineTuneAction, "export");
 });
 
 test("the Agents command shell override persists and rejects unknown values", () => {
@@ -87,7 +87,7 @@ test("the Agents command shell override persists and rejects unknown values", ()
   assert.equal(useSettingsPanelPrefsStore.getState().agentsOs, "unix");
   const raw = store.get(KEY);
   assert.ok(raw);
-  assert.equal(JSON.parse(raw as string).state.agentsOs, "unix");
+  assert.equal(JSON.parse(raw).state.agentsOs, "unix");
 
   const merged = useSettingsPanelPrefsStore.persist.getOptions().merge;
   assert.ok(merged);
@@ -113,7 +113,7 @@ test("a non-string model is refused rather than handed to the tab", () => {
 test("the Audio API tab persists and a non-string is dropped", () => {
   useSettingsPanelPrefsStore.getState().setApiAudioExample("clone");
   assert.equal(
-    JSON.parse(store.get(KEY) as string).state.apiAudioExample,
+    JSON.parse(store.get(KEY)!).state.apiAudioExample,
     "clone",
   );
   const merged = useSettingsPanelPrefsStore.persist.getOptions().merge;
@@ -228,7 +228,7 @@ test("an unreadable record leaves the defaults", () => {
 test("a dismissed driver notice round-trips, and a non-string record is dropped", () => {
   useSettingsPanelPrefsStore.getState().dismissDriverWarning("32.0.31041.1004");
   assert.equal(
-    JSON.parse(store.get(KEY) as string).state.dismissedDriverWarning,
+    JSON.parse(store.get(KEY)!).state.dismissedDriverWarning,
     "32.0.31041.1004",
   );
   const merged = useSettingsPanelPrefsStore.persist.getOptions().merge;
@@ -258,7 +258,7 @@ test("the agent access (MCP) picks persist and reject unknown values", () => {
   s.setMcpOs("unix");
   const raw = store.get(KEY);
   assert.ok(raw);
-  const state = JSON.parse(raw as string).state;
+  const state = JSON.parse(raw).state;
   assert.equal(state.mcpAgent, "dsh");
   assert.equal(state.mcpOs, "unix");
 

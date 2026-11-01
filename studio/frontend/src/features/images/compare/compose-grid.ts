@@ -33,7 +33,7 @@ export interface GridLayout {
   lineHeight: number;
   cellWidth: number;
   cellHeight: number;
-  cells: Array<{ x: number; y: number; w: number; h: number }>; // index ix + iy * cols
+  cells: { x: number; y: number; w: number; h: number }[]; // index ix + iy * cols
   colText: TextBlock[];
   rowText: TextBlock[];
   title: TextBlock | null;
@@ -146,7 +146,7 @@ const FONT = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-
 export function drawGrid(
   ctx: CanvasRenderingContext2D,
   layout: GridLayout,
-  images: ReadonlyArray<CanvasImageSource | null>,
+  images: readonly (CanvasImageSource | null)[],
 ): void {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, layout.width, layout.height);
@@ -170,19 +170,19 @@ export function drawGrid(
   ctx.font = `${layout.fontSize}px ${FONT}`;
   const blocks = [...layout.colText, ...layout.rowText];
   for (const block of blocks) {
-    block.lines.forEach((line, j) => ctx.fillText(line, block.x, block.y + j * layout.lineHeight));
+    block.lines.forEach((line, j) => { ctx.fillText(line, block.x, block.y + j * layout.lineHeight); });
   }
   if (layout.title) {
     ctx.font = `bold ${layout.fontSize}px ${FONT}`;
     const t = layout.title;
-    t.lines.forEach((line, j) => ctx.fillText(line, t.x, t.y + j * layout.lineHeight));
+    t.lines.forEach((line, j) => { ctx.fillText(line, t.x, t.y + j * layout.lineHeight); });
   }
 }
 
 /** Decode and draw cells strictly one after another, so at most one decoded cell exists at a time. A cell that is
  *  missing or fails to decode keeps the placeholder already drawn. */
 export async function drawCellsInTurn<R, B>(
-  records: ReadonlyArray<R | null>,
+  records: readonly (R | null)[],
   load: (record: R, index: number) => Promise<B>,
   draw: (bitmap: B, index: number) => void,
 ): Promise<number> {
@@ -245,8 +245,8 @@ const quote = (v: string) => (/[,:"\n]/.test(v) ? JSON.stringify(v) : v);
 export function gridInfotext(input: {
   prompt: string;
   negativePrompt?: string;
-  fields: ReadonlyArray<[string, string | number | null | undefined]>;
-  axes: ReadonlyArray<{ name: string; type: string; text: string; fixed?: readonly (string | number)[] }>;
+  fields: readonly [string, string | number | null | undefined][];
+  axes: readonly { name: string; type: string; text: string; fixed?: readonly (string | number)[] }[];
 }): string {
   const parts: string[] = [];
   for (const [key, value] of input.fields) if (value !== null && value !== undefined && value !== "") parts.push(`${key}: ${quote(String(value))}`);

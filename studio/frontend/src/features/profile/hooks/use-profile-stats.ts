@@ -5,12 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { subscribeResidentStatusRefresh } from "@/features/hub/lib/resident-status-refresh";
 import { type ProfileStats, loadProfileStats } from "../api/profile-stats";
 
-type ProfileStatsState = {
+interface ProfileStatsState {
   stats: ProfileStats | null;
   loading: boolean;
   error: string | null;
   reload: () => void;
-};
+}
 
 export function useProfileStats(): ProfileStatsState {
   const [stats, setStats] = useState<ProfileStats | null>(null);

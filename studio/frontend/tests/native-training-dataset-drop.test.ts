@@ -159,15 +159,13 @@ test("frontend, backend, and Rust accept the same native dataset extensions", ()
   );
   const rustSource = readText("../../src-tauri/src/native_path_policy.rs");
   const backend = [
-    ...(backendSource
-      .match(BACKEND_DATASET_EXTENSIONS_PATTERN)?.[1]
+    ...((BACKEND_DATASET_EXTENSIONS_PATTERN.exec(backendSource))?.[1]
       .matchAll(DOTTED_EXTENSION_PATTERN) ?? []),
   ]
     .map((match) => match[1])
     .sort();
   const rust = [
-    ...(rustSource
-      .match(RUST_DATASET_EXTENSIONS_PATTERN)?.[1]
+    ...((RUST_DATASET_EXTENSIONS_PATTERN.exec(rustSource))?.[1]
       .matchAll(UNDOTTED_EXTENSION_PATTERN) ?? []),
   ]
     .map((match) => `.${match[1]}`)

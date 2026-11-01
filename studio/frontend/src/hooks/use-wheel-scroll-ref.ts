@@ -34,6 +34,6 @@ export function useWheelScrollRef<T extends HTMLElement>() {
     };
 
     node.addEventListener("wheel", onWheel, { passive: false });
-    detachRef.current = () => node.removeEventListener("wheel", onWheel);
+    detachRef.current = () => { node.removeEventListener("wheel", onWheel); };
   }, []);
 }

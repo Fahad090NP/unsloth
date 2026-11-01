@@ -22,20 +22,20 @@ export interface PreviewRuntimeManifest {
   tailwind: string;
 }
 
-export type PreviewRuntimeFile = {
+export interface PreviewRuntimeFile {
   name: string;
   /** Path inside the build output, e.g. `assets/preview-runtime/react.0123456789.js`. */
   fileName: string;
   code: string;
-};
+}
 
-type PreviewRuntimeSpec = {
+interface PreviewRuntimeSpec {
   name: string;
   versionOf: string;
   /** Registered specifier -> the specifier it is bundled from. */
   modules?: Record<string, string>;
   classic?: string;
-};
+}
 
 export const PREVIEW_RUNTIME_REGISTRY = "__unslothModules";
 export const PREVIEW_RUNTIME_DIR = "preview-runtime";
@@ -130,12 +130,12 @@ function bundledPackages(moduleIds: string[]): Map<string, string> {
     if (!m) {
       continue;
     }
-    const name = (m[2] as string).replace(/\\/g, "/");
+    const name = (m[2]).replace(/\\/g, "/");
     if (seen.has(name)) {
       continue;
     }
     const pkg = readJson<{ version: string; license?: string }>(
-      path.join(m[1] as string, name, "package.json"),
+      path.join(m[1], name, "package.json"),
     );
     seen.set(name, `${pkg.version} (${pkg.license ?? "see package"})`);
   }
@@ -266,7 +266,7 @@ export async function buildPreviewRuntime(
     tailwind: "",
   };
   PREVIEW_RUNTIME_SPECS.forEach((spec, i) => {
-    const code = built[i] as string;
+    const code = built[i];
     checkNoEval(spec.name, code);
     const hash = createHash("sha256").update(code).digest("hex").slice(0, 10);
     const fileName = path.posix.join(

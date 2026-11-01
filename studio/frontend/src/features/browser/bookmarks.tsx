@@ -79,7 +79,7 @@ function bookmarkIcon(src: string): Promise<string | null> {
         resolve(null);
       }
     };
-    image.onerror = () => resolve(null);
+    image.onerror = () => { resolve(null); };
     image.src = src;
   });
 }
@@ -121,7 +121,7 @@ export function removeBookmarkWithUndo(bookmark: Bookmark, t: ReturnType<typeof 
   toast(t("browser.bookmarks.removed"), {
     action: {
       label: t("browser.bookmarks.undo"),
-      onClick: () => useBrowserBookmarksStore.getState().restoreBookmark(bookmark, index),
+      onClick: () => { useBrowserBookmarksStore.getState().restoreBookmark(bookmark, index); },
     },
   });
 }
@@ -189,7 +189,7 @@ function BookmarkEditor({
           id={`${id}-name`}
           data-bookmark-name=""
           value={title}
-          onChange={(event) => setTitle(event.target.value)}
+          onChange={(event) => { setTitle(event.target.value); }}
           spellCheck={false}
           autoComplete="off"
         />
@@ -198,7 +198,7 @@ function BookmarkEditor({
         <span id={`${id}-location`} className="text-ui-13 text-foreground">
           {t("browser.bookmarks.location")}
         </span>
-        <Select value={folder} onValueChange={(value) => setFolder(value as BookmarkFolder)}>
+        <Select value={folder} onValueChange={(value) => { setFolder(value as BookmarkFolder); }}>
           <SelectTrigger aria-labelledby={`${id}-location`} className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -220,14 +220,14 @@ function BookmarkEditor({
         <Checkbox
           id={`${id}-show-editor`}
           checked={showEditor}
-          onCheckedChange={(checked) => useBrowserPrefsStore.getState().setShowBookmarkEditor(checked === true)}
+          onCheckedChange={(checked) => { useBrowserPrefsStore.getState().setShowBookmarkEditor(checked === true); }}
         />
         <label htmlFor={`${id}-show-editor`} className="cursor-pointer text-ui-13 text-muted-foreground">
           {t("browser.bookmarks.showEditor")}
         </label>
       </div>
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => dismiss(true)}>
+        <Button type="button" variant="outline" size="sm" onClick={() => { dismiss(true); }}>
           {t(isNew ? "browser.bookmarks.cancel" : "browser.bookmarks.remove")}
         </Button>
         <Button type="submit" size="sm">
@@ -271,7 +271,7 @@ export function BookmarkEditPopover({
             input.select();
           }}
         >
-          <BookmarkEditor bookmark={bookmark} isNew={isNew} onClose={() => onOpenChange(false)} />
+          <BookmarkEditor bookmark={bookmark} isNew={isNew} onClose={() => { onOpenChange(false); }} />
         </PopoverContent>
       ) : null}
     </Popover>
@@ -335,7 +335,7 @@ export function BookmarkStar({
               aria-label={label}
               aria-pressed={bookmark !== undefined}
               aria-expanded={editing !== null}
-              onClick={() => (editing ? setEditing(null) : press())}
+              onClick={() => { editing ? setEditing(null) : press(); }}
               className={cn(
                 "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(8%*var(--contrast-wash-gain,1)),transparent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-expanded:bg-[color-mix(in_oklab,var(--foreground)_calc(10%*var(--contrast-wash-gain,1)),transparent)]",
                 bookmark && "text-primary hover:text-primary [&_path]:fill-current",
@@ -394,7 +394,7 @@ function BookmarkItem({
             >
               {t("browser.bookmarks.edit")}
             </MenuRow>
-            <MenuRow icon={Delete02Icon} onSelect={() => removeBookmarkWithUndo(bookmark, t)}>
+            <MenuRow icon={Delete02Icon} onSelect={() => { removeBookmarkWithUndo(bookmark, t); }}>
               {t("browser.bookmarks.delete")}
             </MenuRow>
           </>
@@ -407,7 +407,7 @@ function BookmarkItem({
             title={`${title}\n${bookmark.url}`}
             tabIndex={hidden ? -1 : undefined}
             aria-hidden={hidden || undefined}
-            onClick={(event) => openBookmark(bookmark.url, tabId, event.metaKey || event.ctrlKey)}
+            onClick={(event) => { openBookmark(bookmark.url, tabId, event.metaKey || event.ctrlKey); }}
             onAuxClick={(event) => {
               if (event.button === 1) openBookmark(bookmark.url, tabId, true);
             }}
@@ -472,7 +472,7 @@ function BookmarkMenu({
           <DropdownMenuItem
             key={bookmark.id}
             title={bookmark.url}
-            onSelect={() => openBookmark(bookmark.url, tabId, false)}
+            onSelect={() => { openBookmark(bookmark.url, tabId, false); }}
           >
             <SiteFavicon
               url={bookmark.url}
@@ -484,7 +484,7 @@ function BookmarkMenu({
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => useBrowserStore.getState().openInternal("bookmarks")}>
+        <DropdownMenuItem onSelect={() => { useBrowserStore.getState().openInternal("bookmarks"); }}>
           {t("browser.bookmarks.manage")}
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -517,7 +517,7 @@ function useClippedItems(ids: string): [RefObject<HTMLDivElement | null>, Set<st
     observer.observe(root);
     for (const node of root.querySelectorAll("[data-bookmark-id]")) observer.observe(node);
     measure();
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [ids]);
   return [ref, clipped];
 }

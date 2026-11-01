@@ -23,10 +23,10 @@ export const useLibraryChatHandoffStore = create<LibraryChatHandoffState>(
   (set, get) => ({
     pending: null,
     held: null,
-    offer: (targetKey, handoff) => set({ pending: { targetKey, handoff }, held: null }),
+    offer: (targetKey, handoff) => { set({ pending: { targetKey, handoff }, held: null }); },
     take: (targetKey) => {
       const pending = get().pending;
-      if (!pending || pending.targetKey !== targetKey) return null;
+      if (pending?.targetKey !== targetKey) return null;
       set({ pending: null });
       return pending.handoff;
     },

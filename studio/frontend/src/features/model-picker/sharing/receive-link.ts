@@ -45,7 +45,7 @@ function saveHandledNativeUrl(): void {
       sessionStorage.setItem(handledNativeUrlKey, handledNativeUrl);
     }
   } catch {
-    return;
+    
   }
 }
 

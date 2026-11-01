@@ -11,7 +11,7 @@ import { useChatRuntimeStore } from "../stores/chat-runtime-store";
 // Pre-select gate like Web search / Code / MCP; the send path checks supportsTools separately.
 export function useRagToolDisabled(): boolean {
   const modelLoaded = useChatRuntimeStore(
-    (s) => !!s.params.checkpoint && !s.modelLoading,
+    (s) => Boolean(s.params.checkpoint) && !s.modelLoading,
   );
   const checkpoint = useChatRuntimeStore((s) => s.params.checkpoint);
   const supportsTools = useChatRuntimeStore((s) => s.supportsTools);

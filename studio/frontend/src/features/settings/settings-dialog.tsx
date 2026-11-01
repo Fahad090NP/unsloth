@@ -278,7 +278,7 @@ function useStackedLayout(): boolean {
     (onChange) => {
       const list = window.matchMedia(query);
       list.addEventListener("change", onChange);
-      return () => list.removeEventListener("change", onChange);
+      return () => { list.removeEventListener("change", onChange); };
     },
     () => window.matchMedia(query).matches,
     () => false,
@@ -391,7 +391,7 @@ export function SettingsDialog() {
         target.scrollIntoView({ behavior: "smooth", block: "center" });
         target.classList.add("settings-search-hit");
         window.setTimeout(
-          () => target.classList.remove("settings-search-hit"),
+          () => { target.classList.remove("settings-search-hit"); },
           1600,
         );
         setPendingScroll(null);
@@ -424,7 +424,7 @@ export function SettingsDialog() {
       setQuery("");
       setPendingScroll(null);
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [open]);
   const tabButtonRefs = useRef<Record<SettingsTab, HTMLButtonElement | null>>({
     accounts: null,
@@ -457,7 +457,7 @@ export function SettingsDialog() {
       // "nearest" moves only the list, never the panel beside it.
       button?.scrollIntoView({ block: "nearest", inline: "nearest" });
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [open, activeTab]);
 
   return (
@@ -523,7 +523,7 @@ export function SettingsDialog() {
                 />
                 <input
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => { setQuery(e.target.value); }}
                   onKeyDown={(e) => {
                     if (e.key === "Escape" && query) {
                       e.stopPropagation();
@@ -538,7 +538,7 @@ export function SettingsDialog() {
                 {query && (
                   <button
                     type="button"
-                    onClick={() => setQuery("")}
+                    onClick={() => { setQuery(""); }}
                     aria-label={t("settings.dialog.closeAriaLabel")}
                     className="absolute top-1/2 right-2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
                   >
@@ -557,7 +557,7 @@ export function SettingsDialog() {
                       <div key={tab.id} className="flex flex-col">
                         <button
                           type="button"
-                          onClick={() => openResult(tab.id)}
+                          onClick={() => { openResult(tab.id); }}
                           className="flex h-[calc(30px*var(--ui-space-scale,1))] items-center gap-2.5 rounded-full pl-3 pr-2.5 text-ui-13p5 font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                         >
                           {tab.iconComponent ? (
@@ -575,7 +575,7 @@ export function SettingsDialog() {
                           <button
                             key={entry}
                             type="button"
-                            onClick={() => openResult(tab.id, entry)}
+                            onClick={() => { openResult(tab.id, entry); }}
                             className="flex h-[calc(30px*var(--ui-space-scale,1))] items-center rounded-full pl-10 pr-2.5 text-left text-ui-14 text-sidebar-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                           >
                             <span className="min-w-0 truncate">{entry}</span>
@@ -608,7 +608,7 @@ export function SettingsDialog() {
                         tabButtonRefs.current[tab.id] = node;
                       }}
                       type="button"
-                      onClick={() => setActiveTab(tab.id)}
+                      onClick={() => { setActiveTab(tab.id); }}
                       className={cn(
                         "relative flex h-[calc(32px*var(--ui-space-scale,1))] items-center gap-2.5 rounded-full pl-3 pr-2.5 text-ui-14p5 leading-ui-19 tracking-nav font-medium transition-colors",
                         // Otherwise the flex item shrinks to its text when the list scrolls.

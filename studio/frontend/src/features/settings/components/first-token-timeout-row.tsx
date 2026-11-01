@@ -93,7 +93,7 @@ export function FirstTokenTimeoutRow() {
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Select
             value={mode}
-            onValueChange={(value) => setMode(value as Mode)}
+            onValueChange={(value) => { setMode(value as Mode); }}
             disabled={!settings || saving}
           >
             <SelectTrigger
@@ -121,7 +121,7 @@ export function FirstTokenTimeoutRow() {
               max={settings?.max_minutes ?? 10080}
               step={1}
               value={customMinutes}
-              onChange={(event) => setCustomMinutes(event.target.value)}
+              onChange={(event) => { setCustomMinutes(event.target.value); }}
               aria-label={t("settings.chat.firstTokenMinutes")}
               aria-invalid={!valid}
               disabled={saving}

@@ -3,11 +3,11 @@
 
 export const MAX_IMAGE_PREVIEW_BYTES = 200 * 1024;
 
-type PreviewImagePayload = {
+interface PreviewImagePayload {
   type?: unknown;
   mime?: unknown;
   data?: unknown;
-};
+}
 
 type UnknownRecord = Record<string, unknown>;
 

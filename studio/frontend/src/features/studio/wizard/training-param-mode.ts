@@ -44,7 +44,7 @@ export function useParamMode(): [ParamMode, (next: ParamMode) => void] {
       window.localStorage.setItem(TRAINING_PARAM_MODE_STORAGE_KEY, next);
       window.localStorage.removeItem(LEGACY_TRAINING_PARAM_MODE_STORAGE_KEY);
     } catch {
-      return;
+      
     }
   }, []);
   return [mode, update];

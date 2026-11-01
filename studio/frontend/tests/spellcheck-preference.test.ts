@@ -85,8 +85,6 @@ test("an account switch keeps the choice, like the display language", async () =
 });
 
 test("Reset all preferences turns spell check back on", () => {
-  const prefsKeys = readSrc("features/settings/tabs/general-tab.tsx").match(
-    /const PREFS_KEYS: string\[\] = \[([\s\S]*?)\n\];/,
-  )?.[1];
+  const prefsKeys = (/const PREFS_KEYS: string\[\] = \[([\s\S]*?)\n\];/.exec(readSrc("features/settings/tabs/general-tab.tsx")))?.[1];
   assert.match(prefsKeys ?? "", /^\s*SPELLCHECK_STORAGE_KEY,$/m);
 });

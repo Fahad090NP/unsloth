@@ -84,8 +84,8 @@ export function readReferenceFile(
   }
   const reader = new FileReader();
   reader.onload = () =>
-    handlers.onLoaded(typeof reader.result === "string" ? reader.result : null);
-  reader.onerror = () => handlers.onError(`Could not read the ${kind} file`);
+    { handlers.onLoaded(typeof reader.result === "string" ? reader.result : null); };
+  reader.onerror = () => { handlers.onError(`Could not read the ${kind} file`); };
   reader.readAsDataURL(file);
 }
 

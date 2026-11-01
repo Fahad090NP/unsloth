@@ -11,7 +11,7 @@ import { readSrc } from "./helpers/kit.ts";
 
 function sidebarIcon(row: string): string {
   const sidebar = readSrc("components/app-sidebar.tsx");
-  const match = sidebar.match(new RegExp(`\\n    ${row}: \\{\\n      icon: (\\w+),`));
+  const match = new RegExp(`\\n    ${row}: \\{\\n      icon: (\\w+),`).exec(sidebar);
   assert.ok(match, `sidebar ${row} row`);
   return match[1];
 }

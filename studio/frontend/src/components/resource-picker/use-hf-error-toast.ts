@@ -49,7 +49,7 @@ function toastKey(error: string): string {
   if (category !== "other") {
     return category;
   }
-  const status = error.match(HF_STATUS_RE)?.[1];
+  const status = (HF_STATUS_RE.exec(error))?.[1];
   return status ? `status:${status}` : "other";
 }
 

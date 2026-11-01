@@ -7,7 +7,7 @@ export const FLOATING_PANEL_POSITION_KEYS = {
 } as const;
 
 /** User's drop spot in its constraints box; a null axis stays anchored to the far edge. */
-export type PanelIntent = { left: number | null; top: number | null };
+export interface PanelIntent { left: number | null; top: number | null }
 
 function axis(value: unknown): number | null | undefined {
   if (value === null) return null;
@@ -74,7 +74,7 @@ export function nudgeDelta(
   }
 }
 
-export type FrameBox = { left: number; top: number; right: number; bottom: number };
+export interface FrameBox { left: number; top: number; right: number; bottom: number }
 
 export function liftAboveObstacle(
   panel: { left: number; top: number; width: number; height: number },

@@ -192,7 +192,7 @@ export function useCloneGeneration({
   const referenceTranscriber = useReferenceTranscribe({
     sttRepo,
     onText: (next, source) =>
-      useAudioCloneStore.getState().applyTranscript(source, next),
+      { useAudioCloneStore.getState().applyTranscript(source, next); },
   });
   // Holds the page busy like the Transcribe page does, so Generate and model swaps wait for the STT run.
   const transcribeReference = useCallback(
@@ -239,9 +239,9 @@ export function useCloneGeneration({
   }, [toolPanels, storedToolValues, model]);
   const handleToolValueChange = useCallback(
     (panelId: string, value: unknown) =>
-      useAudioCloneStore
+      { useAudioCloneStore
         .getState()
-        .setToolValue(toolValueKey(model, "clone", panelId), value),
+        .setToolValue(toolValueKey(model, "clone", panelId), value); },
     [model],
   );
   const toolRequest = useMemo(
@@ -278,8 +278,8 @@ export function useCloneGeneration({
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (reference?.kind !== "input" || !reference.expiresAt) return;
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
-    return () => window.clearInterval(timer);
+    const timer = window.setInterval(() => { setNow(Date.now()); }, 60_000);
+    return () => { window.clearInterval(timer); };
   }, [reference]);
   const referenceExpired =
     referenceStatus.phase === "expired" ||

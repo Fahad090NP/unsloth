@@ -16,16 +16,16 @@ interface CommandPaletteStore {
 export const useCommandPaletteStore = create<CommandPaletteStore>((set) => ({
   isOpen: false,
   opener: null,
-  close: () => set({ isOpen: false }),
+  close: () => { set({ isOpen: false }); },
   toggle: () =>
-    set((s) =>
+    { set((s) =>
       s.isOpen
         ? { isOpen: false }
         : { isOpen: true, opener: captureFocusedElement() },
-    ),
+    ); },
   setOpen: (isOpen) =>
-    set((s) => {
+    { set((s) => {
       if (!isOpen) return { isOpen: false };
       return s.isOpen ? s : { isOpen: true, opener: captureFocusedElement() };
-    }),
+    }); },
 }));

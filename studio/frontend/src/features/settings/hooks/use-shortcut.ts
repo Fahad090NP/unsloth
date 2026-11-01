@@ -83,7 +83,7 @@ export interface ShortcutTrigger {
 
 const triggers = new Map<ShortcutId, ShortcutTrigger[]>();
 const triggerListeners = new Set<() => void>();
-const notifyTriggerListeners = () => triggerListeners.forEach((listener) => listener());
+const notifyTriggerListeners = () => { triggerListeners.forEach((listener) => { listener(); }); };
 
 /** Exported for the test. Returns the unregister. */
 export function registerShortcutTrigger(
@@ -187,7 +187,7 @@ export function useShortcut(
     if (!enabled) return;
     return registerShortcutTrigger(id, {
       claims: () => latestRef.current.claims?.() !== false,
-      run: () => latestRef.current.handler(new KeyboardEvent("keydown")),
+      run: () => { latestRef.current.handler(new KeyboardEvent("keydown")); },
     });
   }, [id, enabled]);
 
@@ -216,7 +216,7 @@ export function useShortcut(
       latestRef.current.handler(event);
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => { window.removeEventListener("keydown", onKeyDown); };
   }, [bindings, enabled, skipInTextFields, textFieldException, repeats]);
 }
 

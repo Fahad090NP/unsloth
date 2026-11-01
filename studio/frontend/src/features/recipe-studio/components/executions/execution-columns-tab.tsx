@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/table";
 import type { AnalysisColumnStat } from "./executions-view-helpers";
 
-type ExecutionColumnsTabProps = {
+interface ExecutionColumnsTabProps {
   analysisColumns: AnalysisColumnStat[];
-};
+}
 
 export function ExecutionColumnsTab({
   analysisColumns,

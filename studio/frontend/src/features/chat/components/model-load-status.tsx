@@ -13,13 +13,13 @@ export const MODEL_LOAD_TOAST_CLASSNAMES = {
   description: "mt-0 w-full",
 };
 
-type ModelLoadDescriptionProps = {
+interface ModelLoadDescriptionProps {
   title?: string | null;
   message?: string | null;
   progressPercent?: number | null;
   progressLabel?: string | null;
   className?: string;
-};
+}
 
 function clampProgress(value: number): number {
   return Math.max(0, Math.min(100, value));
@@ -94,13 +94,13 @@ export function ModelLoadDescription({
   );
 }
 
-type ModelLoadInlineStatusProps = {
+interface ModelLoadInlineStatusProps {
   label: string;
   title: string;
   progressPercent?: number | null;
   progressLabel?: string | null;
   onStop?: () => void;
-};
+}
 
 export function ModelLoadInlineStatus({
   label,

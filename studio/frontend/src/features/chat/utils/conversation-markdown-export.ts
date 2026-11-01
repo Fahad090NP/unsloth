@@ -11,13 +11,13 @@ import { parseExternalModelId } from "../external-providers.ts";
 import { modelDisplayName } from "../../hub/lib/model-identity.ts";
 import { stripSearchImageTokens } from "../search-images/search-images.ts";
 
-type StoredConversationMessage = {
+interface StoredConversationMessage {
   readonly role: unknown;
-};
+}
 
-type ConversationMarkdownExportDependencies<
+interface ConversationMarkdownExportDependencies<
   Message extends StoredConversationMessage,
-> = {
+> {
   readonly loadMessages: (
     threadId: string,
   ) => Promise<readonly Message[] | null>;
@@ -29,7 +29,7 @@ type ConversationMarkdownExportDependencies<
   ) => Promise<void>;
   readonly exportBasename: (threadId: string) => Promise<string>;
   readonly notifyNoContent: () => void;
-};
+}
 
 export function createConversationMarkdownBuilder<
   Message extends StoredConversationMessage,

@@ -93,7 +93,7 @@ test("the reply action saves through this conversion", async () => {
     "the reply is uploaded without rendering its non-text parts",
   );
   assert.ok(
-    !/aui\.message\(\)\.getCopyText\(\)/.test(handler),
+    !handler.includes('aui.message().getCopyText()'),
     "the reply is still saved as text parts alone",
   );
 });

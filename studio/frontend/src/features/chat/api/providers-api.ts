@@ -208,12 +208,12 @@ export async function listProviderRegistry(): Promise<ProviderRegistryEntry[]> {
   const response = await authFetch(
     "/api/providers/registry?include_hidden=true&include_oauth=true",
   );
-  return parseJsonOrThrow<ProviderRegistryEntry[]>(response);
+  return await parseJsonOrThrow<ProviderRegistryEntry[]>(response);
 }
 
 export async function listProviderConfigs(): Promise<ProviderConfig[]> {
   const response = await authFetch("/api/providers/");
-  return parseJsonOrThrow<ProviderConfig[]>(response);
+  return await parseJsonOrThrow<ProviderConfig[]>(response);
 }
 
 export async function createProviderConfig(payload: {
@@ -228,7 +228,7 @@ export async function createProviderConfig(payload: {
   shared?: boolean;
   apiKey?: string;
 }): Promise<ProviderConfig> {
-  return withApiKeyEncryptionRetry(payload.apiKey ?? "", async (encryptedApiKey) => {
+  return await withApiKeyEncryptionRetry(payload.apiKey ?? "", async (encryptedApiKey) => {
     const response = await authFetch("/api/providers/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -249,7 +249,7 @@ export async function createProviderConfig(payload: {
         encrypted_api_key: encryptedApiKey,
       }),
     });
-    return parseJsonOrThrow<ProviderConfig>(response);
+    return await parseJsonOrThrow<ProviderConfig>(response);
   });
 }
 
@@ -283,7 +283,7 @@ export async function updateProviderConfig(
     clearApiKey?: boolean;
   },
 ): Promise<ProviderConfig> {
-  return withApiKeyEncryptionRetry(payload.apiKey ?? "", async (encryptedApiKey) => {
+  return await withApiKeyEncryptionRetry(payload.apiKey ?? "", async (encryptedApiKey) => {
     const response = await authFetch(`/api/providers/${providerId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -307,7 +307,7 @@ export async function updateProviderConfig(
         ...(payload.clearApiKey === undefined ? {} : { clear_api_key: payload.clearApiKey }),
       }),
     });
-    return parseJsonOrThrow<ProviderConfig>(response);
+    return await parseJsonOrThrow<ProviderConfig>(response);
   });
 }
 
@@ -315,13 +315,13 @@ export async function migrateProviderApiKey(
   providerId: string,
   apiKey: string,
 ): Promise<ProviderConfig> {
-  return withApiKeyEncryptionRetry(apiKey, async (encryptedApiKey) => {
+  return await withApiKeyEncryptionRetry(apiKey, async (encryptedApiKey) => {
     const response = await authFetch(`/api/providers/${providerId}/api-key/migrate`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ encrypted_api_key: encryptedApiKey }),
     });
-    return parseJsonOrThrow<ProviderConfig>(response);
+    return await parseJsonOrThrow<ProviderConfig>(response);
   });
 }
 
@@ -356,7 +356,7 @@ export async function testProviderConnection(payload: {
   apiType?: ConnectionApiType;
   modelId?: string | null;
 }): Promise<ProviderTestResult> {
-  return withApiKeyEncryptionRetry(payload.apiKey, async (encryptedApiKey) => {
+  return await withApiKeyEncryptionRetry(payload.apiKey, async (encryptedApiKey) => {
     const response = await authFetch("/api/providers/test", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -370,7 +370,7 @@ export async function testProviderConnection(payload: {
         model_id: payload.modelId ?? null,
       }),
     });
-    return parseJsonOrThrow<ProviderTestResult>(response);
+    return await parseJsonOrThrow<ProviderTestResult>(response);
   });
 }
 
@@ -382,7 +382,7 @@ export async function listProviderModels(payload: {
   baseUrl?: string | null;
   apiType?: ConnectionApiType;
 }): Promise<ProviderModelInfo[]> {
-  return withApiKeyEncryptionRetry(payload.apiKey, async (encryptedApiKey) => {
+  return await withApiKeyEncryptionRetry(payload.apiKey, async (encryptedApiKey) => {
     const response = await authFetch("/api/providers/models", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -395,13 +395,13 @@ export async function listProviderModels(payload: {
         ...(payload.apiType === undefined ? {} : { api_type: payload.apiType }),
       }),
     });
-    return parseJsonOrThrow<ProviderModelInfo[]>(response);
+    return await parseJsonOrThrow<ProviderModelInfo[]>(response);
   });
 }
 
 export async function fetchModelCatalog(): Promise<ModelCatalogResponse> {
   const response = await authFetch("/api/providers/model-catalog");
-  return parseJsonOrThrow<ModelCatalogResponse>(response);
+  return await parseJsonOrThrow<ModelCatalogResponse>(response);
 }
 
 export async function listProviderModelCapabilities(payload: {
@@ -411,7 +411,7 @@ export async function listProviderModelCapabilities(payload: {
   baseUrl?: string | null;
   apiType?: ProviderApiType;
 }): Promise<ProviderModelCapabilityInfo[]> {
-  return withApiKeyEncryptionRetry(payload.apiKey, async (encryptedApiKey) => {
+  return await withApiKeyEncryptionRetry(payload.apiKey, async (encryptedApiKey) => {
     const response = await authFetch("/api/providers/model-capabilities", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -423,7 +423,7 @@ export async function listProviderModelCapabilities(payload: {
         ...(payload.apiType === undefined ? {} : { api_type: payload.apiType }),
       }),
     });
-    return parseJsonOrThrow<ProviderModelCapabilityInfo[]>(response);
+    return await parseJsonOrThrow<ProviderModelCapabilityInfo[]>(response);
   });
 }
 
@@ -445,7 +445,7 @@ export async function fetchCodexSubscriptionModels(
   // An explicit reload asks about plan changes, so it must not be served from cache.
   const query = options?.refresh ? "?refresh=true" : "";
   const response = await authFetch(`/api/providers/${providerId}/codex/models${query}`);
-  return parseJsonOrThrow<CodexSubscriptionModels>(response);
+  return await parseJsonOrThrow<CodexSubscriptionModels>(response);
 }
 
 
@@ -469,12 +469,12 @@ export async function startCodexOAuth(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ method }),
   });
-  return parseJsonOrThrow<CodexOAuthFlow>(response);
+  return await parseJsonOrThrow<CodexOAuthFlow>(response);
 }
 
 export async function getCodexOAuthFlow(providerId: string, flowId: string): Promise<CodexOAuthFlow> {
   const response = await authFetch(`/api/providers/${providerId}/oauth/flows/${flowId}`);
-  return parseJsonOrThrow<CodexOAuthFlow>(response);
+  return await parseJsonOrThrow<CodexOAuthFlow>(response);
 }
 
 export async function completeCodexOAuth(
@@ -487,7 +487,7 @@ export async function completeCodexOAuth(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ callback_url: callbackUrl }),
   });
-  return parseJsonOrThrow<CodexOAuthFlow>(response);
+  return await parseJsonOrThrow<CodexOAuthFlow>(response);
 }
 
 export async function cancelCodexOAuthFlow(

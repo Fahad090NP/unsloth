@@ -82,7 +82,7 @@ test("refuses a record with no output directory rather than guessing one", () =>
 
 test("refuses a record whose stored settings are incomplete", () => {
   const run = stoppedRun();
-  delete (run.config as Record<string, unknown>).base_model;
+  delete (run.config!).base_model;
   assert.throws(() => buildDiffusionResumePayload(run), /settings are incomplete/);
 });
 

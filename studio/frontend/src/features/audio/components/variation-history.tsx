@@ -78,7 +78,7 @@ export function VariationChips({
             type="button"
             aria-pressed={current}
             aria-label={`Variation ${index + 1} of ${siblings.length}`}
-            onClick={() => onSelect(clip.id)}
+            onClick={() => { onSelect(clip.id); }}
             className={cn(
               "flex size-[calc(24px*var(--ui-space-scale,1))] items-center justify-center rounded-full font-mono text-ui-11p5 tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               current

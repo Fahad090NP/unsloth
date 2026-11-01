@@ -28,7 +28,7 @@ export function ReapCard({
   const sparsity = reapEffectiveSparsity(settings, moe) ?? settings.sparsity;
   const kept = reapKeptExperts(moe, sparsity);
   const set = (patch: Partial<ReapSettings>) =>
-    onChange({ ...settings, ...patch });
+    { onChange({ ...settings, ...patch }); };
   return (
     <div className="space-y-3 rounded-lg border p-3">
       <div className="flex items-start justify-between gap-3">
@@ -44,7 +44,7 @@ export function ReapCard({
           className="mt-[var(--ui-title-cap-inset)]"
           aria-label="Prune experts (REAP)"
           checked={settings.enabled}
-          onCheckedChange={(enabled) => set({ enabled })}
+          onCheckedChange={(enabled) => { set({ enabled }); }}
           disabled={disabled}
         />
       </div>
@@ -59,7 +59,7 @@ export function ReapCard({
                   type="button"
                   size="sm"
                   variant={sparsity === s ? "dark" : "outline"}
-                  onClick={() => set({ sparsity: s })}
+                  onClick={() => { set({ sparsity: s }); }}
                   disabled={disabled || !reapSparsityAllowed(moe, s)}
                   title={
                     reapSparsityAllowed(moe, s)
@@ -85,7 +85,7 @@ export function ReapCard({
                   type="button"
                   size="sm"
                   variant={settings.samples === o.value ? "dark" : "outline"}
-                  onClick={() => set({ samples: o.value })}
+                  onClick={() => { set({ samples: o.value }); }}
                   title={o.hint}
                   disabled={disabled}
                 >
@@ -97,7 +97,7 @@ export function ReapCard({
               aria-label="Calibration dataset"
               placeholder="mlabonne/open-perfectblend (default)"
               value={settings.dataset}
-              onChange={(e) => set({ dataset: e.target.value })}
+              onChange={(e) => { set({ dataset: e.target.value }); }}
               disabled={disabled}
             />
             <div className="text-xs text-muted-foreground">

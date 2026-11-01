@@ -59,7 +59,7 @@ export function createModelReasoningEffortStore(storage: EffortStorage | null) {
   return create<ModelReasoningEffortState>((set) => ({
     effortByModel: readEfforts(storage),
     setModelReasoningEffort: (modelId, effort) =>
-      set((state) => {
+      { set((state) => {
         if (!modelId) return state;
         const next = { ...state.effortByModel };
         if (effort) Object.assign(next, { [modelId]: effort });
@@ -71,8 +71,8 @@ export function createModelReasoningEffortStore(storage: EffortStorage | null) {
           // Keep the choice for this session.
         }
         return { effortByModel: next };
-      }),
-    syncFromStorage: () => set({ effortByModel: readEfforts(storage) }),
+      }); },
+    syncFromStorage: () => { set({ effortByModel: readEfforts(storage) }); },
   }));
 }
 

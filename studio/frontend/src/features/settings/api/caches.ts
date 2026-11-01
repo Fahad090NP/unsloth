@@ -27,7 +27,7 @@ export const CACHE_KEYS = [
 export type CacheKey = (typeof CACHE_KEYS)[number];
 export type CacheGroup = "packages" | "compile" | "models";
 
-export type CacheEntry = {
+export interface CacheEntry {
   key: CacheKey;
   group: CacheGroup;
   optIn: boolean;
@@ -41,31 +41,31 @@ export type CacheEntry = {
   present: boolean;
   purgeable: boolean;
   blockedReason: string | null;
-};
+}
 
-export type CacheInventory = {
+export interface CacheInventory {
   caches: CacheEntry[];
   totalBytes: number;
   reclaimableBytes: number;
   freeBytes: number | null;
   totalDiskBytes: number | null;
   refreshing: boolean;
-};
+}
 
-export type CachePurgeResult = {
+export interface CachePurgeResult {
   key: CacheKey;
   freedBytes: number;
   removedEntries: number;
   errors: string[];
-};
+}
 
-export type CachePurgeOutcome = {
+export interface CachePurgeOutcome {
   results: CachePurgeResult[];
   freedBytes: number;
   inventory: CacheInventory;
-};
+}
 
-type ApiCacheEntry = {
+interface ApiCacheEntry {
   key: CacheKey;
   group: CacheGroup;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -87,9 +87,9 @@ type ApiCacheEntry = {
   purgeable: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   blocked_reason: string | null;
-};
+}
 
-type ApiCacheInventory = {
+interface ApiCacheInventory {
   caches: ApiCacheEntry[];
   // biome-ignore lint/style/useNamingConvention: API schema
   total_bytes: number;
@@ -100,23 +100,23 @@ type ApiCacheInventory = {
   // biome-ignore lint/style/useNamingConvention: API schema
   total_disk_bytes: number | null;
   refreshing?: boolean;
-};
+}
 
-type ApiCachePurgeResult = {
+interface ApiCachePurgeResult {
   key: CacheKey;
   // biome-ignore lint/style/useNamingConvention: API schema
   freed_bytes: number;
   // biome-ignore lint/style/useNamingConvention: API schema
   removed_entries: number;
   errors: string[];
-};
+}
 
-type ApiCachePurgeOutcome = {
+interface ApiCachePurgeOutcome {
   results: ApiCachePurgeResult[];
   // biome-ignore lint/style/useNamingConvention: API schema
   freed_bytes: number;
   inventory: ApiCacheInventory;
-};
+}
 
 function entryFromApi(value: ApiCacheEntry): CacheEntry {
   return {
@@ -179,7 +179,7 @@ export async function loadCacheInventory(
   return inventoryFromApi(await response.json());
 }
 
-export type CacheBreakdownEntry = {
+export interface CacheBreakdownEntry {
   name: string;
   path: string;
   sizeBytes: number;
@@ -187,7 +187,7 @@ export type CacheBreakdownEntry = {
   repoType?: "model";
   cachePath?: string;
   deleteAllowed?: boolean;
-};
+}
 
 export async function loadCacheBreakdown(
   key: CacheKey,

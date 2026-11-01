@@ -6,11 +6,11 @@ import test, { type TestContext } from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type IdleModule = {
+interface IdleModule {
   scheduleIdleTask: (callback: () => void, timeout?: number) => () => void;
   scheduleQuietIdleTask: (callback: () => void, timeout?: number) => () => void;
   inputQuietIn: () => number;
-};
+}
 
 function engine(t: TestContext, idle?: (callback: () => void) => number) {
   let now = 1_000;
@@ -105,7 +105,7 @@ test("a cancelled task never runs", (t) => {
 });
 
 test("engines with requestIdleCallback keep it", (t) => {
-  const queued: Array<() => void> = [];
+  const queued: (() => void)[] = [];
   const { idleModule, advance } = engine(t, (callback) => queued.push(callback));
   let ran = 0;
   idleModule.scheduleIdleTask(() => (ran += 1), 1000);

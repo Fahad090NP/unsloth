@@ -4,19 +4,19 @@
 const TRAINING_COMPARE_HANDOFF_KEY = "chat:training-compare-handoff:v1";
 const HANDOFF_MAX_AGE_MS = 15 * 60 * 1000;
 
-export type TrainingCompareHandoff = {
+export interface TrainingCompareHandoff {
   intent: "compare";
   baseModel: string | null;
   outputDir: string | null;
   requestedAt: number;
-};
+}
 
-type TrainingCompareCandidate = {
+interface TrainingCompareCandidate {
   id: string;
   baseModel: string;
   updatedAt?: number;
   exportType?: "lora" | "merged" | "gguf";
-};
+}
 
 export function setTrainingCompareHandoff(
   baseModel: string | null,

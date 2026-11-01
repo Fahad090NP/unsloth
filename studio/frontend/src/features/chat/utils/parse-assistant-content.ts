@@ -152,11 +152,11 @@ export function hasUnclosedThinkTag(raw: string): boolean {
 const THINK_TAG_OVERLAP =
   Math.max(THINK_OPEN_TAG.length, THINK_CLOSE_TAG.length) - 1;
 
-export type ThinkTagTracker = {
+export interface ThinkTagTracker {
   append(delta: string): void;
   retract(text: string): void;
   endsInsideThink(): boolean;
-};
+}
 
 /** Tracks `hasUnclosedThinkTag` incrementally; reading the buffer per arrival is O(reply^2). */
 export function createThinkTagTracker(): ThinkTagTracker {

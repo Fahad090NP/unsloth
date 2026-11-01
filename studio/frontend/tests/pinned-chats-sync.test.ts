@@ -177,7 +177,7 @@ test("a terminal rejected write rolls back without discarding a newer pending ac
       first = false;
       throw new Error("unavailable");
     }
-    return cas(expected, next);
+    return await cas(expected, next);
   };
   const a = client(backend, [], () => false);
   await a.sync.refresh();
@@ -317,7 +317,7 @@ test("an absent unpin reaches the server to record migration tombstones", async 
       if (operation) {
         operations.push(operation);
       }
-      return backend.compareAndSet(expected, next);
+      return await backend.compareAndSet(expected, next);
     },
     readLegacy: () => [],
     publish: () => undefined,
@@ -358,7 +358,7 @@ test("a recovered absent setting still migrates legacy pins before the next writ
       first = false;
       throw new Error("temporary read failure");
     }
-    return load();
+    return await load();
   };
   const a = client(backend, ["legacy"]);
   const results = await Promise.allSettled([
@@ -484,7 +484,7 @@ test("terminal rejection removes only the failed journal entry", async () => {
         first = false;
         throw new Error("invalid operation");
       }
-      return backend.compareAndSet(expected, next);
+      return await backend.compareAndSet(expected, next);
     },
   });
   const results = await Promise.allSettled([

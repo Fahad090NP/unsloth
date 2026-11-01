@@ -18,11 +18,11 @@ import { en } from "../src/i18n/locales/en.ts";
 import * as formatFastApiError from "../src/lib/format-fastapi-error.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type DialogState = {
+interface DialogState {
   logFamilyRequested: string | null;
   logSourcePathRequested: string | null;
   consumeLogFamilyRequest: () => void;
-};
+}
 
 const IDLE_DIALOG_STATE: DialogState = {
   logFamilyRequested: null,
@@ -50,7 +50,7 @@ function t(key: string, values?: Record<string, string>): string {
     .split(".")
     .reduce<unknown>(
       (node, part) => (node as Record<string, unknown> | undefined)?.[part],
-      en as unknown,
+      en,
     );
   assert.equal(typeof message, "string", `no English message for "${key}"`);
   return String(message).replace(/\{(\w+)\}/g, (match, name: string) =>
@@ -58,12 +58,12 @@ function t(key: string, values?: Record<string, string>): string {
   );
 }
 
-type InvokeCall = { command: string; args: unknown };
-type ToastCall = {
+interface InvokeCall { command: string; args: unknown }
+interface ToastCall {
   kind: string;
   title: string;
   options: Record<string, unknown> | undefined;
-};
+}
 type ButtonProps = Record<string, unknown>;
 
 async function flush(): Promise<void> {

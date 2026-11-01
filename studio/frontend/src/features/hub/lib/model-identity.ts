@@ -40,7 +40,7 @@ export function normalizeModelIdentity(modelId: string): string {
   if (slashPath.startsWith("//")) {
     return normalizeCaseInsensitivePath(trimmed, 2);
   }
-  if (WINDOWS_ROOTED_PATH_RE.test(trimmed)) {
+  if (trimmed.startsWith("\\")) {
     return normalizeCaseInsensitivePath(trimmed, 1);
   }
   if (WSL_DRIVE_PATH_RE.test(slashPath)) {

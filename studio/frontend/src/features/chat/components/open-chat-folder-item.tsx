@@ -107,7 +107,7 @@ export function UploadToChatFolderItem({
     <Item
       title={t("library.chats.folder.uploadTitle")}
       onSelect={() =>
-        openFilePicker("*", (files) => void uploadToChatFolder(sandboxSessionId, files, t))
+        { openFilePicker("*", (files) => void uploadToChatFolder(sandboxSessionId, files, t)); }
       }
     >
       <HugeiconsIcon icon={Upload01Icon} strokeWidth={1.75} className="size-icon" />
@@ -186,7 +186,7 @@ export function OpenProjectFolderItem({
       title={t("library.chats.folder.openProjectTitle")}
       onSelect={() => {
         void revealSandbox(sandboxSessionId).catch((error: unknown) =>
-          reportRevealError(error, t, "project"),
+          { reportRevealError(error, t, "project"); },
         );
       }}
     >
@@ -223,10 +223,10 @@ export function OpenChatFolderUnavailableItem({
         event.preventDefault();
         setHintOpen(true);
       }}
-      onPointerEnter={() => setHintOpen(true)}
-      onPointerLeave={() => setHintOpen(false)}
-      onFocus={() => setHintOpen(true)}
-      onBlur={() => setHintOpen(false)}
+      onPointerEnter={() => { setHintOpen(true); }}
+      onPointerLeave={() => { setHintOpen(false); }}
+      onFocus={() => { setHintOpen(true); }}
+      onBlur={() => { setHintOpen(false); }}
     >
       <HugeiconsIcon icon={FolderOpenIcon} strokeWidth={1.75} className="size-icon" />
       <span>{label ?? t("library.chats.folder.openChat")}</span>

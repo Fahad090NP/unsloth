@@ -23,7 +23,7 @@ export function useHubSourceNotice(): void {
         duration: Number.POSITIVE_INFINITY,
         action: {
           label: t("settings.general.hub.autoSourceAction"),
-          onClick: () => openDialog("general", { scrollTarget: "general-hub" }),
+          onClick: () => { openDialog("general", { scrollTarget: "general-hub" }); },
         },
       });
     });

@@ -12,7 +12,7 @@ import { DialogShell } from "./shared/dialog-shell";
 import { ValidationBanner } from "./shared/validation-banner";
 import { RecipeDialogContent } from "./shared/recipe-dialog-content";
 
-type ConfigDialogProps = {
+interface ConfigDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   config: NodeConfig | null;
@@ -25,7 +25,7 @@ type ConfigDialogProps = {
   onUpdate: (id: string, patch: Partial<NodeConfig>) => void;
   container?: HTMLDivElement | null;
   readOnly?: boolean;
-};
+}
 
 export function ConfigDialog({
   open,
@@ -89,7 +89,7 @@ export function ConfigDialog({
                     className="mt-[var(--ui-title-cap-inset)]"
                     checked={config.drop ?? false}
                     disabled={readOnly}
-                    onCheckedChange={(value) => onUpdate(config.id, { drop: value })}
+                    onCheckedChange={(value) => { onUpdate(config.id, { drop: value }); }}
                   />
                 </div>
               )}
@@ -111,7 +111,7 @@ export function ConfigDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => { onOpenChange(false); }}
           >
             Done
           </Button>

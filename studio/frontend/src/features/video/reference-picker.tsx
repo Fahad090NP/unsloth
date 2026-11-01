@@ -48,11 +48,11 @@ function readVideoDuration(dataUrl: string): Promise<number | undefined> {
       media.load();
       resolve(duration);
     };
-    const timer = setTimeout(() => finish(), REFERENCE_DURATION_TIMEOUT_MS);
+    const timer = setTimeout(() => { finish(); }, REFERENCE_DURATION_TIMEOUT_MS);
     media.preload = "metadata";
     media.onloadedmetadata = () =>
-      finish(Number.isFinite(media.duration) && media.duration > 0 ? media.duration : undefined);
-    media.onerror = () => finish();
+      { finish(Number.isFinite(media.duration) && media.duration > 0 ? media.duration : undefined); };
+    media.onerror = () => { finish(); };
     media.src = dataUrl;
   });
 }

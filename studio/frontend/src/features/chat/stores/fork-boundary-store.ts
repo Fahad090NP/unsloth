@@ -29,8 +29,7 @@ function sameIds(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
 
 function same(a: ForkBoundary | undefined, b: ForkBoundary): boolean {
   return (
-    a !== undefined &&
-    a.sourceThreadId === b.sourceThreadId &&
+    a?.sourceThreadId === b.sourceThreadId &&
     sameIds(a.messageIds, b.messageIds)
   );
 }
@@ -53,7 +52,7 @@ export const useForkBoundaryStore = create<ForkBoundaryState>()((set) => ({
   boundaryByThreadId: {},
   anchorByThreadId: {},
   setForkBoundary: (threadId, boundary) =>
-    set((state) => {
+    { set((state) => {
       const current = state.boundaryByThreadId[threadId];
       if (boundary === null) {
         if (current === undefined) return state;
@@ -65,9 +64,9 @@ export const useForkBoundaryStore = create<ForkBoundaryState>()((set) => ({
       return {
         boundaryByThreadId: { ...state.boundaryByThreadId, [threadId]: boundary },
       };
-    }),
+    }); },
   setForkBoundaryAnchor: (threadId, anchor) =>
-    set((state) => {
+    { set((state) => {
       const current = state.anchorByThreadId[threadId];
       if (current === anchor) return state;
       if (anchor === undefined) {
@@ -79,7 +78,7 @@ export const useForkBoundaryStore = create<ForkBoundaryState>()((set) => ({
       return {
         anchorByThreadId: { ...state.anchorByThreadId, [threadId]: anchor },
       };
-    }),
+    }); },
 }));
 
 export function setForkBoundary(

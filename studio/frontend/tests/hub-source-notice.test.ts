@@ -14,13 +14,13 @@ const { claimHubSourceNotice } = await import(
 );
 
 test("only an explicit grant shows the notice", async (t) => {
-  t.after(() => setAuthFetchHandler(null));
+  t.after(() => { setAuthFetchHandler(null); });
   const urls: string[] = [];
   const answer = (respond: () => Response) =>
-    setAuthFetchHandler((url, init) => {
+    { setAuthFetchHandler((url, init) => {
       urls.push(`${init?.method} ${url}`);
       return respond();
-    });
+    }); };
 
   answer(() => Response.json({ granted: true }));
   assert.equal(await claimHubSourceNotice(), true);

@@ -29,9 +29,9 @@ class StorageEvent {
     Object.assign(this, init, { type });
   }
 }
-const stopPages: Array<() => void> = [];
+const stopPages: (() => void)[] = [];
 // Messages between pages and the panel, held in order when a test needs them in flight.
-let deferred: Array<() => void> | null = null;
+let deferred: (() => void)[] | null = null;
 const deliver = (run: () => void) => (deferred ? deferred.push(run) : run());
 
 function flush() {
@@ -53,8 +53,8 @@ function openPage(url: string, tabId = "tab-1") {
   const origin = pageOrigin(url);
   const parent = {};
   const self = {};
-  const listeners: Array<(event: { source: unknown; data: unknown }) => void> = [];
-  const events: Array<{ key: string | null; newValue: string | null; storageArea: unknown; url: string }> = [];
+  const listeners: ((event: { source: unknown; data: unknown }) => void)[] = [];
+  const events: { key: string | null; newValue: string | null; storageArea: unknown; url: string }[] = [];
   const window = {
     addEventListener: (type: string, listener: (event: { source: unknown; data: unknown }) => void) => {
       if (type === "message") {
@@ -77,7 +77,7 @@ function openPage(url: string, tabId = "tab-1") {
     const parsed = parseFrameMessage({ source: "unsloth-browser", ...message });
     if (parsed?.type === "storage" && origin) {
       deliver(() =>
-        writePageStorage(origin, tabId, parsed.area, parsed.key, parsed.value, self, parsed.url, parsed.seq),
+        { writePageStorage(origin, tabId, parsed.area, parsed.key, parsed.value, self, parsed.url, parsed.seq); },
       );
     }
   };
@@ -95,7 +95,7 @@ function openPage(url: string, tabId = "tab-1") {
       if (site === origin && area !== "session") {
         const refused = own && value !== requested;
         const command = { command: "storageSync", area, key, value, url: writer ?? null, own, seq: own ? seq : null, refused };
-        deliver(() => message({ type: "unsloth:browser-command", ...command }));
+        deliver(() => { message({ type: "unsloth:browser-command", ...command }); });
       }
     }),
   );
@@ -237,7 +237,7 @@ test("clearing browsing data empties the pages that are open, too", () => {
   const clear = { type: "unsloth:browser-command", command: "clearStorage" };
   page.message(clear, {});
   assert.equal(page.window.localStorage.getItem("banner"), "closed");
-  const stop = onPageStorageClear(() => page.message(clear));
+  const stop = onPageStorageClear(() => { page.message(clear); });
   clearPageStorage();
   stop();
   assert.equal(page.window.localStorage.getItem("banner"), null);
@@ -337,7 +337,7 @@ test("a write on its way during Clear browsing data doesn't come back", () => {
   reset();
   const page = openPage("https://example.com/");
   const stop = onPageStorageClear(() =>
-    deliver(() => page.message({ type: "unsloth:browser-command", command: "clearStorage" })),
+    deliver(() => { page.message({ type: "unsloth:browser-command", command: "clearStorage" }); }),
   );
   deferred = [];
   page.window.localStorage.setItem("banner", "closed");

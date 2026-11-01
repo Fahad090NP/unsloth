@@ -8,19 +8,19 @@ import {
 } from "@/lib/account-transition";
 
 export type LoginMode = "single" | "multi";
-export type AuthStatusResponse = {
+export interface AuthStatusResponse {
   initialized: boolean;
   requires_password_change: boolean;
   bootstrap_deadline_seconds?: number | null;
   login_mode?: LoginMode;
   full_access?: boolean;
-};
-export type TokenResponse = {
+}
+export interface TokenResponse {
   access_token: string;
   refresh_token: string;
   must_change_password: boolean;
   account_id?: string | null;
-};
+}
 
 export const LOGIN_MODE_HINT_KEY = "unsloth.auth-login-mode.v1";
 function authHint(): string | null {
@@ -82,10 +82,10 @@ export function setLoginMode(mode: LoginMode, fullAccess?: boolean): void {
   const changed = loginMode !== mode || fullAccessAllowed !== allowed;
   loginMode = mode;
   fullAccessAllowed = allowed;
-  if (changed) listeners.forEach((listener) => listener());
+  if (changed) listeners.forEach((listener) => { listener(); });
 }
 export async function fetchAuthStatus(): Promise<AuthStatusResponse> {
-  if (inflight) return inflight;
+  if (inflight) return await inflight;
   inflight = (async () => {
     const response = await fetch(apiUrl("/api/auth/status"));
     if (!response.ok) throw new Error("Failed to load auth status.");
@@ -130,7 +130,7 @@ export async function loginWithPassword(
     } | null;
     throw new LoginError(payload?.detail ?? "Login failed.", response.status);
   }
-  return response.json();
+  return await response.json();
 }
 
 /** Only a rejected single-mode submit probes for an account created since page load. */

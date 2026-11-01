@@ -162,7 +162,7 @@ function canPreviewTokens(state: {
   isEmbeddingModel: boolean;
 }): boolean {
   return (
-    !!state.selectedModel &&
+    Boolean(state.selectedModel) &&
     !state.isEmbeddingModel &&
     state.modelType !== "embeddings" &&
     state.modelType !== "decision"
@@ -249,7 +249,7 @@ function SelectedDatasetCard({
           variant="ghost"
           size="sm"
           className="shrink-0 text-xs"
-          onClick={() => openPreview()}
+          onClick={() => { openPreview(); }}
         >
           <HugeiconsIcon icon={ViewIcon} className="size-3.5" />
           {t("studio.dataset.viewDataset")}
@@ -261,7 +261,7 @@ function SelectedDatasetCard({
             className="shrink-0 text-xs"
             // The dialog reads the dataset's modality once, so wait until the check has it.
             disabled={settings.isCheckingDataset}
-            onClick={() => setTokenPreviewOpen(true)}
+            onClick={() => { setTokenPreviewOpen(true); }}
           >
             <TextSelectIcon className="size-3.5" />
             {t("studio.dataset.previewTokens")}
@@ -271,7 +271,7 @@ function SelectedDatasetCard({
           variant="ghost"
           size="sm"
           className="shrink-0 text-xs"
-          onClick={() => clearSelection(null)}
+          onClick={() => { clearSelection(null); }}
         >
           {t("studio.dataset.clear")}
         </Button>

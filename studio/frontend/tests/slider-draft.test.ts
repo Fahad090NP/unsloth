@@ -7,7 +7,7 @@ import test from "node:test";
 import { readSrc } from "./helpers/kit.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Draft = {
+interface Draft {
   draft: number | null;
   sliderProps: {
     value: number[];
@@ -16,7 +16,7 @@ type Draft = {
     onValueCommit: (value: number[]) => void;
     onLostPointerCapture: (event: { pointerId: number }) => void;
   };
-};
+}
 
 const documentEvents = new EventTarget();
 Object.defineProperty(globalThis, "document", {
@@ -57,7 +57,7 @@ function mountDraft(value: number, onDraft?: (value: number | null) => void) {
     },
     useEffectEvent: (handler: (event?: Event) => void) => {
       const at = cursor++;
-      if (!(at in slots)) slots[at] = { handler, call: (event?: Event) => (slots[at] as { handler: (event?: Event) => void }).handler(event) };
+      if (!(at in slots)) slots[at] = { handler, call: (event?: Event) => { (slots[at] as { handler: (event?: Event) => void }).handler(event); } };
       const event = slots[at] as { handler: (event?: Event) => void; call: (event?: Event) => void };
       event.handler = handler;
       return event.call;

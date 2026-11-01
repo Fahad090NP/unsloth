@@ -17,10 +17,10 @@ export function discreteInputPending(
   return now - lastInputAt < windowMs;
 }
 
-export type DiscreteInputTracker = {
+export interface DiscreteInputTracker {
   pending(): boolean;
   dispose(): void;
-};
+}
 
 export function createDiscreteInputTracker(
   target: EventTarget,

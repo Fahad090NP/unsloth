@@ -21,7 +21,7 @@ export const useChatSearchStore = create<ChatSearchStore>((set) => ({
   isOpen: false,
   opener: null,
   open: (options) =>
-    set((state) =>
+    { set((state) =>
       state.isOpen
         ? state
         : {
@@ -31,15 +31,15 @@ export const useChatSearchStore = create<ChatSearchStore>((set) => ({
                 ? options.opener
                 : captureFocusedElement(),
           },
-    ),
-  close: () => set({ isOpen: false }),
+    ); },
+  close: () => { set({ isOpen: false }); },
   // Opener survives close: onCloseAutoFocus reads it after this update.
   setOpen: (isOpen) =>
-    set((state) =>
+    { set((state) =>
       isOpen
         ? state.isOpen
           ? state
           : { isOpen: true, opener: captureFocusedElement() }
         : { isOpen: false },
-    ),
+    ); },
 }));

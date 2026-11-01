@@ -23,14 +23,14 @@ export type WorkflowId =
   | "edit";
 
 /** `requires` is the backend workflow id the loaded model must support; null = always. */
-export const WORKFLOW_TABS: Array<{
+export const WORKFLOW_TABS: {
   id: WorkflowId;
   label: string;
   heading?: string;
   requires: string | null;
   icon: IconSvgElement;
   hint: string;
-}> = [
+}[] = [
   {
     id: "create",
     label: "Create",

@@ -42,7 +42,7 @@ globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
-}) as typeof fetch;
+});
 
 const {
   invalidateOpenAIAutoSwitchSettings,

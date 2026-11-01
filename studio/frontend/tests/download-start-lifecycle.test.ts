@@ -71,9 +71,9 @@ test("restart disclosure waits for acceptance and completion dismisses its one k
     }
     if (url === "/api/hub/download") {
       markStartRequested();
-      return new Promise<Response>((resolve) => {
+      return await new Promise<Response>((resolve) => {
         acceptStart = () =>
-          resolve(
+          { resolve(
             json({
               accepted: true,
               attached: false,
@@ -82,14 +82,14 @@ test("restart disclosure waits for acceptance and completion dismisses its one k
               transport: "xet",
               job_key: "backend-key",
             }),
-          );
+          ); };
       });
     }
     if (url === "/api/settings/xet-notice/reserve") {
       return json({ granted: true, shown: 1, limit: 3 });
     }
     throw new Error(`Unexpected request: ${url}`);
-  }) as typeof fetch;
+  });
 
   const request = {
     kind: "model" as const,
@@ -164,9 +164,9 @@ test("a stale model selection does not spend an Xet notice reservation", async (
     }
     if (url === "/api/hub/download") {
       markStartRequested();
-      return new Promise<Response>((resolve) => {
+      return await new Promise<Response>((resolve) => {
         acceptStart = () =>
-          resolve(
+          { resolve(
             json({
               accepted: true,
               attached: false,
@@ -175,7 +175,7 @@ test("a stale model selection does not spend an Xet notice reservation", async (
               transport: "xet",
               job_key: "backend-key",
             }),
-          );
+          ); };
       });
     }
     if (url === "/api/settings/xet-notice/reserve") {
@@ -183,7 +183,7 @@ test("a stale model selection does not spend an Xet notice reservation", async (
       return json({ granted: true, shown: reservations, limit: 3 });
     }
     throw new Error(`Unexpected request: ${url}`);
-  }) as typeof fetch;
+  });
 
   const request = {
     kind: "model" as const,
@@ -244,7 +244,7 @@ test("a later entry of a staged plan starts without reserving another Xet notice
       return json({ granted: true, shown: reservations, limit: 3 });
     }
     throw new Error(`Unexpected request: ${url}`);
-  }) as typeof fetch;
+  });
 
   const first = {
     kind: "model" as const,

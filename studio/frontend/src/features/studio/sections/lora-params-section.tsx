@@ -177,7 +177,7 @@ export function LoraParamsSection(): ReactElement | null {
                   <Checkbox
                     id={key}
                     checked={value}
-                    onCheckedChange={(nextValue) => setter(!!nextValue)}
+                    onCheckedChange={(nextValue) => { setter(Boolean(nextValue)); }}
                   />
                   <label
                     htmlFor={key}
@@ -207,9 +207,9 @@ export function LoraParamsSection(): ReactElement | null {
                       type="button"
                       aria-pressed={active}
                       onClick={() =>
-                        store.setTargetModules(
+                        { store.setTargetModules(
                           toggleCptTargetModule(store.targetModules, module),
-                        )
+                        ); }
                       }
                       className={`cursor-pointer rounded-full border px-2.5 py-0.5 text-ui-11 font-mono transition-colors ${selectableOptionStateClassName(active)} ${
                         active ? "text-foreground" : "text-muted-foreground"
@@ -263,7 +263,7 @@ export function LoraParamsSection(): ReactElement | null {
                     type="button"
                     disabled={unsupportedOnMlx || needsVisionOff}
                     aria-pressed={store.loraVariant === option.value}
-                    onClick={() => store.setLoraVariant(option.value)}
+                    onClick={() => { store.setLoraVariant(option.value); }}
                     className={`flex-1 corner-squircle rounded-md border px-3 py-2 text-left transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${selectableOptionStateClassName(store.loraVariant === option.value)}`}
                   >
                     <p className="text-xs font-medium">{option.label}</p>

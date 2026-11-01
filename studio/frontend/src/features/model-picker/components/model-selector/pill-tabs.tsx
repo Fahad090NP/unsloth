@@ -73,7 +73,7 @@ export function PillTabs({
               .item(next)
               ?.focus();
           }}
-          onClick={() => onValueChange(tab.value)}
+          onClick={() => { onValueChange(tab.value); }}
           className={cn(
             "relative inline-flex items-center justify-center gap-1.5 rounded-full transition-colors",
             (disabled || tab.disabled) && "cursor-not-allowed opacity-50",

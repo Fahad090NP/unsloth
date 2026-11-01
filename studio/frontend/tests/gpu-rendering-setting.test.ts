@@ -153,12 +153,12 @@ test("the note copy carries the placeholders the row fills", () => {
   assert.ok(copy.envOverride.includes("{name}"));
 });
 
-type ApiModule = {
+interface ApiModule {
   loadGpuRendering: () => Promise<GpuRenderingStatus>;
   updateGpuRendering: (value: string) => Promise<GpuRenderingStatus>;
   relaunchToApplyGpuRendering: () => Promise<boolean>;
   notifyRendererReady: typeof NotifyRendererReady;
-};
+}
 
 function loadApi(
   isTauri: boolean,

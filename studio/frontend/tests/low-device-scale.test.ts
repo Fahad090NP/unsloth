@@ -12,12 +12,12 @@ import {
   watchThreadScrollbarGutter,
 } from "../src/app/low-device-scale.ts";
 
-type Query = {
+interface Query {
   dppx: number;
   listeners: Set<() => void>;
   addEventListener: (type: "change", listener: () => void) => void;
   removeEventListener: (type: "change", listener: () => void) => void;
-};
+}
 
 function fakeWorld(initialRatio: number, initialZoom: number) {
   let ratio = initialRatio;

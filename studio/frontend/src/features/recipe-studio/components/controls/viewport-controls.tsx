@@ -11,13 +11,13 @@ import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ContractArrowsIcon, ExpandArrowsIcon } from "@/lib/expand-icons";
 
-type ViewportControlsProps = {
+interface ViewportControlsProps {
   interactive: boolean;
   lockDisabled?: boolean;
   onToggleInteractive: () => void;
   maximized: boolean;
   onToggleMaximize: () => void;
-};
+}
 
 export function ViewportControls({
   interactive,

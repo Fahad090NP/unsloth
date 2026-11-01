@@ -210,8 +210,7 @@ export function useTranscription({
       setSelectedSttRepo(repo);
     }
     if (
-      !resident ||
-      resident.engine !== engine ||
+      resident?.engine !== engine ||
       !sttSameModel(
         repo,
         resident.model,

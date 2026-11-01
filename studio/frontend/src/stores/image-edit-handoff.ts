@@ -15,7 +15,7 @@ interface ImageEditHandoffState {
 export const useImageEditHandoffStore = create<ImageEditHandoffState>(
   (set, get) => ({
     pending: null,
-    offer: (pending) => set({ pending }),
+    offer: (pending) => { set({ pending }); },
     take: () => {
       const pending = get().pending;
       if (pending) set({ pending: null });

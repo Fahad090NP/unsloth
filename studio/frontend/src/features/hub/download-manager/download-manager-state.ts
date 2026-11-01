@@ -103,7 +103,7 @@ function inventoryKindOfPersisted(
     value.scopedFiles.every((file) => typeof file === "string")
   ) {
     return {
-      inventoryKind: scopedDownloadInventoryKind(value.scopedFiles as string[]),
+      inventoryKind: scopedDownloadInventoryKind(value.scopedFiles),
     };
   }
   return {};
@@ -145,7 +145,7 @@ function sanitizePersistedJob(
       : {}),
     ...(Array.isArray(value.scopedFiles) &&
     value.scopedFiles.every((f) => typeof f === "string")
-      ? { scopedFiles: value.scopedFiles as string[] }
+      ? { scopedFiles: value.scopedFiles }
       : {}),
     ...(typeof value.checkpoint === "boolean"
       ? { checkpoint: value.checkpoint }
@@ -598,7 +598,7 @@ export function setConflict(
 
 export function isCurrent(key: string, epoch: number): boolean {
   const rt = runtimeRegistry.runtimes.get(key);
-  return rt != null && rt.epoch === epoch && key in getState().jobs;
+  return rt?.epoch === epoch && key in getState().jobs;
 }
 
 export function scheduleRemoval(key: string, delayMs: number): void {
@@ -704,7 +704,7 @@ export function setExpectedBytesForJob(
   bytes: number,
 ): void {
   const job = selectActiveJob(getState(), kind, repoId, variant);
-  if (!job || job.state !== "running" || bytes <= job.expectedBytes) return;
+  if (job?.state !== "running" || bytes <= job.expectedBytes) return;
   patchJob(job.key, {
     expectedBytes: bytes,
     presentation: presentationForExpectedBytesUpdate(

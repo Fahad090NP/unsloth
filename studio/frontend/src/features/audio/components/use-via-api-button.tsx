@@ -31,7 +31,7 @@ export function UseViaApiButton({
           type="button"
           aria-label={label}
           onClick={() =>
-            useSettingsDialogStore.getState().openAudioApi({
+            { useSettingsDialogStore.getState().openAudioApi({
               workflow,
               // /v1 names a model by its public id; an audio.cpp folder id already is one.
               model: model
@@ -39,7 +39,7 @@ export function UseViaApiButton({
                   ? model
                   : publicModelId(model)
                 : null,
-            })
+            }); }
           }
           className="flex h-[calc(34px*var(--ui-space-scale,1))] w-[calc(34px*var(--ui-space-scale,1))] shrink-0 items-center justify-center gap-1.5 rounded-full text-ui-13 @[84rem]:w-auto @[84rem]:px-2.5 font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >

@@ -46,7 +46,7 @@ export function SaveVoiceDialog({
           mode={mode}
           initial={initial}
           voiceId={voiceId}
-          onCancel={() => onOpenChange(false)}
+          onCancel={() => { onOpenChange(false); }}
           onSubmit={async (details) => {
             await onSubmit(details);
             onOpenChange(false);
@@ -128,8 +128,8 @@ function SaveVoiceForm({
           maxLength={80}
           // biome-ignore lint/a11y/noAutofocus: the dialog opens to name the voice.
           autoFocus={true}
-          onFocus={(event) => event.currentTarget.select()}
-          onChange={(event) => setName(event.target.value)}
+          onFocus={(event) => { event.currentTarget.select(); }}
+          onChange={(event) => { setName(event.target.value); }}
           placeholder="Narrator"
         />
       </Field>
@@ -142,7 +142,7 @@ function SaveVoiceForm({
           id="save-voice-transcript"
           value={transcript}
           maxLength={4000}
-          onChange={(event) => setTranscript(event.target.value)}
+          onChange={(event) => { setTranscript(event.target.value); }}
           className="min-h-20"
         />
       </Field>

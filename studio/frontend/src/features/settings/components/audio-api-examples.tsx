@@ -135,7 +135,7 @@ export function AudioApiExamples({
     const section = sectionRef.current;
     if (!section) return;
     // Consumed only after the user scrolls: clearing it re-runs this effect, whose cleanup stops the pinning.
-    const pin = () => section.scrollIntoView({ block: "start" });
+    const pin = () => { section.scrollIntoView({ block: "start" }); };
     const observer = new ResizeObserver(pin);
     observer.observe(section.parentElement ?? section);
     const release = () => {
@@ -166,7 +166,7 @@ export function AudioApiExamples({
     );
     // The Model auto-switch switch sits in this same tab.
     const unsubscribe = subscribeOpenAIAutoSwitchSettings((settings) =>
-      setAutoSwitch(settings.enabled),
+      { setAutoSwitch(settings.enabled); },
     );
     return () => {
       cancelled = true;
@@ -184,7 +184,7 @@ export function AudioApiExamples({
   const [os, setOs] = useExampleOs(base);
   const key = audioApiKey(apiKey, {
     base,
-    tunnel: useTunnel && !!cloudflareUrl,
+    tunnel: useTunnel && Boolean(cloudflareUrl),
     scope: keylessScope,
     exposure: keylessExposure,
   });

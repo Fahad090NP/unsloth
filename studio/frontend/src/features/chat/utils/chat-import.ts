@@ -138,7 +138,7 @@ function oaiMessagesToRecords(
   baseTs: number,
 ): MessageRecord[] {
   const toolResults = new Map<string, string>();
-  const pending: Array<{ turn: number; part: { toolCallId: string; result?: string } }> = [];
+  const pending: { turn: number; part: { toolCallId: string; result?: string } }[] = [];
 
   const records: MessageRecord[] = [];
   let prevId: string | null = null;
@@ -257,7 +257,7 @@ function sharegptToRecords(
 }
 
 function markdownToRecords(
-  messages: Array<{ role: string; content: string }>,
+  messages: { role: string; content: string }[],
   threadId: string,
   baseTs: number,
 ): MessageRecord[] {
@@ -307,7 +307,7 @@ function csvToRecords(csvText: string, threadId: string, baseTs: number): Messag
       id,
       threadId,
       parentId: prevId,
-      role: validRole as MessageRecord["role"],
+      role: validRole,
       content: [{ type: "text", text: content }] as MessageRecord["content"],
       createdAt: baseTs + idx,
       metadata: { createdAtEstimated: true },
@@ -581,7 +581,7 @@ export async function importConversationsFromFile(
   projectId?: string | null,
   options: ImportOptions = {},
 ): Promise<ImportResult> {
-  return importConversationsFromSource(
+  return await importConversationsFromSource(
     fileImportSource(file),
     projectId,
     options,

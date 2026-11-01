@@ -83,7 +83,7 @@ export function CreateKeyForm({
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => { setName(e.target.value); }}
           placeholder={t("settings.apiKeys.tokenNamePlaceholder")}
           className="h-control min-w-[calc(200px*var(--ui-space-scale,1))] flex-1 text-sm"
           aria-label={t("settings.apiKeys.newAccessTokenName")}
@@ -96,7 +96,7 @@ export function CreateKeyForm({
                 <TooltipTrigger asChild={true}>
                   <button
                     type="button"
-                    onClick={() => setExpiry(p.value)}
+                    onClick={() => { setExpiry(p.value); }}
                     aria-pressed={active}
                     className={cn(
                       "relative inline-flex h-control items-center rounded-full px-3.5 text-ui-12 font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",

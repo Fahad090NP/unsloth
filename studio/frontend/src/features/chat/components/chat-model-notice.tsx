@@ -48,7 +48,7 @@ export function useChatCreatedModel(
   useEffect(() => {
     if (!threadId) return;
     const reader = createChatModelHistoryReader(threadId, (model) =>
-      setRead({ threadId, model }),
+      { setRead({ threadId, model }); },
     );
     // Bumped by every newer answer, so a slower re-read never lands over it.
     let readGeneration = 0;
@@ -72,7 +72,7 @@ export function useChatCreatedModel(
     };
     window.addEventListener(CHAT_HISTORY_UPDATED_EVENT, onHistoryUpdated);
     void getStoredChatThread(threadId)
-      .then((thread) => reader.applyInitial(thread))
+      .then((thread) => { reader.applyInitial(thread); })
       .catch(() => undefined);
     return () => {
       reader.dispose();
@@ -84,7 +84,7 @@ export function useChatCreatedModel(
   return read && read.threadId === threadId ? read.model : null;
 }
 
-type ChatModelNoticeProps = {
+interface ChatModelNoticeProps {
   /** Keep the history reader mounted while the chat route is hidden. */
   active: boolean;
   /** The saved chat on screen, or undefined for an unsent New Chat. */
@@ -98,7 +98,7 @@ type ChatModelNoticeProps = {
     target: ChatModelSwitchTarget,
     stillWanted: () => boolean,
   ) => void;
-};
+}
 
 /** Adopts a chat's last used model when it is still loaded, else only offers it: a local load evicts. */
 export function ChatModelNotice({
@@ -216,7 +216,7 @@ export function ChatModelNotice({
             variant="ghost"
             size="sm"
             className="h-8 justify-start gap-2.5 rounded-md px-3 text-ui-13 font-normal"
-            onClick={() => onSwitch(switchTarget)}
+            onClick={() => { onSwitch(switchTarget); }}
           >
             <HugeiconsIcon
               icon={ArrowTurnBackwardIcon}

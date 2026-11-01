@@ -18,7 +18,7 @@ import {
 import { readSrc } from "./helpers/kit.ts";
 
 /** Complexity tests, not timing: they count characters each string primitive can read. */
-type Counted = { chars: number };
+interface Counted { chars: number }
 
 function withScanAccounting<T>(body: () => T): { result: T; chars: number } {
   const counted: Counted = { chars: 0 };
@@ -62,7 +62,7 @@ function withScanAccounting<T>(body: () => T): { result: T; chars: number } {
   ): boolean {
     counted.chars += String(search).length;
     return realStartsWith.call(this, search, position);
-  } as unknown as typeof realStartsWith;
+  };
   RegExp.prototype.exec = function countingExec(
     this: RegExp,
     subject: string,

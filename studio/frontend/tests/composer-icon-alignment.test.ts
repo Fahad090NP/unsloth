@@ -36,7 +36,7 @@ test("every composer send arrow uses the shared sizing class", () => {
 test("every isolated composer stop square draws at size-3.5, about a third of its circle", () => {
   const stops = componentSources
     .flatMap((source) => tags(source, "HugeiconsIcon"))
-    .filter((tag) => /icon=\{StopIcon\}/.test(tag) && /\bsize-3\.5(?![\w.-])/.test(tag));
+    .filter((tag) => tag.includes('icon={StopIcon}') && /\bsize-3\.5(?![\w.-])/.test(tag));
 
   assert.equal(stops.length, 6);
 });
@@ -52,7 +52,7 @@ test("neither composer action glyph carries a device-pixel nudge", () => {
 });
 
 test("the dictate glyph keeps a 1px optical nudge, not the 2px that read as low", () => {
-  const body = css.match(/& svg\.unsloth-dictate-icon \{([\s\S]*?)\n\t\}/)?.[1];
+  const body = (/& svg\.unsloth-dictate-icon \{([\s\S]*?)\n\t\}/.exec(css))?.[1];
   assert.ok(body, "dictate icon rule");
   assert.match(body, /transform:\s*translateY\(1px\);/);
 });

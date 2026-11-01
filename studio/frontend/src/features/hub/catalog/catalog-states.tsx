@@ -106,8 +106,8 @@ function UseModelScopeButton() {
           setSwitching(true);
           setFailed(false);
           updateHubSource("modelscope")
-            .catch(() => setFailed(true))
-            .finally(() => setSwitching(false));
+            .catch(() => { setFailed(true); })
+            .finally(() => { setSwitching(false); });
         }}
         className="rounded-full"
       >
@@ -128,7 +128,7 @@ function UpdateTokenButton() {
   return (
     <Button
       size="sm"
-      onClick={() => openSettings("general")}
+      onClick={() => { openSettings("general"); }}
       className="rounded-full"
     >
       {t("picker.updateToken")}

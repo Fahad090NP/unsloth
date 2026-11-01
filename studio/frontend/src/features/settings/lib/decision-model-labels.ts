@@ -17,6 +17,6 @@ export function isClefDecisionModel(name: string | null | undefined): boolean {
     name === "clef" ||
     name === "clef-flash" ||
     name === "clef-omni" ||
-    !!name?.startsWith("clef-ft:")
+    Boolean(name?.startsWith("clef-ft:"))
   );
 }

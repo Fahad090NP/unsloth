@@ -196,16 +196,16 @@ function useThreadProjectId(
     let cancelled = false;
     let announced = false;
     const record = (projectId: string | null, editedAt: number) =>
-      setResolved((previous) =>
+      { setResolved((previous) =>
         previous?.threadId === threadId
         && (previous.editedAt > editedAt
           || (previous.editedAt === editedAt
             && previous.projectId === projectId))
           ? previous
           : { threadId, projectId, editedAt },
-      );
+      ); };
     const unsubscribe = subscribeChatHistoryUpdated(({ thread }) => {
-      if (!thread || thread.id !== threadId) return;
+      if (thread?.id !== threadId) return;
       announced = true;
       record(thread.projectId ?? null, thread.modifiedAt ?? 0);
     });
@@ -415,11 +415,11 @@ function useDocumentThumbnail(
   useEffect(() => {
     if (!enabled || !element) return;
     const observer = new IntersectionObserver(
-      (entries) => setVisible(entries[entries.length - 1].isIntersecting),
+      (entries) => { setVisible(entries[entries.length - 1].isIntersecting); },
       { rootMargin: "200px" },
     );
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [enabled, element]);
   useEffect(() => {
     if (!enabled || !visible) {
@@ -854,7 +854,7 @@ function ChatFilesPanel({
                 type="button"
                 className="unsloth-files-panel-action"
                 aria-expanded={true}
-                onClick={() => setShowAll(false)}
+                onClick={() => { setShowAll(false); }}
               >
                 Show less
               </button>
@@ -865,7 +865,7 @@ function ChatFilesPanel({
               type="button"
               className="unsloth-files-panel-show-all"
               aria-expanded={false}
-              onClick={() => setShowAll(true)}
+              onClick={() => { setShowAll(true); }}
             >
               Show all
             </button>
@@ -937,7 +937,7 @@ function AttachmentTargetMenu({
         {ATTACHMENT_TARGETS.map((target) => (
           <DropdownMenuItem
             key={target.value}
-            onSelect={() => onSelect(target.value)}
+            onSelect={() => { onSelect(target.value); }}
             className="items-start"
           >
             {/* Icon aligns with the title line. */}
@@ -1019,7 +1019,7 @@ export function ThreadDocumentsBar({
   // Adoption removes the pending key, so this drops only a choice nobody claimed.
   useEffect(
     () => () =>
-      useChatRuntimeStore.getState().clearPendingProjectAttachmentTarget(),
+      { useChatRuntimeStore.getState().clearPendingProjectAttachmentTarget(); },
     [],
   );
 
@@ -1154,7 +1154,7 @@ export function ThreadDocumentsBar({
         invalidateProjectSources(projectId);
         // Explicit scope: a desktop drop enables RAG and attaches in the same tick.
         void uploadToProject(items, { type: "project", projectId }).finally(() =>
-          announceProjectSourcesUpdated(projectId),
+          { announceProjectSourcesUpdated(projectId); },
         );
         return;
       }
@@ -1261,10 +1261,10 @@ export function ThreadDocumentsBar({
         action: {
           label: "Add",
           onClick: () =>
-            setKbDialogFocus({
+            { setKbDialogFocus({
               kbId,
               uploads: intents.map(uploadItemFromIntent),
-            }),
+            }); },
         },
       });
       kbDropOffersRef.current.add(offer);
@@ -1344,13 +1344,13 @@ export function ThreadDocumentsBar({
           key="kb"
           icon={FileSearchIcon}
           title={activeKbName ? `Knowledge base: ${activeKbName}` : "Knowledge base"}
-          onClose={() => setRagPanelHidden(true)}
+          onClose={() => { setRagPanelHidden(true); }}
           closeLabel="Hide files"
           headerControls={
             <button
               ref={kbChipRef}
               type="button"
-              onClick={() => setKbDialogFocus({ kbId })}
+              onClick={() => { setKbDialogFocus({ kbId }); }}
               className="unsloth-files-panel-action"
             >
               Manage files
@@ -1372,7 +1372,7 @@ export function ThreadDocumentsBar({
             icon={FolderAttachmentIcon}
             title={ragToolDisabled ? "Project sources not used" : "Project sources"}
             count={countSuffix}
-            onClose={() => setRagPanelHidden(true)}
+            onClose={() => { setRagPanelHidden(true); }}
             closeLabel="Hide sources"
             note={
               <span
@@ -1427,7 +1427,7 @@ export function ThreadDocumentsBar({
         info="Add or drop documents, spreadsheets, slides, e-books, email or code. The model searches them as you chat and cites what it uses."
         onDropItems={queueAttach}
         dropDisabledReason={busyReason}
-        onClose={() => setRagPanelHidden(true)}
+        onClose={() => { setRagPanelHidden(true); }}
         closeLabel="Hide files"
         note={
           ragToolDisabled && fileCount > 0 ? (
@@ -1447,7 +1447,7 @@ export function ThreadDocumentsBar({
                 disabled={scopeLocked}
                 sharesWithProject={sharesWithProject}
                 onSelect={(target) =>
-                  setThreadProjectAttachmentTarget(effectiveThreadId, target)
+                  { setThreadProjectAttachmentTarget(effectiveThreadId, target); }
                 }
               />
             ) : null}
@@ -1488,7 +1488,7 @@ export function ThreadDocumentsBar({
                   : doc.status === "failed"
                     ? // Never indexed, so no other chat loses anything: no confirmation.
                       () => void removeFromProject(doc.id)
-                    : () => setRemovingShared(doc)
+                    : () => { setRemovingShared(doc); }
               }
               onRetry={
                 canRetryProject(doc.id)

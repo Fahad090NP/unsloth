@@ -10,10 +10,10 @@ import { SettingsRow } from "./settings-row";
 import { SettingsSection } from "./settings-section";
 
 type ApiObject = Record<string, unknown>;
-type StudioVersions = {
+interface StudioVersions {
   packageVersion: string | null;
   studioVersion: string | null;
-};
+}
 
 const EMPTY_VERSIONS: StudioVersions = {
   packageVersion: null,
@@ -21,8 +21,8 @@ const EMPTY_VERSIONS: StudioVersions = {
 };
 
 function parseStudioVersions(data: ApiObject): StudioVersions {
-  const packageVersion = data["version"];
-  const studioVersion = data["studio_version"];
+  const packageVersion = data.version;
+  const studioVersion = data.studio_version;
   return {
     packageVersion:
       typeof packageVersion === "string" ? packageVersion : null,

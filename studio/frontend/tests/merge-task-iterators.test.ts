@@ -93,7 +93,7 @@ test("aborts and closes pending task iterators when the consumer stops", async (
         await new Promise<void>((_, reject) => {
           signal.addEventListener(
             "abort",
-            () => reject(new DOMException("Aborted", "AbortError")),
+            () => { reject(new DOMException("Aborted", "AbortError")); },
             { once: true },
           );
         });

@@ -115,7 +115,7 @@ test("resetting the source and empty transitions retain no stale lines", () => {
   assert.deepEqual(updateFenceChunks(empty, lines).flat(), lines);
 });
 
-type TestResult = { tokens: ReturnType<typeof makeLines>; fg?: string };
+interface TestResult { tokens: ReturnType<typeof makeLines>; fg?: string }
 const bodyProps = (
   result: TestResult | null = { tokens: makeLines(1) },
 ): FenceBodyMemoProps<TestResult> => ({

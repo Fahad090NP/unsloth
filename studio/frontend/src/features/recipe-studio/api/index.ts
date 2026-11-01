@@ -14,26 +14,26 @@ const DEFAULT_BASE = "/api/data-recipe";
 export const DATA_DESIGNER_API_BASE =
   import.meta.env.VITE_DATA_DESIGNER_API ?? DEFAULT_BASE;
 
-export type JobCreateResponse = {
+export interface JobCreateResponse {
   // biome-ignore lint/style/useNamingConvention: api schema
   job_id: string;
-};
+}
 
-export type PublishRecipeJobRequest = {
+export interface PublishRecipeJobRequest {
   repo_id: string;
   description: string;
   hf_token?: string | null;
   private?: boolean;
   artifact_path?: string | null;
-};
+}
 
-export type PublishRecipeJobResponse = {
+export interface PublishRecipeJobResponse {
   success: boolean;
   url: string;
   message: string;
-};
+}
 
-export type SourceProgressResponse = {
+export interface SourceProgressResponse {
   source?: string | null;
   status?: string | null;
   repo?: string | null;
@@ -53,9 +53,9 @@ export type SourceProgressResponse = {
   message?: string | null;
   // biome-ignore lint/style/useNamingConvention: api schema
   updated_at?: number | null;
-};
+}
 
-export type JobStatusResponse = {
+export interface JobStatusResponse {
   // biome-ignore lint/style/useNamingConvention: api schema
   job_id: string;
   status: string;
@@ -106,22 +106,22 @@ export type JobStatusResponse = {
   started_at?: number | null;
   // biome-ignore lint/style/useNamingConvention: api schema
   finished_at?: number | null;
-};
+}
 
-export type JobDatasetResponse = {
+export interface JobDatasetResponse {
   dataset?: unknown[];
   total?: number;
   limit?: number;
   offset?: number;
-};
+}
 
-export type JobEvent = {
+export interface JobEvent {
   event: string;
   id: number | null;
   payload: Record<string, unknown>;
-};
+}
 
-export type SeedInspectRequest = {
+export interface SeedInspectRequest {
   // biome-ignore lint/style/useNamingConvention: api schema
   dataset_name: string;
   // biome-ignore lint/style/useNamingConvention: api schema
@@ -130,9 +130,9 @@ export type SeedInspectRequest = {
   split?: string;
   // biome-ignore lint/style/useNamingConvention: api schema
   preview_size?: number;
-};
+}
 
-export type SeedInspectUploadRequest = {
+export interface SeedInspectUploadRequest {
   filename?: string;
   // biome-ignore lint/style/useNamingConvention: api schema
   content_base64?: string;
@@ -150,9 +150,9 @@ export type SeedInspectUploadRequest = {
   unstructured_chunk_size?: number;
   // biome-ignore lint/style/useNamingConvention: api schema
   unstructured_chunk_overlap?: number;
-};
+}
 
-export type SeedInspectResponse = {
+export interface SeedInspectResponse {
   // biome-ignore lint/style/useNamingConvention: api schema
   dataset_name: string;
   // biome-ignore lint/style/useNamingConvention: api schema
@@ -166,39 +166,39 @@ export type SeedInspectResponse = {
   resolved_paths?: string[] | null;
   // biome-ignore lint/style/useNamingConvention: api schema
   total_rows?: number | null;
-};
+}
 
-export type ValidateError = {
+export interface ValidateError {
   message: string;
   path?: string | null;
   code?: string | null;
-};
+}
 
-export type ValidateResponse = {
+export interface ValidateResponse {
   valid: boolean;
   errors: ValidateError[];
   // biome-ignore lint/style/useNamingConvention: api schema
   raw_detail?: string | null;
-};
+}
 
-export type McpToolsListRequest = {
+export interface McpToolsListRequest {
   // biome-ignore lint/style/useNamingConvention: api schema
   mcp_providers: Record<string, unknown>[];
   // biome-ignore lint/style/useNamingConvention: api schema
   timeout_sec?: number;
-};
+}
 
-export type McpToolsProviderResult = {
+export interface McpToolsProviderResult {
   name: string;
   tools: string[];
   error?: string | null;
-};
+}
 
-export type McpToolsListResponse = {
+export interface McpToolsListResponse {
   providers: McpToolsProviderResult[];
   // biome-ignore lint/style/useNamingConvention: api schema
   duplicate_tools: Record<string, string[]>;
-};
+}
 
 async function parseErrorResponse(response: Response): Promise<string> {
   const text = (await response.text()).trim();
@@ -238,7 +238,7 @@ async function postJson<T>(path: string, payload: unknown): Promise<T> {
     throw new Error(await parseErrorResponse(response));
   }
 
-  return response.json();
+  return await response.json();
 }
 
 async function getJson<T>(path: string): Promise<T> {
@@ -246,7 +246,7 @@ async function getJson<T>(path: string): Promise<T> {
   if (!response.ok) {
     throw new Error(await parseErrorResponse(response));
   }
-  return response.json();
+  return await response.json();
 }
 
 function parseJobEvent(rawEvent: string): JobEvent | null {
@@ -292,25 +292,25 @@ function parseJobEvent(rawEvent: string): JobEvent | null {
 export async function validateRecipe(
   payload: unknown,
 ): Promise<ValidateResponse> {
-  return postJson<ValidateResponse>("/validate", payload);
+  return await postJson<ValidateResponse>("/validate", payload);
 }
 
 export async function createRecipeJob(
   payload: unknown,
 ): Promise<JobCreateResponse> {
-  return postJson<JobCreateResponse>("/jobs", payload);
+  return await postJson<JobCreateResponse>("/jobs", payload);
 }
 
 export async function getRecipeJobStatus(
   jobId: string,
 ): Promise<JobStatusResponse> {
-  return getJson<JobStatusResponse>(`/jobs/${jobId}/status`);
+  return await getJson<JobStatusResponse>(`/jobs/${jobId}/status`);
 }
 
 export async function getRecipeJobAnalysis(
   jobId: string,
 ): Promise<Record<string, unknown>> {
-  return getJson<Record<string, unknown>>(`/jobs/${jobId}/analysis`);
+  return await getJson<Record<string, unknown>>(`/jobs/${jobId}/analysis`);
 }
 
 export async function getRecipeJobDataset(
@@ -322,7 +322,7 @@ export async function getRecipeJobDataset(
 ): Promise<JobDatasetResponse> {
   const limit = options?.limit ?? 20;
   const offset = options?.offset ?? 0;
-  return getJson<JobDatasetResponse>(
+  return await getJson<JobDatasetResponse>(
     `/jobs/${jobId}/dataset?limit=${limit}&offset=${offset}`,
   );
 }
@@ -356,39 +356,39 @@ export async function downloadRecipeJobDataset(
 export async function cancelRecipeJob(
   jobId: string,
 ): Promise<JobStatusResponse> {
-  return postJson<JobStatusResponse>(`/jobs/${jobId}/cancel`, {});
+  return await postJson<JobStatusResponse>(`/jobs/${jobId}/cancel`, {});
 }
 
 export async function publishRecipeJob(
   jobId: string,
   payload: PublishRecipeJobRequest,
 ): Promise<PublishRecipeJobResponse> {
-  return postJson<PublishRecipeJobResponse>(`/jobs/${jobId}/publish`, payload);
+  return await postJson<PublishRecipeJobResponse>(`/jobs/${jobId}/publish`, payload);
 }
 
 export async function inspectSeedDataset(
   payload: SeedInspectRequest,
 ): Promise<SeedInspectResponse> {
-  return postJson<SeedInspectResponse>("/seed/inspect", payload);
+  return await postJson<SeedInspectResponse>("/seed/inspect", payload);
 }
 
 export async function inspectSeedUpload(
   payload: SeedInspectUploadRequest,
 ): Promise<SeedInspectResponse> {
-  return postJson<SeedInspectResponse>("/seed/inspect-upload", payload);
+  return await postJson<SeedInspectResponse>("/seed/inspect-upload", payload);
 }
 
 // biome-ignore lint/style/useNamingConvention: api schema
-export type GithubEnvTokenStatus = { has_token: boolean };
+export interface GithubEnvTokenStatus { has_token: boolean }
 
 export async function getGithubEnvTokenStatus(): Promise<GithubEnvTokenStatus> {
-  return getJson<GithubEnvTokenStatus>("/seed/github/env-token");
+  return await getJson<GithubEnvTokenStatus>("/seed/github/env-token");
 }
 
 export async function listMcpTools(
   payload: McpToolsListRequest,
 ): Promise<McpToolsListResponse> {
-  return postJson<McpToolsListResponse>("/mcp/tools", payload);
+  return await postJson<McpToolsListResponse>("/mcp/tools", payload);
 }
 
 export async function streamRecipeJobEvents(options: {
@@ -457,7 +457,7 @@ export async function streamRecipeJobEvents(options: {
   }
 }
 
-type UnstructuredFileUploadResponse = {
+interface UnstructuredFileUploadResponse {
   // biome-ignore lint/style/useNamingConvention: api schema
   file_id: string;
   filename: string;
@@ -465,7 +465,7 @@ type UnstructuredFileUploadResponse = {
   size_bytes: number;
   status: "ok" | "error";
   error?: string;
-};
+}
 
 /** A desktop drop, redeemed server-side so the bytes never cross the Tauri bridge. */
 export interface NativeUnstructuredUpload {
@@ -509,7 +509,7 @@ export async function uploadUnstructuredFile(
     throw new Error(await readFastApiError(res, "Upload failed"));
   }
 
-  return res.json();
+  return await res.json();
 }
 
 export async function removeUnstructuredFile(

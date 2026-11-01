@@ -55,7 +55,7 @@ export function shouldReconcileOrdinaryStoredAssistant(options: {
     return false;
   }
 
-  const storedMeta = (stored.metadata ?? {}) as Record<string, unknown>;
+  const storedMeta = (stored.metadata ?? {});
   const storedRunId = storedMeta.generationRunId;
   if (typeof storedRunId === "string") {
     if (isLiveGenerationRun(storedRunId)) {
@@ -116,7 +116,7 @@ export function reconcileOrdinarySavedMessagesInExport(
       ...item,
       message: {
         ...item.message,
-        content: imported as ThreadMessage["content"],
+        content: imported,
         status,
       } as ThreadMessage,
     };
@@ -125,15 +125,15 @@ export function reconcileOrdinarySavedMessagesInExport(
   return { messages, changed };
 }
 
-type ThreadImportExport = {
+interface ThreadImportExport {
   export: () => ExportedMessageRepository;
   import: (data: ExportedMessageRepository) => void;
-};
+}
 
-type ReconcileView = {
+interface ReconcileView {
   threadListItem: () => { getState: () => { remoteId?: string | null } };
   thread: () => ThreadImportExport;
-};
+}
 
 export function reconcileOrdinarySavedMessagesInView(
   view: ReconcileView,

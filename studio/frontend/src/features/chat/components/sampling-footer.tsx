@@ -22,13 +22,13 @@ import type { InferenceParams } from "../types/runtime";
 import type { resolveQwenThinkingParams } from "../utils/qwen-sampling-table";
 
 // Passed in: importing them here splits shared modules out of the startup bundle.
-type Deps = {
+interface Deps {
   store: typeof useChatRuntimeStore;
   notify: typeof toast;
   Checkbox: typeof Checkbox;
   defaults: InferenceParams;
   qwenThinking: typeof resolveQwenThinkingParams;
-};
+}
 
 const DEFAULTS_URL = "/api/settings/model-sampling-defaults";
 
@@ -105,7 +105,7 @@ export default function SamplingFooter({
           setLoaded(true);
         }
       });
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [modelId]);
 
   const run = (action: () => Promise<void>) => {
@@ -114,14 +114,14 @@ export default function SamplingFooter({
       .catch((error: unknown) => {
         notify.error(error instanceof Error ? error.message : String(error));
       })
-      .finally(() => setBusy(false));
+      .finally(() => { setBusy(false); });
   };
 
   // A reply that lands after a model switch belongs to the previous model.
   const stillOn = () => store.getState().params.checkpoint === modelId;
 
   const save = () =>
-    run(async () => {
+    { run(async () => {
       const snapshot = store.getState().params;
       const sampling = samplingPayload(snapshot);
       await writeSavedSampling(modelId, sampling);
@@ -146,19 +146,19 @@ export default function SamplingFooter({
         store.getState().setRememberedParamsForModel(modelId, remembered);
       }
       notify.success("Sampling saved for this model.");
-    });
+    }); };
 
   const forget = () =>
-    run(async () => {
+    { run(async () => {
       await writeSavedSampling(modelId, null);
       if (stillOn()) {
         setSaved(null);
       }
       notify.success("Saved sampling forgotten for this model.");
-    });
+    }); };
 
   const reset = () =>
-    run(async () => {
+    { run(async () => {
       const res = await authFetch(
         `/api/inference/status?${new URLSearchParams({ model: modelId })}`,
       );
@@ -185,12 +185,12 @@ export default function SamplingFooter({
       state.setParams({
         ...state.params,
         ...recommendedSampling(
-          status.inference as Record<string, unknown> | undefined,
+          status.inference,
           defaults,
         ),
         ...qwen,
       });
-    });
+    }); };
 
   const status = samplingSaveStatus(remember, saved, current);
   const unchanged = saved !== null && sameSampling(saved, current);
@@ -205,7 +205,7 @@ export default function SamplingFooter({
             aria-describedby={statusId}
             checked={remember}
             disabled={!loaded}
-            onCheckedChange={(checked) => setRemember(checked === true)}
+            onCheckedChange={(checked) => { setRemember(checked === true); }}
           />
           <label
             htmlFor={rememberId}

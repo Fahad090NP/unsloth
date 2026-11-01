@@ -42,32 +42,32 @@ export async function prepareSetupWindow(options: {
   return isCurrent();
 }
 
-type WorkAreaMonitor = {
+interface WorkAreaMonitor {
   scaleFactor: number;
   workArea: {
     size: {
       toLogical: (scaleFactor: number) => LogicalWindowSize;
     };
   };
-};
+}
 
-type PhysicalWindowSize = {
+interface PhysicalWindowSize {
   width: number;
   height: number;
-};
+}
 
-export type MeasuredWindowLayout<Monitor extends WorkAreaMonitor> = {
+export interface MeasuredWindowLayout<Monitor extends WorkAreaMonitor> {
   bounds: WindowSizeBounds;
   monitor: Monitor | null;
   frameSize: PhysicalWindowSize;
-};
+}
 
-type WindowMonitorReader<Monitor extends WorkAreaMonitor> = {
+interface WindowMonitorReader<Monitor extends WorkAreaMonitor> {
   currentMonitor: () => Promise<Monitor | null>;
   primaryMonitor: () => Promise<Monitor | null>;
   innerSize?: () => Promise<PhysicalWindowSize>;
   outerSize?: () => Promise<PhysicalWindowSize>;
-};
+}
 
 /**
  * Size bounds the window has to stay within on its current monitor.
@@ -127,15 +127,15 @@ export function shouldFinishWindowLayoutWait(
   return sawNativeChange;
 }
 
-type ResolutionQuery = {
+interface ResolutionQuery {
   addEventListener: (type: "change", listener: () => void) => void;
   removeEventListener: (type: "change", listener: () => void) => void;
-};
+}
 
-export type PixelRatioSource = {
+export interface PixelRatioSource {
   devicePixelRatio: () => number;
   matchResolution: (dppx: number) => ResolutionQuery | null;
-};
+}
 
 /** No event for DPR changes, so a matchMedia query for the current ratio stands in. */
 export function observeDevicePixelRatio(
@@ -160,7 +160,7 @@ export function observeDevicePixelRatio(
     query = null;
   };
 }
-type FinalizeAppWindowLayoutOptions<Monitor extends WorkAreaMonitor> = {
+interface FinalizeAppWindowLayoutOptions<Monitor extends WorkAreaMonitor> {
   restored: boolean;
   nativeRestored?: boolean;
   measured: MeasuredWindowLayout<Monitor>;
@@ -170,7 +170,7 @@ type FinalizeAppWindowLayoutOptions<Monitor extends WorkAreaMonitor> = {
   setMinimumConstraints: (minimum: LogicalWindowSize) => Promise<void>;
   enforceBounds: (bounds: WindowSizeBounds) => Promise<void>;
   isCurrent: WindowLayoutGuard;
-};
+}
 
 export async function finalizeAppWindowLayout<Monitor extends WorkAreaMonitor>({
   restored,
@@ -209,17 +209,17 @@ export async function finalizeAppWindowLayout<Monitor extends WorkAreaMonitor>({
   );
 }
 
-type MinimumSizeWindow = {
+interface MinimumSizeWindow {
   isRestored: () => Promise<boolean>;
   onResized: (handler: () => void) => Promise<() => void>;
   applyFloor: (minimum: LogicalWindowSize) => Promise<void>;
-};
+}
 
-export type MinimumSizeApplier = {
+export interface MinimumSizeApplier {
   apply: (minimum: LogicalWindowSize) => Promise<void>;
   /** Drops a floor still waiting, e.g. before setup clears the constraints. */
   cancel: () => void;
-};
+}
 
 /**
  * tao applies a size floor by resizing the window to its own inner size, which drops
@@ -236,7 +236,7 @@ export function createMinimumSizeApplier(
   const stopListening = () => {
     const unlisten = listening;
     listening = null;
-    unlisten?.then((stop) => stop()).catch(() => undefined);
+    unlisten?.then((stop) => { stop(); }).catch(() => undefined);
   };
 
   const flush = async () => {

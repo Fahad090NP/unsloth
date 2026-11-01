@@ -25,10 +25,10 @@ import { CollapsibleSectionTriggerButton } from "../shared/collapsible-section-t
 import { FieldLabel } from "../shared/field-label";
 import { NameField } from "../shared/name-field";
 
-type ModelProviderDialogProps = {
+interface ModelProviderDialogProps {
   config: ModelProviderConfig;
   onUpdate: (patch: Partial<ModelProviderConfig>) => void;
-};
+}
 
 export function ModelProviderDialog({
   config,
@@ -45,7 +45,7 @@ export function ModelProviderDialog({
   const providerType =
     normalizeModelProviderType(config.provider_type) || "openai";
   const providerTypeOptions = useMemo<
-    Array<{ value: string; label: string }>
+    { value: string; label: string }[]
   >(() => {
     if (
       MODEL_PROVIDER_TYPE_OPTIONS.some(
@@ -63,7 +63,7 @@ export function ModelProviderDialog({
     key: K,
     value: ModelProviderConfig[K],
   ) => {
-    onUpdate({ [key]: value } as Partial<ModelProviderConfig>);
+    onUpdate({ [key]: value });
   };
 
   return (
@@ -71,7 +71,7 @@ export function ModelProviderDialog({
       <NameField
         label="Connection name"
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
 
       <div className="grid gap-1.5">
@@ -85,14 +85,14 @@ export function ModelProviderDialog({
                 : "border-border/60 bg-muted/10 hover:border-border"
             }`}
             onClick={() =>
-              onUpdate({
+              { onUpdate({
                 is_local: true,
                 endpoint: "",
                 api_key: "",
                 api_key_env: "",
                 extra_headers: "",
                 extra_body: "",
-              })
+              }); }
             }
           >
             <p className="text-sm font-semibold text-foreground">Local model</p>
@@ -107,7 +107,7 @@ export function ModelProviderDialog({
                 ? "border-ring-strong bg-wash-5"
                 : "border-border/60 bg-muted/10 hover:border-border"
             }`}
-            onClick={() => onUpdate({ is_local: false })}
+            onClick={() => { onUpdate({ is_local: false }); }}
           >
             <p className="text-sm font-semibold text-foreground">
               External endpoint
@@ -148,7 +148,7 @@ export function ModelProviderDialog({
               className="nodrag"
               placeholder="https://..."
               value={config.endpoint}
-              onChange={(event) => updateField("endpoint", event.target.value)}
+              onChange={(event) => { updateField("endpoint", event.target.value); }}
             />
           </div>
           <div className="grid gap-1.5">
@@ -159,7 +159,7 @@ export function ModelProviderDialog({
             />
             <Select
               value={providerType}
-              onValueChange={(value) => updateField("provider_type", value)}
+              onValueChange={(value) => { updateField("provider_type", value); }}
             >
               <SelectTrigger id={providerTypeId} className="nodrag">
                 <SelectValue />
@@ -184,7 +184,7 @@ export function ModelProviderDialog({
               className="nodrag"
               data-reload-snapshot-sensitive
               value={config.api_key ?? ""}
-              onChange={(event) => updateField("api_key", event.target.value)}
+              onChange={(event) => { updateField("api_key", event.target.value); }}
             />
           </div>
           <Collapsible open={optionalOpen} onOpenChange={setOptionalOpen}>
@@ -207,7 +207,7 @@ export function ModelProviderDialog({
                   placeholder="OPENAI_API_KEY"
                   value={config.api_key_env ?? ""}
                   onChange={(event) =>
-                    updateField("api_key_env", event.target.value)
+                    { updateField("api_key_env", event.target.value); }
                   }
                 />
               </div>
@@ -224,7 +224,7 @@ export function ModelProviderDialog({
                   placeholder='{"X-Header": "value"}'
                   value={config.extra_headers ?? ""}
                   onChange={(event) =>
-                    updateField("extra_headers", event.target.value)
+                    { updateField("extra_headers", event.target.value); }
                   }
                 />
               </div>
@@ -241,7 +241,7 @@ export function ModelProviderDialog({
                   placeholder='{"key": "value"}'
                   value={config.extra_body ?? ""}
                   onChange={(event) =>
-                    updateField("extra_body", event.target.value)
+                    { updateField("extra_body", event.target.value); }
                   }
                 />
               </div>

@@ -11,21 +11,21 @@ export type KeylessApiAccessExposure =
   | "private_lan"
   | "network";
 
-export type KeylessApiAccessSettings = {
+export interface KeylessApiAccessSettings {
   scope: KeylessApiAccessScope;
   tools: boolean;
   exposure: KeylessApiAccessExposure | null;
   /** a managed account turns keyless off install-wide, whatever scope is saved */
   suspendedByAccounts: boolean;
-};
+}
 
-type ApiKeylessApiAccessSettings = {
+interface ApiKeylessApiAccessSettings {
   scope: KeylessApiAccessScope;
   tools: boolean;
   exposure?: KeylessApiAccessExposure | null;
   // biome-ignore lint/style/useNamingConvention: API schema
   suspended_by_accounts?: boolean | null;
-};
+}
 
 function fromApi(
   settings: ApiKeylessApiAccessSettings,

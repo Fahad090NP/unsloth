@@ -261,7 +261,7 @@ export function withJpegExif(jpeg: Bytes, meta: EmbeddedRecipe): Bytes {
     at = end;
   }
   const head = jpeg.subarray(0, 2);
-  const app0 = insertAt > 2 ? [kept.shift() as Uint8Array] : [];
+  const app0 = insertAt > 2 ? [kept.shift()!] : [];
   if (!tiff) {
     return concat([head, ...app0, ...kept, jpeg.subarray(at)]);
   }
@@ -520,8 +520,8 @@ function jsonEnd(line: string, at: number): number {
 
 /** `Key: value, ...` pairs of AUTOMATIC1111's settings line (`re_param`, modules/infotext_utils.py:16):
  *  a quoted value is unquoted and may hold commas (`Lora hashes: "a: 1, b: 2"`); so may a JSON value. */
-export function a1111Fields(line: string): Array<[string, string]> {
-  const out: Array<[string, string]> = [];
+export function a1111Fields(line: string): [string, string][] {
+  const out: [string, string][] = [];
   let i = 0;
   while (i < line.length) {
     while (i < line.length && (line[i] === "," || /\s/.test(line[i]))) i++;
@@ -670,7 +670,7 @@ const SETTINGS_KEYS = new Set([
 // a known key is also required here, so a prompt line like "style: a, mood: b, light: c" stays a prompt.
 function isSettingsLine(
   line: string,
-  fields: Array<[string, string]>,
+  fields: [string, string][],
 ): boolean {
   return (
     /(^|,\s*)Steps:\s*\d+/.test(line) ||
@@ -706,7 +706,7 @@ export function isGenerationParametersPaste(text: string): boolean {
 /** The unescaped A1111 attention groups in `text`: `(x)`, `(x:1.2)`, `[x]`; `\(` and `\[` are literal. */
 export function promptEmphasisGroups(text: string): string[] {
   const groups: string[] = [];
-  const open: Array<{ ch: string; at: number }> = [];
+  const open: { ch: string; at: number }[] = [];
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
     if (ch === "\\") {

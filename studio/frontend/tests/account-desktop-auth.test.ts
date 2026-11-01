@@ -7,19 +7,19 @@ import ts from "@typescript/typescript6";
 import test from "node:test";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type AutoAuth = {
+interface AutoAuth {
   tauriAutoAuth(options?: { force?: boolean }): Promise<boolean>;
   isTauriLoginRequired(): boolean;
   getTauriAuthFailure(): string | null;
   markDesktopSignedOut(): Promise<void>;
   continueAsDesktopOwner(): Promise<boolean>;
-};
+}
 
-type Guards = {
+interface Guards {
   requireAuth(): Promise<void>;
   requireGuest(): Promise<void>;
   requirePasswordChangeFlow(): Promise<void>;
-};
+}
 
 function fixture(
   t: { after(fn: () => void): void },
@@ -61,8 +61,8 @@ function fixture(
   } = { initialized: true, requires_password_change: false, login_mode: "single" };
   const navigations: unknown[] = [];
   const session = {
-    hasAuthToken: () => !!access,
-    hasRefreshToken: () => !!refresh,
+    hasAuthToken: () => Boolean(access),
+    hasRefreshToken: () => Boolean(refresh),
     mustChangePassword: () => passwordChange,
     setMustChangePassword: (value: boolean) => { passwordChange = value; },
     storeAuthTokens: (a: string, r: string) => { access = a; refresh = r; },
@@ -433,7 +433,7 @@ function sidebarSignOut(scope: Record<string, unknown>): () => Promise<void> {
   return new Function(...Object.keys(scope), outputText)(...Object.values(scope));
 }
 
-type SignOutCase = { tauri: boolean; owner: boolean; status?: unknown; offline?: boolean; markerFails?: boolean };
+interface SignOutCase { tauri: boolean; owner: boolean; status?: unknown; offline?: boolean; markerFails?: boolean }
 async function runSignOut({ tauri, owner, status, offline, markerFails }: SignOutCase): Promise<string[]> {
   const events: string[] = [];
   await sidebarSignOut({

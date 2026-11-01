@@ -26,11 +26,11 @@ interface HistoricalTrainingViewProps {
   onResumeStarted?: () => void;
 }
 
-type HistoricalRunResult = {
+interface HistoricalRunResult {
   runId: string;
   detail: TrainingRunDetailResponse | null;
   error: string | null;
-};
+}
 
 function mapToViewData(
   detail: TrainingRunDetailResponse,

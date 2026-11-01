@@ -13,12 +13,12 @@ import {
   resolveSavedBranchHead,
 } from "../src/features/chat/utils/message-order.ts";
 
-type Row = {
+interface Row {
   id: string;
   parentId: string | null;
   createdAt: number;
   role: string;
-};
+}
 
 // edited user messages can be stored after replies, so createdAt alone orders replies first.
 const ANOMALOUS = [

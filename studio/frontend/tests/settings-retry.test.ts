@@ -129,7 +129,7 @@ test("retrying is bounded: each round strictly shrinks the patch", () => {
   const rounds: number[] = [];
   for (const field of ["a", "b", "c"]) {
     const result = retryablePatchAfterFailure(patch, extraForbidden(field));
-    patch = result.patch as Record<string, unknown>;
+    patch = result.patch;
     rounds.push(Object.keys(patch).length);
   }
   assert.deepEqual(rounds, [3, 2, 1]);

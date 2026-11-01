@@ -147,7 +147,7 @@ test("pptx: tables capped, SmartArt read, pictures as Blobs", () => {
     "ppt/media/image1.png": new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1]),
     "ppt/media/clip.mp4": new Uint8Array(8),
   });
-  const [table, diagram, image] = readPptx(declareHuge(zip, "ppt/media/clip.mp4")).slides[0]!.boxes;
+  const [table, diagram, image] = readPptx(declareHuge(zip, "ppt/media/clip.mp4")).slides[0].boxes;
   assert.equal(image?.image?.type, "image/png");
   assert.deepEqual(image?.crop, { l: 0.25, t: 0, r: 0, b: -0.1 });
   assert.equal(table?.table?.length, 501);
@@ -233,7 +233,7 @@ test("pptx: maxSlides stops reading after that many slides", () => {
   const first = readPptx(zip, { maxSlides: 1 });
   assert.equal(first.slides.length, 1);
   assert.equal(first.truncated, true);
-  assert.equal(first.slides[0]!.boxes[0]?.paragraphs?.[0]?.text, "one");
+  assert.equal(first.slides[0].boxes[0]?.paragraphs?.[0]?.text, "one");
 });
 
 test("sheet limits cap rows, columns and parsed sheets", () => {
@@ -251,13 +251,13 @@ test("sheet limits cap rows, columns and parsed sheets", () => {
     "xl/worksheets/sheet2.xml": sheet,
   });
   const full = readXlsx(zip);
-  assert.deepEqual([full.length, full[1]!.rows.length], [2, 10]);
+  assert.deepEqual([full.length, full[1].rows.length], [2, 10]);
   const [first, second] = readXlsx(zip, { sheets: 1, rows: 3, columns: 2, extraNames: 1 });
   assert.equal(readXlsx(zip, { sheets: 1, rows: 3, columns: 2, extraNames: 0 }).length, 1);
-  assert.equal(first!.rows.length, 3);
-  assert.ok(first!.rows.every((row) => row.length <= 2));
-  assert.equal(first!.truncated, true);
-  assert.deepEqual([second!.name, second!.rows.length], ["Two", 0]);
+  assert.equal(first.rows.length, 3);
+  assert.ok(first.rows.every((row) => row.length <= 2));
+  assert.equal(first.truncated, true);
+  assert.deepEqual([second.name, second.rows.length], ["Two", 0]);
 
   const csv = readDelimited("a,b,c\n1,2,3\n4,5,6\n7,8,9\n", ",", "x.csv", { sheets: 1, rows: 2, columns: 2 });
   assert.deepEqual(csv.rows.map((row) => row.map((cell) => cell?.text)), [["a", "b"], ["1", "2"]]);

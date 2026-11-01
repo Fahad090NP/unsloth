@@ -21,9 +21,9 @@ const NOTICE =
 const FROM_STATUS_ON_MODEL_CHANGE =
   /if \(hydratingExistingModel\) \{\s*showLoadWarning\(status\.memory_warning\);/;
 
-type ChatApi = {
+interface ChatApi {
   loadModel: (payload: Record<string, unknown>) => Promise<Record<string, unknown>>;
-};
+}
 
 function chatApi(body: Record<string, unknown>) {
   const shown: (string | null | undefined)[] = [];
@@ -77,7 +77,7 @@ function chatApi(body: Record<string, unknown>) {
           _runtime: string,
           _path: string | null,
           run: () => Promise<unknown>,
-        ) => run(),
+        ) => await run(),
       },
     },
   );

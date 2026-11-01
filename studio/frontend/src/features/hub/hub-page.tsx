@@ -318,7 +318,7 @@ function writeInventorySortPreference(sort: InventorySort): void {
   try {
     window.localStorage.setItem(INVENTORY_SORT_STORAGE_KEY, sort);
   } catch {
-    return;
+    
   }
 }
 
@@ -329,7 +329,7 @@ function writeAllModelsViewPreference(view: AllModelsView): void {
   try {
     window.localStorage.setItem(ALL_MODELS_VIEW_STORAGE_KEY, view);
   } catch {
-    return;
+    
   }
 }
 
@@ -1458,7 +1458,7 @@ export function ModelsPage() {
     controller: AbortController;
   } | null>(null);
   useEffect(() => {
-    return () => runConfigOpenCoordinator.cancel();
+    return () => { runConfigOpenCoordinator.cancel(); };
   }, [runConfigOpenCoordinator, selectedId]);
 
   const handleSelect = useCallback(
@@ -1525,7 +1525,7 @@ export function ModelsPage() {
         setUploaderPick(null);
       }
       // Clearing the split view's auto-picked preview only re-picks it: 2 navigations per key (#15221).
-      const openedModel = !!urlModel && urlModel !== autoPreviewIdRef.current;
+      const openedModel = Boolean(urlModel) && urlModel !== autoPreviewIdRef.current;
       if (openedModel || urlSection) {
         void navigate({
           to: "/hub",
@@ -1632,12 +1632,12 @@ export function ModelsPage() {
     setFirstPickArmed(true);
   }, [isModelDiscover, sectionChannelId, urlCapability]);
   const handleManageLocalFolders = useCallback(
-    () => setFoldersDialogOpen(true),
+    () => { setFoldersDialogOpen(true); },
     [],
   );
-  const handleFreeUpSpace = useCallback(() => setFreeUpSpaceOpen(true), []);
+  const handleFreeUpSpace = useCallback(() => { setFreeUpSpaceOpen(true); }, []);
   const handleSwitchDevice = useCallback(
-    () => handleTabChange("downloaded"),
+    () => { handleTabChange("downloaded"); },
     [handleTabChange],
   );
 
@@ -1726,7 +1726,7 @@ export function ModelsPage() {
 
   const handleRunNpu = useCallback(
     (model: NpuModel) =>
-      openRunSettingsInChat({
+      { openRunSettingsInChat({
         requestId: createModelConfigHandoffRequestId(),
         id: model.model_path,
         displayName: model.id,
@@ -1737,7 +1737,7 @@ export function ModelsPage() {
           isVision: model.supports_vision,
           contextLength: model.max_context_length,
         },
-      }),
+      }); },
     [openRunSettingsInChat],
   );
 
@@ -2141,7 +2141,7 @@ export function ModelsPage() {
           onFitOnDeviceOnlyChange={setFitOnDeviceOnly}
           onManageLocalFolders={handleManageLocalFolders}
           onFreeUpSpace={handleFreeUpSpace}
-          onOpenFineTune={() => handleOpenList("finetune")}
+          onOpenFineTune={() => { handleOpenList("finetune"); }}
           npuAvailable={npuSource !== undefined}
           inventorySort={inventorySort}
           onInventorySortChange={setInventorySort}

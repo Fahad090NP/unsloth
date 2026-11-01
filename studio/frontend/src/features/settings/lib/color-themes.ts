@@ -53,18 +53,18 @@ export const COLOR_THEME_IDS = [
 
 export type ColorThemeId = (typeof COLOR_THEME_IDS)[number];
 
-export type ThemeModeColors = {
+export interface ThemeModeColors {
   accent: string;
   background: string;
   foreground: string;
   surface?: string;
-};
+}
 
-type ColorThemeMeta = {
+interface ColorThemeMeta {
   name?: string;
   light: ThemeModeColors;
   dark: ThemeModeColors;
-};
+}
 
 export const COLOR_THEMES: Record<ColorThemeId, ColorThemeMeta> = {
   standard: {

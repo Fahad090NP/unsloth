@@ -111,7 +111,7 @@ function SourceTabs({
               .item(next)
               ?.focus();
           }}
-          onClick={() => onValueChange(tab.value as SourceTab)}
+          onClick={() => { onValueChange(tab.value as SourceTab); }}
           className={cn(
             "flex h-7 shrink-0 items-center rounded-full px-2.5 text-ui-12p5 text-foreground/80 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
             value === tab.value &&
@@ -218,7 +218,7 @@ export function AudioSourceInput({
       void registerNativeAttachmentPath(path)
         .then(nativeAttachmentIntentToFile)
         .then((file) => source.pickFile(file))
-        .catch(() => source.fail("Could not read the dropped file."));
+        .catch(() => { source.fail("Could not read the dropped file."); });
     },
   });
 
@@ -448,9 +448,9 @@ export function AudioSourceInput({
                 variant={recording ? "destructive" : "outline"}
                 disabled={disabled}
                 onClick={() =>
-                  recording
+                  { recording
                     ? source.stopRecording()
-                    : void source.startRecording()
+                    : void source.startRecording(); }
                 }
               >
                 {recording ? (
@@ -490,7 +490,7 @@ export function AudioSourceInput({
                       type="button"
                       disabled={disabled}
                       onClick={() =>
-                        onChange(clipReference({ ...clip, workflow: clipWorkflow(clip) }))
+                        { onChange(clipReference({ ...clip, workflow: clipWorkflow(clip) })); }
                       }
                       className="flex w-full min-w-0 items-center gap-2 rounded-full px-3 py-1.5 text-left text-ui-13 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
@@ -510,14 +510,14 @@ export function AudioSourceInput({
             <VoicePicker
               disabled={disabled}
               onSelect={(voice) =>
-                onChange({
+                { onChange({
                   kind: "voice",
                   id: voice.id,
                   name: voice.name,
                   durationS: voice.duration_s,
                   transcript: voice.transcript,
                   language: voice.language,
-                })
+                }); }
               }
             />
           ) : null}

@@ -50,7 +50,7 @@ function useVisible(element: HTMLElement | null): boolean {
       if (entry) setVisible(entry.isIntersecting);
     });
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [element]);
   return visible;
 }
@@ -59,11 +59,11 @@ function useSize(element: HTMLElement | null): { width: number; height: number }
   const [size, setSize] = useState({ width: 0, height: 0 });
   useLayoutEffect(() => {
     if (!element) return;
-    const measure = () => setSize({ width: element.clientWidth, height: element.clientHeight });
+    const measure = () => { setSize({ width: element.clientWidth, height: element.clientHeight }); };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [element]);
   return size;
 }

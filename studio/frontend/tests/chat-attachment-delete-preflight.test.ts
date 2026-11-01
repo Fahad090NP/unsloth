@@ -9,9 +9,9 @@ import test from "node:test";
 import { readSrc } from "./helpers/kit.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Events = {
+interface Events {
   prepareChatAttachmentDeletion: (attachmentId: string) => Promise<void>;
-};
+}
 
 const HASHED_ID = "content-part-sha256-ab";
 

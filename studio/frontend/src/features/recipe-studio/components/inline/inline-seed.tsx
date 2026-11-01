@@ -13,10 +13,10 @@ import type { SeedConfig } from "../../types";
 import { HfDatasetCombobox } from "../shared/hf-dataset-combobox";
 import { InlineField } from "./inline-field";
 
-type InlineSeedProps = {
+interface InlineSeedProps {
   config: SeedConfig;
   onUpdate: (patch: Partial<SeedConfig>) => void;
-};
+}
 
 const GITHUB_REPO_LIST_SPLIT_RE = /[\n,]+/;
 
@@ -95,13 +95,13 @@ export function InlineSeed({
             value={config.hf_repo_id}
             accessToken={config.hf_token?.trim() || undefined}
             onValueChange={(next) =>
-              onUpdate({
+              { onUpdate({
                 hf_repo_id: next,
                 hf_path: "",
                 seed_columns: [],
                 seed_drop_columns: [],
                 seed_preview_rows: [],
-              })
+              }); }
             }
             placeholder="org/repo"
           />

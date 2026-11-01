@@ -132,7 +132,7 @@ export const usePinnedConnectedModelsStore = create<PinnedConnectedModelsState>(
   (set) => ({
     pinned: readPinned(),
     togglePinnedConnected: (modelId) =>
-      set((state) => {
+      { set((state) => {
         // Apply the edit to the record: rewriting this window's array would drop a newer peer pin.
         const base = persistedBase(state.pinned);
         // Direction from the rendered row, else an unpin could become a pin.
@@ -141,9 +141,9 @@ export const usePinnedConnectedModelsStore = create<PinnedConnectedModelsState>(
         const next = unpinning ? without : [modelId, ...without];
         writePinned(next, unpinning ? null : modelId);
         return { pinned: next };
-      }),
+      }); },
     movePinnedConnected: (fromId, toId) =>
-      set((state) => {
+      { set((state) => {
         const from = state.pinned.indexOf(fromId);
         const to = state.pinned.indexOf(toId);
         if (from < 0 || to < 0 || from === to) return state;
@@ -151,14 +151,14 @@ export const usePinnedConnectedModelsStore = create<PinnedConnectedModelsState>(
         next.splice(to, 0, ...next.splice(from, 1));
         if (dragSnapshot === null) writePinned(next);
         return { pinned: next };
-      }),
+      }); },
     beginPinnedConnectedDrag: () =>
-      set((state) => {
+      { set((state) => {
         dragSnapshot = [...state.pinned];
         return state;
-      }),
+      }); },
     endPinnedConnectedDrag: (commit) =>
-      set((state) => {
+      { set((state) => {
         const snapshot = dragSnapshot;
         dragSnapshot = null;
         if (snapshot === null) return state;
@@ -173,7 +173,7 @@ export const usePinnedConnectedModelsStore = create<PinnedConnectedModelsState>(
         }
         if (sameOrder(base, state.pinned)) return state;
         return { pinned: base };
-      }),
+      }); },
   }),
 );
 

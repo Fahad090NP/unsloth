@@ -107,11 +107,11 @@ const recordCall = findNode(
 const recordGuard = recordCall.parent.parent.parent;
 assert.ok(ts.isIfStatement(recordGuard));
 type Selection = ModelSelectorChangeMeta & { id: string };
-type RememberedModel = {
+interface RememberedModel {
   id: string;
   kind: "gguf" | "model";
   ggufVariant: string | null;
-};
+}
 const finishLoad = new Function(
   "selection",
   "loadResponse",

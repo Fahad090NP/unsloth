@@ -29,7 +29,7 @@ import {
   toExecutionLogLine,
 } from "./runtime";
 
-type TrackRecipeExecutionParams = {
+interface TrackRecipeExecutionParams {
   label: string;
   kind: RecipeExecutionKind;
   rows: number;
@@ -39,12 +39,12 @@ type TrackRecipeExecutionParams = {
   onUpsert: (record: RecipeExecutionRecord) => void;
   onSetPreviewErrors: (errors: string[]) => void;
   onPreviewSuccess?: () => void;
-};
+}
 
-export type TrackRecipeExecutionResult = {
+export interface TrackRecipeExecutionResult {
   success: boolean;
   terminal: boolean;
-};
+}
 
 function isTerminalStatus(status: RecipeExecutionStatus): boolean {
   return status === "completed" || status === "error" || status === "cancelled";

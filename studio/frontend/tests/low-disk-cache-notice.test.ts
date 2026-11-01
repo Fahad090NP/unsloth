@@ -165,7 +165,7 @@ test("a download asks the disk on the way past", () => {
   );
   assert.match(funnel, /import \{ checkDiskSpace \}/);
   // void, not await: a disk reading must never delay a download.
-  assert.match(funnel, /\n  void checkDiskSpace\(\);/);
+  assert.match(funnel, /\n {2}void checkDiskSpace\(\);/);
 
   const check = readFileSync(
     new URL("../src/features/settings/low-disk-check.ts", import.meta.url),
@@ -249,7 +249,7 @@ test("a training run asks the disk on both sides of the worker's download", () =
   assert.match(watch, /void checkDiskSpace\(\{ force: true \}\);/);
   const cleanup = watch.slice(watch.indexOf("return () => {"));
   assert.ok(
-    cleanup.indexOf("void checkDiskSpace({ force: true })") !== -1,
+    cleanup.includes("void checkDiskSpace({ force: true })"),
     "the post-run reading must be in the watch cleanup, not on every tick",
   );
   assert.doesNotMatch(watch, /await checkDiskSpace/);
@@ -334,7 +334,7 @@ test("the download that used the space is the one that reports it", () => {
   const finalize = loop.slice(loop.indexOf("export function finalize"));
   const body = finalize.slice(0, finalize.indexOf("\nexport "));
   // Forced, or the throttle returns the stale pre-download reading.
-  assert.match(body, /\n  void checkDiskSpace\(\{ force: true \}\);/);
+  assert.match(body, /\n {2}void checkDiskSpace\(\{ force: true \}\);/);
   assert.ok(
     body.indexOf("TERMINAL_DISPLAY_STATES") < body.indexOf("void checkDiskSpace("),
     "the reading has to sit after the already-terminal guard, or a job that has already "

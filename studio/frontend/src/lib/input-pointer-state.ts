@@ -13,7 +13,7 @@ export function createInputPointerState(target: Window, document: Document): {
 
   const listen = (node: EventTarget, type: string, listener: EventListener): void => {
     node.addEventListener(type, listener, { capture: true, passive: true });
-    cleanups.push(() => node.removeEventListener(type, listener, { capture: true }));
+    cleanups.push(() => { node.removeEventListener(type, listener, { capture: true }); });
   };
   const release = (): void => {
     pointers.clear();

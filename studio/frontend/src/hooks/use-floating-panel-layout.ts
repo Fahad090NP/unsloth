@@ -377,7 +377,7 @@ export function useFloatingPanelLayout(
 
   function updateDrag(event: PointerEvent<HTMLDivElement>) {
     const session = dragSessionRef.current;
-    if (!session || session.pointerId !== event.pointerId) {
+    if (session?.pointerId !== event.pointerId) {
       return;
     }
 

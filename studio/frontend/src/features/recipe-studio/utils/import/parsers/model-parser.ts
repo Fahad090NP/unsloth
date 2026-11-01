@@ -39,7 +39,7 @@ export function parseModelConfig(
   id: string,
 ): ModelConfig {
   const inference = isRecord(model.inference_parameters)
-    ? (model.inference_parameters as Record<string, unknown>)
+    ? (model.inference_parameters)
     : {};
   return {
     id,

@@ -53,7 +53,7 @@ export interface CompactionMarker {
 
 /** A fit that recalled already emitted its `search_conversation`, which belongs after the cut. */
 export function compactionAnchorToolCallId(
-  toolCalls: ReadonlyArray<{ toolCallId?: unknown; toolName?: unknown }>,
+  toolCalls: readonly { toolCallId?: unknown; toolName?: unknown }[],
   truncation: ContextTruncation,
 ): string | null {
   let end = toolCalls.length;
@@ -86,7 +86,7 @@ export function appendCompactionMarker(
 }
 
 function nonNegativeInt(value: number | undefined): number {
-  return Number.isFinite(value) ? Math.max(0, Math.trunc(value as number)) : 0;
+  return Number.isFinite(value) ? Math.max(0, Math.trunc(value!)) : 0;
 }
 
 export function latestTurnOwnTokens(

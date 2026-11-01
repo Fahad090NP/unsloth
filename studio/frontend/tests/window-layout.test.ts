@@ -104,12 +104,12 @@ test("lets a window stay squeezed to a companion width", () => {
 });
 
 function pixelRatioHarness(initial: number) {
-  const queries: { dppx: number; listeners: Array<() => void> }[] = [];
+  const queries: { dppx: number; listeners: (() => void)[] }[] = [];
   let ratio = initial;
   const source = {
     devicePixelRatio: () => ratio,
     matchResolution: (dppx: number) => {
-      const entry = { dppx, listeners: [] as Array<() => void> };
+      const entry = { dppx, listeners: [] as (() => void)[] };
       queries.push(entry);
       return {
         addEventListener: (_type: "change", listener: () => void) => {

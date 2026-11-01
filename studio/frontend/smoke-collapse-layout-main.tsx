@@ -125,7 +125,7 @@ function ReasoningArm({ extra }: ArmProps) {
   );
 }
 
-type ArmProps = { extra: number };
+interface ArmProps { extra: number }
 
 const ARMS: Record<string, (props: ArmProps) => JSX.Element> = {
   "radix-height": RadixHeightArm,
@@ -143,8 +143,8 @@ function App() {
   const [extra, setExtra] = useState(0);
   useEffect(() => {
     (window as unknown as Record<string, unknown>).__probeGrow = (n: number) =>
-      setExtra((current) => current + n);
-    (window as unknown as Record<string, unknown>).__probeReset = () => setExtra(0);
+      { setExtra((current) => current + n); };
+    (window as unknown as Record<string, unknown>).__probeReset = () => { setExtra(0); };
   }, []);
 
   // Publish readiness after commit: concurrent createRoot may still be mounting large fillers.

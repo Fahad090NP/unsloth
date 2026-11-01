@@ -27,7 +27,7 @@ const config = (customContextLength: number | null) => ({
   customContextLength,
 });
 
-test.beforeEach(() => store.clear());
+test.beforeEach(() => { store.clear(); });
 
 test("a one-time load is remembered per quant until a regular load clears it", () => {
   const sent = { ...config(4096), maxSeqLength: 8192 };

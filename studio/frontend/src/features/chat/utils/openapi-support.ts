@@ -41,5 +41,5 @@ export async function resolveGuardProbe(
   probeSchema: () => Promise<GuardProbe>,
 ): Promise<GuardProbe> {
   if (advertised !== null) return { supported: advertised, settled: true };
-  return probeSchema();
+  return await probeSchema();
 }

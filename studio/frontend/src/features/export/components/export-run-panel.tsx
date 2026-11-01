@@ -46,8 +46,8 @@ function useElapsedSeconds(startedAt: number | null, running: boolean): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!running || startedAt == null) return;
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(id);
+    const id = window.setInterval(() => { setNow(Date.now()); }, 1000);
+    return () => { window.clearInterval(id); };
   }, [running, startedAt]);
   if (startedAt == null) return 0;
   return Math.max(0, Math.floor((now - startedAt) / 1000));
@@ -68,7 +68,7 @@ function isAbsoluteFolderPath(path: string): boolean {
   return (
     path.startsWith("/") ||
     /^[A-Za-z]:([\\/]|$)/.test(path) ||
-    /^\\\\/.test(path)
+    path.startsWith("\\\\")
   );
 }
 
@@ -255,14 +255,14 @@ export function ExportRunPanel(props: ExportRunPanelProps) {
           <div className="flex gap-2">
             <Button
               variant={destination === "local" ? "dark" : "outline"}
-              onClick={() => onDestinationChange("local")}
+              onClick={() => { onDestinationChange("local"); }}
               className="flex-1"
             >
               Save Locally
             </Button>
             <Button
               variant={destination === "hub" ? "dark" : "outline"}
-              onClick={() => onDestinationChange("hub")}
+              onClick={() => { onDestinationChange("hub"); }}
               className="flex-1"
             >
               Push to Hub
@@ -280,7 +280,7 @@ export function ExportRunPanel(props: ExportRunPanelProps) {
                     type="button"
                     variant="ghost"
                     size="xs"
-                    onClick={() => onSaveDirectoryChange(null)}
+                    onClick={() => { onSaveDirectoryChange(null); }}
                   >
                     Use default
                   </Button>
@@ -290,7 +290,7 @@ export function ExportRunPanel(props: ExportRunPanelProps) {
                 <Input
                   className="min-w-0 flex-1 font-mono text-ui-12"
                   value={saveDirectoryInput}
-                  onChange={(e) => onSaveDirectoryChange(e.target.value)}
+                  onChange={(e) => { onSaveDirectoryChange(e.target.value); }}
                   spellCheck={false}
                   title={saveDirectory}
                   placeholder={defaultSaveDirectory}
@@ -301,7 +301,7 @@ export function ExportRunPanel(props: ExportRunPanelProps) {
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => setFolderBrowserOpen(true)}
+                      onClick={() => { setFolderBrowserOpen(true); }}
                       aria-label="Browse save folder"
                     >
                       <HugeiconsIcon
@@ -336,7 +336,7 @@ export function ExportRunPanel(props: ExportRunPanelProps) {
                       <Input
                         placeholder="your-username"
                         value={hfUsername}
-                        onChange={(e) => onHfUsernameChange(e.target.value)}
+                        onChange={(e) => { onHfUsernameChange(e.target.value); }}
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -346,7 +346,7 @@ export function ExportRunPanel(props: ExportRunPanelProps) {
                       <Input
                         placeholder="my-model-GGUF"
                         value={modelName}
-                        onChange={(e) => onModelNameChange(e.target.value)}
+                        onChange={(e) => { onModelNameChange(e.target.value); }}
                       />
                     </div>
                   </div>
@@ -381,7 +381,7 @@ export function ExportRunPanel(props: ExportRunPanelProps) {
                         name="hf-token"
                         placeholder="hf_..."
                         value={hfToken}
-                        onChange={(e) => onHfTokenChange(e.target.value)}
+                        onChange={(e) => { onHfTokenChange(e.target.value); }}
                       />
                     </InputGroup>
                     <p className="text-ui-11 text-muted-foreground/70">
@@ -428,7 +428,7 @@ export function ExportRunPanel(props: ExportRunPanelProps) {
                   : run.result?.outputPath
                     ? [{ label: "", path: run.result.outputPath }]
                     : [];
-              const showLabels = items.length > 1 || !!decisionNote;
+              const showLabels = items.length > 1 || Boolean(decisionNote);
               return items.map((o, i) => (
                 <div
                   key={`${o.path}-${i}`}
@@ -645,7 +645,7 @@ export function ExportRunPanel(props: ExportRunPanelProps) {
         initialPath={
           isAbsoluteFolderPath(saveDirectory) ? saveDirectory : undefined
         }
-        onSelect={(path) => onSaveDirectoryChange(path)}
+        onSelect={(path) => { onSaveDirectoryChange(path); }}
       />
     </div>
   );

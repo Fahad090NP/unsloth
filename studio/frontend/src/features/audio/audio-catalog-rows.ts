@@ -259,7 +259,7 @@ export function createAudioCatalogStore(
             rows,
             byId: catalogById(rows),
             source: response.source,
-            runtimeSpecs: response.runtime_specs === true,
+            runtimeSpecs: response.runtime_specs,
           };
           // Saved or cached answers are degraded: re-ask as soon as the backend's 30 s TTL lapses.
           nextFetchAt = now() + (response.source === "hub" ? ttlMs : retryMs);

@@ -17,16 +17,16 @@ import { CollapsibleSectionTriggerButton } from "../shared/collapsible-section-t
 import { FieldLabel } from "../shared/field-label";
 import { NameField } from "../shared/name-field";
 
-type CategoryDialogProps = {
+interface CategoryDialogProps {
   config: SamplerConfig;
   onUpdate: (patch: Partial<SamplerConfig>) => void;
-};
+}
 
 function addChipWithWeight(
   values: string[] | undefined,
-  weights: Array<number | null> | undefined,
+  weights: (number | null)[] | undefined,
   value: string,
-): { values: string[]; weights: Array<number | null> } {
+): { values: string[]; weights: (number | null)[] } {
   return {
     values: [...(values ?? []), value],
     weights: [...(weights ?? []), null],
@@ -35,9 +35,9 @@ function addChipWithWeight(
 
 function removeChipWithWeight(
   values: string[] | undefined,
-  weights: Array<number | null> | undefined,
+  weights: (number | null)[] | undefined,
   index: number,
-): { values: string[]; weights: Array<number | null> } {
+): { values: string[]; weights: (number | null)[] } {
   const nextValues = [...(values ?? [])];
   const nextWeights = [...(weights ?? [])];
   nextValues.splice(index, 1);
@@ -88,7 +88,7 @@ export function CategoryDialog({
     <div className="space-y-4">
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="space-y-3">
         <div className="grid gap-1.5">
@@ -120,7 +120,7 @@ export function CategoryDialog({
       </div>
       <Collapsible
         open={advancedOpen}
-        onOpenChange={(open) => onUpdate({ advancedOpen: open })}
+        onOpenChange={(open) => { onUpdate({ advancedOpen: open }); }}
       >
         <CollapsibleTrigger asChild={true}>
           <CollapsibleSectionTriggerButton
@@ -181,7 +181,7 @@ export function CategoryDialog({
                 className="nodrag"
                 placeholder="Condition (e.g., {{ region }} == 'US')"
                 value={conditionDraft}
-                onChange={(event) => setConditionDraft(event.target.value)}
+                onChange={(event) => { setConditionDraft(event.target.value); }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
@@ -205,7 +205,7 @@ export function CategoryDialog({
                     type="button"
                     size="xs"
                     variant="ghost"
-                    onClick={() => removeCondition(condition)}
+                    onClick={() => { removeCondition(condition); }}
                   >
                     Remove
                   </Button>

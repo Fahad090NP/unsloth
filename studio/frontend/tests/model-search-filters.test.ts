@@ -351,7 +351,7 @@ test("rejected Unsloth rows stop delaying other publishers after a bounded scan"
         sortBy: "downloads",
         sortDirection: "desc",
         signal: new AbortController().signal,
-        filterPriority: (it: AsyncGenerator<unknown>) =>
+        filterPriority: (it: AsyncGenerator) =>
           (async function* () {
             for await (const row of it) {
               yield (row as { name: string }).name.startsWith("unsloth/")
@@ -360,7 +360,7 @@ test("rejected Unsloth rows stop delaying other publishers after a bounded scan"
             }
           })(),
       },
-    ) as AsyncGenerator<unknown>,
+    ) as AsyncGenerator,
   );
   assert.equal(rows.length, limit + 1);
   assert.deepEqual(rows.at(-1), { name: "Qwen/match" });

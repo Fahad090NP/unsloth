@@ -61,7 +61,7 @@ export function browserDownload(blob: Blob, filename: string): void {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  window.setTimeout(() => { URL.revokeObjectURL(url); }, 0);
 }
 
 function browserUrlDownload(url: string, filename: string): void {
@@ -115,7 +115,7 @@ export async function downloadFile(
       : new Blob([browserContent], { type: mimeType });
 
   browserDownload(blob, filename);
-  return;
+  
 }
 
 /** Save a Blob through bounded IPC chunks in Tauri and retain normal downloads on web. */
@@ -163,7 +163,7 @@ export async function urlToBlob(url: string): Promise<Blob> {
     const { bytes, mimeType } = decodeDataUri(url);
     return new Blob([Uint8Array.from(bytes).buffer], { type: mimeType });
   }
-  return (await fetchDownload(url)).blob();
+  return await (await fetchDownload(url)).blob();
 }
 
 /** Opens the chooser first and Rust streams to the path, avoiding buffering across IPC. */
@@ -192,7 +192,7 @@ export async function downloadUrl(
 ): Promise<string | undefined> {
   if (isDataUri(url)) {
     const { bytes, mimeType } = decodeDataUri(url);
-    return downloadFile(bytes, filename, mimeType);
+    return await downloadFile(bytes, filename, mimeType);
   }
   if (!isTauri) {
     browserUrlDownload(url, filename);
@@ -200,7 +200,7 @@ export async function downloadUrl(
   }
   const response = await fetchDownload(url);
   const bytes = new Uint8Array(await response.arrayBuffer());
-  return downloadFile(
+  return await downloadFile(
     bytes,
     filename,
     response.headers.get("content-type") || "application/octet-stream",
@@ -212,7 +212,7 @@ export async function pickNativeChatImport(): Promise<NativeChatImport | null> {
     return null;
   }
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<NativeChatImport | null>("pick_native_chat_import");
+  return await invoke<NativeChatImport | null>("pick_native_chat_import");
 }
 
 export async function pickNativeTrainingConfig(): Promise<NativeImportedTextFile | null> {
@@ -220,5 +220,5 @@ export async function pickNativeTrainingConfig(): Promise<NativeImportedTextFile
     return null;
   }
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<NativeImportedTextFile | null>("pick_native_training_config");
+  return await invoke<NativeImportedTextFile | null>("pick_native_training_config");
 }

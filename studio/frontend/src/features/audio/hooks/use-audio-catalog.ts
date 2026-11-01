@@ -19,7 +19,7 @@ export function useAudioCatalog(enabled: boolean): AudioCatalogSnapshot {
     void store.refresh();
     // The page stays mounted, so retries and TTL refreshes need a timer; refresh is a no-op until due.
     const timer = setInterval(() => void store.refresh(), CATALOG_POLL_MS);
-    return () => clearInterval(timer);
+    return () => { clearInterval(timer); };
   }, [enabled]);
   return snapshot;
 }

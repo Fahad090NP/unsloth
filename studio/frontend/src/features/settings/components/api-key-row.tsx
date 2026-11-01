@@ -167,12 +167,12 @@ export function ApiKeyRow({
             <HugeiconsIcon icon={Copy01Icon} className="size-3.5 mr-2" />
             {t("settings.apiKeys.copyPrefix")}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onRegenerate(apiKey)}>
+          <DropdownMenuItem onClick={() => { onRegenerate(apiKey); }}>
             <HugeiconsIcon icon={Refresh01Icon} className="size-3.5 mr-2" />
             {t("settings.apiKeys.regenerateToken")}
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => onRevoke(apiKey)}
+            onClick={() => { onRevoke(apiKey); }}
             className="text-destructive focus:text-destructive"
           >
             <HugeiconsIcon icon={Delete02Icon} className="size-3.5 mr-2" />

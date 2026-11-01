@@ -65,7 +65,7 @@ function clearWebSessionDownloads(): void {
   }
   resetDownloadManagerState();
   // Clearing after the state reset also cancels the throttled empty-state write.
-  void useDownloadManagerStore.persist.clearStorage();
+  useDownloadManagerStore.persist.clearStorage();
 }
 
 function handleAuthStorageChange(event: StorageEvent): void {

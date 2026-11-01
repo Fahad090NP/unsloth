@@ -20,9 +20,9 @@ import {
   type StubElement,
 } from "./helpers/module-stubs.ts";
 
-type Call = { url: string; init?: RequestInit };
+interface Call { url: string; init?: RequestInit }
 
-type CapabilityApi = {
+interface CapabilityApi {
   loadSandboxCapability: (options?: {
     force?: boolean;
   }) => Promise<SandboxCapability | null>;
@@ -40,7 +40,7 @@ type CapabilityApi = {
     attempts?: number;
     delayMs?: number;
   }) => Promise<SandboxCapability | null>;
-};
+}
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -59,7 +59,7 @@ function loadCapabilityApi(
         authFetch: async (url: string, init?: RequestInit) => {
           const call = { url, init };
           calls.push(call);
-          return respond(call);
+          return await respond(call);
         },
       },
       "@/lib/format-fastapi-error": {
@@ -668,7 +668,7 @@ test("a failed install shows the job's command; a running one keeps the button",
 });
 
 test("an older capability read that finishes last never replaces a newer one", async () => {
-  const replies: Array<(response: Response) => void> = [];
+  const replies: ((response: Response) => void)[] = [];
   const { api } = loadCapabilityApi(
     () => new Promise<Response>((resolve) => replies.push(resolve)),
   );
@@ -766,7 +766,7 @@ function sandboxPopup(capabilityNow: SandboxCapability | null) {
     const content = (inner.type as (p: unknown) => StubElement)(inner.props);
     const all: StubElement[] = [];
     const walk = (node: unknown) => {
-      if (Array.isArray(node)) return node.forEach(walk);
+      if (Array.isArray(node)) { node.forEach(walk); return; }
       if (node && typeof node === "object" && "props" in node) {
         all.push(node as StubElement);
         walk((node as StubElement).props.children);

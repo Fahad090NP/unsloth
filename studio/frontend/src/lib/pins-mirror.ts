@@ -22,7 +22,7 @@ let queue: Promise<void> = Promise.resolve();
 async function request(init?: RequestInit): Promise<Response> {
   // Imported on first use, so the stores stay importable where there is no auth module to load.
   const { authFetch } = await import("@/features/auth");
-  return authFetch(URL, init);
+  return await authFetch(URL, init);
 }
 
 function send(body: Partial<Record<PinList, string[]>>): void {
@@ -36,7 +36,7 @@ function send(body: Partial<Record<PinList, string[]>>): void {
       if (!res.ok) console.warn(`Saving pinned models failed (${res.status})`);
     })
     .catch((error: unknown) =>
-      console.warn("Saving pinned models failed", error),
+      { console.warn("Saving pinned models failed", error); },
     );
 }
 

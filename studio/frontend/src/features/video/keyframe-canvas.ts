@@ -9,7 +9,7 @@ import type { VideoGenerationDefaults, VideoStatus } from "./api";
 export function nearestPresetCanvas(
   aspectWidth: number,
   aspectHeight: number,
-  presets: ReadonlyArray<readonly [number, number]>,
+  presets: readonly (readonly [number, number])[],
 ): [number, number] | null {
   if (aspectWidth <= 0 || aspectHeight <= 0 || presets.length === 0) return null;
   const target = Math.log(aspectWidth / aspectHeight);

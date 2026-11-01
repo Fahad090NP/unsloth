@@ -296,9 +296,9 @@ test("the page renders no untranslated text", async () => {
     const leaf = key.split(".")[1] as keyof typeof en.projectsPage;
     assert.equal(typeof en.projectsPage[leaf], "string", `${key} has no English message`);
   }
-  assert.equal(PAGE.match(/>\n?\s*[A-Z][a-z]+(?: [a-z]+)*[.…]?\n?\s*</), null);
-  assert.equal(PAGE.match(/(?:aria-label|title|placeholder)="[A-Z][^"]*"/), null);
-  assert.equal(PAGE.match(/toast\.(?:error|info)\("/), null);
+  assert.equal(/>\n?\s*[A-Z][a-z]+(?: [a-z]+)*[.…]?\n?\s*</.exec(PAGE), null);
+  assert.equal(/(?:aria-label|title|placeholder)="[A-Z][^"]*"/.exec(PAGE), null);
+  assert.equal(/toast\.(?:error|info)\("/.exec(PAGE), null);
   assert.match(PAGE, /return then\.toLocaleDateString\(locale, \{/);
   assert.match(PAGE, /formatRelativeTime\(locale, -dayDiff, "day"\)/);
 });

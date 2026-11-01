@@ -24,17 +24,17 @@ export function loadedAudioKind(audioType: string | null | undefined): string {
 }
 
 export function deviceSizeBytes(label: string): number {
-  const match = label.trim().match(/^(\d+(?:\.\d+)?)\s*(MB|GB)$/i);
+  const match = /^(\d+(?:\.\d+)?)\s*(MB|GB)$/i.exec(label.trim());
   if (!match) return 0;
   const value = Number(match[1]);
   return value * (match[2].toUpperCase() === "GB" ? 1024 ** 3 : 1024 ** 2);
 }
 
 export type CreateMode = "speak" | "transcribe";
-export type RemoteCodeApproval = {
+export interface RemoteCodeApproval {
   trustRemoteCode: true;
   approvedRemoteCodeFingerprint: string | null;
-};
+}
 
 export function formatClipDuration(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";

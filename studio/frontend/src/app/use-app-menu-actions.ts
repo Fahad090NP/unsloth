@@ -49,7 +49,7 @@ export function useAppMenuActions(
 
   useEffect(() => {
     if (!hasAppMenus) return;
-    return () => sync([]);
+    return () => { sync([]); };
   }, []);
 
   useEffect(() => {

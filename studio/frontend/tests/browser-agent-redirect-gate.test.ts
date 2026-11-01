@@ -14,7 +14,7 @@ const { chatKeyOfThread, useBrowserStore } = await import("../src/features/brows
 
 const globals = globalThis as Record<string, unknown>;
 useBrowserStore.subscribe(({ tabs }) => {
-  for (const tab of tabs) if (tab.loading) queueMicrotask(() => useBrowserStore.getState().updateTab(tab.id, { loading: false }));
+  for (const tab of tabs) if (tab.loading) queueMicrotask(() => { useBrowserStore.getState().updateTab(tab.id, { loading: false }); });
 });
 globals.__authFetch = async () => new Response(null, { status: 200 });
 const policy = { allowedDomains: [], blockedDomains: [] };
@@ -24,9 +24,9 @@ globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
   return { installed: true, result: { ok: true, text: "page", links } };
 };
 
-type Run = { runKey: string; scope: string; userText: string };
+interface Run { runKey: string; scope: string; userText: string }
 const run = (scope: string): Run => ({ runKey: `run-${scope}`, scope, userText: "search https://www.google.com/ for qwen" });
-const show = (scope: string) => useBrowserStore.getState().showChat(chatKeyOfThread(scope));
+const show = (scope: string) => { useBrowserStore.getState().showChat(chatKeyOfThread(scope)); };
 const pending = () => Object.values(useBrowserAgentStore.getState().chats).find((chat) => chat.question)?.question ?? null;
 const navigate = (id: string, context: Run, url: string) =>
   runBrowserAction({ id, sessionId: "s", op: "navigate", url, direction: "down", policy }, context);

@@ -3,7 +3,7 @@
 
 import { createNavigationNonce } from "../../../lib/navigation-nonce.ts";
 
-export type PinOperation = {
+export interface PinOperation {
   operationId: string;
   kind: "pin";
   ids: string[];
@@ -12,7 +12,7 @@ export type PinOperation = {
   cancels?: string[];
   /** Server replay ID when it differs from the journal's: a trimmed intent keeps its original's. */
   serverId?: string;
-};
+}
 
 export interface PinnedChatsSyncOptions {
   load: () => Promise<string[] | undefined>;

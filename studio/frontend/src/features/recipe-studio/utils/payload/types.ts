@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type RecipePayload = {
+export interface RecipePayload {
   recipe: {
     // biome-ignore lint/style/useNamingConvention: api schema
     model_providers: Record<string, unknown>[];
@@ -35,7 +35,7 @@ export type RecipePayload = {
     run_name?: string | null;
   };
   ui: {
-    nodes: Array<{
+    nodes: {
       id: string;
       x: number;
       y: number;
@@ -46,7 +46,7 @@ export type RecipePayload = {
       note_color?: string;
       note_opacity?: string;
       tools_by_provider?: Record<string, string[]>;
-    }>;
+    }[];
     edges: {
       from: string;
       to: string;
@@ -56,12 +56,12 @@ export type RecipePayload = {
     }[];
     layout_direction?: "LR" | "TB";
     seed_source_type?: "hf" | "local" | "unstructured" | "github_repo";
-    aux_nodes?: Array<{
+    aux_nodes?: {
       llm: string;
       key: string;
       x: number;
       y: number;
-    }>;
+    }[];
     seed_columns?: string[];
     seed_drop_columns?: string[];
     seed_preview_rows?: Record<string, unknown>[];
@@ -81,9 +81,9 @@ export type RecipePayload = {
     unstructured_chunk_overlap?: string;
     advanced_open_by_node?: Record<string, boolean>;
   };
-};
+}
 
-export type RecipePayloadResult = {
+export interface RecipePayloadResult {
   errors: string[];
   payload: RecipePayload;
-};
+}

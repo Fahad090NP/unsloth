@@ -88,7 +88,7 @@ const NBSP = " ";
 
 test("the title and figures occupy separate rows", () => {
   const html = render();
-  const button = html.match(/<button\b[^>]*>([\s\S]*?)<\/button>/)?.[1];
+  const button = (/<button\b[^>]*>([\s\S]*?)<\/button>/.exec(html))?.[1];
   assert.ok(button);
   assert.match(button, /Estimated Memory Usage/);
   assert.doesNotMatch(button, /GiB/);
@@ -102,7 +102,7 @@ test("the disclosure controls an existing breakdown in both states", () => {
   for (const expanded of [false, true]) {
     const html = render({ expanded });
     assert.ok(html.includes(`aria-expanded="${expanded}"`));
-    const contentId = html.match(/aria-controls="([^"]+)"/)?.[1];
+    const contentId = (/aria-controls="([^"]+)"/.exec(html))?.[1];
     assert.ok(contentId);
     assert.ok(html.includes(`id="${contentId}"`));
     assert.equal(html.includes(`id="${contentId}" hidden=""`), !expanded);

@@ -75,18 +75,18 @@ interface ImageGenerationResult {
   prompt?: unknown;
 }
 
-type GeneratedImagePart = {
+interface GeneratedImagePart {
   type: "image";
   image: string;
   filename?: string;
-};
+}
 
-type SandboxMediaResult = {
+interface SandboxMediaResult {
   text: string;
   sessionId: string;
   images: unknown[];
   files?: SandboxFile[];
-};
+}
 
 const sandboxMediaResult = (result: unknown): SandboxMediaResult | null =>
   isSandboxToolResult(result) ? (result as SandboxMediaResult) : null;
@@ -146,7 +146,7 @@ const formatGeneratedImageLabel = (prompt: string): string => {
 const parseImageSize = (
   size: string,
 ): { width: number; height: number } | null => {
-  const match = size.match(/^(\d+)x(\d+)$/i);
+  const match = /^(\d+)x(\d+)$/i.exec(size);
   if (!match) return null;
   const width = Number(match[1]);
   const height = Number(match[2]);
@@ -306,7 +306,7 @@ const ImageGenerationToolUIImpl: ToolCallMessagePartComponent = ({
   const isRunning = isToolCallRunning(status);
 
   const isImageResult =
-    !!result &&
+    Boolean(result) &&
     typeof result === "object" &&
     typeof (result as ImageGenerationResult).image_b64 === "string";
   const imageResult = isImageResult ? (result as ImageGenerationResult) : null;
@@ -552,9 +552,9 @@ const ImageGenerationToolUIImpl: ToolCallMessagePartComponent = ({
                     type="button"
                     className="mt-2 inline-flex text-xs font-medium text-foreground/80 underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     onClick={() =>
-                      setExpandedCaptionPrompt((value) =>
+                      { setExpandedCaptionPrompt((value) =>
                         value === captionPrompt ? null : captionPrompt,
-                      )
+                      ); }
                     }
                     aria-expanded={promptExpanded}
                   >

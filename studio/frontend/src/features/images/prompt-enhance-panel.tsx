@@ -47,7 +47,7 @@ import {
 function usePromptUpsamplerStatus(active: boolean) {
   const [status, setStatus] = useState<PromptUpsamplerStatus | null>(null);
   const [tick, setTick] = useState(0);
-  const refresh = useCallback(() => setTick((t) => t + 1), []);
+  const refresh = useCallback(() => { setTick((t) => t + 1); }, []);
   const downloading = status?.download.downloading === true;
   useEffect(() => {
     if (!active) return;
@@ -55,12 +55,12 @@ function usePromptUpsamplerStatus(active: boolean) {
     getPromptUpsamplerStatus(controller.signal)
       .then(setStatus)
       .catch(() => {});
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [active, tick]);
   useEffect(() => {
     if (!active || !downloading) return;
     const id = window.setInterval(refresh, 1000);
-    return () => window.clearInterval(id);
+    return () => { window.clearInterval(id); };
   }, [active, downloading, refresh]);
   return { status, refresh };
 }
@@ -313,7 +313,7 @@ export function EnhancePromptControls({
             <button
               type="button"
               aria-expanded={previewOpen}
-              onClick={() => setPreviewOpen((o) => !o)}
+              onClick={() => { setPreviewOpen((o) => !o); }}
               className="flex items-center gap-1 font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Enhanced prompt{stale ? " (for an earlier request)" : ""}
@@ -323,7 +323,7 @@ export function EnhancePromptControls({
               type="button"
               aria-label="Dismiss enhanced prompt"
               className="text-muted-foreground hover:text-foreground"
-              onClick={() => setPreview(null)}
+              onClick={() => { setPreview(null); }}
             >
               <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
             </button>
@@ -364,7 +364,7 @@ export function EnhancedPromptRecipeRow({ caption }: { caption: string }) {
       <button
         type="button"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => { setOpen((o) => !o); }}
         className="flex items-start gap-0.5 text-left text-muted-foreground hover:text-foreground"
       >
         Enhanced prompt

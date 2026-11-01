@@ -92,7 +92,7 @@ export function ImageDropzone({
 
   const readFile = useCallback(
     (file: Blob | undefined | null) => {
-      if (!file || !file.type.startsWith("image/")) {
+      if (!file?.type.startsWith("image/")) {
         if (file) toast.error("Please choose an image file");
         return;
       }
@@ -202,7 +202,7 @@ export function ImageDropzone({
           e.dataTransfer.effectAllowed = "copy";
           e.dataTransfer.setData(IMAGE_SLOT_DRAG_TYPE, "");
         }}
-        onDragEnd={() => endImageSlotDrag()}
+        onDragEnd={() => { endImageSlotDrag(); }}
         className={cn("relative overflow-hidden rounded-lg border border-border", className)}
       >
         {/* Checkerboard behind the preview, so a transparent upload shows its alpha.
@@ -272,7 +272,7 @@ export function ImageDropzone({
         if (isGalleryDrag(e) || isSlotDrag(e)) e.dataTransfer.dropEffect = "copy";
         setDragging(true);
       }}
-      onDragLeave={() => setDragging(false)}
+      onDragLeave={() => { setDragging(false); }}
       onDrop={(e) => {
         e.preventDefault();
         setDragging(false);
@@ -301,7 +301,7 @@ export function ImageDropzone({
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={(e) => readFile(e.target.files?.[0])}
+        onChange={(e) => { readFile(e.target.files?.[0]); }}
       />
     </button>
   );

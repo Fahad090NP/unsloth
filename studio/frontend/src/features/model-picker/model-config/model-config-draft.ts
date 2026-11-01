@@ -21,21 +21,21 @@ function draftStorageKey(
   ]);
 }
 
-export type ModelConfigExtraArgsEdit = {
+export interface ModelConfigExtraArgsEdit {
   text: string;
   /** `formatExtraArgs` of the published tokens, to spot an external replacement. */
   source: string;
   loadable?: boolean;
-};
+}
 
-export type ModelConfigDraftSnapshot = {
+export interface ModelConfigDraftSnapshot {
   config: PerModelConfig;
   remember: boolean;
   savedRemember: boolean;
   appliedLiveSignature: string;
   /** The set shown while another is pinned, loaded once; absent follows the stored selection. */
   pickedSet?: string | null;
-};
+}
 
 const drafts = new Map<string, ModelConfigDraftSnapshot>();
 const listeners = new Set<() => void>();
@@ -266,8 +266,7 @@ export function setExtraArgsEditForDraft(
 ): void {
   const existing = extraArgsEditByDraftKey.get(key);
   if (
-    existing &&
-    existing.text === edit.text &&
+    existing?.text === edit.text &&
     existing.source === edit.source &&
     existing.loadable === edit.loadable
   ) {

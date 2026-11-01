@@ -33,7 +33,7 @@ export function startLibraryChat(
   // Drained earlier it would attach to the old thread's composer.
   void navigate({ to: "/chat", search: { new: nonce } }).then(() => {
     requestAnimationFrame(() =>
-      useLibraryChatHandoffStore.getState().offer(`single:${nonce}`, handoff),
+      { useLibraryChatHandoffStore.getState().offer(`single:${nonce}`, handoff); },
     );
   });
 }

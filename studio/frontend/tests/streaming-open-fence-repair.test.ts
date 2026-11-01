@@ -150,7 +150,7 @@ function repairCharacters(text: string, chunk = 256): number {
   ): string {
     counted += this.length;
     return realSubstring.call(this, start, end);
-  } as unknown as typeof realSubstring;
+  };
   try {
     const cache = new IncrementalMarkdownCache();
     for (let end = chunk; end <= text.length; end += chunk) {

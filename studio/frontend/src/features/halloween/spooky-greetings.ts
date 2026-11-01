@@ -3,12 +3,12 @@
 
 import type { TranslationKey } from "@/i18n";
 
-export type SpookyWelcome = {
+export interface SpookyWelcome {
   key: TranslationKey;
   name?: string;
   sloth: string;
   enlarge?: boolean;
-};
+}
 
 const TRICK_OR_TREAT = "sloth halloween trick or treat.png";
 const WITCH = "sloth halloween witch.png";

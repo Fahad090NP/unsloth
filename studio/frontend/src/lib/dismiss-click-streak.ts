@@ -184,7 +184,7 @@ export function installDismissClickStreakGuard(
     ["pointerdown", onPointerDown as EventListener],
     ["mousedown", onMouseDown as EventListener],
     ["mousemove", onMouseMove as EventListener],
-    ["mouseup", onMouseUp as EventListener],
+    ["mouseup", onMouseUp],
   ];
   for (const [type, fn] of listeners) doc.addEventListener(type, fn, true);
   return () => {

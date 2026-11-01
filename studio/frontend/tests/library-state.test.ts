@@ -94,7 +94,7 @@ test("two quick changes to one folder reach the server in the order they were ma
     const { name } = JSON.parse(String(init?.body)) as { name: string };
     sent.push(name);
     if (name !== "first") return Promise.resolve(new Response("{}"));
-    return new Promise((resolve) => (answerFirst = () => resolve(new Response("{}"))));
+    return new Promise((resolve) => (answerFirst = () => { resolve(new Response("{}")); }));
   });
   const first = updateLibraryFolder("f1", { name: "first" });
   const second = updateLibraryFolder("f1", { name: "second" });
@@ -178,7 +178,7 @@ test("the next account's edit does not wait behind one the account that left nev
   assert.deepEqual(sent, ["A's", "B's"]);
 });
 
-type Item = { id: string; name: string; favorite: boolean; folderId: string | null };
+interface Item { id: string; name: string; favorite: boolean; folderId: string | null }
 
 const unpinned: string[] = [];
 
@@ -309,7 +309,7 @@ test("a star that fails offline is undone where Images and Video read it too", a
   online = false;
   await assert.rejects(store.getState().patchItem("image:a", { favorite: true }));
   assert.deepEqual(starsUndone, ["image:a"]);
-  assert.equal(store.getState().items[0]!.favorite, false);
+  assert.equal(store.getState().items[0].favorite, false);
 });
 
 test("undoing a mirrored star leaves a newer toggle of it alone", () => {
@@ -542,6 +542,6 @@ test("a file named __proto__ is kept in a zipped download", async () => {
     { name: "__proto__", sizeBytes: 1 },
     { name: "a.txt", sizeBytes: 1 },
   ]);
-  const archive = fflate.unzipSync(new Uint8Array(await saved[0]!.arrayBuffer()));
+  const archive = fflate.unzipSync(new Uint8Array(await saved[0].arrayBuffer()));
   assert.deepEqual(Object.keys(archive), ["__proto__ (2)", "a.txt"]);
 });

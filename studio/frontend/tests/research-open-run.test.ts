@@ -41,7 +41,7 @@ test("metadata-only awaiting-approval run is hydrated before its panel opens, wi
     requests++;
     throw new Error("Unexpected request");
   };
-  const observed: Array<string | undefined> = [];
+  const observed: (string | undefined)[] = [];
   const unsubscribe = useResearchRunStore.subscribe((state) => {
     if (state.openRunId)
       observed.push(state.sessions[state.openRunId]?.run.threadId);

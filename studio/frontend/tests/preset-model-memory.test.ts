@@ -71,7 +71,7 @@ function pickPreset(preset: Preset): void {
   store.setParams(applyPresetForProvider(store.params, preset, null), {
     minPChoiceEdited: true,
     fromPreset: true,
-  } as never);
+  });
   store.setActivePreset(preset.name);
   store.setActivePresetSource(getPresetSource(preset.name));
 }
@@ -347,7 +347,7 @@ test("a preset picked inside a chat leaves the model's remembered sampling alone
   const store = useChatRuntimeStore.getState();
   store.setActivePresetSource("modified");
   store.setParams({ ...store.params, temperature: 0.2 });
-  store.setActiveThreadId("chat-1" as never);
+  store.setActiveThreadId("chat-1");
   beginThreadScopedPairing("chat-1");
   pickPreset(CUSTOM);
   assert.equal(useChatRuntimeStore.getState().paramsByModel[GEMMA]?.temperature, 0.2);

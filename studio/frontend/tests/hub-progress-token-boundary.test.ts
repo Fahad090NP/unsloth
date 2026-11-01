@@ -11,9 +11,9 @@ import { loadWithStubs } from "./helpers/module-stubs.ts";
 
 import { readText } from "./helpers/kit.ts";
 
-type AuthApi = {
+interface AuthApi {
   authFetch: (input: string, init?: RequestInit) => Promise<Response>;
-};
+}
 
 async function emittedHeaders(init?: RequestInit): Promise<Headers> {
   const originalFetch = globalThis.fetch;

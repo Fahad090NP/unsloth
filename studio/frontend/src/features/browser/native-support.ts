@@ -10,7 +10,7 @@ export const useNativeBrowser = create(() => ({ enabled: false }));
 
 export async function callNative<T = void>(command: string, args?: Record<string, unknown>): Promise<T> {
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<T>(command, args);
+  return await invoke<T>(command, args);
 }
 
 const localOrigins = new Map<string, string>();
@@ -70,5 +70,5 @@ if (isTauri) {
 }
 
 import { onNativeViewsClosed } from "@/lib/native-browser-clear";
-onNativeViewsClosed(() => localOrigins.clear());
+onNativeViewsClosed(() => { localOrigins.clear(); });
 export { clearNativeBrowsingData, nativeClearing, onNativeViewsClosed } from "@/lib/native-browser-clear";

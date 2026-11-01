@@ -142,7 +142,7 @@ async function registerEach(paths: string[]) {
     intents,
     failed: settled.length - intents.length,
     error:
-      rejection && rejection.status === "rejected"
+      rejection?.status === "rejected"
         ? rejection.reason instanceof Error
           ? rejection.reason
           : new Error(String(rejection.reason))
@@ -237,7 +237,7 @@ export function useNativeModelDrop(
     let draggedPaths: string[] = [];
     // "over" fires per cursor move; returning `prev` makes React bail out.
     const publish = (next: NativeModelDropState) =>
-      setDropState((prev) => (sameDropState(prev, next) ? prev : next));
+      { setDropState((prev) => (sameDropState(prev, next) ? prev : next)); };
 
     void import("@tauri-apps/api/webview")
       .then(({ getCurrentWebview }) =>

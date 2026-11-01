@@ -53,10 +53,10 @@ import { RecentSearches } from "./recent-searches";
 // Includes the "Fine-tune ready" pseudo-option, which opens a channel rather than filtering.
 type FormatMenuValue = ModelFormatFilter | "finetune";
 
-const SORT_OPTIONS: ReadonlyArray<{
+const SORT_OPTIONS: readonly {
   value: HfSortKey;
   label: string;
-}> = [
+}[] = [
   { value: "fresh", label: "Latest" },
   { value: "createdAt", label: "Newest" },
   { value: "trendingScore", label: "Trending" },
@@ -181,8 +181,8 @@ export const ModelsToolbar = memo(function ModelsToolbar({
     };
     measure();
     const observer = new ResizeObserver(measure);
-    observer.observe(toolbarRef.current as HTMLDivElement);
-    return () => observer.disconnect();
+    observer.observe(toolbarRef.current!);
+    return () => { observer.disconnect(); };
   }, [showRecentSearches]);
 
   const isDataset = resourceType === "datasets";
@@ -313,7 +313,7 @@ export const ModelsToolbar = memo(function ModelsToolbar({
           type="button"
           role="radio"
           aria-checked={tab === "discover"}
-          onClick={() => onTabChange("discover")}
+          onClick={() => { onTabChange("discover"); }}
           className={cn(
             "relative inline-flex h-9 flex-1 items-center justify-center rounded-full px-3 text-ui-12p5 transition-colors",
             tab === "discover"
@@ -328,7 +328,7 @@ export const ModelsToolbar = memo(function ModelsToolbar({
           type="button"
           role="radio"
           aria-checked={tab === "downloaded"}
-          onClick={() => onTabChange("downloaded")}
+          onClick={() => { onTabChange("downloaded"); }}
           className={cn(
             "relative inline-flex h-9 flex-1 items-center justify-center rounded-full px-3 text-ui-12p5 transition-colors",
             tab === "downloaded"
@@ -364,8 +364,8 @@ export const ModelsToolbar = memo(function ModelsToolbar({
           data-lpignore={true}
           data-form-type="other"
           value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          onFocus={() => setSearchFocused(true)}
+          onChange={(event) => { onQueryChange(event.target.value); }}
+          onFocus={() => { setSearchFocused(true); }}
           onBlur={() => {
             setSearchFocused(false);
             if (isDiscover) {
@@ -396,8 +396,8 @@ export const ModelsToolbar = memo(function ModelsToolbar({
             type="button"
             aria-label="Clear search"
             // Keep focus on the input so clearing reveals recent searches.
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => onQueryChange("")}
+            onMouseDown={(event) => { event.preventDefault(); }}
+            onClick={() => { onQueryChange(""); }}
             className="absolute right-2.5 top-1/2 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:text-foreground"
           >
             <HugeiconsIcon
@@ -441,7 +441,7 @@ export const ModelsToolbar = memo(function ModelsToolbar({
           modalities={datasetModalities}
           onModalitiesChange={onDatasetModalitiesChange}
           onDatasetsChange={(on) =>
-            onResourceTypeChange(on ? "datasets" : "models")
+            { onResourceTypeChange(on ? "datasets" : "models"); }
           }
           onDevice={onDeviceFilters}
           className={cn(
@@ -577,7 +577,7 @@ export const ModelsToolbar = memo(function ModelsToolbar({
                       type="button"
                       role="checkbox"
                       aria-checked={fitOnDeviceOnly}
-                      onClick={() => onFitOnDeviceOnlyChange(!fitOnDeviceOnly)}
+                      onClick={() => { onFitOnDeviceOnlyChange(!fitOnDeviceOnly); }}
                       className="hub-menu-row relative flex w-full cursor-pointer select-none items-center gap-2.5 py-2 pr-3 pl-3 text-left text-sm"
                     >
                       <Checkbox

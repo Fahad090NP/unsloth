@@ -34,7 +34,7 @@ export interface SavedRunSettings {
   config: PerModelConfig;
 }
 
-type StoredEntry = { name: string; savedAt: number; config: unknown };
+interface StoredEntry { name: string; savedAt: number; config: unknown }
 type StoredMap = Record<string, StoredEntry[]>;
 /** model + quant key -> set name, or null for Default. Absent = never chosen. */
 type SelectionMap = Record<string, string | null>;

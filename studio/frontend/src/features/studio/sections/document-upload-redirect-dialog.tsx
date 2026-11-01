@@ -19,12 +19,12 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactElement } from "react";
 
-type DocumentUploadRedirectDialogProps = {
+interface DocumentUploadRedirectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   fileName: string | null;
   onOpenLearningRecipes: () => void;
-};
+}
 
 export function DocumentUploadRedirectDialog({
   open,
@@ -77,7 +77,7 @@ export function DocumentUploadRedirectDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => { onOpenChange(false); }}
           >
             {t("common.cancel")}
           </Button>

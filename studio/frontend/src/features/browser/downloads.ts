@@ -16,7 +16,7 @@ import { useBrowserHistoryStore } from "./history-store";
 import { type SavedNativeDownload, saveNativeDownload } from "./native-downloads";
 import { useBrowserPrefsStore } from "./prefs-store";
 
-export type BrowserDownload = {
+export interface BrowserDownload {
   blob: Blob;
   name: string;
   contentType: string;
@@ -25,12 +25,12 @@ export type BrowserDownload = {
   temporary?: boolean;
   /** Saved from the browser agent's tab: its Downloads permission (agent/permissions.ts). */
   agentRule?: DownloadsRule | null;
-};
+}
 
-type SaveHandle = {
+interface SaveHandle {
   name: string;
   createWritable: () => Promise<{ write: (data: Blob) => Promise<void>; close: () => Promise<void> }>;
-};
+}
 type SaveFilePicker = (options: { suggestedName: string }) => Promise<SaveHandle>;
 
 function saveFilePicker(): SaveFilePicker | null {
@@ -204,7 +204,7 @@ export async function saveLinkAs(url: string): Promise<void> {
         (download) => ({ download }),
         (error: unknown) => ({ error }),
       ),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), RESOLVE_BEFORE_ASK_MS)),
+      new Promise<null>((resolve) => setTimeout(() => { resolve(null); }, RESOLVE_BEFORE_ASK_MS)),
     ]);
     // A link that already failed has nothing to save: report it without asking for a name.
     if (quick && "error" in quick) throw quick.error;

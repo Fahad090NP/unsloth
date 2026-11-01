@@ -49,7 +49,7 @@ function PackingOption({
         id="packing"
         checked={checked && !isMac}
         disabled={isMac}
-        onCheckedChange={(value) => onChange(!!value)}
+        onCheckedChange={(value) => { onChange(Boolean(value)); }}
       />
       <label
         htmlFor="packing"
@@ -94,7 +94,7 @@ function TrainOnCompletionsOption({
         id="trainOnCompletions"
         checked={checked}
         disabled={disabled}
-        onCheckedChange={(value) => onChange(!!value)}
+        onCheckedChange={(value) => { onChange(Boolean(value)); }}
       />
       <label
         htmlFor="trainOnCompletions"
@@ -188,9 +188,9 @@ export function TrainingMemoryParams(): ReactElement {
                 : String(store.visionImageSize)
             }
             onValueChange={(value) =>
-              store.setVisionImageSize(
+              { store.setVisionImageSize(
                 value === "default" ? null : Number(value),
-              )
+              ); }
             }
           >
             <SelectTrigger className="w-32">
@@ -232,7 +232,7 @@ export function TrainingMemoryParams(): ReactElement {
         <Select
           value={store.gradientCheckpointing}
           onValueChange={(value) =>
-            store.setGradientCheckpointing(value as GradientCheckpointing)
+            { store.setGradientCheckpointing(value as GradientCheckpointing); }
           }
         >
           <SelectTrigger className="w-32">

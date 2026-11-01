@@ -197,14 +197,14 @@ export function ParamSlider({
   inline?: boolean;
   commitWhileDragging?: boolean;
 }) {
-  const commit = (v: number) => onChange(snapToStep(v, step, min, max));
+  const commit = (v: number) => { onChange(snapToStep(v, step, min, max)); };
   const { draft, sliderProps: draftProps } = useSliderDraft(
     value,
     commit,
     onDraft,
   );
   const sliderProps = commitWhileDragging
-    ? { value: [value], onValueChange: ([v]: number[]) => commit(v) }
+    ? { value: [value], onValueChange: ([v]: number[]) => { commit(v); } }
     : draftProps;
   const shown = draft ?? value;
   if (inline) {
@@ -694,7 +694,7 @@ export function ChatSettingsPanel({
     promptObserverRef.current = null;
     if (!node || typeof ResizeObserver === "undefined") return;
     // A drag resizes via a custom property without re-rendering.
-    const observer = new ResizeObserver(() => measurePromptRef.current());
+    const observer = new ResizeObserver(() => { measurePromptRef.current(); });
     observer.observe(node);
     promptObserverRef.current = observer;
     measurePromptRef.current();
@@ -1230,9 +1230,9 @@ export function ChatSettingsPanel({
                     <InputGroupInput
                       id="inference-preset-name"
                       value={presetNameInput}
-                      onChange={(e) => setPresetNameInput(e.target.value)}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => { setPresetNameInput(e.target.value); }}
+                      onPointerDown={(e) => { e.stopPropagation(); }}
+                      onClick={(e) => { e.stopPropagation(); }}
                       onKeyDown={(e) => {
                         if (
                           e.key === "Enter" &&
@@ -1303,7 +1303,7 @@ export function ChatSettingsPanel({
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
-                onClick={() => savePresetWithName(presetNameInput)}
+                onClick={() => { savePresetWithName(presetNameInput); }}
                 disabled={!(settingsHydrated && presetSaveState.canSubmit)}
                 variant={presetSaveState.isSaveReady ? "default" : "outline"}
                 size="sm"
@@ -1314,7 +1314,7 @@ export function ChatSettingsPanel({
               </Button>
               <Button
                 type="button"
-                onClick={() => deletePreset(activePreset)}
+                onClick={() => { deletePreset(activePreset); }}
                 disabled={!(settingsHydrated && activeCustomPreset)}
                 variant="ghost"
                 size="sm"
@@ -1474,7 +1474,7 @@ export function ChatSettingsPanel({
             <textarea
               ref={attachPromptBox}
               value={currentSystemPrompt}
-              onChange={(e) => set("systemPrompt")(e.target.value)}
+              onChange={(e) => { set("systemPrompt")(e.target.value); }}
               onMouseDown={(e) => {
                 if (
                   systemPromptOverflows &&
@@ -1640,7 +1640,7 @@ export function ChatSettingsPanel({
                     seedDraft ?? (params.seed == null ? "" : String(params.seed))
                   }
                   onChange={(e) =>
-                    setSeedDraft(e.target.value.replace(/\D/g, ""))
+                    { setSeedDraft(e.target.value.replace(/\D/g, "")); }
                   }
                   onBlur={() => {
                     if (seedDraft === null) return;
@@ -1724,7 +1724,7 @@ export function ChatSettingsPanel({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSystemVariablesOpen((open) => !open)}
+                  onClick={() => { setSystemVariablesOpen((open) => !open); }}
                   className="h-7 gap-1.5 rounded-full px-2.5 text-ui-11 text-muted-foreground"
                   aria-expanded={systemVariablesOpen}
                 >
@@ -1776,7 +1776,7 @@ export function ChatSettingsPanel({
                 <Textarea
                   value={systemVariablesDraft}
                   onChange={(event) =>
-                    setSystemVariablesDraft(event.target.value)
+                    { setSystemVariablesDraft(event.target.value); }
                   }
                   placeholder='{ "env": "staging", "version": "v2.3.1" }'
                   fieldSizing="fixed"
@@ -1806,7 +1806,7 @@ export function ChatSettingsPanel({
             <div className="corner-squircle overflow-hidden rounded-xl border border-border transition-colors focus-within:border-ring dark:border-transparent dark:focus-within:border-transparent">
               <Textarea
                 value={systemPromptDraft}
-                onChange={(event) => setSystemPromptDraft(event.target.value)}
+                onChange={(event) => { setSystemPromptDraft(event.target.value); }}
                 placeholder="You are a helpful assistant..."
                 fieldSizing="fixed"
                 className="min-h-[min(calc(20rem*var(--ui-space-scale,1)),48dvh)] max-h-[48dvh] overflow-y-auto rounded-none border-0 text-sm leading-6 focus-visible:ring-0"
@@ -1818,7 +1818,7 @@ export function ChatSettingsPanel({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => setSystemPromptDraft("")}
+              onClick={() => { setSystemPromptDraft(""); }}
               disabled={systemPromptDraft.length === 0}
               className="text-muted-foreground"
             >
@@ -1938,7 +1938,7 @@ function MaxToolCallsSlider() {
       min={0}
       max={41}
       step={1}
-      onChange={(v) => setMaxToolCalls(v >= 41 ? 9999 : v)}
+      onChange={(v) => { setMaxToolCalls(v >= 41 ? 9999 : v); }}
       format={(v) => (v >= 41 ? "Max" : v === 0 ? "Off" : undefined)}
       info="Cap on tool/function calls the model may invoke within a single response. 0 disables tool use; Max removes the cap."
     />
@@ -1959,7 +1959,7 @@ function ToolCallTimeoutSlider() {
       min={1}
       max={31}
       step={1}
-      onChange={(v) => setTimeout_(v >= 31 ? 9999 : v)}
+      onChange={(v) => { setTimeout_(v >= 31 ? 9999 : v); }}
       format={(v) =>
         v >= 31 ? "Max" : v === 1 ? "1 minute" : `${v} minutes`
       }

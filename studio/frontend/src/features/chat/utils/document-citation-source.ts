@@ -86,9 +86,9 @@ export function parseSourcesFromResult(raw: string): {
     metadata?: { description: string };
   }[] = [];
   for (const block of blocks) {
-    const titleMatch = block.match(/Title:\s*(.+)/);
-    const urlMatch = block.match(/URL:\s*(.+)/);
-    const snippetMatch = block.match(/Snippet:\s*(.+)/);
+    const titleMatch = /Title:\s*(.+)/.exec(block);
+    const urlMatch = /URL:\s*(.+)/.exec(block);
+    const snippetMatch = /Snippet:\s*(.+)/.exec(block);
     if (titleMatch && urlMatch) {
       // Attacker-controllable: a non-http(s) URL must not reach the Sources panel <a href>.
       const url = isSafeNavigableSourceUrl(urlMatch[1]);

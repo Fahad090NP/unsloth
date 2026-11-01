@@ -44,7 +44,7 @@ export async function createApiKey(
     body: JSON.stringify({ name, expires_in_days: expiresInDays }),
   });
   if (!res.ok) throw await actionError(res);
-  return res.json();
+  return await res.json();
 }
 
 export async function revokeApiKey(keyId: number): Promise<void> {

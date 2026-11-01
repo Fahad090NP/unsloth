@@ -90,7 +90,7 @@ export function LibraryToolbar({
           type="search"
           value={filters.query}
           onChange={(event) =>
-            onChange({ ...filters, query: event.target.value })
+            { onChange({ ...filters, query: event.target.value }); }
           }
           disabled={disabled}
           placeholder={placeholder}
@@ -126,7 +126,7 @@ export function LibraryToolbar({
               </DropdownMenuLabel>
               <DropdownMenuRadioGroup
                 value={filters.type}
-                onValueChange={(type) => onChange({ ...filters, type })}
+                onValueChange={(type) => { onChange({ ...filters, type }); }}
               >
                 {Object.entries(TYPE_LABELS).map(([value, label]) => (
                   <DropdownMenuRadioItem key={value} value={value}>
@@ -143,7 +143,7 @@ export function LibraryToolbar({
           <DropdownMenuRadioGroup
             value={filters.sort}
             onValueChange={(sort) =>
-              onChange({ ...filters, sort: sort as LibrarySort })
+              { onChange({ ...filters, sort: sort as LibrarySort }); }
             }
           >
             {Object.entries(SORT_LABELS)

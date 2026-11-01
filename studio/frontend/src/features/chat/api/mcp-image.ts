@@ -4,18 +4,18 @@
 import type { McpImageInputMapping, McpServerConfig } from "./mcp-servers-api";
 
 /** Sent with a tool_start that would send the user's image; approval covers this one call. */
-export type ImageDisclosure = {
+export interface ImageDisclosure {
   server: string;
   tool: string;
   size_bytes: number;
   destination: string;
-};
+}
 
-type Part = { type: string; image?: unknown };
-type Message = {
+interface Part { type: string; image?: unknown }
+interface Message {
   content: readonly Part[];
   attachments?: readonly { content?: readonly Part[] }[];
-};
+}
 
 export function isMcpToolOnly(value: unknown): boolean {
   return (
@@ -77,7 +77,7 @@ export function imageFieldCandidates(schema: unknown): string[] {
     .map(([name]) => name);
 }
 
-type ImageField = { tool: string; field: string };
+interface ImageField { tool: string; field: string }
 
 /** The tool / field pairs not mapped yet, so picking one always changes something. */
 export function unmappedImageFields<T extends ImageField>(

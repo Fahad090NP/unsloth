@@ -51,7 +51,7 @@ export function LazyImportFailure({
         <button
           ref={reloadRef}
           type="button"
-          onClick={() => window.location.reload()}
+          onClick={() => { window.location.reload(); }}
           className="btn-fill rounded-full px-3 py-2 font-medium text-xs "
         >
           {reloadLabel}

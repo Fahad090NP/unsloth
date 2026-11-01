@@ -70,7 +70,7 @@ export function FullViewChatBar({ title }: { title: string | undefined }) {
               <button
                 type="button"
                 aria-label={t("browser.fullView.minimize")}
-                onClick={() => setChatDock("minimized")}
+                onClick={() => { setChatDock("minimized"); }}
                 className={cn(
                   "flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   WASH,
@@ -92,7 +92,7 @@ export function FullViewChatBar({ title }: { title: string | undefined }) {
             aria-label={toggleLabel}
             aria-expanded={expanded}
             title={toggleLabel}
-            onClick={() => setChatDock(expanded ? "composer" : "expanded")}
+            onClick={() => { setChatDock(expanded ? "composer" : "expanded"); }}
             className="flex h-8 min-w-0 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-ui-14 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
@@ -140,7 +140,7 @@ export function FullViewChatBar({ title }: { title: string | undefined }) {
                 />
                 {t("browser.fullView.openChat")}
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => splitWithChatOn("left")}>
+              <DropdownMenuItem onSelect={() => { splitWithChatOn("left"); }}>
                 <HugeiconsIcon
                   icon={ArrowLeft02Icon}
                   strokeWidth={1.75}
@@ -148,7 +148,7 @@ export function FullViewChatBar({ title }: { title: string | undefined }) {
                 />
                 {t("browser.fullView.moveLeft")}
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => splitWithChatOn("right")}>
+              <DropdownMenuItem onSelect={() => { splitWithChatOn("right"); }}>
                 <HugeiconsIcon
                   icon={ArrowRight02Icon}
                   strokeWidth={1.75}
@@ -173,7 +173,7 @@ export function FullViewChatButton() {
         <button
           type="button"
           aria-label={label}
-          onClick={() => useBrowserStore.getState().setChatDock("composer")}
+          onClick={() => { useBrowserStore.getState().setChatDock("composer"); }}
           className="chat-full-view-dock-button flex size-12 cursor-pointer items-center justify-center rounded-full text-foreground transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
         >
           <HugeiconsIcon

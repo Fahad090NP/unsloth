@@ -10,7 +10,7 @@ import type {
 } from "./api";
 import { type SizeLimits, fitSize, matchSourceSize } from "./image-size.ts";
 
-export const ANNOTATION_COLORS: ReadonlyArray<{ name: string; value: string }> =
+export const ANNOTATION_COLORS: readonly { name: string; value: string }[] =
   [
     { name: "red", value: "#ff2020" },
     { name: "blue", value: "#1f6bff" },
@@ -59,11 +59,11 @@ export function seedReferenceResolution(
   return allowed[0];
 }
 
-export const OFFICIAL_2K_PRESETS: ReadonlyArray<{
+export const OFFICIAL_2K_PRESETS: readonly {
   label: string;
   width: number;
   height: number;
-}> = [
+}[] = [
   { label: "1:1", width: 2048, height: 2048 },
   { label: "4:3", width: 2400, height: 1792 },
   { label: "3:4", width: 1792, height: 2400 },

@@ -360,7 +360,7 @@ export function DatasetSelector() {
       isHubLoading={isLoadingHf}
       showUseThis={showUseThis}
       useThisLabel={t("studio.datasetPicker.useAsHubDataset")}
-      onUseThis={() => commitHubQuery(activeQuery)}
+      onUseThis={() => { commitHubQuery(activeQuery); }}
       onExactQueryCommit={commitExactQuery}
       placeholder={{
         hub: t("studio.datasetPicker.hubPlaceholder"),

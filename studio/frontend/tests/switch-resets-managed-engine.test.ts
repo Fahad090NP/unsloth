@@ -18,12 +18,12 @@ const requested = new Function(
   `${runtime.slice(start, end)}\nreturn requestedEngine;`,
 ) as (...args: unknown[]) => string;
 
-type Params = {
+interface Params {
   checkpoint: string;
   engine: string;
   enginePrecision: string;
   engineParallelism: string;
-};
+}
 
 function store(engine: string) {
   const state: {

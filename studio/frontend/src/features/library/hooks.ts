@@ -176,7 +176,7 @@ export function useSeen(ref: RefObject<Element | null>): boolean {
       { rootMargin: "400px" },
     );
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [ref, seen]);
   return seen;
 }

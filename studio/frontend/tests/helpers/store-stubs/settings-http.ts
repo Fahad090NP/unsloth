@@ -3,14 +3,12 @@
 
 export const settingsHttp = {
   settings: {} as Record<string, unknown>,
-  getResponses: [] as Array<
-    Record<string, unknown> | Promise<Record<string, unknown>>
-  >,
+  getResponses: [] as (Record<string, unknown> | Promise<Record<string, unknown>>)[],
   gets: 0,
   beforeConditionalApply: null as (() => void) | null,
   conditionalStatus: 200,
   puts: [] as Record<string, unknown>[],
-  putFailures: [] as Array<{ status: number; detail?: unknown }>,
+  putFailures: [] as { status: number; detail?: unknown }[],
   release: null as (() => void) | null,
   putGate: null as Promise<void> | null,
   hold(): void {

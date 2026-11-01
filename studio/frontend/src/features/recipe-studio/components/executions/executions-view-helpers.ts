@@ -8,7 +8,7 @@ import type {
 import { isExecutionInProgress } from "../../executions/execution-helpers";
 import { resolveImagePreview } from "../../utils/image-preview";
 
-export type AnalysisColumnStat = {
+export interface AnalysisColumnStat {
   column_name: string;
   column_type: string;
   simple_dtype: string;
@@ -16,13 +16,13 @@ export type AnalysisColumnStat = {
   num_null: number | null;
   input_tokens_mean: number | null;
   output_tokens_mean: number | null;
-};
+}
 
-export type ModelUsageRow = {
+export interface ModelUsageRow {
   model: string;
   input: number | null;
   output: number | null;
-};
+}
 
 export const PREVIEW_DATASET_PAGE_SIZE = 20;
 export const TERMINAL_STICKY_BOTTOM_THRESHOLD_PX = 24;
@@ -90,7 +90,7 @@ export function parseAnalysisColumns(
       if (!item || typeof item !== "object" || Array.isArray(item)) {
         return null;
       }
-      const row = item as Record<string, unknown>;
+      const row = item;
       return {
         column_name: parseString(row.column_name),
         column_type: parseString(row.column_type),

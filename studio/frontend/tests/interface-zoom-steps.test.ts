@@ -8,8 +8,8 @@ import { readSrc } from "./helpers/kit.ts";
 
 // The store pulls in zustand persist and Tauri, so the stepping is lifted out and run on its own.
 const STORE = readSrc("features/settings/stores/interface-scale-store.ts");
-const steps = JSON.parse(STORE.match(/INTERFACE_ZOOM_STEPS = (\[[^\]]+\])/)![1]) as number[];
-const range = STORE.match(/min: (\d+),\s*max: (\d+),\s*default: (\d+)/)!.slice(1).map(Number);
+const steps = JSON.parse(/INTERFACE_ZOOM_STEPS = (\[[^\]]+\])/.exec(STORE)![1]) as number[];
+const range = /min: (\d+),\s*max: (\d+),\s*default: (\d+)/.exec(STORE)!.slice(1).map(Number);
 const stepInterfaceScale = (scale: number, direction: 1 | -1): number =>
   (direction > 0
     ? steps.find((step) => step > scale)

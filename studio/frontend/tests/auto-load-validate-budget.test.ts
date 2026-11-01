@@ -90,11 +90,11 @@ const counterMatch = new RegExp(
 ).exec(source);
 const COUNTER_NAME = counterMatch?.[1] ?? "validateFailures";
 
-type CascadeState = {
+interface CascadeState {
   autoLoadCancelled: boolean;
   loadAttempts: number;
   validateFailures: number;
-};
+}
 
 function predicate(condition: string): (state: CascadeState) => boolean {
   const compiled = new Function(
@@ -136,16 +136,16 @@ type Outcome =
   | "load-fails"
   | "loads";
 
-type CascadeResult = {
+interface CascadeResult {
   validates: number;
   loads: number;
   loaded: boolean;
   validateFailures: number;
-};
+}
 
 type SweepStatus = "next-source" | "aborted" | "loaded";
 
-type ValidateBudget = { validates: number; abortAt: number };
+interface ValidateBudget { validates: number; abortAt: number }
 
 function sweepSource(
   quants: readonly Outcome[],
@@ -275,7 +275,7 @@ test("the budget cuts in one candidate past its last refusal", () => {
       cascade.loaded,
       refusals < cap,
       `with ${refusals} refusals ahead of it the model should ` +
-        `${refusals < cap ? "load" : "not be reached"}`,
+        (refusals < cap ? "load" : "not be reached"),
     );
     assert.equal(
       cascade.validates,

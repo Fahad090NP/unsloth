@@ -12,11 +12,11 @@ const answer: PageResponse = { status: 200, statusText: "OK", url: "https://site
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 function setup(page: string | null = "https://site.test/models") {
-  const calls: Array<{ page: string; signal: AbortSignal; finish: (ok: boolean) => void }> = [];
-  const replies: Array<[string, PageResponse | null]> = [];
+  const calls: { page: string; signal: AbortSignal; finish: (ok: boolean) => void }[] = [];
+  const replies: [string, PageResponse | null][] = [];
   const requests = pageRequests(
     (page, _request, signal) =>
-      new Promise((resolve, reject) => calls.push({ page, signal, finish: (ok) => (ok ? resolve(answer) : reject(new Error("failed"))) })),
+      new Promise((resolve, reject) => calls.push({ page, signal, finish: (ok) => { ok ? resolve(answer) : reject(new Error("failed")); } })),
     (id, reply) => replies.push([id, reply]),
     () => page,
   );

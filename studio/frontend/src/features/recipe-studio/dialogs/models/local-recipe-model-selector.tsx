@@ -34,7 +34,7 @@ import {
 
 const GGUF_SUFFIX_PATTERN = /-GGUF(?:$|-)/i;
 
-type LocalRecipeModelSelectorProps = {
+interface LocalRecipeModelSelectorProps {
   value: string;
   ggufVariant?: string | null;
   onChange: (modelId: string, ggufVariant?: string | null) => void;
@@ -42,7 +42,7 @@ type LocalRecipeModelSelectorProps = {
   disabled?: boolean;
   compact?: boolean;
   className?: string;
-};
+}
 
 function normalizeForSearch(value: string): string {
   return value.toLowerCase().replace(/[\s_.-]/g, "");
@@ -90,11 +90,11 @@ function sourceLabel(model: LocalModelInfo): string {
   }
 }
 
-type SelectedModelSummary = {
+interface SelectedModelSummary {
   label: string;
   source: string;
   isGguf: boolean;
-};
+}
 
 function getSelectedModelSummary(
   value: string,
@@ -209,7 +209,7 @@ function LocalGgufVariantList({
             <button
               key={variant.filename}
               type="button"
-              onClick={() => onSelect(variant.quant)}
+              onClick={() => { onSelect(variant.quant); }}
               className={cn(
                 "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted/60",
                 selected && "bg-background text-foreground shadow-sm",
@@ -339,7 +339,7 @@ function LocalModelRow({
       <button
         type="button"
         disabled={probing}
-        onClick={() => onSelectModel(model)}
+        onClick={() => { onSelectModel(model); }}
         className={cn(
           "flex w-full items-center gap-2 rounded-md px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/50",
           selected && "bg-muted/70 text-foreground ring-1 ring-border/70",
@@ -380,7 +380,7 @@ function LocalModelRow({
         <LocalGgufVariantList
           repoId={model.id}
           selectedVariant={selected ? ggufVariant : null}
-          onSelect={(variant) => onSelectVariant(model.id, variant)}
+          onSelect={(variant) => { onSelectVariant(model.id, variant); }}
         />
       ) : null}
     </div>
@@ -614,7 +614,7 @@ export function LocalRecipeModelSelector({
             <div className="flex items-center gap-2">
               <Input
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => { setQuery(event.target.value); }}
                 placeholder="Filter local models"
                 className="h-8 flex-1"
                 autoFocus={true}
@@ -633,7 +633,7 @@ export function LocalRecipeModelSelector({
 
           <div
             className="nowheel max-h-[min(24rem,calc(100vh-12rem))] overflow-y-auto overscroll-contain p-1.5"
-            onWheelCapture={(event) => event.stopPropagation()}
+            onWheelCapture={(event) => { event.stopPropagation(); }}
           >
             <LocalModelResults
               loading={loading}

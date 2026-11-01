@@ -3,7 +3,7 @@
 
 import { create } from "zustand";
 
-export type PromptQueueUIEntry = {
+export interface PromptQueueUIEntry {
   runId: string;
   current: number;
   total: number;
@@ -11,7 +11,7 @@ export type PromptQueueUIEntry = {
   temporary: boolean;
   dispatched: boolean;
   paused: boolean;
-};
+}
 
 export type PromptQueueUIItemStatus =
   | "queued"
@@ -20,7 +20,7 @@ export type PromptQueueUIItemStatus =
   | "running"
   | "paused";
 
-export type PromptQueueUIItem = {
+export interface PromptQueueUIItem {
   id: string;
   runId: string;
   prompt: string;
@@ -31,7 +31,7 @@ export type PromptQueueUIItem = {
   threadIds: string[];
   canEdit: boolean;
   canRemove: boolean;
-};
+}
 
 export interface PromptQueueUIState {
   byThreadId: Record<string, PromptQueueUIEntry>;

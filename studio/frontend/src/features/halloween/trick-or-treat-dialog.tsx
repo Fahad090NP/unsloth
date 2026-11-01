@@ -147,7 +147,7 @@ function ThemeGrid() {
             type="button"
             data-palette-value={id}
             aria-pressed={selected}
-            onClick={() => pickHalloweenTheme(id)}
+            onClick={() => { pickHalloweenTheme(id); }}
             className={cn(
               "flex min-w-0 cursor-pointer items-center gap-2 rounded-full border py-1.5 pr-3 pl-1.5 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
               selected ? "border-primary ring-1 ring-primary" : "border-border",
@@ -218,14 +218,14 @@ export function TrickOrTreatDialog({
               <Row
                 icon={Moon02Icon}
                 label={t("halloween.chooseTheme")}
-                onClick={() => setView("themes")}
+                onClick={() => { setView("themes"); }}
                 trailing={<ArrowBadge />}
               />
               <Row
                 icon={SkullIcon}
                 label={t("halloween.spookyGreetings")}
                 description={t("halloween.spookyGreetingsDescription")}
-                onClick={() => setSpookyGreetings(!spookyGreetings)}
+                onClick={() => { setSpookyGreetings(!spookyGreetings); }}
                 trailing={
                   <Switch
                     aria-label={t("halloween.spookyGreetings")}
@@ -239,7 +239,7 @@ export function TrickOrTreatDialog({
                 icon={<SpiderWebIcon />}
                 label={t("halloween.decorations")}
                 description={t("halloween.decorationsDescription")}
-                onClick={() => setDecorations(!decorations)}
+                onClick={() => { setDecorations(!decorations); }}
                 trailing={
                   <Switch
                     aria-label={t("halloween.decorations")}
@@ -281,7 +281,7 @@ export function TrickOrTreatDialog({
               <button
                 type="button"
                 aria-label={t("halloween.back")}
-                onClick={() => setView("home")}
+                onClick={() => { setView("home"); }}
                 className="flex size-8 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:outline-none"
               >
                 <HugeiconsIcon

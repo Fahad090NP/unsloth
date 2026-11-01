@@ -4,7 +4,7 @@
 /* Which lines carry token spans. Off-window lines lose only colour, never text or height. */
 
 /** An inclusive line range. `null` means "no window": every line renders its token spans. */
-export type LineWindow = { first: number; last: number };
+export interface LineWindow { first: number; last: number }
 
 export const EMPTY_LINE_WINDOW: LineWindow = { first: -1, last: -1 };
 
@@ -19,7 +19,7 @@ export const OVERSCAN_VIEWPORTS = 1;
 // Slack before the window moves; without it one line of scroll re-renders both boundaries.
 export const HYSTERESIS_VIEWPORTS = 0.5;
 
-export type WindowGeometry = {
+export interface WindowGeometry {
   lineCount: number;
   lineHeight: number;
   contentTop: number;
@@ -27,7 +27,7 @@ export type WindowGeometry = {
   viewportHeight: number;
   previous: LineWindow | null;
   cap?: number;
-};
+}
 
 const clamp = (value: number, low: number, high: number): number =>
   value < low ? low : value > high ? high : value;
@@ -87,7 +87,7 @@ export const selectLineWindow = (geometry: WindowGeometry): LineWindow | null =>
 export const lineIsWindowed = (window: LineWindow | null, index: number): boolean =>
   window === null || (index >= window.first && index <= window.last);
 
-export type LinePin = { readonly index: number; readonly windowed: boolean };
+export interface LinePin { readonly index: number; readonly windowed: boolean }
 export type LinePins = readonly LinePin[];
 
 const pinOf = (pins: LinePins | null, index: number): boolean | undefined => {
@@ -104,7 +104,7 @@ export const lineRendered = (
 
 export const samePins = (a: LinePins | null, b: LinePins | null): boolean => {
   if (a === b) return true;
-  if (a === null || b === null || a.length !== b.length) return false;
+  if (a === null || a.length !== b?.length) return false;
   return a.every((pin, at) => pin.index === b[at].index && pin.windowed === b[at].windowed);
 };
 
@@ -121,7 +121,7 @@ export const pinBoundaryLines = (
 
 // Structurally typed rather than importing Shiki's `ThemedToken`, so a bundler-less test runner
 // can load this module.
-type LineToken = { content: string };
+interface LineToken { content: string }
 
 /** A blank line must still be one line tall: an empty text node has no line box. */
 export const isBlankLine = (line: readonly LineToken[]): boolean =>

@@ -222,10 +222,10 @@ export function ExportSubmenu({
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent className={cn(MENU, bulk ? "w-56" : "w-48")}>
         {bulk ? (
-          <BulkExportItems onExport={(format, merged) => onExport({ kind: "bulk", format, merged })} />
+          <BulkExportItems onExport={(format, merged) => { onExport({ kind: "bulk", format, merged }); }} />
         ) : (
           chatExportOptions().map(({ label, format }) => (
-            <DropdownMenuItem key={format} onSelect={() => onExport({ kind: "chat", format })}>
+            <DropdownMenuItem key={format} onSelect={() => { onExport({ kind: "chat", format }); }}>
               {label}
             </DropdownMenuItem>
           ))
@@ -273,7 +273,7 @@ export function MoveSubmenu({
             <MenuItem
               icon={PlusSignIcon}
               label={t("library.chats.toolbar.newProject")}
-              onSelect={() => onMove({ kind: "newProject" })}
+              onSelect={() => { onMove({ kind: "newProject" }); }}
             />
             {projectTargets.length > 0 && (
               <div className={MOVE_TO_LIST}>
@@ -282,7 +282,7 @@ export function MoveSubmenu({
                     key={entry.id}
                     icon={ProjectIcon}
                     label={entry.name}
-                    onSelect={() => onMove({ kind: "project", id: entry.id })}
+                    onSelect={() => { onMove({ kind: "project", id: entry.id }); }}
                   />
                 ))}
               </div>
@@ -297,7 +297,7 @@ export function MoveSubmenu({
                       })
                     : t("shell.sections.removeFromProject")
                 }
-                onSelect={() => onMove({ kind: "project", id: null })}
+                onSelect={() => { onMove({ kind: "project", id: null }); }}
               />
             )}
             <DropdownMenuSeparator className="mx-3" />
@@ -309,7 +309,7 @@ export function MoveSubmenu({
         <MenuItem
           icon={PlusSignIcon}
           label={t("shell.sections.newSection")}
-          onSelect={() => onMove({ kind: "newSection" })}
+          onSelect={() => { onMove({ kind: "newSection" }); }}
         />
         {sectionTargets.length > 0 && (
           <div className={MOVE_TO_LIST}>
@@ -318,7 +318,7 @@ export function MoveSubmenu({
                 key={entry.id}
                 icon={LayerIcon}
                 label={entry.name}
-                onSelect={() => onMove({ kind: "section", id: entry.id })}
+                onSelect={() => { onMove({ kind: "section", id: entry.id }); }}
               />
             ))}
           </div>
@@ -331,7 +331,7 @@ export function MoveSubmenu({
                 ? t("shell.sections.removeFrom", { name: leavingSection.name })
                 : t("shell.sections.removeFromSection")
             }
-            onSelect={() => onMove({ kind: "section", id: null })}
+            onSelect={() => { onMove({ kind: "section", id: null }); }}
           />
         )}
       </DropdownMenuSubContent>
@@ -351,7 +351,7 @@ function RegenerateTitleItem({ chat }: { chat: SidebarItem }) {
       icon={Refresh01Icon}
       label={t("library.menu.regenerateTitle")}
       disabled={generating}
-      onSelect={() => actions.regenerateTitle(chat)}
+      onSelect={() => { actions.regenerateTitle(chat); }}
     />
   );
 }
@@ -365,7 +365,7 @@ function ForkItem({ chat }: { chat: SidebarItem }) {
   return (
     <DropdownMenuItem
       disabled={!canForkChatRow(chat) || generating || forking}
-      onSelect={() => actions.fork(chat)}
+      onSelect={() => { actions.fork(chat); }}
     >
       <HugeiconsIcon icon={ForkIcon} strokeWidth={1.75} className={ICON} />
       {t("library.chats.menu.fork")}
@@ -448,7 +448,7 @@ function Isolate({
 }) {
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: only swallows bubbling clicks
-    <span className={className} onClick={(event) => event.stopPropagation()}>
+    <span className={className} onClick={(event) => { event.stopPropagation(); }}>
       {children}
     </span>
   );
@@ -480,7 +480,7 @@ function ChatMenu({
           <MenuItem
             icon={Edit03Icon}
             label={t("common.rename")}
-            onSelect={() => actions.rename(chat)}
+            onSelect={() => { actions.rename(chat); }}
           />
           <RegenerateTitleItem chat={chat} />
           {!archived && (
@@ -492,12 +492,12 @@ function ChatMenu({
                     ? "settings.data.library.unpin"
                     : "settings.data.library.pin",
                 )}
-                onSelect={() => actions.togglePin(chat)}
+                onSelect={() => { actions.togglePin(chat); }}
               />
               <FavoriteItem
                 favorite={actions.favorites.has(chat.id)}
                 onToggle={() =>
-                  actions.setFavorite([chat], !actions.favorites.has(chat.id))
+                  { actions.setFavorite([chat], !actions.favorites.has(chat.id)); }
                 }
               />
               <MenuItem
@@ -526,31 +526,31 @@ function ChatMenu({
               <MoveSubmenu
                 project={chat.projectId ?? null}
                 section={actions.sectionOf.get(chat.id) ?? null}
-                onMove={(destination) => actions.move([chat], destination)}
+                onMove={(destination) => { actions.move([chat], destination); }}
               />
             </>
           )}
-          <ExportSubmenu onExport={(choice) => actions.exportChats([chat], choice)} />
+          <ExportSubmenu onExport={(choice) => { actions.exportChats([chat], choice); }} />
           {!archived && <OpenChatFolderItem item={chat} />}
           <DropdownMenuSeparator className="mx-3" />
           {archived ? (
             <MenuItem
               icon={ArchiveRestoreIcon}
               label={t("settings.data.library.unarchive")}
-              onSelect={() => actions.unarchive([chat])}
+              onSelect={() => { actions.unarchive([chat]); }}
             />
           ) : (
             <MenuItem
               icon={Archive03Icon}
               label={t("settings.data.library.archive")}
-              onSelect={() => actions.archive([chat])}
+              onSelect={() => { actions.archive([chat]); }}
             />
           )}
           <MenuItem
             icon={Delete02Icon}
             label={t("common.delete")}
             destructive
-            onSelect={() => actions.remove([chat])}
+            onSelect={() => { actions.remove([chat]); }}
           />
         </DropdownMenuContent>
       </DropdownMenu>
@@ -871,14 +871,14 @@ export function DateHeader({
           <DropdownMenuContent
             align="start"
             className={cn(MENU, "w-44")}
-            onCloseAutoFocus={(event) => event.preventDefault()}
+            onCloseAutoFocus={(event) => { event.preventDefault(); }}
           >
             {fields.map((option) => (
               <SortRadio
                 key={option}
                 label={t(DATE_LABELS[option])}
                 checked={option === field}
-                onSelect={() => onFieldChange(option)}
+                onSelect={() => { onFieldChange(option); }}
               />
             ))}
           </DropdownMenuContent>
@@ -972,7 +972,7 @@ function SortHeader({
   return (
     <button
       type="button"
-      onClick={() => onSortChange(column)}
+      onClick={() => { onSortChange(column); }}
       aria-pressed={active}
       aria-label={active ? `${label}, ${direction}` : undefined}
       className={cn(
@@ -1078,9 +1078,9 @@ export function ChatRow({
     // biome-ignore lint/a11y/useKeyWithClickEvents: the title button is the keyboard target
     <div
       onClick={(event) =>
-        actions.selection.size > 0
+        { actions.selection.size > 0
           ? actions.toggleSelected(chat.id, event.shiftKey)
-          : actions.open(chat)
+          : actions.open(chat); }
       }
       className={cn(
         "group/chat relative flex cursor-pointer items-center gap-4 rounded-md transition-colors hover:bg-muted dark:hover:bg-muted/60",
@@ -1178,7 +1178,7 @@ export function ChatCard({
     // biome-ignore lint/a11y/useKeyWithClickEvents: the title button is the keyboard target
     <div
       onClick={(event) =>
-        selecting ? actions.toggleSelected(chat.id, event.shiftKey) : actions.open(chat)
+        { selecting ? actions.toggleSelected(chat.id, event.shiftKey) : actions.open(chat); }
       }
       className={cn(CARD, selected && "ring-2 ring-foreground")}
     >
@@ -1350,14 +1350,14 @@ function ProjectMenu({
           <MenuItem
             icon={PencilEdit02Icon}
             label={t("library.chats.menu.newChatInProject")}
-            onSelect={() => actions.newChatIn(project.id)}
+            onSelect={() => { actions.newChatIn(project.id); }}
           />
           <OpenProjectFolderItem projectId={project.id} />
           <DropdownMenuSeparator className="mx-3" />
           <MenuItem
             icon={Settings01Icon}
             label={t("library.chats.menu.edit")}
-            onSelect={() => actions.editProject(project)}
+            onSelect={() => { actions.editProject(project); }}
           />
           <MenuItem
             icon={pinned ? PinOffIcon : PinIcon}
@@ -1366,22 +1366,22 @@ function ProjectMenu({
                 ? "settings.data.library.unpin"
                 : "settings.data.library.pin",
             )}
-            onSelect={() => actions.togglePinProject(project.id)}
+            onSelect={() => { actions.togglePinProject(project.id); }}
           />
           <FavoriteItem
             favorite={actions.favoriteProjects.has(project.id)}
-            onToggle={() => actions.toggleFavoriteProject(project.id)}
+            onToggle={() => { actions.toggleFavoriteProject(project.id); }}
           />
           <DropdownMenuSeparator className="mx-3" />
           <MoveSubmenu
             sectionsOnly
             section={actions.projectSectionOf.get(project.id) ?? null}
-            onMove={(destination) => actions.moveProject(project, destination)}
+            onMove={(destination) => { actions.moveProject(project, destination); }}
           />
           <ExportSubmenu
             bulk
             disabled={!actions.projectChatCounts.get(project.id)}
-            onExport={(choice) => actions.exportProject(project, choice)}
+            onExport={(choice) => { actions.exportProject(project, choice); }}
           />
           <MenuItem
             icon={Upload01Icon}
@@ -1393,7 +1393,7 @@ function ProjectMenu({
             icon={Delete02Icon}
             label={t("library.chats.menu.deleteProject")}
             destructive
-            onSelect={() => actions.deleteProject(project)}
+            onSelect={() => { actions.deleteProject(project); }}
           />
         </DropdownMenuContent>
       </DropdownMenu>
@@ -1423,7 +1423,7 @@ export function ProjectCard({
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: the name button is the keyboard target
     <div
-      onClick={() => actions.viewProject(project.id)}
+      onClick={() => { actions.viewProject(project.id); }}
       className={CARD}
     >
       <div className={cn("flex items-center gap-2", !showTile && TILELESS_ROW)}>
@@ -1472,7 +1472,7 @@ export function ProjectRow({
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: the name button is the keyboard target
     <div
-      onClick={() => actions.viewProject(project.id)}
+      onClick={() => { actions.viewProject(project.id); }}
       className={cn(
         "group/chat relative flex cursor-pointer items-center gap-4 rounded-md transition-colors hover:bg-muted dark:hover:bg-muted/60",
         ROW_INSET,
@@ -1586,28 +1586,28 @@ export function SectionMenuItems({
           <MenuItem
             icon={PencilEdit02Icon}
             label={t("library.chats.toolbar.newChat")}
-            onSelect={() => actions.newChatInSection(section.id)}
+            onSelect={() => { actions.newChatInSection(section.id); }}
           />
           <MenuItem
             icon={FolderAddIcon}
             label={t("library.chats.toolbar.newProject")}
-            onSelect={() => actions.newProjectInSection(section.id)}
+            onSelect={() => { actions.newProjectInSection(section.id); }}
           />
         </>
       )}
       <MenuItem
         icon={Settings01Icon}
         label={t("shell.sections.edit")}
-        onSelect={() => actions.renameSection(section)}
+        onSelect={() => { actions.renameSection(section); }}
       />
       <FavoriteItem
         favorite={actions.favoriteSections.has(section.id)}
-        onToggle={() => actions.toggleFavoriteSection(section.id)}
+        onToggle={() => { actions.toggleFavoriteSection(section.id); }}
       />
       <ExportSubmenu
         bulk
         disabled={!actions.sectionChatCounts.get(section.id)}
-        onExport={(choice) => actions.exportSection(section, choice)}
+        onExport={(choice) => { actions.exportSection(section, choice); }}
       />
       <MenuItem
         icon={Upload01Icon}
@@ -1621,7 +1621,7 @@ export function SectionMenuItems({
         icon={Delete02Icon}
         label={t("shell.sections.remove")}
         destructive
-        onSelect={() => actions.removeSection(section)}
+        onSelect={() => { actions.removeSection(section); }}
       />
     </>
   );
@@ -1652,7 +1652,7 @@ export function SectionCard({
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: the name button is the keyboard target
     <div
-      onClick={() => actions.viewSection(section.id)}
+      onClick={() => { actions.viewSection(section.id); }}
       className={CARD}
     >
       <div className={cn("flex items-center gap-2", !showTile && TILELESS_ROW)}>
@@ -1695,7 +1695,7 @@ export function SectionRow({
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: the name button is the keyboard target
     <div
-      onClick={() => actions.viewSection(section.id)}
+      onClick={() => { actions.viewSection(section.id); }}
       className={cn(
         "group/chat relative flex cursor-pointer items-center gap-4 rounded-md transition-colors hover:bg-muted dark:hover:bg-muted/60",
         ROW_INSET,
@@ -1829,7 +1829,7 @@ export function FavoriteChatTile({ chat }: { chat: SidebarItem }) {
       title={chatTitle(chat, t)}
       icon={icon}
       time={chatTime(chat, "modified")}
-      onOpen={() => actions.open(chat)}
+      onOpen={() => { actions.open(chat); }}
       menu={<ChatMenu chat={chat} archived={false} variant="card" />}
     />
   );
@@ -1854,7 +1854,7 @@ export function FavoriteProjectTile({
         />
       }
       time={projectTime(project, stats, "modified")}
-      onOpen={() => actions.viewProject(project.id)}
+      onOpen={() => { actions.viewProject(project.id); }}
       menu={<ProjectMenu project={project} variant="card" />}
     />
   );
@@ -1879,7 +1879,7 @@ export function FavoriteSectionTile({
         />
       }
       time={sectionTime(section, stats, "modified")}
-      onOpen={() => actions.viewSection(section.id)}
+      onOpen={() => { actions.viewSection(section.id); }}
       menu={<SectionMenu section={section} variant="card" />}
     />
   );

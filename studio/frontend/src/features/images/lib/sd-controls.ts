@@ -111,7 +111,7 @@ export function canVaryImage(
   return !image.model || image.model === loadedModel;
 }
 
-type VaryBuild = {
+interface VaryBuild {
   engine?: string | null;
   model_kind?: string | null;
   gguf_filename?: string | null;
@@ -120,7 +120,7 @@ type VaryBuild = {
   attention_backend?: string | null;
   transformer_cache?: string | null;
   baked_loras?: string[] | null;
-};
+}
 const VARY_BUILD_KEYS = [
   "engine",
   "model_kind",

@@ -587,7 +587,7 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
   planReviewByRunId: {},
   openRunId: null,
   ingest: (run, event) =>
-    set((state) => {
+    { set((state) => {
       const previous = state.sessions[run.id];
       if (event && previous && event.id <= previous.lastAppliedSeq)
         return state;
@@ -646,9 +646,9 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
             }
           : {}),
       };
-    }),
+    }); },
   setThreadClaimed: (threadId, claimed) =>
-    set((state) =>
+    { set((state) =>
       state.claimedThreadIds[threadId] === claimed
         ? state
         : {
@@ -657,13 +657,13 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
               [threadId]: claimed,
             },
           },
-    ),
+    ); },
   setFollowing: (
     runId,
     following,
     connection = following ? "connected" : "idle",
   ) =>
-    set((state) => {
+    { set((state) => {
       const session = state.sessions[runId];
       if (!session) return state;
       if (
@@ -678,9 +678,9 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
           [runId]: { ...session, following, connection },
         },
       };
-    }),
+    }); },
   setConnectionError: (runId, error) =>
-    set((state) => {
+    { set((state) => {
       const session = state.sessions[runId];
       if (!session) return state;
       return {
@@ -693,11 +693,11 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
           },
         },
       };
-    }),
-  openPanel: (openRunId) => set({ openRunId }),
-  closePanel: () => set({ openRunId: null }),
+    }); },
+  openPanel: (openRunId) => { set({ openRunId }); },
+  closePanel: () => { set({ openRunId: null }); },
   setActivityOpen: (runId, activityId, open) =>
-    set((state) => {
+    { set((state) => {
       const current = state.activityOpenByRunId[runId] ?? {};
       if (current[activityId] === open) return state;
       return {
@@ -706,9 +706,9 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
           [runId]: { ...current, [activityId]: open },
         },
       };
-    }),
+    }); },
   setPlanReviewOpen: (runId, open) =>
-    set((state) => {
+    { set((state) => {
       const current = state.planReviewByRunId[runId];
       if (!current || current.open === open) return state;
       return {
@@ -717,9 +717,9 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
           [runId]: { ...current, open },
         },
       };
-    }),
+    }); },
   setPlanReviewEditing: (runId, editing) =>
-    set((state) => {
+    { set((state) => {
       const current = state.planReviewByRunId[runId];
       if (!current || current.editing === editing) return state;
       return {
@@ -728,9 +728,9 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
           [runId]: { ...current, editing },
         },
       };
-    }),
+    }); },
   setPlanReviewDraft: (runId, draft) =>
-    set((state) => {
+    { set((state) => {
       const current = state.planReviewByRunId[runId];
       if (!current || current.draft === draft) return state;
       return {
@@ -739,7 +739,7 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
           [runId]: { ...current, draft },
         },
       };
-    }),
+    }); },
 }));
 
 const ownedFollowers = new Map<string, AbortController>();
@@ -914,7 +914,7 @@ export function ingestResearchUpdate(
     run,
     event,
     timer: setTimeout(
-      () => flushPendingStreamEvent(run.id),
+      () => { flushPendingStreamEvent(run.id); },
       STREAM_EVENT_FLUSH_MS,
     ),
   });

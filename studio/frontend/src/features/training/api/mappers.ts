@@ -79,7 +79,7 @@ export function offloadSupported(
 export function offloadHardwareSupported(
   system: Pick<SystemInfoResponse, "status" | "device_backend" | "gpu"> | null | undefined,
 ): boolean {
-  if (!system || system.status !== "ready") return true;
+  if (system?.status !== "ready") return true;
   if (system.device_backend !== "cuda" && system.device_backend !== "rocm") return false;
   const devices = system.gpu?.devices ?? [];
   return devices.length === 0 || devices.some((device) => device.unified_memory !== true);
@@ -298,7 +298,7 @@ export function buildTrainingStartPayload(
     finetune_language_layers: config.finetuneLanguageLayers,
     finetune_attention_modules: config.finetuneAttentionModules,
     finetune_mlp_modules: config.finetuneMLPModules,
-    is_dataset_image: isEmbedding ? false : !!config.isDatasetImage,
+    is_dataset_image: isEmbedding ? false : Boolean(config.isDatasetImage),
     // The decision trainer reads its rows itself; this flag selects the chat audio path.
     is_dataset_audio: isEmbedding || isDecision ? false : config.isDatasetAudio,
     is_embedding: isEmbedding && !isDecision,

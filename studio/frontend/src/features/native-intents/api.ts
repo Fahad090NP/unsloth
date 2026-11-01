@@ -15,7 +15,7 @@ async function invokeNative<T>(
     );
   }
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<T>(command, args);
+  return await invoke<T>(command, args);
 }
 
 export interface NativeDocumentFolderSelection {
@@ -31,19 +31,19 @@ export async function pickNativeDocumentFolder(): Promise<NativeDocumentFolderSe
       "Persistent local folder sync is only available in the desktop app.",
     );
   }
-  return invokeNative<NativeDocumentFolderSelection | null>(
+  return await invokeNative<NativeDocumentFolderSelection | null>(
     "pick_native_document_folder",
   );
 }
 
 export async function drainNativeIntents(): Promise<NativeIntent[]> {
   if (!isTauri) return [];
-  return invokeNative<NativeIntent[]>("drain_native_intents");
+  return await invokeNative<NativeIntent[]>("drain_native_intents");
 }
 
 export async function pickHuggingFaceCacheDir(): Promise<string | null> {
   if (!isTauri) return null;
-  return invokeNative<string | null>("pick_hugging_face_cache_dir");
+  return await invokeNative<string | null>("pick_hugging_face_cache_dir");
 }
 
 /** Desktop owner's OS folder dialog. `undefined` = use the in-app browser (web app,
@@ -62,13 +62,13 @@ export async function pickNativeModelFolder(
 export async function registerNativeModelPath(
   path: string,
 ): Promise<NativeIntent> {
-  return invokeNative<NativeIntent>("register_native_model_path", { path });
+  return await invokeNative<NativeIntent>("register_native_model_path", { path });
 }
 
 export async function registerNativeAttachmentPath(
   path: string,
 ): Promise<NativeIntent> {
-  return invokeNative<NativeIntent>("register_native_attachment_path", {
+  return await invokeNative<NativeIntent>("register_native_attachment_path", {
     path,
   });
 }
@@ -76,13 +76,13 @@ export async function registerNativeAttachmentPath(
 export async function registerNativeDatasetPath(
   path: string,
 ): Promise<NativeIntent> {
-  return invokeNative<NativeIntent>("register_native_dataset_path", { path });
+  return await invokeNative<NativeIntent>("register_native_dataset_path", { path });
 }
 
 export async function readNativeAttachmentFile(
   token: string,
 ): Promise<{ name: string; mimeType: string; base64: string }> {
-  return invokeNative<{ name: string; mimeType: string; base64: string }>(
+  return await invokeNative<{ name: string; mimeType: string; base64: string }>(
     "read_native_attachment_file",
     { token },
   );
@@ -92,21 +92,21 @@ export async function consumeNativePathToken(
   token: string,
   operation: NativePathOperation,
 ): Promise<NativePathLeaseResponse> {
-  return invokeNative<NativePathLeaseResponse>("consume_native_path_token", {
+  return await invokeNative<NativePathLeaseResponse>("consume_native_path_token", {
     token,
     operation,
   });
 }
 
 export async function revealPathToken(token: string): Promise<void> {
-  return invokeNative<void>("reveal_path_token", { token });
+  await invokeNative<void>("reveal_path_token", { token });
 }
 
 export async function openPathToken(token: string): Promise<void> {
-  return invokeNative<void>("open_path_token", { token });
+  await invokeNative<void>("open_path_token", { token });
 }
 
 // Tauri validates that the path is a real directory.
 export async function openModelsDir(path: string): Promise<void> {
-  return invokeNative<void>("open_models_dir", { path });
+  await invokeNative<void>("open_models_dir", { path });
 }

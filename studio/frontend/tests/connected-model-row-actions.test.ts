@@ -629,17 +629,17 @@ test("a served catalogue cannot take away a context window it has no field for",
   setModelsDevCatalog({
     fetched_at: Date.now(),
     providers: { openai: { "gpt-4-turbo": { input: ["text"], context: 999_999 } } },
-  } as never);
+  });
   assert.equal(resolveModelCatalogEntry("openai", "gpt-4-turbo")?.contextLength, 999_999);
 
   // A backend payload without context must not erase the bundled window.
   setModelsDevCatalog({
     fetched_at: Date.now(),
     providers: { openai: { "gpt-4-turbo": { input: ["text"] } } },
-  } as never);
+  });
   assert.equal(resolveModelCatalogEntry("openai", "gpt-4-turbo")?.contextLength, bundled);
 
-  setModelsDevCatalog({ fetched_at: Date.now(), providers: {} } as never);
+  setModelsDevCatalog({ fetched_at: Date.now(), providers: {} });
 });
 
 test("connection saves write back the live store, not the render snapshot", () => {

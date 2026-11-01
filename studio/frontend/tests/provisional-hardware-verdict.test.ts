@@ -275,7 +275,7 @@ test("the store exposes an unknown state, not just chat-only", async () => {
 // Under the torch-warm kill switch `fetched` never flips, so unknown would spin forever.
 test("a deferred verdict counts as settled, not as still checking", async () => {
   const { readFile } = await import("node:fs/promises");
-  const selector = /capabilitiesUnknown: \(\) => \{([\s\S]*?)\n  \},/.exec(ENV);
+  const selector = /capabilitiesUnknown: \(\) => \{([\s\S]*?)\n {2}\},/.exec(ENV);
   assert.ok(selector, "capabilitiesUnknown is no longer a block the deferred case can live in");
   assert.match(
     selector[1],
@@ -342,12 +342,12 @@ test("the Video page gates on the backend's own capability answer", async () => 
   );
   // Video does not use MLX, so it must not wait on the training verdict during MLX self-heal.
   assert.ok(
-    !/usePlatformStore/.test(src),
+    !src.includes('usePlatformStore'),
     "the Video gate waits on the training verdict again",
   );
   // An older backend sends null; only an explicit false may hide the generator.
   assert.ok(
-    !/videoSupported !== true/.test(src),
+    !src.includes('videoSupported !== true'),
     "an older backend's missing field would hide the page it has always served",
   );
 });
@@ -411,7 +411,7 @@ test("the Video row is disabled exactly when the hint has something to say", asy
     /tooltip: videoDisabledHint,/,
     "the Video row is disabled with no reason shown",
   );
-  assert.ok(!/coming soon/.test(APP_SIDEBAR), "the Video row still promises macOS support that has shipped");
+  assert.ok(!APP_SIDEBAR.includes('coming soon'), "the Video row still promises macOS support that has shipped");
 });
 
 // A failed probe used to stay unloaded forever, spinning the Video gate.
@@ -439,7 +439,7 @@ test("a cache filled between render and subscribe still reaches the component", 
   );
   // load() reads !loaded as failure, so a superseded 200 must not count as one.
   assert.ok(
-    !/return cached \?\? DEFAULT;/.test(USE_HARDWARE_INFO),
+    !USE_HARDWARE_INFO.includes('return cached ?? DEFAULT;'),
     "a superseded but successful read still resolves as an unloaded DEFAULT",
   );
 });

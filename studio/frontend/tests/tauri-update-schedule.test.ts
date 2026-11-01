@@ -17,10 +17,10 @@ interface BundleState {
   downloading: boolean;
 }
 
-type UpdateController = {
+interface UpdateController {
   checkForUpdate: () => Promise<void>;
   installUpdate: () => Promise<void>;
-};
+}
 
 type Listener = EventListenerOrEventListenerObject;
 
@@ -105,32 +105,32 @@ function installBrowserClock() {
     setTimeout: {
       configurable: true,
       writable: true,
-      value: ((callback: () => void, delay = 0) => {
+      value: (callback: () => void, delay = 0) => {
         const id = nextTimerId++;
         timeouts.set(id, { callback, delay });
         return id;
-      }) as unknown as typeof setTimeout,
+      },
     },
     clearTimeout: {
       configurable: true,
       writable: true,
-      value: ((id: number) =>
-        timeouts.delete(id)) as unknown as typeof clearTimeout,
+      value: (id: number) =>
+        timeouts.delete(id),
     },
     setInterval: {
       configurable: true,
       writable: true,
-      value: ((callback: () => void, delay = 0) => {
+      value: (callback: () => void, delay = 0) => {
         const id = nextTimerId++;
         intervals.set(id, { callback, delay });
         return id;
-      }) as unknown as typeof setInterval,
+      },
     },
     clearInterval: {
       configurable: true,
       writable: true,
-      value: ((id: number) =>
-        intervals.delete(id)) as unknown as typeof clearInterval,
+      value: (id: number) =>
+        intervals.delete(id),
     },
   });
   Object.defineProperty(Date, "now", {
@@ -148,7 +148,7 @@ function installBrowserClock() {
       ...[...timeouts.values()].map(({ delay }) => delay),
       ...[...intervals.values()].map(({ delay }) => delay),
     ],
-    fireDocument: (type: string) => documentTarget.fire(type),
+    fireDocument: (type: string) => { documentTarget.fire(type); },
     fireIntervals: (delay: number) => {
       for (const timer of intervals.values()) {
         if (timer.delay === delay) timer.callback();
@@ -161,7 +161,7 @@ function installBrowserClock() {
         timer.callback();
       }
     },
-    fireWindow: (type: string) => windowTarget.fire(type),
+    fireWindow: (type: string) => { windowTarget.fire(type); },
     listenerCount: () =>
       windowTarget.listenerCount() + documentTarget.listenerCount(),
     setHidden: (nextHidden: boolean) => {
@@ -192,8 +192,8 @@ function installBrowserClock() {
 }
 
 function createHookReact() {
-  const effects: Array<() => unknown> = [];
-  const cleanups: Array<() => void> = [];
+  const effects: (() => unknown)[] = [];
+  const cleanups: (() => void)[] = [];
   const statusUpdates: string[] = [];
   const progressUpdates: number[] = [];
   let stateIndex = 0;
@@ -327,7 +327,7 @@ function hookHarness(
           backendUpdates += 1;
           if (backendUpdate === "fails")
             throw new Error("backend update failed");
-          queueMicrotask(() => emit("update-complete"));
+          queueMicrotask(() => { emit("update-complete"); });
           return undefined;
         }
         if (command === "set_renderer_activity") return undefined;

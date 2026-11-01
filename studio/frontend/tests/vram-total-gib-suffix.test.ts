@@ -68,7 +68,7 @@ test("localized GPU totals name a binary unit", () => {
     const source = readFileSync(new URL(file, LOCALES), "utf8");
     for (const line of source.split("\n")) {
       if (!/\b(vramNeeds|vramTight):/.test(line)) continue;
-      const unit = line.match(UNIT);
+      const unit = UNIT.exec(line);
       assert.ok(unit, `${file}: no unit after {total} in ${line.trim()}`);
       assert.ok(
         BINARY_UNITS.includes(unit[1]),
@@ -82,7 +82,7 @@ test("helper-formatted totals pick the GiB helper, not the disk one", () => {
   for (const relative of HELPER_RENDERERS) {
     const source = readFileSync(new URL(relative, SRC), "utf8");
 
-    const helper = source.match(/function formatGiB[\s\S]*?\n}/);
+    const helper = /function formatGiB[\s\S]*?\n}/.exec(source);
     assert.ok(helper, `${relative}: no formatGiB helper`);
     assert.match(helper[0], /`.*GiB`/, `${relative}: formatGiB does not suffix GiB`);
 
@@ -104,9 +104,7 @@ const BINARY_FORMATTERS: [string, string][] = [
 test("every shared memory formatter names a binary unit", () => {
   for (const [relative, fn] of BINARY_FORMATTERS) {
     const source = readFileSync(new URL(relative, SRC), "utf8");
-    const helper = source.match(
-      new RegExp(`export function ${fn}[\\s\\S]*?\\n}`),
-    );
+    const helper = new RegExp(`export function ${fn}[\\s\\S]*?\\n}`).exec(source);
     assert.ok(helper, `${relative}: no ${fn}`);
     assert.doesNotMatch(
       helper[0],

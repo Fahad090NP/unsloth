@@ -346,7 +346,7 @@ function startsNewMarkdownBlock(text: string, at: number): boolean {
 
 function findShellQuoteStates(
   text: string,
-  resetRegions: ReadonlyArray<readonly [number, number]>,
+  resetRegions: readonly (readonly [number, number])[],
 ): Map<number, number> {
   const states = new Map<number, number>();
   let quote = 0;
@@ -658,10 +658,10 @@ const VARIABLE_DOLLAR = "&#36;";
 
 /** merges ascending spans; overlaps merge and non-ascending spans drop. */
 function mergeRegions(
-  left: ReadonlyArray<readonly [number, number]>,
-  right: ReadonlyArray<readonly [number, number]>,
-): Array<[number, number]> {
-  const merged: Array<[number, number]> = [];
+  left: readonly (readonly [number, number])[],
+  right: readonly (readonly [number, number])[],
+): [number, number][] {
+  const merged: [number, number][] = [];
   let leftIndex = 0;
   let rightIndex = 0;
   while (leftIndex < left.length || rightIndex < right.length) {
@@ -734,8 +734,8 @@ function normalizedMarkdownOffsets(content: string): {
 
 function findInlineCodeRegions(
   content: string,
-  blockRegions: Array<[number, number]>,
-): Array<[number, number]> {
+  blockRegions: [number, number][],
+): [number, number][] {
   // Skip the O(n) rebuild when no backtick lies outside a block; streaming calls this per frame.
   let spanTickOutsideBlock = false;
   for (
@@ -773,7 +773,7 @@ function findInlineCodeRegions(
 
   const normalized = normalizedMarkdownOffsets(masked);
   const blocks = parseMarkdownIntoBlocks(normalized.text);
-  const regions: Array<[number, number]> = [];
+  const regions: [number, number][] = [];
   let blockStart = 0;
   for (const block of blocks) {
     for (const span of codeSpans(block)) {
@@ -787,10 +787,10 @@ function findInlineCodeRegions(
   return regions;
 }
 
-export function findCodeBlockRegions(content: string): Array<[number, number]> {
-  const fenced: Array<[number, number]> = [];
+export function findCodeBlockRegions(content: string): [number, number][] {
+  const fenced: [number, number][] = [];
   let match: RegExpExecArray | null;
-  const indented: Array<[number, number]> = [];
+  const indented: [number, number][] = [];
 
   FENCE_CANDIDATE_RE.lastIndex = 0;
   INDENTED_CODE_CANDIDATE_RE.lastIndex = 0;
@@ -807,7 +807,7 @@ export function findCodeBlockRegions(content: string): Array<[number, number]> {
     const tail = match[4] ?? "";
     const lineStart = match.index + (match[1]?.length ?? 0);
     if (simpleFenceStart < 0) {
-      if (marker[0] !== "`" || !tail.includes("`")) {
+      if (!marker.startsWith("`") || !tail.includes("`")) {
         simpleFenceStart = lineStart;
         simpleFenceMarker = marker;
       }
@@ -901,7 +901,7 @@ export function findCodeBlockRegions(content: string): Array<[number, number]> {
         const marker = fence[1] ?? "";
         const tail = fence[2] ?? "";
         if (openFence === null) {
-          if (marker[0] !== "`" || !tail.includes("`")) {
+          if (!marker.startsWith("`") || !tail.includes("`")) {
             const quoted = containerContent(text, EMPTY_LIST_STATE, quotes);
             openFence = {
               start,
@@ -975,9 +975,9 @@ const AUTOLINK_RE =
   /<(?:[a-z][a-z0-9+.-]*:[^\s<>]*|[^\s<>@]+@[^\s<>@]+)>|\b(?:https?:\/\/|www\.)[^\s<]+/gi;
 
 /** shields link destinations from math rewrites; link text stays convertible. */
-function findLinkDestinationRegions(content: string): Array<[number, number]> {
+function findLinkDestinationRegions(content: string): [number, number][] {
   if (!content.includes("](")) return [];
-  const regions: Array<[number, number]> = [];
+  const regions: [number, number][] = [];
   let match: RegExpExecArray | null;
   LINK_DEST_RE.lastIndex = 0;
   while ((match = LINK_DEST_RE.exec(content)) !== null) {
@@ -991,17 +991,17 @@ function findLinkDestinationRegions(content: string): Array<[number, number]> {
 const RAW_TEXT_ELEMENT_RE =
   /<(script|style|xmp|iframe|noembed|noframes)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi;
 
-function findRawTextRegions(content: string): Array<[number, number]> {
+function findRawTextRegions(content: string): [number, number][] {
   if (!content.includes("<")) return [];
-  const regions: Array<[number, number]> = [];
+  const regions: [number, number][] = [];
   for (const match of content.matchAll(RAW_TEXT_ELEMENT_RE)) {
     regions.push([match.index, match.index + match[0].length]);
   }
   return regions;
 }
 
-function findAutolinkRegions(content: string): Array<[number, number]> {
-  const regions: Array<[number, number]> = [];
+function findAutolinkRegions(content: string): [number, number][] {
+  const regions: [number, number][] = [];
   AUTOLINK_RE.lastIndex = 0;
   for (const match of content.matchAll(AUTOLINK_RE)) {
     regions.push([match.index, match.index + match[0].length]);
@@ -1011,7 +1011,7 @@ function findAutolinkRegions(content: string): Array<[number, number]> {
 
 /** `isInRegion` for ascending positions: amortised O(1) per query. */
 function regionCursor(
-  regions: Array<[number, number]>,
+  regions: [number, number][],
 ): (position: number) => boolean {
   let k = 0;
   return (position) => {
@@ -1023,7 +1023,7 @@ function regionCursor(
 /** regions must be sorted by start and non-overlapping. */
 export function isInRegion(
   position: number,
-  regions: Array<[number, number]>,
+  regions: [number, number][],
 ): boolean {
   let lo = 0;
   let hi = regions.length - 1;
@@ -1082,7 +1082,7 @@ function looksLikeMathBody(body: string): boolean {
 function hasInlineMathCloser(
   content: string,
   offset: number,
-  mathRegions: Array<[number, number]>,
+  mathRegions: [number, number][],
   shellQuoteStates: Map<number, number>,
   legacyArithmeticCloses: Int32Array | undefined,
   isStreaming: boolean,
@@ -1180,7 +1180,7 @@ const CONVERT_LATEX_DELIM_RE =
  */
 function convertLatexDelimiters(content: string): {
   text: string;
-  mathRegions: Array<[number, number]>;
+  mathRegions: [number, number][];
 } {
   if (!content.includes("\\[") && !content.includes("\\(")) {
     return { text: content, mathRegions: [] };
@@ -1191,7 +1191,7 @@ function convertLatexDelimiters(content: string): {
   const inSkipZone = (pos: number) =>
     isInRegion(pos, codeRegions) || isInRegion(pos, linkRegions);
   // Ascending and non-overlapping by construction, so no sort is needed.
-  const mathRegions: Array<[number, number]> = [];
+  const mathRegions: [number, number][] = [];
   // An array, not `+=`: reading a growing string's tail flattens its rope each time (O(n^2)).
   const parts: string[] = [];
   let offset = 0;

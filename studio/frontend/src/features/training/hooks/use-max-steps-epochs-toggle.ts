@@ -37,7 +37,7 @@ function normalizePrevSaveSteps(value: number): number {
   return Number.isFinite(value) && value >= 0 ? value : 0;
 }
 
-type UseMaxStepsEpochsToggleParams = {
+interface UseMaxStepsEpochsToggleParams {
   maxSteps: number;
   epochs: number;
   saveSteps: number;
@@ -45,12 +45,12 @@ type UseMaxStepsEpochsToggleParams = {
   setEpochs: (value: number) => void;
   setSaveSteps: (value: number) => void;
   defaultEpochs?: number;
-};
+}
 
-type UseMaxStepsEpochsToggleResult = {
+interface UseMaxStepsEpochsToggleResult {
   useEpochs: boolean;
   toggleUseEpochs: () => void;
-};
+}
 
 export function useMaxStepsEpochsToggle({
   maxSteps,

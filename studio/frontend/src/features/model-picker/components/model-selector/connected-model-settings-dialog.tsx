@@ -185,7 +185,7 @@ export function ConnectedModelSettingsDialog({
             <Textarea
               id="connected-model-system-prompt"
               value={systemPrompt}
-              onChange={(event) => setPromptDraft(event.target.value)}
+              onChange={(event) => { setPromptDraft(event.target.value); }}
               rows={5}
             />
           </div>
@@ -204,7 +204,7 @@ export function ConnectedModelSettingsDialog({
               max={maxCap}
               inputMode="numeric"
               value={maxTokens}
-              onChange={(event) => setCapDraft(event.target.value)}
+              onChange={(event) => { setCapDraft(event.target.value); }}
               className="w-28"
             />
           </div>
@@ -230,7 +230,7 @@ export function ConnectedModelSettingsDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => { onOpenChange(false); }}>
             Cancel
           </Button>
           <Button onClick={save}>Save</Button>

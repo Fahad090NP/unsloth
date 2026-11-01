@@ -20,13 +20,13 @@ export function BulkExportItems({
   return (
     <>
       {COMBINED_EXPORT_FORMATS_LIST.map(({ fmt, label }) => (
-        <DropdownMenuItem key={`merged-${fmt}`} onSelect={() => onExport(fmt, true)}>
+        <DropdownMenuItem key={`merged-${fmt}`} onSelect={() => { onExport(fmt, true); }}>
           {label} {t("settings.chat.exportCombinedSuffix")}
         </DropdownMenuItem>
       ))}
       <DropdownMenuSeparator className="mx-3" />
       {EXPORT_FORMATS_LIST.map(({ fmt, label }) => (
-        <DropdownMenuItem key={`separate-${fmt}`} onSelect={() => onExport(fmt, false)}>
+        <DropdownMenuItem key={`separate-${fmt}`} onSelect={() => { onExport(fmt, false); }}>
           {label} {t("settings.chat.exportPerChatSuffix")}
         </DropdownMenuItem>
       ))}

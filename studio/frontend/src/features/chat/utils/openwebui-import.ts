@@ -142,15 +142,15 @@ function pushText(parts: unknown[], text: string): void {
   const trimmed = text.trim();
   if (!trimmed) return;
   const last = parts.at(-1) as Dict | undefined;
-  if (last && last.type === "text") {
+  if (last?.type === "text") {
     last.text = `${last.text as string}\n\n${trimmed}`;
     return;
   }
   parts.push({ type: "text", text: trimmed });
 }
 
-function fencedRanges(content: string): Array<[number, number]> {
-  const ranges: Array<[number, number]> = [];
+function fencedRanges(content: string): [number, number][] {
+  const ranges: [number, number][] = [];
   FENCED_CODE.lastIndex = 0;
   let match = FENCED_CODE.exec(content);
   while (match !== null) {
@@ -462,7 +462,7 @@ function collectNodes(chat: Dict): Node[] {
   const walk = (root: Node): void => {
     const stack: Node[] = [root];
     while (stack.length > 0) {
-      const node = stack.pop() as Node;
+      const node = stack.pop()!;
       if (visited.has(node.id)) continue;
       if (ordered.length >= MAX_MESSAGES_PER_CHAT) return;
       visited.add(node.id);
@@ -479,7 +479,7 @@ function collectNodes(chat: Dict): Node[] {
   const reachable = new Set<string>();
   const pending = [...roots];
   while (pending.length > 0) {
-    const node = pending.pop() as Node;
+    const node = pending.pop()!;
     if (reachable.has(node.id)) continue;
     reachable.add(node.id);
     for (const kid of children.get(node.id) ?? []) pending.push(kid);

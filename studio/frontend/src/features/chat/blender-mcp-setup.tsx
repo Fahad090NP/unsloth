@@ -149,7 +149,7 @@ export function BlenderMcpSetup({ servers, disabled, onBusyChange }: {
       {duplicate && <p className="text-xs leading-relaxed text-amber-600">A custom Blender server also exists. Disable it in Manage MCP servers if you prefer Unsloth’s managed setup.</p>}
       {config && !config.is_enabled && (
         <div className="flex items-start gap-3">
-          <Checkbox id="blender-mcp-consent" className="mt-0.5" checked={consent} disabled={locked} onCheckedChange={(checked) => setConsent(checked === true)} />
+          <Checkbox id="blender-mcp-consent" className="mt-0.5" checked={consent} disabled={locked} onCheckedChange={(checked) => { setConsent(checked === true); }} />
           <Label htmlFor="blender-mcp-consent" className="text-xs font-normal leading-relaxed">
             Allow unsandboxed Python, scene changes and background Blender tool processes. Results may be sent to your model provider. Cancelling may not undo changes.
           </Label>

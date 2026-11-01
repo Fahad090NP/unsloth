@@ -120,7 +120,7 @@ async function selectLlm(): Promise<string[]> {
   return requested;
 }
 
-after(() => setAuthFetchHandler(null));
+after(() => { setAuthFetchHandler(null); });
 
 test("an LLM trained as a decision model gets the decision recipe and keeps QLoRA", async () => {
   useTrainingConfigStore.getState().reset();

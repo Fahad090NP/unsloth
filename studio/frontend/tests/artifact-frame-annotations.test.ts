@@ -8,13 +8,13 @@ import vm from "node:vm";
 
 const backend = readFileSync(new URL("../../backend/routes/inference.py", import.meta.url), "utf8");
 // Decode the Python string's escaped quotes/backslashes without importing the GPU backend.
-const shell = backend.match(/_ARTIFACT_PREVIEW_FRAME_HTML = """([\s\S]*?)"""/)![1]!
+const shell = /_ARTIFACT_PREVIEW_FRAME_HTML = """([\s\S]*?)"""/.exec(backend)![1]
   .replace(/\\(["\\])/g, "$1");
-const script = shell.match(/<script>([\s\S]*?)<\/script>/)![1]!;
+const script = /<script>([\s\S]*?)<\/script>/.exec(shell)![1];
 
 function preview() {
-  const listeners = new Map<string, Array<(event: unknown) => void>>();
-  const reports: Array<Record<string, unknown>> = [];
+  const listeners = new Map<string, ((event: unknown) => void)[]>();
+  const reports: Record<string, unknown>[] = [];
   const calls: unknown[] = [];
   let writes = 0;
   const parent = { postMessage: (value: Record<string, unknown>) => reports.push(value) };
@@ -27,7 +27,7 @@ function preview() {
     document: {
       // A document meta CSP may prohibit new scripts after the HTML is written.
       createElement: () => { throw new Error("Inline scripts blocked by document CSP"); },
-      open: () => listeners.clear(),
+      open: () => { listeners.clear(); },
       write: () => writes++, close: () => {}, addEventListener: () => {},
     },
   });

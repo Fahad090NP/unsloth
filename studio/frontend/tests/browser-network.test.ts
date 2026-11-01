@@ -85,7 +85,7 @@ function setup(
   let now = 0;
   // The script patches its Response's body readers: a class of its own keeps that out of other tests.
   class PageResponse extends Response {}
-  const answers: Array<(response: Response) => void> = [];
+  const answers: ((response: Response) => void)[] = [];
   const refused: string[] = [];
   const window = Object.assign(new EventTarget(), {
     fetch: (input: unknown) =>
@@ -100,7 +100,7 @@ function setup(
     XMLHttpRequest: XHR,
   });
   // What the page sent its parent, the shell.
-  const posted: Array<Record<string, unknown>> = [];
+  const posted: Record<string, unknown>[] = [];
   const parent = {};
   const base = pageUrl ?? "about:srcdoc";
   const resolve = (href: string) => {
@@ -127,7 +127,7 @@ function setup(
   const page = window as unknown as { fetch: (url: string, init?: RequestInit) => Promise<Response>; XMLHttpRequest: new () => NativeXHR };
   return {
     window: page, pending, advance: (ms: number) => (now += ms),
-    answer: (i: number, body = "{}") => answers[i](new PageResponse(body)),
+    answer: (i: number, body = "{}") => { answers[i](new PageResponse(body)); },
     Response: PageResponse,
     native: answers,
     refused,
@@ -200,7 +200,7 @@ test("a second send the browser refuses keeps counting the request in flight", (
   const xhr = new t.window.XMLHttpRequest();
   xhr.open();
   xhr.send();
-  assert.throws(() => xhr.send());
+  assert.throws(() => { xhr.send(); });
   assert.equal(t.pending(0), 1);
   xhr.dispatchEvent(new Event("loadend"));
   assert.equal(t.pending(0), 0);
@@ -347,7 +347,7 @@ test("aborting an upload whose stream stalls rejects the fetch at once", async (
   const write = t.window.fetch("/upload", { method: "POST", body: stream, duplex: "half", signal: controller.signal } as RequestInit);
   await tick();
   controller.abort();
-  const outcome = await Promise.race([write.then(() => "resolved", () => "rejected"), new Promise((r) => setTimeout(() => r("pending"), 500))]);
+  const outcome = await Promise.race([write.then(() => "resolved", () => "rejected"), new Promise((r) => setTimeout(() => { r("pending"); }, 500))]);
   assert.equal(outcome, "rejected");
   assert.equal(t.posted.length, 0);
 });
@@ -408,7 +408,7 @@ test("a fetch body reaches the panel with the headers the browser would send", a
   assert.equal(sent.method, "POST");
   assert.equal(sent.integrity, "sha256-abc");
   assert.equal(new TextDecoder().decode(sent.body as ArrayBuffer), "hello");
-  assert.deepEqual(Object.fromEntries(sent.headers as Array<[string, string]>), {
+  assert.deepEqual(Object.fromEntries(sent.headers as [string, string][]), {
     "content-type": "text/plain;charset=UTF-8",
     "x-test": "1",
   });
@@ -493,7 +493,7 @@ test("an XHR the panel can't make ends as a network error", async () => {
   assert.deepEqual(events, ["readystatechange:4", "error:4", "loadend:4"]);
   assert.equal(xhr.status, 0);
   assert.equal(t.pending(0), 0);
-  assert.throws(() => xhr.send(), (error: Error) => error.name === "InvalidStateError");
+  assert.throws(() => { xhr.send(); }, (error: Error) => error.name === "InvalidStateError");
 });
 
 test("aborting an XHR the panel is making ends it as the browser would", async () => {
@@ -566,9 +566,9 @@ test("an XHR's Document body is sent serialized, as UTF-8 HTML or XML", async ()
   ] as const) {
     const xhr = new t.window.XMLHttpRequest() as PageXHR;
     xhr.open("POST", "/soap");
-    xhr.send(document as unknown as string);
+    xhr.send(document);
     await tick();
-    const sent = t.posted.at(-1) as Record<string, unknown>;
+    const sent = t.posted.at(-1)!;
     assert.equal(new TextDecoder().decode(sent.body as ArrayBuffer), markup);
     assert.deepEqual(plain(sent.headers), [["Content-Type", type]]);
   }
@@ -586,9 +586,9 @@ test("an XHR's text body relabels the page's charset as the UTF-8 it is sent in"
     const xhr = new t.window.XMLHttpRequest() as PageXHR;
     xhr.open("POST", "/api");
     xhr.setRequestHeader("Content-Type", type);
-    xhr.send(body as unknown as string);
+    xhr.send(body);
     await tick();
-    assert.deepEqual(plain((t.posted.at(-1) as Record<string, unknown>).headers), [["Content-Type", sent]]);
+    assert.deepEqual(plain((t.posted.at(-1)!).headers), [["Content-Type", sent]]);
   }
 });
 

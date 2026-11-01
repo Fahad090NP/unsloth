@@ -97,7 +97,7 @@ export function DiffusionSamples({
           <button
             key={r.step}
             type="button"
-            onClick={() => setPicked({ jobId, step: r.step })}
+            onClick={() => { setPicked({ jobId, step: r.step }); }}
             className={`rounded-full px-2 py-0.5 text-ui-11 tabular-nums ${
               r.step === current.step
                 ? "bg-action text-background"

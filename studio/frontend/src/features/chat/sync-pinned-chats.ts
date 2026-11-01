@@ -62,7 +62,7 @@ function createRuntime(sessionScope: string) {
     readPending: journal.readPending,
     writePending: journal.writePending,
     isRetryable: isRetryablePinError,
-    publish: (pinnedIds) => usePinnedChatsStore.setState({ pinnedIds }),
+    publish: (pinnedIds) => { usePinnedChatsStore.setState({ pinnedIds }); },
     onError: (error) => {
       if (isPinFailureUnderDesktopUpdate(error)) return;
       toast.error("Could not sync pinned chats. Try again when connected.", {

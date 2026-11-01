@@ -32,7 +32,7 @@ const EMBEDDING_TASKS: readonly PipelineType[] = [
 /** Listed first on the empty search, ahead of unsloth's embedders by downloads, where a new
  *  release would sit at the bottom. The older embeddinggemma-300m follows it from the listing. */
 const PINNED_EMBEDDING_MODELS: readonly string[] = ["unsloth/embeddinggemma-2"];
-type EmbeddingModelPickerProps = {
+interface EmbeddingModelPickerProps {
   value: string;
   /** Fires once, on a pick; typing is a search. */
   onSelect: (model: string) => void;
@@ -49,7 +49,7 @@ type EmbeddingModelPickerProps = {
   /** Something is resident; set to offer eject on trigger hover, as the chat model picker does. */
   onEject?: () => void;
   className?: string;
-};
+}
 
 /** Repo ids an on-device copy can be filed under: llama-server opens the `-GGUF` companion and
  * a slashless alias resolves under `sentence-transformers/`. */
@@ -158,7 +158,7 @@ export function EmbeddingModelPicker({
                 <span
                   aria-hidden={true}
                   data-eject-hit={true}
-                  onPointerDown={(event) => event.stopPropagation()}
+                  onPointerDown={(event) => { event.stopPropagation(); }}
                   onClick={(event) => {
                     event.stopPropagation();
                     onEject();
@@ -201,7 +201,7 @@ export function EmbeddingModelPicker({
           />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => { setQuery(event.target.value); }}
             data-testid="embedding-model-search"
             placeholder={t("settings.general.rag.searchPlaceholder")}
             className="h-8 pl-8 text-sm"
@@ -245,7 +245,7 @@ export function EmbeddingModelPicker({
                 >
                   <button
                     type="button"
-                    onClick={() => pick(item.id)}
+                    onClick={() => { pick(item.id); }}
                     aria-selected={item.id === value}
                     className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-full py-1.5 pl-2.5 text-left"
                   >
@@ -281,7 +281,7 @@ export function EmbeddingModelPicker({
                       <TooltipTrigger asChild={true}>
                         <button
                           type="button"
-                          onClick={() => onTogglePin(item.id)}
+                          onClick={() => { onTogglePin(item.id); }}
                           aria-pressed={pinned}
                           aria-label={t(
                             pinned ? "settings.general.rag.unpin" : "settings.general.rag.pin",

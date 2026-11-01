@@ -23,12 +23,12 @@ import {
 import type { resolveRunConfigTarget } from "./target";
 
 type RunConfigTarget = NonNullable<ReturnType<typeof resolveRunConfigTarget>>;
-type ResolutionOptions = {
+interface ResolutionOptions {
   hfToken?: string;
   inventoryVersion: number;
   signal: AbortSignal;
   checkLocalPath?: boolean;
-};
+}
 type CachedVariantsResponse = Pick<
   GgufVariantsResponse,
   "variants" | "default_variant" | "dependencies_resolved"
@@ -180,7 +180,7 @@ export async function resolveCachedRunConfigTarget(
       );
     }
   }
-  return resolveHubRunConfigTarget(target, options);
+  return await resolveHubRunConfigTarget(target, options);
 }
 
 async function resolveHubRunConfigTarget(
@@ -254,7 +254,7 @@ async function resolveHubRunConfigTarget(
       });
     }
   }
-  return resolveHubVariantTarget(target, options);
+  return await resolveHubVariantTarget(target, options);
 }
 
 async function resolveHubVariantTarget(

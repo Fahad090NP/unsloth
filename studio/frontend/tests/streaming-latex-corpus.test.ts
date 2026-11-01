@@ -19,7 +19,7 @@ import { preprocessLaTeX } from "../src/lib/latex.ts";
 const processStreamingText = (text: string): string =>
   stabilizeStreamingMarkdown(preprocessLaTeX(text), true);
 
-const NAMED_CASES: Array<[string, string]> = [
+const NAMED_CASES: [string, string][] = [
   ["inline-paren", "The value \\(x^2\\) is positive.\n\n"],
   ["inline-dollar", "The value $x^2$ is positive.\n\n"],
   ["display-bracket", "Show \\[E = mc^2\\] which is famous.\n\n"],
@@ -247,7 +247,7 @@ test("rebuilds of the retained prefix do not grow with the reply", () => {
 });
 
 test("preprocessLaTeX is not prefix-stable, which is why the above is not free", () => {
-  const cases: Array<[string, string]> = [
+  const cases: [string, string][] = [
     ["closing an inline span", "The value \\(x^2\\)"],
     ["a currency dollar", "Cost is $1"],
     ["closing a display span", "Show \\[E = mc^2\\]"],

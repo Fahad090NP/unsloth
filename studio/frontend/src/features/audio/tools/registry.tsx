@@ -67,13 +67,13 @@ function instructionsPanel(
           voiceRequired={kind === "voice" && needsVoiceDescription(ctx)}
           audioInstructions={value.instructions}
           setAudioInstructions={(instructions) =>
-            onChange({ ...value, instructions })
+            { onChange({ ...value, instructions }); }
           }
         />
         {kind === "style" ? (
           <MossLanguageField
             audioLanguage={value.language}
-            setAudioLanguage={(language) => onChange({ ...value, language })}
+            setAudioLanguage={(language) => { onChange({ ...value, language }); }}
           />
         ) : null}
       </>

@@ -90,7 +90,7 @@ export type AccountTransitionBrowser = Pick<
   "localStorage" | "sessionStorage" | "indexedDB" | "location"
 >;
 
-export type BrowserAccount = { username: string; accountId?: string | null };
+export interface BrowserAccount { username: string; accountId?: string | null }
 
 const ACCOUNT_ID_MARKER_PREFIX = "account:";
 
@@ -132,7 +132,7 @@ export function accountDatabaseName(
   return account === "owner" ? name : `${name}:${account}`;
 }
 
-type MarkedAccount = { accountId: string | null; username: string };
+interface MarkedAccount { accountId: string | null; username: string }
 function isOwnerAccount(account: MarkedAccount): boolean {
   return (
     account.accountId === "owner" ||
@@ -222,15 +222,15 @@ function deleteAccountDatabase(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.deleteDatabase(name);
-    request.onsuccess = () => resolve();
+    request.onsuccess = () => { resolve(); };
     request.onerror = () =>
-      reject(request.error ?? new Error("Could not clear account data."));
+      { reject(request.error ?? new Error("Could not clear account data.")); };
     request.onblocked = () =>
-      reject(
+      { reject(
         new Error(
           "Close other Unsloth tabs and retry signing in to clear the previous account's data.",
         ),
-      );
+      ); };
   });
 }
 

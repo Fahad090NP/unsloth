@@ -130,7 +130,7 @@ export function DatasetDeviceList({
           <li key={item.key}>
             <SelectablePickerItem
               active={active}
-              onSelect={() => onPick(item)}
+              onSelect={() => { onPick(item); }}
               values={[item.kind === "local" ? item.path : item.repoId]}
             >
               <span className="block min-w-0 flex-1 truncate">
@@ -165,7 +165,7 @@ export function DatasetHubList({
   showLoadMore,
   sentinelRef,
 }: {
-  items: ReadonlyArray<{ id: string }>;
+  items: readonly { id: string }[];
   isLoading: boolean;
   isLoadingMore: boolean;
   value: string | null;
@@ -237,7 +237,7 @@ export function DatasetHubList({
             <li key={item.id}>
               <SelectablePickerItem
                 active={active}
-                onSelect={() => onPick(item.id)}
+                onSelect={() => { onPick(item.id); }}
                 values={[item.id]}
               >
                 <span className="block min-w-0 flex-1 truncate">{item.id}</span>

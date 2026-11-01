@@ -9,7 +9,7 @@ import { invalidateOpenAIAutoSwitchSettings } from "./openai-auto-switch";
 
 const MODEL_MEMORY_EVENT = "unsloth-model-memory-change";
 
-export type ModelMemorySettings = {
+export interface ModelMemorySettings {
   keepResident: boolean;
   noRamReserve: boolean;
   defaultKeepResident: boolean;
@@ -20,9 +20,9 @@ export type ModelMemorySettings = {
   reloadRequired: boolean;
   /** Soft RLIMIT_MEMLOCK; null means unlimited or N/A. */
   memlockLimitBytes: number | null;
-};
+}
 
-type ApiModelMemorySettings = {
+interface ApiModelMemorySettings {
   // biome-ignore lint/style/useNamingConvention: API schema
   keep_resident: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -39,7 +39,7 @@ type ApiModelMemorySettings = {
   reload_required: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   memlock_limit_bytes: number | null;
-};
+}
 
 let inFlightModelMemory: Promise<ModelMemorySettings> | null = null;
 // Bumped by every forced read so a displaced read stops publishing to other subscribers.
@@ -52,7 +52,7 @@ export function subscribeModelMemorySettings(
     listener((event as CustomEvent<ModelMemorySettings>).detail);
   };
   window.addEventListener(MODEL_MEMORY_EVENT, handleChange);
-  return () => window.removeEventListener(MODEL_MEMORY_EVENT, handleChange);
+  return () => { window.removeEventListener(MODEL_MEMORY_EVENT, handleChange); };
 }
 
 function fromApi(settings: ApiModelMemorySettings): ModelMemorySettings {
@@ -114,7 +114,7 @@ export async function loadModelMemorySettings(
         inFlightModelMemory = null;
       }
     });
-  return inFlightModelMemory;
+  return await inFlightModelMemory;
 }
 
 export async function updateModelMemorySettings(

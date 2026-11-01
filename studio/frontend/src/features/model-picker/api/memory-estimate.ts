@@ -230,8 +230,8 @@ function toMemoryEstimate(body: ApiEstimateResponse): MemoryEstimate {
   return {
     available: flag(body.available, false),
     // An unknown reason would render nothing.
-    reason: ESTIMATE_REASONS.includes(body.reason as MemoryEstimateReason)
-      ? (body.reason as MemoryEstimateReason)
+    reason: ESTIMATE_REASONS.includes(body.reason!)
+      ? (body.reason!)
       : null,
     weightsBytes: finiteBytes(body.weights_bytes, 0),
     kvBytes,

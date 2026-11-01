@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type SseFrame = {
+export interface SseFrame {
   event: string;
   remainder: string;
-};
+}
 
 const SSE_FRAME_SEPARATOR = /\r?\n\r?\n/;
 
 export function takeSseFrame(buffer: string): SseFrame | null {
-  const separator = buffer.match(SSE_FRAME_SEPARATOR);
+  const separator = SSE_FRAME_SEPARATOR.exec(buffer);
   const separatorIndex = separator?.index;
   if (separatorIndex === undefined || !separator) {
     return null;

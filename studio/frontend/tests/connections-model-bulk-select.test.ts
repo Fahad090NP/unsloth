@@ -9,9 +9,7 @@ import { readSrc } from "./helpers/kit.ts";
 const dialog = readSrc("features/chat/chat-providers-dialog.tsx");
 
 function body(name: string): string {
-  const match = dialog.match(
-    new RegExp(`function ${name}\\(\\) \\{([\\s\\S]*?)\\n {2}\\}`),
-  )?.[1];
+  const match = (new RegExp(`function ${name}\\(\\) \\{([\\s\\S]*?)\\n {2}\\}`).exec(dialog))?.[1];
   assert.ok(match, `${name} not found`);
   return match;
 }

@@ -15,7 +15,7 @@ const realNavigate = useBrowserStore.getState().navigate;
 useBrowserStore.setState({
   navigate: (...args: Parameters<typeof realNavigate>) => {
     const result = realNavigate(...args);
-    setTimeout(() => useBrowserStore.getState().updateTab(args[0], { loading: false }), 0);
+    setTimeout(() => { useBrowserStore.getState().updateTab(args[0], { loading: false }); }, 0);
     return result;
   },
 });
@@ -87,7 +87,7 @@ async function linkClickHold(showCursor: boolean, from: string): Promise<number>
         navigatedAt = Date.now();
         stop.abort();
       }
-      return original(...args);
+      original(...args);
     },
   });
   try {

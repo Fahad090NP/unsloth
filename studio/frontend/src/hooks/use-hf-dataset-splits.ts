@@ -243,7 +243,7 @@ export function useHfDatasetSplits(
         }
       });
 
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [accessToken, datasetName, localPath, online, preferLocalCache, hfDatasetsServer, hubSource, hfEndpoint]);
 
   const subsets = Array.from(new Set(entries.map((e) => e.config)));

@@ -64,7 +64,7 @@ export function useLinkedFolders(
   const projectWorkScopeId = scopeType === "project" ? scopeId : null;
   const withProjectWork = useCallback(
     async <T>(run: () => Promise<T>): Promise<T> => {
-      if (!projectWorkScopeId) return run();
+      if (!projectWorkScopeId) return await run();
       noteProjectWork(projectWorkScopeId, 1);
       try {
         return await run();

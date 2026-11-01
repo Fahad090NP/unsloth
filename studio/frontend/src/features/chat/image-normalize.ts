@@ -104,7 +104,7 @@ export async function normalizeChatImage(file: File): Promise<File> {
     }
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
     const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, type, 0.92),
+      { canvas.toBlob(resolve, type, 0.92); },
     );
     if (!blob) {
       throw new Error(`Could not convert ${file.name}.`);

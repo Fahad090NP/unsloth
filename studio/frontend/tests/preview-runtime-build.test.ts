@@ -120,30 +120,30 @@ test("only the react file has React in it", () => {
 
 test("no file evaluates strings, beyond recharts' two global fallbacks", () => {
   for (const f of files) {
-    assert.doesNotThrow(() => checkNoEval(f.name, f.code), f.name);
+    assert.doesNotThrow(() => { checkNoEval(f.name, f.code); }, f.name);
   }
   assert.equal(code("recharts").match(/Function\(`return this`\)/g)?.length, 2);
-  assert.throws(() => checkNoEval("react", "a();eval(x)"), /evaluates code/);
+  assert.throws(() => { checkNoEval("react", "a();eval(x)"); }, /evaluates code/);
   assert.throws(
-    () => checkNoEval("react", "new Function('a')"),
+    () => { checkNoEval("react", "new Function('a')"); },
     /evaluates code/,
   );
   assert.throws(
-    () => checkNoEval("react", "x=Function ('a')"),
+    () => { checkNoEval("react", "x=Function ('a')"); },
     /evaluates code/,
   );
   assert.throws(
-    () => checkNoEval("react", "x=Function(`return this`)()"),
+    () => { checkNoEval("react", "x=Function(`return this`)()"); },
     /expected 0/,
   );
   assert.throws(
     () =>
-      checkNoEval("recharts", `${code("recharts")};Function("return this")`),
+      { checkNoEval("recharts", `${code("recharts")};Function("return this")`); },
     /expected 2 .* found 3/,
   );
   // Property access and longer names are not the global Function.
   assert.doesNotThrow(() =>
-    checkNoEval("react", "a.Function(1);isFunction(2)"),
+    { checkNoEval("react", "a.Function(1);isFunction(2)"); },
   );
 });
 
@@ -164,7 +164,7 @@ function run(names: string[]): Record<string, Record<string, unknown>> {
 test("the files register module namespaces, React first and shared", () => {
   const r = run(["react", "lucide-react", "recharts", "motion"]);
   assert.deepEqual(Object.keys(r).sort(), Object.keys(manifest.modules).sort());
-  const react = r.react as Record<string, unknown>;
+  const react = r.react;
   const reactDefault = react.default as Record<string, unknown>;
   // CommonJS packages: `default` is the exports object and its keys are named exports too.
   assert.equal(typeof react.useState, "function");
@@ -237,11 +237,11 @@ test("the plugin serves the manifest module and the files, and 404s anything els
             headers[k.toLowerCase()] = v;
           },
           end: (body = "") =>
-            resolve({
+            { resolve({
               status: res.statusCode,
               type: headers["content-type"],
               body,
-            }),
+            }); },
         };
         handler?.({ url }, res, reject);
       },

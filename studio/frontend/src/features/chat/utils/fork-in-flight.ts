@@ -9,5 +9,5 @@ export const useForkInFlight = create<{
   setForking: (forking: boolean) => void;
 }>((set) => ({
   forking: false,
-  setForking: (forking) => set({ forking }),
+  setForking: (forking) => { set({ forking }); },
 }));

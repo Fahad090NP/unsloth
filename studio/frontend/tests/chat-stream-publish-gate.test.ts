@@ -17,12 +17,12 @@ import { parseAssistantContent } from "../src/features/chat/utils/parse-assistan
 
 import { readSrc } from "./helpers/kit.ts";
 
-type Scheduled = {
-  frames: Array<() => void>;
+interface Scheduled {
+  frames: (() => void)[];
   timers: { run: () => void; ms: number }[];
   cancelledFrames: number[];
   clearedTimers: number[];
-};
+}
 
 function withStubbedScheduling(body: (scheduled: Scheduled) => void): void {
   const globals = globalThis as unknown as {
@@ -49,7 +49,7 @@ function withStubbedScheduling(body: (scheduled: Scheduled) => void): void {
   };
   globals.setTimeout = (run, ms) => scheduled.timers.push({ run, ms });
   globals.clearTimeout = (handle) => {
-    scheduled.clearedTimers.push(handle as number);
+    scheduled.clearedTimers.push(handle!);
   };
   try {
     body(scheduled);
@@ -314,7 +314,7 @@ test("pacing cannot change a reasoning duration", () => {
     text.lastIndexOf("<think>") > text.lastIndexOf("</think>");
 
   const run = (
-    arrivals: Array<[number, string]>,
+    arrivals: [number, string][],
     publishes: ReadonlySet<number>,
   ) => {
     let clock = 0;
@@ -343,7 +343,7 @@ test("pacing cannot change a reasoning duration", () => {
     return { meta: tracker.metadata(), lastPublished };
   };
 
-  const cases: Array<[string, Array<[number, string]>]> = [
+  const cases: [string, [number, string][]][] = [
     [
       "an opening tag split across two arrivals",
       [[0, "Hello "], [1000, "<thi"], [1000, "nk>why"], [9000, "</think>"], [9500, "answer"]],

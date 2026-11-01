@@ -438,7 +438,7 @@ export function QuantOptionsMenu({
       <DropdownMenuTrigger asChild={true}>
         <button
           type="button"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); }}
           aria-label={`More options for ${label}`}
           className={cn(
             "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full",
@@ -1320,7 +1320,7 @@ export function GgufDownloadCard({
         {showUpdateAction && (
           <button
             type="button"
-            onClick={() => selected && setUpdateTarget(selected.quant)}
+            onClick={() => { selected && setUpdateTarget(selected.quant); }}
             aria-label={`Update ${repoId}`}
             className="hub-action-btn ml-1 text-amber-700 dark:text-amber-300"
           >
@@ -1396,7 +1396,7 @@ export function GgufDownloadCard({
             label={`Configure and run ${repoId} ${selectedLabel ?? selected.quant}`}
             loading={runPending}
             onClick={() =>
-              onRun({
+              { onRun({
                 ggufVariant: selected.quant,
                 ggufFilename: selected.filename,
                 expectedBytes:
@@ -1404,7 +1404,7 @@ export function GgufDownloadCard({
                   selected.download_size_bytes > 0
                     ? selected.download_size_bytes
                     : selected.size_bytes,
-              })
+              }); }
             }
           />
         )}

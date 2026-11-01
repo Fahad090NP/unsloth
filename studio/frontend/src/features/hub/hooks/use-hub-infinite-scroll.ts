@@ -203,7 +203,7 @@ export function useHubInfiniteScroll(
       },
     );
     observer.observe(sentinelNode);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [enabled, requestAutomaticPage, sentinelNode]);
 
   useEffect(() => {

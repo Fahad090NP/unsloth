@@ -71,7 +71,7 @@ export function TranscriptExportItems({
       <DropdownMenuItem
         key={format}
         disabled={blocked}
-        onClick={() => onExport(format)}
+        onClick={() => { onExport(format); }}
       >
         {label(format)}
         {blocked ? (
@@ -256,10 +256,10 @@ export function TranscriptGallery({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => setArchived(false)}>
+            <DropdownMenuItem onClick={() => { setArchived(false); }}>
               History
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setArchived(true)}>
+            <DropdownMenuItem onClick={() => { setArchived(true); }}>
               Archived transcripts
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -268,7 +268,7 @@ export function TranscriptGallery({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setConfirmingClear(true)}
+            onClick={() => { setConfirmingClear(true); }}
           >
             Clear all
           </Button>

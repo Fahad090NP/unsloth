@@ -13,20 +13,20 @@ export interface ReasoningRoundState {
 export const useReasoningRoundStore = create<ReasoningRoundState>()((set) => ({
   open: {},
   setRoundOpen: (key, open) =>
-    set((state) =>
+    { set((state) =>
       state.open[key] === open
         ? state
         : { open: { ...state.open, [key]: open } },
-    ),
+    ); },
   clearRound: (key) =>
-    set((state) => {
+    { set((state) => {
       if (!(key in state.open)) return state;
       const open: Record<string, boolean> = {};
       for (const [id, value] of Object.entries(state.open)) {
         if (id !== key) open[id] = value;
       }
       return { open };
-    }),
+    }); },
 }));
 
 export function setReasoningRoundOpen(key: string, open: boolean): void {

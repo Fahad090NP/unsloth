@@ -17,7 +17,7 @@ const messagesModule = await import("../src/i18n/messages.ts");
 
 const CHUNK_URL = "https://studio.example/assets/de-a1b2c3.js";
 
-type ImporterCall = { locale: string; retryUrl: string | null };
+interface ImporterCall { locale: string; retryUrl: string | null }
 
 async function attempt(load: Promise<void> | undefined): Promise<string> {
   const [outcome] = await Promise.allSettled([load]);

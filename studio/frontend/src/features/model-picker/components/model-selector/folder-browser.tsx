@@ -40,7 +40,7 @@ function splitBreadcrumb(path: string): { label: string; value: string }[] {
   // Detect path style before normalizing: `\` is a valid POSIX filename char.
   const isWindowsDrive =
     /^[A-Za-z]:[\\/]/.test(path) || /^[A-Za-z]:$/.test(path);
-  const isUnc = /^\\\\/.test(path);
+  const isUnc = path.startsWith("\\\\");
   const isWindows = isWindowsDrive || isUnc;
   const normalized = isWindows ? path.replace(/\\/g, "/") : path;
   const segments = normalized.split("/");
@@ -114,7 +114,7 @@ export function FolderBrowser({
         setError(message);
         if (opts?.fallbackOnError && target !== undefined) {
           // No target means HOME; do not recurse if HOME itself fails.
-          queueMicrotask(() => navigate(undefined, hidden));
+          queueMicrotask(() => { navigate(undefined, hidden); });
         }
       })
       .finally(() => {
@@ -164,7 +164,7 @@ export function FolderBrowser({
                 <button
                   type="button"
                   className="rounded px-1 py-0.5 hover:bg-muted hover:text-foreground"
-                  onClick={() => navigate(c.value, showHidden)}
+                  onClick={() => { navigate(c.value, showHidden); }}
                   disabled={loading}
                 >
                   {c.label}
@@ -183,7 +183,7 @@ export function FolderBrowser({
               <button
                 key={s}
                 type="button"
-                onClick={() => navigate(s, showHidden)}
+                onClick={() => { navigate(s, showHidden); }}
                 disabled={loading}
                 className="rounded-full border border-border px-2 py-0.5 font-mono text-ui-10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
                 title={s}
@@ -216,7 +216,7 @@ export function FolderBrowser({
               {data.parent !== null && (
                 <button
                   type="button"
-                  onClick={() => navigate(data.parent ?? undefined, showHidden)}
+                  onClick={() => { navigate(data.parent ?? undefined, showHidden); }}
                   className="flex w-full items-center gap-2 px-6 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <HugeiconsIcon
@@ -308,7 +308,7 @@ export function FolderBrowser({
             <Button
               type="button"
               onClick={handleConfirm}
-              disabled={!path || loading || !!error}
+              disabled={!path || loading || Boolean(error)}
             >
               {confirmLabel}
             </Button>

@@ -66,7 +66,7 @@ test("a new runtime scope aborts the previous scoped request", async () => {
     pending.set(scope, operation);
     signal.addEventListener(
       "abort",
-      () => operation.reject(new DOMException("Superseded", "AbortError")),
+      () => { operation.reject(new DOMException("Superseded", "AbortError")); },
       { once: true },
     );
     return operation.promise;
@@ -86,13 +86,13 @@ test("a new runtime scope aborts the previous scoped request", async () => {
 });
 
 test("a scoped refresh replaces an in-flight request in the same scope", async () => {
-  const attempts: Array<ReturnType<typeof deferred<number>>> = [];
+  const attempts: ReturnType<typeof deferred<number>>[] = [];
   const request = createScopedSingleFlightRequest((_scope, _input, signal) => {
     const operation = deferred<number>();
     attempts.push(operation);
     signal.addEventListener(
       "abort",
-      () => operation.reject(new DOMException("Refreshed", "AbortError")),
+      () => { operation.reject(new DOMException("Refreshed", "AbortError")); },
       { once: true },
     );
     return operation.promise;

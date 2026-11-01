@@ -3,10 +3,10 @@
 
 export async function loadTrayIconVisible(): Promise<boolean | null> {
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<boolean | null>("get_tray_icon_visible");
+  return await invoke<boolean | null>("get_tray_icon_visible");
 }
 
 export async function updateTrayIconVisible(visible: boolean): Promise<boolean> {
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<boolean>("set_tray_icon_visible", { enabled: visible });
+  return await invoke<boolean>("set_tray_icon_visible", { enabled: visible });
 }

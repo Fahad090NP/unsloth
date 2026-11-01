@@ -153,7 +153,7 @@ function FilterMenu({
             icon={icon}
             label={t(label)}
             checked={filters.flags.has(value)}
-            onToggle={() => onChange({ ...filters, flags: toggled(filters.flags, value) })}
+            onToggle={() => { onChange({ ...filters, flags: toggled(filters.flags, value) }); }}
           />
         ))}
         {facets.showProjects && (
@@ -165,7 +165,7 @@ function FilterMenu({
             <CheckItem
               label={t("settings.data.library.noProject")}
               checked={filters.projects.has(NO_PROJECT)}
-              onToggle={() => onChange({ ...filters, projects: toggled(filters.projects, NO_PROJECT) })}
+              onToggle={() => { onChange({ ...filters, projects: toggled(filters.projects, NO_PROJECT) }); }}
             />
             {facets.projects.map((project) => (
               <CheckItem
@@ -174,7 +174,7 @@ function FilterMenu({
                 label={project.name}
                 checked={filters.projects.has(project.id)}
                 onToggle={() =>
-                  onChange({ ...filters, projects: toggled(filters.projects, project.id) })
+                  { onChange({ ...filters, projects: toggled(filters.projects, project.id) }); }
                 }
               />
             ))}
@@ -187,7 +187,7 @@ function FilterMenu({
             <CheckItem
               label={t("library.chats.toolbar.withoutSection")}
               checked={filters.sections.has(NO_SECTION)}
-              onToggle={() => onChange({ ...filters, sections: toggled(filters.sections, NO_SECTION) })}
+              onToggle={() => { onChange({ ...filters, sections: toggled(filters.sections, NO_SECTION) }); }}
             />
             {facets.sections.map((section) => (
               <CheckItem
@@ -196,7 +196,7 @@ function FilterMenu({
                 label={section.name}
                 checked={filters.sections.has(section.id)}
                 onToggle={() =>
-                  onChange({ ...filters, sections: toggled(filters.sections, section.id) })
+                  { onChange({ ...filters, sections: toggled(filters.sections, section.id) }); }
                 }
               />
             ))}
@@ -214,7 +214,7 @@ function FilterMenu({
                 label={label}
                 hint={String(count)}
                 checked={filters.models.has(model)}
-                onToggle={() => onChange({ ...filters, models: toggled(filters.models, model) })}
+                onToggle={() => { onChange({ ...filters, models: toggled(filters.models, model) }); }}
               />
             ))}
           </>
@@ -222,7 +222,7 @@ function FilterMenu({
         {chatFiltersActive(filters) && (
           <>
             <DropdownMenuSeparator className="mx-3" />
-            <DropdownMenuItem onSelect={() => onChange(EMPTY_CHAT_FILTERS)}>
+            <DropdownMenuItem onSelect={() => { onChange(EMPTY_CHAT_FILTERS); }}>
               <span className="text-muted-foreground">{t("library.toolbar.clearFilters")}</span>
             </DropdownMenuItem>
           </>
@@ -281,7 +281,7 @@ export function SortMenu<K extends string>({
             label={t(option.label)}
             checked={option.value === value}
             onSelect={() =>
-              onChange(option.value, option.value === value ? desc : option.value !== "name")
+              { onChange(option.value, option.value === value ? desc : option.value !== "name"); }
             }
           />
         ))}
@@ -289,12 +289,12 @@ export function SortMenu<K extends string>({
         <SortRadio
           label={t("library.toolbar.sortAscending")}
           checked={!desc}
-          onSelect={() => onChange(value, false)}
+          onSelect={() => { onChange(value, false); }}
         />
         <SortRadio
           label={t("library.toolbar.sortDescending")}
           checked={desc}
-          onSelect={() => onChange(value, true)}
+          onSelect={() => { onChange(value, true); }}
         />
         {groupBy !== undefined && onGroupByChange && (
           <>
@@ -305,7 +305,7 @@ export function SortMenu<K extends string>({
                 key={option.value}
                 label={t(option.label)}
                 checked={groupBy === option.value}
-                onSelect={() => onGroupByChange(option.value)}
+                onSelect={() => { onGroupByChange(option.value); }}
               />
             ))}
           </>
@@ -317,7 +317,7 @@ export function SortMenu<K extends string>({
               icon={<HugeiconsIcon icon={PinIcon} strokeWidth={1.75} className={ICON} />}
               label={t("library.chats.toolbar.pinnedFirst")}
               checked={pinnedFirst}
-              onToggle={() => onPinnedFirstChange(!pinnedFirst)}
+              onToggle={() => { onPinnedFirstChange(!pinnedFirst); }}
             />
           </>
         )}
@@ -406,7 +406,7 @@ export function ChatsToolbar({
             aria-label={t(label)}
             data-active={view === value}
             aria-pressed={view === value}
-            onClick={() => onViewChange(value)}
+            onClick={() => { onViewChange(value); }}
             className={ROUND_BUTTON}
           >
             <HugeiconsIcon icon={icon} strokeWidth={1.75} className="size-5" />
@@ -422,7 +422,7 @@ export function ChatsToolbar({
         <input
           type="search"
           value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
+          onChange={(event) => { onSearchChange(event.target.value); }}
           placeholder={searchPlaceholder}
           aria-label={searchPlaceholder}
           className="ml-2.5 min-w-0 flex-1 bg-transparent text-ui-14 outline-none placeholder:text-muted-foreground dark:placeholder:text-foreground/55 [&::-webkit-search-cancel-button]:hidden"

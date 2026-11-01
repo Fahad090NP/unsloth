@@ -60,8 +60,7 @@ let fullListEpoch = 0;
 function readFullList() {
   const session = getAuthSessionEpoch();
   if (
-    !fullList ||
-    fullList.epoch !== fullListEpoch ||
+    fullList?.epoch !== fullListEpoch ||
     fullList.session !== session
   ) {
     const promise = listStoredChatThreads({ includeArchived: true });
@@ -140,7 +139,7 @@ export async function fetchSidebarRowPage(
     }
     serverPages = false;
   }
-  return fullListPage(query, limit, continuesFullList ? cursor : null);
+  return await fullListPage(query, limit, continuesFullList ? cursor : null);
 }
 
 /** Every row id in order, so a manual order written from a partly loaded list keeps unloaded rows. */
@@ -236,7 +235,7 @@ const IDLE_LIST: SidebarRowPages = {
   retry: () => Promise.resolve(),
 };
 
-type RowUnion = { parts: SidebarItem[][]; items: SidebarItem[] };
+interface RowUnion { parts: SidebarItem[][]; items: SidebarItem[] }
 
 /** Every row of `parts` once, in order; the previous array while no part changed. */
 function unionRows(previous: RowUnion, parts: SidebarItem[][]): RowUnion {

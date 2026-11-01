@@ -113,7 +113,7 @@ export const seedVcLogic: AudioToolPanelLogic<SeedVcValue> = {
             ...shared,
             similarity_guidance_scale: guidance(value.similarity),
             intelligibility_guidance_scale: guidance(value.intelligibility),
-            voice_anonymization: value.anonymize === true,
+            voice_anonymization: value.anonymize,
           }
         : { ...shared, inference_guidance_scale: guidance(value.guidance) };
     return { options, convert: { route } };

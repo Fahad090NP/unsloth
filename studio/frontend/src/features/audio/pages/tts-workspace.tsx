@@ -277,7 +277,7 @@ export function TtsRailFields({
             data-type-to-activate="prompt"
             id="audio-prompt"
             value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
+            onChange={(event) => { setPrompt(event.target.value); }}
             placeholder={
               musicGeneration
                 ? "[verse]\nMorning light through the pines…\n\n[chorus]\n…"
@@ -624,11 +624,11 @@ export function TtsOutput({
     () => new Set(),
   );
   const toggleGroup = (groupId: string) =>
-    setOpenGroups((open) => {
+    { setOpenGroups((open) => {
       const next = new Set(open);
       if (!next.delete(groupId)) next.add(groupId);
       return next;
-    });
+    }); };
   const siblings = variationSiblings(clips, selectedClip?.id ?? null);
   const clipMenu = (clip: AudioGalleryClip, variant: "row" | "toolbar") => (
     <GalleryItemMenu
@@ -645,7 +645,7 @@ export function TtsOutput({
       leadingItems={
         <>
           <ClipSendToMenu handlers={sendHandlersFor(clip)} />
-          <DropdownMenuItem onClick={() => onSaveVoice(clip)}>
+          <DropdownMenuItem onClick={() => { onSaveVoice(clip); }}>
             <HugeiconsIcon
               icon={FloppyDiskIcon}
               strokeWidth={1.75}
@@ -653,7 +653,7 @@ export function TtsOutput({
             />
             Save as voice…
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUseTextAgain(clip)}>
+          <DropdownMenuItem onClick={() => { onUseTextAgain(clip); }}>
             <HugeiconsIcon
               icon={SparklesIcon}
               strokeWidth={1.75}
@@ -663,7 +663,7 @@ export function TtsOutput({
           </DropdownMenuItem>
           {onReuseSeed && typeof clip.settings?.seed === "number" ? (
             <DropdownMenuItem
-              onClick={() => onReuseSeed(Number(clip.settings?.seed))}
+              onClick={() => { onReuseSeed(Number(clip.settings?.seed)); }}
             >
               <HugeiconsIcon
                 icon={DiceFaces03Icon}
@@ -727,7 +727,7 @@ export function TtsOutput({
               peaks={peaksById.get(selectedClip.id) ?? null}
               onDownload={
                 srcById[selectedClip.id]
-                  ? () => handleDownloadClip(selectedClip)
+                  ? () => { handleDownloadClip(selectedClip); }
                   : null
               }
               menu={clipMenu(selectedClip, "row")}
@@ -808,7 +808,7 @@ export function TtsOutput({
                   clips={header.clips}
                   open={header.open}
                   selected={header.clips.some((item) => item.id === selectedId)}
-                  onToggle={() => toggleGroup(header.groupId)}
+                  onToggle={() => { toggleGroup(header.groupId); }}
                 />
               ) : (
                 // Shell, not a button: the pin badge and dots menu are buttons and cannot nest.
@@ -827,7 +827,7 @@ export function TtsOutput({
                   )}
                   <button
                     type="button"
-                    onClick={() => selectClip(clip.id)}
+                    onClick={() => { selectClip(clip.id); }}
                     aria-current={clip.id === selectedId ? "true" : undefined}
                     className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left text-ui-13"
                   >

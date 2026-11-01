@@ -21,13 +21,13 @@ const DRAG_SLOP = 4
 const CLICK_COMPAT_WINDOW_MS = 300
 const RESIZE_STEP = 16
 
-type DragState = {
+interface DragState {
   startX: number
   startWidth: number
   moved: boolean
 }
 
-export type PanelResizeHandleProps = {
+export interface PanelResizeHandleProps {
   edge: "left" | "right"
   open: boolean
   width: number
@@ -297,8 +297,8 @@ export function PanelResizeHandle({
             setHovered(false)
             onHoverChange?.(false)
           }}
-          onFocus={(event) => setFocused(event.target.matches(":focus-visible"))}
-          onBlur={() => setFocused(false)}
+          onFocus={(event) => { setFocused(event.target.matches(":focus-visible")); }}
+          onBlur={() => { setFocused(false); }}
           className={cn(
             "absolute inset-y-0 z-30 hidden w-2 touch-none select-none sm:block",
             edge === "left" ? "-left-1" : "-right-1",

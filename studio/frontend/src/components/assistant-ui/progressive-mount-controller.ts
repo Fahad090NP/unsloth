@@ -59,13 +59,13 @@ export function admits(current: MountWindow, index: number): boolean {
   return current == null || index >= current.start;
 }
 
-export type AnchorSample = {
+export interface AnchorSample {
   /** Offset from the scroll container top, not the window, so container moves are not corrected. */
   viewportOffset: number;
   scrollTop: number;
   /** For the clamp when content above a reader near the bottom shrinks; see anchorCorrection. */
   maxScrollTop: number;
-};
+}
 
 /**
  * scrollTop delta keeping the reader on the same content, or null. Document space: correct only

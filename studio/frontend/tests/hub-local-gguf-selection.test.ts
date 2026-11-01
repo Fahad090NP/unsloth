@@ -169,7 +169,7 @@ test("the memory bar reads the cached revision while an update is published", as
     cached,
   ]);
   assert.equal(barVariant?.size_bytes, 70 * GiB);
-  assert.equal(ggufVariantLookupTableBytes(barVariant!), 20 * GiB);
+  assert.equal(ggufVariantLookupTableBytes(barVariant), 20 * GiB);
 
   // No update, or no cached row, keeps the selected variant.
   const current = { ...cached, update_available: false };

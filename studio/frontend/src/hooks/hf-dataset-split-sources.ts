@@ -9,26 +9,26 @@ export interface HfSplitEntry {
   split: string;
 }
 
-export type LoadHfDatasetSplitsArgs = {
+export interface LoadHfDatasetSplitsArgs {
   datasetName: string;
   accessToken?: string;
   localPath?: string | null;
   online: boolean;
   preferLocalCache: boolean;
   signal: AbortSignal;
-};
+}
 
-export type DatasetSplitLoadResult = {
+export interface DatasetSplitLoadResult {
   entries: HfSplitEntry[];
   error: string | null;
   source: "local" | "remote" | "hub" | "manual";
-};
+}
 
-export type DatasetSplitFetchers = {
+export interface DatasetSplitFetchers {
   local: (args: LoadHfDatasetSplitsArgs) => Promise<HfSplitEntry[]>;
   remote: (args: LoadHfDatasetSplitsArgs) => Promise<HfSplitEntry[]>;
   hub: (args: LoadHfDatasetSplitsArgs) => Promise<HfSplitEntry[]>;
-};
+}
 
 export function normalizeDatasetSplitsError(message: string): string {
   const normalized = message.toLowerCase();

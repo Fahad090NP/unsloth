@@ -109,7 +109,7 @@ test("the sidebar list measures its scroll rail", async () => {
     source,
     /const attachScroller = useCallback\(\s*\(el: HTMLDivElement \| null\) => \{/,
   );
-  assert.equal(/useLayoutEffect/.test(source), false);
+  assert.equal(source.includes('useLayoutEffect'), false);
   // Old observer goes first, or a detached node keeps one.
   assert.match(source, /railObserverRef\.current\?\.disconnect\(\);/);
   // Cache is per node: a new parent has no variable even at the same width.
@@ -124,7 +124,7 @@ test("the sidebar list measures its scroll rail", async () => {
   // Writes the DOM, never state: that pairing is what looped.
   assert.equal(/new ResizeObserver\([^)]*set[A-Z]/.test(source), false);
   assert.match(source, /if \(fade\.dataset\.visible !== visible\) fade\.dataset\.visible = visible;/);
-  assert.equal(/setCanScrollDown/.test(source), false);
+  assert.equal(source.includes('setCanScrollDown'), false);
   assert.match(source, /for \(const section of el\.children\) observer\.observe\(section\);/);
   assert.match(source, /sections\.observe\(el, \{ childList: true \}\);/);
   // Only on a change, so it cannot re-trigger itself.
@@ -145,7 +145,7 @@ test("the sidebar list measures its scroll rail", async () => {
     /:root\.client-windows \* \{\s*scrollbar-width: auto;/,
   );
   assert.equal(
-    /\.sidebar-scroll-fade::-webkit-scrollbar \{/.test(INDEX),
+    INDEX.includes('.sidebar-scroll-fade::-webkit-scrollbar {'),
     false,
   );
   assert.match(INDEX, /\.sidebar-scroll-fade:hover::-webkit-scrollbar-thumb,/);

@@ -3,20 +3,20 @@
 
 // /unload matches the internal id, so read it from status first. Plain module for node --test.
 
-export type ResidentModel = {
+export interface ResidentModel {
   checkpoint: string;
   aliases: string[];
-};
+}
 
-export type UnloadResidentDeps = {
+export interface UnloadResidentDeps {
   readResident: () => Promise<ResidentModel | null>;
   unload: (checkpoint: string) => Promise<void>;
-};
+}
 
-export type UnloadResidentResult = {
+export interface UnloadResidentResult {
   unloadedAliases: string[];
   stillResident: string | null;
-};
+}
 
 // One retry: an auto-switch can replace the model between read and unload, and /unload on a
 // replaced model is a 200 no-op.

@@ -7,10 +7,10 @@ import type { SamplerConfig } from "../../types";
 import { NameField } from "../shared/name-field";
 import { FieldLabel } from "../shared/field-label";
 
-type UuidDialogProps = {
+interface UuidDialogProps {
   config: SamplerConfig;
   onUpdate: (patch: Partial<SamplerConfig>) => void;
-};
+}
 
 export function UuidDialog({
   config,
@@ -21,13 +21,13 @@ export function UuidDialog({
     key: K,
     value: SamplerConfig[K],
   ) => {
-    onUpdate({ [key]: value } as Partial<SamplerConfig>);
+    onUpdate({ [key]: value });
   };
   return (
     <div className="space-y-4">
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="grid gap-1.5">
         <FieldLabel
@@ -39,7 +39,7 @@ export function UuidDialog({
           id={uuidId}
           className="nodrag"
           value={config.uuid_format ?? ""}
-          onChange={(event) => updateField("uuid_format", event.target.value)}
+          onChange={(event) => { updateField("uuid_format", event.target.value); }}
         />
       </div>
     </div>

@@ -11,9 +11,7 @@ test("mac titlebar navigation shifts buttons with centered glyphs", async () => 
     atDefaultUiScale(readSrc("components/tauri/window-titlebar.tsx")),
     atDefaultUiScale(readSrc("app/provider.tsx")),
   ]);
-  const macStyle = provider.match(
-    /const MAC_NATIVE_CHROME_STYLE = \{[\s\S]*?\} as CSSProperties;/,
-  )?.[0];
+  const macStyle = (/const MAC_NATIVE_CHROME_STYLE = \{[\s\S]*?\} as CSSProperties;/.exec(provider))?.[0];
   assert.ok(macStyle);
   assert.match(macStyle, /"--studio-titlebar-navigation-margin-top": "4px"/);
   assert.match(macStyle, /"--studio-titlebar-navigation-offset-y": "4px"/);
@@ -37,9 +35,7 @@ test("mac chat and media headers share the lowered control row", async () => {
     atDefaultUiScale(readSrc("features/video/video-page.tsx")),
   ]);
 
-  const macStyle = provider.match(
-    /const MAC_NATIVE_CHROME_STYLE = \{[\s\S]*?\} as CSSProperties;/,
-  )?.[0];
+  const macStyle = (/const MAC_NATIVE_CHROME_STYLE = \{[\s\S]*?\} as CSSProperties;/.exec(provider))?.[0];
   assert.ok(macStyle);
   assert.match(macStyle, /"--studio-chat-header-padding-top": "9px"/);
   for (const page of [chat, images, video]) {

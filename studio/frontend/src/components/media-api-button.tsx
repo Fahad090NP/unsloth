@@ -30,11 +30,11 @@ export function MediaApiButton({
           type="button"
           aria-label={label}
           onClick={() =>
-            useSettingsDialogStore.getState().openMediaApi({
+            { useSettingsDialogStore.getState().openMediaApi({
               kind,
               // /v1 names a model by its public id.
               model: model ? publicModelId(model) : null,
-            })
+            }); }
           }
           className={HEADER_ICON_BUTTON}
         >

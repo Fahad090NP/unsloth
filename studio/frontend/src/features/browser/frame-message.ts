@@ -50,19 +50,19 @@ export type FrameMessage =
 
 export type RedirectMode = "follow" | "error" | "manual";
 
-export type PageRequest = {
+export interface PageRequest {
   url: string;
   method: string;
-  headers: Array<[string, string]>;
+  headers: [string, string][];
   body: ArrayBuffer | null;
   redirect: RedirectMode;
   /** Fetch's integrity metadata, checked against the body. */
   integrity: string;
-};
+}
 
 const REDIRECT_MODES = new Set<unknown>(["follow", "error", "manual"]);
 
-export type AnnotateRect = { left: number; top: number; width: number; height: number };
+export interface AnnotateRect { left: number; top: number; width: number; height: number }
 
 /** What the page reports while annotating (`annotation` in routes/browser.py); it draws its own outlines. */
 export type AnnotateEvent =
@@ -79,7 +79,7 @@ export type AnnotateEvent =
       alt: string;
       area: boolean;
     }
-  | { kind: "rects"; rects: Array<[number, AnnotateRect | null]> };
+  | { kind: "rects"; rects: [number, AnnotateRect | null][] };
 
 // Same limits as the fetch endpoint.
 const MAX_URL_CHARS = 8192;
@@ -146,7 +146,7 @@ function annotateEvent(message: Record<string, unknown>): AnnotateEvent | null {
     }
     case "rects": {
       if (!Array.isArray(message.rects)) return null;
-      const rects = message.rects.slice(0, MAX_MARKS).flatMap((entry): Array<[number, AnnotateRect | null]> => {
+      const rects = message.rects.slice(0, MAX_MARKS).flatMap((entry): [number, AnnotateRect | null][] => {
         if (!Array.isArray(entry) || typeof entry[0] !== "number") return [];
         return [[entry[0], rect(entry[1])]];
       });
@@ -157,9 +157,9 @@ function annotateEvent(message: Record<string, unknown>): AnnotateEvent | null {
   }
 }
 
-function headerList(value: unknown): Array<[string, string]> | null {
+function headerList(value: unknown): [string, string][] | null {
   if (!Array.isArray(value) || value.length > MAX_REQUEST_HEADERS) return null;
-  const headers: Array<[string, string]> = [];
+  const headers: [string, string][] = [];
   for (const entry of value) {
     const name = Array.isArray(entry) && entry.length === 2 ? text(entry[0], MAX_HEADER_NAME_CHARS) : null;
     const content = name === null ? null : text(entry[1], MAX_URL_CHARS);

@@ -80,7 +80,7 @@ const META_WHITESPACE_RE = /\s+/;
 export function classifyMetaToken(raw: string): MetaToken | null {
   const t = raw.trim();
   if (!t) return null;
-  if (META_SIZE_RE.test(t) || META_APPROX_RE.test(t)) {
+  if (META_SIZE_RE.test(t) || t.startsWith("~")) {
     return { kind: "size", label: t };
   }
   if (META_PARAM_RE.test(t)) {

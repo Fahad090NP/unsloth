@@ -34,7 +34,7 @@ export function ThemeSegmented() {
           <button
             key={opt.value}
             type="button"
-            onClick={() => setTheme(opt.value)}
+            onClick={() => { setTheme(opt.value); }}
             aria-pressed={active}
             className={cn(
               "relative flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors",

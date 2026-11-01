@@ -4,7 +4,7 @@
 import { authFetch } from "@/features/auth";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
-export type DeveloperModeSettings = {
+export interface DeveloperModeSettings {
   /** Effective answer: the env override when set, else the saved setting. */
   videoCpu: boolean;
   videoCpuSetting: boolean;
@@ -15,9 +15,9 @@ export type DeveloperModeSettings = {
   videoCpuApplicable: boolean;
   hostRamBytes: number | null;
   minRamBytes: number;
-};
+}
 
-type ApiDeveloperModeSettings = {
+interface ApiDeveloperModeSettings {
   // biome-ignore lint/style/useNamingConvention: API schema
   video_cpu: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -32,7 +32,7 @@ type ApiDeveloperModeSettings = {
   host_ram_bytes: number | null;
   // biome-ignore lint/style/useNamingConvention: API schema
   min_ram_bytes: number;
-};
+}
 
 export function developerModeFromApi(
   settings: ApiDeveloperModeSettings,

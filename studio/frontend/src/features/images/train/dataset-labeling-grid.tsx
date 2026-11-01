@@ -81,7 +81,7 @@ function LabelTile({
       setCaption(updated.caption ?? "");
       onSaved(updated);
       setSavedTick(true);
-      window.setTimeout(() => setSavedTick(false), 1500);
+      window.setTimeout(() => { setSavedTick(false); }, 1500);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save caption");
     } finally {
@@ -136,7 +136,7 @@ function LabelTile({
         {/* Textarea's md:text-sm outsizes a tile, so pin the size at both widths. */}
         <Textarea
           value={caption}
-          onChange={(e) => setCaption(e.target.value)}
+          onChange={(e) => { setCaption(e.target.value); }}
           onBlur={() => void save()}
           rows={2}
           spellCheck={false}
@@ -252,7 +252,7 @@ export function DatasetLabelingGrid({
               size="icon"
               className="size-6"
               disabled={clampedPage === 0}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              onClick={() => { setPage((p) => Math.max(0, p - 1)); }}
               aria-label="Previous images"
             >
               <HugeiconsIcon icon={ChevronLeftStandardIcon} className="size-3.5" />
@@ -263,7 +263,7 @@ export function DatasetLabelingGrid({
               size="icon"
               className="size-6"
               disabled={clampedPage >= pageCount - 1}
-              onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              onClick={() => { setPage((p) => Math.min(pageCount - 1, p + 1)); }}
               aria-label="Next images"
             >
               <HugeiconsIcon icon={ChevronRightStandardIcon} className="size-3.5" />

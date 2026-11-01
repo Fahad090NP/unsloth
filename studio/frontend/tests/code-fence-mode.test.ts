@@ -103,16 +103,16 @@ test("tokenize is measurement only and no default or boolean can reach it", () =
   assert.notEqual(resolveFenceMode(undefined, ""), "tokenize");
   assert.notEqual(resolveFenceMode(true, ""), "tokenize");
   assert.notEqual(resolveFenceMode(false, ""), "tokenize");
-  assert.notEqual(resolveFenceMode(1 as unknown, ""), "tokenize");
-  assert.notEqual(resolveFenceMode({} as unknown, ""), "tokenize");
+  assert.notEqual(resolveFenceMode(1, ""), "tokenize");
+  assert.notEqual(resolveFenceMode({}, ""), "tokenize");
 });
 
 test("a non-string non-boolean global is ignored rather than coerced", () => {
   // Numeric 1 is not coerced; it falls through to the build flag.
-  assert.equal(resolveFenceMode(1 as unknown, "off"), "off");
-  assert.equal(resolveFenceMode(0 as unknown, "defer"), "defer");
+  assert.equal(resolveFenceMode(1, "off"), "off");
+  assert.equal(resolveFenceMode(0, "defer"), "defer");
   assert.equal(resolveFenceMode(null, ""), SHIP_DEFAULT);
-  assert.equal(resolveFenceMode({} as unknown, ""), SHIP_DEFAULT);
+  assert.equal(resolveFenceMode({}, ""), SHIP_DEFAULT);
 });
 
 test("the mode module is plain TypeScript", () => {

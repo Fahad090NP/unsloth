@@ -30,7 +30,7 @@ export function AudioToolPanels({
         <panel.Component
           key={panel.id}
           value={panelValue(panel, values, specs)}
-          onChange={(value: unknown) => onChange(panel.id, value)}
+          onChange={(value: unknown) => { onChange(panel.id, value); }}
           specs={specs}
           disabled={disabled}
           ctx={ctx}

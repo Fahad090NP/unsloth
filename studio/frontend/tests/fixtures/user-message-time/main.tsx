@@ -117,7 +117,7 @@ function PopupAssistant() {
         <ActionBarMorePrimitive.Root modal={false}>
           <ActionBarMorePrimitive.Trigger>More</ActionBarMorePrimitive.Trigger>
           <ActionBarMorePrimitive.Content
-            onCloseAutoFocus={(event) => event.preventDefault()}
+            onCloseAutoFocus={(event) => { event.preventDefault(); }}
           >
             <ActionBarMorePrimitive.Item>
               Menu action
@@ -146,7 +146,7 @@ function App() {
   window.messageTimeFixture = {
     setLocale,
     updateReply: () =>
-      setMessages((previous) =>
+      { setMessages((previous) =>
         previous.map((message) =>
           message.role === "assistant"
             ? {
@@ -155,7 +155,7 @@ function App() {
               }
             : message,
         ),
-      ),
+      ); },
   };
   return (
     <AssistantRuntimeProvider runtime={runtime}>
@@ -193,6 +193,6 @@ await setLocale((params.get("locale") ?? "en") as Locale);
 if (params.has("scale"))
   document.documentElement.style.setProperty(
     "--ui-font-size-scale",
-    params.get("scale")!,
+    params.get("scale"),
   );
 createRoot(document.getElementById("root")!).render(<App />);

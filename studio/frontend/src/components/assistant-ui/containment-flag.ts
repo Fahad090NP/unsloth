@@ -9,7 +9,7 @@ import {
 
 export type ContainmentMode = MathBlockMode;
 
-export type ContainmentFlag = {
+export interface ContainmentFlag {
   attribute: string;
   on: string;
   global: string;
@@ -24,7 +24,7 @@ export type ContainmentFlag = {
     scope: Record<string, unknown>,
     apply: () => ContainmentMode,
   ) => boolean;
-};
+}
 
 export function defineContainmentFlag({
   attribute,

@@ -157,7 +157,7 @@ export function ChatTemplateEditorDialog({
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => setDraft(defaultTemplate ?? "")}
+                onClick={() => { setDraft(defaultTemplate ?? ""); }}
                 disabled={
                   defaultLoading || renderedDraft === (defaultTemplate ?? "")
                 }

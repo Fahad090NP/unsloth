@@ -141,7 +141,7 @@ test("recalling a quantized model carries the selected adapters into its load", 
   assert.equal((loads[0][2] as { family_override?: string }).family_override, "flux.1");
 
   // A recalled build loads with its own encoder / VAE files, never the live fields.
-  type Files = { text_encoder_file?: string[]; vae_file?: string };
+  interface Files { text_encoder_file?: string[]; vae_file?: string }
   const supplied = {
     repoId: "/comfy/models/diffusion_models",
     kind: "gguf",
@@ -166,7 +166,7 @@ test("recalling a quantized model carries the selected adapters into its load", 
     matchesRememberedModel,
     componentFilesMatch,
     withEngagedFamily: (m: Record<string, unknown>) => m,
-    rememberImageModel: (m: unknown) => storage.setItem("unsloth:images:last-model", JSON.stringify(m)),
+    rememberImageModel: (m: unknown) => { storage.setItem("unsloth:images:last-model", JSON.stringify(m)); },
     setRememberedModel: () => {},
     handleGenerate: async () => {},
   });
@@ -180,7 +180,7 @@ test("recalling a quantized model carries the selected adapters into its load", 
     matchesRememberedModel,
     componentFilesMatch,
     withEngagedFamily: (m: Record<string, unknown>) => m,
-    rememberImageModel: (m: unknown) => storage.setItem("unsloth:images:last-model", JSON.stringify(m)),
+    rememberImageModel: (m: unknown) => { storage.setItem("unsloth:images:last-model", JSON.stringify(m)); },
     setRememberedModel: () => {},
     handleGenerate: async () => {},
   });
@@ -195,7 +195,7 @@ test("recalling a quantized model carries the selected adapters into its load", 
     matchesRememberedModel,
     componentFilesMatch,
     withEngagedFamily: (m: Record<string, unknown>) => m,
-    rememberImageModel: (m: unknown) => storage.setItem("unsloth:images:last-model", JSON.stringify(m)),
+    rememberImageModel: (m: unknown) => { storage.setItem("unsloth:images:last-model", JSON.stringify(m)); },
     setRememberedModel: () => {},
     handleGenerate: async () => {},
   });

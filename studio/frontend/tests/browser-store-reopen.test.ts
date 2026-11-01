@@ -12,7 +12,7 @@ const { browserFile, cachePage, cachedPage, currentEntry, sentPosts, setNativeWe
 
 test("reopening a rewritten file shows its new bytes; an unchanged one keeps its viewer", async () => {
   const store = useBrowserStore.getState();
-  const open = (text: string) => store.openFile({ blob: new Blob([text]), name: "a.txt", key: "sandbox/a.txt" });
+  const open = (text: string) => { store.openFile({ blob: new Blob([text]), name: "a.txt", key: "sandbox/a.txt" }); };
   const shown = () => {
     const tab = useBrowserStore.getState().tabs[0];
     const entry = tab && currentEntry(tab);
@@ -42,7 +42,7 @@ test("reopening a rewritten file shows its new bytes; an unchanged one keeps its
 test("a large file differing only in its last byte is told apart across compare slices", async () => {
   const store = useBrowserStore.getState();
   const bytes = new Uint8Array(2.5 * 1024 * 1024 + 3).fill(7);
-  const open = (data: Uint8Array<ArrayBuffer>) => store.openFile({ blob: new Blob([data]), name: "big.bin", key: "sandbox/big.bin" });
+  const open = (data: Uint8Array<ArrayBuffer>) => { store.openFile({ blob: new Blob([data]), name: "big.bin", key: "sandbox/big.bin" }); };
   const shown = () => {
     const tab = useBrowserStore.getState().tabs.find((candidate) => candidate.openKey === "file:sandbox/big.bin");
     const entry = tab && currentEntry(tab);
@@ -275,7 +275,7 @@ test("leaving a chat closes tabs containing its pages in history, and only those
   const store = useBrowserStore.getState();
   for (const tab of useBrowserStore.getState().tabs) store.closeTab(tab.id);
   const html = (name: string, key: string) =>
-    store.openFile({ blob: new Blob(["<p>hi</p>"], { type: "text/html" }), name, contentType: "text/html", key: `html:${key}` });
+    { store.openFile({ blob: new Blob(["<p>hi</p>"], { type: "text/html" }), name, contentType: "text/html", key: `html:${key}` }); };
   html("shown.html", "a1");
   html("left.html", "a2");
   store.navigate(useBrowserStore.getState().activeTabId ?? "", { url: "https://example.com/" });
@@ -328,7 +328,7 @@ test("a file opened at a page asks for it again on every reopen, and a reopen wi
   const store = useBrowserStore.getState();
   for (const tab of useBrowserStore.getState().tabs) store.closeTab(tab.id);
   const open = (page?: number) =>
-    store.openFile({ blob: new Blob(["%PDF"]), name: "guide.pdf", key: "rag:doc-1", ...(page ? { page } : {}) });
+    { store.openFile({ blob: new Blob(["%PDF"]), name: "guide.pdf", key: "rag:doc-1", ...(page ? { page } : {}) }); };
   const target = () => {
     const state = useBrowserStore.getState();
     return state.fileViews[state.activeTabId ?? ""]?.pageTarget ?? null;

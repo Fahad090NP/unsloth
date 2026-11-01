@@ -16,7 +16,7 @@ const { chatKeyOfThread, chatTabs, currentEntry, useBrowserStore } = await impor
 
 const globals = globalThis as Record<string, unknown>;
 const policy = { allowedDomains: [], blockedDomains: [] };
-type Posted = { action_id: string; result: { ok: boolean; url?: string; error?: string } };
+interface Posted { action_id: string; result: { ok: boolean; url?: string; error?: string } }
 const posted: Posted[] = [];
 globals.__authFetch = async (_url: string, init: { body: string }) => {
   posted.push(JSON.parse(init.body));
@@ -34,7 +34,7 @@ const kept: string[] = [];
 // A page opened in the background reports its load a beat later.
 globals.__keep = (tabId: string) => {
   kept.push(tabId);
-  setTimeout(() => useBrowserStore.getState().updateTab(tabId, { loading: false }), 30);
+  setTimeout(() => { useBrowserStore.getState().updateTab(tabId, { loading: false }); }, 30);
 };
 
 const navigate = (id: string, scope: string, url: string) =>

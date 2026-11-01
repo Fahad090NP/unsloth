@@ -43,7 +43,7 @@ export interface CompareContext {
   shift: ShiftControl | null;
   loraCapable: boolean;
   // The form's active LoRA rows, in order; a weight axis targets one of them.
-  loras: ReadonlyArray<{ id: string; weight: number; label: string }>;
+  loras: readonly { id: string; weight: number; label: string }[];
   sdControls?: CompareSdControls | null;
   controlnetEngaged: boolean;
   // Hires CFG makes the refine pass read the negative prompt at any base CFG; no axis varies Hires, so it is grid-wide.
@@ -63,7 +63,7 @@ export interface CellState {
   baseShift?: number;
   maxShift?: number;
   loraWeights: Record<number, number>;
-  replacements: Array<[string, string]>;
+  replacements: [string, string][];
   extra: Record<string, number>;
 }
 
@@ -72,7 +72,7 @@ export interface AxisDef {
   label: string;
   type: AxisValueType;
   placeholder: string;
-  choices?: ReadonlyArray<{ value: string; label: string }>;
+  choices?: readonly { value: string; label: string }[];
   // A1111 AxisOption.cost: costly axes run in the outer loop. Here cost = may change the denoiser's work shape.
   cost: number;
   resolve(value: Value): { ok: true; value: Value } | { ok: false; error: string };
@@ -113,7 +113,7 @@ function numberAxis(
       if (n > max) return fail(`${label} ${n} is above ${max}`);
       return ok(type === "int" ? Math.trunc(n) : roundValue(n));
     },
-    apply: (cell, v) => apply(cell, Number(v)),
+    apply: (cell, v) => { apply(cell, Number(v)); },
     format: (v) => `${label}: ${v}`,
     ...extra,
   };
@@ -122,7 +122,7 @@ function numberAxis(
 function choiceAxis(
   id: string,
   label: string,
-  choices: ReadonlyArray<{ value: string; label: string }>,
+  choices: readonly { value: string; label: string }[],
   apply: (cell: CellState, v: string) => void,
 ): AxisDef {
   return {
@@ -137,7 +137,7 @@ function choiceAxis(
       const hit = choices.find((c) => c.value.toLowerCase() === want || c.label.toLowerCase() === want);
       return hit ? ok(hit.value) : fail(`Unknown ${label.toLowerCase()}: ${v}`);
     },
-    apply: (cell, v) => apply(cell, String(v)),
+    apply: (cell, v) => { apply(cell, String(v)); },
     format: (v) => choices.find((c) => c.value === v)?.label ?? String(v),
   };
 }
@@ -418,7 +418,7 @@ export function gridNegativePrompt(plan: CompareGridPlan, ctx: CompareContext): 
 export function cellState(plan: CompareGridPlan, index: number): CellState {
   const cell: CellState = { loraWeights: {}, replacements: [], extra: {} };
   const c = cellCoords(plan, index);
-  plan.axes.forEach((axis, a) => axis.def.apply(cell, axis.values[c[a]], axis.values));
+  plan.axes.forEach((axis, a) => { axis.def.apply(cell, axis.values[c[a]], axis.values); });
   return cell;
 }
 

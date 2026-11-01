@@ -81,7 +81,7 @@ export async function resumeTrainingRun(runId: string): Promise<boolean> {
     }
     return await submitResumeTrainingRun(payload, attempt);
   } catch (error) {
-    return attempt.fail(error);
+    return await attempt.fail(error);
   }
 }
 
@@ -338,5 +338,5 @@ async function submitResumeTrainingRun(
       response.error_code ?? null,
     );
   }
-  return attempt.settleAccepted(response.job_id, response.message);
+  return await attempt.settleAccepted(response.job_id, response.message);
 }

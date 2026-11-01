@@ -16,7 +16,7 @@ const { aggregateGpuMemoryTotalGb } = await import("../src/hooks/gpu-vram.ts");
 const GB = 1024 ** 3;
 const PLATFORMS = ["linux", "wsl", "win32", "darwin"] as const;
 
-type Device = { memory_total_gb: number; shared_memory?: boolean };
+interface Device { memory_total_gb: number; shared_memory?: boolean }
 
 interface Host {
   label: string;

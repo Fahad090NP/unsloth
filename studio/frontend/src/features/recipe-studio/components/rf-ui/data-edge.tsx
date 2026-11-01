@@ -7,7 +7,7 @@ import {
   getBezierPath,
   getSmoothStepPath,
   getStraightPath,
-  Position,
+  type Position,
   type Edge,
   type EdgeProps,
 } from "@xyflow/react";

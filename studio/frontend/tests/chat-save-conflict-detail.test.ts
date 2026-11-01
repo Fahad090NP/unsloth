@@ -7,7 +7,7 @@ import test from "node:test";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 import { skillLoadCardEvent } from "../src/features/chat/api/skill-load-event.ts";
 
-type Module = {
+interface Module {
   saveChatMessage: (
     message: Record<string, unknown>,
     options?: { allowGenerationEdit?: boolean; coalesce?: boolean },
@@ -17,7 +17,7 @@ type Module = {
     messageId: string,
     detail?: string,
   ) => Error & { threadId: string; messageId: string };
-};
+}
 
 function jsonResponse(status: number, body: unknown, kind: string | null = "protected") {
   let reads = 0;

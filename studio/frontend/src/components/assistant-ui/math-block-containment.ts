@@ -65,6 +65,6 @@ export const applyMathBlockContainment = (
 };
 
 export const watchMathBlockContainmentOverride = (
-  scope: Record<string, unknown> = globalThis as Record<string, unknown>,
+  scope: Record<string, unknown> = globalThis,
   apply: () => MathBlockMode = applyMathBlockContainment,
 ): boolean => installOverrideWatcher(scope, apply);

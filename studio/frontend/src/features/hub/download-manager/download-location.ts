@@ -48,7 +48,7 @@ export function setDownloadDir(path: string | null): void {
 export function useDownloadDir(): string | null {
   const [dir, setDir] = useState<string | null>(getDownloadDir);
   useEffect(() => {
-    const sync = () => setDir(getDownloadDir());
+    const sync = () => { setDir(getDownloadDir()); };
     const handleStorage = (event: StorageEvent) => {
       if (event.key === null || event.key === DOWNLOAD_DIR_STORAGE_KEY) {
         sync();

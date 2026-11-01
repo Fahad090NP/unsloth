@@ -31,7 +31,7 @@ export function DownloadApprovalDialog() {
 
   return (
     <AlertDialog open={request !== undefined} onOpenChange={(open) => !open && answer(false, false)}>
-      <AlertDialogContent onOverlayClick={() => answer(false, false)}>
+      <AlertDialogContent onOverlayClick={() => { answer(false, false); }}>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("browser.downloadPrompt.title")}</AlertDialogTitle>
           <AlertDialogDescription className="break-words">
@@ -46,13 +46,13 @@ export function DownloadApprovalDialog() {
         {/* Files that run code ask every time, so there's nothing to remember. */}
         {request?.origin && !request.dangerous ? (
           <label htmlFor={checkboxId} className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-            <Checkbox id={checkboxId} checked={remember} onCheckedChange={(checked) => setRemember(checked === true)} />
+            <Checkbox id={checkboxId} checked={remember} onCheckedChange={(checked) => { setRemember(checked === true); }} />
             {t("browser.downloadPrompt.remember")}
           </label>
         ) : null}
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => answer(false)}>{t("browser.downloadPrompt.cancel")}</AlertDialogCancel>
-          <AlertDialogAction onClick={() => answer(true)}>{t("browser.downloadPrompt.download")}</AlertDialogAction>
+          <AlertDialogCancel onClick={() => { answer(false); }}>{t("browser.downloadPrompt.cancel")}</AlertDialogCancel>
+          <AlertDialogAction onClick={() => { answer(true); }}>{t("browser.downloadPrompt.download")}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

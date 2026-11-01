@@ -25,15 +25,15 @@ import { planChatItemSources } from "../src/features/chat/utils/project-source-p
 import type { ThreadRecord } from "../src/features/chat/types.ts";
 import { readSrc } from "./helpers/kit.ts";
 
-type StoredMessage = {
+interface StoredMessage {
   id: string;
   parentId: string | null;
   createdAt: number;
   role: string;
   content: string;
-};
+}
 
-type Exporters = {
+interface Exporters {
   buildConversationMarkdownForThread: (
     threadId: string,
   ) => Promise<string | null>;
@@ -49,7 +49,7 @@ type Exporters = {
     format: "markdown",
     basename: string,
   ) => Promise<void>;
-};
+}
 
 const SOURCE = readSrc(
   "features/chat/prompt-storage/prompt-storage-dialog.tsx",

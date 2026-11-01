@@ -168,15 +168,15 @@ export function useNotificationDue(channel: NotificationChannel): boolean {
       Math.max(lastShown + period - Date.now(), 0) + 1000,
       MAX_TIMEOUT_MS,
     );
-    const timer = setTimeout(() => setTick((tick) => tick + 1), wait);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => { setTick((tick) => tick + 1); }, wait);
+    return () => { clearTimeout(timer); };
   }, [due, frequency, lastShown, tick]);
   return due;
 }
 
 function subscribeVisibility(listener: () => void): () => void {
   document.addEventListener("visibilitychange", listener);
-  return () => document.removeEventListener("visibilitychange", listener);
+  return () => { document.removeEventListener("visibilitychange", listener); };
 }
 
 /** Whether the user can see this tab; a hidden tab must not use up the quiet period. */

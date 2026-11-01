@@ -6,7 +6,7 @@ import type { RecipeExecutionKind } from "../execution-types";
 import type { RecipeExecutionRecord } from "../execution-types";
 import { sortExecutions, withExecutionDefaults } from "../executions/execution-helpers";
 
-export type RecipeRunSettings = {
+export interface RecipeRunSettings {
   batchSize: number;
   batchEnabled: boolean;
   mergeBatches: boolean;
@@ -17,7 +17,7 @@ export type RecipeRunSettings = {
   disableEarlyShutdown: boolean;
   shutdownErrorRate: number;
   shutdownErrorWindow: number;
-};
+}
 
 const DEFAULT_RUN_SETTINGS: RecipeRunSettings = {
   batchSize: 1000,
@@ -32,7 +32,7 @@ const DEFAULT_RUN_SETTINGS: RecipeRunSettings = {
   shutdownErrorWindow: 10,
 };
 
-type RecipeExecutionsState = {
+interface RecipeExecutionsState {
   runDialogOpen: boolean;
   runDialogKind: RecipeExecutionKind;
   previewRows: number;
@@ -57,7 +57,7 @@ type RecipeExecutionsState = {
   upsertExecution: (record: RecipeExecutionRecord) => void;
   selectExecution: (id: string | null) => void;
   resetForRecipe: () => void;
-};
+}
 
 const INITIAL_STATE = {
   runDialogOpen: false,
@@ -88,9 +88,9 @@ const INITIAL_STATE = {
 
 export const useRecipeExecutionsStore = create<RecipeExecutionsState>((set) => ({
   ...INITIAL_STATE,
-  setRunDialogOpen: (open) => set({ runDialogOpen: open }),
+  setRunDialogOpen: (open) => { set({ runDialogOpen: open }); },
   setRunDialogKind: (kind) =>
-    set((state) => {
+    { set((state) => {
       if (state.runDialogKind === "preview" && kind === "full") {
         return {
           runDialogKind: kind,
@@ -102,39 +102,39 @@ export const useRecipeExecutionsStore = create<RecipeExecutionsState>((set) => (
         };
       }
       return { runDialogKind: kind };
-    }),
+    }); },
   setPreviewRows: (rows) =>
-    set({ previewRows: Number.isFinite(rows) && rows > 0 ? Math.floor(rows) : 1 }),
+    { set({ previewRows: Number.isFinite(rows) && rows > 0 ? Math.floor(rows) : 1 }); },
   setFullRows: (rows) =>
-    set({ fullRows: Number.isFinite(rows) && rows > 0 ? Math.floor(rows) : 1 }),
-  setFullRunName: (name) => set({ fullRunName: name }),
-  setRunErrors: (errors) => set({ runErrors: errors }),
+    { set({ fullRows: Number.isFinite(rows) && rows > 0 ? Math.floor(rows) : 1 }); },
+  setFullRunName: (name) => { set({ fullRunName: name }); },
+  setRunErrors: (errors) => { set({ runErrors: errors }); },
   setRunSettings: (patch) =>
-    set((state) => ({
+    { set((state) => ({
       runSettings: {
         ...state.runSettings,
         ...patch,
       },
-    })),
-  setPreviewLoading: (loading) => set({ previewLoading: loading }),
-  setFullLoading: (loading) => set({ fullLoading: loading }),
+    })); },
+  setPreviewLoading: (loading) => { set({ previewLoading: loading }); },
+  setFullLoading: (loading) => { set({ fullLoading: loading }); },
   setExecutions: (records) =>
-    set(() => {
+    { set(() => {
       const normalized = sortExecutions(records.map(withExecutionDefaults));
       return {
         executions: normalized,
         selectedExecutionId: normalized[0]?.id ?? null,
       };
-    }),
+    }); },
   upsertExecution: (record) =>
-    set((state) => {
+    { set((state) => {
       const normalized = withExecutionDefaults(record);
       const withoutCurrent = state.executions.filter((item) => item.id !== normalized.id);
       return {
         executions: sortExecutions([normalized, ...withoutCurrent]),
         selectedExecutionId: normalized.id,
       };
-    }),
-  selectExecution: (id) => set({ selectedExecutionId: id }),
-  resetForRecipe: () => set(INITIAL_STATE),
+    }); },
+  selectExecution: (id) => { set({ selectedExecutionId: id }); },
+  resetForRecipe: () => { set(INITIAL_STATE); },
 }));

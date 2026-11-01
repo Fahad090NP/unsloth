@@ -49,9 +49,7 @@ test("the chat renderer's rehypePlugins pipeline carries the allowedTags merge i
     "PRECONDITION: the chat renderer relies on the allowedTags sanitizer",
   );
   assert.ok(
-    /withDataImageSupport\(STREAMDOWN_ALLOWED_TAGS,/.test(
-      MARKDOWN_TEXT,
-    ) && MARKDOWN_TEXT.includes("rehypePlugins={rehypePlugins}"),
+    MARKDOWN_TEXT.includes('withDataImageSupport(STREAMDOWN_ALLOWED_TAGS,') && MARKDOWN_TEXT.includes("rehypePlugins={rehypePlugins}"),
     "the passed pipeline must be derived from the defaults AND carry the allowedTags merge",
   );
 });
@@ -108,8 +106,8 @@ test("the stylesheet rule names the class, the attribute and both declarations",
     "the formula placeholder, near the measured 49px mean",
   );
   assert.notEqual(
-    marked.match(/contain-intrinsic-size: auto [\d.]+rem/)?.[0],
-    display.match(/contain-intrinsic-size: auto [\d.]+rem/)?.[0],
+    (/contain-intrinsic-size: auto [\d.]+rem/.exec(marked))?.[0],
+    (/contain-intrinsic-size: auto [\d.]+rem/.exec(display))?.[0],
     "one shared placeholder is the thing this pair replaced",
   );
 });

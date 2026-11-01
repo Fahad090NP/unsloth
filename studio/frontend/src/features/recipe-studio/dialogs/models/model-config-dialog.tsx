@@ -24,12 +24,12 @@ import { FieldLabel } from "../shared/field-label";
 import { NameField } from "../shared/name-field";
 import { LocalRecipeModelSelector } from "./local-recipe-model-selector";
 
-type ModelConfigDialogProps = {
+interface ModelConfigDialogProps {
   config: ModelConfig;
   providerOptions: string[];
   localProviderNames: Set<string>;
   onUpdate: (patch: Partial<ModelConfig>) => void;
-};
+}
 
 export function ModelConfigDialog({
   config,
@@ -57,7 +57,7 @@ export function ModelConfigDialog({
     key: K,
     value: ModelConfig[K],
   ) => {
-    onUpdate({ [key]: value } as Partial<ModelConfig>);
+    onUpdate({ [key]: value });
   };
 
   const applyProviderChange = (selectedProvider: string) => {
@@ -87,7 +87,7 @@ export function ModelConfigDialog({
       <NameField
         label="Model preset name"
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="rounded-lg border border-border/60 bg-muted/10 px-4 py-3">
         <p className="text-sm font-semibold text-foreground">
@@ -110,7 +110,7 @@ export function ModelConfigDialog({
             filteredItems={providerOptions}
             filter={null}
             value={config.provider || null}
-            onValueChange={(value) => applyProviderChange(value ?? "")}
+            onValueChange={(value) => { applyProviderChange(value ?? ""); }}
             onInputValueChange={(value) => {
               providerInputRef.current = value;
             }}
@@ -164,11 +164,11 @@ export function ModelConfigDialog({
             }
             ggufVariant={config.gguf_variant}
             onChange={(model, variant) =>
-              onUpdate({
+              { onUpdate({
                 model,
                 // biome-ignore lint/style/useNamingConvention: api schema
                 gguf_variant: variant ?? undefined,
-              })
+              }); }
             }
           />
         ) : (
@@ -178,11 +178,11 @@ export function ModelConfigDialog({
             placeholder="gpt-4o-mini"
             value={config.model}
             onChange={(event) =>
-              onUpdate({
+              { onUpdate({
                 model: event.target.value,
                 // biome-ignore lint/style/useNamingConvention: api schema
                 gguf_variant: undefined,
-              })
+              }); }
             }
           />
         )}
@@ -214,7 +214,7 @@ export function ModelConfigDialog({
               className="nodrag"
               value={config.inference_temperature ?? ""}
               onChange={(event) =>
-                updateField("inference_temperature", event.target.value)
+                { updateField("inference_temperature", event.target.value); }
               }
             />
           </div>
@@ -229,7 +229,7 @@ export function ModelConfigDialog({
               className="nodrag"
               value={config.inference_top_p ?? ""}
               onChange={(event) =>
-                updateField("inference_top_p", event.target.value)
+                { updateField("inference_top_p", event.target.value); }
               }
             />
           </div>
@@ -244,7 +244,7 @@ export function ModelConfigDialog({
               className="nodrag"
               value={config.inference_max_tokens ?? ""}
               onChange={(event) =>
-                updateField("inference_max_tokens", event.target.value)
+                { updateField("inference_max_tokens", event.target.value); }
               }
             />
           </div>
@@ -259,7 +259,7 @@ export function ModelConfigDialog({
               className="nodrag"
               value={config.inference_timeout ?? ""}
               onChange={(event) =>
-                updateField("inference_timeout", event.target.value)
+                { updateField("inference_timeout", event.target.value); }
               }
             />
           </div>
@@ -285,7 +285,7 @@ export function ModelConfigDialog({
               placeholder='{"top_k": 20, "min_p": 0.0}'
               value={config.inference_extra_body ?? ""}
               onChange={(event) =>
-                updateField("inference_extra_body", event.target.value)
+                { updateField("inference_extra_body", event.target.value); }
               }
             />
           </div>
@@ -297,7 +297,7 @@ export function ModelConfigDialog({
               id={skipHealthCheckId}
               checked={config.skip_health_check ?? false}
               onCheckedChange={(value) =>
-                updateField("skip_health_check", Boolean(value))
+                { updateField("skip_health_check", Boolean(value)); }
               }
             />
             Skip connection check

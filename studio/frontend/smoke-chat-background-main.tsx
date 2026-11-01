@@ -35,7 +35,7 @@ function App() {
     <TooltipProvider>
       <div className="p-4 text-foreground">
         <div className="mb-4 flex flex-wrap gap-4">
-          <button onClick={() => setConversation((v) => !v)}>
+          <button onClick={() => { setConversation((v) => !v); }}>
             Toggle conversation
           </button>
           <button
@@ -46,9 +46,9 @@ function App() {
           >
             Toggle theme
           </button>
-          <button onClick={() => setActive((v) => !v)}>Toggle route</button>
-          <button onClick={() => setSidebar(v => !v)}>Toggle sidebar</button>
-          <button onClick={() => setOtherPage(v => !v)}>Toggle page</button>
+          <button onClick={() => { setActive((v) => !v); }}>Toggle route</button>
+          <button onClick={() => { setSidebar(v => !v); }}>Toggle sidebar</button>
+          <button onClick={() => { setOtherPage(v => !v); }}>Toggle page</button>
           <button onClick={() => void resetChatBackground()}>Reset all</button>
         </div>
         <div className="grid gap-8 lg:grid-cols-2">
@@ -125,7 +125,7 @@ function App() {
   );
 }
 const root = createRoot(document.getElementById("root")!);
-if (import.meta.hot) import.meta.hot.dispose(() => root.unmount());
+if (import.meta.hot) import.meta.hot.dispose(() => { root.unmount(); });
 root.render(
   <StrictMode>
     <App />

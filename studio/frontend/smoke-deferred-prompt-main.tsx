@@ -47,15 +47,15 @@ function Owner() {
         onValueChange={setPrompt}
       />
       <output aria-label="Owner prompt">{prompt}</output>
-      <button type="button" onClick={() => setGenerated((g) => [...g, prompt])}>
+      <button type="button" onClick={() => { setGenerated((g) => [...g, prompt]); }}>
         Generate
       </button>
-      <button type="button" onClick={() => setPrompt("from recall")}>
+      <button type="button" onClick={() => { setPrompt("from recall"); }}>
         Recall
       </button>
       <button
         type="button"
-        onClick={() => setPrompt((p) => `${p}, transparent background`)}
+        onClick={() => { setPrompt((p) => `${p}, transparent background`); }}
       >
         Append
       </button>

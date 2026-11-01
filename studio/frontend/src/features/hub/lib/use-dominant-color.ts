@@ -64,7 +64,7 @@ function extractColor(url: string): Promise<string | null> {
         resolve(null);
       }
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => { resolve(null); };
     img.src = url;
   });
 }

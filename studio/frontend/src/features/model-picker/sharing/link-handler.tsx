@@ -41,7 +41,7 @@ export function SharedRunConfigLinkHandler({
         void receiveStartupRunConfigUrl();
       }
     });
-    const onAuth = () => setAuthRevision((revision) => revision + 1);
+    const onAuth = () => { setAuthRevision((revision) => revision + 1); };
     const unsubscribe = subscribeRunConfigSession(onAuth);
     return () => {
       active = false;
@@ -57,7 +57,7 @@ export function SharedRunConfigLinkHandler({
           message="Shared run settings could not load. Reload Unsloth and reopen the link to try again."
           reloadLabel="Reload Unsloth"
           dismissLabel="Dismiss"
-          onDismiss={() => runConfigInbox.clear(pending.id)}
+          onDismiss={() => { runConfigInbox.clear(pending.id); }}
           testId="shared-run-settings-unavailable"
           className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border bg-background p-4"
         />

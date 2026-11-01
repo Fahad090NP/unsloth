@@ -16,13 +16,13 @@ import { hasPrefix } from "./streaming-render-schedule.ts";
 export const REASONING_TRANSCRIPT_THRESHOLD = 16_384;
 export const REASONING_FRAGMENT_CHARACTERS = 8_192;
 
-export type ReasoningCodeLine = { line: number; column: number; text: string };
-export type ReasoningReadingAnchor = {
+export interface ReasoningCodeLine { line: number; column: number; text: string }
+export interface ReasoningReadingAnchor {
   text: string;
   top: number;
   occurrence?: number;
-};
-export type ReasoningFragment = {
+}
+export interface ReasoningFragment {
   key: string;
   document: number;
   start: number;
@@ -42,9 +42,9 @@ export type ReasoningFragment = {
     language: string | null;
     lines: readonly ReasoningCodeLine[];
   };
-};
+}
 
-type Block = {
+interface Block {
   start: number;
   end: number;
   text: string;
@@ -61,21 +61,21 @@ type Block = {
     language: string | null;
     index?: ReasoningCodeIndex;
   };
-};
-type Fence = {
+}
+interface Fence {
   marker: string;
   scan: number;
   bodyStart: number;
   closeStart?: number;
   block?: Block;
-};
+}
 
-type MarkdownNode = {
+interface MarkdownNode {
   type: string;
   value?: string;
   position?: { start: { offset?: number }; end: { offset?: number } };
   children?: MarkdownNode[];
-};
+}
 
 export function findReasoningAnchor(
   fragments: readonly ReasoningFragment[],
@@ -196,8 +196,7 @@ function continuationPrefix(
     if (
       match &&
       !(
-        close &&
-        close[1][0] === match[2][0] &&
+        close?.[1][0] === match[2][0] &&
         close[1].length >= match[2].length
       )
     )
@@ -249,7 +248,7 @@ function fenceAt(source: string, start: number): Fence | null {
   const match = /^( {0,3})(`{3,}|~{3,})([^\n]*)$/.exec(
     source.slice(start, newline),
   );
-  if (!match || (match[2][0] === "`" && match[3].includes("`"))) return null;
+  if (!match || (match[2].startsWith("`") && match[3].includes("`"))) return null;
   return { marker: match[2], scan: newline + 1, bodyStart: newline + 1 };
 }
 
@@ -261,8 +260,7 @@ function fenceEnd(source: string, fence: Fence): number | null {
     const line = source.slice(from, end);
     const match = /^ {0,3}(`{3,}|~{3,})[\t ]*\r?$/.exec(line);
     if (
-      match &&
-      match[1][0] === fence.marker[0] &&
+      match?.[1][0] === fence.marker[0] &&
       match[1].length >= fence.marker.length
     ) {
       // A partial closing line can acquire non-whitespace on the next append.
@@ -509,8 +507,8 @@ function fragmentsOf(
 
 export class ReasoningTranscriptIndex {
   generation = 0;
-  private documents: DocumentIndex[] = [];
-  private fragments = new WeakMap<
+  private readonly documents: DocumentIndex[] = [];
+  private readonly fragments = new WeakMap<
     Block,
     {
       revision: number;
@@ -549,8 +547,7 @@ export class ReasoningTranscriptIndex {
         }
         let cached = this.fragments.get(block);
         if (
-          !cached ||
-          cached.revision !== index.definitionsRevision ||
+          cached?.revision !== index.definitionsRevision ||
           cached.text !== block.text
         ) {
           const base =
@@ -611,7 +608,7 @@ export function cachedReasoningTranscriptIndex(
   const index = new ReasoningTranscriptIndex();
   indices.set(key, index);
   if (indices.size > INDEX_CACHE_ENTRIES) {
-    indices.delete(indices.keys().next().value as string);
+    indices.delete(indices.keys().next().value!);
   }
   return index;
 }

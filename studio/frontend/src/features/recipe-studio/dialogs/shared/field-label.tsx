@@ -6,11 +6,11 @@ import { InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactElement } from "react";
 
-type FieldLabelProps = {
+interface FieldLabelProps {
   label: string;
   htmlFor?: string;
   hint?: string;
-};
+}
 
 export function FieldLabel({
   label,

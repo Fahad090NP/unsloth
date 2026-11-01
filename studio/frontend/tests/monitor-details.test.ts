@@ -128,9 +128,7 @@ test("the Detailed view row follows the Live monitor cards without a divider", (
     new URL("../src/features/settings/tabs/resources-tab.tsx", import.meta.url),
     "utf8",
   );
-  const row = tab.match(
-    /<SettingsRow\s+label=\{t\("settings\.resources\.liveMonitor\.detailedView"\)\}[^>]*>/,
-  );
+  const row = /<SettingsRow\s+label=\{t\("settings\.resources\.liveMonitor\.detailedView"\)\}[^>]*>/.exec(tab);
   assert.ok(row);
   assert.doesNotMatch(row[0], /border-t/);
 });

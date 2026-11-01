@@ -64,7 +64,7 @@ export async function completeProgressiveMounts(
       await Promise.all(pending.map((entry) => entry.complete()));
     }
     await new Promise<void>((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      requestAnimationFrame(() => requestAnimationFrame(() => { resolve(); })),
     );
     // Filtered set: an unwanted completer would otherwise hold the loop open forever.
     if (wanted().length === 0 && (observed || Date.now() >= deadline)) {
@@ -154,12 +154,12 @@ function holdAnchor(viewport: HTMLElement, element: Element): HeldAnchor {
   };
 }
 
-type HeldAnchor = {
+interface HeldAnchor {
   element: Element;
   sample: AnchorSample;
   row: Element | null;
   rowSample: AnchorSample | null;
-};
+}
 
 function isAnchorVisible(viewport: HTMLElement, element: Element): boolean {
   const box = element.getBoundingClientRect();
@@ -177,16 +177,16 @@ function useProgressiveMountWindow(
 
   // Imperative, so run start/stop does not re-render and rebuild the row array.
   const isRunningNow = useCallback(
-    () => aui.thread().getState().isRunning === true,
+    () => aui.thread().getState().isRunning,
     [aui],
   );
 
   // Read imperatively: a useAuiState selector on messages would walk the thread every keystroke.
   const renderableAt = useCallback(() => {
-    const messages = aui.thread().getState().messages as ReadonlyArray<{
+    const messages = aui.thread().getState().messages as readonly {
       role?: ThreadMessageRole;
       composer?: { isEditing?: boolean };
-    }>;
+    }[];
     return (index: number) => {
       const message = messages[index];
       // Unknown shapes count as renderable, degrading to the count-based window rather than none.
@@ -271,7 +271,7 @@ function useProgressiveMountWindow(
         setMountWindow((current) => widen(current, count));
       });
     });
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); };
   }, [mountWindow, count, captureAnchor, isRunningNow]);
 
   // mountWindow is a trigger: this must run in the commit that widened the window, before paint.
@@ -341,7 +341,7 @@ function useProgressiveMountWindow(
       idleRef.current = holdAnchor(viewport, element);
     };
     frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); };
   }, [mountWindow, adjustForContentInsertedAbove, viewportRef]);
 
   // Restore native anchoring when the window closes or on unmount; it is turned off at capture.
@@ -360,7 +360,7 @@ function useProgressiveMountWindow(
 
   // Registered only while rows are withheld, so completeProgressiveMounts is free when settled.
   const isWithholding = mountWindow != null;
-  const completionWaiters = useRef<Array<() => void>>([]);
+  const completionWaiters = useRef<(() => void)[]>([]);
   useLayoutEffect(() => {
     if (!isWithholding) return;
     const complete = () =>
@@ -388,7 +388,7 @@ function useProgressiveMountWindow(
     const frame = requestAnimationFrame(() =>
       requestAnimationFrame(flushCompletionWaiters),
     );
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); };
   }, [mountWindow, flushCompletionWaiters]);
 
   // Settle waiters on unmount, or a DOM capture racing a thread switch waits forever.

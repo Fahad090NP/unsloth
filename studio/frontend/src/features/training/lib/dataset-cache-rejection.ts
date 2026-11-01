@@ -19,15 +19,15 @@ export type DatasetCacheInventoryIdentity = Readonly<{
   partialTransport?: string | null;
 }>;
 
-type ObservedDatasetCache = {
+interface ObservedDatasetCache {
   identity: DatasetCacheUsabilityIdentity;
   fingerprint: string;
-};
+}
 
-type RejectedDatasetCache = {
+interface RejectedDatasetCache {
   identity: DatasetCacheUsabilityIdentity;
   fingerprint: string | null;
-};
+}
 
 export type DatasetCacheValidationToken = Readonly<{
   identity: DatasetCacheUsabilityIdentity;
@@ -143,8 +143,7 @@ export class DatasetCacheRejectionTracker {
     }
     this.observed = { identity, fingerprint };
     if (
-      this.rejected &&
-      this.rejected.fingerprint === null &&
+      this.rejected?.fingerprint === null &&
       targetsSameCacheUsability(this.rejected.identity, identity)
     ) {
       this.rejected.fingerprint = fingerprint;

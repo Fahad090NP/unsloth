@@ -154,14 +154,14 @@ export async function fetchDeviceType(options?: {
   if (isTauri && getApiPort() === null) {
     return localPlatformFallback(options?.force);
   }
-  if (options?.force) return readHealth(options);
+  if (options?.force) return await readHealth(options);
 
   let token: string | null;
   try {
     token = readAuthToken();
   } catch {
     // Same fallback as a failed read; readHealth records it.
-    return readHealth(options);
+    return await readHealth(options);
   }
   const url = apiUrl("/api/health");
   const shared = sharedHealthRead;
@@ -171,7 +171,7 @@ export async function fetchDeviceType(options?: {
     shared.url === url &&
     shared.generation === backendGeneration
   ) {
-    return shared.promise;
+    return await shared.promise;
   }
   const entry = {
     token,
@@ -184,7 +184,7 @@ export async function fetchDeviceType(options?: {
     if (sharedHealthRead === entry) sharedHealthRead = null;
   };
   entry.promise.then(release, release);
-  return entry.promise;
+  return await entry.promise;
 }
 
 async function readHealth(
@@ -291,7 +291,7 @@ async function readHealth(
         videoCpuOptIn:
           data.video_cpu_opt_in === undefined
             ? previous.videoCpuOptIn
-            : data.video_cpu_opt_in === true,
+            : data.video_cpu_opt_in,
         cloudflareUrl: data.cloudflare_url ?? null,
         serverUrl: data.server_url ?? null,
         secure: data.secure ?? false,

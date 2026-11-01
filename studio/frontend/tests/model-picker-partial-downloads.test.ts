@@ -232,7 +232,7 @@ test("Hub selections preserve download completeness and continuation state", () 
     isDatasetMode: false,
   } satisfies Parameters<typeof useSelectedModelView>[0];
 
-  const cases: Array<{
+  const cases: {
     name: string;
     input: Parameters<typeof useSelectedModelView>[0];
     kind: SelectedModelView["kind"];
@@ -241,7 +241,7 @@ test("Hub selections preserve download completeness and continuation state", () 
     transport: string | null;
     resumable: boolean;
     action: "Download" | "Resume" | "Continue";
-  }> = [
+  }[] = [
     {
       name: "direct cache row",
       input: { ...base, selectedCachedRow: cached },

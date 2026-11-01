@@ -56,7 +56,7 @@ function stubBackend({ start = "accepted" }: { start?: StartAnswer } = {}) {
     markRequested = resolve;
   });
   const held = new Promise<Response>((resolve) => {
-    release = () => resolve(json({ downloads: [] }));
+    release = () => { resolve(json({ downloads: [] })); };
   });
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     const url = String(input);
@@ -65,7 +65,7 @@ function stubBackend({ start = "accepted" }: { start?: StartAnswer } = {}) {
     }
     if (url.startsWith("/api/hub/active-downloads")) {
       markRequested();
-      return held;
+      return await held;
     }
     if (url.startsWith("/api/hub/transport-status")) {
       return json({ has_partial: false, last_transport: null, resumable: false });
@@ -88,8 +88,8 @@ function stubBackend({ start = "accepted" }: { start?: StartAnswer } = {}) {
       return json({ granted: false, shown: 3, limit: 3 });
     }
     throw new Error(`Unexpected request: ${url}`);
-  }) as typeof fetch;
-  return { requested, release: () => release() };
+  });
+  return { requested, release: () => { release(); } };
 }
 
 test("a requested start is visible while its preflight runs, until the backend accepts it", async () => {

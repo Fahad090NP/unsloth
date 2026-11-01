@@ -109,7 +109,7 @@ export function useExportRuntimeLifecycle(): void {
         await streamExportLogs({
           signal: controller.signal,
           since: store.getState().lastSeq,
-          onOpen: () => store.getState().setConnected(true),
+          onOpen: () => { store.getState().setConnected(true); },
           onEvent: (event) => {
             if (event.event === "log" && event.entry) {
               store.getState().appendLog(event.entry, event.id ?? undefined);

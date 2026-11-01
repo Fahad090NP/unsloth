@@ -38,17 +38,7 @@ export function useAudioHandoff({
     "refreshGallery" | "loadMore" | "loadingMoreRef" | "selectClip"
   >) {
   const navigateSelf = useNavigate();
-  const routeSearch = useSearch({ strict: false }) as {
-    model?: string;
-    quant?: string;
-    ggufQuant?: string;
-    task?: string;
-    workflow?: string;
-    audioType?: string;
-    loadId?: string;
-    gguf?: boolean;
-    item?: string;
-  };
+  const routeSearch = useSearch({ strict: false });
   const committedWorkflow = useAudioWorkspaceStore((state) => state.workflow);
   const handledRouteModel = useRef<string | null>(null);
   // The workflow the URL and the page last agreed on; cleared while hidden, so back/forward

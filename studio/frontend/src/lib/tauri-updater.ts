@@ -35,12 +35,12 @@ export function downloadPercent(downloaded: number, total: number | null): numbe
 
 export async function checkDesktopUpdate(): Promise<DesktopUpdateMetadata | null> {
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<DesktopUpdateMetadata | null>("check_desktop_update");
+  return await invoke<DesktopUpdateMetadata | null>("check_desktop_update");
 }
 
 export async function desktopUpdateBundleStatus(): Promise<DesktopUpdateBundleStatus> {
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<DesktopUpdateBundleStatus>("desktop_update_bundle_status");
+  return await invoke<DesktopUpdateBundleStatus>("desktop_update_bundle_status");
 }
 
 /** Separate because a webview reload leaves the native download running with no listener. */
@@ -49,7 +49,7 @@ export async function listenDesktopUpdateDownload(
   onProgress: (percent: number) => void,
 ): Promise<() => void> {
   const { listen } = await import("@tauri-apps/api/event");
-  return listen<DesktopUpdateDownloadEvent>(
+  return await listen<DesktopUpdateDownloadEvent>(
     "desktop-update-download",
     (event) => {
       if (!sameUpdateVersion(event.payload.version, expectedVersion)) return;

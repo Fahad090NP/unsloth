@@ -110,7 +110,7 @@ const watchSilence = (instance: Worker): void => {
   if (awaitingReply.size === 0) return;
   silence = setTimeout(() => {
     silence = undefined;
-    afterQueuedMessages(() => silenced(instance));
+    afterQueuedMessages(() => { silenced(instance); });
   }, REPLY_SILENCE_MS);
 };
 
@@ -150,12 +150,12 @@ function getWorker(patient = false): Worker | null {
     listeners.get(data.client)?.(data);
     watchSilence(instance);
   };
-  instance.onerror = (event) => fail(instance, event.message || event.type);
+  instance.onerror = (event) => { fail(instance, event.message || event.type); };
   worker = instance;
   boot = {
     instance,
     timer: setTimeout(
-      () => afterQueuedMessages(() => stall(instance)),
+      () => { afterQueuedMessages(() => { stall(instance); }); },
       READY_TIMEOUT_MS,
     ),
   };
@@ -188,7 +188,7 @@ export function requestFullHighlight(
     listeners.delete(id);
     patientClients.delete(id);
     awaitingReply.delete(id);
-    onResult(reply.failed ? null : (reply.result as HighlightResult));
+    onResult(reply.failed ? null : (reply.result!));
     if (listeners.size === 0 && worker) scheduleIdle();
   });
   const request: ReasoningHighlightRequest = {

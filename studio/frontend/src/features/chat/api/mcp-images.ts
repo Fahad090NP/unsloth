@@ -128,7 +128,7 @@ export function boundMcpImageEnvelopes<T extends EnvelopeCarrier>(
   { localMarkers = false }: { localMarkers?: boolean } = {},
 ): T[] {
   const out = messages.slice();
-  type Carrier = { index: number; text: string; images: McpImage[] };
+  interface Carrier { index: number; text: string; images: McpImage[] }
   const carriers: Carrier[] = [];
   for (let i = 0; i < out.length; i++) {
     const message = out[i];
@@ -164,7 +164,7 @@ export function boundMcpImageEnvelopes<T extends EnvelopeCarrier>(
     { localMarkers },
   );
   batches.forEach((batch, b) =>
-    batch.forEach((carrier, r) => {
+    { batch.forEach((carrier, r) => {
       const kept = plan[b][r];
       if (kept.length === carrier.images.length) return;
       out[carrier.index] = {
@@ -174,7 +174,7 @@ export function boundMcpImageEnvelopes<T extends EnvelopeCarrier>(
             ? carrier.text + mcpImagesEnvelope(kept)
             : carrier.text,
       };
-    }),
+    }); },
   );
   return out;
 }

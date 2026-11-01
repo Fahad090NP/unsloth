@@ -29,7 +29,7 @@ export const useNpuCatalogStore = create<NpuCatalogState>(() => ({
 }));
 
 useNpuCatalogStore.subscribe((state) =>
-  reportDownloadsActive("npu", Object.keys(state.progress).length > 0),
+  { reportDownloadsActive("npu", Object.keys(state.progress).length > 0); },
 );
 
 let latestListing = 0;

@@ -23,15 +23,15 @@ export function chatSettingsInsetMinColumn(uiSpaceScale = 1): number {
 
 const HEADER_ROUTES = new Set(["/chat", "/images", "/video", "/audio"]);
 
-export type ToastOffset = {
+export interface ToastOffset {
   top: number;
   right: number;
-};
+}
 
-export type ToastOffsets = {
+export interface ToastOffsets {
   default: ToastOffset;
   mobile: ToastOffset;
-};
+}
 
 export function getToastOffsets(
   pathname: string,
@@ -172,10 +172,10 @@ export function watchComposerClearance(
   };
 }
 
-type InsetPanel = {
+interface InsetPanel {
   offsetWidth: number;
   parentElement: { clientWidth: number } | null;
-};
+}
 type InsetObserver = new (
   callback: () => void,
 ) => {

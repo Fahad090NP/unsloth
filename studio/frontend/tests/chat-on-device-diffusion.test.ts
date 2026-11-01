@@ -9,7 +9,7 @@ import { readSrc } from "./helpers/kit.ts";
 const pickerSource = readSrc("features/model-picker/components/model-selector/pickers.tsx");
 
 function taskList(name: string): string[] {
-  const match = pickerSource.match(new RegExp(`export const ${name} = \\[([\\s\\S]*?)\\] as const;`));
+  const match = new RegExp(`export const ${name} = \\[([\\s\\S]*?)\\] as const;`).exec(pickerSource);
   assert.ok(match, name);
   return [...match[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
 }

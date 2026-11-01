@@ -212,7 +212,7 @@ test("downgrade starts local state from last remote pins, preserving existing pi
   const operation = pin("downgrade", ["new"]);
   const conflict = await f.transport.compareAndSet(undefined, ["new"], operation);
   assert.deepEqual(conflict, { applied: false, pinnedIds: ["server-a", "server-b"] });
-  await f.transport.compareAndSet(conflict.pinnedIds, ["new", ...conflict.pinnedIds!], operation);
+  await f.transport.compareAndSet(conflict.pinnedIds, ["new", ...conflict.pinnedIds], operation);
   assert.deepEqual(f.local, ["new", "server-a", "server-b"]);
   assert.deepEqual(f.fallback?.baseIds, ["server-a", "server-b"]);
 });
@@ -258,14 +258,14 @@ test("partial replay retains operation IDs and retries without repeating acknowl
     compareAndSet: async (...args) => {
       calls += 1;
       if (calls === 2) throw new TypeError("network disconnected");
-      return f.options.compareAndSet(...args);
+      return await f.options.compareAndSet(...args);
     },
   });
   assert.deepEqual(await interrupted.load(), ["second", "first", "legacy"]);
   assert.equal(f.fallback?.operations.length, 2);
   assert.deepEqual(f.remote, ["first", "legacy"]);
   // A different browser puts a new row above the first acknowledged pin.
-  f.remote = ["other-browser", ...f.remote!];
+  f.remote = ["other-browser", ...f.remote];
   assert.deepEqual(await interrupted.load(), ["second", "other-browser", "first", "legacy"]);
   assert.equal(f.fallback, undefined);
 });

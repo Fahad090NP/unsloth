@@ -29,7 +29,7 @@ function inferenceStatus(
     loading: [],
     loaded: [],
     ...overrides,
-  } as Parameters<typeof describeInferenceStatus>[0];
+  };
 }
 
 test("no runtime loaded produces no rows", () => {

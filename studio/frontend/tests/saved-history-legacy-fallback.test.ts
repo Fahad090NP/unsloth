@@ -7,11 +7,11 @@ import test from "node:test";
 import type { MessageRecord } from "../src/features/chat/types";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Storage = {
+interface Storage {
   readStoredChatMessages: (
     threadId: string,
   ) => Promise<{ messages: MessageRecord[]; fromBackend: boolean }>;
-};
+}
 
 class StubWriteCoordinator {
   closeAdmission(): () => void {

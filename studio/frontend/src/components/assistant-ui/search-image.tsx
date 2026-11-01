@@ -83,7 +83,7 @@ function viewerImage(entry: SearchImageEntry): ViewerImage {
     load: async () => {
       const response = await authFetch(searchImagePath(entry.id));
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.blob();
+      return await response.blob();
     },
   };
 }
@@ -107,7 +107,7 @@ function useNearViewport<T extends Element>() {
       { rootMargin: "200px" },
     );
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [near]);
   return [ref, near] as const;
 }

@@ -90,7 +90,7 @@ test("dropping a selection clears its anchor too", async () => {
 
 test("the bulk archive failure reads a translated string", async () => {
   const source = APP_SIDEBAR;
-  const archive = /async function archiveChatItems\(([\s\S]*?)\n  \}/.exec(source);
+  const archive = /async function archiveChatItems\(([\s\S]*?)\n {2}\}/.exec(source);
   assert.ok(archive, "no archiveChatItems");
   assert.match(archive[1], /translate\("settings\.data\.failedToArchiveChats"\)/);
 });
@@ -99,7 +99,7 @@ test("one failed archive does not abandon the rest of the batch", async () => {
   // The selection is cleared up front, so the loop must catch per item.
   const source = APP_SIDEBAR;
   assert.match(source, /async function archiveSelected\(\) \{\s*const items = selectedChatItems;\s*clearSelection\(\);\s*await archiveChatItems\(items\);/);
-  const archive = /async function archiveChatItems\(([\s\S]*?)\n  \}/.exec(source);
+  const archive = /async function archiveChatItems\(([\s\S]*?)\n {2}\}/.exec(source);
   assert.ok(archive, "no archiveChatItems");
   const body = archive[1];
   const loopAt = body.indexOf("for (const item of items)");
@@ -113,7 +113,7 @@ test("one failed archive does not abandon the rest of the batch", async () => {
 
 test("deleting folders in bulk cleans up like deleting one", async () => {
   const source = APP_SIDEBAR;
-  const branch = /if \(target\.kind === "projects"\) \{([\s\S]*?)\n      return;/.exec(
+  const branch = /if \(target\.kind === "projects"\) \{([\s\S]*?)\n {6}return;/.exec(
     source,
   );
   assert.ok(branch, "no bulk project delete branch");
@@ -124,7 +124,7 @@ test("deleting folders in bulk cleans up like deleting one", async () => {
   // The redirect reads what was actually deleted, not what was requested.
   assert.match(branch[1], /deletedIds\.add\(project\.id\)/);
   assert.equal(
-    /new Set\(target\.projects\.map/.test(branch[1]),
+    branch[1].includes('new Set(target.projects.map'),
     false,
     "deletedIds is built from the requested projects, not the deleted ones",
   );

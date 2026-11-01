@@ -115,17 +115,17 @@ export const useScheduledTasksStore = create<ScheduledTasksState>()((set, get) =
     create: (input) =>
       write(
         () => createScheduledTask(input),
-        (task) => set((state) => ({ tasks: withTask(state.tasks, task) })),
+        (task) => { set((state) => ({ tasks: withTask(state.tasks, task) })); },
       ),
     update: (id, patch) =>
       write(
         () => updateScheduledTask(id, patch),
-        (task) => set((state) => ({ tasks: withTask(state.tasks, task) })),
+        (task) => { set((state) => ({ tasks: withTask(state.tasks, task) })); },
       ),
     remove: async (id) => {
       await write(
         () => deleteScheduledTask(id),
-        () => set((state) => ({ tasks: state.tasks.filter((task) => task.id !== id) })),
+        () => { set((state) => ({ tasks: state.tasks.filter((task) => task.id !== id) })); },
       );
       // Its chat survives but the run record went with the task, so the results poll never reports it.
       notifyChatHistoryUpdated();
@@ -134,11 +134,11 @@ export const useScheduledTasksStore = create<ScheduledTasksState>()((set, get) =
       await write(
         () => runScheduledTaskNow(id, loadModel),
         (run) =>
-          set((state) => ({
+          { set((state) => ({
             tasks: state.tasks.map((task) =>
               task.id === id ? { ...task, lastRun: newerRun(task.lastRun, run) } : task,
             ),
-          })),
+          })); },
       );
     },
   };

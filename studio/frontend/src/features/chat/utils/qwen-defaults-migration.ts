@@ -41,7 +41,7 @@ function currentQwenDefaults(
   thinkingOn: boolean,
 ): PersistedInferenceParams | null {
   const resolved = resolveQwenThinkingParams(modelId, thinkingOn);
-  if (resolved === null || resolved.presencePenalty === undefined) {
+  if (resolved?.presencePenalty === undefined) {
     return null;
   }
   return {
@@ -107,11 +107,11 @@ function isBuiltInDefault(settings: PersistedChatSettings): boolean {
   );
 }
 
-export type QwenDefaultsMigration = {
+export interface QwenDefaultsMigration {
   settings: PersistedChatSettings;
   patch: PersistedChatSettings | null;
   migratedModelIds: string[];
-};
+}
 
 function migrateStoredModelDefaults(
   stored: Record<string, PersistedInferenceParams> | undefined,

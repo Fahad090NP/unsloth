@@ -18,11 +18,11 @@ Object.assign(globalThis, {
   document: { elementFromPoint: () => zone },
 });
 
-type Registration = {
+interface Registration {
   event: string;
   target: { kind: string; label: string };
   handler: number;
-};
+}
 const registrations: Registration[] = [];
 mockIPC((command, args) => {
   if (command === "plugin:event|listen") {

@@ -14,12 +14,12 @@ import {
   useStagedDownload,
   type StagedDownloadEntry,
 } from "./use-staged-download";
-export type Plan = {
+export interface Plan {
   id: number;
   origin?: { repoId: string; filename?: string };
   entries: StagedDownloadEntry[];
   remaining: StagedDownloadEntry[];
-};
+}
 let nextId = 0;
 export const useHubQueue = create<{ plans: Plan[] }>(() => ({ plans: [] }));
 export function enqueueHubDownload(
@@ -45,9 +45,9 @@ export function useHubDownloadQueue() {
   const plan = useHubQueue((s) => s.plans[0]);
   const started = useRef<number | null>(null);
   const finish = () =>
-    useHubQueue.setState((s) => ({
+    { useHubQueue.setState((s) => ({
       plans: s.plans.filter((p) => p.id !== started.current),
-    }));
+    })); };
   const { stage, remaining } = useStagedDownload({
     scopeId: "hub-assets",
     publishQueue: false,

@@ -7,10 +7,10 @@ import {
   mcpToolFromProvenance,
 } from "./mcp-tool-name.ts";
 
-export type ConversationMarkdownMessage = {
+export interface ConversationMarkdownMessage {
   readonly role: string;
   readonly content: string;
-};
+}
 
 export const CONVERSATION_MARKDOWN_FORMAT = "markdown";
 export const CONVERSATION_MARKDOWN_LABEL = "Markdown";
@@ -73,7 +73,7 @@ const HTML_BLOCK_START_PATTERN = /^ {0,3}<[A-Za-z!/?]/;
 function runClosesLater(lines: readonly string[], from: number, run: string): boolean {
   const closer = new RegExp("(^|[^`])(" + run + ")(?!`)");
   for (let index = from; index < lines.length; index += 2) {
-    const line = lines[index] as string;
+    const line = lines[index];
     const content = line.slice((BLOCKQUOTE_PATTERN.exec(line)?.[0] ?? "").length);
     if (line.trim() === "" || HTML_BLOCK_START_PATTERN.test(content)) return false;
     if (closer.test(line)) return true;
@@ -140,7 +140,7 @@ function closeOpenBlocks(text: string): string {
   const escapes: { readonly part: number; readonly column: number }[] = [];
 
   for (let part = 0; part < parts.length; part += 2) {
-    let line = parts[part] as string;
+    let line = parts[part];
     const blankLine = line.trim() === "";
     const afterBlank = blankBefore;
     blankBefore = blankLine;
@@ -159,12 +159,12 @@ function closeOpenBlocks(text: string): string {
     const [, indent = "", run, info = ""] =
       unfinished.length || literal ? [] : FENCE_LINE_PATTERN.exec(content) ?? [];
     if (fence !== null) {
-      if (run && run[0] === fence.run[0] && run.length >= fence.run.length && !info.trim()) {
+      if (run?.[0] === fence.run[0] && run.length >= fence.run.length && !info.trim()) {
         fence = null;
       }
       continue;
     }
-    if (run && (run[0] === "~" || !info.includes("`"))) {
+    if (run && (run.startsWith("~") || !info.includes("`"))) {
       fence = { run, indent, quoted: marker !== "" };
       continue;
     }
@@ -197,9 +197,9 @@ function closeOpenBlocks(text: string): string {
       );
     }
     const leftover = OPEN_RUN_PATTERN.exec(prose);
-    if (leftover !== null && runClosesLater(parts, part + 2, leftover[2] as string)) {
-      span = leftover[2] as string;
-      const from = (leftover.index ?? 0) + (leftover[1] as string).length;
+    if (leftover !== null && runClosesLater(parts, part + 2, leftover[2])) {
+      span = leftover[2];
+      const from = (leftover.index ?? 0) + (leftover[1]).length;
       prose = prose.slice(0, from) + " ".repeat(prose.length - from);
     }
     let blockAt = -1;
@@ -229,7 +229,7 @@ function closeOpenBlocks(text: string): string {
       }
       let end = at;
       for (; end < tags.length; end += 1) {
-        const character = tags[end] as string;
+        const character = tags[end];
         if (character === "<" && TAG_OPEN_PATTERN.test(tags.slice(end))) {
           unfinished.push({ part, column: end });
         } else if (quote) {
@@ -243,7 +243,7 @@ function closeOpenBlocks(text: string): string {
       if (end === tags.length) break;
       const start = unfinished[0] as { part: number; column: number };
       const [, slash, name = ""] =
-        TAG_OPEN_PATTERN.exec((parts[start.part] as string).slice(start.column)) ?? [];
+        TAG_OPEN_PATTERN.exec((parts[start.part]).slice(start.column)) ?? [];
       unfinished = [];
       at = end + 1;
       const tag = name.toLowerCase();
@@ -267,7 +267,7 @@ function closeOpenBlocks(text: string): string {
   escapes.push(...unfinished);
   escapes.sort((a, b) => b.part - a.part || b.column - a.column);
   for (const { part, column } of escapes) {
-    const line = parts[part] as string;
+    const line = parts[part];
     parts[part] = `${line.slice(0, column)}&lt;${line.slice(column + 1)}`;
   }
 
@@ -277,7 +277,7 @@ function closeOpenBlocks(text: string): string {
   // Indented to the opener's column: at column zero the closer would end its list.
   if (fence !== null && !fence.quoted) out += `${eol}${fence.indent}${fence.run}`;
   for (let index = open.length - 1; index >= 0; index -= 1) {
-    const name = open[index] as string;
+    const name = open[index];
     out += CONTAINER_ELEMENTS.has(name)
       ? `${eol}${eol}</${name}>`
       : `${eol}</${name}>`;

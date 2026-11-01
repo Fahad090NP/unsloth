@@ -14,12 +14,12 @@ const { fireWindowEvent } = installLocalStorageFake();
 
 type ValidationStatus = "valid" | "invalid" | "unavailable" | "missing";
 
-type Prepared = { proceed: boolean; token: string | null };
+interface Prepared { proceed: boolean; token: string | null }
 
-type ConfirmToken = {
+interface ConfirmToken {
   prepareHfTokenForUse: (token: string | null) => Promise<Prepared>;
   forgetHfTokenValidation: (token?: string) => void;
-};
+}
 
 const SESSION_CLEARED = "unsloth:auth-session-cleared";
 
@@ -43,12 +43,12 @@ function tokenStoreStub(initial: string | null = null) {
   };
 }
 
-type Gate = { promise: Promise<void>; open: () => void };
+interface Gate { promise: Promise<void>; open: () => void }
 
 function makeGate(): Gate {
   let open: () => void = () => {};
   const promise = new Promise<void>((resolve) => {
-    open = () => resolve();
+    open = () => { resolve(); };
   });
   return { promise, open };
 }

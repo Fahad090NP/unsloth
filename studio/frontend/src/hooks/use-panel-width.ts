@@ -6,7 +6,7 @@ import { layoutScale, subscribeLayoutScale } from "../lib/layout-scale.ts";
 
 const MAX_VIEWPORT_FRACTION = 0.4;
 
-export type PanelWidthStore = {
+export interface PanelWidthStore {
   clamp: (px: number) => number;
   useWidth: () => {
     width: number;
@@ -17,7 +17,7 @@ export type PanelWidthStore = {
     setWidth: (value: number) => void;
     resetWidth: () => void;
   };
-};
+}
 
 /** Widths are layout px rendered times `scale`. The preference is stored whole and an effective
  * width derived, so narrowing the window does not lose the user's pick. */
@@ -84,7 +84,7 @@ export function createPanelWidthStore({
     effectiveWidth = nextWidth;
     effectiveMax = nextMax;
     lastStored = storedWidth;
-    listeners.forEach((cb) => cb());
+    listeners.forEach((cb) => { cb(); });
   }
 
   function onStorage(event: StorageEvent) {
@@ -134,8 +134,8 @@ export function createPanelWidthStore({
     // Uncapped, so a capped drag can avoid lowering it.
     const preference = useSyncExternalStore(subscribe, () => storedWidth, () => fallback);
     const scale = useSyncExternalStore(subscribeLayoutScale, layoutScale, () => 1);
-    const setWidth = useCallback((value: number) => setWidthGlobal(value), []);
-    const resetWidth = useCallback(() => setWidthGlobal(fallback), []);
+    const setWidth = useCallback((value: number) => { setWidthGlobal(value); }, []);
+    const resetWidth = useCallback(() => { setWidthGlobal(fallback); }, []);
     return { width, max: panelMax, scale, stored: preference, setWidth, resetWidth };
   }
 

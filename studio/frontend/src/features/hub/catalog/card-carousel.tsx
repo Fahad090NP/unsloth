@@ -91,7 +91,7 @@ export function CardCarousel<T>({
     updateArrows();
     const observer = new ResizeObserver(updateArrows);
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [updateArrows]);
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export function CardCarousel<T>({
 
   const endDrag = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     const d = drag.current;
-    if (!d || e.pointerId !== d.id) return;
+    if (e.pointerId !== d?.id) return;
     if (d.moved) {
       suppressClick.current = true;
       const el = scrollerRef.current;
@@ -172,7 +172,7 @@ export function CardCarousel<T>({
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onClickCapture={onClickCapture}
-        onDragStart={(e) => e.preventDefault()}
+        onDragStart={(e) => { e.preventDefault(); }}
         aria-label={ariaLabel}
         // Padding gives card shadows room; scroll-px-2 keeps snap aligned with the heading.
         className="hub-carousel -mx-2 flex cursor-grab snap-x scroll-px-2 gap-4 overflow-x-auto px-2 pb-4 pt-2 select-none active:cursor-grabbing"
@@ -203,13 +203,13 @@ export function CardCarousel<T>({
         side="left"
         visible={canLeft}
         centerPx={arrowCenterPx}
-        onClick={() => scrollByCards(-1)}
+        onClick={() => { scrollByCards(-1); }}
       />
       <CarouselArrow
         side="right"
         visible={canRight}
         centerPx={arrowCenterPx}
-        onClick={() => scrollByCards(1)}
+        onClick={() => { scrollByCards(1); }}
       />
     </div>
   );

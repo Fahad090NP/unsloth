@@ -1532,7 +1532,7 @@ test("a delta whose arguments arrive as a decoded object keeps its payload", () 
 
 test("a decoded object lands exactly where its string spelling would", () => {
   // Object and string arguments must get identical answers downstream; pinned as a pair.
-  const asObject = (a: unknown) => a as unknown as string;
+  const asObject = (a: unknown) => a as string;
   for (const [label, objectStream, stringStream] of [
     [
       "one payload",

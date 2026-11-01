@@ -153,10 +153,10 @@ function wasLaunchedHidden(): Promise<boolean> {
   return launchedHidden;
 }
 
-type WindowLayoutObserver = {
+interface WindowLayoutObserver {
   waitForSettled: () => Promise<void>;
   dispose: () => void;
-};
+}
 
 const WINDOW_LAYOUT_POLL_MS = 50;
 const WINDOW_LAYOUT_TIMEOUT_MS = 1000;
@@ -532,7 +532,7 @@ function TauriUpdateLayer({
   // Sync the parent titlebar before paint to avoid flashing sidebar chrome.
   useLayoutEffect(() => {
     onUpdateScreenChange(isUpdating);
-    return () => onUpdateScreenChange(false);
+    return () => { onUpdateScreenChange(false); };
   }, [isUpdating, onUpdateScreenChange]);
 
   const content = isUpdating ? (
@@ -738,7 +738,7 @@ function TauriWrapper({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isTauri) return;
     setDesktopShellReady(canMountApp && appShellReady);
-    return () => setDesktopShellReady(false);
+    return () => { setDesktopShellReady(false); };
   }, [canMountApp, appShellReady]);
 
   // Readiness comes from the mounted boundary, so an obsolete async load cannot reveal us.
@@ -751,8 +751,8 @@ function TauriWrapper({ children }: { children: ReactNode }) {
     }
     if (appShellReady) return;
     // A failed chunk must not strand the user behind the splash; never bypass credential auth.
-    const timeout = window.setTimeout(() => setAppShellReady(true), 15_000);
-    return () => window.clearTimeout(timeout);
+    const timeout = window.setTimeout(() => { setAppShellReady(true); }, 15_000);
+    return () => { window.clearTimeout(timeout); };
   }, [canMountApp, appShellReady]);
 
   const [windowRevealRevision, setWindowRevealRevision] = useState(0);

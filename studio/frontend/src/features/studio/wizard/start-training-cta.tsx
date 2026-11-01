@@ -124,9 +124,9 @@ export function StartTrainingCta() {
   });
   const isWarning =
     !(startError || isIncompatible || !configValidation.ok) &&
-    !!(modelError || datasetUnverified);
+    Boolean(modelError || datasetUnverified);
   const showsModelWarning =
-    !!modelError &&
+    Boolean(modelError) &&
     !startError &&
     !isIncompatible &&
     configValidation.ok &&

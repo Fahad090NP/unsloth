@@ -375,7 +375,7 @@ export function OpenAICodeExecSection({
           min={TTL_MIN}
           max={TTL_MAX}
           value={ttlValue}
-          onChange={(e) => onTtlChange(e.target.value)}
+          onChange={(e) => { onTtlChange(e.target.value); }}
           className="h-8 w-[calc(72px*var(--ui-space-scale,1))] pl-3 text-sm tabular-nums"
         />
       </div>
@@ -501,7 +501,7 @@ export function OpenAICodeExecSection({
             autoFocus
             placeholder="Name"
             value={createName}
-            onChange={(e) => setCreateName(e.target.value)}
+            onChange={(e) => { setCreateName(e.target.value); }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -541,7 +541,7 @@ export function OpenAICodeExecSection({
         <Button
           size="sm"
           variant="outline"
-          onClick={() => setCreateOpen(true)}
+          onClick={() => { setCreateOpen(true); }}
           disabled={!hasCredential}
         >
           <HugeiconsIcon icon={PlusSignIcon} className="size-3.5 mr-1" />

@@ -34,7 +34,7 @@ import {
   validateManualDatasetSubset,
 } from "../lib/manual-dataset-options";
 
-type Props = {
+interface Props {
   variant: "wizard" | "studio";
   enabled: boolean;
   datasetName: string | null;
@@ -51,7 +51,7 @@ type Props = {
   datasetStreaming: boolean;
   setManualDatasetOptionsValid: (v: boolean) => void;
   markManualDatasetOptionsEdited: (optionsValid: boolean) => void;
-};
+}
 
 function manualDatasetDraftsAreValid(
   subset: string,
@@ -129,7 +129,7 @@ export function HfDatasetSubsetSplitSelectors({
   ]);
 
   const showDropdowns =
-    isLoading === false && error === null && hfSubsets.length > 0;
+    !isLoading && error === null && hfSubsets.length > 0;
 
   const selectorFields = (disabled = false) => (
     <>
@@ -308,7 +308,7 @@ function ManualDatasetOptions({
   ]);
 
   useEffect(
-    () => () => setManualDatasetOptionsValid(true),
+    () => () => { setManualDatasetOptionsValid(true); },
     [setManualDatasetOptionsValid],
   );
 
@@ -625,7 +625,7 @@ function SelectorDropdown({
         </FieldLabel>
         <Select
           value={selectValue}
-          onValueChange={(v) => onChange(v === "_none" ? null : v)}
+          onValueChange={(v) => { onChange(v === "_none" ? null : v); }}
           disabled={disabled}
         >
           <SelectTrigger className="w-full">
@@ -662,7 +662,7 @@ function SelectorDropdown({
       </span>
       <Select
         value={selectValue}
-        onValueChange={(v) => onChange(v === "_none" ? null : v)}
+        onValueChange={(v) => { onChange(v === "_none" ? null : v); }}
         disabled={disabled}
       >
         <SelectTrigger className="w-full min-w-0">

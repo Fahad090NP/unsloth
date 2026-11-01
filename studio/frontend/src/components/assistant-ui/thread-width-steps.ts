@@ -32,5 +32,5 @@ export function observeThreadWidthSteps(root: HTMLElement): () => void {
     applyThreadWidthSteps(root, entry.contentRect.width, remPx);
   });
   observer.observe(root);
-  return () => observer.disconnect();
+  return () => { observer.disconnect(); };
 }

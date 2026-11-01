@@ -29,7 +29,7 @@ export function AdvancedDisclosure({
     <div className="mt-2 flex flex-col gap-3 border-t border-border/60 pt-4 pb-4">
       <button
         type="button"
-        onClick={() => onOpenChange(!open)}
+        onClick={() => { onOpenChange(!open); }}
         aria-expanded={open}
         className="flex items-center gap-2 rounded-full px-3 py-1.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >

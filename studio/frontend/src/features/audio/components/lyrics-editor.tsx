@@ -89,7 +89,7 @@ export function LyricsEditor({
             {tags.map((section) => (
               <DropdownMenuItem
                 key={section.tag}
-                onSelect={() => insert(section.tag)}
+                onSelect={() => { insert(section.tag); }}
               >
                 {section.name}
                 <span className="ms-auto text-muted-foreground">
@@ -105,7 +105,7 @@ export function LyricsEditor({
         id={id}
         value={value}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => { onChange(event.target.value); }}
         placeholder={placeholder}
         aria-describedby={describedBy}
         className="min-h-36 font-normal"

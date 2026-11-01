@@ -361,7 +361,7 @@ function classify(lines: string[]): Classified {
     if (inHtmlBlock) {
       track("", above);
       // Only a blank line ends a type 6 or 7 block; a bare quote marker counts as one.
-      inHtmlBlock = !!container.trim();
+      inHtmlBlock = Boolean(container.trim());
       if (!inHtmlBlock) {
         endBlock();
       }
@@ -376,7 +376,7 @@ function classify(lines: string[]): Classified {
       if (openFence === null) {
         // A backtick fence's info string may not contain a backtick.
         openFence =
-          marker[0] !== "`" || !(fence[2] ?? "").includes("`") ? marker : null;
+          !marker.startsWith("`") || !(fence[2] ?? "").includes("`") ? marker : null;
         if (openFence === null) {
           text.push(index);
           masked.push(original);

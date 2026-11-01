@@ -2,7 +2,7 @@
 import { canvasBlob, decodeImage } from "./image";
 import type { BackgroundEffect } from "./model";
 
-type Job = { promise: Promise<Blob>; release: () => void };
+interface Job { promise: Promise<Blob>; release: () => void }
 const cache = new WeakMap<Blob, Map<string, Blob>>();
 const jobs = new WeakMap<
 	Blob,
@@ -42,7 +42,7 @@ export function acquireRender(
 					decoded.close();
 				}
 				if (cancelled) return;
-				const pixels = ctx!.getImageData(
+				const pixels = ctx.getImageData(
 					0,
 					0,
 					canvas.width,
@@ -51,7 +51,7 @@ export function acquireRender(
 				worker = new Worker(new URL("./worker.ts", import.meta.url), {
 					type: "module",
 				});
-				worker.onerror = () => reject(new Error("effect"));
+				worker.onerror = () => { reject(new Error("effect")); };
 				worker.onmessage = ({
 					data,
 				}: MessageEvent<{ pixels?: Uint8ClampedArray; error?: boolean }>) => {
@@ -61,7 +61,7 @@ export function acquireRender(
 						reject(new Error("effect"));
 						return;
 					}
-					ctx!.putImageData(
+					ctx.putImageData(
 						new ImageData(
 							new Uint8ClampedArray(data.pixels),
 							canvas.width,
@@ -82,7 +82,7 @@ export function acquireRender(
 				if (!cancelled) {
 					const images = cache.get(blob) ?? new Map();
 					images.set(key, result);
-					if (images.size > 4) images.delete(images.keys().next().value!);
+					if (images.size > 4) images.delete(images.keys().next().value);
 					cache.set(blob, images);
 				}
 				return result;

@@ -153,7 +153,7 @@ test("restoring onto parsed parts keeps the same properties", () => {
     const out = restoreCarriedParts(
       content.filter(isSpoken),
       carried,
-    ) as Part[];
+    );
 
     assert.deepEqual(carriedIds(out), carriedIds(content), where());
     assert.equal(
@@ -245,7 +245,7 @@ test("an import that is not the view keeps the recovered body whole", () => {
       next() < 0.5
         ? randomContent(next, seed + 100000)
         : [...view, { type: "text", text: randomText(next) }];
-    const out = recoveredContentToImport(view, recovered) as Part[];
+    const out = recoveredContentToImport(view, recovered);
     if (out === view) continue;
     const where = () => `seed ${seed}`;
     for (const id of carriedIds(recovered)) {

@@ -130,7 +130,7 @@ export function DatasetAdvancedSettings({
                 <Select
                   value={datasetFormat}
                   onValueChange={(value) =>
-                    setDatasetFormat(value as DatasetFormat)
+                    { setDatasetFormat(value as DatasetFormat); }
                   }
                 >
                   <SelectTrigger className="w-full">
@@ -182,7 +182,7 @@ export function DatasetAdvancedSettings({
                 placeholder="0"
                 value={datasetSliceStart ?? ""}
                 onChange={(event) =>
-                  setDatasetSliceStart(normalizeSliceInput(event.target.value))
+                  { setDatasetSliceStart(normalizeSliceInput(event.target.value)); }
                 }
               />
             </div>
@@ -218,7 +218,7 @@ export function DatasetAdvancedSettings({
                 placeholder={t("studio.dataset.endPlaceholder")}
                 value={datasetSliceEnd ?? ""}
                 onChange={(event) =>
-                  setDatasetSliceEnd(normalizeSliceInput(event.target.value))
+                  { setDatasetSliceEnd(normalizeSliceInput(event.target.value)); }
                 }
               />
             </div>
@@ -229,7 +229,7 @@ export function DatasetAdvancedSettings({
                 id="datasetStreaming"
                 checked={datasetStreaming}
                 disabled={!isStreamingSupported}
-                onCheckedChange={(value) => setDatasetStreaming(Boolean(value))}
+                onCheckedChange={(value) => { setDatasetStreaming(Boolean(value)); }}
               />
               <label
                 htmlFor="datasetStreaming"

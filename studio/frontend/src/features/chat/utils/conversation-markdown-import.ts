@@ -153,10 +153,10 @@ export function parseConversationMarkdownMessages(
     : messagesFromNodes(text, fromMarkdown(text).children, text.length);
 }
 
-export type ParsedMarkdownConversation = {
+export interface ParsedMarkdownConversation {
   title: string;
   messages: ConversationMarkdownMessage[];
-};
+}
 
 export function parseConversationMarkdownDocument(
   input: string,

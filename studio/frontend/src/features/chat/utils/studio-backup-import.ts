@@ -163,7 +163,7 @@ export function studioBackupToConversations(
   const conversations: ParsedConversation[] = [];
   threads.forEach((thread, index) => {
     const source = messagesByThread.get(thread.id as string) ?? [];
-    const threadId = threadIds.get(thread.id as string) as string;
+    const threadId = threadIds.get(thread.id as string)!;
     const ordered = source
       .map((message) => ({
         raw: message,
@@ -178,7 +178,7 @@ export function studioBackupToConversations(
       const ts = Math.max(previousTs + 1, createdAt);
       previousTs = ts;
       const record: MessageRecord = {
-        id: messageIds.get(id) as string,
+        id: messageIds.get(id)!,
         threadId,
         role: restorableRole(raw.role as string),
         content: messageContent(raw.content),
@@ -244,7 +244,7 @@ export function studioBackupToConversations(
           ? {
               settings: restorableSettings(
                 thread.settings,
-              ) as ThreadRecord["settings"],
+              ),
             }
           : {}),
       },

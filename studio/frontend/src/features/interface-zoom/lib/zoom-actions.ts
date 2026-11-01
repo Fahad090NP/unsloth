@@ -18,8 +18,8 @@ interface ZoomPopupState {
 export const useZoomPopupStore = create<ZoomPopupState>()((set) => ({
   token: 0,
   open: false,
-  show: () => set((s) => ({ open: true, token: s.token + 1 })),
-  hide: () => set({ open: false }),
+  show: () => { set((s) => ({ open: true, token: s.token + 1 })); },
+  hide: () => { set({ open: false }); },
 }));
 
 export function zoomInterface(direction: ZoomDirection): void {
@@ -29,12 +29,12 @@ export function zoomInterface(direction: ZoomDirection): void {
   useZoomPopupStore.getState().show();
 }
 
-export type ZoomScope = {
+export interface ZoomScope {
   contains: (element: Element) => boolean;
   zoom: (direction: ZoomDirection) => void;
   /** Holds the keys outside this document (a native page view), where activeElement can't show it. */
   holdsKeys?: () => boolean;
-};
+}
 
 const scopes = new Set<ZoomScope>();
 

@@ -69,14 +69,14 @@ test("the bridge token survives a non-secure Studio origin", () => {
     }
   };
   withCrypto({ randomUUID: () => "uuid" }, () =>
-    assert.equal(newBridgeToken(), null),
+    { assert.equal(newBridgeToken(), null); },
   );
   withCrypto({ getRandomValues: real.getRandomValues.bind(real) }, () => {
     const first = newBridgeToken();
     assert.match(String(first), /^[0-9a-f]{32}$/);
     assert.notEqual(first, newBridgeToken());
   });
-  withCrypto(undefined, () => assert.equal(newBridgeToken(), null));
+  withCrypto(undefined, () => { assert.equal(newBridgeToken(), null); });
 });
 
 test("the host advertises each server method the bridge proxies", () => {

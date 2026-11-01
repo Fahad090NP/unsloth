@@ -23,7 +23,7 @@ const CHORDS = readSrc("app/app-menu-chords.ts");
 const ROOT = readSrc("app/routes/__root.tsx");
 
 const rowsOf = (table: string) =>
-  [...APP_MENU.match(new RegExp(`const ${table}: &\\[Row\\] = &\\[([\\s\\S]*?)\\];`))![1].matchAll(
+  [...new RegExp(`const ${table}: &\\[Row\\] = &\\[([\\s\\S]*?)\\];`).exec(APP_MENU)![1].matchAll(
     /Row::Action\(\s*"([a-z-]+)"/g,
   )].map((m) => m[1]);
 const fileActions = rowsOf("FILE_ROWS");
@@ -34,7 +34,7 @@ const helpActions = rowsOf("HELP_ROWS");
 const rustActions = [...fileActions, ...viewActions, ...goActions, ...helpActions];
 const HELP = readSrc("components/help-actions.ts");
 const actionsOf = (source: string, type: string) =>
-  [...source.match(new RegExp(`export type ${type} =([^;]+);`))![1].matchAll(/"([a-z-]+)"/g)].map(
+  [...new RegExp(`export type ${type} =([^;]+);`).exec(source)![1].matchAll(/"([a-z-]+)"/g)].map(
     (m) => m[1],
   );
 assert.match(CHORDS, /export type AppMenuAction =\s*\| HelpAction/);
@@ -61,7 +61,7 @@ test("the menus and the renderer name the same actions", () => {
     "help-system-status",
     "help-send-feedback",
   ]);
-  const helpGroups = [...HELP.match(/HELP_GROUPS[^=]*=([\s\S]*?);/)![1].matchAll(/"([a-z-]+)"/g)].map(
+  const helpGroups = [.../HELP_GROUPS[^=]*=([\s\S]*?);/.exec(HELP)![1].matchAll(/"([a-z-]+)"/g)].map(
     (m) => m[1],
   );
   assert.deepEqual(helpGroups, helpActions, "the sidebar's Help lists the menu's items in order");
@@ -86,7 +86,7 @@ test("Go > Settings lists every Settings page, in the dialog's order", () => {
   const tabs = [...dialog.slice(dialog.indexOf("const TABS")).matchAll(/id: "([a-z-]+)"/g)].map((m) => m[1]);
   assert.deepEqual(settingsActions, tabs.slice(0, settingsActions.length).map((tab) => `settings-${tab}`));
   const store = readSrc("features/settings/stores/settings-dialog-store.ts");
-  const known = [...store.match(/SETTINGS_TABS = \[([\s\S]*?)\]/)![1].matchAll(/"([a-z-]+)"/g)].map((m) => m[1]);
+  const known = [.../SETTINGS_TABS = \[([\s\S]*?)\]/.exec(store)![1].matchAll(/"([a-z-]+)"/g)].map((m) => m[1]);
   assert.deepEqual([...settingsActions].sort(), known.map((tab) => `settings-${tab}`).sort());
   assert.match(CHORDS, /export type SettingsMenuAction = `settings-\$\{SettingsTab\}`;/);
   assert.match(ROOT, /`settings-\$\{tab\}`,\s*!isAuthFlowRoute && settingsTabVisible\(tab, isOwner\)/);
@@ -235,7 +235,7 @@ test("menu chords follow the user's bindings and never steal a web shortcut's ch
   const { menuAccelerators } = await import("../src/app/app-menu-chords.ts");
   const defaults = menuAccelerators({});
   const rustAccel = (action: string) =>
-    APP_MENU.match(new RegExp(`Row::Action\\(\\s*"${action}",\\s*"[^"]+",\\s*"([^"]+)"`))?.[1];
+    (new RegExp(`Row::Action\\(\\s*"${action}",\\s*"[^"]+",\\s*"([^"]+)"`).exec(APP_MENU))?.[1];
   const native = (accel: string) =>
     accel
       .replace(/\+([A-Z])$/, "+Key$1")
@@ -250,23 +250,23 @@ test("menu chords follow the user's bindings and never steal a web shortcut's ch
     assert.equal(defaults[action as keyof typeof defaults], accel ? native(accel) : null, action);
   }
   assert.equal(
-    menuAccelerators({ toggleSidebar: { primary: "Mod+KeyJ" } } as never)["toggle-sidebar"],
+    menuAccelerators({ toggleSidebar: { primary: "Mod+KeyJ" } })["toggle-sidebar"],
     "CmdOrCtrl+KeyJ",
   );
   assert.equal(
-    menuAccelerators({ findInPage: { primary: null } } as never)["find"],
+    menuAccelerators({ findInPage: { primary: null } }).find,
     null,
   );
   assert.equal(
-    menuAccelerators({ findInPage: { primary: "Mod+KeyO" } } as never)["open-folder"],
+    menuAccelerators({ findInPage: { primary: "Mod+KeyO" } })["open-folder"],
     null,
   );
   assert.equal(
-    menuAccelerators({ toggleSidebar: { primary: "Mod+KeyW" } } as never)["toggle-sidebar"],
+    menuAccelerators({ toggleSidebar: { primary: "Mod+KeyW" } })["toggle-sidebar"],
     null,
   );
   assert.equal(
-    menuAccelerators({ findInPage: { primary: "Mod+KeyM", alternate: "Mod+KeyJ" } } as never)["find"],
+    menuAccelerators({ findInPage: { primary: "Mod+KeyM", alternate: "Mod+KeyJ" } }).find,
     "CmdOrCtrl+KeyJ",
   );
   assert.match(MAIN_RS, /MenuItemBuilder::with_id\(APP_QUIT_MENU_ID, "Quit Unsloth"\)\s*\.accelerator\("CmdOrCtrl\+Q"\)/);
@@ -275,7 +275,7 @@ test("menu chords follow the user's bindings and never steal a web shortcut's ch
     if (chord) assert.ok(!NATIVE_MENU_CHORDS.has(chord), `${chord} is not a native chord`);
   }
   assert.equal(
-    menuAccelerators({ toggleSidebar: { primary: "Alt+KeyB" } } as never)["toggle-sidebar"],
+    menuAccelerators({ toggleSidebar: { primary: "Alt+KeyB" } })["toggle-sidebar"],
     null,
   );
 });
@@ -302,8 +302,8 @@ test("Back and Forward follow page history, and zoom steps the interface scale",
 test("Help items reuse the icon of the Settings tab they open", () => {
   const dialog = readSrc("features/settings/settings-dialog.tsx");
   const tabIcon = (id: string) =>
-    dialog.match(new RegExp(`id: "${id}",\\s*labelKey: "[^"]+",\\s*icon: (\\w+)`))?.[1];
-  const helpIcon = (action: string) => HELP.match(new RegExp(`"${action}": \\{[^}]*icon: (\\w+)`))?.[1];
+    (new RegExp(`id: "${id}",\\s*labelKey: "[^"]+",\\s*icon: (\\w+)`).exec(dialog))?.[1];
+  const helpIcon = (action: string) => (new RegExp(`"${action}": \\{[^}]*icon: (\\w+)`).exec(HELP))?.[1];
   for (const [action, tab] of [
     ["help-keyboard-shortcuts", "keyboard-shortcuts"],
     ["help-troubleshooting", "debugging"],

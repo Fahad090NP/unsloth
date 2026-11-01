@@ -13,7 +13,7 @@ import { type BrowserTab, currentEntry } from "./store";
 
 const PRINT_TIMEOUT_MS = 20_000;
 
-const isMac = typeof navigator !== "undefined" && /Mac/.test(navigator.platform);
+const isMac = typeof navigator !== "undefined" && navigator.platform.includes('Mac');
 
 function nativePageOf(tab: BrowserTab): boolean {
   return currentEntry(tab).kind === "web" && hasNativeView(tab.id);
@@ -25,10 +25,10 @@ export function canPrintFrames(): boolean {
 }
 
 export async function printPage(tab: BrowserTab): Promise<boolean> {
-  if (!nativePageOf(tab)) return printFramePage(tab.id);
+  if (!nativePageOf(tab)) return await printFramePage(tab.id);
   // The menu that asked hides the view; print what the reader sees once it's back.
   await whenNativeViewShown(tab.id);
-  return callNative("browser_view_print", { tabId: tab.id }).then(
+  return await callNative("browser_view_print", { tabId: tab.id }).then(
     () => true,
     () => false,
   );
@@ -45,7 +45,7 @@ export async function printFramePage(tabId: string): Promise<boolean> {
   // Kept on screen at a pixel: a frame with no size may never lay out its images.
   frame.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none";
   frame.src = apiUrl("/api/browser/print");
-  return new Promise((resolve) => {
+  return await new Promise((resolve) => {
     let finished = false;
     const finish = (printed: boolean) => {
       if (finished) return;
@@ -53,7 +53,7 @@ export async function printFramePage(tabId: string): Promise<boolean> {
       window.removeEventListener("message", listener);
       clearTimeout(timer);
       // print() returns as the dialog closes; a moment more for engines that spool after it.
-      setTimeout(() => frame.remove(), 1000);
+      setTimeout(() => { frame.remove(); }, 1000);
       resolve(printed);
     };
     const listener = (event: MessageEvent) => {
@@ -64,7 +64,7 @@ export async function printFramePage(tabId: string): Promise<boolean> {
       } else if (event.data.type === "printed") finish(true);
     };
     // Only until the copy arrives: the dialog itself stays open as long as the reader wants.
-    const timer = setTimeout(() => finish(false), PRINT_TIMEOUT_MS);
+    const timer = setTimeout(() => { finish(false); }, PRINT_TIMEOUT_MS);
     window.addEventListener("message", listener);
     document.body.appendChild(frame);
   });
@@ -76,8 +76,8 @@ export class OtherSurfaceError extends Error {}
 
 /** Null if nothing captured or sharing stopped; rejects NotAllowedError or OtherSurfaceError. */
 export async function screenshotPage(tab: BrowserTab, element: HTMLElement): Promise<Blob | null> {
-  if (isTauri) return nativeScreenshot(tab, element);
-  return regionScreenshot(element);
+  if (isTauri) return await nativeScreenshot(tab, element);
+  return await regionScreenshot(element);
 }
 
 const png = (bytes: ArrayBuffer) => (bytes.byteLength > 0 ? new Blob([bytes], { type: "image/png" }) : null);
@@ -95,7 +95,7 @@ async function nativeScreenshot(tab: BrowserTab, element: HTMLElement): Promise<
     return png(await callNative<ArrayBuffer>("browser_capture", { tabId: tab.id }));
   }
   await clearOfOverlays(element);
-  return withChromeHidden(async () => {
+  return await withChromeHidden(async () => {
     const rect = element.getBoundingClientRect();
     if (rect.width < 1 || rect.height < 1) return null;
     return png(
@@ -144,7 +144,7 @@ async function regionScreenshot(element: HTMLElement): Promise<Blob | null> {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext("2d")?.drawImage(video, 0, 0);
-      return await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+      return await new Promise<Blob | null>((resolve) => { canvas.toBlob(resolve, "image/png"); });
     });
   } finally {
     video.srcObject = null;
@@ -195,7 +195,7 @@ function intersects(a: DOMRect, b: DOMRect): boolean {
 
 async function clearOfOverlays(element: HTMLElement, timeoutMs = 1000): Promise<void> {
   const started = performance.now();
-  const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => { resolve(); }));
   while (performance.now() - started < timeoutMs) {
     const rect = element.getBoundingClientRect();
     const covered = [...document.querySelectorAll<HTMLElement>(OVERLAY_SELECTOR)].some((overlay) => {
@@ -219,7 +219,7 @@ async function withChromeHidden<T>(capture: () => Promise<T>): Promise<T> {
   style.textContent = CAPTURE_STYLE;
   document.head.appendChild(style);
   try {
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => { resolve(); })));
     return await capture();
   } finally {
     style.remove();

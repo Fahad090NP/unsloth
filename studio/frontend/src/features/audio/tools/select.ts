@@ -160,7 +160,7 @@ export function panelValue<V>(
   const stored = values[panel.id];
   if (stored === undefined) return initial;
   if (isPlainObject(initial) && isPlainObject(stored)) {
-    return { ...initial, ...stored } as V;
+    return { ...initial, ...stored };
   }
   return stored as V;
 }

@@ -38,13 +38,13 @@ function chunked(text: string, size: number): string[] {
   return out;
 }
 
-type Case = {
+interface Case {
   name: string;
   chunks: string[];
   expect: string;
   /** `true` marks a case that alone discriminates the fix from the bug. */
   lostBefore: boolean;
-};
+}
 
 const FULL = "return `Hi, ${name}!`";
 

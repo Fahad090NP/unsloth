@@ -14,10 +14,10 @@ type Invoke = (
 
 const DISK_FULL = /disk full/;
 
-type NativeFiles = {
+interface NativeFiles {
   downloadBlobStreaming: (content: Blob, filename: string) => Promise<void>;
   isDownloadCancelled: (error: unknown) => boolean;
-};
+}
 
 function loadNativeFiles(invoke: Invoke): NativeFiles {
   return loadWithStubs<NativeFiles>(
@@ -37,7 +37,7 @@ function loadNativeFiles(invoke: Invoke): NativeFiles {
 
 test("a native Blob save crosses IPC in bounded chunks", async () => {
   const chunkSizes: number[] = [];
-  const headers: Array<Record<string, string> | undefined> = [];
+  const headers: (Record<string, string> | undefined)[] = [];
   const commands: string[] = [];
   const nativeFiles = loadNativeFiles((command, args, options) => {
     commands.push(command);

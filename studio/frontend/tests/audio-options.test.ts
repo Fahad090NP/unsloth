@@ -99,7 +99,7 @@ test("only set, valid values are sent; unknown names are dropped", () => {
       cot: "full",
       abc: true,
       stop_after: "",
-      guidance_scale: "high" as unknown as number,
+      guidance_scale: "high",
       removed_option: 3,
     }),
     { num_inference_steps: 200, cot: "full", abc: true },

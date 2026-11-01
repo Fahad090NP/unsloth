@@ -94,7 +94,7 @@ export function useRepoDownload(config: RepoDownloadConfig): DownloadJob {
     if (!autoAdopt) return;
     const controller = new AbortController();
     void downloadManager.probeAndAdopt(kind, repoId, controller.signal);
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [autoAdopt, kind, repoId]);
 
   const activeState = useDownloadManagerStore(
@@ -195,20 +195,20 @@ export function useRepoDownload(config: RepoDownloadConfig): DownloadJob {
 
   const setExpectedBytes = useCallback(
     (bytes: number, variant: string | null = null) =>
-      downloadManager.setExpected(kind, repoId, variant, bytes),
+      { downloadManager.setExpected(kind, repoId, variant, bytes); },
     [kind, repoId],
   );
 
   const resumeConflict = useCallback(
-    () => downloadManager.resumeConflict(visibleConflictKey),
+    () => { downloadManager.resumeConflict(visibleConflictKey); },
     [visibleConflictKey],
   );
   const restartConflict = useCallback(
-    () => downloadManager.restartConflict(visibleConflictKey),
+    () => { downloadManager.restartConflict(visibleConflictKey); },
     [visibleConflictKey],
   );
   const cancelConflict = useCallback(
-    () => downloadManager.cancelConflict(visibleConflictKey),
+    () => { downloadManager.cancelConflict(visibleConflictKey); },
     [visibleConflictKey],
   );
 

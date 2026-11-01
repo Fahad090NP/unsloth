@@ -88,7 +88,7 @@ export function MediaApiExamples({
     if (!showHeading || scrollTarget !== "api-keys-media-api") return;
     const section = sectionRef.current;
     if (!section) return;
-    const pin = () => section.scrollIntoView({ block: "start" });
+    const pin = () => { section.scrollIntoView({ block: "start" }); };
     const observer = new ResizeObserver(pin);
     observer.observe(section.parentElement ?? section);
     const release = () => {
@@ -116,7 +116,7 @@ export function MediaApiExamples({
       () => undefined,
     );
     const unsubscribe = subscribeOpenAIAutoSwitchSettings((settings) =>
-      setAutoSwitch(settings.mediaAutoSwitchModel),
+      { setAutoSwitch(settings.mediaAutoSwitchModel); },
     );
     return () => {
       cancelled = true;
@@ -134,7 +134,7 @@ export function MediaApiExamples({
   const [os, setOs] = useExampleOs(base);
   const key = audioApiKey(apiKey, {
     base,
-    tunnel: useTunnel && !!cloudflareUrl,
+    tunnel: useTunnel && Boolean(cloudflareUrl),
     scope: keylessScope,
     exposure: keylessExposure,
   });

@@ -749,9 +749,9 @@ test("a desktop password sign-in clears the explicit sign-out", async (t) => {
   const form = mountForm(client(), { access: null, change: false }, false, false, desktop);
   let tree = await form.initialize();
   const set = (id: string, value: string) =>
-    (elements(tree).find((element) => element.props.id === id)?.props.onChange as (
+    { (elements(tree).find((element) => element.props.id === id)?.props.onChange as (
       event: unknown,
-    ) => void)({ target: { value } });
+    ) => void)({ target: { value } }); };
   set("username", "riley");
   tree = form.render();
   set("password", "owner-password");

@@ -401,7 +401,7 @@ function SandboxFileLink({
         void target
           .load()
           .then((blob) =>
-            openFileInBrowser({ blob, name: target.name, contentType: blob.type, key: `sandbox:${sessionId}:${file}` }),
+            { openFileInBrowser({ blob, name: target.name, contentType: blob.type, key: `sandbox:${sessionId}:${file}` }); },
           )
           .catch(() => toast.error(t("linkMenu.openFailed", { name: target.name })));
         return;
@@ -477,7 +477,7 @@ function findMermaidFence(blockContent: string): MermaidFence {
     const isClose =
       rest.replace(/[\t ]*\r?$/, "") === "" && marker.length >= 3;
     if (enclosing === null) {
-      if (marker[0] === "`" && rest.includes("`")) continue;
+      if (marker.startsWith("`") && rest.includes("`")) continue;
       if (/^[\t ]*mermaid\b/i.test(rest)) {
         const indent = /^( *)/.exec(line)?.[1] ?? "";
         const body = lines.slice(index + 1).join("\n");
@@ -965,7 +965,7 @@ function useFenceTokens(
         });
       } else work();
     };
-    const late = (result: FenceTokens) => publish(() => show(result));
+    const late = (result: FenceTokens) => { publish(() => { show(result); }); };
     const tokenizeNow = (): boolean => {
       if (!current() || highlight("", () => {}) === null) return false;
       const result = code.highlightExact(options, late);
@@ -992,7 +992,7 @@ function useFenceTokens(
             (result) => {
               if (!current()) return;
               if (result === null) {
-                if (failover) publish(() => show(highlight(body, late)));
+                if (failover) publish(() => { show(highlight(body, late)); });
                 return;
               }
               cancelFallback?.();
@@ -1344,7 +1344,7 @@ function useCoalescedStreamingText(
       renderedAtRef.current = frameTime;
       afterFrame(() => {
         const startedAt = performance.now();
-        flushSync(() => setDisplayed(pendingRef.current));
+        flushSync(() => { setDisplayed(pendingRef.current); });
         costRef.current = performance.now() - startedAt;
       });
     };
@@ -1361,7 +1361,7 @@ function useCoalescedStreamingText(
     displayed.messageId === messageId &&
     text.length >= displayed.text.length &&
     // Not startsWith, which scans a growing reply (see hasPrefix in streaming-render-schedule.ts).
-    text.slice(0, displayed.text.length) === displayed.text
+    text.startsWith(displayed.text)
   ) {
     return displayed.text;
   }
@@ -1371,7 +1371,7 @@ function useCoalescedStreamingText(
 /** False inside the reasoning block, which renders through this same component. */
 export const SearchImagesEnabledContext = createContext(true);
 
-type MarkdownTextRendererProps = {
+interface MarkdownTextRendererProps {
   isStreaming: boolean;
   messageHasRenderableRenderHtmlTool: boolean;
   messageId: string;
@@ -1381,7 +1381,7 @@ type MarkdownTextRendererProps = {
   searchImagesKey: string;
   statusType: string;
   text: string;
-};
+}
 
 function MarkdownTextRenderer({
   isStreaming,
@@ -1460,7 +1460,7 @@ function MarkdownTextRenderer({
     : null;
   const renderKey = markdownRenderKey(processedText);
 
-  const audioMatch = displayText.match(AUDIO_PLAYER_RE);
+  const audioMatch = AUDIO_PLAYER_RE.exec(displayText);
   if (audioMatch) {
     return <AudioPlayer src={audioMatch[1]} />;
   }
@@ -1538,7 +1538,7 @@ const MarkdownTextImpl = () => {
   const cut = useAuiState(
     ({ message }) =>
       message.status?.type !== "running" &&
-      !!readIncompleteInfo(message.metadata) &&
+      Boolean(readIncompleteInfo(message.metadata)) &&
       !message.parts.slice(partIndex + 1).some((part) => part.type === "text"),
   );
 
@@ -1557,12 +1557,12 @@ const MarkdownTextImpl = () => {
   );
 };
 
-type MarkdownTextSourceProps = {
+interface MarkdownTextSourceProps {
   messageHasRenderableRenderHtmlTool: boolean;
   messageId: string;
   sourceText: string;
   streaming: boolean;
-};
+}
 
 const MarkdownTextSourceImpl = ({
   messageHasRenderableRenderHtmlTool,

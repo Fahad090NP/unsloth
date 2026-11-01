@@ -762,7 +762,7 @@ export function TrainModelSelector({
       isHubLoading={isLoadingHf}
       showUseThis={showUseThis}
       useThisLabel={useThisLabel}
-      onUseThis={() => pickFreeformModel(activeQuery)}
+      onUseThis={() => { pickFreeformModel(activeQuery); }}
       onExactQueryCommit={commitExactQuery}
       placeholder={{
         hub: t("studio.modelPicker.hubPlaceholder"),

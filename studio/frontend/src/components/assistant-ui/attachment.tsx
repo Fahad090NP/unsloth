@@ -186,11 +186,11 @@ const CardImageOrBody: FC<{
   );
 };
 
-type PastedTextAttachment = {
+interface PastedTextAttachment {
   readonly file?: File;
   readonly sentText?: string;
   readonly sentBytes?: number;
-};
+}
 
 // The text can be megabytes, so the selector only passes references and nothing here copies or scans it.
 const usePastedTextAttachment = (): PastedTextAttachment | null => {

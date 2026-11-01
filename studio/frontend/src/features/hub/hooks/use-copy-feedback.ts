@@ -21,7 +21,7 @@ export function useCopyFeedback(resetMs = 1500) {
       if (!ok) return;
       setCopied(true);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => setCopied(false), resetMs);
+      timeoutRef.current = setTimeout(() => { setCopied(false); }, resetMs);
     },
     [resetMs],
   );

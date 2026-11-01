@@ -172,7 +172,7 @@ export async function saveChatSettingsPatch(
 export async function saveChatSettingsPatchIfCurrent(
   expected: PersistedChatSettings,
   patch: PersistedChatSettings,
-  expectedAbsent: Array<keyof PersistedChatSettings> = [],
+  expectedAbsent: (keyof PersistedChatSettings)[] = [],
   expectedAbsentPaths: ChatSettingsPath[] = [],
   options: {
     signal?: AbortSignal;
@@ -207,5 +207,5 @@ export async function saveChatSettingsPatchIfCurrent(
   ) {
     return { settings: expected, applied: false };
   }
-  return parseJsonOrThrow<ConditionalChatSettingsResponse>(response);
+  return await parseJsonOrThrow<ConditionalChatSettingsResponse>(response);
 }

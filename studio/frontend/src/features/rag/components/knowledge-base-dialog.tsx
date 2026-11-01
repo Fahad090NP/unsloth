@@ -282,7 +282,7 @@ export function KnowledgeBaseDialog({
               <Input
                 id="kb-name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); }}
                 placeholder="e.g. Product docs"
               />
             </div>
@@ -291,7 +291,7 @@ export function KnowledgeBaseDialog({
               <Textarea
                 id="kb-description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => { setDescription(e.target.value); }}
                 placeholder="Optional. What this knowledge base contains."
                 rows={3}
               />
@@ -342,7 +342,7 @@ export function KnowledgeBaseDialog({
                   >
                     <button
                       type="button"
-                      onClick={() => openDocuments(kb)}
+                      onClick={() => { openDocuments(kb); }}
                       title="Open to add or remove documents"
                       className="-my-1 -ml-2 flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
@@ -367,7 +367,7 @@ export function KnowledgeBaseDialog({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => startEdit(kb)}
+                        onClick={() => { startEdit(kb); }}
                         aria-label="Rename knowledge base"
                       >
                         <HugeiconsIcon icon={Edit03Icon} className="size-3.5" />
@@ -376,7 +376,7 @@ export function KnowledgeBaseDialog({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => setConfirmingDelete(kb)}
+                        onClick={() => { setConfirmingDelete(kb); }}
                         aria-label="Delete knowledge base"
                       >
                         <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
@@ -459,7 +459,7 @@ function KnowledgeBaseDocuments({
       onUploadsStarted();
       void upload(uploads);
     }, 0);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); };
   }, [uploads, uploading, onUploadsStarted, upload]);
 
   return (

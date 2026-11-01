@@ -134,7 +134,7 @@ test("disarmAll runs in the recovery's finally, not only on the terminal path", 
     "expected exactly one disarmAll call site; more than one means the terminal-path copy came " +
       "back and the two can disagree about ordering against the seed join",
   );
-  const before = text.slice(0, disarms[0]!.index!);
+  const before = text.slice(0, disarms[0].index);
   const lastFinally = before.lastIndexOf("} finally {");
   const lastTerminalIf = before.lastIndexOf("isTerminalChatGenerationRun(update.run)");
   assert.ok(

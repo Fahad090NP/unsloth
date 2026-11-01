@@ -366,7 +366,7 @@ test("HF credential API rejects a successful non-JSON response", async () => {
     new Response("not json", {
       status: 200,
       headers: { "Content-Type": "text/plain" },
-    })) as typeof fetch;
+    }));
 
   try {
     const { loadSavedHfToken } = await import(
@@ -408,7 +408,7 @@ test("HF store hydrates from the API without recreating plaintext storage", asyn
       JSON.stringify({ token: "hf_server", has_token: true }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
-  }) as typeof fetch;
+  });
 
   try {
     const hfStore = await import(
@@ -453,7 +453,7 @@ test("HF hydration does not overwrite an in-flight user edit", async () => {
   });
 
   globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) =>
-    init?.method === "PUT" ? saveResponse : loadResponse) as typeof fetch;
+    init?.method === "PUT" ? await saveResponse : await loadResponse);
 
   try {
     const hfStore = await import(
@@ -502,12 +502,12 @@ test("cross-tab refresh replays after an active HF hydration", async () => {
     reads += 1;
     if (reads === 1) {
       firstStarted();
-      return firstResponse;
+      return await firstResponse;
     }
     return new Response(JSON.stringify({ token: "hf_new_tab", has_token: true }), {
       status: 200, headers: { "Content-Type": "application/json" },
     });
-  }) as typeof fetch;
+  });
 
   try {
     const hfStore = await import("../src/features/hub/stores/hf-token-store.ts");
@@ -540,14 +540,14 @@ test("a delayed HF write response reconciles a newer cross-tab commit", async ()
   globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
     if (init?.method === "PUT") {
       writeStarted();
-      return writeResponse;
+      return await writeResponse;
     }
     reads += 1;
     return new Response(JSON.stringify({ token: "hf_new_tab", has_token: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  }) as typeof fetch;
+  });
 
   try {
     const hfStore = await import("../src/features/hub/stores/hf-token-store.ts");
@@ -581,7 +581,7 @@ test("pending HF edits can be drained before navigation", async () => {
   let saveStarted!: () => void;
   const response = new Promise<Response>((resolve) => { resolveSave = resolve; });
   const started = new Promise<void>((resolve) => { saveStarted = resolve; });
-  globalThis.fetch = (async () => { saveStarted(); return response; }) as typeof fetch;
+  globalThis.fetch = (async () => { saveStarted(); return await response; });
 
   try {
     const hfStore = await import("../src/features/hub/stores/hf-token-store.ts");
@@ -619,10 +619,10 @@ test("a superseded successful HF write advances the rollback baseline", async ()
   let requestCount = 0;
   globalThis.fetch = (async () => {
     requestCount += 1;
-    if (requestCount === 1) { firstStarted(); return firstResponse; }
+    if (requestCount === 1) { firstStarted(); return await firstResponse; }
     secondStarted();
-    return secondResponse;
-  }) as typeof fetch;
+    return await secondResponse;
+  });
 
   try {
     const hfStore = await import("../src/features/hub/stores/hf-token-store.ts");
@@ -717,10 +717,10 @@ test("credential gate follows authentication session transitions", () => {
 
 // The API key is wrapped with a per-request AES key because RSA-OAEP-SHA256 caps keys at 190 bytes.
 
-type EncryptionModule = {
+interface EncryptionModule {
   encryptProviderApiKey: (plaintextApiKey: string, forceRefresh?: boolean) => Promise<string>;
   clearProviderPublicKeyCache: () => void;
-};
+}
 
 // Spelled out, not imported, so the frontend and decrypt_api_key cannot drift together.
 const ENVELOPE_AAD = "unsloth-studio-provider-key-v1";

@@ -319,11 +319,11 @@ const UNSUPPORTED_ATTACHMENT_HINT =
 
 class PreStreamAwareAttachmentAdapter implements AttachmentAdapter {
   private readonly delegate: AttachmentAdapter;
-  private readonly getThreadIds: () => Array<string | null | undefined>;
+  private readonly getThreadIds: () => (string | null | undefined)[];
 
   constructor(
     delegate: AttachmentAdapter,
-    getThreadIds: () => Array<string | null | undefined>,
+    getThreadIds: () => (string | null | undefined)[],
   ) {
     this.delegate = delegate;
     this.getThreadIds = getThreadIds;
@@ -593,10 +593,10 @@ class VisionImageAdapter implements AttachmentAdapter {
   }
 
   private async fileToBase64DataURL(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error("Failed to read image file"));
+      reader.onload = () => { resolve(reader.result as string); };
+      reader.onerror = () => { reject(new Error("Failed to read image file")); };
       reader.readAsDataURL(file);
     });
   }
@@ -1414,7 +1414,7 @@ function toThreadMessage(m: MessageRecord): ThreadMessage {
       },
     };
   }
-  const custom = (m.metadata as Record<string, unknown>) ?? {};
+  const custom = (m.metadata!) ?? {};
   const savedTiming = custom.timing as
     | import("@assistant-ui/react").MessageTiming
     | undefined;
@@ -1460,10 +1460,10 @@ function toThreadMessage(m: MessageRecord): ThreadMessage {
   };
 }
 
-type GenerationRecovery = {
+interface GenerationRecovery {
   promise: Promise<void>;
   views: Set<ReturnType<typeof useAui>>;
-};
+}
 
 const generationRecoveries = new Map<string, GenerationRecovery>();
 
@@ -1473,7 +1473,7 @@ function scheduleGenerationRecovery(
   records: MessageRecord[],
   aui: ReturnType<typeof useAui>,
 ): void {
-  const metadata = (storedMessage.metadata ?? {}) as Record<string, unknown>;
+  const metadata = (storedMessage.metadata ?? {});
   const runId = metadata.generationRunId;
   if (typeof runId !== "string" || !generationNeedsRecovery(metadata)) return;
   // This tab streams the run itself; a second, lagging writer would corrupt it.
@@ -1494,7 +1494,7 @@ function scheduleGenerationRecovery(
     // Keyed exactly as the live stream (toolConfirmationScopeId) so cards are the same.
     const toolRecovery = createGenerationToolRecovery(carried, runId, cursor, {
       register: (partId, approvalId, sessionId) =>
-        useChatRuntimeStore
+        { useChatRuntimeStore
           .getState()
           .setToolConfirmation(
             partId,
@@ -1504,9 +1504,9 @@ function scheduleGenerationRecovery(
             threadId,
             undefined,
             runId,
-          ),
+          ); },
       resolve: (partId) =>
-        useChatRuntimeStore.getState().clearToolConfirmation(partId),
+        { useChatRuntimeStore.getState().clearToolConfirmation(partId); },
     });
     // Settled before disarmAll so an arm cannot land after the run is over.
     let seededApprovals: Promise<void> | null = null;
@@ -1755,12 +1755,12 @@ function scheduleGenerationRecovery(
                   cache_read_input_tokens?: unknown;
                 };
                 timings?: Record<string, unknown>;
-                choices?: Array<{
+                choices?: {
                   delta?: {
                     content?: unknown;
                     reasoning_content?: unknown;
                   };
-                }>;
+                }[];
                 context_truncated?: OpenAIChatChunk["context_truncated"];
                 quote_cut?: boolean;
               };
@@ -1797,10 +1797,10 @@ function scheduleGenerationRecovery(
               if (chunk.context_truncated) {
                 const toolCalls = carried
                   .map((entry) => entry.part as { type?: unknown } | null)
-                  .filter((part) => part?.type === "tool-call") as Array<{
+                  .filter((part) => part?.type === "tool-call") as {
                   toolCallId?: unknown;
                   toolName?: unknown;
-                }>;
+                }[];
                 currentMetadata = {
                   ...currentMetadata,
                   contextTruncation: mergeContextTruncation(
@@ -2125,9 +2125,7 @@ function createStudioDbAdapter(
       }
       return {
         threads: threads.map((t) => ({
-          status: (t.archived ? "archived" : "regular") as
-            | "archived"
-            | "regular",
+          status: (t.archived ? "archived" : "regular"),
           remoteId: t.id,
           title: t.title,
         })),
@@ -2504,7 +2502,7 @@ function useStudioRuntimeAdapters(
           for (const message of messages) {
             if (
               message.role === "assistant" &&
-              typeof (message.metadata as Record<string, unknown> | undefined)
+              typeof (message.metadata)
                 ?.generationRunId === "string"
             ) {
               scheduleGenerationRecovery(remoteId, message, messages, aui);
@@ -2737,7 +2735,7 @@ function useStudioRuntimeAdapters(
         const terminalMessageRuns = new Set(
           msgs
             .filter((message) => {
-              const custom = (message.metadata ?? {}) as Record<string, unknown>;
+              const custom = (message.metadata ?? {});
               const status = custom.generationStatus;
               return (
                 status === "completed" ||
@@ -2759,7 +2757,7 @@ function useStudioRuntimeAdapters(
           let answered = true;
           const known = new Set(activeGenerationRuns.map((run) => run.id));
           const missed = msgs.some((message) => {
-            const custom = (message.metadata ?? {}) as Record<string, unknown>;
+            const custom = (message.metadata ?? {});
             const runId = custom.generationRunId;
             const status = custom.generationStatus;
             return (
@@ -2838,7 +2836,7 @@ function useStudioRuntimeAdapters(
         for (const message of msgs) {
           if (
             message.role === "assistant" &&
-            typeof (message.metadata as Record<string, unknown> | undefined)
+            typeof (message.metadata)
               ?.generationRunId === "string"
           ) {
             scheduleGenerationRecovery(
@@ -3142,9 +3140,9 @@ function createRuntimeHook(
 
 const MAX_PENDING_SAVED_THREAD_SWITCHES = 16;
 
-type PendingSavedThreadSwitch = { id: string; settled: boolean };
+interface PendingSavedThreadSwitch { id: string; settled: boolean }
 
-type NewThreadSwitchState = {
+interface NewThreadSwitchState {
   activeNonce: string | null;
   hasSwitched: boolean;
   // Bumped per switch: two switches for the same nonce can be in flight.
@@ -3155,7 +3153,7 @@ type NewThreadSwitchState = {
   nonceThread: { nonce: string; threadId: string } | null;
   // Only record ownership from a thread this nonce's switch actually opened.
   landedAttempt: number;
-};
+}
 
 function ThreadAutoSwitch({
   threadId,
@@ -3624,7 +3622,7 @@ function ThreadScopedSettingsSync({
               : null,
           );
         })
-        .catch(() => retryThreadRead());
+        .catch(() => { retryThreadRead(); });
     };
 
     // The read did not answer for this chat: send what is held to the chat it was made in, then
@@ -3685,7 +3683,7 @@ function ActiveBranchRegistrar({
         return null;
       }
     });
-    return () => setActiveBranchReader(null);
+    return () => { setActiveBranchReader(null); };
   }, [aui, enabled]);
 
   return null;
@@ -3772,8 +3770,7 @@ function ThreadContextUsageRecount({
   useEffect(() => {
     const previous = pricedReasoningRef.current;
     if (
-      previous &&
-      previous.threadId === activeThreadId &&
+      previous?.threadId === activeThreadId &&
       previous.checkpoint === checkpoint &&
       !previous.pending &&
       !previous.loading &&
@@ -3782,8 +3779,7 @@ function ThreadContextUsageRecount({
       promptChangedAtRef.current.set(JSON.stringify([activeThreadId, checkpoint]), Date.now());
     }
     const stale = Boolean(
-      previous &&
-      previous.threadId === activeThreadId &&
+      previous?.threadId === activeThreadId &&
       previous.checkpoint === checkpoint &&
       previous.savedUsage === savedUsage &&
       !previous.pending &&
@@ -3805,8 +3801,7 @@ function ThreadContextUsageRecount({
       modelLoading ||
       threadLoading ||
       threadSettingsPending ||
-      !previous ||
-      previous.threadId !== activeThreadId ||
+      previous?.threadId !== activeThreadId ||
       previous.checkpoint !== checkpoint ||
       (previous.settings === reasoningSettings && ((!previous.pending && !previous.loading) || reasoningSettings === undefined)) ||
       !checkpoint ||
@@ -4214,7 +4209,7 @@ function ThreadBackendAutosave({
         return false;
       }
       try {
-        return runtime.threads.getById(threadId).getState().isRunning === true;
+        return runtime.threads.getById(threadId).getState().isRunning;
       } catch {
         // getById throws for deleted or detached threads.
         return false;
@@ -4416,7 +4411,7 @@ export function ChatRuntimeProvider({
           enabled={
             modelType === "base" &&
             !pairId &&
-            !!newThreadNonce &&
+            Boolean(newThreadNonce) &&
             !initialThreadId &&
             !backgrounded
           }

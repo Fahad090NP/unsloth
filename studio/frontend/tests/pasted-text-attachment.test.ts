@@ -46,12 +46,12 @@ import {
 
 import { readSrcAsync } from "./helpers/kit.ts";
 
-type ClipboardStub = {
+interface ClipboardStub {
   readonly files: readonly File[];
   readonly items: readonly { kind: string }[];
   readonly types: readonly string[];
   getData: (type: string) => string;
-};
+}
 
 function clipboard(
   text: string,

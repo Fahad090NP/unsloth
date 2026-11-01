@@ -59,14 +59,14 @@ async function runRequestWithTimeout<TResult>(
     abortReason = reason;
     controller.abort();
   };
-  const onParentAbort = () => abort(createAbortError("Request was superseded"));
+  const onParentAbort = () => { abort(createAbortError("Request was superseded")); };
   if (parentSignal?.aborted) {
     onParentAbort();
     throw abortReason;
   }
   parentSignal?.addEventListener("abort", onParentAbort, { once: true });
   const timeoutId = setTimeout(
-    () => abort(createAbortError(timeoutMessage)),
+    () => { abort(createAbortError(timeoutMessage)); },
     timeoutMs,
   );
   let rejectAborted: ((reason: Error) => void) | null = null;
@@ -203,7 +203,7 @@ export async function startTraining(
 export async function getTrainingStartRequestStatus(
   startRequestId: string,
 ): Promise<TrainingStartRequestStatusResponse | null> {
-  return runRequestWithTimeout(
+  return await runRequestWithTimeout(
     TRAINING_STATUS_TIMEOUT_MS,
     "Training start status request timed out",
     async (signal) => {
@@ -215,7 +215,7 @@ export async function getTrainingStartRequestStatus(
       if (response.status === 404) {
         return null;
       }
-      return parseJson<TrainingStartRequestStatusResponse>(response);
+      return await parseJson<TrainingStartRequestStatusResponse>(response);
     },
   );
 }
@@ -223,7 +223,7 @@ export async function getTrainingStartRequestStatus(
 export async function acknowledgeTrainingStartRequest(
   startRequestId: string,
 ): Promise<void> {
-  return runRequestWithTimeout(
+  await runRequestWithTimeout(
     TRAINING_STATUS_TIMEOUT_MS,
     "Training start acknowledgement timed out",
     async (signal) => {
@@ -242,7 +242,7 @@ export async function acknowledgeTrainingStartRequest(
 export async function cancelTrainingStartRequest(
   startRequestId: string,
 ): Promise<TrainingStartRequestStatusResponse> {
-  return runRequestWithTimeout(
+  return await runRequestWithTimeout(
     TRAINING_STATUS_TIMEOUT_MS,
     "Training start cancellation timed out",
     async (signal) => {
@@ -251,7 +251,7 @@ export async function cancelTrainingStartRequest(
         { method: "POST", signal },
         { retryNetworkErrors: false },
       );
-      return parseJson<TrainingStartRequestStatusResponse>(response);
+      return await parseJson<TrainingStartRequestStatusResponse>(response);
     },
   );
 }
@@ -285,7 +285,7 @@ export async function stopTraining(
     headers: { "Content-Type": "application/json" },
     body: scopedTrainingBody({ save }, scope),
   });
-  return parseJson<TrainingStopResponse>(response);
+  return await parseJson<TrainingStopResponse>(response);
 }
 
 export async function resetTraining(
@@ -296,14 +296,14 @@ export async function resetTraining(
     headers: { "Content-Type": "application/json" },
     body: scopedTrainingBody({}, scope),
   });
-  return parseJson<TrainingResetResponse>(response);
+  return await parseJson<TrainingResetResponse>(response);
 }
 
 const requestTrainingStatus = createScopedSingleFlightRequest<
   undefined,
   TrainingStatusResponse
 >(async (_scope, _input, signal) =>
-  runRequestWithTimeout(
+  await runRequestWithTimeout(
     TRAINING_STATUS_TIMEOUT_MS,
     "Training status request timed out",
     async (requestSignal) => {
@@ -312,7 +312,7 @@ const requestTrainingStatus = createScopedSingleFlightRequest<
         { signal: requestSignal },
         { retryNetworkErrors: false },
       );
-      return parseJson<TrainingStatusResponse>(response);
+      return await parseJson<TrainingStatusResponse>(response);
     },
     signal,
   ),
@@ -331,7 +331,7 @@ const requestTrainingMetrics = createScopedSingleFlightRequest<
   string,
   TrainingMetricsResponse
 >(async (_scope, expectedJobId, signal) =>
-  runRequestWithTimeout(
+  await runRequestWithTimeout(
     TRAINING_STATUS_TIMEOUT_MS,
     "Training metrics request timed out",
     async (requestSignal) => {
@@ -341,7 +341,7 @@ const requestTrainingMetrics = createScopedSingleFlightRequest<
         { signal: requestSignal },
         { retryNetworkErrors: false },
       );
-      return parseJson<TrainingMetricsResponse>(response);
+      return await parseJson<TrainingMetricsResponse>(response);
     },
     signal,
   ),

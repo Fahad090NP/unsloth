@@ -43,11 +43,11 @@ export const useEmbeddingModelStore = create<EmbeddingModelState>(
     loadError: null,
     revision: 0,
     applySettings: (settings) =>
-      set((state) => ({
+      { set((state) => ({
         settings,
         loadError: null,
         revision: state.revision + 1,
-      })),
+      })); },
     beginSave: () => ++latestSave,
     isSaveCurrent: (reservation) => reservation === latestSave,
     save: async (request, reservation) => {

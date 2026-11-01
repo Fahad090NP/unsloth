@@ -35,7 +35,7 @@ export function FullInstallDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => { onOpenChange(false); }}>
             {t("common.cancel")}
           </Button>
           <Button
@@ -65,7 +65,7 @@ export function DesktopInstallTypeControl(): ReactElement | null {
         label={t("settings.general.fullInstall.label")}
         description={t("settings.general.fullInstall.description")}
       >
-        <Button size="sm" onClick={() => setConfirmOpen(true)}>
+        <Button size="sm" onClick={() => { setConfirmOpen(true); }}>
           {t("settings.general.fullInstall.action")}
         </Button>
       </SettingsRow>

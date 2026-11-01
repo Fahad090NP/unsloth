@@ -170,7 +170,7 @@ const HF_DECISION_DATASET = {
   manualDatasetOptionsValid: true,
 };
 
-after(() => setAuthFetchHandler(null));
+after(() => { setAuthFetchHandler(null); });
 
 test("picking a decision model starts a LoRA run with the model's defaults", async () => {
   useTrainingConfigStore.getState().reset();

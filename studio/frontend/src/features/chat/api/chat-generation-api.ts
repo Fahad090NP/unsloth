@@ -66,19 +66,19 @@ export function normalizeChatGenerationChunkPayload(
   if (payload !== null && typeof payload === "object" && "type" in payload) {
     const frameType = (payload as { type?: unknown }).type;
     if (frameType === "skill_load") {
-      return { _toolEvent: skillLoadCardEvent(payload) } as unknown as OpenAIChatChunk;
+      return { _toolEvent: skillLoadCardEvent(payload) };
     }
     if (frameType === "reasoning_summary") {
       return {
         _reasoningDurationMs: (payload as { duration_ms?: unknown }).duration_ms,
-      } as unknown as OpenAIChatChunk;
+      };
     }
     // Persisted control frames arrive as plain chunks (the decoder drops the SSE event field); re-tag
     // them as chat-api.ts does or a resumed run loses tool activity.
     if (frameType === "tool_status") {
       return {
         _toolStatus: (payload as { content?: unknown }).content ?? "",
-      } as unknown as OpenAIChatChunk;
+      };
     }
     if (
       frameType === "tool_start" ||
@@ -89,16 +89,16 @@ export function normalizeChatGenerationChunkPayload(
       frameType === "tool_approved"
     ) {
       // The consumer accumulates tool events by tag, so keep the frame whole.
-      return { _toolEvent: payload } as unknown as OpenAIChatChunk;
+      return { _toolEvent: payload };
     }
     if (frameType === "diffusion_frame") {
-      return { _diffusionFrame: payload } as unknown as OpenAIChatChunk;
+      return { _diffusionFrame: payload };
     }
     if (frameType === "context_usage") {
-      return { _contextUsage: payload } as unknown as OpenAIChatChunk;
+      return { _contextUsage: payload };
     }
     if (frameType === "generation_progress") {
-      return { _generationProgress: payload } as unknown as OpenAIChatChunk;
+      return { _generationProgress: payload };
     }
   }
   return payload;
@@ -243,7 +243,7 @@ export function explicitStopSignal(signal: AbortSignal): {
   }
   return {
     signal: controller.signal,
-    dispose: () => signal.removeEventListener("abort", forward),
+    dispose: () => { signal.removeEventListener("abort", forward); },
   };
 }
 
@@ -320,7 +320,7 @@ export async function createChatGenerationRunUntilAbort(
   const createPromise = createChatGenerationRun(input);
   let resolveAbort: (() => void) | undefined;
   const aborted = new Promise<null>((resolve) => {
-    resolveAbort = () => resolve(null);
+    resolveAbort = () => { resolve(null); };
     if (signal.aborted) {
       resolveAbort();
     } else {
@@ -352,7 +352,7 @@ export async function getChatGenerationRun(
   id: string,
   signal?: AbortSignal,
 ): Promise<ChatGenerationRun> {
-  return json<ChatGenerationRun>(
+  return await json<ChatGenerationRun>(
     await authFetch(`/api/inference/chat-runs/${encodeURIComponent(id)}`, {
       signal,
     }),
@@ -362,7 +362,7 @@ export async function getChatGenerationRun(
 export async function cancelChatGenerationRun(
   id: string,
 ): Promise<ChatGenerationRun> {
-  return json<ChatGenerationRun>(
+  return await json<ChatGenerationRun>(
     await authFetch(
       `/api/inference/chat-runs/${encodeURIComponent(id)}/cancel`,
       { method: "POST" },
@@ -446,7 +446,7 @@ export async function* followChatGenerationRun(
   // One controller downstream of the caller covers both the open stream and reconnect sleeps.
   const deadline = new AbortController();
   const callerSignal = options.signal;
-  const forwardAbort = () => deadline.abort(callerSignal?.reason);
+  const forwardAbort = () => { deadline.abort(callerSignal?.reason); };
   if (callerSignal?.aborted) {
     deadline.abort(callerSignal.reason);
   } else {

@@ -40,7 +40,7 @@ function readStackedLayerMutations(records: MutationRecord[]): void {
     // Styles that never named pointer-events are skipped (every animation frame and resize drag).
     if (
       current === "" &&
-      (previous === null || !previous.includes("pointer-events"))
+      (!previous?.includes("pointer-events"))
     ) {
       continue;
     }
@@ -78,7 +78,7 @@ function readModalLayer(): void {
 
 export function subscribeModalLayer(listener: () => void): () => void {
   // Fresh identity per subscription so shared callbacks do not collapse in the Set.
-  const subscription = () => listener();
+  const subscription = () => { listener(); };
   modalLayerListeners.add(subscription);
   // Both checks: a duplicate listener would otherwise orphan a body observer and leak.
   if (

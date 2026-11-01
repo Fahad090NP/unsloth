@@ -199,23 +199,23 @@ export function TabMenuItems({
   const groups: ReactNode[][] = [
     [
       pinnedId ? (
-        <Row key="unpin" P={P} icon={PinOffIcon} onSelect={() => unpinPage(pinnedId)}>
+        <Row key="unpin" P={P} icon={PinOffIcon} onSelect={() => { unpinPage(pinnedId); }}>
           {t("browser.tabMenu.unpin")}
         </Row>
       ) : tab && url ? (
-        <Row key="pin" P={P} icon={PinIcon} onSelect={() => pinTab(tab, tab.customTitle || tab.title || hostOf(url))}>
+        <Row key="pin" P={P} icon={PinIcon} onSelect={() => { pinTab(tab, tab.customTitle || tab.title || hostOf(url)); }}>
           {t("browser.tabMenu.pin")}
         </Row>
       ) : null,
     ],
     [
       strip && tab ? (
-        <Row key="newTabRight" P={P} icon={PlusSignIcon} onSelect={() => store.newTabAfter(tab.id)}>
+        <Row key="newTabRight" P={P} icon={PlusSignIcon} onSelect={() => { store.newTabAfter(tab.id); }}>
           {t("browser.tabMenu.newTabRight")}
         </Row>
       ) : null,
       tab && kind !== "newtab" ? (
-        <Row key="reload" P={P} icon={Refresh01Icon} onSelect={() => reloadTab(tab)}>
+        <Row key="reload" P={P} icon={Refresh01Icon} onSelect={() => { reloadTab(tab); }}>
           {t("browser.reload")}
         </Row>
       ) : null,
@@ -236,10 +236,10 @@ export function TabMenuItems({
             <span>{t("browser.tabMenu.fork")}</span>
           </P.SubTrigger>
           <P.SubContent className={cn(subClassName, "w-48")}>
-            <Row P={P} icon={BubbleChatAddIcon} onSelect={() => forkToChat(navigate, { tab, url }, false)}>
+            <Row P={P} icon={BubbleChatAddIcon} onSelect={() => { forkToChat(navigate, { tab, url }, false); }}>
               {t("browser.tabMenu.forkNewChat")}
             </Row>
-            <Row P={P} icon={BubbleChatTemporaryIcon} onSelect={() => forkToChat(navigate, { tab, url }, true)}>
+            <Row P={P} icon={BubbleChatTemporaryIcon} onSelect={() => { forkToChat(navigate, { tab, url }, true); }}>
               {t("browser.tabMenu.forkTemporaryChat")}
             </Row>
           </P.SubContent>
@@ -256,7 +256,7 @@ export function TabMenuItems({
         </Row>
       ) : null,
       url ? (
-        <Row key="openExternal" P={P} icon={LinkSquare02Icon} onSelect={() => openExternalLink(url)}>
+        <Row key="openExternal" P={P} icon={LinkSquare02Icon} onSelect={() => { openExternalLink(url); }}>
           {t("browser.tabMenu.openExternal")}
         </Row>
       ) : null,
@@ -272,7 +272,7 @@ export function TabMenuItems({
           key="mute"
           P={P}
           icon={tab.muted ? VolumeHighIcon : VolumeMute02Icon}
-          onSelect={() => setTabMuted(tab, !tab.muted)}
+          onSelect={() => { setTabMuted(tab, !tab.muted); }}
         >
           {t(tab.muted ? "browser.tabMenu.unmute" : "browser.tabMenu.mute")}
         </Row>
@@ -280,17 +280,17 @@ export function TabMenuItems({
     ],
     [
       tab ? (
-        <Row key="close" P={P} icon={Cancel01Icon} onSelect={() => store.closeTab(tab.id)}>
+        <Row key="close" P={P} icon={Cancel01Icon} onSelect={() => { store.closeTab(tab.id); }}>
           {t("browser.tabMenu.close")}
         </Row>
       ) : null,
       strip && tab && tabs.length > 1 ? (
-        <Row key="closeOthers" P={P} icon={Cancel01Icon} onSelect={() => store.closeOtherTabs(tab.id)}>
+        <Row key="closeOthers" P={P} icon={Cancel01Icon} onSelect={() => { store.closeOtherTabs(tab.id); }}>
           {t("browser.tabMenu.closeOthers")}
         </Row>
       ) : null,
       strip && tab && index >= 0 && index < tabs.length - 1 ? (
-        <Row key="closeRight" P={P} icon={Cancel01Icon} onSelect={() => store.closeTabsToRight(tab.id)}>
+        <Row key="closeRight" P={P} icon={Cancel01Icon} onSelect={() => { store.closeTabsToRight(tab.id); }}>
           {t("browser.tabMenu.closeRight")}
         </Row>
       ) : null,

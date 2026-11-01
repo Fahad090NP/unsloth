@@ -73,7 +73,7 @@ export function mergeMonitorResponse(
     entries === previous.entries &&
     sameFields(
       previous as unknown as Record<string, unknown>,
-      merged as unknown as Record<string, unknown>,
+      merged,
       "server_time",
     )
   ) {

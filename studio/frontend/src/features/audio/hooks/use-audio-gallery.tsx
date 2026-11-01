@@ -94,7 +94,7 @@ export function useAudioGallery({
   const ensureClipPeaks = useCallback(async (clip: AudioGalleryClip) => {
     if (galleryCache.peaksById.has(clip.id)) return;
     const pending = clipPeaksLoads.current.get(clip.id);
-    if (pending) return pending;
+    if (pending) { await pending; return; }
     const load = (async () => {
       try {
         const blob = await fetchClipBlob(clip.url);
@@ -124,7 +124,7 @@ export function useAudioGallery({
       return;
     }
     const pending = clipSrcLoads.current.get(clip.id);
-    if (pending) return pending;
+    if (pending) { await pending; return; }
     const load = (async () => {
       try {
         const url = await fetchGalleryAudioSignedUrl(clip.id);

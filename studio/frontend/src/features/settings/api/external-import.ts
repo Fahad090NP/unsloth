@@ -14,23 +14,23 @@ export const EXTERNAL_IMPORT_LABELS: Record<ExternalImportSource, string> = {
   codex: "Codex",
 };
 
-export type ExternalImportStatus = {
+export interface ExternalImportStatus {
   available: boolean;
   chats: number;
-};
+}
 
-export type ExternalImportResult = {
+export interface ExternalImportResult {
   newChats: number;
   messages: number;
   warnings: string[];
-};
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await authFetch(path, init);
   if (!res.ok) {
     throw new Error(await readFastApiError(res, "External import failed"));
   }
-  return res.json();
+  return await res.json();
 }
 
 export function loadExternalImportStatus(

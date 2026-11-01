@@ -40,7 +40,7 @@ export function viewLogsAction(
   return {
     label: translate("settings.debugging.viewLogs"),
     onClick: () =>
-      useSettingsDialogStore.getState().openLogs(family, sourcePath ?? null),
+      { useSettingsDialogStore.getState().openLogs(family, sourcePath ?? null); },
   };
 }
 

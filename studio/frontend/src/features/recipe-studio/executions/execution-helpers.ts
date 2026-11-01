@@ -54,7 +54,7 @@ export function normalizeAnalysis(value: unknown): RecipeExecutionAnalysis | nul
   if (!normalized) {
     return null;
   }
-  return normalized as RecipeExecutionAnalysis;
+  return normalized;
 }
 
 export function mapJobStatus(status: string): RecipeExecutionStatus {

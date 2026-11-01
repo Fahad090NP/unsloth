@@ -37,7 +37,7 @@ Object.defineProperty(globalThis, "fetch", {
       url: String(input),
       body: typeof init?.body === "string" ? JSON.parse(init.body) : null,
     });
-    return respond();
+    return await respond();
   },
 });
 

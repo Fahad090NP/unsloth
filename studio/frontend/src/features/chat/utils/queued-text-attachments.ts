@@ -11,11 +11,11 @@ import { attachmentContentText, isPastedTextFile } from "./pasted-text.ts";
 
 import { annotationsContentText, annotationsOfFile } from "./document-annotations.ts";
 
-export type QueuedPrompt = {
+export interface QueuedPrompt {
   prompt: string;
   attachments?: CompleteAttachment[];
   attachmentFiles?: File[];
-};
+}
 
 export async function prepareQueuedPromptFiles(
   item: QueuedPrompt,
@@ -28,7 +28,7 @@ export async function prepareQueuedPromptFiles(
   if (attachmentFiles === undefined || attachmentFiles.length === 0) {
     return item;
   }
-  if (!attachments || attachments.length !== attachmentFiles.length) {
+  if (attachments?.length !== attachmentFiles.length) {
     throw new Error("Queued attachment snapshot is inconsistent");
   }
   return {

@@ -6,11 +6,11 @@ import test from "node:test";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 
-type Element = {
+interface Element {
   type: unknown;
   props: Record<string, unknown>;
   children: unknown[];
-};
+}
 
 function galleryRenderer(scope: Record<string, unknown>) {
   const source = readSrc("features/audio/transcript-gallery.tsx");
@@ -132,7 +132,7 @@ test("Clear all deletes the history only after the in-app confirmation", async (
       },
       useRef: (initial: unknown) => (refs[refIndex++] ??= { current: initial }),
       useCallback: (callback: unknown) => callback,
-      useLayoutEffect: (effect: () => void) => effect(),
+      useLayoutEffect: (effect: () => void) => { effect(); },
       useEffect: () => {},
       deleteTranscript: async (...args: unknown[]) => {
         deletes.push(args);

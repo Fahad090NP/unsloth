@@ -32,7 +32,7 @@ export function useSingleLine<T extends HTMLElement>(): [
     if (!node || typeof ResizeObserver === "undefined") {
       return;
     }
-    const update = () => setSingle(fitsOneLine(node));
+    const update = () => { setSingle(fitsOneLine(node)); };
     update();
     observer.current = new ResizeObserver(update);
     observer.current.observe(node);

@@ -3,12 +3,12 @@
 
 // Plain module: the hook imports React and cannot load under node --test.
 
-export type ClearMonitorDeps = {
+export interface ClearMonitorDeps {
   clearRemote: () => Promise<void>;
   resetDetails: () => void;
   reload: () => Promise<void>;
   onError: (message: string) => void;
-};
+}
 
 export const CLEAR_MONITOR_FAILED = "Failed to clear the monitor";
 

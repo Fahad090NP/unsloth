@@ -12,8 +12,8 @@ interface ExternalLinkConfirmStore {
 
 export const useExternalLinkConfirm = create<ExternalLinkConfirmStore>((set) => ({
   pendingUrl: null,
-  request: (url) => set({ pendingUrl: url }),
-  dismiss: () => set({ pendingUrl: null }),
+  request: (url) => { set({ pendingUrl: url }); },
+  dismiss: () => { set({ pendingUrl: null }); },
 }));
 
 export function isUnslothSiteUrl(url: string): boolean {

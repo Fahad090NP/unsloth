@@ -6,22 +6,22 @@ import { readFastApiError } from "@/lib/format-fastapi-error";
 import type { ColorThemeId } from "../lib/color-themes";
 import type { AppearanceCustomization } from "../stores/appearance-custom-store";
 
-export type PersonalizationProfile = {
+export interface PersonalizationProfile {
   displayName: string;
   nickname: string;
   avatarDataUrl: string | null;
   avatarShape: "circle" | "rounded";
   showGreetingSloth: boolean;
-};
+}
 
-export type PersonalizationAppearance = {
+export interface PersonalizationAppearance {
   theme: "light" | "dark" | "system";
   palette: ColorThemeId;
   language: string | null;
   customization: AppearanceCustomization;
-};
+}
 
-export type Personalization = {
+export interface Personalization {
   version: number;
   profile: PersonalizationProfile;
   appearance: PersonalizationAppearance;
@@ -32,7 +32,7 @@ export type Personalization = {
   sentAttachmentsSaved?: boolean;
   paletteSaved: boolean;
   greetingSlothSaved: boolean;
-};
+}
 
 export async function loadPersonalization(): Promise<Personalization> {
   const res = await authFetch("/api/settings/personalization");

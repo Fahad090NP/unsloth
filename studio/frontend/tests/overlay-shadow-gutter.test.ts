@@ -12,7 +12,7 @@ import { readSrc } from "./helpers/kit.ts";
 const PROVIDER = readSrc("app/provider.tsx");
 
 function constant(name: string): number {
-  const found = PROVIDER.match(new RegExp(`const ${name} = (\\d+);`));
+  const found = new RegExp(`const ${name} = (\\d+);`).exec(PROVIDER);
   assert.ok(found, `${name} is gone from the provider`);
   return Number(found[1]);
 }
@@ -39,8 +39,8 @@ test("the rail's edge drops by the gutter, so the cards keep their inset", () =>
   );
   assert.equal(rails?.length, 2, "a rail left its bottom-right corner");
   for (const rail of rails ?? []) {
-    const floor = Number(rail.match(/bottom-(\d+)/)?.[1]);
-    const edge = Number(rail.match(/right-(\d+)/)?.[1]);
+    const floor = Number((/bottom-(\d+)/.exec(rail))?.[1]);
+    const edge = Number((/right-(\d+)/.exec(rail))?.[1]);
     assert.equal(
       floor + GUTTER_BOTTOM,
       CARDS_INSET,
@@ -61,7 +61,7 @@ test("the cap grows by both gutters, so the cards' band is unchanged", () => {
   );
   assert.equal(caps?.length, 2, "a rail lost its cap");
   for (const cap of caps ?? []) {
-    const trim = Number(cap.match(/_-_(\d+)px/)?.[1] ?? 0);
+    const trim = Number((/_-_(\d+)px/.exec(cap))?.[1] ?? 0);
     assert.equal(
       trim,
       CARDS_BAND_TRIM - GUTTER_BOTTOM - GUTTER_TOP,

@@ -126,7 +126,7 @@ export function useReleaseNotes({
         load(version);
       }
     }, AUTH_POLL_MS);
-    return () => window.clearInterval(timer);
+    return () => { window.clearInterval(timer); };
   }, [enabled, version, load]);
 
   const retry = useCallback(() => {

@@ -360,7 +360,7 @@ function focusFirstChildOption(optionKey: string): boolean {
   return true;
 }
 
-type ModelRowOptionProps = {
+interface ModelRowOptionProps {
   id: string;
   tabIndex: number;
   onFocus: () => void;
@@ -368,7 +368,7 @@ type ModelRowOptionProps = {
   "data-model-picker-option": true;
   "data-model-picker-active-option"?: "true";
   "aria-current"?: "true";
-};
+}
 
 /** Set after commit, read only from handlers, so memoized rows reach the latest callbacks. */
 class LatestBox<T> {
@@ -419,9 +419,9 @@ function rovingOptionProps(
   return {
     id: optionId,
     tabIndex: 0,
-    onFocus: () => events.get().setRovingOptionKey(optionKey),
+    onFocus: () => { events.get().setRovingOptionKey(optionKey); },
     onKeyDown: (event) =>
-      moveFocusForKey(event, optionKey, events.get().moveFocus),
+      { moveFocusForKey(event, optionKey, events.get().moveFocus); },
     "data-model-picker-option": true,
     "data-model-picker-active-option": active ? "true" : undefined,
     "aria-current": selected ? "true" : undefined,
@@ -518,7 +518,7 @@ function useRovingModelList({
       onFocus: () => {
         setRovingOptionKey(optionKey);
       },
-      onKeyDown: (event) => moveFocusForKey(event, optionKey, moveFocus),
+      onKeyDown: (event) => { moveFocusForKey(event, optionKey, moveFocus); },
       "data-model-picker-option": true,
       "data-model-picker-active-option":
         optionKey === activeOptionKey ? "true" : undefined,
@@ -1309,7 +1309,7 @@ function ModelRow({
 
   const { owner, name } = splitRepoLabel(label);
   // Hide our own owner: the list is nearly all unsloth/.
-  const showOwner = !!owner && !hideOwner && !isUnslothOwner(owner);
+  const showOwner = Boolean(owner) && !hideOwner && !isUnslothOwner(owner);
   const parsed = parseMetaTokens(meta);
   const paramLabel = parsed.param ?? extractParamLabel(name) ?? null;
   const caps = capabilities ?? detectCapabilities({ id: label });
@@ -1347,7 +1347,7 @@ function ModelRow({
   const [tooltipOpen, setTooltipOpen] = useState(false);
   // Touch has no hover: a tap on the name opens it and a tap elsewhere closes it.
   const [tappedOpen, setTappedOpen] = useState(false);
-  useEffect(() => () => window.clearTimeout(nameHoverTimer.current), []);
+  useEffect(() => () => { window.clearTimeout(nameHoverTimer.current); }, []);
   useEffect(() => {
     if (!tappedOpen) return;
     const release = (event: Event) => {
@@ -1368,7 +1368,7 @@ function ModelRow({
   const onNameEnter = (event: React.PointerEvent) => {
     if (event.pointerType === "touch") return;
     window.clearTimeout(nameHoverTimer.current);
-    nameHoverTimer.current = window.setTimeout(() => setTooltipOpen(true), 700);
+    nameHoverTimer.current = window.setTimeout(() => { setTooltipOpen(true); }, 700);
   };
   const onNameLeave = () => {
     window.clearTimeout(nameHoverTimer.current);
@@ -1720,7 +1720,7 @@ function ejectMenuItemsFor(
               className="size-icon"
             />
           ),
-          onSelect: () => actions.get().eject(modelId),
+          onSelect: () => { actions.get().eject(modelId); },
         },
       ]
     : undefined;
@@ -1733,20 +1733,20 @@ function useDeviceExpanderCallbacks(
 ) {
   const onSelect = useCallback(
     (id: string, meta: ModelSelectorChangeMeta) =>
-      actions.get().select(id, meta),
+      { actions.get().select(id, meta); },
     [actions],
   );
   const onConfigure = useCallback(
     (id: string, meta: ModelSelectorChangeMeta) =>
-      actions.get().configure(id, meta),
+      { actions.get().configure(id, meta); },
     [actions],
   );
   const onNavigatePastStart = useCallback(
-    () => actions.get().focusOption(optionKey),
+    () => { actions.get().focusOption(optionKey); },
     [actions, optionKey],
   );
   const onNavigatePastEnd = useCallback(
-    () => actions.get().moveFocus(optionKey, "next"),
+    () => { actions.get().moveFocus(optionKey, "next"); },
     [actions, optionKey],
   );
   return {
@@ -1802,7 +1802,7 @@ const DownloadedModelDeviceRow = memo(function DownloadedModelDeviceRow({
             isSelected,
           )}
           onClick={() =>
-            actions.get().select(c.repo_id, {
+            { actions.get().select(c.repo_id, {
               source: "hub",
               isLora: false,
               // The Audio route reads a forwarded loadId as proof the weights are there.
@@ -1811,7 +1811,7 @@ const DownloadedModelDeviceRow = memo(function DownloadedModelDeviceRow({
               pipelineTag: c.task ?? null,
               audioType: c.audio_type ?? null,
               familyOverrideRequired: c.opaque === true,
-            })
+            }); }
           }
           vramStatus={null}
           className={downloadedRowButtonClassName}
@@ -1822,7 +1822,7 @@ const DownloadedModelDeviceRow = memo(function DownloadedModelDeviceRow({
           <ModelLoadSettingsAction
             ariaLabel={`Inference settings for ${c.repo_id}`}
             onConfigure={() =>
-              actions.get().configure(c.repo_id, {
+              { actions.get().configure(c.repo_id, {
                 source: "hub",
                 isLora: false,
                 // No load identity for an incomplete snapshot.
@@ -1832,7 +1832,7 @@ const DownloadedModelDeviceRow = memo(function DownloadedModelDeviceRow({
                 pipelineTag: c.task ?? null,
                 audioType: c.audio_type ?? null,
                 familyOverrideRequired: c.opaque === true,
-              })
+              }); }
             }
           />
         )}
@@ -1844,7 +1844,7 @@ const DownloadedModelDeviceRow = memo(function DownloadedModelDeviceRow({
             pinned,
             pinLabel: "Pin",
             unpinLabel: "Unpin",
-            onToggle: () => actions.get().togglePinned(c.repo_id),
+            onToggle: () => { actions.get().togglePinned(c.repo_id); },
           }}
           del={{
             title: "Delete cached model?",
@@ -1869,7 +1869,7 @@ const DownloadedModelDeviceRow = memo(function DownloadedModelDeviceRow({
               // Repo-wide, so quant pins go too.
               actions.get().unpinRepo(c.repo_id);
             },
-            onDeleted: () => actions.get().refreshCachedLists(),
+            onDeleted: () => { actions.get().refreshCachedLists(); },
           }}
         />
       </span>
@@ -1959,7 +1959,7 @@ const SoleQuantGgufDeviceRow = memo(function SoleQuantGgufDeviceRow({
             optionActive,
             isSelected,
           )}
-          onClick={() => actions.get().select(c.repo_id, selectMeta)}
+          onClick={() => { actions.get().select(c.repo_id, selectMeta); }}
           vramStatus={null}
           className={downloadedRowButtonClassName}
         />
@@ -1968,7 +1968,7 @@ const SoleQuantGgufDeviceRow = memo(function SoleQuantGgufDeviceRow({
         {canConfigure && (
           <ModelLoadSettingsAction
             ariaLabel={`Inference settings for ${onDeviceRepoLabel(c.repo_id)} ${variant.quant}`}
-            onConfigure={() => actions.get().configure(c.repo_id, selectMeta)}
+            onConfigure={() => { actions.get().configure(c.repo_id, selectMeta); }}
           />
         )}
         <ModelRowMenu
@@ -1979,7 +1979,7 @@ const SoleQuantGgufDeviceRow = memo(function SoleQuantGgufDeviceRow({
             pinned: isPinned,
             pinLabel: "Pin",
             unpinLabel: "Unpin",
-            onToggle: () => actions.get().togglePinned(c.repo_id, variant.quant),
+            onToggle: () => { actions.get().togglePinned(c.repo_id, variant.quant); },
           }}
           del={{
             title: "Delete cached model?",
@@ -2082,7 +2082,7 @@ const DownloadedGgufDeviceRow = memo(function DownloadedGgufDeviceRow({
               optionActive,
               isSelected,
             )}
-            onClick={() => actions.get().toggleGgufExpanded(c.repo_id, expanderOpen)}
+            onClick={() => { actions.get().toggleGgufExpanded(c.repo_id, expanderOpen); }}
             onArrowDownIntoChildren={
               expanderOpen ? () => focusFirstChildOption(optionKey) : undefined
             }
@@ -2126,7 +2126,7 @@ const DownloadedGgufDeviceRow = memo(function DownloadedGgufDeviceRow({
                     actions.get().unpinRepo(c.repo_id);
                   }
                 },
-                onDeleted: () => actions.get().refreshCachedLists(),
+                onDeleted: () => { actions.get().refreshCachedLists(); },
               }}
             />
           </span>
@@ -2140,7 +2140,7 @@ const DownloadedGgufDeviceRow = memo(function DownloadedGgufDeviceRow({
                 tabIndex={-1}
                 aria-hidden="true"
                 onClick={() =>
-                  actions.get().toggleGgufExpanded(c.repo_id, expanderOpen)
+                  { actions.get().toggleGgufExpanded(c.repo_id, expanderOpen); }
                 }
                 className="flex h-full w-full cursor-pointer items-center justify-end pr-2.5 text-muted-foreground/80 hover:text-foreground"
               >
@@ -2169,7 +2169,7 @@ const DownloadedGgufDeviceRow = memo(function DownloadedGgufDeviceRow({
           cachePath={c.cache_path}
           onDevice={true}
           allowPin={true}
-          onHasVision={(v) => actions.get().reportVision(c.repo_id, v)}
+          onHasVision={(v) => { actions.get().reportVision(c.repo_id, v); }}
           onSelect={callbacks.onSelect}
           resolveDownloadFootprint={expander.resolveDownloadFootprint}
           onConfigure={canConfigure ? callbacks.onConfigure : undefined}
@@ -2277,7 +2277,7 @@ const LocalModelDeviceRow = memo(function LocalModelDeviceRow({
             <ModelLoadSettingsAction
               ariaLabel={`Inference settings for ${name}`}
               onConfigure={() =>
-                actions.get().configure(m.id, localDirectGgufMeta(m.task))
+                { actions.get().configure(m.id, localDirectGgufMeta(m.task)); }
               }
             />
           )}
@@ -2285,12 +2285,12 @@ const LocalModelDeviceRow = memo(function LocalModelDeviceRow({
             <ModelLoadSettingsAction
               ariaLabel={`Inference settings for ${name}`}
               onConfigure={() =>
-                actions
+                { actions
                   .get()
                   .configure(
                     m.id,
                     localModelMeta(false, m.task, m.audio_type, m.opaque === true),
-                  )
+                  ); }
               }
             />
           )}
@@ -2312,7 +2312,7 @@ const LocalModelDeviceRow = memo(function LocalModelDeviceRow({
                     successMessage: `Deleted ${name}`,
                     disabled: deleteDisabled,
                     onConfirm: () => deleteLocalModel(m.path, m.id),
-                    onDeleted: () => actions.get().refreshLocalModelsList(),
+                    onDeleted: () => { actions.get().refreshLocalModelsList(); },
                   }
                 : undefined
             }
@@ -3034,7 +3034,7 @@ function GgufVariantExpander({
         <span>{error}</span>
         <button
           type="button"
-          onClick={() => setRefreshKey((key) => key + 1)}
+          onClick={() => { setRefreshKey((key) => key + 1); }}
           className="rounded-full border border-destructive/40 px-2 py-0.5 font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           Retry
@@ -3119,14 +3119,14 @@ function GgufVariantExpander({
             {...variantList.getOptionProps(variantOptionKey, false)}
             disabled={unusableLocal}
             onClick={() =>
-              handleVariantClick(
+              { handleVariantClick(
                 v.quant,
                 v.filename,
                 v.downloaded,
                 expectedBytes,
                 pendingDrafterPresentation(v),
                 variantContext,
-              )
+              ); }
             }
             className={cn(
               "flex min-w-0 flex-1 items-center justify-between gap-2 rounded-full py-1 pl-2 pr-1.5 text-left text-sm transition-colors hover:bg-sidebar-accent focus-visible:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -3222,7 +3222,7 @@ function GgufVariantExpander({
                 ariaLabel={`Inference settings for ${repoId} ${v.quant}`}
                 className="relative left-0.5"
                 onConfigure={() =>
-                  onConfigure(repoId, {
+                  { onConfigure(repoId, {
                     source: sourceOverride ?? (isLocalPath ? "local" : "hub"),
                     isLora: false,
                     loadId,
@@ -3232,7 +3232,7 @@ function GgufVariantExpander({
                     contextLength: variantContext,
                     isGguf: variantsAreGguf,
                     isVision: variantVisionHint,
-                  })
+                  }); }
                 }
               />
             )}
@@ -3253,7 +3253,7 @@ function GgufVariantExpander({
                           pinned: pinnedKeys.includes(pinKey(repoId, v.quant)),
                           pinLabel: "Pin",
                           unpinLabel: "Unpin",
-                          onToggle: () => togglePinnedQuant(repoId, v.quant),
+                          onToggle: () => { togglePinnedQuant(repoId, v.quant); },
                         }
                       : undefined
                   }
@@ -3277,7 +3277,7 @@ function GgufVariantExpander({
                           disabled: updateDisabled,
                           onConfirm: () =>
                             onUpdateVariant(v.quant, expectedBytes),
-                          onUpdated: () => setRefreshKey((key) => key + 1),
+                          onUpdated: () => { setRefreshKey((key) => key + 1); },
                         }
                       : undefined
                   }
@@ -3827,7 +3827,7 @@ export function HubModelPicker({
     const quants = isChatPicker
       ? loadedModels
           .filter((m) => m.quant && modelIdsMatchForPicker(m.id, repoId))
-          .map((m) => m.quant as string)
+          .map((m) => m.quant!)
       : [];
     if (activeGgufVariant && modelIdsMatchForPicker(loadedModelId, repoId)) {
       quants.push(activeGgufVariant);
@@ -4491,7 +4491,7 @@ export function HubModelPicker({
   const npuCatalog = useNpuCatalog(npu);
   // MLX only runs on a Mac; chat keeps it everywhere.
   const offeredFormatFilters = useMemo(
-    () => formatFilterValues({ npu: !!npuCatalog, mlx: isMac || !task }),
+    () => formatFilterValues({ npu: Boolean(npuCatalog), mlx: isMac || !task }),
     [npuCatalog, isMac, task],
   );
   const formatFilterOptions = useMemo(
@@ -6548,10 +6548,10 @@ export function HubModelPicker({
     const el = scrollRef.current;
     if (!el) return;
     updateListFades(el);
-    const observer = new ResizeObserver(() => updateListFades(el));
+    const observer = new ResizeObserver(() => { updateListFades(el); });
     observer.observe(el);
     if (el.firstElementChild) observer.observe(el.firstElementChild);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [scrollRef, updateListFades]);
 
   // Re-attach per loaded page so a heavily filtered list keeps paging; fetchMore no-ops in flight.
@@ -6591,7 +6591,7 @@ export function HubModelPicker({
       { threshold: 0, root },
     );
     obs.observe(recommendedSentinel);
-    return () => obs.disconnect();
+    return () => { obs.disconnect(); };
   }, [
     recommendedSentinel,
     recommendedHasMore,
@@ -6715,7 +6715,7 @@ export function HubModelPicker({
           type="button"
           role="checkbox"
           aria-checked={fitOnDeviceOnly}
-          onClick={() => setFitOnDeviceOnly(!fitOnDeviceOnly)}
+          onClick={() => { setFitOnDeviceOnly(!fitOnDeviceOnly); }}
           className="flex w-full cursor-pointer select-none items-center gap-1.5 rounded-[10px] px-2 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <Checkbox
@@ -6823,13 +6823,13 @@ export function HubModelPicker({
           <ModelLoadSettingsAction
             ariaLabel={`Inference settings for ${id}`}
             onConfigure={() =>
-              onConfigure(cachedIdFor(id) ?? id, {
+              { onConfigure(cachedIdFor(id) ?? id, {
                 source: "hub",
                 isLora: false,
                 isGguf: false,
                 isDownloaded: cachedIdFor(id) !== null,
                 pipelineTag: pipelineTagById.get(id) ?? null,
-              })
+              }); }
             }
           />
         </span>
@@ -6967,11 +6967,11 @@ export function HubModelPicker({
               loaded={true}
               optionProps={hubModelList.getOptionProps(optionKey, isSelected)}
               onClick={() =>
-                expandable
+                { expandable
                   ? setExpandedGguf((prev) =>
                       prev === entry.id ? null : entry.id,
                     )
-                  : onSelect(checkpoint, selectMeta)
+                  : onSelect(checkpoint, selectMeta); }
               }
               onArrowDownIntoChildren={
                 expanded ? () => focusFirstChildOption(optionKey) : undefined
@@ -6984,7 +6984,7 @@ export function HubModelPicker({
             {onConfigure && (
               <ModelLoadSettingsAction
                 ariaLabel={`Inference settings for ${entry.id}`}
-                onConfigure={() => onConfigure(...configureArgs)}
+                onConfigure={() => { onConfigure(...configureArgs); }}
               />
             )}
             <ModelRowMenu
@@ -7021,7 +7021,7 @@ export function HubModelPicker({
                       pinned: pinnedSet.has(pinKey(pinRepoId, quant ?? undefined)),
                       pinLabel: "Pin",
                       unpinLabel: "Unpin",
-                      onToggle: () => togglePinned(pinRepoId, quant ?? undefined),
+                      onToggle: () => { togglePinned(pinRepoId, quant ?? undefined); },
                     }
               }
             />
@@ -7040,8 +7040,8 @@ export function HubModelPicker({
             onConfigure={onConfigure}
             hfToken={hfToken || undefined}
             parentOptionKey={optionKey}
-            onNavigatePastStart={() => hubModelList.focusOption(optionKey)}
-            onNavigatePastEnd={() => hubModelList.moveFocus(optionKey, "next")}
+            onNavigatePastStart={() => { hubModelList.focusOption(optionKey); }}
+            onNavigatePastEnd={() => { hubModelList.moveFocus(optionKey, "next"); }}
             gpuGb={expanderGpuGb}
             systemRamGb={expanderRamGb || undefined}
             budgetKnown={expanderBudgetGpu.budgetKnown}
@@ -7109,7 +7109,7 @@ export function HubModelPicker({
             selected={isSelected}
             optionProps={hubModelList.getOptionProps(optionKey, isSelected)}
             onClick={() =>
-              onSelect(model.id, { source: "external", isLora: false })
+              { onSelect(model.id, { source: "external", isLora: false }); }
             }
             vramStatus={null}
             className={cn(downloadedRowButtonClassName, "pl-3.5")}
@@ -7120,7 +7120,7 @@ export function HubModelPicker({
             ariaLabel={`Settings for ${model.name}`}
             tooltip="Model settings"
             onConfigure={() =>
-              setSettingsModel({
+              { setSettingsModel({
                 model,
                 providerModelId,
                 apiType: externalApiTypeById.get(model.providerId),
@@ -7130,7 +7130,7 @@ export function HubModelPicker({
                 reasoningConfig: externalReasoningConfigById.get(model.providerId),
                 connectionMaxOutputTokens:
                   externalMaxOutputById.get(model.providerId) ?? null,
-              })
+              }); }
             }
           />
           <ModelRowMenu
@@ -7139,7 +7139,7 @@ export function HubModelPicker({
               pinned: isPinned,
               pinLabel: "Pin",
               unpinLabel: "Unpin",
-              onToggle: () => togglePinnedConnected(model.id),
+              onToggle: () => { togglePinnedConnected(model.id); },
             }}
             items={[
               {
@@ -7153,7 +7153,7 @@ export function HubModelPicker({
                   />
                 ),
                 onSelect: () =>
-                  setInfoModel({
+                  { setInfoModel({
                     model,
                     providerModelId,
                     apiType: externalApiTypeById.get(model.providerId),
@@ -7161,7 +7161,7 @@ export function HubModelPicker({
                     isReasoningProvider:
                       externalReasoningFlagById.get(model.providerId) === true,
                     reasoningConfig: externalReasoningConfigById.get(model.providerId),
-                  }),
+                  }); },
               },
               {
                 key: "copy",
@@ -7247,7 +7247,7 @@ export function HubModelPicker({
             loaded={isLoaded}
             optionProps={hubModelList.getOptionProps(optionKey, isSelected)}
             onClick={() =>
-              onSelect(entry.repoId, {
+              { onSelect(entry.repoId, {
                 source: "hub",
                 isLora: false,
                 ggufVariant: entry.quant,
@@ -7257,7 +7257,7 @@ export function HubModelPicker({
                 isVision: pinnedVisionHint,
                 pipelineTag:
                   diffusionTaskById.get(entry.repoId.toLowerCase()) ?? null,
-              })
+              }); }
             }
             vramStatus={null}
             className={downloadedRowButtonClassName}
@@ -7268,7 +7268,7 @@ export function HubModelPicker({
             <ModelLoadSettingsAction
               ariaLabel={`Inference settings for ${entry.repoId} ${entry.quant}`}
               onConfigure={() =>
-                onConfigure(entry.repoId, {
+                { onConfigure(entry.repoId, {
                   source: "hub",
                   isLora: false,
                   ggufVariant: entry.quant,
@@ -7277,7 +7277,7 @@ export function HubModelPicker({
                   isVision: pinnedVisionHint,
                   pipelineTag:
                     diffusionTaskById.get(entry.repoId.toLowerCase()) ?? null,
-                })
+                }); }
               }
             />
           )}
@@ -7288,7 +7288,7 @@ export function HubModelPicker({
               pinned: true,
               pinLabel: "Pin",
               unpinLabel: "Unpin",
-              onToggle: () => togglePinned(entry.repoId, entry.quant),
+              onToggle: () => { togglePinned(entry.repoId, entry.quant); },
             }}
             del={{
               title: "Delete cached model?",
@@ -7479,14 +7479,14 @@ export function HubModelPicker({
             alignMeta="device"
             optionProps={hubModelList.getOptionProps(optionKey, isSelected)}
             onClick={() =>
-              onSelect(model.id, {
+              { onSelect(model.id, {
                 source: "hub",
                 isLora: false,
                 isDownloaded: true,
                 isGguf: model.isGguf === true,
                 pipelineTag,
                 audioType: model.audioType ?? null,
-              })
+              }); }
             }
             vramStatus={null}
             className={downloadedRowButtonClassName}
@@ -7546,7 +7546,7 @@ export function HubModelPicker({
       isLora: false,
       isDownloaded: true,
     } as const;
-    const pick = () => onSelect(model.model_path, meta);
+    const pick = () => { onSelect(model.model_path, meta); };
     const row = (
       <ModelRow
         label={model.id}
@@ -7592,10 +7592,10 @@ export function HubModelPicker({
         <ModelLoadSettingsAction
           ariaLabel={`Inference settings for ${model.id}`}
           onConfigure={() =>
-            onConfigure(model.model_path, {
+            { onConfigure(model.model_path, {
               ...meta,
               contextLength: model.max_context_length,
-            })
+            }); }
           }
         />
       ) : null;
@@ -7654,7 +7654,7 @@ export function HubModelPicker({
             />
             <Input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => { setQuery(event.target.value); }}
               placeholder={
                 section === "downloaded"
                   ? "Search local models"
@@ -7750,7 +7750,7 @@ export function HubModelPicker({
 
         <div
           ref={scrollRef}
-          onScroll={(e) => updateListFades(e.currentTarget)}
+          onScroll={(e) => { updateListFades(e.currentTarget); }}
           className={cn(
             // Padding keeps the focus ring off the clip edges; the right inset lives in index.css.
             "model-list-scroll max-h-[calc(335px*var(--ui-space-scale,1))] overflow-y-auto scroll-py-1.5 pl-0.5",
@@ -7791,7 +7791,7 @@ export function HubModelPicker({
                         label="Pinned"
                         collapsed={pinnedConnectedCollapsed}
                         onToggle={() =>
-                          setPinnedConnectedCollapsed((value) => !value)
+                          { setPinnedConnectedCollapsed((value) => !value); }
                         }
                       />
                       {pinnedConnectedCollapsed
@@ -7823,11 +7823,11 @@ export function HubModelPicker({
                             label={group.providerName}
                             collapsed={collapsed}
                             onToggle={() =>
-                              toggleConnectedGroup(group.providerId)
+                              { toggleConnectedGroup(group.providerId); }
                             }
                             onConfigure={
                               onConfigureConnection
-                                ? () => onConfigureConnection(group.providerId)
+                                ? () => { onConfigureConnection(group.providerId); }
                                 : undefined
                             }
                             configureLabel={`${group.providerName} connection settings`}
@@ -7877,7 +7877,7 @@ export function HubModelPicker({
                         <HugeiconsIcon icon={PinIcon} className="size-3.5" />
                       }
                       collapsed={pinnedCollapsed}
-                      onToggle={() => setPinnedCollapsed((v) => !v)}
+                      onToggle={() => { setPinnedCollapsed((v) => !v); }}
                     >
                       Pinned
                     </ListLabel>
@@ -7919,7 +7919,7 @@ export function HubModelPicker({
                     <ListLabel
                       divider={pinnedRows.length > 0}
                       collapsed={downloadedCollapsed}
-                      onToggle={() => setDownloadedCollapsed((v) => !v)}
+                      onToggle={() => { setDownloadedCollapsed((v) => !v); }}
                       action={
                         <>
                           {hasOtherModels ? (
@@ -8013,7 +8013,7 @@ export function HubModelPicker({
                         <HugeiconsIcon icon={Flag01Icon} className="size-3.5" />
                       }
                       collapsed={otherModelsCollapsed}
-                      onToggle={() => setOtherModelsCollapsed((v) => !v)}
+                      onToggle={() => { setOtherModelsCollapsed((v) => !v); }}
                     >
                       Other models
                     </ListLabel>
@@ -8039,7 +8039,7 @@ export function HubModelPicker({
                         hasOtherModels
                       }
                       collapsed={npuOnDeviceCollapsed}
-                      onToggle={() => setNpuOnDeviceCollapsed((v) => !v)}
+                      onToggle={() => { setNpuOnDeviceCollapsed((v) => !v); }}
                     >
                       NPU
                     </ListLabel>
@@ -8067,7 +8067,7 @@ export function HubModelPicker({
                               : "Collapse fine-tuned models"
                           }
                           title={fineTunedCollapsed ? "Expand" : "Collapse"}
-                          onClick={() => setFineTunedCollapsed((v) => !v)}
+                          onClick={() => { setFineTunedCollapsed((v) => !v); }}
                           className="-mr-0.5 shrink-0 rounded p-1 text-muted-foreground/80 transition-colors hover:text-foreground"
                         >
                           {fineTunedCollapsed ? (
@@ -8164,7 +8164,7 @@ export function HubModelPicker({
                               : "Collapse custom folders"
                           }
                           title={customFoldersCollapsed ? "Expand" : "Collapse"}
-                          onClick={() => setCustomFoldersCollapsed((v) => !v)}
+                          onClick={() => { setCustomFoldersCollapsed((v) => !v); }}
                           className="-mr-0.5 shrink-0 rounded p-1 text-muted-foreground/80 transition-colors hover:text-foreground"
                         >
                           {customFoldersCollapsed ? (
@@ -8349,7 +8349,7 @@ export function HubModelPicker({
                     <ListLabel
                       divider={true}
                       collapsed={lmStudioCollapsed}
-                      onToggle={() => setLmStudioCollapsed((v) => !v)}
+                      onToggle={() => { setLmStudioCollapsed((v) => !v); }}
                     >
                       LM Studio
                     </ListLabel>
@@ -8369,7 +8369,7 @@ export function HubModelPicker({
                     <ListLabel
                       divider={true}
                       collapsed={localDirCollapsed}
-                      onToggle={() => setLocalDirCollapsed((v) => !v)}
+                      onToggle={() => { setLocalDirCollapsed((v) => !v); }}
                     >
                       Local models
                     </ListLabel>
@@ -8392,7 +8392,7 @@ export function HubModelPicker({
                       onToggle={
                         npuBrowseForcedOpen
                           ? undefined
-                          : () => setNpuBrowseCollapsed((v) => !v)
+                          : () => { setNpuBrowseCollapsed((v) => !v); }
                       }
                     >
                       NPU
@@ -8529,10 +8529,10 @@ export function HubModelPicker({
                                 hfToken={hfToken || undefined}
                                 parentOptionKey={optionKey}
                                 onNavigatePastStart={() =>
-                                  hubModelList.focusOption(optionKey)
+                                  { hubModelList.focusOption(optionKey); }
                                 }
                                 onNavigatePastEnd={() =>
-                                  hubModelList.moveFocus(optionKey, "next")
+                                  { hubModelList.moveFocus(optionKey, "next"); }
                                 }
                                 gpuGb={expanderGpuGb}
                                 systemRamGb={expanderRamGb || undefined}
@@ -8664,10 +8664,10 @@ export function HubModelPicker({
                               hfToken={hfToken || undefined}
                               parentOptionKey={optionKey}
                               onNavigatePastStart={() =>
-                                hubModelList.focusOption(optionKey)
+                                { hubModelList.focusOption(optionKey); }
                               }
                               onNavigatePastEnd={() =>
-                                hubModelList.moveFocus(optionKey, "next")
+                                { hubModelList.moveFocus(optionKey, "next"); }
                               }
                               gpuGb={expanderGpuGb}
                               systemRamGb={expanderRamGb || undefined}
@@ -8801,10 +8801,10 @@ export function HubModelPicker({
                                 hfToken={hfToken || undefined}
                                 parentOptionKey={optionKey}
                                 onNavigatePastStart={() =>
-                                  hubModelList.focusOption(optionKey)
+                                  { hubModelList.focusOption(optionKey); }
                                 }
                                 onNavigatePastEnd={() =>
-                                  hubModelList.moveFocus(optionKey, "next")
+                                  { hubModelList.moveFocus(optionKey, "next"); }
                                 }
                                 gpuGb={expanderGpuGb}
                                 systemRamGb={expanderRamGb || undefined}
@@ -8843,7 +8843,7 @@ export function HubModelPicker({
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-end pr-3.5 pb-[calc(19px*var(--ui-space-scale,1))]">
             <button
               type="button"
-              onClick={() => (ejectsAll ? onEjectAll?.() : onEject())}
+              onClick={() => { ejectsAll ? onEjectAll?.() : onEject(); }}
               className="pointer-events-auto inline-flex items-center justify-center gap-2 rounded-full bg-popover px-3 py-2 text-ui-13 font-medium text-destructive shadow-[0_2px_8px_-2px_rgba(0,0,0,0.16)] transition-colors hover:bg-[color-mix(in_srgb,var(--foreground)_8%,var(--popover))] dark:bg-sidebar-accent dark:shadow-none dark:hover:bg-[color-mix(in_srgb,var(--foreground)_8%,var(--sidebar-accent))]"
               title={ejectsAll ? "Eject all models" : "Eject model"}
             >
@@ -9062,7 +9062,7 @@ function FineTunedRows({
                 {canConfigure && onConfigure && (
                   <ModelLoadSettingsAction
                     ariaLabel={`Inference settings for ${adapter.name}`}
-                    onConfigure={() => onConfigure(adapter.id, selectionMeta)}
+                    onConfigure={() => { onConfigure(adapter.id, selectionMeta); }}
                   />
                 )}
                 <ModelRowMenu
@@ -9071,7 +9071,7 @@ function FineTunedRows({
                     pinned: pinnedKeys.includes(pinKey(adapter.id)),
                     pinLabel: "Pin",
                     unpinLabel: "Unpin",
-                    onToggle: () => togglePinned(adapter.id),
+                    onToggle: () => { togglePinned(adapter.id); },
                   }}
                   onReveal={
                     isLocal
@@ -9123,9 +9123,9 @@ function FineTunedRows({
                 onSelect={onSelect}
                 onConfigure={onConfigure}
                 parentOptionKey={optionKey}
-                onNavigatePastStart={() => loraModelList.focusOption(optionKey)}
+                onNavigatePastStart={() => { loraModelList.focusOption(optionKey); }}
                 onNavigatePastEnd={() =>
-                  loraModelList.moveFocus(optionKey, "next")
+                  { loraModelList.moveFocus(optionKey, "next"); }
                 }
                 gpuGb={gpu.available ? gpu.memoryTotalGb : undefined}
                 gpuCount={gpu.deviceCount}
@@ -9155,7 +9155,7 @@ function FineTunedRows({
                           ggufVariant: quant,
                         });
                         if (pinnedKeys.includes(pinKey(adapter.id))) {
-                          await repinExportedGguf(adapter.id).catch(() => unpinRepo(adapter.id));
+                          await repinExportedGguf(adapter.id).catch(() => { unpinRepo(adapter.id); });
                         }
                         onModelsChange?.({
                           id: adapter.id,

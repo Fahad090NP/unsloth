@@ -102,11 +102,11 @@ export function MusicEditInputs({
         }
         value={draft.source}
         onChange={(next) =>
-          onChange({
+          { onChange({
             source: next,
             // Parts picked on another clip point at the wrong audio.
             ranges: next && next.id === draft.source?.id ? draft.ranges : [],
-          })
+          }); }
         }
         disabled={disabled}
         allowHistory={true}
@@ -124,7 +124,7 @@ export function MusicEditInputs({
               src={preview.src}
               label={preview.label}
               ranges={draft.ranges}
-              onChange={(ranges) => onChange({ ranges })}
+              onChange={(ranges) => { onChange({ ranges }); }}
               maxRanges={maxRanges}
               beyondEndS={beyondEndS}
               disabled={disabled}
@@ -210,7 +210,7 @@ export function MusicEditInputs({
           min={0}
           max={1}
           step={0.05}
-          onChange={(strength) => onChange({ strength })}
+          onChange={(strength) => { onChange({ strength }); }}
           format={(v) => v.toFixed(2)}
           disabled={disabled}
           info="Lower keeps more of the original."
@@ -224,7 +224,7 @@ export function MusicEditInputs({
           min={EXTEND_MIN_S}
           max={EXTEND_MAX_S}
           step={1}
-          onChange={(extendS) => onChange({ extendS })}
+          onChange={(extendS) => { onChange({ extendS }); }}
           onDraft={setDraggedExtendS}
           disabled={disabled}
           info="New music is added after the clip's end."
@@ -244,7 +244,7 @@ export function MusicEditInputs({
           <Textarea
             id={PROMPT_ID}
             value={draft.prompt}
-            onChange={(event) => onChange({ prompt: event.target.value })}
+            onChange={(event) => { onChange({ prompt: event.target.value }); }}
             disabled={disabled}
             placeholder={
               editUsesStrength(action)

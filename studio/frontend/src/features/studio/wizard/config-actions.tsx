@@ -63,7 +63,7 @@ export function ConfigActions() {
       return;
     }
     readBrowserTrainingConfig(file)
-      .then((content) => applyYamlConfig(content, file.name))
+      .then((content) => { applyYamlConfig(content, file.name); })
       .catch((error: unknown) => {
         toast.error(t("studio.training.failedToReadFile"), {
           description:

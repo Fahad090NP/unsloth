@@ -75,7 +75,7 @@ export function partitionSoleQuants<T>(
   if (!enabled) return { quants, pending, stale };
   for (const target of targets) {
     const entry = entries.get(target.repoId);
-    if (!entry || entry.key !== target.key) {
+    if (entry?.key !== target.key) {
       pending.add(target.repoId);
       stale.push(target);
       continue;

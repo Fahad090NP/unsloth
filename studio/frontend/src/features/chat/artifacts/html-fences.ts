@@ -3,22 +3,22 @@
 
 // Shared so the in-place collapse and the post-message auto-render agree on renderable fences.
 
-export type CodeFence = {
+export interface CodeFence {
   language: string | null;
   source: string;
-};
+}
 
 // One fenced block spanning the whole string. The close is THREE OR MORE backticks (CommonMark
 // "at least as many"), and needs a line break before it unless the body is empty.
 export const CODE_FENCE_RE =
   /^```([^\r\n`]*)\r?\n(?:([\s\S]*?)\r?\n`{3,}|`{3,})$/;
 
-export type ToolCallPartLike = {
+export interface ToolCallPartLike {
   type?: string;
   toolName?: string;
   args?: unknown;
   result?: unknown;
-};
+}
 
 // True when a part is a render_html tool call with usable code or a non-error result.
 export function isRenderableRenderHtmlToolPart(part: unknown): boolean {
@@ -43,7 +43,7 @@ export function isRenderableRenderHtmlToolPart(part: unknown): boolean {
 }
 
 export function getCodeFence(blockContent: string): CodeFence | null {
-  const match = blockContent.trimEnd().match(CODE_FENCE_RE);
+  const match = CODE_FENCE_RE.exec(blockContent.trimEnd());
   if (!match) {
     return null;
   }
@@ -101,7 +101,7 @@ export function extractHtmlFences(text: string): HtmlFence[] {
   let index = 0;
 
   while (i < lines.length) {
-    const open = lines[i].match(FENCE_OPEN_RE);
+    const open = FENCE_OPEN_RE.exec(lines[i]);
     if (!open) {
       i++;
       continue;
@@ -179,7 +179,7 @@ export function extractReactFences(text: string): ReactFence[] {
   let index = 0;
 
   while (i < lines.length) {
-    const open = lines[i].match(FENCE_OPEN_RE);
+    const open = FENCE_OPEN_RE.exec(lines[i]);
     if (!open) {
       i++;
       continue;

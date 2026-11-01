@@ -19,9 +19,9 @@ const LEGACY_PSEUDO_ELEMENTS = new Set([":before", ":after", ":first-line", ":fi
 const ATTRIBUTE_PREFIX = "data-mq-";
 const BOOT_SCRIPT_NAME = "viewport-media.js";
 
-export type ViewportQuery = { attribute: string; query: string };
+export interface ViewportQuery { attribute: string; query: string }
 
-type Gate = { attribute: string; present: boolean };
+interface Gate { attribute: string; present: boolean }
 
 function isPseudoElement(node: SelectorNode): boolean {
   return (

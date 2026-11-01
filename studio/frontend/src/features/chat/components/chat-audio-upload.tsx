@@ -30,7 +30,7 @@ export function ChatAudioUpload({ audioUpload }: ChatAudioUploadProps) {
   const { dialogOpen, pickerCancelled } = audioUpload;
   useEffect(() => {
     if (!dialogOpen) return;
-    const cancelled = () => pickerCancelled();
+    const cancelled = () => { pickerCancelled(); };
     const inputs = [recordInputRef.current, chooseInputRef.current];
     for (const input of inputs) input?.addEventListener("cancel", cancelled);
     return () => {
@@ -160,21 +160,21 @@ export function ChatAudioUpload({ audioUpload }: ChatAudioUploadProps) {
           accept="audio/*"
           capture="user"
           className="hidden"
-          onChange={(event) => acceptFile(event.currentTarget)}
+          onChange={(event) => { acceptFile(event.currentTarget); }}
         />
         <input
           ref={chooseInputRef}
           type="file"
           accept={AUDIO_PICKER_ACCEPT}
           className="hidden"
-          onChange={(event) => acceptFile(event.currentTarget)}
+          onChange={(event) => { acceptFile(event.currentTarget); }}
         />
 
         <Button
           type="button"
           variant="outline"
           className="h-auto min-h-9 whitespace-normal py-2"
-          onClick={() => useSettingsDialogStore.getState().openDialog("voice")}
+          onClick={() => { useSettingsDialogStore.getState().openDialog("voice"); }}
         >
           {t("settings.voice.dictation.sttOpenVoiceSettings")}
         </Button>
@@ -210,7 +210,7 @@ export function ChatAudioUpload({ audioUpload }: ChatAudioUploadProps) {
                 <Button
                   type="button"
                   disabled={pickerDisabled}
-                  onClick={() => launch(recordInputRef.current)}
+                  onClick={() => { launch(recordInputRef.current); }}
                 >
                   {t("settings.voice.dictation.audioUploadRecord")}
                 </Button>
@@ -219,7 +219,7 @@ export function ChatAudioUpload({ audioUpload }: ChatAudioUploadProps) {
                 type="button"
                 variant={platform === "android" ? "outline" : "default"}
                 disabled={pickerDisabled}
-                onClick={() => launch(chooseInputRef.current)}
+                onClick={() => { launch(chooseInputRef.current); }}
               >
                 {t("settings.voice.dictation.audioUploadChooseFile")}
               </Button>

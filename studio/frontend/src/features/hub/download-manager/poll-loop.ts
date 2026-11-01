@@ -336,7 +336,7 @@ function syncServerGeneration(
   }
   if (change === "attempt") {
     rt.floorHold = {
-      attempt: status.attempt as number,
+      attempt: status.attempt!,
       remainingBytes: job.expectedBytes - job.downloadedBytes,
       until: Date.now() + ATTEMPT_FLOOR_HOLD_MS,
     };
@@ -910,13 +910,13 @@ async function resolveCancelWatchdog(
   cancelEpoch: number,
 ): Promise<void> {
   const rt = runtimeRegistry.runtimes.get(key);
-  if (!rt || rt.epoch !== cancelEpoch || !rt.cancelRequested) return;
+  if (rt?.epoch !== cancelEpoch || !rt.cancelRequested) return;
   const job = getState().jobs[key];
   if (!job) return;
   const probe = await probeCancelOutcome(key, job, rt, cancelEpoch);
   if (probe === "stale") return;
   const live = runtimeRegistry.runtimes.get(key);
-  if (!live || live.epoch !== cancelEpoch || !live.cancelRequested) return;
+  if (live?.epoch !== cancelEpoch || !live.cancelRequested) return;
   if (probe.terminal === "complete") {
     finalize(key, "complete", { bytes: getState().jobs[key]?.downloadedBytes ?? 0 });
   } else if (probe.terminal === "error") {
@@ -934,7 +934,7 @@ function applyCancelResult(
   const live = runtimeRegistry.runtimes.get(key);
   if (live && live.epoch !== cancelEpoch) return;
   if (result.state === "cancelling" || result.state === "cancelled") {
-    if (!live || !live.pollingStarted) finalize(key, "cancelled");
+    if (!live?.pollingStarted) finalize(key, "cancelled");
     return;
   }
   if (live) {
@@ -963,7 +963,7 @@ function applyCancelResult(
   }
 }
 
-type CancelProbeResult = { terminal: Terminal | null; error: string | null };
+interface CancelProbeResult { terminal: Terminal | null; error: string | null }
 
 async function probeCancelOutcome(
   key: string,
@@ -1049,7 +1049,7 @@ export async function cancelJob(key: string): Promise<void> {
     if (probe === "stale") return;
 
     const live = runtimeRegistry.runtimes.get(key);
-    if (rt && (!live || live.epoch !== cancelEpoch)) return;
+    if (rt && (live?.epoch !== cancelEpoch)) return;
 
     if (probe.terminal !== null) {
       if (probe.terminal === "complete") {
@@ -1107,11 +1107,11 @@ export function adoptJob(
   });
 }
 
-type ProbeAndAdoptOptions = {
+interface ProbeAndAdoptOptions {
   includeVariants?: boolean;
   fresh?: boolean;
   onModelAdopt?: (download: ActiveModelDownload) => void;
-};
+}
 
 export async function probeAndAdopt(
   kind: DownloadKind,

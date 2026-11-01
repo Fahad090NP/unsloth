@@ -68,7 +68,7 @@ function ExamplesOrHint({
           disabled={disabled}
           className="h-[calc(24px*var(--ui-space-scale,1))] px-2.5 text-ui-11p5 font-normal"
           title={example.text}
-          onClick={() => onPick(example.text)}
+          onClick={() => { onPick(example.text); }}
         >
           {example.label}
         </Button>
@@ -181,7 +181,7 @@ function SongInputs({
             id={MUSIC_DESCRIPTION_FIELD_ID}
             value={description}
             disabled={disabled}
-            onChange={(event) => setDescription(event.target.value)}
+            onChange={(event) => { setDescription(event.target.value); }}
             placeholder={
               instrumental.value
                 ? "Genre, mood, instruments and tempo…"
@@ -219,7 +219,7 @@ function SongInputs({
               checked={instrumental.value}
               disabled={disabled || !instrumental.enabled}
               onCheckedChange={(checked) =>
-                patch("song", { instrumental: checked })
+                { patch("song", { instrumental: checked }); }
               }
             />
           </FieldLabel>
@@ -263,12 +263,12 @@ function SongInputs({
                 disabled={disabled}
                 className="h-auto p-0 text-ui-11p5 font-medium text-foreground"
                 onClick={() =>
-                  setLyrics(
+                  { setLyrics(
                     exampleLyrics(
                       rule.section_case,
                       MUSIC_EXAMPLES.lyrics[0].text,
                     ),
-                  )
+                  ); }
                 }
               >
                 Try example lyrics
@@ -280,13 +280,13 @@ function SongInputs({
       <SecondsSlider
         rule={rule}
         value={music.song.durationS}
-        onChange={(durationS) => patch("song", { durationS })}
+        onChange={(durationS) => { patch("song", { durationS }); }}
         disabled={disabled}
       />
       <VariationsSlider
         rule={rule}
         value={music.song.variations}
-        onChange={(variations) => patch("song", { variations })}
+        onChange={(variations) => { patch("song", { variations }); }}
         disabled={disabled}
         notice={music.reloadNotice}
       />
@@ -312,7 +312,7 @@ function SfxInputs({
             id={MUSIC_SFX_FIELD_ID}
             value={music.sfx.prompt}
             disabled={disabled}
-            onChange={(event) => patch("sfx", { prompt: event.target.value })}
+            onChange={(event) => { patch("sfx", { prompt: event.target.value }); }}
             placeholder="What you want to hear, and where…"
             className="min-h-16"
           />
@@ -322,20 +322,20 @@ function SfxInputs({
           examples={MUSIC_EXAMPLES.sfx}
           empty={!music.sfx.prompt.trim()}
           hint="What you want to hear, and where."
-          onPick={(prompt) => patch("sfx", { prompt })}
+          onPick={(prompt) => { patch("sfx", { prompt }); }}
           disabled={disabled}
         />
       </div>
       <SecondsSlider
         rule={rule}
         value={music.sfx.durationS}
-        onChange={(durationS) => patch("sfx", { durationS })}
+        onChange={(durationS) => { patch("sfx", { durationS }); }}
         disabled={disabled}
       />
       <VariationsSlider
         rule={rule}
         value={music.sfx.variations}
-        onChange={(variations) => patch("sfx", { variations })}
+        onChange={(variations) => { patch("sfx", { variations }); }}
         disabled={disabled}
         notice={music.reloadNotice}
       />
@@ -370,7 +370,7 @@ export function MusicStudioInputs({
           <PillTabs
             ariaLabel="What to make"
             value={rule.id}
-            onValueChange={(mode) => music.setMusicMode(mode as MusicMode)}
+            onValueChange={(mode) => { music.setMusicMode(mode as MusicMode); }}
             disabled={disabled}
             fit={true}
             compact={true}
@@ -411,7 +411,7 @@ export function MusicStudioInputs({
           rule={rule}
           draft={music.edit}
           onChange={(patch) =>
-            useAudioMusicStore.getState().patchDraft("edit", patch)
+            { useAudioMusicStore.getState().patchDraft("edit", patch); }
           }
           disabled={disabled}
           onSourceStatusChange={music.setSourceStatus}

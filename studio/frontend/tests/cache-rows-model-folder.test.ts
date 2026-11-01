@@ -13,10 +13,10 @@ const ROWS_URL = new URL(
   import.meta.url,
 );
 
-type Rows = {
+interface Rows {
   singleClearDescriptionKeys: (key: string) => string[];
   presentCaches: (inventory: unknown) => { key: string; sizeBytes: number }[];
-};
+}
 
 function loadRows(): Rows {
   const noop = () => undefined;
@@ -216,7 +216,7 @@ function driveRows(options: {
   return Object.assign(render, { unmount: () => cleanup?.() });
 }
 
-type Element = { type: unknown; props?: Record<string, unknown> };
+interface Element { type: unknown; props?: Record<string, unknown> }
 
 function* walk(node: unknown): Generator<Element> {
   if (Array.isArray(node)) {

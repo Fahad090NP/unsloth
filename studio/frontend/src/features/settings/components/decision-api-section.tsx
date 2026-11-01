@@ -163,7 +163,7 @@ export function DecisionApiSection({
         .getState()
         .consumeScrollTarget("api-keys-decision-api");
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [scrollTarget, settings, showHeading]);
 
   useEffect(() => {
@@ -172,7 +172,7 @@ export function DecisionApiSection({
       if (document.visibilityState !== "visible") return;
       loadSystemOneSettings().then(setSettings, () => undefined);
     }, POLL_MS);
-    return () => window.clearInterval(timer);
+    return () => { window.clearInterval(timer); };
   }, [enabled]);
 
   const jobKey =
@@ -396,7 +396,7 @@ export function DecisionApiSection({
                 size="sm"
                 className="shrink-0 gap-1.5"
                 disabled={!enabled}
-                onClick={() => setTryOpen(true)}
+                onClick={() => { setTryOpen(true); }}
               >
                 <PlayIcon strokeWidth={2} className="size-3.5" />
                 {t("decisions.tryIt")}
@@ -447,7 +447,7 @@ export function DecisionApiSection({
   const runtimeChoice =
     isClefDecisionModel(settings.model) ||
     settings.layout === "clef" ||
-    !!current?.llamaCppOnly;
+    Boolean(current?.llamaCppOnly);
   const connectionGroups = [
     ...new Set(connections?.map((c) => c.providerId)),
   ].map((id) => connections?.filter((c) => c.providerId === id) ?? []);
@@ -764,7 +764,7 @@ export function DecisionApiSection({
                 className="text-foreground underline underline-offset-2 hover:text-primary"
                 // openDialog, not setActiveTab: the API page shows this card with no dialog open.
                 onClick={() =>
-                  useSettingsDialogStore.getState().openDialog("connections")
+                  { useSettingsDialogStore.getState().openDialog("connections"); }
                 }
               >
                 {t("settings.apiKeys.decisionApi.connectionsLink")}

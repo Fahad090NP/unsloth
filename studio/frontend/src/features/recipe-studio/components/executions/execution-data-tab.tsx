@@ -145,7 +145,7 @@ function RunningDatasetEmptyState({
   );
 }
 
-type ExecutionDataTabProps = {
+interface ExecutionDataTabProps {
   execution: RecipeExecutionRecord;
   datasetColumnNames: string[];
   hiddenDatasetColumns: string[];
@@ -158,7 +158,7 @@ type ExecutionDataTabProps = {
   onSetHiddenColumns: (updater: (current: string[]) => string[]) => void;
   onPrevPage: () => void;
   onNextPage: () => void;
-};
+}
 
 export function ExecutionDataTab({
   execution,

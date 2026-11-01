@@ -162,7 +162,7 @@ function reply(fences: number, linesPerFence: number): string {
   return parts.join("\n\n");
 }
 
-type Frame = {
+interface Frame {
   t: number;
   heights: number[];
   tops: number[];
@@ -171,16 +171,16 @@ type Frame = {
   clientHeight: number;
   anchorTop: number | null;
   running: boolean;
-};
+}
 
-type RunOptions = {
+interface RunOptions {
   historyMessages?: number;
   fences?: number;
   linesPerFence?: number;
   chunkChars?: number;
   gapMs?: number;
   park?: "bottom" | "edge";
-};
+}
 
 const state = {
   cssMode: CSS_MODE,
@@ -328,7 +328,7 @@ function FlickerApi(): null {
         const start = view.scrollTop;
         const twoFrames = () =>
           new Promise<void>((resolve) => {
-            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+            requestAnimationFrame(() => requestAnimationFrame(() => { resolve(); }));
           });
         await twoFrames();
         for (let i = 0; i < steps && view.scrollTop > 0; i += 1) {

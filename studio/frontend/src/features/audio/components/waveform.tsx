@@ -75,7 +75,7 @@ export function Waveform({
     const audio = audioRef.current;
     if (!(audio && src)) return;
     if (audio.paused) {
-      audio.play().catch(() => setPlaying(false));
+      audio.play().catch(() => { setPlaying(false); });
     } else {
       audio.pause();
     }
@@ -102,7 +102,7 @@ export function Waveform({
         const next = Math.min(limit, Math.max(0, seconds));
         audio.currentTime = next;
         setPosition(next);
-        if (play && audio.paused) audio.play().catch(() => setPlaying(false));
+        if (play && audio.paused) audio.play().catch(() => { setPlaying(false); });
       },
       toggle,
     }),
@@ -122,7 +122,7 @@ export function Waveform({
       valueMax={duration}
       disabled={!src}
       style={tailS > 0 ? { flexGrow: duration > 0 ? duration : 1 } : undefined}
-      onSeek={(next) => seekTo(next * duration)}
+      onSeek={(next) => { seekTo(next * duration); }}
       onKeyDown={(event) => {
         if (event.key === " ") {
           event.preventDefault();
@@ -181,14 +181,14 @@ export function Waveform({
           src={src}
           preload="metadata"
           className="hidden"
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
+          onPlay={() => { setPlaying(true); }}
+          onPause={() => { setPlaying(false); }}
           onError={onError}
           onEnded={() => {
             setPlaying(false);
             setPosition(0);
           }}
-          onTimeUpdate={(event) => setPosition(event.currentTarget.currentTime)}
+          onTimeUpdate={(event) => { setPosition(event.currentTarget.currentTime); }}
           onLoadedMetadata={(event) => {
             const value = event.currentTarget.duration;
             if (Number.isFinite(value)) setMediaDuration(value);
@@ -299,9 +299,9 @@ export function WaveformBarGlyphs({
     const box = boxRef.current;
     if (!box) return;
     setWidth(box.clientWidth);
-    const observer = new ResizeObserver(() => setWidth(box.clientWidth));
+    const observer = new ResizeObserver(() => { setWidth(box.clientWidth); });
     observer.observe(box);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, []);
   const count =
     width > 0

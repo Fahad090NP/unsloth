@@ -16,7 +16,7 @@ export function AgentBar({ activeTabId }: { activeTabId: string | null }) {
   const chat = useBrowserStore((state) => state.chat);
   const { tabId, working, step, runKey, stoppedRun, question } = useBrowserAgentStore((state) => state.chats[chat] ?? IDLE_AGENT);
   // The whole run, not just each action: Stop between calls stops the next one before it starts.
-  const running = working || (!!runKey && stoppedRun !== runKey);
+  const running = working || (Boolean(runKey) && stoppedRun !== runKey);
   const [readId, setReadId] = useState<number | null>(null);
   const script = question?.ask === "script";
   const doing =
@@ -36,7 +36,7 @@ export function AgentBar({ activeTabId }: { activeTabId: string | null }) {
           {question ? t(`browser.agent.ask.${question.ask}`, { host: question.host, name: question.name }) : doing}
         </p>
         {question && script ? (
-          <ScriptPreview key={question.id} code={question.detail} onRead={() => setReadId(question.id)} />
+          <ScriptPreview key={question.id} code={question.detail} onRead={() => { setReadId(question.id); }} />
         ) : question?.detail ? (
           <p className="truncate text-muted-foreground" title={question.detail}>
             {question.detail}
@@ -46,11 +46,11 @@ export function AgentBar({ activeTabId }: { activeTabId: string | null }) {
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
         {question ? (
           <>
-            <Button type="button" size="xs" variant="ghost" onClick={() => answerQuestion(question.id, false)}>
+            <Button type="button" size="xs" variant="ghost" onClick={() => { answerQuestion(question.id, false); }}>
               {t("browser.agent.deny")}
             </Button>
             {question.always ? (
-              <Button type="button" size="xs" variant="outline" onClick={() => answerQuestion(question.id, true, true)}>
+              <Button type="button" size="xs" variant="outline" onClick={() => { answerQuestion(question.id, true, true); }}>
                 {t("browser.agentSettings.alwaysAllow")}
               </Button>
             ) : null}
@@ -58,13 +58,13 @@ export function AgentBar({ activeTabId }: { activeTabId: string | null }) {
               type="button"
               size="xs"
               disabled={script && readId !== question.id}
-              onClick={() => answerQuestion(question.id, true)}
+              onClick={() => { answerQuestion(question.id, true); }}
             >
               {t("browser.agent.allow")}
             </Button>
           </>
         ) : null}
-        <Button type="button" size="xs" variant="outline" onClick={() => stopBrowserAgent(chat)}>
+        <Button type="button" size="xs" variant="outline" onClick={() => { stopBrowserAgent(chat); }}>
           {t("browser.agent.stop")}
         </Button>
       </div>
@@ -83,7 +83,7 @@ function ScriptPreview({ code, onRead }: { code: string; onRead: () => void }) {
   return (
     <pre
       ref={check}
-      onScroll={(event) => check(event.currentTarget)}
+      onScroll={(event) => { check(event.currentTarget); }}
       className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-muted px-2 py-1 font-mono text-ui-11 text-foreground"
     >
       {code}

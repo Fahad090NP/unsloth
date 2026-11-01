@@ -64,7 +64,7 @@ export function OpenAICodexConnect({
     if (providerId) setActiveProviderId(providerId);
   }, [providerId]);
   useEffect(() => {
-    if (!flow || flow.status !== "pending" || !activeProviderId) return;
+    if (flow?.status !== "pending" || !activeProviderId) return;
     const delay = flow.method === "device" ? 2500 : 1500;
     const timer = window.setInterval(() => {
       if (Date.now() >= flow.expires_at * 1000) {
@@ -85,7 +85,7 @@ export function OpenAICodexConnect({
         })
         .catch((cause) => mounted.current && setError(cause instanceof Error ? cause.message : "Authorization failed."));
     }, delay);
-    return () => window.clearInterval(timer);
+    return () => { window.clearInterval(timer); };
   }, [flow, activeProviderId, onChanged]);
 
   async function start(method: "browser" | "device") {
@@ -205,7 +205,7 @@ export function OpenAICodexConnect({
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">If the browser cannot return automatically, paste the complete localhost callback URL.</p>
           <div className="flex gap-2">
-            <Input data-reload-snapshot-sensitive value={callbackUrl} onChange={(event) => setCallbackUrl(event.target.value)} placeholder="http://localhost:1455/auth/callback?..." />
+            <Input data-reload-snapshot-sensitive value={callbackUrl} onChange={(event) => { setCallbackUrl(event.target.value); }} placeholder="http://localhost:1455/auth/callback?..." />
             <Button type="button" variant="outline" disabled={busy || !callbackUrl.trim()} onClick={() => void complete()}>Complete</Button>
           </div>
         </div>

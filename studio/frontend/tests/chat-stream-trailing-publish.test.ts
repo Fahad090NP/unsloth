@@ -15,13 +15,13 @@ const TRAILING_PUBLISH = (pacing as Record<string, unknown>).TRAILING_PUBLISH as
   | typeof pacing.TRAILING_PUBLISH
   | undefined;
 
-type Clock = {
+interface Clock {
   frame(): void;
   framesQueued(): number;
   cancelledFrames: number[];
   timersArmed: number;
   timersCleared: number;
-};
+}
 
 async function withFakeClock(body: (clock: Clock) => Promise<void>) {
   const globals = globalThis as unknown as Record<string, unknown>;

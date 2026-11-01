@@ -28,9 +28,9 @@ export function useChatSearchSources(open: boolean): ChatSearchSources {
   const [sources, setSources] = useState<ChatSearchSources>(EMPTY);
 
   useEffect(() => {
-    const clear = () => setSources(EMPTY);
+    const clear = () => { setSources(EMPTY); };
     window.addEventListener(AUTH_SESSION_CLEARED_EVENT, clear);
-    return () => window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, clear);
+    return () => { window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, clear); };
   }, []);
 
   useEffect(() => {

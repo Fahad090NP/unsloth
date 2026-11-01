@@ -8,7 +8,7 @@ import { RowPager } from "../src/features/chat/utils/sidebar-row-pager.ts";
 import * as rowQuery from "../src/features/chat/utils/sidebar-row-query.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Row = { id: string; projectId?: string | null; updatedAt: number };
+interface Row { id: string; projectId?: string | null; updatedAt: number }
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 function offsetPage<T>(list: T[], limit: number, cursor: string | null) {
@@ -89,7 +89,7 @@ function hookHarness(fetchSidebarRows: (request: { limit: number; cursor: string
     useEffect: (fn: () => unknown, deps?: unknown[]) => {
       const c = cell<{ deps?: unknown[] } | null>(() => null);
       const same =
-        c.v?.deps && deps && deps.every((dep, k) => Object.is(dep, c.v?.deps?.[k]));
+        c.v?.deps && deps?.every((dep, k) => Object.is(dep, c.v?.deps?.[k]));
       if (!same) {
         c.v = { deps };
         fn();
@@ -116,7 +116,7 @@ function hookHarness(fetchSidebarRows: (request: { limit: number; cursor: string
   const slots = { recents: { query: rowQuery.sidebarRowQuery({}) } };
   const render = () => {
     at = 0;
-    return mod.useSidebarRowPages(slots as never, true).lists.recents;
+    return mod.useSidebarRowPages(slots, true).lists.recents;
   };
   return { render };
 }

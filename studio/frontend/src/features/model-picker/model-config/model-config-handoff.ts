@@ -199,11 +199,11 @@ export function modelConfigHandoffForDestination(
 export const useModelConfigHandoffStore = create<ModelConfigHandoffState>(
   (set) => ({
     request: null,
-    submit: (request) => set({ request }),
+    submit: (request) => { set({ request }); },
     clear: (requestId) =>
-      set((state) =>
+      { set((state) =>
         state.request?.requestId === requestId ? { request: null } : state,
-      ),
+      ); },
   }),
 );
 

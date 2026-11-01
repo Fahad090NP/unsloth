@@ -76,10 +76,10 @@ export const CHAT_HISTORY_UPDATED_EVENT = "unsloth-chat-history-updated";
 export { CHAT_HISTORY_REVISION_KEY } from "../utils/chat-history-revision";
 export const CHAT_PROJECTS_UPDATED_EVENT = "unsloth-chat-projects-updated";
 
-export type ChatHistoryUpdatedDetail = {
+export interface ChatHistoryUpdatedDetail {
   thread?: ThreadRecord;
   coalesce?: boolean;
-};
+}
 
 // bounds the request itself so a wedged socket cannot stall every reader waiting on the write
 const THREAD_WRITE_TIMEOUT_MS = 30_000;
@@ -101,7 +101,7 @@ async function threadWriteFetch(
   }
   // Either reason ends the request. Linked by hand rather than with AbortSignal.any, which Safari only got in 17.4.
   const controller = new AbortController();
-  const abort = () => controller.abort();
+  const abort = () => { controller.abort(); };
   if (caller.aborted) abort();
   caller.addEventListener("abort", abort);
   timeout.signal.addEventListener("abort", abort);
@@ -178,9 +178,9 @@ export function subscribeChatHistoryUpdated(
 ): () => void {
   if (typeof window === "undefined") return () => {};
   const onEvent = (event: Event) =>
-    listener((event as CustomEvent<ChatHistoryUpdatedDetail>).detail ?? {});
+    { listener((event as CustomEvent<ChatHistoryUpdatedDetail>).detail ?? {}); };
   window.addEventListener(CHAT_HISTORY_UPDATED_EVENT, onEvent);
-  return () => window.removeEventListener(CHAT_HISTORY_UPDATED_EVENT, onEvent);
+  return () => { window.removeEventListener(CHAT_HISTORY_UPDATED_EVENT, onEvent); };
 }
 
 const THREAD_READ_JOIN_MS = 2_000;
@@ -200,7 +200,7 @@ async function readThreadRecord(
     signal ? { signal } : undefined,
   );
   if (response.status === 404) return null;
-  return parseJsonOrThrow<ThreadRecord>(response);
+  return await parseJsonOrThrow<ThreadRecord>(response);
 }
 
 function shareThreadRead(
@@ -211,8 +211,7 @@ function shareThreadRead(
   let shared = inFlightThreadReads.get(threadId);
   const authEpoch = getAuthSessionEpoch();
   if (
-    !shared
-    || shared.authEpoch !== authEpoch
+    shared?.authEpoch !== authEpoch
     || performance.now() - shared.startedAt > THREAD_READ_JOIN_MS
   ) {
     const controller = new AbortController();
@@ -319,7 +318,7 @@ async function parseJsonOrThrow<T>(
 
 export async function listModels(): Promise<ListModelsResponse> {
   const response = await authFetch("/api/models/list");
-  return parseJsonOrThrow<ListModelsResponse>(response);
+  return await parseJsonOrThrow<ListModelsResponse>(response);
 }
 
 export async function listLoras(
@@ -329,7 +328,7 @@ export async function listLoras(
     ? `?${new URLSearchParams({ outputs_dir: outputsDir }).toString()}`
     : "";
   const response = await authFetch(`/api/models/loras${query}`);
-  return parseJsonOrThrow<ListLorasResponse>(response);
+  return await parseJsonOrThrow<ListLorasResponse>(response);
 }
 
 export async function getInferenceStatus(
@@ -338,12 +337,12 @@ export async function getInferenceStatus(
 ): Promise<InferenceStatusResponse> {
   const query = model ? `?${new URLSearchParams({ model }).toString()}` : "";
   const response = await authFetch(`/api/inference/status${query}`, { signal });
-  return parseJsonOrThrow<InferenceStatusResponse>(response);
+  return await parseJsonOrThrow<InferenceStatusResponse>(response);
 }
 
 export async function getApiMonitor(): Promise<ApiMonitorResponse> {
   const response = await authFetch("/api/inference/monitor");
-  return parseJsonOrThrow<ApiMonitorResponse>(response);
+  return await parseJsonOrThrow<ApiMonitorResponse>(response);
 }
 
 export async function getApiMonitorEntry(
@@ -353,7 +352,7 @@ export async function getApiMonitorEntry(
   const response = await authFetch(
     `/api/inference/monitor/${encodeURIComponent(id)}${includePrompt ? "" : "?include_prompt=false"}`,
   );
-  return parseJsonOrThrow<ApiMonitorEntry>(response);
+  return await parseJsonOrThrow<ApiMonitorEntry>(response);
 }
 
 export async function clearApiMonitor(): Promise<void> {
@@ -380,7 +379,7 @@ export async function getActiveGenerations(
 ): Promise<ActiveGenerationsResponse> {
   const query = model ? `?model=${encodeURIComponent(model)}` : "";
   const response = await authFetch(`/api/inference/active-generations${query}`);
-  return parseJsonOrThrow<ActiveGenerationsResponse>(response);
+  return await parseJsonOrThrow<ActiveGenerationsResponse>(response);
 }
 
 export async function loadModel(
@@ -406,7 +405,7 @@ export async function loadModel(
   await options?.beforeRequest?.();
   options?.onRequestStart?.();
   // Announced after the token prompt so a cancelled load never shows a row.
-  return withModelLoadNotice(
+  return await withModelLoadNotice(
     options?.runtime ?? "chat",
     payload.model_path ?? null,
     async () => {
@@ -454,7 +453,7 @@ export async function countChatInputTokens(payload: {
     headers: { "Content-Type": "application/json" },
     body: serializedPayload,
   });
-  return parseJsonOrThrow<{ input_tokens: number; model?: string }>(response);
+  return await parseJsonOrThrow<{ input_tokens: number; model?: string }>(response);
 }
 
 export async function validateModel(
@@ -473,7 +472,7 @@ export async function validateModel(
     signal: options?.signal,
     body: JSON.stringify(validateRequestBody(payload, preparedToken.token)),
   });
-  return parseJsonOrThrow<ValidateModelResponse>(response);
+  return await parseJsonOrThrow<ValidateModelResponse>(response);
 }
 
 /** Reads GGUF header dims locally; all null when not downloaded, not a GGUF, or gated. */
@@ -621,7 +620,7 @@ export async function getGgufDownloadProgress(
     `/api/models/gguf-download-progress?${params}`,
     { headers: hubTokenHeader(hfToken) },
   );
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 export interface DownloadProgressResponse {
@@ -648,7 +647,7 @@ export async function getDownloadProgress(
   const response = await authFetch(`/api/models/download-progress?${params}`, {
     headers: hubTokenHeader(hfToken),
   });
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 export async function getDatasetDownloadProgress(
@@ -660,7 +659,7 @@ export async function getDatasetDownloadProgress(
     `/api/hub/datasets/download-progress?${params}`,
     { headers: hubTokenHeader(hfToken) },
   );
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 export type ModelLoadPhase = "mmap" | "ready" | null;
@@ -677,7 +676,7 @@ export interface LoadProgressResponse {
 /** GGUF load mmap/upload progress, covering the download-to-ready window for large models. */
 export async function getLoadProgress(): Promise<LoadProgressResponse> {
   const response = await authFetch("/api/inference/load-progress");
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 export interface LocalModelInfo {
@@ -708,7 +707,7 @@ export async function listLocalModels(
   signal?: AbortSignal,
 ): Promise<LocalModelListResponse> {
   const response = await authFetch("/api/models/local", { signal });
-  return parseJsonOrThrow<LocalModelListResponse>(response);
+  return await parseJsonOrThrow<LocalModelListResponse>(response);
 }
 
 export async function listCachedGguf(
@@ -771,7 +770,7 @@ export async function getCachedModelPath(
   const response = await authFetch(
     `/api/models/cached-model-path?${params.toString()}`,
   );
-  return parseJsonOrThrow<CachedModelPath>(response);
+  return await parseJsonOrThrow<CachedModelPath>(response);
 }
 
 export async function revealCachedModel(
@@ -900,7 +899,7 @@ export class SidebarCursorRejectedError extends Error {
 export async function fetchSidebarRows(
   request: SidebarRowsRequest,
 ): Promise<SidebarRowsPage | null> {
-  if (request.includeIds && request.includeIds.length === 0) {
+  if (request.includeIds?.length === 0) {
     return { rows: [], nextCursor: null, hasMore: false, total: 0 };
   }
   const body: SidebarRowsRequest = {
@@ -1010,7 +1009,7 @@ export async function uploadChatAttachmentOriginal(
     { beforeRetry: sameAccount },
   );
   sameAccount();
-  return parseJsonOrThrow<{ sha256: string; sizeBytes: number }>(response);
+  return await parseJsonOrThrow<{ sha256: string; sizeBytes: number }>(response);
 }
 
 export async function fetchChatAttachmentBlob(
@@ -1024,7 +1023,7 @@ export async function fetchChatAttachmentBlob(
     const body = await response.json().catch(() => null);
     throw new Error(parseErrorText(response.status, body));
   }
-  return response.blob();
+  return await response.blob();
 }
 
 export async function deleteChatAttachment(
@@ -1223,7 +1222,7 @@ export async function deleteChatThreads(
     {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: threadIds, delete_files: !!args.deleteFiles }),
+      body: JSON.stringify({ ids: threadIds, delete_files: Boolean(args.deleteFiles) }),
     },
     threadIds,
   );
@@ -1252,7 +1251,7 @@ export async function getChatProject(
     `/api/chat/projects/${encodeURIComponent(projectId)}`,
   );
   if (response.status === 404) return null;
-  return parseJsonOrThrow<ProjectRecord>(response);
+  return await parseJsonOrThrow<ProjectRecord>(response);
 }
 
 export async function getChatAgentsMd(
@@ -1260,7 +1259,7 @@ export async function getChatAgentsMd(
 ): Promise<AgentsMdRecord> {
   const query = projectId ? `?project_id=${encodeURIComponent(projectId)}` : "";
   const response = await authFetch(`/api/chat/agents-md${query}`);
-  return parseJsonOrThrow<AgentsMdRecord>(response);
+  return await parseJsonOrThrow<AgentsMdRecord>(response);
 }
 
 export async function saveChatProject(
@@ -1406,7 +1405,7 @@ export async function getChatMessage(
     `/api/chat/threads/${encodeURIComponent(threadId)}/messages/${encodeURIComponent(messageId)}`,
   );
   if (response.status === 404) return null;
-  return parseJsonOrThrow<MessageRecord>(response);
+  return await parseJsonOrThrow<MessageRecord>(response);
 }
 
 /** Set by routes/chat_history.py; exposed through the CORS middleware in main.py. */
@@ -1540,7 +1539,7 @@ export async function buildBackendChatExport(): Promise<{
   messages: MessageRecord[];
 }> {
   const response = await authFetch("/api/chat/export");
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 // Server-side legacy-Dexie import ledger, so a studio.db wipe keeps the import recoverable.
@@ -1622,7 +1621,7 @@ export async function browseFolders(
     `/api/models/browse-folders${qs ? `?${qs}` : ""}`,
     signal ? { signal } : undefined,
   );
-  return parseJsonOrThrow<BrowseFoldersResponse>(response);
+  return await parseJsonOrThrow<BrowseFoldersResponse>(response);
 }
 
 export async function listGgufVariants(
@@ -1631,12 +1630,12 @@ export async function listGgufVariants(
   options?: GgufVariantsRequestOptions,
 ): Promise<GgufVariantsResponse> {
   const params = ggufVariantsQuery(repoId, options, isHuggingFaceOffline());
-  return runBoundedVariantsRequest(options?.signal, async (signal) => {
+  return await runBoundedVariantsRequest(options?.signal, async (signal) => {
     const response = await authFetch(`/api/models/gguf-variants?${params}`, {
       headers: hubTokenHeader(hfToken),
       signal,
     });
-    return parseJsonOrThrow<GgufVariantsResponse>(response);
+    return await parseJsonOrThrow<GgufVariantsResponse>(response);
   });
 }
 
@@ -1738,7 +1737,7 @@ export async function estimateKvCache(
     `/api/models/kv-cache-estimate?${params}`,
     signal ? { signal } : undefined,
   );
-  return parseJsonOrThrow<KvCacheEstimate>(response);
+  return await parseJsonOrThrow<KvCacheEstimate>(response);
 }
 
 function parseSseEvent(rawEvent: string): string[] {
@@ -1982,10 +1981,10 @@ export async function* streamChatCompletions(
         // finish_reason is a valid terminal signal for providers that close without a [DONE] sentinel.
         const parsedChoices = (
           parsed as {
-            choices?: Array<{
+            choices?: {
               delta?: Record<string, unknown>;
               finish_reason?: string | null;
-            }>;
+            }[];
           }
         ).choices;
         for (const choice of parsedChoices ?? []) {

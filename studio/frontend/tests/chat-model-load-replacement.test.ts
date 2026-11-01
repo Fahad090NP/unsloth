@@ -59,7 +59,7 @@ const blocks = {
   externalFailure: section(page, "if (!stopped) {", "return;"),
 };
 type Check = readonly [keyof typeof blocks, RegExp];
-type Contract = { name: string; match?: Check[]; absent?: Check[]; order?: readonly [keyof typeof blocks, ...string[]][] };
+interface Contract { name: string; match?: Check[]; absent?: Check[]; order?: readonly [keyof typeof blocks, ...string[]][] }
 const contracts: Contract[] = [
   { name: "a different pick supersedes the pending load instead of being rejected",
     match: [["loop", /while \(true\) \{/],

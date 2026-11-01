@@ -57,7 +57,7 @@ test("both waits sit inside the attempt's deadline, not in front of it", () => {
 test("the pairing wait still outlasts the worst case read chain", () => {
   // Read from source so this cannot drift from THREAD_PAIRING_WAIT_MS's stated arithmetic.
   const constant = (source: string, name: string): number => {
-    const match = source.match(new RegExp(`${name}\\s*=\\s*([0-9_]+)`));
+    const match = new RegExp(`${name}\\s*=\\s*([0-9_]+)`).exec(source);
     assert.ok(match, `${name} not found`);
     return Number(match[1].replace(/_/g, ""));
   };
@@ -265,7 +265,7 @@ test("a replay entry survives a failed replay", () => {
   assert.match(replay, /if \(res\.ok\) forgetReplayedThreadSettings\(threadId, body\)/);
   assert.doesNotMatch(
     replay,
-    /localStorage\.removeItem\(THREAD_SETTINGS_REPLAY_KEY\);\n    if \(!raw\)/,
+    /localStorage\.removeItem\(THREAD_SETTINGS_REPLAY_KEY\);\n {4}if \(!raw\)/,
     "the whole batch is still dropped before it is known to have landed",
   );
 });

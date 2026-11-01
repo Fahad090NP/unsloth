@@ -206,7 +206,7 @@ export function UpdateBanner({
                   variant="ghost"
                   className="-ml-2 h-auto whitespace-nowrap rounded-full px-2.5 py-2 text-ui-13 font-medium text-foreground"
                   onClick={() =>
-                    setNotesVersion(notesOpen ? null : notesTargetVersion)
+                    { setNotesVersion(notesOpen ? null : notesTargetVersion); }
                   }
                   aria-expanded={notesOpen}
                   data-testid="tauri-update-release-notes-toggle"
@@ -284,7 +284,7 @@ export function UpdateBanner({
                   <textarea
                     readOnly={true}
                     value={manualReport}
-                    onFocus={(event) => event.currentTarget.select()}
+                    onFocus={(event) => { event.currentTarget.select(); }}
                     className="mt-2 h-28 w-full resize-none rounded-xl border border-border/50 bg-muted/30 p-2 font-mono text-ui-10 text-muted-foreground"
                   />
                 )}

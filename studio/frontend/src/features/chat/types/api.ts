@@ -546,36 +546,36 @@ export interface AudioGenerationResponse {
     format: string;
     sample_rate: number;
   };
-  choices: Array<{
+  choices: {
     index: number;
     message: { role: string; content: string };
     finish_reason: string;
-  }>;
+  }[];
 }
 
-export type OpenAIReasoningSummaryPart = {
+export interface OpenAIReasoningSummaryPart {
   type: "summary_text";
   text: string;
-};
+}
 
-export type OpenAIReasoningContentPart = {
+export interface OpenAIReasoningContentPart {
   type: "reasoning";
   id: string;
   summary: OpenAIReasoningSummaryPart[];
   status?: "in_progress" | "completed" | "incomplete";
-};
+}
 
-export type OpenAIImageGenerationCallContentPart = {
+export interface OpenAIImageGenerationCallContentPart {
   type: "image_generation_call";
   id: string;
   response_id?: string;
-};
+}
 
-export type ProviderCompactionContentPart = {
+export interface ProviderCompactionContentPart {
   type: "compaction";
   content?: string;
   encrypted_content?: string;
-};
+}
 
 export type OpenAIMessageContentPart =
   | { type: "text"; text: string }

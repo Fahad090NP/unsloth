@@ -8,13 +8,13 @@ import {
   type AvatarShape,
 } from "../stores/user-profile-store";
 
-type UserAvatarProps = {
+interface UserAvatarProps {
   name: string;
   imageUrl: string | null;
   size: "sm" | "md" | "lg";
   className?: string;
   shape?: AvatarShape;
-};
+}
 
 const SIZE: Record<"sm" | "md" | "lg", string> = {
   sm: "size-9 text-xs",

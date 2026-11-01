@@ -143,7 +143,7 @@ export function includedBySettings(itemId: string, settings: LibrarySettings): b
 }
 
 export type LibrarySortKey = "name" | "modified" | "size";
-export type LibrarySortState = { key: LibrarySortKey; desc: boolean };
+export interface LibrarySortState { key: LibrarySortKey; desc: boolean }
 
 export type LibraryUrlSort = LibrarySort | "name-desc" | "size-asc";
 
@@ -168,7 +168,7 @@ export function nextSort(current: LibrarySortState, key: LibrarySortKey): Librar
   return current.key === key ? { key, desc: !current.desc } : { key, desc: key !== "name" };
 }
 
-type Sortable = { name: string; updatedAt: number; sizeBytes?: number | null };
+interface Sortable { name: string; updatedAt: number; sizeBytes?: number | null }
 
 export function lastActivity(item: { updatedAt: number; openedAt?: number | null }): number {
   return Math.max(item.updatedAt, item.openedAt ?? 0);
@@ -186,5 +186,5 @@ export function compareBySort({ key, desc }: LibrarySortState): (a: Sortable, b:
 
 export const useLibraryVisitStore = create<{ visit: number; restart: () => void }>((set) => ({
   visit: 0,
-  restart: () => set((state) => ({ visit: state.visit + 1 })),
+  restart: () => { set((state) => ({ visit: state.visit + 1 })); },
 }));

@@ -24,7 +24,7 @@ function gatedMirrorPairs(): Set<string> {
   const source = readFileSync(FAMILIES, "utf8");
   const pairs = new Set<string>();
   for (const table of ["_GATED_MIRROR_PAIRS", "_VIDEO_GATED_MIRROR_PAIRS"]) {
-    const body = source.match(new RegExp(`^${table}: [^=]+= \\(\\n([\\s\\S]*?)^\\)`, "m"));
+    const body = new RegExp(`^${table}: [^=]+= \\(\\n([\\s\\S]*?)^\\)`, "m").exec(source);
     assert.ok(body, `diffusion_families.py no longer defines ${table}`);
     for (const [, upstream, mirror] of body[1].matchAll(/\("([^"]+)",\s*"([^"]+)"\)/g)) {
       pairs.add(`${upstream} -> ${mirror}`);

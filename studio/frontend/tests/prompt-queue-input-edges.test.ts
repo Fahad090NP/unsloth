@@ -15,13 +15,13 @@ import {
 } from "../src/features/chat/utils/prompt-queue-input.ts";
 import { isGuardRetiringKey } from "../src/features/chat/utils/composer-send-guard.ts";
 
-type ChordEvent = {
+interface ChordEvent {
   key: string;
   shiftKey: boolean;
   metaKey: boolean;
   ctrlKey: boolean;
   altKey?: boolean;
-};
+}
 
 function key(overrides: Partial<ChordEvent> = {}): ChordEvent {
   return {

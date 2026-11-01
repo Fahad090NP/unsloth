@@ -55,7 +55,7 @@ const extensionForMimeType = (mimeType?: string): string => {
 const IMAGE_DATA_URI_MIME_RE = /^data:([^;,]+)/;
 
 const mimeFromImage = (image: string): string | undefined =>
-  image.match(IMAGE_DATA_URI_MIME_RE)?.[1];
+  (IMAGE_DATA_URI_MIME_RE.exec(image))?.[1];
 
 export const downloadImagePart = (
   part: Pick<ImageMessagePart, "image" | "filename">,
@@ -252,8 +252,8 @@ type ImageZoomProps = PropsWithChildren<{
 function ImageZoom({ src, alt = "Image preview", children }: ImageZoomProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleOpen = () => setIsOpen(true);
-  const handleClose = () => setIsOpen(false);
+  const handleOpen = () => { setIsOpen(true); };
+  const handleClose = () => { setIsOpen(false); };
 
   useEffect(() => {
     if (!isOpen) {
@@ -265,7 +265,7 @@ function ImageZoom({ src, alt = "Image preview", children }: ImageZoomProps) {
       }
     };
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => { document.removeEventListener("keydown", handleKeyDown); };
   }, [isOpen]);
 
   useEffect(() => {
@@ -349,11 +349,11 @@ function ImageContentFilterError({
   );
 }
 
-export type ImageActionsProps = {
+export interface ImageActionsProps {
   part: ImageMessagePart;
   onRegenerate?: () => void | Promise<void>;
   className?: string;
-};
+}
 
 function RegenerateButton({
   onRegenerate,
@@ -392,7 +392,7 @@ function ImageActions({ part, onRegenerate, className }: ImageActionsProps) {
     >
       <button
         type="button"
-        onClick={() => downloadImagePart(part)}
+        onClick={() => { downloadImagePart(part); }}
         data-slot="image-download"
         aria-label="Download image"
         className="inline-flex size-7 items-center justify-center rounded-full hover:bg-muted"

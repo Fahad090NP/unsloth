@@ -92,7 +92,7 @@ function useHighlightedItemScroll(root: HTMLElement | null) {
       attributeFilter: ["data-highlighted"],
     });
     scroll();
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [root]);
 }
 
@@ -106,7 +106,7 @@ function MentionEnterSignal({
   useEffect(() => {
     if (!onChange) return;
     onChange(active);
-    return () => onChange(false);
+    return () => { onChange(false); };
   }, [active, onChange]);
   return null;
 }
@@ -120,7 +120,7 @@ function MentionOpenSignal({
   useLayoutEffect(() => {
     if (!onChange) return;
     onChange(open);
-    return () => onChange(false);
+    return () => { onChange(false); };
   }, [open, onChange]);
   return null;
 }
@@ -145,13 +145,13 @@ function MentionTabAccept({
       const enter = {
         key: "Enter",
         shiftKey: false,
-        preventDefault: () => event.preventDefault(),
+        preventDefault: () => { event.preventDefault(); },
       };
       if (handleKeyDown(enter)) event.stopPropagation();
     };
     // intercept before the browser moves focus or the composer handles Tab.
     window.addEventListener("keydown", accept, true);
-    return () => window.removeEventListener("keydown", accept, true);
+    return () => { window.removeEventListener("keydown", accept, true); };
   }, [active, handleKeyDown, scopeRef]);
   return null;
 }
@@ -264,7 +264,7 @@ export function SkillMentionPopover({
                   item={item}
                   index={index}
                   // Keep focus (and the caret) in the textarea so the token replacer sees it.
-                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseDown={(event) => { event.preventDefault(); }}
                   className="flex w-full items-start gap-2.5 rounded-md px-3 py-2 text-left outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-highlighted:bg-accent data-highlighted:text-accent-foreground"
                 >
                   <HugeiconsIcon
@@ -431,9 +431,9 @@ export function useTextareaSkillMentions({
             data-mention-index={index}
             data-highlighted={index === highlighted}
             className="flex w-full items-start gap-2.5 rounded-md px-3 py-2 text-left outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[highlighted=true]:bg-accent data-[highlighted=true]:text-accent-foreground"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => insert(skill)}
-            onMouseEnter={() => setHighlighted(index)}
+            onMouseDown={(event) => { event.preventDefault(); }}
+            onClick={() => { insert(skill); }}
+            onMouseEnter={() => { setHighlighted(index); }}
           >
             <HugeiconsIcon
               icon={Scroll01Icon}
@@ -458,7 +458,7 @@ export function useTextareaSkillMentions({
     update,
     onKeyDown,
     popover,
-    close: () => setRange(null),
+    close: () => { setRange(null); },
     inputProps: {
       role: "combobox" as const,
       "aria-autocomplete": "list" as const,

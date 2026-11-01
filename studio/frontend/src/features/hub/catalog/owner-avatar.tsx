@@ -214,7 +214,7 @@ function DefaultAvatar({
           : current,
       );
     }, avatarImageRetryDelay(activeFailure.failures));
-    return () => globalThis.clearTimeout(timer);
+    return () => { globalThis.clearTimeout(timer); };
   }, [remoteUrl, failedImage]);
 
   return (
@@ -233,7 +233,7 @@ function DefaultAvatar({
           alt=""
           decoding="async"
           className="size-full object-cover"
-          onLoad={() => setFailedImage(null)}
+          onLoad={() => { setFailedImage(null); }}
           onError={() => {
             if (!remoteUrl) {
               return;

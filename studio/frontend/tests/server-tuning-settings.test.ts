@@ -193,7 +193,7 @@ test("the load mode is reported as removed, not as winning, under Model Memory",
     keepResident: true,
   }).map((entry) => entry.message);
   assert.ok(
-    messages.some((message) => /removed/.test(message)),
+    messages.some((message) => message.includes('removed')),
     messages.join(" "),
   );
 });

@@ -3,24 +3,24 @@
 
 export type ManualDatasetOptionError = "invalid" | "required" | "too_long";
 
-export type ManualDatasetOptionDraft = {
+export interface ManualDatasetOptionDraft {
   committedValue: string | null;
   value: string;
   error: ManualDatasetOptionError | null;
-};
+}
 
-export type ManualDatasetOptionDrafts = {
+export interface ManualDatasetOptionDrafts {
   subset: ManualDatasetOptionDraft;
   split: ManualDatasetOptionDraft;
   evalSplit: ManualDatasetOptionDraft;
-};
+}
 
-type ManualDatasetOptionDraftSources = {
+interface ManualDatasetOptionDraftSources {
   datasetSubset: string | null;
   datasetSplit: string | null;
   datasetEvalSplit: string | null;
   defaultSplit: string;
-};
+}
 
 const MAX_OPTION_LENGTH = 128;
 const CONFIG_FORBIDDEN_PATTERN = /[<>:/\\|?*]/;

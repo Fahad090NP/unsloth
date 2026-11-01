@@ -22,25 +22,25 @@ export interface GpuRenderingStatus {
 
 export async function loadGpuRendering(): Promise<GpuRenderingStatus> {
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<GpuRenderingStatus>("get_gpu_rendering");
+  return await invoke<GpuRenderingStatus>("get_gpu_rendering");
 }
 
 export async function updateGpuRendering(
   value: GpuRenderingSetting,
 ): Promise<GpuRenderingStatus> {
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<GpuRenderingStatus>("set_gpu_rendering", { value });
+  return await invoke<GpuRenderingStatus>("set_gpu_rendering", { value });
 }
 
 /** False when a quit is already pending; otherwise the app quits through its usual confirmations. */
 export async function relaunchToApplyGpuRendering(): Promise<boolean> {
   const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<boolean>("relaunch_to_apply_gpu_rendering");
+  return await invoke<boolean>("relaunch_to_apply_gpu_rendering");
 }
 
 function nextFrame(): Promise<void> {
   return new Promise((resolve) => {
-    window.requestAnimationFrame(() => resolve());
+    window.requestAnimationFrame(() => { resolve(); });
   });
 }
 

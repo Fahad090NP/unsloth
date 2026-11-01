@@ -160,7 +160,7 @@ function desktopExportError(error: unknown): LogExportError {
   if (message === DESKTOP_LOGIN_REQUIRED) {
     return new LogExportError("forbidden", message);
   }
-  const status = Number(message.match(DESKTOP_STATUS_PATTERN)?.[1] ?? 0);
+  const status = Number((DESKTOP_STATUS_PATTERN.exec(message))?.[1] ?? 0);
   return new LogExportError(failureForStatus(status), message);
 }
 
@@ -169,7 +169,7 @@ function desktopExportStatus(error: unknown): number {
     typeof error === "string"
       ? error
       : ((error as Error | undefined)?.message ?? String(error));
-  return Number(message.match(DESKTOP_STATUS_PATTERN)?.[1] ?? 0);
+  return Number((DESKTOP_STATUS_PATTERN.exec(message))?.[1] ?? 0);
 }
 
 function pad2(value: number): string {

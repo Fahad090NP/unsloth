@@ -22,7 +22,7 @@ type PersistRecipeFn = (input: {
   updatedAt: number;
 }>;
 
-type UseRecipeStudioActionsParams = {
+interface UseRecipeStudioActionsParams {
   recipeId: string;
   initialRecipeName: string;
   initialPayload: RecipePayload;
@@ -34,9 +34,9 @@ type UseRecipeStudioActionsParams = {
   getCurrentPayloadFromStore: () => RecipePayload;
   onExecutionStart?: () => void;
   onPreviewSuccess?: () => void;
-};
+}
 
-type UseRecipeStudioActionsResult = {
+interface UseRecipeStudioActionsResult {
   initialRecipeReady: boolean;
   workflowName: string;
   setWorkflowName: (value: string) => void;
@@ -81,7 +81,7 @@ type UseRecipeStudioActionsResult = {
   loadExecutionDatasetPage: (id: string, page: number) => Promise<void>;
   copyRecipe: () => Promise<void>;
   importRecipe: (value: string) => string | null;
-};
+}
 
 export function useRecipeStudioActions({
   recipeId,

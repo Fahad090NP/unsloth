@@ -34,9 +34,9 @@ function sanitizeNumeric(raw: string, allowNegative: boolean): string {
   return `${sign}${head}${tail}`;
 }
 
-export type NumericValueInputHandle = {
+export interface NumericValueInputHandle {
   commit: () => number | null;
-};
+}
 
 export const NumericValueInput = forwardRef<
   NumericValueInputHandle,

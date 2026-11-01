@@ -155,7 +155,7 @@ function LlamaCppPathRow({ onChanged }: { onChanged: () => void }) {
                 ? t("settings.resources.llamaBackend.customPath.automatic")
                 : t("common.loading")
             }
-            onChange={(event) => setDraftPath(event.target.value)}
+            onChange={(event) => { setDraftPath(event.target.value); }}
             onKeyDown={(event) => {
               if (event.key === "Enter" && pathDirty && !saving) {
                 void save(draftPath.trim() || null);
@@ -178,7 +178,7 @@ function LlamaCppPathRow({ onChanged }: { onChanged: () => void }) {
             variant="outline"
             size="sm"
             disabled={!settings?.editable || saving}
-            onClick={() => setBrowserOpen(true)}
+            onClick={() => { setBrowserOpen(true); }}
             data-testid="llama-cpp-path-change"
           >
             {saving

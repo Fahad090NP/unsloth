@@ -12,14 +12,14 @@ import type {
 export function isSamplerConfig(
   config: NodeConfig | null | undefined,
 ): config is SamplerConfig {
-  return Boolean(config && config.kind === "sampler");
+  return Boolean(config?.kind === "sampler");
 }
 
 export function isCategoryConfig(
   config: NodeConfig | null | undefined,
 ): config is SamplerConfig {
   return Boolean(
-    config && config.kind === "sampler" && config.sampler_type === "category",
+    config?.kind === "sampler" && config.sampler_type === "category",
   );
 }
 
@@ -27,8 +27,7 @@ export function isSubcategoryConfig(
   config: NodeConfig | null | undefined,
 ): config is SamplerConfig {
   return Boolean(
-    config &&
-      config.kind === "sampler" &&
+    config?.kind === "sampler" &&
       config.sampler_type === "subcategory",
   );
 }
@@ -36,17 +35,17 @@ export function isSubcategoryConfig(
 export function isLlmConfig(
   config: NodeConfig | null | undefined,
 ): config is LlmConfig {
-  return Boolean(config && config.kind === "llm");
+  return Boolean(config?.kind === "llm");
 }
 
 export function isExpressionConfig(
   config: NodeConfig | null | undefined,
 ): config is ExpressionConfig {
-  return Boolean(config && config.kind === "expression");
+  return Boolean(config?.kind === "expression");
 }
 
 export function isValidatorConfig(
   config: NodeConfig | null | undefined,
 ): config is ValidatorConfig {
-  return Boolean(config && config.kind === "validator");
+  return Boolean(config?.kind === "validator");
 }

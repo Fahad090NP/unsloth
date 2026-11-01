@@ -19,9 +19,9 @@ import {
   useRef,
 } from "react";
 
-type Api = {
+interface Api {
   fire: (options?: ConfettiOptions) => void;
-};
+}
 
 type Props = React.ComponentPropsWithRef<"canvas"> & {
   options?: ConfettiOptions;

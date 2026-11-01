@@ -25,7 +25,7 @@ const {
   sidebarRowQueryKey,
 } = rowQuery;
 
-type Row = { id: string; projectId?: string | null; updatedAt: number };
+interface Row { id: string; projectId?: string | null; updatedAt: number }
 
 function rows(count: number, prefix = "c"): Row[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -153,7 +153,7 @@ test("a page asked for while a history refresh is in flight loads after it, not 
   let release = () => {};
   const list = pager(async (query, limit, cursor) => {
     if (gate) await gate;
-    return server.fetchPage(query, limit, cursor);
+    return await server.fetchPage(query, limit, cursor);
   });
   await list.start();
   gate = new Promise<void>((resolve) => {
@@ -252,7 +252,7 @@ test("a cursor the server rejects re-reads from the top through the page it aske
       reject = false;
       throw Object.assign(new Error("stale"), { cursorRejected: true });
     }
-    return server.fetchPage(q, limit, cursor);
+    return await server.fetchPage(q, limit, cursor);
   };
   const list = pager(fetchPage);
   await list.start();
@@ -270,7 +270,7 @@ test("a failed page stops paging until retried, and keeps the rows it had", asyn
   const server = fakeServer(() => rows(100));
   const fetchPage: typeof server.fetchPage = async (q, limit, cursor) => {
     if (fail) throw new Error("offline");
-    return server.fetchPage(q, limit, cursor);
+    return await server.fetchPage(q, limit, cursor);
   };
   const list = pager(fetchPage);
   await list.start();
@@ -581,8 +581,8 @@ test("the thread-row lookup reads the key and the per-request cap the route defi
   const client = readSrc("features/chat/api/chat-api.ts");
   assert.match(route, /rowIdByThreadId: dict\[str, str\]/);
   assert.match(client, /data\.rowIdByThreadId/);
-  const serverCap = route.match(/_SIDEBAR_THREAD_ROWS_MAX = (\d+)/)?.[1];
-  const clientCap = client.match(/const SIDEBAR_THREAD_ROWS_MAX = (\d+)/)?.[1];
+  const serverCap = (/_SIDEBAR_THREAD_ROWS_MAX = (\d+)/.exec(route))?.[1];
+  const clientCap = (/const SIDEBAR_THREAD_ROWS_MAX = (\d+)/.exec(client))?.[1];
   assert.ok(serverCap && clientCap, "both caps are declared");
   assert.ok(Number(clientCap) <= Number(serverCap), "client chunks within the route's cap");
 });

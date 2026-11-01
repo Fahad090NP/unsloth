@@ -10,7 +10,7 @@ export const APPROVAL_SETTLE_MS = 1_500;
 
 type PendingConfirmations = Readonly<Record<string, { threadId: string }>>;
 
-type ConfirmationSource = {
+interface ConfirmationSource {
   getState: () => { toolConfirmations: PendingConfirmations };
   subscribe: (
     listener: (
@@ -18,7 +18,7 @@ type ConfirmationSource = {
       previous: { toolConfirmations: PendingConfirmations },
     ) => void,
   ) => () => void;
-};
+}
 
 const NONE: ReadonlySet<string> = new Set();
 

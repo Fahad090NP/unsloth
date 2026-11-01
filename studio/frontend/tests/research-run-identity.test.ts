@@ -77,7 +77,7 @@ function stubFetch(frames: string[], finalSnapshot: AnyRecord): () => void {
       status: 200,
       headers: { "content-type": "application/json" },
     });
-  }) as typeof globalThis.fetch;
+  });
   return () => {
     globalThis.fetch = original;
   };

@@ -20,7 +20,7 @@ export function useNativeDropTarget(
   useEffect(() => {
     if (!isTauri || !enabled || !element) return;
     return registerNativeDropTarget(element, {
-      onDrop: (paths) => latest.current.onDrop(paths),
+      onDrop: (paths) => { latest.current.onDrop(paths); },
       onDragOver: (over) => latest.current.onDragOver?.(over),
     });
   }, [element, enabled]);

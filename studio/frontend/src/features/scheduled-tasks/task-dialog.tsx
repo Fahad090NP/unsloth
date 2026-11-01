@@ -161,9 +161,9 @@ function levelLabel(level: TaskReasoningEffort, modelId: string | undefined): st
   return level.charAt(0).toUpperCase() + level.slice(1);
 }
 
-type LoadedReasoning = { supportsReasoning: boolean; reasoningStyle: string; reasoningAlwaysOn: boolean };
+interface LoadedReasoning { supportsReasoning: boolean; reasoningStyle: string; reasoningAlwaysOn: boolean }
 
-type ConnectionChoice = { id: string; modelId: string; provider: ExternalProviderConfig };
+interface ConnectionChoice { id: string; modelId: string; provider: ExternalProviderConfig }
 
 /** Models a task can run on: local and connected providers, never one needing a download. */
 function useModelChoices(current: string | null) {
@@ -273,14 +273,14 @@ export function TaskDialog({
   const named = title.trim() !== "";
   const finalTitle = named ? title.trim() : titleFromPrompt(prompt);
 
-  const patchForm = (patch: Partial<ScheduleForm>) => setForm((current) => ({ ...current, ...patch }));
+  const patchForm = (patch: Partial<ScheduleForm>) => { setForm((current) => ({ ...current, ...patch })); };
   const toggleDay = (day: number) =>
-    setForm((current) => ({
+    { setForm((current) => ({
       ...current,
       days: current.days.includes(day)
         ? current.days.filter((entry) => entry !== day)
         : [...current.days, day],
-    }));
+    })); };
 
   async function save() {
     if (!valid || busy) return;
@@ -362,7 +362,7 @@ export function TaskDialog({
               id={`${ids}-name`}
               aria-label={t("scheduledTasks.form.name")}
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) => { setTitle(event.target.value); }}
               maxLength={120}
               disabled={busy}
               placeholder={t("scheduledTasks.form.namePlaceholder")}
@@ -376,7 +376,7 @@ export function TaskDialog({
               aria-label={t("scheduledTasks.form.instructions")}
               aria-describedby={`${ids}-prompt-hint`}
               value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
+              onChange={(event) => { setPrompt(event.target.value); }}
               maxLength={20_000}
               rows={5}
               disabled={busy}
@@ -392,7 +392,7 @@ export function TaskDialog({
           <Row id={`${ids}-model`} label={t("scheduledTasks.form.model")}>
             <Select
               value={model ?? LOADED_MODEL}
-              onValueChange={(value) => setModel(value === LOADED_MODEL ? null : value)}
+              onValueChange={(value) => { setModel(value === LOADED_MODEL ? null : value); }}
               disabled={busy}
             >
               <SelectTrigger id={`${ids}-model`} className={cn(BARE_SELECT, "max-w-[60%]")}>
@@ -456,7 +456,7 @@ export function TaskDialog({
               <Select
                 value={effort ?? DEFAULT_EFFORT}
                 onValueChange={(value) =>
-                  setEffort(value === DEFAULT_EFFORT ? null : (value as TaskReasoningEffort))
+                  { setEffort(value === DEFAULT_EFFORT ? null : (value as TaskReasoningEffort)); }
                 }
                 disabled={busy}
               >
@@ -489,7 +489,7 @@ export function TaskDialog({
           <Row id={`${ids}-repeat`} label={t("scheduledTasks.form.repeat")}>
             <Select
               value={form.repeat}
-              onValueChange={(value) => patchForm({ repeat: value as RepeatKind })}
+              onValueChange={(value) => { patchForm({ repeat: value as RepeatKind }); }}
               disabled={busy}
             >
               <SelectTrigger id={`${ids}-repeat`} className={BARE_SELECT}>
@@ -513,7 +513,7 @@ export function TaskDialog({
                 max={24}
                 step={1}
                 value={Number.isNaN(form.hours) ? "" : form.hours}
-                onChange={(event) => patchForm({ hours: event.target.valueAsNumber })}
+                onChange={(event) => { patchForm({ hours: event.target.valueAsNumber }); }}
                 disabled={busy}
                 className={cn(BARE_INPUT, "w-24 pr-8")}
               />
@@ -526,7 +526,7 @@ export function TaskDialog({
                 type="date"
                 value={form.date}
                 min={localDateKey(now)}
-                onChange={(event) => patchForm({ date: event.target.value })}
+                onChange={(event) => { patchForm({ date: event.target.value }); }}
                 disabled={busy}
                 className={BARE_INPUT}
               />
@@ -536,7 +536,7 @@ export function TaskDialog({
             <Row id={`${ids}-day`} label={t("scheduledTasks.form.dayOfMonth")}>
               <Select
                 value={String(form.dayOfMonth)}
-                onValueChange={(value) => patchForm({ dayOfMonth: Number(value) })}
+                onValueChange={(value) => { patchForm({ dayOfMonth: Number(value) }); }}
                 disabled={busy}
               >
                 <SelectTrigger id={`${ids}-day`} className={BARE_SELECT}>
@@ -564,7 +564,7 @@ export function TaskDialog({
                       aria-pressed={selected}
                       title={weekdayName(day, locale, "long")}
                       disabled={busy}
-                      onClick={() => toggleDay(day)}
+                      onClick={() => { toggleDay(day); }}
                       className={cn(
                         "h-8 min-w-11 cursor-pointer rounded-full px-2.5 text-ui-13 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
                         selected
@@ -583,7 +583,7 @@ export function TaskDialog({
             <Row id={`${ids}-time`} label={t("scheduledTasks.form.time")}>
               <Select
                 value={form.time}
-                onValueChange={(value) => patchForm({ time: value })}
+                onValueChange={(value) => { patchForm({ time: value }); }}
                 disabled={busy}
               >
                 <SelectTrigger id={`${ids}-time`} title={timezone} className={BARE_SELECT}>
@@ -617,7 +617,7 @@ export function TaskDialog({
             type="button"
             aria-expanded={advanced}
             aria-controls={advanced ? `${ids}-advanced` : undefined}
-            onClick={() => setAdvanced((open) => !open)}
+            onClick={() => { setAdvanced((open) => !open); }}
             className="flex cursor-pointer items-center gap-1 rounded-md px-1 text-ui-14 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t("scheduledTasks.form.advanced")}
@@ -632,7 +632,7 @@ export function TaskDialog({
               <Row id={`${ids}-notify`} label={t("scheduledTasks.form.notifications")}>
                 <Select
                   value={notify}
-                  onValueChange={(value) => setNotify(value as TaskNotify)}
+                  onValueChange={(value) => { setNotify(value as TaskNotify); }}
                   disabled={busy}
                 >
                   <SelectTrigger id={`${ids}-notify`} className={BARE_SELECT}>
@@ -659,7 +659,7 @@ export function TaskDialog({
               <Row id={`${ids}-project`} label={t("scheduledTasks.form.project")}>
                 <Select
                   value={projectId ?? NO_PROJECT}
-                  onValueChange={(value) => setProjectId(value === NO_PROJECT ? null : value)}
+                  onValueChange={(value) => { setProjectId(value === NO_PROJECT ? null : value); }}
                   disabled={busy}
                 >
                   <SelectTrigger id={`${ids}-project`} className={cn(BARE_SELECT, "max-w-[60%]")}>

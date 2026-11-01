@@ -9,12 +9,12 @@ import * as researchSync from "../src/features/chat/utils/research-message-sync.
 import * as savedUsage from "../src/features/chat/utils/saved-context-usage.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Exported = {
+interface Exported {
   headId: string | null;
   messages: { parentId: string | null; message: Record<string, unknown> }[];
-};
+}
 
-type Module = {
+interface Module {
   exportedItemToRecord: (
     threadId: string,
     parentId: string | null,
@@ -25,14 +25,14 @@ type Module = {
     messageId: string;
     remoteId: string | undefined;
   }) => Promise<void>;
-};
+}
 
-type Harness = {
+interface Harness {
   module: Module;
   calls: string[];
   synced: { records: Record<string, unknown>[]; pruneMissing?: boolean }[];
   stored: Record<string, unknown>[];
-};
+}
 
 function harness(): Harness {
   const calls: string[] = [];

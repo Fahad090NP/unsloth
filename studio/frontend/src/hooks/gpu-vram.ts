@@ -63,9 +63,9 @@ export function gpuMemoryTotalsGb(
         const hostBackedReported = device.shared_memory_host_backed_gb;
         const hostBackedKnown =
           Number.isFinite(hostBackedReported) &&
-          (hostBackedReported as number) >= 0;
+          (hostBackedReported!) >= 0;
         const hostBacked = hostBackedKnown
-          ? Math.min(total, hostBackedReported as number)
+          ? Math.min(total, hostBackedReported!)
           : total;
         return {
           // `shared_memory` devices are views of one host pool (take the largest);
@@ -190,13 +190,13 @@ function budgetedGpuMemoryGb(
     const reportedHostBacked = device.sharedMemoryHostBackedGb;
     const hostBacked =
       Number.isFinite(reportedHostBacked) &&
-      (reportedHostBacked as number) >= 0
-        ? Math.min(total, reportedHostBacked as number)
+      (reportedHostBacked!) >= 0
+        ? Math.min(total, reportedHostBacked!)
         : total;
     const deviceReserved = total - hostBacked;
     reserved += Math.min(deviceReserved, deviceCapacity);
     const deviceSharedDemand = Math.max(0, deviceCapacity - deviceReserved);
-    if (device.sharedMemory !== true) {
+    if (!device.sharedMemory) {
       perDeviceDemand += deviceSharedDemand;
       perDevicePool += hostBacked;
       continue;
@@ -254,7 +254,7 @@ export function resolveMemoryCapacityGb(input: MemoryCapacityInput): {
     input.pinnedDevices.map((device) => ({
       memory_total_gb: device.memoryTotalGb,
       // Both flags raw: pre-folding made this path answer 48 GiB where totals said 96 (#11366).
-      shared_memory: device.sharedMemory === true,
+      shared_memory: device.sharedMemory,
       unified_memory: device.unifiedMemory === true,
       shared_memory_host_backed_gb: device.sharedMemoryHostBackedGb,
     })),
@@ -271,8 +271,8 @@ export function resolveMemoryCapacityGb(input: MemoryCapacityInput): {
   const rawDedicatedCapacityGb = pinGoverns
     ? pinnedTotals.dedicated
     : Number.isFinite(input.hostDedicatedGpuTotalGb) &&
-        (input.hostDedicatedGpuTotalGb as number) >= 0
-      ? (input.hostDedicatedGpuTotalGb as number)
+        (input.hostDedicatedGpuTotalGb!) >= 0
+      ? (input.hostDedicatedGpuTotalGb!)
       : hostGpuTotalGb;
   // Measure against the budgeted capacity the slider draws; a 0 or missing value would zero it.
   const budget =
@@ -288,7 +288,7 @@ export function resolveMemoryCapacityGb(input: MemoryCapacityInput): {
     capacityDevices.map((device) => ({
       memory_total_gb: device.memoryTotalGb,
       // Both flags raw, as above.
-      shared_memory: device.sharedMemory === true,
+      shared_memory: device.sharedMemory,
       unified_memory: device.unifiedMemory === true,
       shared_memory_host_backed_gb: device.sharedMemoryHostBackedGb,
     })),
@@ -348,7 +348,7 @@ export function resolveGpuVramUsedGb(
     return devices.reduce((sum, device) => sum + (device.vram_used_gb ?? 0), 0);
   }
   const aggregate = gpu?.vram_used_gb_aggregate;
-  return Number.isFinite(aggregate) ? (aggregate as number) : null;
+  return Number.isFinite(aggregate) ? (aggregate!) : null;
 }
 
 /** The loader's default VRAM fraction (`_CTX_FIT_VRAM_FRACTION`). */
@@ -523,8 +523,8 @@ export function aggregateUsableFreeVramGb(
       continue;
     }
     const total =
-      Number.isFinite(device.memoryTotalGb) && (device.memoryTotalGb as number) > 0
-        ? (device.memoryTotalGb as number)
+      Number.isFinite(device.memoryTotalGb) && (device.memoryTotalGb!) > 0
+        ? (device.memoryTotalGb!)
         : 0;
     if (total === 0) {
       fullySharedDemand = Math.max(fullySharedDemand, deviceUsable);
@@ -534,8 +534,8 @@ export function aggregateUsableFreeVramGb(
     const reportedHostBacked = device.sharedMemoryHostBackedGb;
     const hostBacked =
       Number.isFinite(reportedHostBacked) &&
-      (reportedHostBacked as number) >= 0
-        ? Math.min(total, reportedHostBacked as number)
+      (reportedHostBacked!) >= 0
+        ? Math.min(total, reportedHostBacked!)
         : total;
     const deviceReserved = total - hostBacked;
     const deviceCapacity = usableFreeVramGb(total, total, fraction);
@@ -548,8 +548,8 @@ export function aggregateUsableFreeVramGb(
     if (deviceReserved > 0) {
       partialSharedDemand += deviceSharedDemand;
       const free =
-        Number.isFinite(device.memoryFreeGb) && (device.memoryFreeGb as number) > 0
-          ? (device.memoryFreeGb as number)
+        Number.isFinite(device.memoryFreeGb) && (device.memoryFreeGb!) > 0
+          ? (device.memoryFreeGb!)
           : 0;
       const deviceSharedFree = Math.min(hostBacked, free);
       partialSharedFree = Math.max(partialSharedFree, deviceSharedFree);

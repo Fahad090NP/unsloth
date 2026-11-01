@@ -22,9 +22,9 @@ type DesktopAuthResponse =
   | { login_required: true; login_mode: "multi" }
   | { signed_out: true };
 
-type TauriAutoAuthOptions = {
+interface TauriAutoAuthOptions {
   force?: boolean;
-};
+}
 
 // Route guards can call this concurrently; dedupe so first-launch password change cannot race.
 let pending: { promise: Promise<boolean>; force: boolean } | null = null;

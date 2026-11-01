@@ -184,8 +184,8 @@ function useServerNow(
   const [tick, setTick] = useState(0);
   useEffect(() => {
     if (!ticking) return;
-    const timer = window.setInterval(() => setTick((n) => n + 1), AGO_TICK_MS);
-    return () => window.clearInterval(timer);
+    const timer = window.setInterval(() => { setTick((n) => n + 1); }, AGO_TICK_MS);
+    return () => { window.clearInterval(timer); };
   }, [ticking]);
   const skew = useMemo(
     () => (serverTime == null ? 0 : Math.round(serverTime - Date.now() / 1000)),
@@ -255,7 +255,7 @@ function statusTextClass(status: ApiMonitorEntry["status"]): string {
   }
 }
 
-type ServedModel = {
+interface ServedModel {
   name: string;
   /** The id the monitor logs under; the label can carry an MLX folder suffix. */
   id: string;
@@ -263,7 +263,7 @@ type ServedModel = {
   active: boolean;
   quant: string | null;
   isMlx: boolean;
-};
+}
 
 function servedModels(
   loaded: { id: string; quant?: string | null; checkpoint?: string }[],
@@ -346,9 +346,9 @@ function MultiModelHint({
             type="button"
             className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
             onClick={() =>
-              useSettingsDialogStore.getState().openDialog("resources", {
+              { useSettingsDialogStore.getState().openDialog("resources", {
                 scrollTarget: "resources-model-memory",
-              })
+              }); }
             }
           >
             Settings
@@ -423,7 +423,7 @@ function CopyButton({
             if (timerRef.current !== undefined) {
               window.clearTimeout(timerRef.current);
             }
-            timerRef.current = window.setTimeout(() => setCopied(false), 1800);
+            timerRef.current = window.setTimeout(() => { setCopied(false); }, 1800);
           }
         }}
         className={cn(
@@ -597,7 +597,7 @@ const RequestRow = memo(function RequestRow({
     <button
       type="button"
       data-entry-id={entry.id}
-      onClick={() => onSelect(entry.id)}
+      onClick={() => { onSelect(entry.id); }}
       aria-current={selected}
       className={cn(
         "flex w-full min-w-0 flex-col gap-1 rounded-md px-3 py-2.5 text-left outline-none transition-colors focus-visible:ring-1 focus-visible:ring-ring/70",
@@ -699,7 +699,7 @@ function PayloadBlock({
               variant="ghost"
               size="xs"
               aria-pressed={showAll}
-              onClick={() => setShowAll((value) => !value)}
+              onClick={() => { setShowAll((value) => !value); }}
               className="text-ui-10 text-muted-foreground"
             >
               {showAll ? "Show less" : "Show all"}
@@ -803,8 +803,7 @@ function RequestDetail({
 }): ReactElement {
   // Prefer the detail only once it is as fresh as the list row, or the panel rewinds.
   const detailIsCurrent =
-    detail != null &&
-    detail.status === entry.status &&
+    detail?.status === entry.status &&
     detail.updated_at >= entry.updated_at;
   const prompt = detail?.prompt ?? entry.prompt_preview;
   const reply = detailIsCurrent
@@ -1065,7 +1064,7 @@ export function ApiMonitorPage(): ReactElement {
     };
     refreshRemoteBase();
     window.addEventListener("focus", refreshRemoteBase);
-    return () => window.removeEventListener("focus", refreshRemoteBase);
+    return () => { window.removeEventListener("focus", refreshRemoteBase); };
   }, []);
 
   // read status for /unload's internal id; recheck because an API auto-switch can make it a no-op.
@@ -1202,8 +1201,8 @@ export function ApiMonitorPage(): ReactElement {
       setRetryTick(0);
     } else {
       // Refused: an older fetch is running and no dep changes when it settles.
-      const timer = window.setTimeout(() => setRetryTick((n) => n + 1), 250);
-      return () => window.clearTimeout(timer);
+      const timer = window.setTimeout(() => { setRetryTick((n) => n + 1); }, 250);
+      return () => { window.clearTimeout(timer); };
     }
   }, [
     selectedId_,
@@ -1307,7 +1306,7 @@ export function ApiMonitorPage(): ReactElement {
         size="sm"
         aria-label={`Run settings for ${model.name}`}
         aria-haspopup="dialog"
-        onClick={() => openRunSettings(model)}
+        onClick={() => { openRunSettings(model); }}
         // Primary opens only on live settings: the kept-model fallback would send Run its bare label.
         disabled={
           ejecting || modelLoading || (model.active && !canEditSettings)
@@ -1374,7 +1373,7 @@ export function ApiMonitorPage(): ReactElement {
         size="sm"
         aria-label={`API example for ${model.name}`}
         aria-haspopup="dialog"
-        onClick={() => setExampleModel(model)}
+        onClick={() => { setExampleModel(model); }}
         className="size-7 shrink-0 rounded-full p-0 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/row:opacity-100 dark:hover:bg-chat-icon-bg-hover [@media(hover:none)]:opacity-100"
       >
         <HugeiconsIcon icon={CodeIcon} strokeWidth={1.75} className="size-4" />
@@ -1500,7 +1499,7 @@ export function ApiMonitorPage(): ReactElement {
             onUnloadActive={unloadActiveModel}
             unloading={ejecting}
             configRequest={configRequest}
-            onConfigRequestAdopted={() => setConfigRequest(null)}
+            onConfigRequestAdopted={() => { setConfigRequest(null); }}
             onEjectAll={() => void ejectAll()}
             onLastLoadChanged={reload.refreshLastLoad}
           />
@@ -1707,7 +1706,7 @@ export function ApiMonitorPage(): ReactElement {
 
         {error ? <Banner>{error}</Banner> : null}
         {unloadError ? (
-          <Banner onDismiss={() => setUnloadError(null)}>{unloadError}</Banner>
+          <Banner onDismiss={() => { setUnloadError(null); }}>{unloadError}</Banner>
         ) : null}
 
         <section
@@ -1778,7 +1777,7 @@ export function ApiMonitorPage(): ReactElement {
               />
               <Input
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => { setQuery(event.target.value); }}
                 placeholder="Search requests"
                 aria-label="Search API requests"
                 title="Matches the model, endpoint, prompt, reply or error"
@@ -1797,7 +1796,7 @@ export function ApiMonitorPage(): ReactElement {
                     key={option.value}
                     type="button"
                     aria-current={active ? "page" : undefined}
-                    onClick={() => setStatusFilter(option.value)}
+                    onClick={() => { setStatusFilter(option.value); }}
                     className={cn(
                       "flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 font-heading text-ui-14 text-foreground/80 transition-colors hover:text-foreground",
                       active &&
@@ -1858,7 +1857,7 @@ export function ApiMonitorPage(): ReactElement {
                     paused ? "Resume the live feed" : "Pause the live feed"
                   }
                   aria-pressed={paused}
-                  onClick={() => setPaused(!paused)}
+                  onClick={() => { setPaused(!paused); }}
                   className={cn(
                     "rounded-full",
                     paused &&

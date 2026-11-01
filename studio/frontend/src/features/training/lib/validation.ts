@@ -56,7 +56,7 @@ function hasChatAudioRows(
     deviceType === "mac" &&
     config.modelType === "decision" &&
     (config.decisionLayout === "clef" || config.decisionLayout === "llm");
-  return config.isDatasetAudio === true && !trainerReadsRows;
+  return config.isDatasetAudio && !trainerReadsRows;
 }
 
 export function hasIncompatibleTrainingModalities(
@@ -84,7 +84,7 @@ export function validateS3Source(
     };
   }
   const s3 = config.s3Config;
-  if (!s3 || !s3.bucket.trim()) {
+  if (!s3?.bucket.trim()) {
     return {
       ok: false,
       errorKey: "studio.training.validation.s3BucketRequired",
@@ -116,7 +116,7 @@ function validateDatasetSelection(
         errorKey: "studio.datasetPicker.reasonInvalidHubId",
       };
     }
-    if (config.manualDatasetOptionsValid === false) {
+    if (!config.manualDatasetOptionsValid) {
       return {
         ok: false,
         errorKey: "studio.dataset.selectors.manualInvalid",

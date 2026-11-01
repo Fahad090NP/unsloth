@@ -38,7 +38,7 @@ export function writePickerTabPreference(
   try {
     window.localStorage.setItem(storageKey, tab);
   } catch {
-    return;
+    
   }
 }
 

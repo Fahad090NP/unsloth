@@ -161,7 +161,7 @@ export interface CachedDatasetRepo {
   partial_resumable?: boolean;
 }
 
-export type LocalDatasetInfo = {
+export interface LocalDatasetInfo {
   metadata?: {
     actual_num_records?: number | null;
     target_num_records?: number | null;
@@ -175,11 +175,11 @@ export type LocalDatasetInfo = {
   source: "recipe" | "upload";
   rows?: number | null;
   updated_at?: number | null;
-};
+}
 
-export type LocalDatasetsResponse = {
+export interface LocalDatasetsResponse {
   datasets: LocalDatasetInfo[];
-};
+}
 
 export interface ScanFolderInfo {
   id: number;
@@ -231,7 +231,7 @@ async function parseJsonOrThrow<T>(
   if (!response.ok) {
     throw new Error(await readFastApiError(response, fallback));
   }
-  return response.json();
+  return await response.json();
 }
 
 async function throwIfNotOk(
@@ -261,14 +261,14 @@ export async function listLocalModels(): Promise<LocalModelListResponse> {
   const response = await withHubTimeout(INVENTORY_TIMEOUT_MS, (signal) =>
     authFetch("/api/hub/local", { signal }),
   );
-  return parseJsonOrThrow<LocalModelListResponse>(response);
+  return await parseJsonOrThrow<LocalModelListResponse>(response);
 }
 
 export async function listUnslothModels(): Promise<LocalModelListResponse> {
   const response = await withHubTimeout(INVENTORY_TIMEOUT_MS, (signal) =>
     authFetch("/api/hub/unsloth-models", { signal }),
   );
-  return parseJsonOrThrow<LocalModelListResponse>(response);
+  return await parseJsonOrThrow<LocalModelListResponse>(response);
 }
 
 export async function fetchCachedGgufInventory(
@@ -315,7 +315,7 @@ export async function listLocalDatasets(): Promise<LocalDatasetsResponse> {
   const response = await withHubTimeout(INVENTORY_TIMEOUT_MS, (signal) =>
     authFetch("/api/hub/datasets/local", { signal }),
   );
-  return parseJsonOrThrow<LocalDatasetsResponse>(response);
+  return await parseJsonOrThrow<LocalDatasetsResponse>(response);
 }
 
 export async function listCachedDatasets(): Promise<CachedDatasetRepo[]> {
@@ -551,17 +551,17 @@ export async function listGgufVariants(
 ): Promise<GgufVariantsResponse> {
   const offline = options?.localOnly === true || isHuggingFaceOffline();
   const localPath = options?.localPath?.trim() || null;
-  const preferLocalCache = !!options?.preferLocalCache || offline;
+  const preferLocalCache = Boolean(options?.preferLocalCache) || offline;
   const signal = options?.signal;
   const key = `${repoId}::${fingerprintToken(hfToken)}::${
     offline ? "offline" : preferLocalCache ? "local" : "remote"
-  }::${localPathCacheKey(localPath)}::${!!options?.includeCacheLocations}`;
+  }::${localPathCacheKey(localPath)}::${Boolean(options?.includeCacheLocations)}`;
   const now = Date.now();
   const hit = ggufVariantsCache.get(key);
   if (hit && now < hit.expiresAt) {
     ggufVariantsCache.delete(key);
     ggufVariantsCache.set(key, hit);
-    return withAbort(hit.promise, signal);
+    return await withAbort(hit.promise, signal);
   }
   if (hit) {
     ggufVariantsCache.delete(key);
@@ -586,7 +586,7 @@ export async function listGgufVariants(
         headers: hubTokenHeader(hfToken),
         signal,
       });
-      return parseJsonOrThrow<GgufVariantsResponse>(response);
+      return await parseJsonOrThrow<GgufVariantsResponse>(response);
     },
   );
   const promise = requestPromise.then((result) => {
@@ -607,7 +607,7 @@ export async function listGgufVariants(
       ggufVariantsCache.delete(key);
     }
   });
-  return withAbort(promise, signal);
+  return await withAbort(promise, signal);
 }
 
 export function invalidateGgufVariantsCache(repoId?: string): void {

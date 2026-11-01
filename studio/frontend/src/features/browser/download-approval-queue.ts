@@ -12,13 +12,13 @@ import { useDownloadSitesStore } from "./download-sites-store";
 import { useBrowserPrefsStore } from "./prefs-store";
 
 /** `dangerous`: the file runs code when opened (download-safety.ts), so it asks whatever was remembered. */
-export type DownloadRequest = {
+export interface DownloadRequest {
   origin: string;
   label: string;
   name: string;
   dangerous: boolean;
   resolve: (allow: boolean) => void;
-};
+}
 
 export const useApprovalStore = create<{ queue: DownloadRequest[] }>(() => ({ queue: [] }));
 
@@ -69,9 +69,9 @@ export function approveChosenDownload(url: string, name: string): Promise<boolea
 
 function ask(origin: string, label: string, name: string, dangerous: boolean): Promise<boolean> {
   return new Promise((resolve) =>
-    useApprovalStore.setState((state) => ({
+    { useApprovalStore.setState((state) => ({
       queue: [...state.queue, { origin, label, name, dangerous, resolve }],
-    })),
+    })); },
   );
 }
 

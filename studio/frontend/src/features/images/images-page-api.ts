@@ -17,7 +17,7 @@ export async function listDiffusionControlNets(
 
 /** Move one image to just after `afterId` (null = front). The server also decides the pin. */
 export async function moveGalleryImage(id: string, afterId: string | null): Promise<GalleryImage> {
-  return parseJson(
+  return await parseJson(
     await authFetch(`/api/inference/images/gallery/${id}/move`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -30,7 +30,7 @@ export async function addGalleryImageToProject(
   id: string,
   projectId: string,
 ): Promise<{ path: string; already: boolean }> {
-  return parseJson(
+  return await parseJson(
     await authFetch(`/api/inference/images/gallery/${id}/project`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

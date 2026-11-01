@@ -19,7 +19,7 @@ export type MediaZoom = "fit" | number;
 const VIDEO_CONTROLS_PX = 56;
 const DRAG_SLOP_PX = 4;
 
-type Size = { width: number; height: number };
+interface Size { width: number; height: number }
 
 function translate({ x, y }: { x: number; y: number }): string {
   return `translate3d(${x}px, ${y}px, 0)`;
@@ -29,7 +29,7 @@ function clamp(value: number, limit: number): number {
   return Math.max(-limit, Math.min(limit, value));
 }
 
-export type MediaInset = { top: number; right: number; bottom: number; left: number };
+export interface MediaInset { top: number; right: number; bottom: number; left: number }
 
 const NO_INSET: MediaInset = { top: 0, right: 0, bottom: 0, left: 0 };
 
@@ -66,13 +66,13 @@ export function MediaZoomStage({
     const node = stageRef.current;
     if (!node) return;
     const observer = new ResizeObserver(([entry]) =>
-      setStage({
+      { setStage({
         width: entry.contentRect.width,
         height: entry.contentRect.height,
-      }),
+      }); },
     );
     observer.observe(node);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, []);
 
   const room = stage
@@ -85,7 +85,7 @@ export function MediaZoomStage({
     room && natural
       ? Math.min(room.width / natural.width, room.height / natural.height)
       : null;
-  useEffect(() => onFitScale(fit), [fit, onFitScale]);
+  useEffect(() => { onFitScale(fit); }, [fit, onFitScale]);
 
   const scale = zoom === "fit" ? fit : zoom;
   const box =
@@ -118,7 +118,7 @@ export function MediaZoomStage({
               src: target.currentSrc,
             }
           : null;
-    if (!size || !size.width || !size.height) return;
+    if (!size?.width || !size.height) return;
     if (size.src !== natural?.src) setOffset({ x: 0, y: 0 });
     setNatural(size);
   }
@@ -147,7 +147,7 @@ export function MediaZoomStage({
 
   function onPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     const current = drag.current;
-    if (!current || current.id !== event.pointerId) return;
+    if (current?.id !== event.pointerId) return;
     if ((event.buttons & 1) === 0) {
       endDrag(current);
       return;

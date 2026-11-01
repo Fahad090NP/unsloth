@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type DocumentAnnotation = { quote: string; request: string };
+export interface DocumentAnnotation { quote: string; request: string }
 
 /** A file's annotations, or a web page's: `file` is then the page's title and `url` its address. */
-export type DocumentAnnotations = { file: string; url?: string; items: DocumentAnnotation[] };
+export interface DocumentAnnotations { file: string; url?: string; items: DocumentAnnotation[] }
 
 const TAG = "document_annotations";
 const MIME = "text/plain";

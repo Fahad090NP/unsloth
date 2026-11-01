@@ -182,9 +182,9 @@ export function useConvertGeneration({
   }, [toolPanels, storedToolValues, model]);
   const handleToolValueChange = useCallback(
     (panelId: string, value: unknown) =>
-      useAudioCloneStore
+      { useAudioCloneStore
         .getState()
-        .setToolValue(toolValueKey(model, "convert", panelId), value),
+        .setToolValue(toolValueKey(model, "convert", panelId), value); },
     [model],
   );
   const toolRequest = useMemo(
@@ -249,8 +249,8 @@ export function useConvertGeneration({
       (item) => item?.kind === "input" && item.expiresAt,
     );
     if (!expiring) return;
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
-    return () => window.clearInterval(timer);
+    const timer = window.setInterval(() => { setNow(Date.now()); }, 60_000);
+    return () => { window.clearInterval(timer); };
   }, [source, target]);
   const isExpired = (
     selection: AudioSourceSelection | null,
@@ -309,11 +309,11 @@ export function useConvertGeneration({
         return focusAction("Add the target voice", targetHandle);
       case "source-expired":
         return againAction(sourceHandle, () =>
-          useAudioConvertStore.getState().setSource(null),
+          { useAudioConvertStore.getState().setSource(null); },
         );
       case "target-expired":
         return againAction(targetHandle, () =>
-          useAudioConvertStore.getState().setTarget(null),
+          { useAudioConvertStore.getState().setTarget(null); },
         );
       case "source-text":
         return [

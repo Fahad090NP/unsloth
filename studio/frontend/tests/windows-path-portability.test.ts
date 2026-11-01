@@ -41,7 +41,7 @@ function walk(
 ): void {
   if (barrier?.(node)) return;
   visit(node);
-  node.forEachChild((child) => walk(child, visit, barrier));
+  node.forEachChild((child) => { walk(child, visit, barrier); });
 }
 
 function subtreeHas(

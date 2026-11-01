@@ -6,12 +6,12 @@ import test from "node:test";
 
 import { pickLoadDevice } from "../src/hooks/gpu-selection.ts";
 
-type GpuDevice = {
+interface GpuDevice {
   index?: number;
   index_kind?: string;
   visible_ordinal?: number;
   memory_total_gb?: number;
-};
+}
 
 // CUDA_VISIBLE_DEVICES="3,1": physical GPU 3 becomes CUDA device 0.
 const reorderedMask: GpuDevice[] = [

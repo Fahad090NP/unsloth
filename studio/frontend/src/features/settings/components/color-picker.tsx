@@ -13,7 +13,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
 /* ------------------------- HSV ↔ hex conversions ------------------------- */
 
-type Hsv = { h: number; s: number; v: number };
+interface Hsv { h: number; s: number; v: number }
 
 function hexToHsv(hex: string): Hsv {
   const r = Number.parseInt(hex.slice(1, 3), 16) / 255;
@@ -61,7 +61,7 @@ function isLightColor(hex: string): boolean {
 }
 
 /* ------------------------------- Component ------------------------------- */
-type EyeDropperResult = { sRGBHex: string };
+interface EyeDropperResult { sRGBHex: string }
 type EyeDropperConstructor = new () => {
   open: () => Promise<EyeDropperResult>;
 };
@@ -219,7 +219,7 @@ export function ColorPickerSwatch({
             step={1}
             value={Math.round(hsv.h)}
             aria-label={t("settings.appearance.custom.colorPicker.hue")}
-            onChange={(e) => emit({ ...hsv, h: Number(e.target.value) })}
+            onChange={(e) => { emit({ ...hsv, h: Number(e.target.value) }); }}
             className="h-3 w-full cursor-pointer appearance-none rounded-full outline-none [&::-moz-range-thumb]:size-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-transparent [&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-[0_0_0_1px_rgba(0,0,0,0.35)]"
             style={{
               background:
@@ -229,7 +229,7 @@ export function ColorPickerSwatch({
           <div className="flex items-center gap-2">
             <input
               value={hexDraft.toUpperCase()}
-              onChange={(e) => setHexDraft(e.target.value)}
+              onChange={(e) => { setHexDraft(e.target.value); }}
               onBlur={commitHex}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {

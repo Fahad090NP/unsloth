@@ -12,6 +12,6 @@ interface McpServersDialogState {
 export const useMcpServersDialogStore = create<McpServersDialogState>(
   (set) => ({
     open: false,
-    setOpen: (open) => set({ open }),
+    setOpen: (open) => { set({ open }); },
   }),
 );

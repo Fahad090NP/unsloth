@@ -132,7 +132,7 @@ export function TrainModelDeviceList({
         <li key={model.key}>
           <SelectablePickerItem
             active={activeKey === model.key}
-            onSelect={() => onPick(model)}
+            onSelect={() => { onPick(model); }}
             values={[model.id, model.path]}
           >
             <Tooltip>
@@ -235,7 +235,7 @@ export function TrainModelHubList({
             <li key={id}>
               <SelectablePickerItem
                 active={hubResourceIdsEqual(value, id)}
-                onSelect={() => onPick(id)}
+                onSelect={() => { onPick(id); }}
                 values={[id]}
               >
                 <Tooltip>

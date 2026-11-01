@@ -146,13 +146,13 @@ function specificity(node: SelectorNode): Specificity {
     if ([":is", ":not", ":has"].includes(node.value))
       return (node.nodes ?? [])
         .map(specificity)
-        .reduce((a, b) => (compare(a, b) >= 0 ? a : b), [
+        .reduce<Specificity>((a, b) => (compare(a, b) >= 0 ? a : b), [
           0, 0, 0,
-        ] as Specificity);
+        ]);
     return node.value.startsWith("::") ? [0, 0, 1] : [0, 1, 0];
   }
   if ("nodes" in node && Array.isArray(node.nodes))
-    return node.nodes.map(specificity).reduce(add, [0, 0, 0] as Specificity);
+    return node.nodes.map(specificity).reduce<Specificity>(add, [0, 0, 0]);
   return [0, 0, 0];
 }
 

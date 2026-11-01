@@ -10,8 +10,8 @@ import { hostOf } from "./address";
 import { forgetNativeDownloads } from "./native-downloads";
 import { useBrowserPrefsStore } from "./prefs-store";
 
-export type HistoryItem = { id: string; url: string; title: string; visitedAt: number };
-export type DownloadItem = {
+export interface HistoryItem { id: string; url: string; title: string; visitedAt: number }
+export interface DownloadItem {
   id: string;
   name: string;
   url: string | null;
@@ -20,7 +20,7 @@ export type DownloadItem = {
   downloadedAt: number;
   /** Desktop app id for the saved file (native-downloads.ts). */
   nativeId?: string;
-};
+}
 
 const MAX_HISTORY = 1000;
 const MAX_DOWNLOADS = 200;
@@ -223,7 +223,7 @@ const PRUNE_INTERVAL_MS = 60 * 60 * 1000;
 // Prune at startup (storage loads synchronously), hourly while open, and when retention shortens.
 useBrowserHistoryStore.getState().pruneHistory();
 if (typeof window !== "undefined" && typeof window.setInterval === "function") {
-  window.setInterval(() => useBrowserHistoryStore.getState().pruneHistory(), PRUNE_INTERVAL_MS);
+  window.setInterval(() => { useBrowserHistoryStore.getState().pruneHistory(); }, PRUNE_INTERVAL_MS);
 }
 useBrowserPrefsStore.subscribe((state, previous) => {
   if (state.historyRetentionDays !== previous.historyRetentionDays) useBrowserHistoryStore.getState().pruneHistory();

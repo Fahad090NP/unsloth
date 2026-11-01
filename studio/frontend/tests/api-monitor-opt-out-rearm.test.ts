@@ -48,8 +48,8 @@ function overlay(): {
   const watch = createWatch(0);
   return {
     watch,
-    standDown: () => standDownWatch(watch),
-    standUp: (nowMs) => startWatching(watch, nowMs),
+    standDown: () => { standDownWatch(watch); },
+    standUp: (nowMs) => { startWatching(watch, nowMs); },
     observe: (response, nowMs) => observeResponse(watch, response, nowMs),
   };
 }

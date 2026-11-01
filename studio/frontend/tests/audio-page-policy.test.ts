@@ -683,8 +683,8 @@ test("returning to a visible audio tab refreshes the loaded window", () => {
   );
 });
 
-type WindowClip = { id: string };
-type WindowPage = { audio: WindowClip[]; has_more: boolean; next: number | null };
+interface WindowClip { id: string }
+interface WindowPage { audio: WindowClip[]; has_more: boolean; next: number | null }
 function windowShelf(size: number) {
   const shelf = Array.from({ length: size }, (_, n) => ({ id: `c${n}` }));
   const calls: { limit: number; cursor: number | null }[] = [];
@@ -1224,7 +1224,7 @@ test("a primary speech model is used as is, without probing", async () => {
 
 test("with only the chat model loaded, the Audio page shows no model to eject", async () => {
   // An id not in a slot answers with the primary; a failed probe counts as nothing.
-  for (const probe of [async () => chatPrimary, async () => Promise.reject(new Error("x"))]) {
+  for (const probe of [async () => chatPrimary, async () => await Promise.reject(new Error("x"))]) {
     const view = await describeAudioSlot(chatPrimary, probe);
     assert.equal(view.status.active_model, null);
     assert.equal(view.status.is_audio, false);
@@ -1237,7 +1237,7 @@ test("with only the chat model loaded, the Audio page shows no model to eject", 
 
 test("a new speech load replaces only another speech model", () => {
   assert.equal(audioModelToReplace(kokoroSlot, "pocket"), kokoroSlot.active_model);
-  assert.equal(audioModelToReplace(kokoroSlot, kokoroSlot.active_model as string), null);
+  assert.equal(audioModelToReplace(kokoroSlot, kokoroSlot.active_model), null);
   assert.equal(audioModelToReplace(chatPrimary, "pocket"), null);
   assert.equal(audioModelToReplace(null, "pocket"), null);
 });

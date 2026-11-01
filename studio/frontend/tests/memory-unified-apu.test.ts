@@ -55,7 +55,7 @@ test("reading the platform instead of the hardware double counts the pool", () =
 test("the panel passes the hardware signal, not the platform one", () => {
   // The fix is in a .tsx this runner cannot render, so it is asserted on source.
   const source = readFileSync(PANEL, "utf8");
-  const call = source.match(/resolveMemoryCapacityGb\(\{[\s\S]*?\n\s*\}\)/);
+  const call = /resolveMemoryCapacityGb\(\{[\s\S]*?\n\s*\}\)/.exec(source);
   assert.ok(call, "resolveMemoryCapacityGb is no longer called here");
   assert.match(
     call[0],
@@ -127,7 +127,7 @@ test("a discrete pin on a mixed APU host keeps system RAM as a pool beside it", 
 
 test("the panel scopes the unified flag to the pinned devices", () => {
   const source = readFileSync(PANEL, "utf8");
-  const decl = source.match(/const hasUnifiedMemory = useMemo\(\(\) => \{[\s\S]*?\}, \[[^\]]*\]\);/);
+  const decl = /const hasUnifiedMemory = useMemo\(\(\) => \{[\s\S]*?\}, \[[^\]]*\]\);/.exec(source);
   assert.ok(decl, "hasUnifiedMemory is no longer a scoped useMemo");
   assert.match(
     decl[0],
@@ -148,7 +148,7 @@ test("a mixed governing set is not unified, pinned or unpinned", () => {
   const mixed = [APU, DGPU];
 
   const unified = (governing: typeof mixed) =>
-    governing.length > 0 && governing.every((d) => d.unifiedMemory === true);
+    governing.length > 0 && governing.every((d) => d.unifiedMemory);
 
   assert.equal(unified(mixed), false, "a mixed set must not read as unified");
   assert.equal(unified([APU]), true, "an APU-only set is unified");
@@ -174,7 +174,7 @@ test("a mixed governing set is not unified, pinned or unpinned", () => {
 
 test("the panel asks whether EVERY governing device is unified", () => {
   const source = readFileSync(PANEL, "utf8");
-  const decl = source.match(/const hasUnifiedMemory = useMemo\(\(\) => \{[\s\S]*?\}, \[[^\]]*\]\);/);
+  const decl = /const hasUnifiedMemory = useMemo\(\(\) => \{[\s\S]*?\}, \[[^\]]*\]\);/.exec(source);
   assert.ok(decl, "hasUnifiedMemory is no longer a scoped useMemo");
   assert.match(
     decl[0],
@@ -247,7 +247,7 @@ test("Apple is unchanged, since its GPU figure already is the whole pool", () =>
 
 test("the panel tells the resolver which kind of unified memory it has", () => {
   const source = readFileSync(PANEL, "utf8");
-  const call = source.match(/resolveMemoryCapacityGb\(\{[\s\S]*?\n\s*\}\)/);
+  const call = /resolveMemoryCapacityGb\(\{[\s\S]*?\n\s*\}\)/.exec(source);
   assert.ok(call, "resolveMemoryCapacityGb is no longer called here");
   assert.match(
     call[0],
@@ -426,7 +426,7 @@ test("Apple and discrete hosts still answer from their own free VRAM", () => {
 
 test("the panel hands the free-capacity rule its own inputs", () => {
   const source = readFileSync(PANEL, "utf8");
-  const call = source.match(PANEL_FREE_CAPACITY_CALL);
+  const call = PANEL_FREE_CAPACITY_CALL.exec(source);
   assert.ok(
     call,
     "the panel no longer resolves free capacity through the shared rule",

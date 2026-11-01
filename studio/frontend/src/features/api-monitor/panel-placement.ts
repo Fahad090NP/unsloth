@@ -88,7 +88,7 @@ function candidates(
     .sort((a, b) => b.top - a.top)
     .map((box) => ({ left: right, top: box.top - PANEL_GAP - size.height }));
   // Keep each candidate's corner explicitly; inferring the side from `left` misranks wide panels.
-  const ordered: Array<PanelAnchor & { rightSide: boolean }> = [
+  const ordered: (PanelAnchor & { rightSide: boolean })[] = [
     { left: right, top: bottom, rightSide: true },
     ...steps.map((step) => ({ ...step, rightSide: true })),
     { left: PANEL_MARGIN, top: bottom, rightSide: false },

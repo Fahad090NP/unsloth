@@ -7,7 +7,7 @@
  * research-reply-owners.ts so the two answers never mix.
  */
 
-export type ResearchPresenceMessage = { metadata?: unknown };
+export interface ResearchPresenceMessage { metadata?: unknown }
 
 const presenceByMessages = new WeakMap<object, boolean>();
 const presenceByLiveRun = new WeakMap<object, Map<string, boolean>>();

@@ -43,12 +43,12 @@ const MARKDOWN = [
   "",
 ].join("\n");
 
-type Node = {
+interface Node {
   type: string;
   tagName?: string;
   properties?: { className?: unknown };
   children?: Node[];
-};
+}
 
 const render = async (markdown: string) => {
   const baseMath = createMathPlugin({ singleDollarTextMath: true });

@@ -122,7 +122,7 @@ test("tokenization does not degrade when the tokenizer overruns the wall clock",
       code: SOURCE,
       language: LANGUAGE,
       themes: THEMES,
-    }) as HighlightResult;
+    })!;
   } finally {
     Date.now = realNow;
   }

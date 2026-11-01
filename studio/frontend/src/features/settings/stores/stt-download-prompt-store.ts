@@ -23,8 +23,8 @@ interface SttDownloadPromptState {
 export const useSttDownloadPromptStore = create<SttDownloadPromptState>(
   (set) => ({
     pending: null,
-    requestDownload: (pending) => set({ pending }),
-    dismiss: () => set({ pending: null }),
+    requestDownload: (pending) => { set({ pending }); },
+    dismiss: () => { set({ pending: null }); },
   }),
 );
 

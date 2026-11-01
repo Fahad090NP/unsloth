@@ -22,13 +22,13 @@ export const MAX_PAINTED_RANGES = 400;
 
 const REVEAL_INSET_PX = 24;
 
-type HighlightLike = { priority: number; clear(): void };
+interface HighlightLike { priority: number; clear(): void }
 type HighlightConstructor = new (...ranges: Range[]) => HighlightLike;
-type HighlightRegistry = {
+interface HighlightRegistry {
   get(name: string): HighlightLike | undefined;
   set(name: string, highlight: HighlightLike): void;
   delete(name: string): void;
-};
+}
 
 /** Via globalThis since lib has no `Highlight`. Null on WebKitGTK; see selectRangeFallback. */
 function highlightApi(): {
@@ -236,11 +236,11 @@ export function clearHighlights(): void {
   if (removedActive || removedAll) forceHighlightRepaint();
 }
 
-type CaretHold = {
+interface CaretHold {
   field: HTMLInputElement | HTMLTextAreaElement;
   start: number | null;
   end: number | null;
-};
+}
 
 /** On WebKit and Blink, moving the selection steals the focused field's caret, so save it. */
 function holdCaret(): CaretHold | null {

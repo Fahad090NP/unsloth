@@ -3,14 +3,14 @@
 
 export type WebPlacement = "top-right" | "bottom-right" | "top";
 
-export type SpiderWeb = {
+export interface SpiderWeb {
   placement: WebPlacement;
   // Corner webs span `size` square; a top web is twice as wide as tall.
   size: number;
   left?: string;
   spokes: string;
   threads: string;
-};
+}
 
 type Rand = () => number;
 

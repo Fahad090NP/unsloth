@@ -29,8 +29,8 @@ export function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () =>
-      typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Could not read the image"));
-    reader.onerror = () => reject(reader.error ?? new Error("Could not read the image"));
+      { typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Could not read the image")); };
+    reader.onerror = () => { reject(reader.error ?? new Error("Could not read the image")); };
     reader.readAsDataURL(blob);
   });
 }
@@ -41,7 +41,7 @@ export async function fitImageDataUrl(dataUrl: string, maxSide: number): Promise
   try {
     image = await new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image();
-      img.onload = () => resolve(img);
+      img.onload = () => { resolve(img); };
       img.onerror = reject;
       img.src = dataUrl;
     });

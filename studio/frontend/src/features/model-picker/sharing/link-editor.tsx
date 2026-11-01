@@ -145,7 +145,7 @@ export function SharedRunConfigLinkEditor({
               autoComplete="off"
               placeholder="owner/model-GGUF or local GGUF path"
               value={modelInput}
-              onChange={(event) => setModelInput(event.target.value)}
+              onChange={(event) => { setModelInput(event.target.value); }}
             />
           </div>
           <div className="flex justify-end">

@@ -188,7 +188,7 @@ function MemoryLimitRow({
             value={draft}
             disabled={memory.lockedByEnvironment}
             aria-label={t("settings.sandbox.memoryLabel")}
-            onChange={(event) => setDraft(event.target.value)}
+            onChange={(event) => { setDraft(event.target.value); }}
             onKeyDown={(event) => {
               if (event.key === "Enter") submit();
             }}
@@ -246,7 +246,7 @@ function PermissionsSection() {
       permissionsRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
       consumeScrollTarget("sandbox-permissions");
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [consumeScrollTarget, scrollTarget]);
 
   return (
@@ -328,7 +328,7 @@ function SandboxLevelSection() {
                 disabled={disabled && !selected}
                 onClick={() => {
                   if (selected || level === "off") return;
-                  void pickSandboxLevel(level, setSandboxLevel, () => setSetupOpen(true));
+                  void pickSandboxLevel(level, setSandboxLevel, () => { setSetupOpen(true); });
                 }}
                 className={cn(
                   "relative inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-ui-12 font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
@@ -429,7 +429,7 @@ function OsSandboxSections() {
       sectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
       consumeScrollTarget("sandbox-os");
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [consumeScrollTarget, scrollTarget, settled]);
 
   // Callers set `loading`: a synchronous setState from the mount effect would cascade a render.
@@ -503,7 +503,7 @@ function OsSandboxSections() {
           setSetupJob(null);
         });
     }, HOST_PREP_POLL_MS);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); };
   }, [setupJob, refresh, t]);
 
   useEffect(() => {
@@ -529,7 +529,7 @@ function OsSandboxSections() {
           setJob(null);
         });
     }, HOST_PREP_POLL_MS);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); };
   }, [job, refresh, t]);
 
   const save = async (update: SandboxSettingsUpdate) => {

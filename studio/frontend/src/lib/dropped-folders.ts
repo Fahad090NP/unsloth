@@ -42,11 +42,11 @@ export interface FolderFiles {
 function readBatch(
   reader: FileSystemDirectoryReader,
 ): Promise<FileSystemEntry[]> {
-  return new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+  return new Promise((resolve, reject) => { reader.readEntries(resolve, reject); });
 }
 
 function entryFile(entry: FileSystemFileEntry): Promise<File> {
-  return new Promise((resolve, reject) => entry.file(resolve, reject));
+  return new Promise((resolve, reject) => { entry.file(resolve, reject); });
 }
 
 /** Call inside the drop handler: the browser empties `items` once the event returns. */
@@ -75,9 +75,9 @@ async function walkEntries(
   let truncated = 0;
   const pending = [...roots];
   while (pending.length > 0) {
-    const entry = pending.shift() as FileSystemEntry;
+    const entry = pending.shift()!;
     if (entry.isFile) {
-      const root = roots.indexOf(entry) >= 0;
+      const root = roots.includes(entry);
       if (!root && (skippedFile(entry.name) || !keep(entry.name))) continue;
       if (files.length >= MAX_FOLDER_FILES) {
         truncated = 1;
@@ -92,7 +92,7 @@ async function walkEntries(
     }
     if (
       !entry.isDirectory ||
-      (roots.indexOf(entry) < 0 && skippedDir(entry.name))
+      (!roots.includes(entry) && skippedDir(entry.name))
     ) {
       continue;
     }

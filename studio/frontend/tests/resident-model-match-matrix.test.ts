@@ -16,7 +16,7 @@ const { residentModelMatchesPick } = await import(
   "../src/features/chat/lib/resident-model-match.ts"
 );
 
-type Row = {
+interface Row {
   host: string;
   what: string;
   status: {
@@ -26,7 +26,7 @@ type Row = {
   };
   pick: { id: string; loadPath?: string | null; ggufVariant?: string | null };
   resident: boolean;
-};
+}
 
 const REPO = "unsloth/Qwen3-0.6B-GGUF";
 const OTHER = "unsloth/gemma-4-12b-GGUF";

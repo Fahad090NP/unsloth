@@ -10,10 +10,10 @@ import * as savedUsage from "../src/features/chat/utils/saved-context-usage.ts";
 import { readSrc } from "./helpers/kit.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Exported = {
+interface Exported {
   headId: string | null;
   messages: { parentId: string | null; message: Record<string, unknown> }[];
-};
+}
 
 type Sync = (
   remoteId: string,

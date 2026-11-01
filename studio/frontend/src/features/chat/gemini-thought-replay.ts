@@ -1,48 +1,48 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type GeminiThoughtReplayPart = {
+export interface GeminiThoughtReplayPart {
   text: string;
   thoughtSignature?: string;
-};
+}
 
 export type PositionedGeminiThoughtReplayPart = GeminiThoughtReplayPart & {
   afterToolCalls: number;
 };
 
-export type GeminiAnswerReplayPart = {
+export interface GeminiAnswerReplayPart {
   text: string;
   thoughtSignature?: string;
-};
+}
 
 export type PositionedGeminiAnswerReplayPart = GeminiAnswerReplayPart & {
   afterToolCalls: number;
 };
 
-export type GeminiContinuationReplayTurn = {
+export interface GeminiContinuationReplayTurn {
   text: string;
   thoughtSignature?: string;
   thoughtParts?: GeminiThoughtReplayPart[];
   answerParts?: GeminiAnswerReplayPart[];
-};
+}
 
-export type GeminiContinuationReplay = {
+export interface GeminiContinuationReplay {
   turns: GeminiContinuationReplayTurn[];
   visiblePrefix: string;
   stripVisiblePrefix: boolean;
-};
+}
 
 export type GeminiContinuationReplayEntry =
   | { role: "assistant"; turn: GeminiContinuationReplayTurn }
   | { role: "user" };
 
-type ReplayableMessagePart = {
+interface ReplayableMessagePart {
   type: string;
   text?: unknown;
   _google_thought_signature?: unknown;
   _google_thought_parts?: unknown;
   _google_answer_parts?: unknown;
-};
+}
 
 export function appendGeminiThoughtReplayPart(
   parts: PositionedGeminiThoughtReplayPart[],
@@ -80,7 +80,7 @@ export function pinGeminiTextThoughtSignature<T extends { type: string }>(
     parts[index] = {
       ...parts[index],
       _google_thought_signature: thoughtSignature,
-    } as T;
+    };
     break;
   }
   return parts;
@@ -158,7 +158,7 @@ export function pinGeminiThoughtReplayParts<T extends { type: string }>(
       parts[targetIndex] = {
         ...parts[targetIndex],
         _google_thought_parts: replayMetadata,
-      } as T;
+      };
     }
   }
   return parts;
@@ -199,7 +199,7 @@ export function pinGeminiAnswerReplayParts<T extends { type: string }>(
       parts[targetIndex] = {
         ...parts[targetIndex],
         _google_answer_parts: replayMetadata,
-      } as T;
+      };
     }
   }
   return parts;

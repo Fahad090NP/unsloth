@@ -46,7 +46,7 @@ export function SidebarEdgeTrigger({
   // would unmount this: the handle would lose pointer capture and the width
   // would never commit. Hold on until the pointer is released.
   const [holding, setHolding] = useState(false);
-  const release = () => setHolding(false);
+  const release = () => { setHolding(false); };
 
   const sidebarShowing = isMobile ? openMobile : pinned;
   if (!isTauri) {
@@ -65,8 +65,8 @@ export function SidebarEdgeTrigger({
       onPointerCancel={release}
       onLostPointerCapture={release}
       // Keyboard users have no pointer to hold the sidebar out, so focus does it.
-      onFocus={() => setPeeking(true)}
-      onBlur={() => setPeeking(false)}
+      onFocus={() => { setPeeking(true); }}
+      onBlur={() => { setPeeking(false); }}
     >
       {(!sidebarShowing || holding) && (
         <PanelResizeHandle

@@ -114,7 +114,7 @@ export function ManagedEngineOfferDialog() {
                 <EngineInstall
                   engine={engine}
                   centered={true}
-                  onUse={() => resolve(engine.engine)}
+                  onUse={() => { resolve(engine.engine); }}
                 />
               </section>
             ))}
@@ -126,7 +126,7 @@ export function ManagedEngineOfferDialog() {
             <AlertDialogAction
               variant="dark"
               key={engine.engine}
-              onClick={() => resolve(engine.engine)}
+              onClick={() => { resolve(engine.engine); }}
             >
               Load with {ENGINE_NAMES[engine.engine]}
             </AlertDialogAction>

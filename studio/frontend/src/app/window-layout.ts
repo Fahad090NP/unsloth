@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type LogicalWindowSize = {
+export interface LogicalWindowSize {
   width: number;
   height: number;
-};
+}
 
-export type PhysicalWindowRect = {
+export interface PhysicalWindowRect {
   position: { x: number; y: number };
   size: { width: number; height: number };
-};
+}
 
-export type WindowSizeBounds = {
+export interface WindowSizeBounds {
   minimum: LogicalWindowSize;
   maximum?: LogicalWindowSize;
-};
+}
 
 export const MINIMUM_APP_WINDOW_SIZE: LogicalWindowSize = {
   width: 460,

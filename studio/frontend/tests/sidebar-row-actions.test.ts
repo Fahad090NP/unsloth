@@ -257,7 +257,7 @@ test("a row being generated into cannot be forked", async () => {
   assert.match(APP_SIDEBAR, /const inFlight = useForkInFlight\.getState\(\);\n\s*if \(inFlight\.forking\) return;\n\s*inFlight\.setForking\(true\);/);
   assert.match(APP_SIDEBAR, /\} finally \{\n\s*inFlight\.setForking\(false\);/);
   assert.match(APP_SIDEBAR, /const forkInFlight = useForkInFlight\(\(s\) => s\.forking\);/);
-  assert.ok(!/const useForkInFlight = create</.test(THREAD));
+  assert.ok(!THREAD.includes('const useForkInFlight = create<'));
   assert.match(THREAD, /^\s*useForkInFlight,$/m);
   const STORE = await readSrcAsync("features/chat/utils/fork-in-flight.ts");
   assert.match(STORE, /export const useForkInFlight = create</);

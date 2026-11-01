@@ -82,7 +82,7 @@ const FORMAT_ALIAS_TAGS: Record<string, string> = {
   "auto-gptq": "gptq",
 };
 
-const FORMAT_NAME_PATTERNS: ReadonlyArray<{ key: string; pattern: RegExp }> = [
+const FORMAT_NAME_PATTERNS: readonly { key: string; pattern: RegExp }[] = [
   { key: "awq", pattern: /(?:^|[-_./])awq(?:\d+(?:bit)?)?(?:$|[-_./])/i },
   { key: "gptq", pattern: /(?:^|[-_./])gptq(?:\d+(?:bit)?)?(?:$|[-_./])/i },
   { key: "exl2", pattern: /(?:^|[-_./])exl2(?:$|[-_./])/i },

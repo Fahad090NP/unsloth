@@ -523,7 +523,7 @@ function followUpShortcutBehavior(event: {
 }
 
 // module scope and runningByThreadId let queues survive Composer remounts and advance off-screen.
-type PromptQueueTarget = {
+interface PromptQueueTarget {
   getDocumentThreadId: () => string | null;
   /** project captured when a new chat has no persisted row to read. */
   getQueueProjectId: () => string | null;
@@ -543,7 +543,7 @@ type PromptQueueTarget = {
   researchStarted: () => boolean;
   temporary: boolean;
   consumeDeepResearch: () => void;
-};
+}
 
 type PromptQueueItem = QueuedPrompt & {
   id: string;
@@ -553,7 +553,7 @@ type PromptQueueItem = QueuedPrompt & {
   blockedByModelFailure?: boolean;
 };
 
-type PromptQueueRun = {
+interface PromptQueueRun {
   id: string;
   items: PromptQueueItem[];
   index: number;
@@ -563,7 +563,7 @@ type PromptQueueRun = {
   paused: boolean;
   retryTimer: ReturnType<typeof setTimeout> | null;
   deepResearchConsumed: boolean;
-};
+}
 
 const PROMPT_QUEUE_INDEXING_RETRY_MS = 500;
 const PROMPT_QUEUE_DISPATCH_RETRY_MS = 500;
@@ -578,7 +578,7 @@ let promptQueueStoreUnsub: (() => void) | null = null;
 let promptQueuePumpTimer: ReturnType<typeof setTimeout> | null = null;
 let promptQueueRoundRobinCursor = 0;
 
-function compactIds(ids: Array<string | null | undefined>) {
+function compactIds(ids: (string | null | undefined)[]) {
   return Array.from(new Set(ids.filter((id): id is string => Boolean(id))));
 }
 
@@ -712,7 +712,7 @@ function appendQueuedPrompt(run: PromptQueueRun, item: PromptQueueItem) {
     const result = item.target.append(item);
     if (result && typeof result.catch === "function") {
       void result
-        .then(() => consumePromptQueueDeepResearch(run, item))
+        .then(() => { consumePromptQueueDeepResearch(run, item); })
         .catch((error) => {
           handleQueuedPromptAppendFailure(run, item, error);
         });
@@ -1191,7 +1191,7 @@ function movePromptQueueItem(itemId: string, targetItemId: string) {
   }
   const match = findPromptQueueRunByItemId(itemId);
   const target = findPromptQueueRunByItemId(targetItemId);
-  if (!match || !target || match.run !== target.run) {
+  if (!match || match.run !== target?.run) {
     return false;
   }
   const { run, itemIndex, item } = match;
@@ -1428,7 +1428,7 @@ function steerPromptQueueItem(itemId: string) {
 }
 
 function startPromptQueue(
-  items: Array<string | QueuedPrompt>,
+  items: (string | QueuedPrompt)[],
   target: PromptQueueTarget,
   waitForCurrentRun = false,
   behavior: ComposerFollowUpBehavior = "queue",
@@ -1868,7 +1868,7 @@ const ThreadMessage: FC = () => {
 const PendingCompactionRule: FC = () => {
   const threadId = useChatRuntimeStore((s) => s.activeThreadId);
   const pending = useCompactRequestStore((s) =>
-    threadId === null ? false : s.requested[threadId] === true,
+    threadId === null ? false : s.requested[threadId],
   );
   const endsWithReply = useAuiState(
     ({ message }) => message.isLast && message.role === "assistant",
@@ -2039,7 +2039,7 @@ const startGrammarPrewarm = (): void => {
       idle: scheduleQuietIdleTask,
       wait: (callback, ms) => {
         const timer = setTimeout(callback, ms);
-        return () => clearTimeout(timer);
+        return () => { clearTimeout(timer); };
       },
       quiet: () =>
         !streamActive()
@@ -2232,7 +2232,7 @@ export const Thread: FC<{
       }
     };
     el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
+    return () => { el.removeEventListener("scroll", onScroll); };
   }, [viewportEl, applySpacerPx]);
 
   // These pin to the bottom; runStart also opens the shrink window for send-clears-chips.
@@ -2473,10 +2473,10 @@ const GeneratedImageViewportOverlay: FC<{
                 size="icon-sm"
                 className="size-7 rounded-full"
                 onClick={() =>
-                  downloadImagePart({
+                  { downloadImagePart({
                     image: overlay.image,
                     filename: overlay.filename,
-                  })
+                  }); }
                 }
                 aria-label="Download generated image"
               >
@@ -2573,7 +2573,7 @@ const ThreadComposerDock: FC<{
   useEffect(() => {
     const el = dockRef.current;
     if (!el || !onHeightChange) return;
-    const measure = () => onHeightChange(el.offsetHeight);
+    const measure = () => { onHeightChange(el.offsetHeight); };
     measure();
     const resizeObserver = new ResizeObserver(measure);
     resizeObserver.observe(el);
@@ -2596,7 +2596,7 @@ const ThreadComposerDock: FC<{
     const inner = dockInnerRef.current;
     const viewport = childWithClass(dock?.parentElement, "aui-thread-viewport");
     if (!dock || !inner || !viewport) return;
-    const resizeObserver = new ResizeObserver(() => apply());
+    const resizeObserver = new ResizeObserver(() => { apply(); });
     let observedFooter: Element | null = null;
     const apply = () => {
       // May fire before the gutter's observer, which would leave the composer a scrollbar off-centre.
@@ -2677,7 +2677,7 @@ const ThreadScrollToBottom: FC = () => {
     <TooltipIconButton
       tooltip="Scroll to bottom"
       variant="outline"
-      onClick={() => scrollToBottom("auto")}
+      onClick={() => { scrollToBottom("auto"); }}
       className={cn(
         "aui-thread-scroll-to-bottom pointer-events-auto rounded-full p-0 size-[calc(28px*var(--ui-space-scale,1))] bg-background shadow-[0_0_0_0.5px_rgb(0_0_0/0.15)] hover:bg-accent dark:shadow-[0_0_0_0.5px_rgb(255_255_255/0.2)] dark:bg-muted dark:hover:bg-accent",
         isAtBottom && "invisible pointer-events-none",
@@ -2698,12 +2698,12 @@ const pickRandom = <T,>(arr: T[]): T =>
 // same mascot. Greeting varies by local time; name-bearing lines drop the
 // name when none is set. Text is a message key, translated at render so a
 // language switch updates the open greeting.
-type Welcome = {
+interface Welcome {
   key: TranslationKey;
   name?: string;
   sloth: string;
   enlarge?: boolean;
-};
+}
 const DEFAULT_WELCOME: Welcome = {
   key: "welcome.onYourMind",
   sloth: "sloth magnify final.png",
@@ -3114,7 +3114,7 @@ const Composer: FC<{
                 youtubePasteText +
                 value.slice(selectionEnd),
             );
-          requestAnimationFrame(() => input.setSelectionRange(caret, caret));
+          requestAnimationFrame(() => { input.setSelectionRange(caret, caret); });
           if (justSentRef.current?.draftKey === draftKeyRef.current) {
             justSentRef.current = null;
           }
@@ -3166,7 +3166,7 @@ const Composer: FC<{
     if (isWritingExpanded) {
       detachFromBottom();
     } else {
-      window.requestAnimationFrame(() => scrollThreadToBottom("instant"));
+      window.requestAnimationFrame(() => { scrollThreadToBottom("instant"); });
     }
   }, [isWritingExpanded, threadEmpty, detachFromBottom, scrollThreadToBottom]);
   useExpandedComposerFill(editorRef, isWritingExpanded && !isDictating);
@@ -3636,7 +3636,7 @@ const Composer: FC<{
               requeue(intents.slice(index));
               return;
             }
-            const intent = intents[index]!;
+            const intent = intents[index];
             let file: File;
             try {
               file = await normalizeChatImage(
@@ -3870,7 +3870,7 @@ const Composer: FC<{
     [aui],
   );
   const writeAudioUploadDraft = useCallback(
-    (value: string) => aui.composer().setText(value),
+    (value: string) => { aui.composer().setText(value); },
     [aui],
   );
   const focusAudioUploadDraft = useCallback(() => {
@@ -3995,7 +3995,7 @@ const Composer: FC<{
   // above, which clears the raced draft this would otherwise retire on.
   useEffect(() => {
     const guard = justSentRef.current;
-    if (guard === null || guard.draftKey !== draftKey) return;
+    if (guard?.draftKey !== draftKey) return;
     if (aui.composer().getState().text.length === 0) return;
     justSentRef.current = null;
   }, [composerText, draftKey, aui]);
@@ -4089,9 +4089,9 @@ const Composer: FC<{
     if (composerText === remoteDraftRef.current) return;
     remoteDraftRef.current = null;
     publishDraft(composerText, draftSource);
-    const t = setTimeout(() => writeComposerDraft(draftKey, composerText), 300);
+    const t = setTimeout(() => { writeComposerDraft(draftKey, composerText); }, 300);
     draftSaveTimerRef.current = t;
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); };
   }, [composerText, draftScope, draftKey, draftSource]);
   const draftScopeRef = useRef(draftScope);
   useEffect(() => {
@@ -4129,7 +4129,7 @@ const Composer: FC<{
       return;
     }
     let lastWidth = -1;
-    const pending: Array<ReturnType<typeof setTimeout>> = [];
+    const pending: ReturnType<typeof setTimeout>[] = [];
     const observer = new ResizeObserver((entries) => {
       const width = Math.round(entries[0]?.contentRect.width ?? 0);
       // Width changes only; reacting to autosize's height change would loop.
@@ -4580,7 +4580,7 @@ const Composer: FC<{
 
   const startHydratedPromptQueue = useCallback(
     (
-      items: Array<string | QueuedPrompt>,
+      items: (string | QueuedPrompt)[],
       waitForCurrentRun = false,
       onStarted?: () => void,
       onAborted?: () => void,
@@ -4709,7 +4709,7 @@ const Composer: FC<{
               return;
             }
             void composer.clearAttachments();
-            flushResourcesSync(() => composer.setText(""));
+            flushResourcesSync(() => { composer.setText(""); });
             clearStoredDraft();
             armJustSent(text);
           },
@@ -5221,7 +5221,7 @@ const Composer: FC<{
       }
     };
     window.addEventListener("keydown", collapseOnEscape, true);
-    return () => window.removeEventListener("keydown", collapseOnEscape, true);
+    return () => { window.removeEventListener("keydown", collapseOnEscape, true); };
   }, []);
   // Keep the mic clickable: if the engine cannot run, explain and point to the local model.
   const startDictation = useCallback(() => {
@@ -5321,12 +5321,12 @@ const Composer: FC<{
   };
   useShortcut(
     "queueMessage",
-    () => submitWithFollowUp("queue"),
+    () => { submitWithFollowUp("queue"); },
     followUpShortcutOptions,
   );
   useShortcut(
     "steerMessage",
-    () => submitWithFollowUp("steer"),
+    () => { submitWithFollowUp("steer"); },
     followUpShortcutOptions,
   );
   const wasDictatingRef = useRef(false);
@@ -5622,7 +5622,7 @@ const Composer: FC<{
 
   const startQueue = useCallback(
     (
-      items: Array<string | QueuedPrompt>,
+      items: (string | QueuedPrompt)[],
       waitForCurrentRun =
         threadIsRunning || aui.thread().getState().isRunning,
       onAborted?: () => void,
@@ -5671,7 +5671,7 @@ const Composer: FC<{
               <PermissionModeComposerPill side={effectiveMenuSide} />
               {effectiveDeepResearchEnabled ? (
                 <DeepResearchComposerButton
-                  onConfigure={() => setResearchWebsiteAccessOpen(true)}
+                  onConfigure={() => { setResearchWebsiteAccessOpen(true); }}
                 />
               ) : null}
               <WebSearchToggle />
@@ -5722,10 +5722,10 @@ const Composer: FC<{
                 {...inputProps}
                 cancelOnEscape={!(declineMounted && declineOwnsEscape)}
                 onScrollCapture={(event) =>
-                  markComposerScrollEdges(event.currentTarget)
+                  { markComposerScrollEdges(event.currentTarget); }
                 }
                 onInputCapture={(event) =>
-                  markComposerScrollEdges(event.currentTarget)
+                  { markComposerScrollEdges(event.currentTarget); }
                 }
                 // Capture, so inputProps keeps the handlers it already owns.
                 onKeyDownCapture={notePlainPasteChord}
@@ -5744,7 +5744,7 @@ const Composer: FC<{
                   aria-controls={inputId}
                   disabled={disabled}
                   className="unsloth-composer-expand absolute -right-1 top-0 size-8 rounded-full bg-transparent text-muted-foreground hover:bg-transparent hover:text-muted-foreground dark:hover:bg-transparent aria-expanded:bg-transparent aria-expanded:text-muted-foreground"
-                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseDown={(event) => { event.preventDefault(); }}
                   onClick={toggleWritingExpanded}
                 >
                   <svg
@@ -5859,7 +5859,7 @@ const Composer: FC<{
         <YoutubeTranscriptPrompt
           key={youtubeOfferUrl}
           url={youtubeOfferUrl}
-          onClose={() => setYoutubeLink(null)}
+          onClose={() => { setYoutubeLink(null); }}
         />
       ) : null}
       {isTauri ? (
@@ -5885,7 +5885,7 @@ const Composer: FC<{
 };
 
 function isNativeComposing(event: Event) {
-  return "isComposing" in event && (event as InputEvent).isComposing === true;
+  return "isComposing" in event && (event as InputEvent).isComposing;
 }
 
 // An autocorrect commit; its value can differ from what was sent, so equality is not enough.
@@ -6160,7 +6160,7 @@ const ReasoningToggle: FC<{ side?: "top" | "bottom" }> = ({
   side = "bottom",
 }) => {
   const modelLoaded = useChatRuntimeStore(
-    (s) => !!s.params.checkpoint && !s.modelLoading,
+    (s) => Boolean(s.params.checkpoint) && !s.modelLoading,
   );
   const checkpoint = useChatRuntimeStore((s) => s.params.checkpoint);
   const supportsReasoning = useChatRuntimeStore((s) => s.supportsReasoning);
@@ -6459,7 +6459,7 @@ const PillGlyph: FC<{ children: ReactNode }> = ({ children }) => (
 
 const WebSearchToggle: FC = () => {
   const modelLoaded = useChatRuntimeStore(
-    (s) => !!s.params.checkpoint && !s.modelLoading,
+    (s) => Boolean(s.params.checkpoint) && !s.modelLoading,
   );
   const checkpoint = useChatRuntimeStore((s) => s.params.checkpoint);
   const supportsTools = useChatRuntimeStore((s) => s.supportsTools);
@@ -6516,7 +6516,7 @@ const WebSearchToggle: FC = () => {
 
 const CodeToolsToggle: FC = () => {
   const modelLoaded = useChatRuntimeStore(
-    (s) => !!s.params.checkpoint && !s.modelLoading,
+    (s) => Boolean(s.params.checkpoint) && !s.modelLoading,
   );
   const supportsTools = useChatRuntimeStore((s) => s.supportsTools);
   // Claude 4.x runs code_execution server-side; mirrors shared-composer's codeDisabled.
@@ -6531,7 +6531,7 @@ const CodeToolsToggle: FC = () => {
     <button
       type="button"
       disabled={disabled}
-      onClick={() => setCodeToolsEnabled(!codeToolsEnabled)}
+      onClick={() => { setCodeToolsEnabled(!codeToolsEnabled); }}
       className="composer-pill-btn"
       data-pill-label="Tools"
       data-active={codeToolsEnabled && !disabled ? "true" : "false"}
@@ -6553,7 +6553,7 @@ const CodeToolsToggle: FC = () => {
 
 const ImagesToggle: FC = () => {
   const modelLoaded = useChatRuntimeStore(
-    (s) => !!s.params.checkpoint && !s.modelLoading,
+    (s) => Boolean(s.params.checkpoint) && !s.modelLoading,
   );
   // The provider's own image_generation, or the image or video model loaded in
   // Unsloth for a model that calls Unsloth tools. Mirror of
@@ -6571,7 +6571,7 @@ const ImagesToggle: FC = () => {
     <button
       type="button"
       disabled={disabled}
-      onClick={() => setImageToolsEnabled(!imageToolsEnabled)}
+      onClick={() => { setImageToolsEnabled(!imageToolsEnabled); }}
       className="composer-pill-btn"
       data-pill-label="Images"
       data-active={imageToolsEnabled && !disabled ? "true" : "false"}
@@ -6627,10 +6627,10 @@ const ToolStatusDisplay: FC = () => {
     // 300ms debounce unless already visible, so short tool calls never flash the badge.
     let showTimer: ReturnType<typeof setTimeout> | undefined;
     if (!visibleRef.current) {
-      showTimer = setTimeout(() => setVisible(true), 300);
+      showTimer = setTimeout(() => { setVisible(true); }, 300);
     }
 
-    const interval = setInterval(() => setNow(Date.now()), 1000);
+    const interval = setInterval(() => { setNow(Date.now()); }, 1000);
     return () => {
       clearInterval(interval);
       if (showTimer) {
@@ -6736,7 +6736,7 @@ const ComposerToolsMenu: FC<{
   const isDictating = useAuiState((s) => s.composer.dictation != null);
   // Gate like the visible pills so menu and pills agree on what the loaded model supports.
   const modelLoaded = useChatRuntimeStore(
-    (s) => !!s.params.checkpoint && !s.modelLoading,
+    (s) => Boolean(s.params.checkpoint) && !s.modelLoading,
   );
   const checkpoint = useChatRuntimeStore((s) => s.params.checkpoint);
   const supportsTools = useChatRuntimeStore((s) => s.supportsTools);
@@ -6870,7 +6870,7 @@ const ComposerToolsMenu: FC<{
     "openComposerMenu",
     () => {
       // The open menu inerts the composer, so closing skips the gate.
-      if (plusOpen) return setPlusMenuOpen(false);
+      if (plusOpen) { setPlusMenuOpen(false); return; }
       if (!isSurfaceInForeground(COMPOSER_INPUT_SELECTOR)) return;
       setPlusMenuOpen(true);
     },
@@ -6924,7 +6924,7 @@ const ComposerToolsMenu: FC<{
             ? "text-primary font-medium"
             : undefined
         }
-        onSelect={() => setDeepResearchEnabled(!deepResearchEnabled)}
+        onSelect={() => { setDeepResearchEnabled(!deepResearchEnabled); }}
       >
         <HugeiconsIcon icon={Telescope02Icon} strokeWidth={2} />
         Deep research
@@ -6969,7 +6969,7 @@ const ComposerToolsMenu: FC<{
             ? "text-primary font-medium"
             : undefined
         }
-        onSelect={() => setMcpEnabledForChat(!mcpEnabledForChat)}
+        onSelect={() => { setMcpEnabledForChat(!mcpEnabledForChat); }}
       >
         <HugeiconsIcon icon={McpServerIcon} strokeWidth={2} />
         MCP
@@ -6981,7 +6981,7 @@ const ComposerToolsMenu: FC<{
     skills: (
       <DropdownMenuItem
         className={skillsOn ? "text-primary font-medium" : undefined}
-        onSelect={() => setSkillsOn(!skillsOn)}
+        onSelect={() => { setSkillsOn(!skillsOn); }}
       >
         <HugeiconsIcon icon={Scroll01Icon} strokeWidth={2} />
         Skills
@@ -7003,13 +7003,13 @@ const ComposerToolsMenu: FC<{
           {recentPrompts.map((p) => (
             <DropdownMenuItem
               key={`prompt:${p.id}`}
-              onSelect={() => aui.composer().setText(p.text)}
+              onSelect={() => { aui.composer().setText(p.text); }}
             >
               <span className="truncate">{p.name}</span>
             </DropdownMenuItem>
           ))}
           {recentLists.map((l) => (
-            <DropdownMenuItem key={`list:${l.id}`} onSelect={() => runPromptList(l.items)}>
+            <DropdownMenuItem key={`list:${l.id}`} onSelect={() => { runPromptList(l.items); }}>
               <span className="truncate">{l.name}</span>
               <PromptCountBadge count={l.items.length} />
             </DropdownMenuItem>
@@ -7017,14 +7017,14 @@ const ComposerToolsMenu: FC<{
           {recentPrompts.length > 0 || recentLists.length > 0 ? (
             <DropdownMenuSeparator />
           ) : null}
-          <DropdownMenuItem onSelect={() => setPromptStorageOpen(true)}>
+          <DropdownMenuItem onSelect={() => { setPromptStorageOpen(true); }}>
             All saved prompts…
           </DropdownMenuItem>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
     ),
     compareChat: (
-      <DropdownMenuItem onSelect={() => startCompare()}>
+      <DropdownMenuItem onSelect={() => { startCompare(); }}>
         <Columns2Icon />
         Compare chat
       </DropdownMenuItem>
@@ -7099,7 +7099,7 @@ const ComposerToolsMenu: FC<{
           Projects
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className="unsloth-plus-menu w-[calc(232px*var(--ui-space-scale,1))]">
-          <DropdownMenuItem onSelect={() => setNewProjectOpen(true)}>
+          <DropdownMenuItem onSelect={() => { setNewProjectOpen(true); }}>
             <HugeiconsIcon icon={FolderAddIcon} strokeWidth={2} />
             New project
           </DropdownMenuItem>
@@ -7108,7 +7108,7 @@ const ComposerToolsMenu: FC<{
             recentProjects.map((project) => (
               <DropdownMenuItem
                 key={project.id}
-                onSelect={() => openProject(project.id)}
+                onSelect={() => { openProject(project.id); }}
               >
                 <HugeiconsIcon icon={ProjectIcon} strokeWidth={2} />
                 <span className="truncate">{project.name}</span>
@@ -7135,7 +7135,7 @@ const ComposerToolsMenu: FC<{
       onUse={(text) => {
         aui.composer().setText(text);
       }}
-      onRunList={(items) => runPromptList(items, true)}
+      onRunList={(items) => { runPromptList(items, true); }}
     />
     <DropdownMenu open={plusOpen} onOpenChange={setPlusMenuOpen}>
       <DropdownMenuTrigger asChild={true}>
@@ -7156,11 +7156,11 @@ const ComposerToolsMenu: FC<{
         avoidCollisions={true}
         className="unsloth-plus-menu w-[calc(244px*var(--ui-space-scale,1))]"
         // Don't refocus the + on close; restored focus showed a stray ring.
-        onCloseAutoFocus={(event) => event.preventDefault()}
+        onCloseAutoFocus={(event) => { event.preventDefault(); }}
       >
         <DropdownMenuItem
           disabled={!composerCanAddAttachments}
-          onSelect={() => pickAttachment()}
+          onSelect={() => { pickAttachment(); }}
         >
           <HugeiconsIcon icon={AttachmentIcon} strokeWidth={2} />
           Add photos &amp; files
@@ -7199,7 +7199,7 @@ const ComposerToolsMenu: FC<{
               ? "text-primary font-medium"
               : undefined
           }
-          onSelect={() => setCodeToolsEnabled(!codeToolsEnabled)}
+          onSelect={() => { setCodeToolsEnabled(!codeToolsEnabled); }}
         >
           {/* Scale, not width: an oversized box pushed the label out of line. */}
           <HugeiconsIcon
@@ -7225,7 +7225,7 @@ const ComposerToolsMenu: FC<{
                 ? "text-primary font-medium"
                 : undefined
             }
-            onSelect={() => setImageToolsEnabled(!imageToolsEnabled)}
+            onSelect={() => { setImageToolsEnabled(!imageToolsEnabled); }}
           >
             <HugeiconsIcon icon={Image03Icon} strokeWidth={2} />
             Images
@@ -7256,9 +7256,9 @@ const ComposerToolsMenu: FC<{
             ))}
             {overflowPlusItems.length > 0 && <DropdownMenuSeparator />}
             <DropdownMenuItem
-              onSelect={() => useSettingsDialogStore.getState().openDialog("chat", {
+              onSelect={() => { useSettingsDialogStore.getState().openDialog("chat", {
                 scrollTarget: "chat-composer",
-              })}
+              }); }}
             >
               <HugeiconsIcon icon={SlidersHorizontalIcon} className="size-4" />
               {t("composerSettings.settings")}
@@ -7297,7 +7297,7 @@ const PromptQueueStack: FC<{ queueThreadIds: string[] }> = ({
       onRemove={removePromptQueueItem}
       onMove={movePromptQueueItem}
       onSteer={steerPromptQueueItem}
-      onResume={() => resumePromptQueueRun(queueThreadIds)}
+      onResume={() => { resumePromptQueueRun(queueThreadIds); }}
     />
   );
 };
@@ -7403,7 +7403,7 @@ const ComposerRightControls: FC<{
       stoppingResearchRunIdRef.current = activeResearchRunId;
       setStoppingResearchRunId(activeResearchRunId);
       void cancelResearchRun(activeResearchRunId)
-        .then((run) => ingestResearchUpdate(run))
+        .then((run) => { ingestResearchUpdate(run); })
         .catch((error) => {
           stoppingResearchRunIdRef.current = null;
           setStoppingResearchRunId(null);
@@ -7647,7 +7647,7 @@ const GeneratingStatus: FC = () => {
     (s) => s.liveGenerationByThreadId[threadKey]?.prefill ?? null,
   );
   const labelShown = useChatRuntimeStore(
-    (s) => s.liveGenerationByThreadId[threadKey]?.prefillShown === true,
+    (s) => s.liveGenerationByThreadId[threadKey]?.prefillShown,
   );
   // A reply can decode with nothing to show yet (a tool call being written): past the prompt, back to Working.
   const decoding = useChatRuntimeStore(
@@ -7829,7 +7829,7 @@ function useContinuation() {
       ...(geminiReplayTurns.length > 0 ? { geminiReplayTurns } : {}),
       ...providerCompactionContinuationFields(metadata),
     };
-    return aui.thread().startRun({
+    aui.thread().startRun({
       parentId: parent,
       runConfig: {
         custom: { [CONTINUATION_RUN_CONFIG_KEY]: request },
@@ -8159,7 +8159,7 @@ const AssistantMessage: FC = () => {
       await updateThreadMessage({
         thread: {
           export: () => aui.thread().export(),
-          import: (data) => aui.thread().import(data)
+          import: (data) => { aui.thread().import(data); }
         },
         messageId,
         remoteId,
@@ -8208,7 +8208,7 @@ const AssistantMessage: FC = () => {
               }}
             />
             <div className="mx-3 flex items-center gap-2 self-end">
-              <Button type="button" size="sm" variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => { setEditingId(null); }}>Cancel</Button>
               <Button type="button" size="sm" onClick={handleSave}>Save</Button>
             </div>
           </div>
@@ -8475,7 +8475,7 @@ function useDeleteMessage() {
       await deleteThreadMessage({
         thread: {
           export: () => thread.export(),
-          import: (data) => thread.import(data),
+          import: (data) => { thread.import(data); },
         },
         messageId,
         remoteId,
@@ -8540,10 +8540,10 @@ const RewindMessageButton: FC = () => {
       tooltip={t("rewind.title")}
       disabled={isRunning}
       onClick={() =>
-        useRewindDialogStore.getState().openRewind({
+        { useRewindDialogStore.getState().openRewind({
           threadKey: aui.threadListItem().getState().id,
           messageId,
-        })
+        }); }
       }
     >
       <HugeiconsIcon icon={UndoIcon} strokeWidth={1.75} className="size-icon" />
@@ -8599,7 +8599,7 @@ const EditAssistantMessageButton: FC = () => {
     <TooltipIconButton
       tooltip="Edit response"
       disabled={isRunning || researchActive}
-      onClick={() => setEditingId(messageId)}
+      onClick={() => { setEditingId(messageId); }}
     >
       <HugeiconsIcon
         icon={Edit03Icon}
@@ -8654,7 +8654,7 @@ const EditAssistantMessageMenuItem: FC = () => {
   return (
     <ActionBarMorePrimitive.Item
       disabled={isRunning || researchActive}
-      onSelect={() => setEditingId(messageId)}
+      onSelect={() => { setEditingId(messageId); }}
       className="aui-action-bar-more-item flex cursor-pointer select-none items-center gap-2 rounded-md px-3 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
     >
       <HugeiconsIcon icon={Edit03Icon} strokeWidth={1.75} className="size-icon" />
@@ -8753,14 +8753,14 @@ const AssistantActionBar: FC = () => {
             side="bottom"
             align="start"
             collisionPadding={moreMenuCollisionPadding}
-            onCloseAutoFocus={(e) => e.preventDefault()}
+            onCloseAutoFocus={(e) => { e.preventDefault(); }}
             className={MORE_MENU_CONTENT_CLASS}
           >
             {/* Scroll an inner viewport: a scrollbar on the rounded surface squares its corners. */}
             <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
               {/* Keep the click that dismisses the menu off the bar's buttons. */}
               <MenuDismissGuard triggerRef={moreMenuTriggerRef} />
-              <MessageMenuTime onShowDetails={() => setDetailsOpen(true)} />
+              <MessageMenuTime onShowDetails={() => { setDetailsOpen(true); }} />
               <ContinueResponseMenuItem />
               {!inlineEdit && <EditAssistantMessageMenuItem />}
               <ActionBarPrimitive.ExportMarkdown

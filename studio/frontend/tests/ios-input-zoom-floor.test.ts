@@ -13,7 +13,7 @@ const FLOOR_BLOCK =
   /@layer base \{\s*@media \(hover: none\) and \(pointer: coarse\) \{([\s\S]*?)\n\t\}\n\}/;
 
 test("the focus-zoom floor sits in @layer base so it beats important utilities", () => {
-  const block = css.match(FLOOR_BLOCK);
+  const block = FLOOR_BLOCK.exec(css);
   assert.ok(block, "the coarse-pointer font-size floor is gone from index.css");
 
   // Important declarations reverse layer order, so base beats text-ui-13!.
@@ -23,7 +23,7 @@ test("the focus-zoom floor sits in @layer base so it beats important utilities",
 });
 
 test("the floor skips controls that render no text of their own", () => {
-  const block = css.match(FLOOR_BLOCK);
+  const block = FLOOR_BLOCK.exec(css);
   assert.ok(block);
   for (const type of [
     "checkbox",

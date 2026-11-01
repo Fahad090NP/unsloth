@@ -8,7 +8,7 @@ import ts from "@typescript/typescript6";
 
 import { readSrc } from "./helpers/kit.ts";
 
-type Load = { status: string; url?: string; blob?: unknown };
+interface Load { status: string; url?: string; blob?: unknown }
 
 function imageHook() {
   const source = readSrc("components/assistant-ui/use-sandbox-image.ts");

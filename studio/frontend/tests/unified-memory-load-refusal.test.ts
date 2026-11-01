@@ -53,7 +53,7 @@ function captureFetch(reply: object): Record<string, unknown>[] {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  }) as typeof fetch;
+  });
   return sent;
 }
 

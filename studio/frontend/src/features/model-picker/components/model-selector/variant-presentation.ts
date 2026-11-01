@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-type PresentableGgufVariant = {
+interface PresentableGgufVariant {
   filename: string;
   quant: string;
   display_label?: string | null;
   size_bytes: number;
-};
+}
 
-export type GgufVariantPresentationGroup<T extends PresentableGgufVariant> = {
+export interface GgufVariantPresentationGroup<T extends PresentableGgufVariant> {
   key: string;
   title: string | null;
   description: string | null;
   variants: T[];
-};
+}
 
 // `.gguf` optional: an H3 quant key is the file stem; lazy quant group so the suffix wins.
 const H3_FILENAME = /^minimax_h3_(fl2va|ref2va)(?:_pruned)?-(.+?)(?:\.gguf)?$/i;
@@ -26,11 +26,11 @@ const H3_WORKFLOW_LABEL = {
   "reference-media": "References",
 } as const;
 
-type H3Presentation = {
+interface H3Presentation {
   group: "text-frames" | "reference-media";
   quantLabel: string;
   build: "Full" | "Pruned";
-};
+}
 
 function h3PresentationFor(name: string): H3Presentation | null {
   const leaf = name.split(PATH_SEPARATOR).at(-1) ?? name;

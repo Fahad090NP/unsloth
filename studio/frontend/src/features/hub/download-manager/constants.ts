@@ -57,16 +57,16 @@ export function probeDescribesCurrentRun(
     : Number.isSafeInteger(reported);
 }
 
-export type AdoptedTransports = {
+export interface AdoptedTransports {
   transport?: ResolvedTransport;
   cancelTransport?: ResolvedTransport;
-};
+}
 
 /** `cancelTransport: null` = no marker; undefined = source cannot report one. */
-export type ReportedTransports = {
+export interface ReportedTransports {
   transport?: ResolvedTransport;
   cancelTransport?: ResolvedTransport | null;
-};
+}
 
 /** Merge both fields so a probe carrying only one (e.g. /download-status) cannot erase the other. */
 export function adoptedTransports(

@@ -51,20 +51,20 @@ async function annotationScreenshot(page: HTMLElement | null): Promise<File[]> {
   return blob ? [new File([blob], "Annotated page.png", { type: "image/png" })] : [];
 }
 
-type Annotation = {
+interface Annotation {
   id: number;
   ranges: Range[];
   places?: (Place | null)[];
   quote: string;
   frame?: Frame;
   request: string;
-};
+}
 /** A drag's box, offset from its content so it scrolls with it, at the zoom and page width it was drawn at. */
-type Frame = { left: number; top: number; width: number; height: number; zoom: number; item?: number };
-type Pending = { id: number | null; ranges: Range[]; places?: (Place | null)[]; quote: string; frame?: Frame };
+interface Frame { left: number; top: number; width: number; height: number; zoom: number; item?: number }
+interface Pending { id: number | null; ranges: Range[]; places?: (Place | null)[]; quote: string; frame?: Frame }
 /** Where a range sits in a virtualized page: its text offsets, or the path to the element it selects. */
 type Place = { item: string; start: number; end: number; text: string } | { item: string; path: number[]; tag: string };
-type Box = { left: number; top: number; width: number; height: number };
+interface Box { left: number; top: number; width: number; height: number }
 
 function hasOwnText(element: Element): boolean {
   return [...element.childNodes].some(
@@ -239,7 +239,7 @@ const itemOf = (node: Node): HTMLElement | null =>
   (node instanceof Element ? node : node.parentElement)?.closest<HTMLElement>(ITEM) ?? null;
 
 /** A page's text nodes and where each starts, built once and shared by all its ranges. */
-type TextIndex = { nodes: Text[]; starts: number[]; at: Map<Node, number>; length: number };
+interface TextIndex { nodes: Text[]; starts: number[]; at: Map<Node, number>; length: number }
 
 function textIndex(item: Element): TextIndex {
   const nodes: Text[] = [];
@@ -262,7 +262,7 @@ function lastWhere<T>(items: readonly T[], test: (item: T) => boolean): number {
   let high = items.length;
   while (low < high) {
     const middle = (low + high) >> 1;
-    if (test(items[middle] as T)) low = middle + 1;
+    if (test(items[middle])) low = middle + 1;
     else high = middle;
   }
   return low - 1;
@@ -425,7 +425,7 @@ export function AnnotateLayer({
   const [, setFrame] = useState(0);
   const { setAnnotating, sendAnnotations } = useBrowserStore.getState();
 
-  const exit = () => setAnnotating(null);
+  const exit = () => { setAnnotating(null); };
 
   const committed = (): Annotation[] => {
     if (!pending) return items;
@@ -467,7 +467,7 @@ export function AnnotateLayer({
     const sent = await sendAnnotations(
       { file: fileName, url, items: outgoing.map(({ quote, request }) => ({ quote, request })) },
       files,
-    ).finally(() => setSending(false));
+    ).finally(() => { setSending(false); });
     if (sent) exit();
   };
 
@@ -482,7 +482,7 @@ export function AnnotateLayer({
         150,
       );
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => setFrame((value) => value + 1));
+      frame = requestAnimationFrame(() => { setFrame((value) => value + 1); });
     };
     // Reduced motion gives zoom a 0.01ms transition, so content settles when it ends.
     const zoomed = (event: TransitionEvent) => event.propertyName === "zoom" && redraw();
@@ -507,8 +507,8 @@ export function AnnotateLayer({
 
   // A zoom resizes the content after this render measured it, and fires no scroll or resize.
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setFrame((value) => value + 1));
-    return () => cancelAnimationFrame(frame);
+    const frame = requestAnimationFrame(() => { setFrame((value) => value + 1); });
+    return () => { cancelAnimationFrame(frame); };
   }, [zoom]);
 
   // Capture phase, so the page's own links and click handlers never see a marking press.
@@ -554,7 +554,7 @@ export function AnnotateLayer({
             width: area.width,
             height: area.height,
             zoom: zoomAt(ranges),
-            item: itemOf(ranges[0]!.startContainer)?.offsetWidth,
+            item: itemOf(ranges[0].startContainer)?.offsetWidth,
           }
         : undefined;
       setPending({ id: null, ranges, places: placesOf(ranges), quote, frame });
@@ -658,7 +658,7 @@ export function AnnotateLayer({
       } else exit();
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => { window.removeEventListener("keydown", onKeyDown); };
   });
 
   useLayoutEffect(() => {
@@ -824,7 +824,7 @@ function useCommentDictation(draft: string, onDraft: (value: string) => void) {
     }
   };
   const stop = () => void session.current?.stop();
-  return { listening, toggle: () => (listening ? stop() : start()) };
+  return { listening, toggle: () => { listening ? stop() : start(); } };
 }
 
 function CommentForm({
@@ -873,7 +873,7 @@ function CommentForm({
       <input
         ref={inputRef}
         value={draft}
-        onChange={(event) => onDraft(event.target.value)}
+        onChange={(event) => { onDraft(event.target.value); }}
         placeholder={placeholder ?? t("browser.annotate.placeholder")}
         aria-label={placeholder ?? t("browser.annotate.placeholder")}
         className="min-w-0 flex-1 bg-transparent text-ui-15 outline-none placeholder:text-muted-foreground dark:placeholder:text-neutral-400"
@@ -940,7 +940,7 @@ function AnnotateBar({
     const start = drag.current;
     const bar = barRef.current;
     const layer = bar?.parentElement;
-    if (!start || start.id !== event.pointerId || !bar || !layer) return;
+    if (start?.id !== event.pointerId || !bar || !layer) return;
     const bounds = layer.getBoundingClientRect();
     const width = bar.offsetWidth;
     const height = bar.offsetHeight;
@@ -1004,8 +1004,8 @@ function AnnotateBar({
   );
 }
 
-type WebMark = { id: number; quote: string; request: string };
-type WebPending = { id: number; quote: string; saved: boolean };
+interface WebMark { id: number; quote: string; request: string }
+interface WebPending { id: number; quote: string; saved: boolean }
 
 function accentColor(): string {
   const probe = document.createElement("span");
@@ -1046,7 +1046,7 @@ export function WebAnnotateLayer({
   const { setAnnotating, sendAnnotations } = useBrowserStore.getState();
   const nativeSend = useRef<((command: FrameCommand) => void) | null>(null);
 
-  const exit = () => setAnnotating(null);
+  const exit = () => { setAnnotating(null); };
   const command = (next: FrameCommand) =>
     native ? nativeSend.current?.(next) : sendFrameCommand(tabId, next);
   const forget = (id: number) => command({ command: "annotateForget", id });
@@ -1100,7 +1100,7 @@ export function WebAnnotateLayer({
     const sent = await sendAnnotations(
       { file: title || url || "", url, items: outgoing.map(({ quote, request }) => ({ quote, request })) },
       files,
-    ).finally(() => setSending(false));
+    ).finally(() => { setSending(false); });
     if (sent) exit();
   };
 
@@ -1166,11 +1166,11 @@ export function WebAnnotateLayer({
   startRef.current = start;
 
   useEffect(() => {
-    const listener = (event: AnnotateEvent) => handleRef.current(event);
+    const listener = (event: AnnotateEvent) => { handleRef.current(event); };
     let stop: () => void;
     if (native) {
       // One poll can carry several reports: render between them so each sees the last one's state.
-      const channel = startNativeAnnotate(tabId, (event) => flushSync(() => listener(event)));
+      const channel = startNativeAnnotate(tabId, (event) => { flushSync(() => { listener(event); }); });
       nativeSend.current = channel.send;
       stop = () => {
         nativeSend.current = null;
@@ -1195,9 +1195,9 @@ export function WebAnnotateLayer({
   useEffect(() => {
     const layer = layerRef.current;
     if (!layer) return;
-    const observer = new ResizeObserver(() => setLayout((value) => value + 1));
+    const observer = new ResizeObserver(() => { setLayout((value) => value + 1); });
     observer.observe(layer);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, []);
 
   useEffect(() => {
@@ -1208,7 +1208,7 @@ export function WebAnnotateLayer({
       else exit();
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => { window.removeEventListener("keydown", onKeyDown); };
   });
 
   useLayoutEffect(() => {
@@ -1216,7 +1216,7 @@ export function WebAnnotateLayer({
   }, [pending]);
 
   useEffect(() => {
-    const numbers: Array<[number, number]> = items.map((item, index) => [item.id, index + 1]);
+    const numbers: [number, number][] = items.map((item, index) => [item.id, index + 1]);
     if (pending && !pending.saved) numbers.push([pending.id, items.length + 1]);
     command({ command: "annotateNumbers", numbers });
   }, [tabId, items, pending]);

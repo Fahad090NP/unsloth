@@ -384,7 +384,7 @@ function ApiMonitorPanel({
         data-testid="api-monitor-panel"
         // Takes its own clicks over a macOS browser page (native-view.ts).
         data-native-clickable=""
-        onPointerDownCapture={() => raisePanel("api-monitor")}
+        onPointerDownCapture={() => { raisePanel("api-monitor"); }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -558,7 +558,7 @@ function ApiMonitorPanel({
                       key={entry.id}
                       type="button"
                       data-entry-id={entry.id}
-                      onClick={() => openApiPage(entry.id)}
+                      onClick={() => { openApiPage(entry.id); }}
                       title="Inspect this request on the API page"
                       className="flex h-9 w-full min-w-0 items-center gap-2.5 rounded-md px-3 text-left transition-colors hover:bg-nav-surface-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
@@ -572,7 +572,7 @@ function ApiMonitorPanel({
         </div>
         <button
           type="button"
-          onClick={() => openApiPage()}
+          onClick={() => { openApiPage(); }}
           className="mt-1 flex shrink-0 h-[calc(33px*var(--ui-space-scale,1))] w-full items-center justify-center gap-[calc(8.5px*var(--ui-space-scale,1))] rounded-full bg-muted/60 text-ui-13p5 font-medium tracking-nav text-nav-fg transition-colors hover:bg-nav-surface-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:bg-background/50"
         >
           <HugeiconsIcon

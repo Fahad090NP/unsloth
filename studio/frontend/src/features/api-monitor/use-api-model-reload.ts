@@ -30,13 +30,13 @@ import { monitorSelection } from "./use-resident-run-target";
 
 type Runtime = ReturnType<typeof useChatModelRuntime>;
 
-export type ReloadableModel = {
+export interface ReloadableModel {
   name: string;
   checkpoint: string;
   quant: string | null;
   active: boolean;
   isMlx?: boolean;
-};
+}
 
 function errorMessage(err: unknown, fallback: string): string | null {
   const runtime = useChatRuntimeStore.getState();
@@ -110,15 +110,15 @@ export function useApiModelReload({
   const refreshLastLoad = useCallback(() => {
     readLastLocalModelLoad()
       .then((last) =>
-        setLastLoadLabel(
+        { setLastLoadLabel(
           last
             ? last.kind === "gguf" && last.ggufVariant
               ? `${last.id} · ${last.ggufVariant}`
               : last.id
             : null,
-        ),
+        ); },
       )
-      .catch(() => setLastLoadLabel(null));
+      .catch(() => { setLastLoadLabel(null); });
   }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: residencyKey is the trigger, not an input

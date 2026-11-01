@@ -2,13 +2,13 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 export type PageStorageArea = "local" | "session" | "cookie";
-export type PageStorage = Record<PageStorageArea, Array<[string, string]>>;
+export type PageStorage = Record<PageStorageArea, [string, string][]>;
 
 // Per area and site, in characters, so caches like a site's script store aren't kept.
 const PAGE_STORAGE_QUOTA = 128 * 1024;
 const MAX_TOTAL_CHARS = 4 * 1024 * 1024;
 
-type Store = { items: Map<string, string>; chars: number };
+interface Store { items: Map<string, string>; chars: number }
 
 // In memory only, so nothing outlives the session.
 const stores = new Map<string, Store>();
@@ -32,7 +32,7 @@ export function readPageStorage(origin: string, tabId: string): PageStorage {
   return { local: entries("local"), session: entries("session"), cookie: entries("cookie") };
 }
 
-export type PageStorageWrite = {
+export interface PageStorageWrite {
   origin: string;
   tabId: string;
   area: PageStorageArea;
@@ -43,7 +43,7 @@ export type PageStorageWrite = {
   from?: unknown;
   url?: string | null;
   seq?: number | null;
-};
+}
 
 const writeListeners = new Set<(write: PageStorageWrite) => void>();
 

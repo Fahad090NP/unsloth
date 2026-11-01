@@ -30,8 +30,8 @@ export function InfoHint({
     >
       <TooltipTrigger asChild>
         <button
-          onPointerEnter={hoverOnly ? () => setHovered(true) : undefined}
-          onPointerLeave={hoverOnly ? () => setHovered(false) : undefined}
+          onPointerEnter={hoverOnly ? () => { setHovered(true); } : undefined}
+          onPointerLeave={hoverOnly ? () => { setHovered(false); } : undefined}
           type="button"
           data-slot="info-hint"
           aria-label="More info"

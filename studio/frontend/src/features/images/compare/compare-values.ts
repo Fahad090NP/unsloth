@@ -11,7 +11,7 @@
 export type AxisValueType = "int" | "float" | "str";
 
 export type ParsedValues =
-  | { ok: true; values: Array<number | string> }
+  | { ok: true; values: (number | string)[] }
   | { ok: false; error: string };
 
 // One more than A1111's own limit would never matter here: the grid is capped far below this.

@@ -22,13 +22,13 @@ const TERMINAL = new Set<StoredGenerationStatus>([
 export function generationChunkHasSubstantiveDelta(payload: unknown): boolean {
   const delta = (
     payload as {
-      choices?: Array<{
+      choices?: {
         delta?: {
           content?: unknown;
           reasoning_content?: unknown;
           reasoning_details?: unknown;
         };
-      }>;
+      }[];
     }
   )?.choices?.[0]?.delta;
   const reasoning =
@@ -152,7 +152,7 @@ export async function loadGenerationOverlaySnapshot<TMessage, TRun>(
   return { messages, activeRuns, activeRunsLoaded };
 }
 
-type RecoveryUsage = {
+interface RecoveryUsage {
   prompt_tokens?: unknown;
   completion_tokens?: unknown;
   total_tokens?: unknown;
@@ -160,7 +160,7 @@ type RecoveryUsage = {
   prompt_tokens_details?: { cached_tokens?: unknown; cache_write_tokens?: unknown };
   cache_creation_input_tokens?: unknown;
   cache_read_input_tokens?: unknown;
-};
+}
 
 export function usageCacheWriteTokens(usage: RecoveryUsage | undefined): number {
   if (typeof usage?.cache_creation_input_tokens === "number") {
@@ -170,11 +170,11 @@ export function usageCacheWriteTokens(usage: RecoveryUsage | undefined): number 
   return typeof details === "number" ? details : 0;
 }
 
-type RecoveryTimings = {
+interface RecoveryTimings {
   cache_n?: unknown;
   predicted_per_second?: unknown;
   [key: string]: unknown;
-};
+}
 
 const RECOVERED_STOP_REASONS = new Set(["stop", "length", "tool_calls", "content_filter"]);
 
@@ -287,7 +287,7 @@ export function recoveredGenerationFinalMetadata(options: {
 const THINK_OPEN = "<think>";
 const THINK_CLOSE = "</think>";
 
-export type CarriedPart = { at: number; part: unknown };
+export interface CarriedPart { at: number; part: unknown }
 
 export function generationRawContent(content: unknown): {
   raw: string;
@@ -446,14 +446,14 @@ function carriedPartKey({ at, part }: CarriedPart): string {
     : JSON.stringify([record.type, id]);
 }
 
-type ToolIdentity = {
+interface ToolIdentity {
   type?: string;
   toolCallId?: string;
   toolName?: string;
   backendToolCallId?: string;
   generationToolCallId?: string;
   toolApprovalId?: string;
-};
+}
 
 function followingCarriedMatches(matches: (number | undefined)[]) {
   let next: number | undefined;

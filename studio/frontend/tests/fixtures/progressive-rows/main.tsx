@@ -10,7 +10,7 @@ import "./styles.css";
 const params = new URLSearchParams(location.search);
 const height = Number(params.get("height") ?? 600);
 
-type Item = { id: string };
+interface Item { id: string }
 const makeItems = (count: number): Item[] =>
   Array.from({ length: count }, (_, i) => ({ id: `chat-${i}` }));
 
@@ -38,9 +38,9 @@ function App() {
   const [mounted, setMounted] = useState(true);
   useEffect(() => {
     window.fixture = {
-      setCount: (count) => setItems(makeItems(count)),
+      setCount: (count) => { setItems(makeItems(count)); },
       setMounted,
-      refresh: () => setItems((current) => current.map(({ id }) => ({ id }))),
+      refresh: () => { setItems((current) => current.map(({ id }) => ({ id }))); },
     };
   }, []);
   return (
@@ -66,4 +66,4 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root") as HTMLElement).render(<App />);
+createRoot(document.getElementById("root")!).render(<App />);

@@ -31,7 +31,7 @@ export function GpuRenderingSegmented({
           <button
             key={opt.value}
             type="button"
-            onClick={() => onChange(opt.value)}
+            onClick={() => { onChange(opt.value); }}
             aria-pressed={active}
             disabled={disabled}
             className={cn(

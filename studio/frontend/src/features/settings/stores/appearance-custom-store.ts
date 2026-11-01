@@ -40,16 +40,16 @@ export type ReduceMotionSetting = "system" | "on" | "off";
 export type ChatWidthSetting = "standard" | "wide" | "full";
 export type SentAttachmentsSetting = "auto" | "list" | "chips";
 
-export type CustomModeColors = {
+export interface CustomModeColors {
   accent: string | null;
   background: string | null;
   foreground: string | null;
-};
+}
 
-export type ImportedFont = {
+export interface ImportedFont {
   name: string;
   dataUrl: string;
-};
+}
 
 /** Settings, Help, Log out and Shutdown are pinned and never appear here. */
 export const SIDEBAR_MENU_ITEM_IDS = [
@@ -65,10 +65,10 @@ export const SIDEBAR_MENU_ITEM_IDS = [
 
 export type SidebarMenuItemId = (typeof SIDEBAR_MENU_ITEM_IDS)[number];
 
-export type SidebarMenuItemPref = {
+export interface SidebarMenuItemPref {
   id: SidebarMenuItemId;
   visible: boolean;
-};
+}
 
 export const SIDEBAR_MENU_DEFAULT_VISIBLE: Record<SidebarMenuItemId, boolean> =
   {
@@ -100,10 +100,10 @@ export const SIDEBAR_NAV_ITEM_IDS = [
 
 export type SidebarNavItemId = (typeof SIDEBAR_NAV_ITEM_IDS)[number];
 
-export type SidebarNavItemPref = {
+export interface SidebarNavItemPref {
   id: SidebarNavItemId;
   pinned: boolean;
-};
+}
 
 export const SIDEBAR_NAV_AUTO_ITEM_IDS = ["projects"] as const satisfies
   readonly SidebarNavItemId[];
@@ -215,7 +215,7 @@ export const MAX_IMPORTED_FONT_DATA_URL_LENGTH = 2_200_000;
 /** Keeps the persisted store under typical ~5M-unit localStorage quotas. */
 export const MAX_TOTAL_IMPORTED_FONT_DATA_URL_LENGTH = 4_400_000;
 
-export type AppearanceCustomization = {
+export interface AppearanceCustomization {
   colors: { light: CustomModeColors; dark: CustomModeColors };
   uiFont: string | null;
   headingFont: string | null;
@@ -241,7 +241,7 @@ export type AppearanceCustomization = {
   sidebarNav: SidebarNavItemPref[];
   /** Rows still following their automatic rule; only Projects has one. */
   sidebarNavAuto: SidebarNavItemId[];
-};
+}
 
 const EMPTY_MODE_COLORS: CustomModeColors = {
   accent: null,
@@ -605,7 +605,7 @@ export const useAppearanceCustomStore = create<AppearanceCustomState>()(
           version,
           9,
         );
-        return { customization } as AppearanceCustomState;
+        return { customization };
       },
       // Sanitize on every rehydrate: a same-version payload from an older bundle can miss fields.
       merge: (persisted, current) => ({
@@ -673,7 +673,7 @@ function readableForeground(hex: string): string {
   return FOREGROUND_DARK_FALLBACK;
 }
 
-type PaletteSurfaces = { background: string; elevated: readonly string[] };
+interface PaletteSurfaces { background: string; elevated: readonly string[] }
 
 const PALETTE_SURFACES: Record<ResolvedTheme, PaletteSurfaces> = {
   light: { background: "#ffffff", elevated: ["#ffffff"] },
@@ -1047,6 +1047,6 @@ export function prefersReducedMotion(): boolean {
   if (setting === "off") return false;
   return (
     typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
   );
 }

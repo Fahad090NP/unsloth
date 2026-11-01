@@ -35,13 +35,13 @@ export function useLowDiskNotice(): void {
           action: {
             label: t("settings.resources.storage.lowDisk.action"),
             onClick: () =>
-              openDialog("resources", { scrollTarget: "resources-caches" }),
+              { openDialog("resources", { scrollTarget: "resources-caches" }); },
           },
         },
       );
     });
     // force: a disk already full before Studio started is exactly who this is for.
     void checkDiskSpace({ force: true });
-    return () => setLowDiskNotifier(null);
+    return () => { setLowDiskNotifier(null); };
   }, [isOwner, openDialog, t]);
 }

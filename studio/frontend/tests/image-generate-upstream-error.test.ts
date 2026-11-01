@@ -18,7 +18,7 @@ const { cancelDiffusionGeneration, generateDiffusionImage, GenerateResponseLostE
 
 function respond(status: number, body: string, contentType: string) {
   globalThis.fetch = (async () =>
-    new Response(body, { status, headers: { "content-type": contentType } })) as typeof fetch;
+    new Response(body, { status, headers: { "content-type": contentType } }));
 }
 
 test("a JSON 502 from the app shows the upstream reason instead of waiting for a lost run", async () => {
@@ -50,7 +50,7 @@ test("Stop on a connection run targets the connection, a local Stop does not", a
       status: 200,
       headers: { "content-type": "application/json" },
     });
-  }) as typeof fetch;
+  });
   const { cancelConnectionImageGeneration } = await import(
     "../src/features/images/connection-cancel.ts"
   );

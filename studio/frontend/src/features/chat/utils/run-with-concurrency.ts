@@ -13,7 +13,7 @@ export async function runWithConcurrency<T>(
       while (next < items.length) {
         const item = items[next];
         next += 1;
-        await task(item as T);
+        await task(item);
       }
     }),
   );

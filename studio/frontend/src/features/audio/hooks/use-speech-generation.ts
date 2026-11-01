@@ -131,11 +131,11 @@ export function useSpeechGeneration({
     }));
   }, []);
   const setPrompt = useCallback(
-    (next: string) => setDraft("prompt", next),
+    (next: string) => { setDraft("prompt", next); },
     [setDraft],
   );
   const setAudioInstructions = useCallback(
-    (next: string) => setDraft("instructions", next),
+    (next: string) => { setDraft("instructions", next); },
     [setDraft],
   );
   const [audioLanguage, setAudioLanguage] = useState("");

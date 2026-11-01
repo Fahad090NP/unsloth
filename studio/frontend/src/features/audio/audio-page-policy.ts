@@ -74,11 +74,11 @@ export type AudioGenerationPhase =
   | "finishing"
   | null;
 
-export type AudioGenerationPresentation = {
+export interface AudioGenerationPresentation {
   status: string;
   actionLabel: string;
   canStop: boolean;
-};
+}
 
 /** No browser-visible numeric progress exists, so labels never imply a fraction or ETA. */
 export function audioGenerationPresentation(
@@ -274,13 +274,13 @@ export function trainedTtsCheckpointIsRunnableOnMac(
   );
 }
 
-type SttDownloadedStatus = {
+interface SttDownloadedStatus {
   downloaded_models?: readonly string[];
   transformers?: { downloaded_models?: readonly string[] };
   gguf?: { downloaded_models?: readonly string[] };
   mtmd?: { downloaded_models?: readonly string[] };
   audiocpp?: { downloaded_models?: readonly string[] };
-};
+}
 
 export interface SttDownloadedArtifact {
   repoId: string;
@@ -666,11 +666,11 @@ export function sttEjectSucceeded(released: boolean | undefined): boolean {
   return released !== false;
 }
 
-type SttEngineResidency = {
+interface SttEngineResidency {
   loaded_model?: string | null;
   loading?: boolean;
   available?: boolean;
-};
+}
 
 type SttResidencyStatus = SttEngineResidency & {
   transformers?: SttEngineResidency;

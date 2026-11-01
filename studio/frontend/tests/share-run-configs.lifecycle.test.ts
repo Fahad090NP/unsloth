@@ -447,7 +447,7 @@ for (const phase of [
     edit("resolved");
     if (app.inbox.getSnapshot()) {
       app.openCurrent({ location: at("/chat?new=request-1") });
-      app.schedule(() => assert.ok(!matching, "A newer edit was overwritten"));
+      app.schedule(() => { assert.ok(!matching, "A newer edit was overwritten"); });
       edit("scheduled");
       await settle();
     }
@@ -511,8 +511,8 @@ function sessionHarness({
   return {
     ...{ loadDocument, storage, errors, notices, cleared },
     parserLoads: () => parserLoads,
-    signIn: () => signal(true),
-    signOut: () => signal(false),
+    signIn: () => { signal(true); },
+    signOut: () => { signal(false); },
     receive: async (doc: Doc, source: "startup" | "event" = "event") => {
       if (desktop) {
         doc.receiver.receiveSharedRunConfigUrls([run], source);

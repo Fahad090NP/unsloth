@@ -15,11 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export type TrainFamilyOption = {
+export interface TrainFamilyOption {
   name: string;
   label: string;
   base_repos: string[];
-};
+}
 
 // Training never runs on a GGUF, so only trainable bases are listed.
 export function TrainBaseSelector({
@@ -75,7 +75,7 @@ export function TrainBaseSelector({
               return (
                 <DropdownMenuItem
                   key={repo}
-                  onSelect={() => onSelect(f.name, repo)}
+                  onSelect={() => { onSelect(f.name, repo); }}
                   className="gap-2"
                 >
                   <span className="min-w-0 flex-1 truncate">{repo}</span>

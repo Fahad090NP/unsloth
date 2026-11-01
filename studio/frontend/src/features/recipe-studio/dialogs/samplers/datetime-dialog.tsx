@@ -24,10 +24,10 @@ const DATETIME_UNITS = [
   "year",
 ];
 
-type DatetimeDialogProps = {
+interface DatetimeDialogProps {
   config: SamplerConfig;
   onUpdate: (patch: Partial<SamplerConfig>) => void;
-};
+}
 
 export function DatetimeDialog({
   config,
@@ -40,13 +40,13 @@ export function DatetimeDialog({
     key: K,
     value: SamplerConfig[K],
   ) => {
-    onUpdate({ [key]: value } as Partial<SamplerConfig>);
+    onUpdate({ [key]: value });
   };
   return (
     <div className="space-y-4">
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="grid gap-3">
         <div className="grid gap-2 sm:grid-cols-2">
@@ -62,7 +62,7 @@ export function DatetimeDialog({
               className="nodrag"
               value={config.datetime_start ?? ""}
               onChange={(event) =>
-                updateField("datetime_start", event.target.value)
+                { updateField("datetime_start", event.target.value); }
               }
             />
           </div>
@@ -78,7 +78,7 @@ export function DatetimeDialog({
               className="nodrag"
               value={config.datetime_end ?? ""}
               onChange={(event) =>
-                updateField("datetime_end", event.target.value)
+                { updateField("datetime_end", event.target.value); }
               }
             />
           </div>
@@ -91,7 +91,7 @@ export function DatetimeDialog({
           />
           <Select
             value={config.datetime_unit ?? ""}
-            onValueChange={(value) => updateField("datetime_unit", value)}
+            onValueChange={(value) => { updateField("datetime_unit", value); }}
           >
             <SelectTrigger className="nodrag w-full" id={unitId}>
               <SelectValue placeholder="Select unit" />

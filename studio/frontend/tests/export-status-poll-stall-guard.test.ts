@@ -6,9 +6,9 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type ExportLifecycle = {
+interface ExportLifecycle {
   useExportRuntimeLifecycle: () => void;
-};
+}
 
 const STATUS_POLL_INTERVAL_MS = 5_000;
 const IDLE_STATUS_POLL_INTERVAL_MS = 30_000;

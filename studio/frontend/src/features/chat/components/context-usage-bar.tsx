@@ -126,7 +126,7 @@ function useClickPin(enabled: boolean) {
     root: { open: hovered || pinned, onOpenChange: setHovered },
     trigger: {
       ref: triggerRef,
-      onClick: () => setPinned((was) => !was),
+      onClick: () => { setPinned((was) => !was); },
       "aria-expanded": pinned,
     },
   };

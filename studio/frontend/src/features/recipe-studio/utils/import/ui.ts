@@ -7,44 +7,44 @@ import { nodeDataFromConfig } from "../index";
 import { normalizeRecipeHandleId } from "../handles";
 import { isRecord, readString } from "./helpers";
 
-type UiInput = {
+interface UiInput {
   nodes?: unknown;
   edges?: unknown;
   aux_nodes?: unknown;
   layout_direction?: unknown;
   layoutDirection?: unknown;
-};
+}
 
-type ParsedAuxNode = {
+interface ParsedAuxNode {
   llm: string;
   key: string;
   x: number;
   y: number;
-};
+}
 
 export function parseUi(
   ui: UiInput | null,
 ): {
   layouts: Map<string, { x: number; y: number; width?: number }>;
   auxNodes: ParsedAuxNode[];
-  edges: Array<{
+  edges: {
     from: string;
     to: string;
     type?: string;
     sourceHandle?: string;
     targetHandle?: string;
-  }> | null;
+  }[] | null;
   layoutDirection: "LR" | "TB" | null;
 } {
   const layouts = new Map<string, { x: number; y: number; width?: number }>();
   const auxNodes: ParsedAuxNode[] = [];
-  const edges: Array<{
+  const edges: {
     from: string;
     to: string;
     type?: string;
     sourceHandle?: string;
     targetHandle?: string;
-  }> = [];
+  }[] = [];
   if (ui && Array.isArray(ui.nodes)) {
     for (const node of ui.nodes) {
       if (isRecord(node)) {

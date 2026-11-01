@@ -86,7 +86,7 @@ export function SiteFavicon({
         <img
           src={src}
           alt=""
-          onError={() => setBroken(true)}
+          onError={() => { setBroken(true); }}
           className={cn("object-contain", className)}
         />
       ) : (

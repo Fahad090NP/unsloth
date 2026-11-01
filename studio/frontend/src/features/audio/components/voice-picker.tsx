@@ -121,8 +121,8 @@ export function VoicePicker({
       <audio
         ref={audioRef}
         className="hidden"
-        onEnded={() => setPlayingId(null)}
-        onPause={() => setPlayingId(null)}
+        onEnded={() => { setPlayingId(null); }}
+        onPause={() => { setPlayingId(null); }}
       />
       {voices.length === 0 ? (
         <p className="px-1 py-2 text-ui-12 leading-snug text-muted-foreground">
@@ -224,7 +224,7 @@ export function VoicePicker({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setEditing(voice)}>
+                    <DropdownMenuItem onClick={() => { setEditing(voice); }}>
                       <HugeiconsIcon
                         icon={PencilEdit02Icon}
                         strokeWidth={1.75}

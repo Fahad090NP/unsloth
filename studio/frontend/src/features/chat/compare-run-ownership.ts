@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type CompareRun<Model> = {
+export interface CompareRun<Model> {
   readonly id: number;
   readonly controller: AbortController;
   loadingModel: Model | null;
   cleanup: Promise<void> | null;
-};
+}
 
 /** One generalized compare send; a stopped send can unwind after a newer one begins, so late
  *  callbacks check ownership before touching shared state. */

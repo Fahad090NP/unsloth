@@ -93,7 +93,7 @@ export const useChatNavigationStore = create<ChatNavigationState>(
 
     // Published from an effect every render, so bail out when nothing moved.
     publishLists: (next) =>
-      set((state) => {
+      { set((state) => {
         if (
           state.activeItemId === next.activeItemId &&
           sameRows(state.pinnedItems, next.pinnedItems) &&
@@ -104,21 +104,21 @@ export const useChatNavigationStore = create<ChatNavigationState>(
           return state;
         }
         return next;
-      }),
+      }); },
 
-    setOpenChatItem: (fn) => set({ openChatItem: fn }),
+    setOpenChatItem: (fn) => { set({ openChatItem: fn }); },
 
     // A fresh Set each time, or every account after the first shares one.
     resetAccountState: () =>
-      set({ ...ACCOUNT_STATE, unreadThreadIds: new Set(), unreadRowIds: {} }),
+      { set({ ...ACCOUNT_STATE, unreadThreadIds: new Set(), unreadRowIds: {} }); },
 
     setSelectionActive: (active) =>
-      set((state) =>
+      { set((state) =>
         state.selectionActive === active ? state : { selectionActive: active },
-      ),
+      ); },
 
     markThreadsUnread: (threadIds, rowIdByThreadId) =>
-      set((state) => {
+      { set((state) => {
         if (threadIds.length === 0) return state;
         const unreadThreadIds = new Set(state.unreadThreadIds);
         for (const id of threadIds) unreadThreadIds.add(id);
@@ -128,10 +128,10 @@ export const useChatNavigationStore = create<ChatNavigationState>(
           if (rowId) unreadRowIds[id] = rowId;
         }
         return { unreadThreadIds, unreadRowIds };
-      }),
+      }); },
 
     clearThreadsUnread: (threadIds) =>
-      set((state) => {
+      { set((state) => {
         if (!threadIds.some((id) => state.unreadThreadIds.has(id))) {
           return state;
         }
@@ -142,19 +142,19 @@ export const useChatNavigationStore = create<ChatNavigationState>(
           delete unreadRowIds[id];
         }
         return { unreadThreadIds, unreadRowIds };
-      }),
+      }); },
 
     clearAllUnreads: () =>
-      set((state) =>
+      { set((state) =>
         state.unreadThreadIds.size === 0
           ? state
           : { unreadThreadIds: new Set(), unreadRowIds: {} },
-      ),
+      ); },
 
     noteViewed: (itemId) => {
       const { recentlyViewedIds, traversal } = get();
       // Mid-walk the stack holds still, or each step would swap the top two.
-      if (traversal && traversal.order[traversal.index] === itemId) return;
+      if (traversal?.order[traversal.index] === itemId) return;
       if (recentlyViewedIds[0] === itemId) {
         if (traversal) set({ traversal: null });
         return;

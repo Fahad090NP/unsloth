@@ -34,7 +34,7 @@ async function fetchPreviews(repo: string): Promise<string[]> {
   const base = getHfDatasetsServerBase();
   const cacheKey = `${base}::${repo}`;
   const cached = _previewCache.get(cacheKey);
-  if (cached) return cached;
+  if (cached) return await cached;
   const p = (async () => {
     try {
       const res = await hubFetch(
@@ -61,7 +61,7 @@ async function fetchPreviews(repo: string): Promise<string[]> {
     }
   })();
   _previewCache.set(cacheKey, p);
-  return p;
+  return await p;
 }
 
 export function shortExampleLabel(label: string): string {
@@ -147,7 +147,7 @@ export function ExampleDatasetCards({
                 variant="outline"
                 // ml-auto keeps it right-aligned even when the previews are missing.
                 className="ml-auto shrink-0 text-xs"
-                onClick={() => onImport(ex)}
+                onClick={() => { onImport(ex); }}
                 disabled={busyId !== null}
               >
                 {busyId === ex.id ? "Importing..." : "Import"}

@@ -112,7 +112,7 @@ function recoveredToolResult(
       // Keep malformed envelopes as text.
     }
   }
-  if (sandbox && (SANDBOX_RUN_TOOLS.has(toolName as string) || files.length > 0)) {
+  if (sandbox && (SANDBOX_RUN_TOOLS.has(toolName) || files.length > 0)) {
     return { text, images: [], sessionId, files };
   }
   if (toolName === SEARCH_IMAGE_TOOL) {
@@ -126,11 +126,11 @@ function recoveredToolResult(
 
 /** Re-arms a tool call still waiting on approval after a tab reopens; the caller owns the store.
  *  Both calls must be idempotent: a card can be re-raised from the seed and its frame. */
-export type RecoveredToolConfirmations = {
+export interface RecoveredToolConfirmations {
   /** `partId` is the card's toolCallId; `sessionId` scopes the decision and "Always allow". */
   register: (partId: string, approvalId: string, sessionId: string) => void;
   resolve: (partId: string) => void;
-};
+}
 
 export function createGenerationToolRecovery(
   carried: CarriedPart[],
@@ -400,7 +400,7 @@ export function createGenerationToolRecovery(
         carried[at].part = {
           ...part,
           provenance: withToolModelSuffix(record(part.provenance), suffix),
-        } as CarriedPart["part"];
+        };
       }
       return;
     }

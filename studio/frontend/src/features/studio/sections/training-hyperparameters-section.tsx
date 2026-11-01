@@ -137,7 +137,7 @@ export function TrainingHyperparametersSection({
       <CollapsibleContent className="mt-5 data-[state=open]:overflow-visible">
         <Tabs
           value={tab}
-          onValueChange={(value) => setTab(value as HyperparameterTab)}
+          onValueChange={(value) => { setTab(value as HyperparameterTab); }}
           className="w-full"
         >
           <div className="flex justify-start">
@@ -286,7 +286,7 @@ export function TrainingHyperparametersSection({
                 step="0.001"
                 value={store.weightDecay}
                 onChange={(event) =>
-                  store.setWeightDecay(Number(event.target.value))
+                  { store.setWeightDecay(Number(event.target.value)); }
                 }
                 className="w-28 font-mono"
               />
@@ -359,7 +359,7 @@ export function TrainingHyperparametersSection({
                   type="number"
                   value={store.saveSteps}
                   onChange={(event) =>
-                    store.setSaveSteps(Number(event.target.value))
+                    { store.setSaveSteps(Number(event.target.value)); }
                   }
                   className="w-28 font-mono"
                 />
@@ -376,7 +376,7 @@ export function TrainingHyperparametersSection({
                 max="1.0"
                 value={store.evalSteps}
                 onChange={(event) =>
-                  store.setEvalSteps(Number(event.target.value))
+                  { store.setEvalSteps(Number(event.target.value)); }
                 }
                 className="w-28 font-mono"
               />
@@ -394,7 +394,7 @@ export function TrainingHyperparametersSection({
                   disabled={store.evalSteps <= 0}
                   value={store.earlyStoppingPatience}
                   onChange={(event) =>
-                    store.setEarlyStoppingPatience(Number(event.target.value))
+                    { store.setEarlyStoppingPatience(Number(event.target.value)); }
                   }
                   className="w-28 font-mono"
                 />
@@ -408,7 +408,7 @@ export function TrainingHyperparametersSection({
                 type="number"
                 value={store.randomSeed}
                 onChange={(event) =>
-                  store.setRandomSeed(Number(event.target.value))
+                  { store.setRandomSeed(Number(event.target.value)); }
                 }
                 className="w-28 font-mono"
               />

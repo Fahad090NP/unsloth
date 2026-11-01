@@ -34,7 +34,7 @@ const GENERAL_TAB = new URL(
 const { NATIVE_MAC_TITLEBAR_HEIGHT_PX, NATIVE_MAC_TRAFFIC_LIGHT_INSET_PX } =
   await import("../src/features/settings/lib/interface-scale-runtime.ts");
 
-type InterfaceScaleModule = {
+interface InterfaceScaleModule {
   sanitizeInterfaceScale: (value: unknown) => number;
   interfaceScaleToZoom: (scale: number) => number;
   getAppliedInterfaceZoom: () => number;
@@ -44,7 +44,7 @@ type InterfaceScaleModule = {
     scale: number,
     timeoutMs?: number,
   ) => Promise<void>;
-};
+}
 
 let generation = 0;
 
@@ -67,7 +67,7 @@ async function load(tauri: boolean) {
     },
   };
   if (tauri) {
-    windowStub["__TAURI_INTERNALS__"] = {};
+    windowStub.__TAURI_INTERNALS__ = {};
   }
   define("window", windowStub);
   define("document", {

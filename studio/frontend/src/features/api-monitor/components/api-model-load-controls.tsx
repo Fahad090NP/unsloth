@@ -109,11 +109,11 @@ function localSelection(
   };
 }
 
-type PendingDownload = {
+interface PendingDownload {
   id: string;
   meta: ModelSelectorChangeMeta;
   originModel: string | null;
-};
+}
 
 // Starts a staged pick's managed download and loads it on completion, as Chat does. The listener
 // is bound before the start, and a newer pick cancels this one's start result.
@@ -138,9 +138,9 @@ function useLoadAfterDownload(
     kind: DOWNLOAD_KIND.MODEL,
     repoId: pending?.id ?? "__hub_autoload_idle__",
     activeVariant: pending?.meta.ggufVariant ?? null,
-    onComplete: (variant) => settle(variant, true),
-    onError: (variant) => settle(variant, false),
-    onCancelled: (variant) => settle(variant, false),
+    onComplete: (variant) => { settle(variant, true); },
+    onError: (variant) => { settle(variant, false); },
+    onCancelled: (variant) => { settle(variant, false); },
   });
   useEffect(() => {
     if (!pending) {
@@ -330,7 +330,7 @@ export function ApiModelLoadControls({
     (modelId?: string) => {
       setPendingDownload(null);
       if (modelId) {
-        ejectModel(modelId).then(() => onSettled());
+        ejectModel(modelId).then(() => { onSettled(); });
       } else {
         onUnloadActive();
       }

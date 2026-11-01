@@ -130,7 +130,7 @@ export function pickLoadDevice<
   const ordered = devices.filter((d) => typeof d.visible_ordinal === "number");
   if (ordered.length > 0) {
     return ordered.reduce((pick, d) =>
-      (d.visible_ordinal as number) < (pick.visible_ordinal as number)
+      (d.visible_ordinal!) < (pick.visible_ordinal!)
         ? d
         : pick,
     );

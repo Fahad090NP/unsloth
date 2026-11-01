@@ -168,7 +168,7 @@ const CAN_OBSERVE =
   typeof globalThis !== "undefined";
 
 /* Fences not yet reached, so a discontinuous scroll or a print can latch them all without a render. */
-type FenceGate = {
+interface FenceGate {
   node: HTMLElement;
   near: HTMLElement | null;
   outer: HTMLElement | null;
@@ -179,7 +179,7 @@ type FenceGate = {
   latch: () => void;
   /** A no-op state write that gives React sync work to do (see latchNow). */
   poke: () => void;
-};
+}
 
 const unreached = new Set<FenceGate>();
 const pendingReaches = new Map<FenceGate, () => void>();
@@ -198,7 +198,7 @@ const queueReach = (gate: FenceGate): void => {
 
 const gateOpen = (gate: FenceGate): boolean =>
   inBand(gate.node, gate.near)
-  && (gate.near === gate.outer || inBand(gate.near as HTMLElement, gate.outer));
+  && (gate.near === gate.outer || inBand(gate.near!, gate.outer));
 
 /*
  * Upgrade inside this task so the browser never paints the plain shell. All three steps are needed:
@@ -380,7 +380,7 @@ const fenceSpeculator = createFenceSpeculator<FenceGate>({
   idle: (callback, timeout) => scheduleQuietIdleTask(callback, timeout),
   wait: (callback, ms) => {
     const timer = setTimeout(callback, ms);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   },
   enabled: () =>
     fenceMode() !== "off" && highlightWorkerState() !== "unavailable",
@@ -399,7 +399,7 @@ if (typeof window !== "undefined" && typeof window.addEventListener === "functio
     upgradeEverythingForPrint();
     setPrinting(true);
   });
-  window.addEventListener("afterprint", () => setPrinting(false));
+  window.addEventListener("afterprint", () => { setPrinting(false); });
   window.matchMedia?.("print")?.addEventListener?.("change", (event) => {
     if (event.matches) {
       upgradeEverythingForPrint();
@@ -557,7 +557,7 @@ export function useFenceReached(
     if (!node) return;
     const near = scrollerOf(node);
     const outer = outermostScrollerOf(node);
-    if (inBand(node, near) && (near === outer || inBand(near as HTMLElement, outer))) {
+    if (inBand(node, near) && (near === outer || inBand(near!, outer))) {
       // The cascading render is intended: once per on-screen fence, versus painted frames of plain code.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLatched(true);
@@ -575,7 +575,7 @@ export function useFenceReached(
     // Watch the pane, not the fence, against the outer root: the fence would be clipped by the pane.
     const gates: [Element, Element | null][] = near === outer
       ? [[node, near]]
-      : [[node, near], [near as HTMLElement, outer]];
+      : [[node, near], [near!, outer]];
     const seen = gates.map(() => false);
     const observers = gates.map(([, root], i) => new IntersectionObserver(
       (entries) => {
@@ -590,7 +590,7 @@ export function useFenceReached(
       },
       { root, rootMargin: REACH_MARGIN },
     ));
-    gates.forEach(([target], i) => observers[i].observe(target));
+    gates.forEach(([target], i) => { observers[i].observe(target); });
 
     const registered: FenceGate = {
       node,
@@ -598,11 +598,11 @@ export function useFenceReached(
       outer,
       language,
       chars,
-      warm: (tokens) => warmRef.current(tokens),
+      warm: (tokens) => { warmRef.current(tokens); },
       speculate: (settle) => speculateRef.current(settle),
-      latch: () => setLatched(true),
+      latch: () => { setLatched(true); },
       // Reuses `generation`: this fence just latched, so the bump costs one render.
-      poke: () => setGeneration((n) => n + 1),
+      poke: () => { setGeneration((n) => n + 1); },
     };
     unreached.add(registered);
     watchScrolling();
@@ -949,7 +949,7 @@ const flyingDuringFrame = (
  */
 let printing = false;
 
-type PrintTokenizer = { chars: number; tokenizeNow: () => boolean };
+interface PrintTokenizer { chars: number; tokenizeNow: () => boolean }
 const awaitingWorker = new Set<PrintTokenizer>();
 const PRINT_TOKENIZE_CHARS = 10 * MAX_HIGHLIGHT_CHARS;
 
@@ -1039,7 +1039,7 @@ const highlightQueue = createFenceHighlightQueue({
     };
   },
   blocked: () => inputPointerHeld() || highlightQuietIn() > 0 || selectionInFence(liveSelection()),
-  commit: (run) => flushSync(run),
+  commit: (run) => { flushSync(run); },
 });
 
 const watchHighlighting = (): void => {
@@ -1149,7 +1149,7 @@ function useFenceHighlightLimit(
       const visible = progress.located ? 0 : visibleHighlightLine(code.current, frame.current);
       setPrevious({ tokens, progress: advanceHighlightProgress(tokens, progress, visible) });
       return true;
-    }, () => setPrevious({ tokens, progress: null }));
+    }, () => { setPrevious({ tokens, progress: null }); });
     return () => {
       cancel();
       unwatchHighlighting();
@@ -1282,11 +1282,11 @@ type LineWindowState =
 
 const UNMEASURED: LineWindowState = { measured: false };
 
-type FenceMetrics = {
+interface FenceMetrics {
   lineHeight: number;
   contentInset: number;
   insets: number;
-};
+}
 
 type FenceGeometry = FenceMetrics & {
   scroller: HTMLElement | null;
@@ -1498,7 +1498,7 @@ function useLineWindow(
     current.current = next;
     pinned.current = pins;
     const update = { measured: true, window: next, pins };
-    if (shifting) startTransition(() => setState(update));
+    if (shifting) startTransition(() => { setState(update); });
     else setState(update);
   };
 
@@ -1508,7 +1508,7 @@ function useLineWindow(
       geometry.current = null;
       return;
     }
-    const run = () => measure.current();
+    const run = () => { measure.current(); };
     windowedFences.add(run);
     watchWindows();
     run();

@@ -3,14 +3,14 @@
 
 export const STREAM_COOLDOWN_MS = 2_000;
 
-type RunningState = { runningByThreadId: Record<string, boolean> };
+interface RunningState { runningByThreadId: Record<string, boolean> }
 
-export type StreamActivityStore = {
+export interface StreamActivityStore {
   getState(): RunningState;
   subscribe(listener: (next: RunningState, previous: RunningState) => void): () => void;
-};
+}
 
-export type StreamActivity = { active(): boolean };
+export interface StreamActivity { active(): boolean }
 
 const anyRunning = (running: Record<string, boolean>): boolean =>
   Object.values(running).some(Boolean);

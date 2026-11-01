@@ -9,12 +9,12 @@ import type { ElementInfo } from "./page-agent";
 import { type AgentPermissions, patternMatches, ruleFor } from "./permissions";
 
 /** `prompt` is for the model; `ask`, `host` and `name` let the panel say it in the reader's language. */
-export type Question = {
+export interface Question {
   ask: "open" | "signIn" | "submit" | "click" | "history" | "script" | "pointer";
   host: string;
   name: string;
   detail: string;
-};
+}
 
 /** `linked`: allowed only because the page links there, so its site isn't approved for addresses the model makes up. */
 export type Gate =
@@ -25,7 +25,7 @@ export type Gate =
 const ALLOW: Gate = { kind: "allow" };
 const LINKED: Gate = { kind: "allow", linked: true };
 
-export type SitePolicy = { allowedDomains: string[]; blockedDomains: string[] };
+export interface SitePolicy { allowedDomains: string[]; blockedDomains: string[] }
 
 export function hostOfUrl(url: string): string {
   try {
@@ -72,7 +72,7 @@ export function navigationBlocks(url: string, policy: SitePolicy, permissions: A
     : "the user only lets the agent open the sites they allowed in Settings";
 }
 
-export type NavigationContext = {
+export interface NavigationContext {
   policy: SitePolicy;
   permissions: AgentPermissions;
   /** The page the agent is on: moving within a site needs no new OK. */
@@ -81,7 +81,7 @@ export type NavigationContext = {
   /** Links on the page the agent last read: following one carries nothing the model made up. */
   pageLinks: ReadonlySet<string>;
   userText: string;
-};
+}
 
 // Hosts that give anyone a subdomain (from the public suffix list's private section).
 const SHARED_HOSTS = [

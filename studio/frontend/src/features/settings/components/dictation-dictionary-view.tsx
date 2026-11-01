@@ -69,7 +69,7 @@ export function DictationDictionaryView({ onBack }: { onBack: () => void }) {
           >
             <Input
               value={entry}
-              onChange={(e) => updateDictionaryEntry(index, e.target.value)}
+              onChange={(e) => { updateDictionaryEntry(index, e.target.value); }}
               // Tabbing to remove must not commit-splice first, which would delete the wrong entry.
               onBlur={(e) => {
                 if (
@@ -91,8 +91,8 @@ export function DictationDictionaryView({ onBack }: { onBack: () => void }) {
               className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
               data-remove-index={index}
               // Prevent blur on an empty input, which would splice this row and delete the next.
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => removeDictionaryEntry(index)}
+              onMouseDown={(e) => { e.preventDefault(); }}
+              onClick={() => { removeDictionaryEntry(index); }}
               aria-label={t("settings.voice.dictionary.removeEntryAria", {
                 index: index + 1,
               })}
@@ -104,7 +104,7 @@ export function DictationDictionaryView({ onBack }: { onBack: () => void }) {
         <div className="flex items-center gap-2 py-1.5">
           <Input
             value={newEntry}
-            onChange={(e) => setNewEntry(e.target.value)}
+            onChange={(e) => { setNewEntry(e.target.value); }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();

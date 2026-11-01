@@ -30,7 +30,7 @@ import { vi } from "./locales/vi.ts";
 import { zhCN } from "./locales/zh-CN.ts";
 import { zhTW } from "./locales/zh-TW.ts";
 
-type Tree = { readonly [k: string]: string | Tree };
+interface Tree { readonly [k: string]: string | Tree }
 
 function isTree(v: unknown): v is Tree {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -119,30 +119,30 @@ function checkExtras(
 }
 
 const overlays: Record<string, Tree> = {
-  "zh-CN": zhCN as unknown as Tree,
-  "pt-BR": ptBR as unknown as Tree,
-  ja: ja as unknown as Tree,
-  es: es as unknown as Tree,
-  hi: hi as unknown as Tree,
-  ar: ar as unknown as Tree,
-  he: he as unknown as Tree,
-  fr: fr as unknown as Tree,
-  ru: ru as unknown as Tree,
-  sv: sv as unknown as Tree,
-  de: de as unknown as Tree,
-  ko: ko as unknown as Tree,
-  it: it as unknown as Tree,
-  "zh-TW": zhTW as unknown as Tree,
-  "es-419": es419 as unknown as Tree,
-  id: id as unknown as Tree,
-  vi: vi as unknown as Tree,
-  tr: tr as unknown as Tree,
-  pl: pl as unknown as Tree,
-  uk: uk as unknown as Tree,
-  th: th as unknown as Tree,
-  fa: fa as unknown as Tree,
-  cs: cs as unknown as Tree,
-  nl: nl as unknown as Tree,
+  "zh-CN": zhCN,
+  "pt-BR": ptBR,
+  ja: ja,
+  es: es,
+  hi: hi,
+  ar: ar,
+  he: he,
+  fr: fr,
+  ru: ru,
+  sv: sv,
+  de: de,
+  ko: ko,
+  it: it,
+  "zh-TW": zhTW,
+  "es-419": es419,
+  id: id,
+  vi: vi,
+  tr: tr,
+  pl: pl,
+  uk: uk,
+  th: th,
+  fa: fa,
+  cs: cs,
+  nl: nl,
 };
 
 const requiredOverlayPrefixes = ["picker.", "studio."] as const;
@@ -158,8 +158,8 @@ let anyMissing = false;
 for (const [locale, overlay] of Object.entries(overlays)) {
   const errors: string[] = [];
   const missing: string[] = [];
-  checkOverlay(en as unknown as Tree, overlay, "", errors, missing);
-  checkExtras(overlay, en as unknown as Tree, "", errors);
+  checkOverlay(en, overlay, "", errors, missing);
+  checkExtras(overlay, en, "", errors);
   for (const key of missing) {
     if (requiresOverlay(key)) {
       errors.push(`${key} must be localized`);

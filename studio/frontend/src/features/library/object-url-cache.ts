@@ -16,7 +16,7 @@ const objectUrls = new Map<string, Entry>();
 let cachedBytes = 0;
 
 function revoke(entry: Entry): void {
-  void entry.url.then((url) => URL.revokeObjectURL(url), () => {});
+  void entry.url.then((url) => { URL.revokeObjectURL(url); }, () => {});
 }
 
 export function clearCachedObjectUrls(): void {

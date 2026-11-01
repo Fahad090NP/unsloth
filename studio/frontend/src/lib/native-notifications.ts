@@ -132,7 +132,7 @@ async function ensurePermission(allowRequest: boolean): Promise<boolean> {
     }
   }
 
-  return checkNativePermission(allowRequest);
+  return await checkNativePermission(allowRequest);
 }
 
 export async function primeNativeNotificationPermission(): Promise<boolean> {

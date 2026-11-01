@@ -34,7 +34,7 @@ export function BypassPermissionsMenuItem() {
         <PermissionModeMenuItems
           // Defer past Radix focus restoration, or the dropdown steals focus from the dialog trap.
           onRequestFullAccess={() =>
-            setTimeout(() => setBypassConfirmOpen(true), 0)
+            setTimeout(() => { setBypassConfirmOpen(true); }, 0)
           }
         />
       </DropdownMenuSubContent>
@@ -55,7 +55,7 @@ export function BypassPermissionsConfirmDialog() {
           setPermissionMode("full");
           setOpen(false);
         }}
-        onClose={() => setOpen(false)}
+        onClose={() => { setOpen(false); }}
       />
     </AlertDialog>
   );

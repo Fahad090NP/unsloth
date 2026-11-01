@@ -71,7 +71,7 @@ const qwen3TimbrePanel: AudioToolPanel<TimbreOnlyValue> = {
           id="clone-timbre-only"
           checked={value.timbreOnly}
           disabled={disabled}
-          onCheckedChange={(timbreOnly) => onChange({ timbreOnly })}
+          onCheckedChange={(timbreOnly) => { onChange({ timbreOnly }); }}
         />
       </FieldLabel>
       <p className="text-ui-11p5 leading-snug text-muted-foreground">
@@ -93,7 +93,7 @@ const indexTts2EmotionPanel: AudioToolPanel<EmotionValue> = {
         ariaLabel="Emotion source"
         value={value.mode}
         onValueChange={(mode) =>
-          onChange({ ...value, mode: mode as EmotionMode })
+          { onChange({ ...value, mode: mode as EmotionMode }); }
         }
         disabled={disabled}
         fit={true}
@@ -116,7 +116,7 @@ const indexTts2EmotionPanel: AudioToolPanel<EmotionValue> = {
             value={value.text}
             disabled={disabled}
             onChange={(event) =>
-              onChange({ ...value, text: event.target.value })
+              { onChange({ ...value, text: event.target.value }); }
             }
             className="min-h-16"
           />
@@ -127,7 +127,7 @@ const indexTts2EmotionPanel: AudioToolPanel<EmotionValue> = {
           label="Emotion clip"
           hint="Its mood is copied, not its voice."
           value={value.source}
-          onChange={(source) => onChange({ ...value, source })}
+          onChange={(source) => { onChange({ ...value, source }); }}
           onStatusChange={(status) => {
             const sourceProblem = emotionSourceProblem(status);
             if (sourceProblem !== (value.sourceProblem ?? null)) {
@@ -167,7 +167,7 @@ const indexTts2EmotionPanel: AudioToolPanel<EmotionValue> = {
         step={0.05}
         disabled={disabled}
         info="How strongly the emotion colours the voice."
-        onChange={(alpha) => onChange({ ...value, alpha })}
+        onChange={(alpha) => { onChange({ ...value, alpha }); }}
       />
     </PanelSection>
   ),
@@ -188,7 +188,7 @@ const chatterboxExpressivenessPanel: AudioToolPanel<ExpressivenessValue> = {
         step={0.05}
         disabled={disabled}
         info="Higher is more dramatic; 0.5 is natural."
-        onChange={(exaggeration) => onChange({ ...value, exaggeration })}
+        onChange={(exaggeration) => { onChange({ ...value, exaggeration }); }}
       />
       <ParamSlider
         label="Guidance"
@@ -198,7 +198,7 @@ const chatterboxExpressivenessPanel: AudioToolPanel<ExpressivenessValue> = {
         step={0.05}
         disabled={disabled}
         info="How closely the delivery follows the reference. Lower suits fast speakers."
-        onChange={(guidance) => onChange({ ...value, guidance })}
+        onChange={(guidance) => { onChange({ ...value, guidance }); }}
       />
     </PanelSection>
   ),
@@ -221,7 +221,7 @@ const cosyVoiceModePanel: AudioToolPanel<CosyVoiceModeValue> = {
         ariaLabel="Mode"
         value={value.mode}
         onValueChange={(mode) =>
-          onChange({ ...value, mode: mode as CosyVoiceMode })
+          { onChange({ ...value, mode: mode as CosyVoiceMode }); }
         }
         disabled={disabled}
         fit={true}
@@ -241,7 +241,7 @@ const cosyVoiceModePanel: AudioToolPanel<CosyVoiceModeValue> = {
             disabled={disabled}
             placeholder="Speak slowly, in a calm and warm tone."
             onChange={(event) =>
-              onChange({ ...value, instruction: event.target.value })
+              { onChange({ ...value, instruction: event.target.value }); }
             }
             className="min-h-16"
           />
@@ -263,7 +263,7 @@ const f5SpeedDialectPanel: AudioToolPanel<SpeedDialectValue> = {
         step={0.05}
         disabled={disabled}
         format={(v) => `${v.toFixed(2)}×`}
-        onChange={(speed) => onChange({ ...value, speed })}
+        onChange={(speed) => { onChange({ ...value, speed }); }}
       />
       {specs.some((spec) => spec.name === "dialect") ? (
         <div className="grid gap-1.5">
@@ -275,7 +275,7 @@ const f5SpeedDialectPanel: AudioToolPanel<SpeedDialectValue> = {
           </FieldLabel>
           <Select
             value={value.dialect}
-            onValueChange={(dialect) => onChange({ ...value, dialect })}
+            onValueChange={(dialect) => { onChange({ ...value, dialect }); }}
             disabled={disabled}
           >
             <SelectTrigger id="clone-dialect" size="sm" className="w-full">

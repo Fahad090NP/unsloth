@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type FindTargetResult = { count: number | null; active: number };
+export interface FindTargetResult { count: number | null; active: number }
 
-export type FindTarget = {
+export interface FindTarget {
   id: string;
   available: () => boolean;
   contains: (node: Node) => boolean;
@@ -14,7 +14,7 @@ export type FindTarget = {
   takeFocus?: () => boolean;
   /** Gives keys back after `takeFocus`, as the bar closes. */
   returnFocus?: () => void;
-};
+}
 
 export const EMPTY_FIND_RESULT: FindTargetResult = { count: 0, active: -1 };
 

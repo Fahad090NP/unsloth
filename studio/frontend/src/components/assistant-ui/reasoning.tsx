@@ -368,7 +368,7 @@ function ReasoningCopyButton({
     if (await copyToClipboard(reasoningText)) {
       setCopied(true);
       if (resetRef.current) clearTimeout(resetRef.current);
-      resetRef.current = setTimeout(() => setCopied(false), COPY_RESET_MS);
+      resetRef.current = setTimeout(() => { setCopied(false); }, COPY_RESET_MS);
     }
   }, [aui, startIndex, endIndex]);
 
@@ -407,10 +407,10 @@ function useReasoningTranscriptMode({
     if (!session.anchor) return;
     // Captured only on first mount; reopening must not replay the threshold reading position.
     const timer = setTimeout(
-      () => setSession((current) => ({ ...current, anchor: undefined })),
+      () => { setSession((current) => ({ ...current, anchor: undefined })); },
       0,
     );
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [session.anchor]);
   if (session.messageId !== messageId || (!wantsWindow && session.active))
     setSession({ messageId, active: wantsWindow });
@@ -436,7 +436,7 @@ function useReasoningTranscriptMode({
       )
     ) {
       const timer = setTimeout(activate, 0);
-      return () => clearTimeout(timer);
+      return () => { clearTimeout(timer); };
     }
     const handleSelectionChange = () => {
       if (
@@ -449,7 +449,7 @@ function useReasoningTranscriptMode({
     };
     document.addEventListener("selectionchange", handleSelectionChange);
     return () =>
-      document.removeEventListener("selectionchange", handleSelectionChange);
+      { document.removeEventListener("selectionchange", handleSelectionChange); };
   }, [messageId, reasoningContentRef, session.active, wantsWindow]);
   return {
     active:
@@ -540,12 +540,12 @@ function ReasoningTail({
       return;
     }
     if (!capped || !box || !content) return;
-    const check = () => setOverflowing(content.offsetHeight > box.clientHeight);
+    const check = () => { setOverflowing(content.offsetHeight > box.clientHeight); };
     const observer = new ResizeObserver(check);
     observer.observe(content);
     observer.observe(box);
     check();
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [cappable, capped]);
   const clipped = capped && overflowing;
   const flexBox = useTailFlexBox(capped, streaming);
@@ -587,7 +587,7 @@ function ReasoningTail({
           type="button"
           data-slot="reasoning-show-full"
           aria-expanded={expanded}
-          onClick={() => onExpandedChange(!expanded)}
+          onClick={() => { onExpandedChange(!expanded); }}
           className="mt-2 inline-flex cursor-pointer items-center gap-1.5 font-medium text-muted-foreground text-xs transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           {expanded ? "Collapse thinking" : "Expand thinking"}
@@ -872,7 +872,7 @@ const ReasoningGroupBlock = ({
     if (!foldLead) return;
     setReasoningRoundOpen(roundKey, isOpen);
   }, [foldLead, isOpen, roundKey]);
-  useLayoutEffect(() => () => clearReasoningRound(roundKey), [roundKey]);
+  useLayoutEffect(() => () => { clearReasoningRound(roundKey); }, [roundKey]);
 
   // Detach from bottom on a manual open, or the viewport pins the bottom and shoves the header up.
   const detachFromBottom = useDetachThreadFromBottom();

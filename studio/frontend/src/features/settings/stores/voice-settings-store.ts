@@ -173,7 +173,7 @@ export interface VoiceSettingsState {
 /** On quota errors drop the oldest dictations instead of losing the whole save. */
 const quotaSafeLocalStorage = {
   getItem: (key: string) => localStorage.getItem(key),
-  removeItem: (key: string) => localStorage.removeItem(key),
+  removeItem: (key: string) => { localStorage.removeItem(key); },
   setItem: (key: string, value: string) => {
     try {
       localStorage.setItem(key, value);
@@ -389,7 +389,7 @@ export const useVoiceSettingsStore = create<VoiceSettingsState>()(
           dictationLanguage,
           dictionary: Array.isArray(saved?.dictionary)
             ? saved.dictionary
-                .filter((v): v is string => typeof v === "string" && !!v.trim())
+                .filter((v): v is string => typeof v === "string" && Boolean(v.trim()))
                 .map((v) => v.trim().slice(0, MAX_DICTIONARY_ENTRY_LENGTH))
                 .slice(0, MAX_DICTIONARY_ENTRIES)
             : [],

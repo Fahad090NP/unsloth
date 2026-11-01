@@ -12,10 +12,10 @@ import type {
   LocalInventoryRow,
 } from "../types";
 
-export type SelectionResolution = {
+export interface SelectionResolution {
   selectedId: string | null;
   hiddenByFilters: boolean;
-};
+}
 
 export type SelectionUrlSync =
   | { action: "select"; selectedId: string | null }
@@ -67,11 +67,11 @@ function idMap<T extends { id: string }>(rows: readonly T[]): Map<string, T> {
   return new Map(rows.map((row) => [row.id, row]));
 }
 
-type CacheSelectionIdentity = {
+interface CacheSelectionIdentity {
   source: "cache" | "download" | "hf_cache";
   modelFormat: CachedInventoryRow["modelFormat"];
   repoKey: string;
-};
+}
 
 const MODEL_FORMATS = new Set<CachedInventoryRow["modelFormat"]>([
   "gguf",

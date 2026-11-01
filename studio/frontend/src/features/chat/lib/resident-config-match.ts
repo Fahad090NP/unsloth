@@ -91,7 +91,7 @@ function sameGpuPlacement(
 }
 
 /** Unset values the applier fills in; required so callers cannot forget them. */
-export type StandingConfigDefaults = {
+export interface StandingConfigDefaults {
   speculativeType: string | null;
   gpuMemoryMode: "auto" | "manual";
   gpuLayers: number;
@@ -110,9 +110,9 @@ export type StandingConfigDefaults = {
   splitRatio: number[] | null;
   /** Passed in rather than imported to keep this module a React-free leaf. */
   normalizeSpeculative: (value: string | null | undefined) => string | null;
-};
+}
 
-type SettingCheck = {
+interface SettingCheck {
   placement?: true;
   mlxComparable?: true;
   ggufPlacement?: true;
@@ -125,7 +125,7 @@ type SettingCheck = {
     status: ResidentRuntime,
     standing: StandingConfigDefaults,
   ) => boolean;
-};
+}
 
 /** Fallbacks the backend retries on an identical load (see `_runtime_matches_intent`). */
 const RETRYABLE_SPEC_FALLBACKS = new Set([

@@ -45,7 +45,7 @@ interface CacheEntry {
 const cache = new LruMap<string, CacheEntry>(CACHE_MAX_ENTRIES);
 const inflight = new Map<string, Promise<CachedResult>>();
 let active = 0;
-const waiting: Array<() => void> = [];
+const waiting: (() => void)[] = [];
 
 function acquire(): Promise<void> {
   if (active < MAX_CONCURRENT) {
@@ -109,7 +109,7 @@ export async function cachedModelInfo(
   if (!isStale(key)) return cache.get(key)!.data;
 
   const flying = inflight.get(key);
-  if (flying) return flying;
+  if (flying) return await flying;
 
   const promise = (async () => {
     await acquire();
@@ -143,5 +143,5 @@ export async function cachedModelInfo(
   })();
 
   inflight.set(key, promise);
-  return promise;
+  return await promise;
 }

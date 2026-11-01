@@ -85,7 +85,7 @@ async function activeSiblingTransport(
   const timeout = disposableTimeoutSignal(TRANSPORT_STATUS_TIMEOUT_MS);
   const downloads = await getActiveModelDownloads(req.repoId, timeout.signal, {
     fresh: true,
-  }).finally(() => timeout.dispose());
+  }).finally(() => { timeout.dispose(); });
   const variant = req.variant.trim().toLowerCase();
   for (const download of downloads) {
     const siblingVariant = download.variant?.trim().toLowerCase();
@@ -176,7 +176,7 @@ export async function requestStart(
   const originSelectionEpoch = currentStartToastSelectionEpoch();
   // Fire-and-forget, never a gate; the check throttles itself.
   void checkDiskSpace();
-  return runWithPendingStartGuard(req, async () => {
+  return await runWithPendingStartGuard(req, async () => {
     const preferred: TransportMode = await resolveTransportMode();
     let mode: TransportMode = preferred;
     try {
@@ -237,7 +237,7 @@ export async function requestStart(
       }
       if (
         status.has_partial &&
-        (status.resumable === false || !status.last_transport)
+        (!status.resumable || !status.last_transport)
       ) {
         // Do not raise during preflight: the backend may still reject or attach this start.
         restartDisclosure = true;

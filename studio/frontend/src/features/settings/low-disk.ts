@@ -10,14 +10,14 @@ export const REARM_MARGIN_GB = 5;
 
 export type DiskPressure = "ok" | "low" | "critical";
 
-export type DiskReading = {
+export interface DiskReading {
   free_gb: number | null | undefined;
   total_gb: number | null | undefined;
-};
+}
 
-export type LowDiskState = {
+export interface LowDiskState {
   notified: DiskPressure;
-};
+}
 
 export const INITIAL_LOW_DISK_STATE: LowDiskState = { notified: "ok" };
 
@@ -44,10 +44,10 @@ export function diskPressure(disk: DiskReading): DiskPressure | null {
   return "ok";
 }
 
-export type LowDiskDecision = {
+export interface LowDiskDecision {
   state: LowDiskState;
   notify: Exclude<DiskPressure, "ok"> | null;
-};
+}
 
 export function nextLowDiskNotice(
   state: LowDiskState,
@@ -62,7 +62,7 @@ export function nextLowDiskNotice(
   if (RANK[pressure] < RANK[state.notified]) {
     const forgotten = forgetRearmedLevels(
       state.notified,
-      disk.free_gb as number,
+      disk.free_gb!,
     );
     if (forgotten !== state.notified) {
       return { state: { notified: forgotten }, notify: null };

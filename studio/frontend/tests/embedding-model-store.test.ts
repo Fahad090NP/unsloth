@@ -14,7 +14,7 @@ const { useEmbeddingModelStore } = await import(
   "../src/features/settings/stores/embedding-model-store.ts"
 );
 
-type Settings = {
+interface Settings {
   embeddingModel: string;
   embeddingGgufRepo: string;
   defaultEmbeddingModel: string;
@@ -24,7 +24,7 @@ type Settings = {
   backendLoaded: boolean;
   embeddingDevice: "auto" | "cpu" | "gpu";
   embeddingDeviceLocked: boolean;
-};
+}
 
 function settings(model: string): Settings {
   return {
@@ -60,7 +60,7 @@ function respondWith(model: string, release?: Promise<void>): void {
         loaded: false,
       }),
     } as unknown as Response;
-  }) as typeof fetch;
+  });
 }
 
 function reset(): void {
@@ -85,7 +85,7 @@ test("a save that lands mid-read is not undone by it", async () => {
   reset();
   let release = (): void => undefined;
   const gate = new Promise<void>((resolve) => {
-    release = () => resolve();
+    release = () => { resolve(); };
   });
   respondWith("unsloth/bge-small-en-v1.5", gate);
   const reading = useEmbeddingModelStore.getState().load();
@@ -116,12 +116,12 @@ test("a slow read cannot report over the one that overtook it", async () => {
   reset();
   let release = (): void => undefined;
   const gate = new Promise<void>((resolve) => {
-    release = () => resolve();
+    release = () => { resolve(); };
   });
   globalThis.fetch = (async () => {
     await gate;
     throw new Error("network unreachable");
-  }) as typeof fetch;
+  });
   const first = useEmbeddingModelStore.getState().load();
 
   respondWith("unsloth/bge-m3");
@@ -147,7 +147,7 @@ test("a failed read reports the backend's reason", async () => {
       ok: false,
       status: 500,
       json: async () => ({ detail: "storage is offline" }),
-    }) as unknown as Response) as typeof fetch;
+    }) as unknown as Response);
   await useEmbeddingModelStore.getState().load();
   assert.equal(
     useEmbeddingModelStore.getState().loadError,
@@ -160,7 +160,7 @@ test("an older save cannot land on top of a newer one", async () => {
   const store = useEmbeddingModelStore.getState();
   let releaseFirst = (): void => undefined;
   const firstGate = new Promise<void>((resolve) => {
-    releaseFirst = () => resolve();
+    releaseFirst = () => { resolve(); };
   });
   const first = store.save(async () => {
     await firstGate;
@@ -212,7 +212,7 @@ test("a superseded save is reconciled against the backend", async () => {
   respondWith("unsloth/bge-m3");
   let releaseFirst = (): void => undefined;
   const firstGate = new Promise<void>((resolve) => {
-    releaseFirst = () => resolve();
+    releaseFirst = () => { resolve(); };
   });
   const first = store.save(async () => {
     await firstGate;
@@ -242,7 +242,7 @@ test("a lone save that fails does not trigger a re-read", async () => {
   globalThis.fetch = (async () => {
     reads += 1;
     throw new Error("should not be read");
-  }) as typeof fetch;
+  });
   await store
     .save(async () => {
       throw new Error("could not verify that model");
@@ -266,7 +266,7 @@ test("a save with nothing overlapping it commits without a re-read", async () =>
   globalThis.fetch = (async () => {
     reads += 1;
     throw new Error("should not be read");
-  }) as typeof fetch;
+  });
   assert.ok(await store.save(async () => settings("unsloth/bge-m3")));
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(reads, 0);
@@ -282,7 +282,7 @@ test("the settle flag does not carry into the next save", async () => {
   respondWith("unsloth/bge-m3");
   let release = (): void => undefined;
   const gate = new Promise<void>((resolve) => {
-    release = () => resolve();
+    release = () => { resolve(); };
   });
   const first = store.save(async () => {
     await gate;
@@ -297,7 +297,7 @@ test("the settle flag does not carry into the next save", async () => {
   globalThis.fetch = (async () => {
     reads += 1;
     throw new Error("should not be read");
-  }) as typeof fetch;
+  });
   await store.save(async () => settings("unsloth/bge-small-en-v1.5"));
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(reads, 0, "the earlier overlap was already settled");

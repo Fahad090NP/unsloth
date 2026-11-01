@@ -18,17 +18,16 @@ const tabUrl = new URL(
 // The tab only reads the key list for its reset; the rows are a stubbed component.
 const notificationPrefStub = { NOTIFICATION_PREF_KEYS: [] };
 
-type EffectSlot = {
+interface EffectSlot {
   cleanup?: () => void;
   deps?: unknown[];
   next?: () => undefined | (() => void);
-};
+}
 
 function sameDeps(left: unknown[] | undefined, right: unknown[] | undefined) {
   return (
     left !== undefined &&
-    right !== undefined &&
-    left.length === right.length &&
+    left.length === right?.length &&
     left.every((value, index) => Object.is(value, right[index]))
   );
 }
@@ -46,7 +45,7 @@ function nodes(node: unknown): StubElement[] {
 
 function generalTab(initialToken: string) {
   const states: unknown[] = [];
-  const refs: Array<{ current: unknown }> = [];
+  const refs: { current: unknown }[] = [];
   const effects: EffectSlot[] = [];
   const writes: string[] = [];
   let stateCursor = 0;

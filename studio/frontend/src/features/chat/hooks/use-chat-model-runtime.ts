@@ -207,17 +207,17 @@ import type {
   ChatModelRow,
 } from "../types/runtime";
 
-type LoadingModelState = {
+interface LoadingModelState {
   id: string;
   displayName: string;
   isDownloaded?: boolean;
   isCachedLora?: boolean;
   ggufVariant?: string | null;
   nativePathToken?: string | null;
-};
+}
 
 /** One attempt at claiming the shared load slot; its token lets late callbacks prove ownership. */
-type ActiveModelLoadRun = {
+interface ActiveModelLoadRun {
   attemptId: number;
   intentId: number;
   abortController: AbortController;
@@ -240,7 +240,7 @@ type ActiveModelLoadRun = {
   /** Resolves when the owning coroutine unwinds; cancellation holds the slot until then. */
   settledPromise: Promise<void>;
   markSettled: () => void;
-};
+}
 
 let modelSelectionIntentEpoch = 0;
 /** Bumped when a load ends without loading; selectModel itself resolves quietly then. */
@@ -248,7 +248,7 @@ let modelLoadCancelEpoch = 0;
 let pendingExternalReplacement:
   | { intentId: number; config?: PerModelConfig }
   | null = null;
-export type SelectedModelInput = {
+export interface SelectedModelInput {
   id: string;
   loadId?: string | null;
   isLora?: boolean;
@@ -278,7 +278,7 @@ export type SelectedModelInput = {
   stillWanted?: () => boolean;
   config?: PerModelConfig;
   previousConfig?: PerModelConfig;
-};
+}
 
 /** An absent route is not a failed read: only the second one withholds an answer. */
 async function readReloadHint(
@@ -322,7 +322,7 @@ function restoreRollbackConfigForClear(run: ActiveModelLoadRun): void {
 }
 
 const approvedRemoteCodeFingerprints = new Map<string, string>();
-type PendingReplacementRollback = {
+interface PendingReplacementRollback {
   checkpoint: string | null;
   config?: PerModelConfig;
   /** The cancelled run unloaded the resident before POSTing /load; replacement must reload it. */
@@ -332,7 +332,7 @@ type PendingReplacementRollback = {
   nativePathToken?: string | null;
   nativePathExpiresAtMs?: number | null;
   loadedState?: ReturnType<typeof useChatRuntimeStore.getState>;
-};
+}
 
 // Retained until the winning intent reserves its run: cancel can finish after a newer pick starts.
 let pendingReplacementRollback: PendingReplacementRollback | null = null;
@@ -414,7 +414,7 @@ async function waitForServerModel(signal?: AbortSignal): Promise<void> {
 }
 
 function parseTrailingEpoch(input: string): number | undefined {
-  const match = input.match(LORA_SUFFIX_RE);
+  const match = LORA_SUFFIX_RE.exec(input);
   if (!match) {
     return undefined;
   }
@@ -1009,7 +1009,7 @@ export function useChatModelRuntime() {
       if (!run || (expectedRun && !ownsModelLoadRun(run, expectedRun))) {
         return false;
       }
-      if (run.cancelPromise) return run.cancelPromise;
+      if (run.cancelPromise) return await run.cancelPromise;
 
       const model = loadingModelRef.current;
       modelLoadCancelEpoch += 1;
@@ -1116,7 +1116,7 @@ export function useChatModelRuntime() {
         }
       })();
       run.cancelPromise = cancelPromise;
-      return cancelPromise;
+      return await cancelPromise;
     },
     [clearCheckpoint, refresh, setLoadToastDismissedState, setModelsError],
   );
@@ -1336,7 +1336,7 @@ export function useChatModelRuntime() {
                   } catch {
                     // Preserve state when backend status is unavailable; a later refresh can reconcile it.
                   }
-                  return;
+                  
                 }
               });
             }
@@ -2659,7 +2659,7 @@ export function useChatModelRuntime() {
                   .replace(/\\/g, "/")
                   .split("/")
                   .reduceRight<RegExpMatchArray | null>(
-                    (found, seg) => found ?? seg.match(sizeRe),
+                    (found, seg) => found ?? (sizeRe.exec(seg)),
                     null,
                   );
                 if (sizeMatch) {
@@ -3302,7 +3302,7 @@ export function useChatModelRuntime() {
           try {
             const prog = await getLoadProgress();
             if (abortCtrl.signal.aborted || !loadingModelRef.current) return;
-            if (!prog || prog.phase == null) return;
+            if (prog?.phase == null) return;
             if (prog.phase === "ready") {
               if (progressInterval) clearInterval(progressInterval);
               return;

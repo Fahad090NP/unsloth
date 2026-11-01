@@ -211,7 +211,7 @@ function isDateField(key: string): key is DateField {
   return (DATE_FIELDS as readonly string[]).includes(key);
 }
 
-type HeaderTabs = { items: HeaderTab[]; active: string; onChange: (key: string) => void };
+interface HeaderTabs { items: HeaderTab[]; active: string; onChange: (key: string) => void }
 
 type PendingDelete =
   | { kind: "chats"; chats: SidebarItem[]; deleteFiles: boolean }
@@ -578,7 +578,7 @@ export function ChatsLibrary({
       setSelection(new Set());
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => { window.removeEventListener("keydown", onKey); };
   }, [selection.size]);
 
   const activeChatId = () => useChatRuntimeStore.getState().activeThreadId ?? undefined;
@@ -611,7 +611,7 @@ export function ChatsLibrary({
     runtime.setIncognito(false);
     setPendingNewChatSection(null);
     void navigate({ to: "/chat", search: { new: nonce } }).then(() =>
-      setPendingNewChatSection({ sectionId, nonce }),
+      { setPendingNewChatSection({ sectionId, nonce }); },
     );
   };
 
@@ -826,17 +826,17 @@ export function ChatsLibrary({
       setSort({ key: next, desc: isDateField(sort.key) ? sort.desc : true });
     },
     onToggle: () =>
-      setSort({ key: field, desc: sort.key === field ? !sort.desc : true }),
+      { setSort({ key: field, desc: sort.key === field ? !sort.desc : true }); },
   });
   const chatDateColumn = dateColumn(
     prefs.sort,
-    (sort) => prefs.set({ sort }),
+    (sort) => { prefs.set({ sort }); },
     DATE_FIELDS,
     prefs.dateField,
   );
   const sectionDateColumn = dateColumn(
     prefs.sectionSort,
-    (sectionSort) => prefs.set({ sectionSort }),
+    (sectionSort) => { prefs.set({ sectionSort }); },
     DATE_FIELDS,
     prefs.dateField,
   );
@@ -871,7 +871,7 @@ export function ChatsLibrary({
     open: openChat,
     rename: setRenaming,
     regenerateTitle: (chat) => void regenerateChatTitleWithToast(chat),
-    togglePin: (chat) => togglePinned(chat.id),
+    togglePin: (chat) => { togglePinned(chat.id); },
     setFavorite: (chats, favorite) => {
       setFavoriteChats(
         chats.map((chat) => chat.id),
@@ -879,8 +879,8 @@ export function ChatsLibrary({
       );
       setSelection(new Set());
     },
-    toggleFavoriteProject: (id) => setFavoriteProjects([id], !favoriteProjects.has(id)),
-    toggleFavoriteSection: (id) => setFavoriteSections([id], !favoriteSections.has(id)),
+    toggleFavoriteProject: (id) => { setFavoriteProjects([id], !favoriteProjects.has(id)); },
+    toggleFavoriteSection: (id) => { setFavoriteSections([id], !favoriteSections.has(id)); },
     fork: (chat) => void forkChat(chat),
     move: moveChats,
     moveProject,
@@ -895,14 +895,14 @@ export function ChatsLibrary({
     viewProject: openProject,
     filterProject: embedded
       ? openProject
-      : (id) => setFilters((current) => ({ ...current, projects: new Set([id]) })),
+      : (id) => { setFilters((current) => ({ ...current, projects: new Set([id]) })); },
     sections,
     sectionOf,
     projectSectionOf,
     dateField: prefs.dateField,
     chatContents,
-    viewSection: (id) => go({ chatSection: id }),
-    newChatInSection: (id) => newChatInSection(id),
+    viewSection: (id) => { go({ chatSection: id }); },
+    newChatInSection: (id) => { newChatInSection(id); },
     newProjectInSection,
     renameSection: setRenamingSection,
     removeSection: (entry) => {
@@ -930,7 +930,7 @@ export function ChatsLibrary({
         `project-${project.name}`,
       ),
     // Off by default: the workspace may hold the user's own files.
-    deleteProject: (project) => setPendingDelete({ kind: "project", project, deleteFiles: false }),
+    deleteProject: (project) => { setPendingDelete({ kind: "project", project, deleteFiles: false }); },
   };
 
   const narrowed = Boolean(query.trim()) || chatFiltersActive(filters);
@@ -994,7 +994,7 @@ export function ChatsLibrary({
               <Button
                 variant="muted"
                 className="rounded-full"
-                onClick={() => newChatInSection(openSectionId)}
+                onClick={() => { newChatInSection(openSectionId); }}
               >
                 {t("library.chats.toolbar.newChat")}
               </Button>
@@ -1008,7 +1008,7 @@ export function ChatsLibrary({
           title={t("library.chats.empty.chatsTitle")}
           description={t("library.chats.empty.chatsDescription")}
           action={
-            <Button variant="muted" className="rounded-full" onClick={() => newChatIn(null)}>
+            <Button variant="muted" className="rounded-full" onClick={() => { newChatIn(null); }}>
               {t("library.chats.toolbar.newChat")}
             </Button>
           }
@@ -1085,19 +1085,19 @@ export function ChatsLibrary({
           <ChatListHeader
             sort={prefs.sort}
             onSortChange={(key) =>
-              prefs.set({
+              { prefs.set({
                 sort:
                   prefs.sort.key === key
                     ? { key, desc: !prefs.sort.desc }
                     : { key, desc: key !== "name" },
-              })
+              }); }
             }
             date={chatDateColumn}
             showLocation={locationColumn}
             allSelected={allSelected}
             selecting={selection.size > 0}
             onToggleAll={() =>
-              setSelection(allSelected ? new Set() : new Set(shownChats.map((chat) => chat.id)))
+              { setSelection(allSelected ? new Set() : new Set(shownChats.map((chat) => chat.id))); }
             }
           />
         )}
@@ -1130,7 +1130,7 @@ export function ChatsLibrary({
             <Button
               variant="muted"
               className="rounded-full"
-              onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+              onClick={() => { setVisibleCount((count) => count + PAGE_SIZE); }}
             >
               {t("library.chats.list.showMore", { count: total - visibleCount })}
             </Button>
@@ -1158,7 +1158,7 @@ export function ChatsLibrary({
             <Button
               variant="muted"
               className="rounded-full"
-              onClick={() => setMovingIntoNew({ kind: "section", chats: [] })}
+              onClick={() => { setMovingIntoNew({ kind: "section", chats: [] }); }}
             >
               {t("shell.sections.newSection")}
             </Button>
@@ -1186,7 +1186,7 @@ export function ChatsLibrary({
       <CardGrid minRowHeight={CHAT_CARD_ROW_MIN}>
         <button
           type="button"
-          onClick={() => setMovingIntoNew({ kind: "section", chats: [] })}
+          onClick={() => { setMovingIntoNew({ kind: "section", chats: [] }); }}
           className="flex min-h-0 flex-col self-stretch items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-ui-14 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
         >
           <HugeiconsIcon icon={PlusSignIcon} strokeWidth={1.5} className="size-6" />
@@ -1249,7 +1249,7 @@ export function ChatsLibrary({
             key={entry}
             type="button"
             aria-current={active ? "page" : undefined}
-            onClick={() => go(entry === "all" ? {} : { chatView: entry })}
+            onClick={() => { go(entry === "all" ? {} : { chatView: entry }); }}
             className={cn(
               "flex h-8 items-center gap-2 rounded-full font-heading text-ui-14 text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
               active && "font-medium text-foreground",
@@ -1270,10 +1270,10 @@ export function ChatsLibrary({
       icon={LayerIcon}
       name={currentSection.name}
       parent={t("shell.sections.sectionsHeading")}
-      onParent={() => go({ chatView: "sections" })}
+      onParent={() => { go({ chatView: "sections" }); }}
       actions={
         <>
-          <Button variant="muted" className="rounded-full" onClick={() => newChatInSection(currentSection.id)}>
+          <Button variant="muted" className="rounded-full" onClick={() => { newChatInSection(currentSection.id); }}>
             <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={1.75} className="size-4" />
             {t("library.chats.toolbar.newChat")}
           </Button>
@@ -1312,7 +1312,7 @@ export function ChatsLibrary({
         value={prefs.sectionSort.key}
         desc={prefs.sectionSort.desc}
         onChange={(key, desc) =>
-          prefs.set({ sectionSort: { key, desc }, ...(isDateField(key) ? { dateField: key } : {}) })
+          { prefs.set({ sectionSort: { key, desc }, ...(isDateField(key) ? { dateField: key } : {}) }); }
         }
       />
     ) : section === "projects" ? (
@@ -1321,10 +1321,10 @@ export function ChatsLibrary({
         value={prefs.projectSort.key}
         desc={prefs.projectSort.desc}
         onChange={(key, desc) =>
-          prefs.set({
+          { prefs.set({
             projectSort: { key, desc },
             ...(isDateField(key) ? { dateField: key } : {}),
-          })
+          }); }
         }
       />
     ) : (
@@ -1333,13 +1333,13 @@ export function ChatsLibrary({
         value={prefs.sort.key}
         desc={prefs.sort.desc}
         onChange={(key, desc) =>
-          prefs.set({ sort: { key, desc }, ...(isDateField(key) ? { dateField: key } : {}) })
+          { prefs.set({ sort: { key, desc }, ...(isDateField(key) ? { dateField: key } : {}) }); }
         }
         groupBy={section === "all" ? undefined : groupBy}
         groupOptions={groupOptions}
-        onGroupByChange={(next) => prefs.set({ groupBy: next })}
+        onGroupByChange={(next) => { prefs.set({ groupBy: next }); }}
         pinnedFirst={archived ? undefined : prefs.pinnedFirst}
-        onPinnedFirstChange={(next) => prefs.set({ pinnedFirst: next })}
+        onPinnedFirstChange={(next) => { prefs.set({ pinnedFirst: next }); }}
       />
     );
 
@@ -1452,15 +1452,15 @@ export function ChatsLibrary({
                 facets={facets}
                 sort={sortControl}
                 view={view}
-                onViewChange={(view) => prefs.set({ view })}
+                onViewChange={(view) => { prefs.set({ view }); }}
                 search={query}
                 onSearchChange={setQuery}
                 searchPlaceholder={searchPlaceholder}
-                onNewChat={() => (openSectionId ? newChatInSection(openSectionId) : newChatIn(null))}
+                onNewChat={() => { openSectionId ? newChatInSection(openSectionId) : newChatIn(null); }}
                 onNewProject={() =>
-                  openSectionId ? newProjectInSection(openSectionId) : setCreatingProject(true)
+                  { openSectionId ? newProjectInSection(openSectionId) : setCreatingProject(true); }
                 }
-                onNewSection={() => setMovingIntoNew({ kind: "section", chats: [] })}
+                onNewSection={() => { setMovingIntoNew({ kind: "section", chats: [] }); }}
                 showView={section !== "projects"}
               />
             }
@@ -1481,12 +1481,12 @@ export function ChatsLibrary({
                       searching={query.trim() !== ""}
                       orderedDesc={prefs.projectSort.key !== "updated" || prefs.projectSort.desc}
                       onToggleOrder={() =>
-                        prefs.set({
+                        { prefs.set({
                           projectSort: {
                             key: "updated",
                             desc: prefs.projectSort.key === "updated" ? !prefs.projectSort.desc : false,
                           },
-                        })
+                        }); }
                       }
                     />
                   )
@@ -1507,7 +1507,7 @@ export function ChatsLibrary({
               {archived ? (
                 <button
                   type="button"
-                  onClick={() => unarchiveChats(selectedChats)}
+                  onClick={() => { unarchiveChats(selectedChats); }}
                   className={cn(BAR_PILL, "bg-action text-background transition-opacity hover:opacity-85")}
                 >
                   <HugeiconsIcon icon={ArchiveRestoreIcon} strokeWidth={1.75} className="size-4" />
@@ -1517,7 +1517,7 @@ export function ChatsLibrary({
                 <>
                   <button
                     type="button"
-                    onClick={() => setChatsPinned(selectedChats, !selectedPinned)}
+                    onClick={() => { setChatsPinned(selectedChats, !selectedPinned); }}
                     className={cn(BAR_PILL, BAR_OUTLINE)}
                   >
                     <HugeiconsIcon icon={selectedPinned ? PinOffIcon : PinIcon} strokeWidth={1.75} className="size-4" />
@@ -1525,7 +1525,7 @@ export function ChatsLibrary({
                   </button>
                   <button
                     type="button"
-                    onClick={() => archiveChats(selectedChats)}
+                    onClick={() => { archiveChats(selectedChats); }}
                     className={cn(BAR_PILL, BAR_OUTLINE)}
                   >
                     <HugeiconsIcon icon={Archive03Icon} strokeWidth={1.75} className="size-4" />
@@ -1535,7 +1535,7 @@ export function ChatsLibrary({
               )}
               <button
                 type="button"
-                onClick={() => actions.remove(selectedChats)}
+                onClick={() => { actions.remove(selectedChats); }}
                 className={cn(
                   BAR_PILL,
                   "bg-destructive/10 text-destructive transition-colors hover:bg-destructive/15",
@@ -1557,14 +1557,14 @@ export function ChatsLibrary({
                 <DropdownMenuContent align="center" side="top" className="library-actions-menu w-52">
                   {selectedChats.length < shownChats.length && (
                     <DropdownMenuItem
-                      onSelect={() => setSelection(new Set(shownChats.map((chat) => chat.id)))}
+                      onSelect={() => { setSelection(new Set(shownChats.map((chat) => chat.id))); }}
                     >
                       <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={1.75} className="size-icon" />
                       {t("settings.data.library.selectAll")}
                     </DropdownMenuItem>
                   )}
                   {!archived && (
-                    <DropdownMenuItem onSelect={() => actions.setFavorite(selectedChats, !selectedFavorite)}>
+                    <DropdownMenuItem onSelect={() => { actions.setFavorite(selectedChats, !selectedFavorite); }}>
                       <HugeiconsIcon
                         icon={StarPointedIcon}
                         strokeWidth={1.75}
@@ -1577,7 +1577,7 @@ export function ChatsLibrary({
                     <MoveSubmenu
                       project={sharedProject}
                       section={sharedSection}
-                      onMove={(destination) => moveChats(selectedChats, destination)}
+                      onMove={(destination) => { moveChats(selectedChats, destination); }}
                     />
                   )}
                   <ExportSubmenu
@@ -1589,7 +1589,7 @@ export function ChatsLibrary({
               <button
                 type="button"
                 aria-label={t("library.selection.clear")}
-                onClick={() => setSelection(new Set())}
+                onClick={() => { setSelection(new Set()); }}
                 className={BAR_ROUND}
               >
                 <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.75} className="size-5" />
@@ -1670,7 +1670,7 @@ export function ChatsLibrary({
         onSubmit={(name) => renamingSection && renameCustomSection(renamingSection.id, name)}
       />
       <AlertDialog open={pendingDelete !== null} onOpenChange={(open) => !open && setPendingDelete(null)}>
-        <AlertDialogContent onOverlayClick={() => setPendingDelete(null)}>
+        <AlertDialogContent onOverlayClick={() => { setPendingDelete(null); }}>
           <AlertDialogHeader>
             <AlertDialogTitle className="break-words">{deleteCopy?.title}</AlertDialogTitle>
             <AlertDialogDescription>{deleteCopy?.description}</AlertDialogDescription>
@@ -1679,7 +1679,7 @@ export function ChatsLibrary({
             <DeleteChatFilesSwitch
               id="library-chats-delete-files"
               checked={pendingDelete.deleteFiles}
-              onCheckedChange={(deleteFiles) => setPendingDelete({ ...pendingDelete, deleteFiles })}
+              onCheckedChange={(deleteFiles) => { setPendingDelete({ ...pendingDelete, deleteFiles }); }}
               label={deleteCopy?.filesLabel}
               description={deleteCopy?.files}
             />

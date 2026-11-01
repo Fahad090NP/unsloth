@@ -39,7 +39,7 @@ function hubPageRefresh(coalesce: boolean) {
   let seq = 0;
   const supersession: RefreshSupersession = { latest: null };
   const store: Status = { ...STALE };
-  const inFlight: Array<(status: Status) => void> = [];
+  const inFlight: ((status: Status) => void)[] = [];
 
   const refresh = (): Promise<void> => {
     const mine = ++seq;
@@ -61,7 +61,7 @@ function hubPageRefresh(coalesce: boolean) {
   return {
     refresh,
     store,
-    deliver: (n: number, status: Status = SWITCHED) => inFlight[n](status),
+    deliver: (n: number, status: Status = SWITCHED) => { inFlight[n](status); },
     unmount: () => {
       seq += 1;
     },
@@ -144,7 +144,7 @@ test("an unmount strands nobody, since it bumps the sequence without starting a 
   hub.unmount();
   hub.deliver(0);
 
-  const timeout = new Promise<"hung">((r) => setTimeout(() => r("hung"), 50));
+  const timeout = new Promise<"hung">((r) => setTimeout(() => { r("hung"); }, 50));
   assert.notEqual(
     await Promise.race([read.then(() => "settled" as const), timeout]),
     "hung",

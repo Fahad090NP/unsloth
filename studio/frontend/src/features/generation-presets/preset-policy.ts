@@ -42,7 +42,7 @@ export function closestResolutionIndex(
 }
 
 export function closestDurationIndex(
-  durations: Array<{ seconds: number }>,
+  durations: { seconds: number }[],
   targetSeconds: number,
 ): number {
   if (durations.length === 0) {

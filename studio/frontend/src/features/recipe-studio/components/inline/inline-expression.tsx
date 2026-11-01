@@ -17,10 +17,10 @@ import { getAvailableVariableEntries } from "../../utils/variables";
 import { AvailableReferencesInline } from "../shared/available-references-inline";
 import { InlineField } from "./inline-field";
 
-type InlineExpressionProps = {
+interface InlineExpressionProps {
   config: ExpressionConfig;
   onUpdate: (patch: Partial<ExpressionConfig>) => void;
-};
+}
 
 const DTYPE_OPTIONS: ExpressionDtype[] = ["str", "int", "float", "bool"];
 
@@ -42,7 +42,7 @@ export function InlineExpression({
           <Select
             value={config.dtype}
             onValueChange={(value) =>
-              onUpdate({ dtype: value as ExpressionDtype })
+              { onUpdate({ dtype: value as ExpressionDtype }); }
             }
           >
             <SelectTrigger className="nodrag h-8 w-full text-xs">
@@ -63,7 +63,7 @@ export function InlineExpression({
             aria-invalid={invalidRefs.length > 0}
             placeholder="{{ column_name }}"
             value={config.expr}
-            onChange={(event) => onUpdate({ expr: event.target.value })}
+            onChange={(event) => { onUpdate({ expr: event.target.value }); }}
           />
         </InlineField>
       </div>

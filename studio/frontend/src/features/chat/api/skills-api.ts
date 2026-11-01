@@ -10,7 +10,7 @@ import { SKILL_MENTION_PATTERN } from "./skill-tools";
 
 export { SKILL_MENTION_PATTERN } from "./skill-tools";
 
-export type SkillRecord = {
+export interface SkillRecord {
   name: string;
   description: string;
   source: "agents" | "claude" | "bundled";
@@ -25,27 +25,27 @@ export type SkillRecord = {
   metadata?: Record<string, string> | null;
   allowed_tools?: string | null;
   path?: string | null;
-};
+}
 
-export type SkillDraft = {
+export interface SkillDraft {
   name: string;
   description: string;
   instructions: string;
-};
+}
 
 export type SkillManifest = SkillRecord & { instructions: string };
 
-export type SkillImportResult = {
+export interface SkillImportResult {
   imported: SkillRecord[];
   failed: { name: string; error: string }[];
-};
+}
 
-type SkillsSnapshot = {
+interface SkillsSnapshot {
   skills: readonly SkillRecord[];
   loading: boolean;
   initialized: boolean;
   error: string | null;
-};
+}
 
 const EMPTY_SNAPSHOT: SkillsSnapshot = {
   skills: [],
@@ -229,7 +229,7 @@ export async function createSkill(draft: SkillDraft): Promise<SkillRecord> {
 
 export async function getSkillManifest(name: string): Promise<SkillManifest> {
   const response = await authFetch(`/api/skills/${encodeURIComponent(name)}`);
-  return parseResponse<SkillManifest>(response);
+  return await parseResponse<SkillManifest>(response);
 }
 
 export async function updateSkill(
@@ -273,7 +273,7 @@ export async function exportSkill(name: string): Promise<Blob> {
     `/api/skills/${encodeURIComponent(name)}/export`,
   );
   if (!response.ok) await parseResponse<unknown>(response);
-  return response.blob();
+  return await response.blob();
 }
 
 // authFetch has no deadline, so a hung /api/skills must not stall the send.

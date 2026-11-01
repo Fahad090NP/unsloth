@@ -12,7 +12,7 @@ const MAX_GUTTER_PX = 48;
 /** Re-measuring forces layout, so resize bursts are coalesced. */
 const RESIZE_SETTLE_MS = 200;
 
-type Measurement = { gutter: number; classic: number; reliable: boolean };
+interface Measurement { gutter: number; classic: number; reliable: boolean }
 
 function measure(doc: Document): Measurement {
   const body = doc.body;

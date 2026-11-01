@@ -160,12 +160,12 @@ function useDatasetDownloadProgress(
 const PROGRESS_INDICATOR_CLASS =
   "bg-[linear-gradient(90deg,var(--control-accent)_0%,color-mix(in_oklab,var(--control-accent)_72%,white)_100%)]";
 
-type ResourceRowProps = {
+interface ResourceRowProps {
   label: string;
   resourceName?: string | null;
   state: DownloadState;
   preparation: PreparationProgress | null;
-};
+}
 
 // The caller needs this too: the AnimatedSpan wrapper lays out a line even when the row is null.
 export function resourceRowHasContent(
@@ -275,7 +275,7 @@ function ResourceRow({
   );
 }
 
-type TrainingStartOverlayProps = {
+interface TrainingStartOverlayProps {
   message: string
   currentStep: number
 }
@@ -378,7 +378,7 @@ export function TrainingStartOverlay({
               variant="ghost"
               size="icon"
               className="absolute right-3 top-3 z-10 size-7 cursor-pointer rounded-full text-muted-foreground/90 hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => setCancelDialogOpen(true)}
+              onClick={() => { setCancelDialogOpen(true); }}
               disabled={cancelRequested}
             >
               <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />

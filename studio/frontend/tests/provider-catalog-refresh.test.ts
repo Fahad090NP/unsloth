@@ -31,7 +31,7 @@ test("a failing OpenRouter connection leaves the catalog for the next connection
     return providerId === "expired-key"
       ? Response.json({ detail: "Invalid API key" }, { status: 502 })
       : Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["low", "high"] } }]);
-  }) as typeof fetch;
+  });
   try {
     await refreshProviderModelCatalogs([
       { id: "expired-key", providerType: "openrouter" },
@@ -60,7 +60,7 @@ test("an OpenRouter connection on a gateway base URL never writes the shared cat
     return providerId === "gateway"
       ? Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["max"] } }])
       : Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["low", "high"] } }]);
-  }) as typeof fetch;
+  });
   try {
     await refreshProviderModelCatalogs([
       { id: "gateway", providerType: "openrouter", baseUrl: "https://gateway.example/api/v1" },
@@ -81,7 +81,7 @@ test("editing a connection refreshes the catalog with the saved base URL, not th
   const dialog = readSrc("features/chat/chat-providers-dialog.tsx");
   const saveAt = dialog.indexOf("async function saveProviderEdits()");
   const save = dialog.slice(saveAt, dialog.indexOf("\n  async function ", saveAt + 1));
-  const refreshed = save.match(/refreshProviderModelCatalogs\(\[(\w+)\]\)/)?.[1];
+  const refreshed = (/refreshProviderModelCatalogs\(\[(\w+)\]\)/.exec(save))?.[1];
   assert.ok(saveAt > 0 && refreshed, "the edit save path no longer refreshes the catalog");
   const literalAt = save.indexOf(`const ${refreshed}: ExternalProviderConfig = {`);
   assert.ok(literalAt > 0, `${refreshed} is not the edited connection`);
@@ -96,7 +96,7 @@ test("editing a connection refreshes the catalog with the saved base URL, not th
   globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
     asked.push(JSON.parse(String(init?.body)).provider_id);
     return Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["low", "high"] } }]);
-  }) as typeof fetch;
+  });
   try {
     await refreshProviderModelCatalogs([
       { id: "edited", providerType: "openrouter", baseUrl: "https://openrouter.ai/api/v1" },

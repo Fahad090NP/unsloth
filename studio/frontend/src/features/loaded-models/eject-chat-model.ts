@@ -7,25 +7,25 @@
 // Extension-qualified so node --test resolves it.
 import { unloadResident } from "../api-monitor/unload-resident.ts";
 
-export type ResidentChatModel = {
+export interface ResidentChatModel {
   checkpoint: string;
   /** Status reports the load path, the store the repo id. */
   aliases: string[];
-};
+}
 
-export type EjectChatModelDeps = {
+export interface EjectChatModelDeps {
   readResident: () => Promise<ResidentChatModel | null>;
   unload: (modelPath: string) => Promise<void>;
   matches: (left: string, right: string) => boolean;
   cachedRow?: boolean;
   readCached?: () => Promise<string[]>;
-};
+}
 
-export type EjectChatModelResult = {
+export interface EjectChatModelResult {
   unloadedAliases: string[];
   stillResident: string | null;
   replacedBy: string | null;
-};
+}
 
 /**
  * Read, unload, re-read: /unload naming a replaced model is a 200 no-op, and the read is

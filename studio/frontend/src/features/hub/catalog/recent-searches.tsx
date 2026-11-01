@@ -26,7 +26,7 @@ export function RecentSearches({
       className="hub-recent-panel menu-soft-surface dropdown-surface absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-lg p-1"
       style={top === undefined ? undefined : { top }}
       aria-label="Recent searches"
-      onMouseDown={(event) => event.preventDefault()}
+      onMouseDown={(event) => { event.preventDefault(); }}
     >
       <div className="flex items-center justify-between gap-2 px-2.5 pb-1.5 pt-1">
         <span className="text-ui-11 font-semibold uppercase tracking-[0.04em] text-muted-foreground/70">
@@ -46,7 +46,7 @@ export function RecentSearches({
             <div className="hub-recent-item group/recent flex items-center rounded-md pr-1.5">
               <button
                 type="button"
-                onClick={() => onSelect(query)}
+                onClick={() => { onSelect(query); }}
                 className="flex min-w-0 flex-1 items-center gap-2.5 rounded-l-md py-2 pl-2.5 text-left"
               >
                 <HugeiconsIcon
@@ -61,7 +61,7 @@ export function RecentSearches({
               <button
                 type="button"
                 aria-label={`Remove “${query}” from recent searches`}
-                onClick={() => onRemove(query)}
+                onClick={() => { onRemove(query); }}
                 className="hub-recent-remove ml-1 inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-[opacity,color,background-color] hover:text-foreground focus-visible:opacity-100 group-hover/recent:opacity-100"
               >
                 <HugeiconsIcon

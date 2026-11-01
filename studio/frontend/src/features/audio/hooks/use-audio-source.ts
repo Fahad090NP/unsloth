@@ -50,8 +50,8 @@ function mediaDuration(blob: Blob): Promise<number | null> {
     };
     audio.preload = "metadata";
     audio.onloadedmetadata = () =>
-      done(Number.isFinite(audio.duration) ? audio.duration : null);
-    audio.onerror = () => done(null);
+      { done(Number.isFinite(audio.duration) ? audio.duration : null); };
+    audio.onerror = () => { done(null); };
     audio.src = url;
   });
 }
@@ -68,7 +68,7 @@ async function openMicrophone(deviceId: string): Promise<MediaStream> {
   } catch (error) {
     // Saved mic may be unplugged; fall back to the default, as dictation does.
     if (deviceId === "default" || !isMissingDeviceError(error)) throw error;
-    return navigator.mediaDevices.getUserMedia({
+    return await navigator.mediaDevices.getUserMedia({
       audio: micAudioConstraints(null),
     });
   }
@@ -232,7 +232,7 @@ export function useAudioSource({
         const record = await uploadAudioInput(file, fileName, {
           signal: controller.signal,
           onProgress: (progress) =>
-            dispatch({ type: "upload-progress", progress }),
+            { dispatch({ type: "upload-progress", progress }); },
         });
         if (controller.signal.aborted) return;
         dispatch({ type: "upload-done", key: `input:${record.id}` });
@@ -349,10 +349,10 @@ export function useAudioSource({
       return;
     }
     const timer = window.setInterval(
-      () => setElapsed(Math.floor((Date.now() - recordingStartedAt) / 1000)),
+      () => { setElapsed(Math.floor((Date.now() - recordingStartedAt) / 1000)); },
       250,
     );
-    return () => window.clearInterval(timer);
+    return () => { window.clearInterval(timer); };
   }, [recordingStartedAt]);
 
   const abortAll = useCallback(() => {
@@ -386,11 +386,11 @@ export function useAudioSource({
   );
 
   const fail = useCallback(
-    (message: string) => dispatch({ type: "fail", message }),
+    (message: string) => { dispatch({ type: "fail", message }); },
     [],
   );
 
-  const expire = useCallback(() => dispatch({ type: "expire" }), []);
+  const expire = useCallback(() => { dispatch({ type: "expire" }); }, []);
 
   return {
     status: state.status,

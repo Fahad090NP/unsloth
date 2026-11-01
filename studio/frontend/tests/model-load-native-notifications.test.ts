@@ -34,7 +34,7 @@ type WebviewPermission = "absent" | "default" | "granted" | "denied";
 
 type StubMode = "ok" | "send-fails" | "module-missing";
 
-type EnvOptions = {
+interface EnvOptions {
   tauri: boolean;
   webview?: WebviewPermission;
   pluginGranted?: boolean;
@@ -42,15 +42,15 @@ type EnvOptions = {
   stub?: StubMode;
   /** What the plugin's desktop backend answers to is_permission_granted; unset = no backend. */
   backend?: boolean;
-};
+}
 
-type Control = {
+interface Control {
   sent: { title: string; body?: string }[];
   granted: boolean;
   mode: StubMode;
   requests: number;
   backend?: boolean;
-};
+}
 
 let generation = 0;
 

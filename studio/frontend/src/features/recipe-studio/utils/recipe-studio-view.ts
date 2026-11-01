@@ -3,14 +3,14 @@
 
 import type { NodeConfig, SamplerConfig } from "../types";
 
-export type DialogOptions = {
+export interface DialogOptions {
   categoryOptions: SamplerConfig[];
   modelConfigAliases: string[];
   modelProviderOptions: string[];
   localProviderNames: Set<string>;
   toolProfileAliases: string[];
   datetimeOptions: string[];
-};
+}
 
 export function buildDialogOptions(configList: NodeConfig[]): DialogOptions {
   const categoryOptions: SamplerConfig[] = [];

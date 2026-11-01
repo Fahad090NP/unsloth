@@ -9,12 +9,12 @@ const applier = readSrc("features/chat/lib/apply-inference-status-to-store.ts");
 const start = applier.indexOf("    // Rollback needs the request,");
 const end = applier.indexOf("    // AFTER that clear,", start);
 assert.ok(start >= 0 && end > start);
-type State = {
+interface State {
   loadedReasoningBudget: number;
   loadedReasoningBudgetMessage: string;
   loadedReasoningBudgetRequested: number | null;
   loadedReasoningBudgetMessageRequested: string | null;
-};
+}
 const hydrate = new Function(
   "previous",
   "status",

@@ -9,7 +9,7 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type CachesApi = {
+interface CachesApi {
   loadCacheBreakdown: (key: string) => Promise<
     {
       path: string;
@@ -28,9 +28,9 @@ type CachesApi = {
     freeBytes: number | null;
   };
   bulkPurgeKeys: (inventory: unknown) => string[];
-};
+}
 
-type Request = { url: string; init: RequestInit | undefined };
+interface Request { url: string; init: RequestInit | undefined }
 
 function loadApi(responder: (url: string, init?: RequestInit) => Response): {
   api: CachesApi;

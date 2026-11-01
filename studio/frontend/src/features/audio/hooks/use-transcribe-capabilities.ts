@@ -48,10 +48,10 @@ export function useTranscribeCapabilities(
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
       });
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [key, model, engine, generation]);
 
-  const refresh = useCallback(() => setGeneration((value) => value + 1), []);
+  const refresh = useCallback(() => { setGeneration((value) => value + 1); }, []);
 
   return { caps, loading, refresh };
 }

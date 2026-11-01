@@ -26,13 +26,13 @@ export const PASTED_TEXT_PREVIEW_MAX_CHARS = 100_000;
 const ATTACHMENT_SAMPLE_CHARS = 512;
 const UNSAFE_NAME_CHARS = /[\\/:*?"<>|\p{Cc}]/gu;
 
-type ClipboardTextPasteEvent = {
+interface ClipboardTextPasteEvent {
   readonly clipboardData: DataTransfer | null;
   readonly defaultPrevented: boolean;
   preventDefault: () => void;
-};
+}
 
-type PlainPasteKeyEvent = {
+interface PlainPasteKeyEvent {
   readonly code?: string;
   readonly key?: string;
   readonly keyCode?: number;
@@ -40,7 +40,7 @@ type PlainPasteKeyEvent = {
   readonly ctrlKey: boolean;
   readonly shiftKey: boolean;
   readonly altKey: boolean;
-};
+}
 
 /** Follows the physical key, not the layout or Option-produced character. */
 const V_KEY_CODE = 86;
@@ -216,12 +216,12 @@ export function attachmentContentSample(
   return content.slice(start, Math.min(end, start + max)).trim();
 }
 
-type AttachmentLike = {
+interface AttachmentLike {
   readonly content?: readonly {
     readonly type: string;
     readonly text?: string;
   }[];
-};
+}
 
 export function attachmentsSample(
   attachments: readonly AttachmentLike[] | undefined,

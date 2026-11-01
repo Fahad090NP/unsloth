@@ -61,7 +61,7 @@ test("family options follow the backend registry, deduplicated, and every backen
   const names = ["diffusion_families.py", "video_families.py"].flatMap((f) => {
     const source = readFileSync(new URL(f, root), "utf8");
     const constant = (key: string) => {
-      const value = source.match(new RegExp(`^${key} = "([^"]+)"$`, "m"));
+      const value = new RegExp(`^${key} = "([^"]+)"$`, "m").exec(source);
       assert.ok(value, `${f}: ${key} is not a family-name string constant`);
       return value[1];
     };

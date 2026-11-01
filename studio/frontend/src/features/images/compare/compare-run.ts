@@ -30,8 +30,8 @@ export interface CompareRun {
 export interface CompareRunState extends CompareRun {
   readonly plan: CompareGridPlan;
   // By cell index (ix + iy*nx + iz*nx*ny), null until that cell lands.
-  readonly results: Array<GalleryImage | null>;
-  readonly requests: Array<DiffusionGenerateRequest | null>;
+  readonly results: (GalleryImage | null)[];
+  readonly requests: (DiffusionGenerateRequest | null)[];
 }
 
 export function createCompareRun(
@@ -41,8 +41,8 @@ export function createCompareRun(
   // is 0 because a Var. strength axis supplies it.
   options: { keepRandomSeeds: boolean; seedFieldEmpty: boolean; rng?: () => number; variationSeed?: number | null },
 ): CompareRunState {
-  const results: Array<GalleryImage | null> = Array.from({ length: plan.cellCount }, () => null);
-  const requests: Array<DiffusionGenerateRequest | null> = Array.from({ length: plan.cellCount }, () => null);
+  const results: (GalleryImage | null)[] = Array.from({ length: plan.cellCount }, () => null);
+  const requests: (DiffusionGenerateRequest | null)[] = Array.from({ length: plan.cellCount }, () => null);
   // One variation seed per run: the typed one, else drawn up front; "Keep -1 for seeds" with an empty seed box keeps
   // it random per cell too.
   const variation =
@@ -105,7 +105,7 @@ export function completedCells(run: CompareRunState): number {
  *  schedule a sampler fell back from, a per-cell random seed, a Seed axis). `{ value: undefined }` = every cell
  *  omitted it. Cells are compared through `same` (each cell's request is built afresh, so objects by content). */
 function sharedValue(
-  sent: ReadonlyArray<Readonly<Record<string, unknown>>>,
+  sent: readonly Readonly<Record<string, unknown>>[],
   varied: ReadonlySet<string>,
   key: string,
   axisId: string = key,
@@ -147,7 +147,7 @@ function controlNetUnit(value: unknown): string | undefined {
 const sameHires = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 /** Hires fields in A1111 names (diffusion_hires.infotext_fields); Size stays the base pass. */
-function hiresFields(hires: HiresRequest | undefined): Array<[string, string | number | undefined]> {
+function hiresFields(hires: HiresRequest | undefined): [string, string | number | undefined][] {
   if (!hires) return [];
   const upscaler = hires.upscaler ? (HIRES_UPSCALER_LABELS[hires.upscaler] ?? hires.upscaler.replace(/^local:/, "")) : undefined;
   return [
@@ -163,19 +163,17 @@ function hiresFields(hires: HiresRequest | undefined): Array<[string, string | n
  *  written only when every cell ran the same value, so the PNG never claims one cell's setting for the grid. */
 export function gridRecipeFields(
   plan: CompareGridPlan,
-  requests: ReadonlyArray<DiffusionGenerateRequest | null | undefined>,
+  requests: readonly (DiffusionGenerateRequest | null | undefined)[],
   form: { steps: number; guidance: number; width: number; height: number; model: string | null },
-): Array<[string, string | number | null | undefined]> {
+): [string, string | number | null | undefined][] {
   const varied = new Set(plan.axes.map((a) => a.def.id));
-  const sent = requests.filter((r): r is DiffusionGenerateRequest => Boolean(r)) as unknown as Array<
-    Record<string, unknown>
-  >;
+  const sent = requests.filter((r): r is DiffusionGenerateRequest => Boolean(r)) as unknown as Record<string, unknown>[];
   const shared = (key: string, axisId?: string) => scalar(sharedValue(sent, varied, key, axisId)?.value);
   const sampler = sharedValue(sent, varied, "sampler");
   const schedule = shared("schedule_type", "schedule");
   const width = shared("width");
   const height = shared("height");
-  const fields: Array<[string, string | number | null | undefined]> = [
+  const fields: [string, string | number | null | undefined][] = [
     ["Steps", sent.length ? shared("steps") : form.steps],
     ["Sampler", sampler ? (SAMPLER_LABELS[String(sampler.value ?? "default")] ?? scalar(sampler.value)) : undefined],
     ["Schedule type", schedule ? (SCHEDULE_LABELS[String(schedule)] ?? schedule) : undefined],
@@ -226,7 +224,7 @@ const AXIS_NAMES = ["X", "Y", "Z"] as const;
 export function gridParameters(
   plan: CompareGridPlan,
   ctx: CompareContext,
-  requests: ReadonlyArray<DiffusionGenerateRequest | null | undefined>,
+  requests: readonly (DiffusionGenerateRequest | null | undefined)[],
   form: { steps: number; guidance: number; width: number; height: number; model: string | null; keepRandomSeeds: boolean },
 ): string {
   const fields = gridRecipeFields(plan, requests, form);

@@ -72,7 +72,7 @@ export function useRecentSearches(): string[] {
   const [list, setList] = useState<string[]>(readStored);
 
   useEffect(() => {
-    const handleLocal = () => setList(readStored());
+    const handleLocal = () => { setList(readStored()); };
     const handleStorage = (event: StorageEvent) => {
       if (event.storageArea !== window.localStorage) {
         return;

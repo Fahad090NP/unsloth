@@ -153,9 +153,9 @@ export function useEditGeneration({
   }, [toolPanels, storedToolValues, model]);
   const handleToolValueChange = useCallback(
     (panelId: string, value: unknown) =>
-      useAudioCloneStore
+      { useAudioCloneStore
         .getState()
-        .setToolValue(toolValueKey(model, "edit", panelId), value),
+        .setToolValue(toolValueKey(model, "edit", panelId), value); },
     [model],
   );
   const claimedOptions = useMemo(
@@ -196,8 +196,8 @@ export function useEditGeneration({
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (source?.kind !== "input" || !source.expiresAt) return;
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
-    return () => window.clearInterval(timer);
+    const timer = window.setInterval(() => { setNow(Date.now()); }, 60_000);
+    return () => { window.clearInterval(timer); };
   }, [source]);
   const sourceExpired =
     sourceStatus.phase === "expired" ||
@@ -261,7 +261,7 @@ export function useEditGeneration({
           return;
         case "focus-changes":
           changesRef.current?.focus();
-          return;
+          
       }
     },
     [sourceExpired, transcribe],
@@ -272,7 +272,7 @@ export function useEditGeneration({
         actions: inputBlocker.actions.length
           ? inputBlocker.actions.map((action) => ({
               label: action.label,
-              onClick: () => runAction(action.id),
+              onClick: () => { runAction(action.id); },
             }))
           : undefined,
       }

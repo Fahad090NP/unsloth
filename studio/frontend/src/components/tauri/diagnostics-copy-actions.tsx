@@ -58,7 +58,7 @@ export function DiagnosticsCopyActions({
         <textarea
           readOnly
           value={manualReport}
-          onFocus={(event) => event.currentTarget.select()}
+          onFocus={(event) => { event.currentTarget.select(); }}
           className="h-32 w-full max-w-md resize-none rounded-xl border border-border/50 bg-muted/30 p-2 text-left font-mono text-ui-10 text-muted-foreground"
         />
       )}

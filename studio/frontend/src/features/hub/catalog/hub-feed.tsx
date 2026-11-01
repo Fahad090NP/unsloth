@@ -31,7 +31,7 @@ export const HubFeed = memo(function HubFeed({
         rows={trending.rows}
         isLoading={trending.isLoading}
         onSelect={onSelect}
-        onOpenList={() => onOpenChannel("trending")}
+        onOpenList={() => { onOpenChannel("trending"); }}
         deviceType={deviceType}
         isDataset={isDataset}
       />

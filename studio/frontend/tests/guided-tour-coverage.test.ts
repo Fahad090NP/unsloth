@@ -10,8 +10,8 @@ import { readSrc } from "./helpers/kit.ts";
 const SRC_ROOT = new URL("../src/", import.meta.url);
 
 /** URLs throughout: a file: URL pathname is "/D:/..." on Windows. */
-function sourceFiles(dir: URL): Array<{ path: string; text: string }> {
-  const out: Array<{ path: string; text: string }> = [];
+function sourceFiles(dir: URL): { path: string; text: string }[] {
+  const out: { path: string; text: string }[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.isDirectory()) {
       out.push(...sourceFiles(new URL(`${entry.name}/`, dir)));
@@ -31,7 +31,7 @@ const files = sourceFiles(SRC_ROOT);
 const tourStepFiles = files.filter((file) => file.path.includes("/tour/"));
 
 function matchAll(text: string, pattern: RegExp): string[] {
-  return [...text.matchAll(pattern)].map((match) => match[1] as string);
+  return [...text.matchAll(pattern)].map((match) => match[1]);
 }
 
 const anchors = new Set<string>();

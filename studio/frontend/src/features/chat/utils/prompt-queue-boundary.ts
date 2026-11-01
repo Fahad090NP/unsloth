@@ -27,7 +27,7 @@ import type {
 export function requestPromptQueueStop(threadIds?: string[]) {
   if (
     typeof window === "undefined" ||
-    (threadIds !== undefined && threadIds.length === 0)
+    (threadIds?.length === 0)
   ) {
     return;
   }

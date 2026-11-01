@@ -9,8 +9,8 @@ import { MASK_OVERLAY_RGBA, tintMaskPixels } from "./lib/mask-from-text.ts";
 function loadMaskImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Could not read the mask image."));
+    img.onload = () => { resolve(img); };
+    img.onerror = () => { reject(new Error("Could not read the mask image.")); };
     img.src = src;
   });
 }

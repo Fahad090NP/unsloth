@@ -161,7 +161,7 @@ test("the ladder order a caller passes does not change the clamp", () => {
 
 test("every shipped effort ladder is ordered weakest first", () => {
   // The Think menu renders table order and fallbackExternalEffort reads levels[0] as weakest.
-  const models: Array<[string, string]> = [
+  const models: [string, string][] = [
     ["anthropic", "claude-opus-5"],
     ["anthropic", "claude-opus-4-6"],
     ["anthropic", "claude-opus-4-5"],
@@ -209,12 +209,10 @@ test("the effort scale matches the backend's _REASONING_EFFORT_SCALE", () => {
     path.join(here, "../../backend/core/inference/llama_cpp.py"),
     "utf8",
   );
-  const frontendScale = frontend
-    .match(/const REASONING_EFFORT_SCALE = \[([\s\S]*?)\] as const/)?.[1]
+  const frontendScale = (/const REASONING_EFFORT_SCALE = \[([\s\S]*?)\] as const/.exec(frontend))?.[1]
     .match(/"([a-z]+)"/g)
     ?.map((quoted) => quoted.slice(1, -1));
-  const backendScale = backend
-    .match(/^_REASONING_EFFORT_SCALE = \(([^)]*)\)/m)?.[1]
+  const backendScale = (/^_REASONING_EFFORT_SCALE = \(([^)]*)\)/m.exec(backend))?.[1]
     .match(/"([a-z]+)"/g)
     ?.map((quoted) => quoted.slice(1, -1));
   assert.ok(frontendScale, "frontend REASONING_EFFORT_SCALE not found");
@@ -230,7 +228,7 @@ test("Astra reasoning does not enable unrelated model families", () => {
 
 test("the gpt-5.1 and gpt-5.2 ladders drop minimal for none", () => {
   // From 5.1 on, offering "minimal" fails the turn.
-  const ladders: Array<[string, readonly string[]]> = [
+  const ladders: [string, readonly string[]][] = [
     ["gpt-5.2", ["none", "low", "medium", "high", "xhigh"]],
     ["gpt-5.1", ["none", "low", "medium", "high"]],
   ];
@@ -240,7 +238,7 @@ test("the gpt-5.1 and gpt-5.2 ladders drop minimal for none", () => {
     assert.deepEqual([...caps.reasoningEffortLevels], levels, model);
   }
   // Codex tunings keep reasoning mandatory; only codex-max has xhigh, so it sorts first.
-  const codexLadders: Array<[string, readonly string[]]> = [
+  const codexLadders: [string, readonly string[]][] = [
     ["gpt-5-codex", ["low", "medium", "high"]],
     ["gpt-5.1-codex", ["low", "medium", "high"]],
     ["gpt-5.1-codex-mini", ["low", "medium", "high"]],
@@ -500,7 +498,7 @@ test("hosted Code is only claimed where the backend registry hosts code_executio
   for (const [i, entry] of entries.entries()) {
     const body = registry.slice(entry.index, entries[i + 1]?.index);
     const hosted = /"hosted_tools":\s*\(([^)]*)\)/.exec(body)?.[1] ?? "";
-    if (/"code_execution"/.test(hosted)) backendSandboxes.add(entry[1]);
+    if (hosted.includes('"code_execution"')) backendSandboxes.add(entry[1]);
   }
   assert.ok(backendSandboxes.size > 0, "no provider hosts code_execution");
 

@@ -231,7 +231,7 @@ export const useKeyboardShortcutsStore = create<KeyboardShortcutsState>(
   (set) => ({
     overrides: loadOverrides(),
     setBinding: (id, slot, value) =>
-      set((state) => {
+      { set((state) => {
         const { disabled: _, ...entry } = state.overrides[id] ?? {};
         const overrides = withEntry(state.overrides, id, {
           ...entry,
@@ -239,9 +239,9 @@ export const useKeyboardShortcutsStore = create<KeyboardShortcutsState>(
         });
         persist(overrides);
         return { overrides };
-      }),
+      }); },
     setEnabled: (id, enabled) =>
-      set((state) => {
+      { set((state) => {
         if (isShortcutEnabled(state.overrides, id) === enabled) return state;
         const { disabled: _, ...entry } = state.overrides[id] ?? {};
         const overrides = withEntry(
@@ -251,33 +251,33 @@ export const useKeyboardShortcutsStore = create<KeyboardShortcutsState>(
         );
         persist(overrides);
         return { overrides };
-      }),
+      }); },
     clearBinding: (id, slot) =>
-      set((state) => {
+      { set((state) => {
         const overrides = withSlot(state.overrides, id, slot, null);
         persist(overrides);
         return { overrides };
-      }),
+      }); },
     resetBinding: (id, slot) =>
-      set((state) => {
+      { set((state) => {
         if (!isSlotOverridden(state.overrides, id, slot)) return state;
         const overrides = withSlot(state.overrides, id, slot, undefined);
         persist(overrides);
         return { overrides };
-      }),
+      }); },
     resetAction: (id) =>
-      set((state) => {
+      { set((state) => {
         if (!Object.hasOwn(state.overrides, id)) return state;
         const overrides = { ...state.overrides };
         delete overrides[id];
         persist(overrides);
         return { overrides };
-      }),
+      }); },
     resetAll: () =>
-      set(() => {
+      { set(() => {
         persist({});
         return { overrides: {} };
-      }),
+      }); },
   }),
 );
 

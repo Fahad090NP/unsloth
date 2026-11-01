@@ -28,11 +28,11 @@ export const DATE_FIELDS = ["created", "updated", "modified"] as const;
 export type DateField = (typeof DATE_FIELDS)[number];
 
 export type ChatSortKey = "name" | DateField;
-export type ChatSort = { key: ChatSortKey; desc: boolean };
+export interface ChatSort { key: ChatSortKey; desc: boolean }
 export type ProjectSortKey = "name" | DateField | "chats";
-export type ProjectSort = { key: ProjectSortKey; desc: boolean };
+export interface ProjectSort { key: ProjectSortKey; desc: boolean }
 export type SectionSortKey = "name" | DateField | "chats";
-export type SectionSort = { key: SectionSortKey; desc: boolean };
+export interface SectionSort { key: SectionSortKey; desc: boolean }
 export type ChatGroupBy = "none" | "project" | "section" | "date";
 
 export type ChatFlag = "favorite" | "pinned" | "forks" | "compare";

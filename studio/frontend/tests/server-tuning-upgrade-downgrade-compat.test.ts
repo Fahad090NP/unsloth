@@ -165,7 +165,7 @@ test("a v5 record is out of a pre-v5 build's reach in the first place", () => {
   let rewrote = false;
   for (const key of Object.keys(map)) {
     const version =
-      typeof map[key].version === "number" ? (map[key].version as number) : 0;
+      typeof map[key].version === "number" ? (map[key].version) : 0;
     if (version > PRE_TUNING_CEILING) {
       continue;
     }

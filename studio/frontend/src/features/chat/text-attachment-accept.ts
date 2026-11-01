@@ -663,7 +663,7 @@ const GETTEXT_ENTRY_ENDED_RE = /\r?\n[ \t]*[^ \t"\r\n]/;
 
 /** @param truncated Whether `text` is a prefix; a cut entry asks the caller to read it all. */
 function gettextHeaderCharset(text: string, truncated = false): string | null {
-  const match = text.match(GETTEXT_HEADER_ENTRY_RE);
+  const match = GETTEXT_HEADER_ENTRY_RE.exec(text);
   if (!match) {
     return null;
   }
@@ -671,7 +671,7 @@ function gettextHeaderCharset(text: string, truncated = false): string | null {
   if (truncated && !GETTEXT_ENTRY_ENDED_RE.test(after)) {
     return null;
   }
-  const charset = gettextStringValue(match[1]).match(GETTEXT_CHARSET_RE)?.[1];
+  const charset = (GETTEXT_CHARSET_RE.exec(gettextStringValue(match[1])))?.[1];
   return charset && charset.toUpperCase() !== "CHARSET" ? charset : null;
 }
 
@@ -866,7 +866,7 @@ function declaredXmlEncoding(bytes: Uint8Array): string | null {
     return null;
   }
   const declaration = decoder.decode(bytes.subarray(0, close + 1));
-  return declaration.match(XML_PROLOG_ENCODING_RE)?.[1] ?? null;
+  return (XML_PROLOG_ENCODING_RE.exec(declaration))?.[1] ?? null;
 }
 
 /** Canonical name via TextDecoder, so cp1252/latin1/windows-1252 count as one charset. */
@@ -1050,7 +1050,7 @@ function decodeVCardPerProperty(
           valueCharset = charsets[0] ?? null;
           valueDecoder = decoderFor(valueCharset);
           if (!valueDecoder) {
-            return { failure: unsupportedCharsetError(fileName, valueCharset!) };
+            return { failure: unsupportedCharsetError(fileName, valueCharset) };
           }
           out.push(parameters, ":");
           out.push(
@@ -1129,7 +1129,7 @@ export function decodeTextAttachmentBytes(
     }
   }
   if (vCardCharsets.length === 1) {
-    return decodeWithCharset(bytes, vCardCharsets[0]!, fileName, truncated);
+    return decodeWithCharset(bytes, vCardCharsets[0], fileName, truncated);
   }
   try {
     // Only a truncated read uses stream:true; a dangling lead byte in a whole file is an error.
@@ -1141,7 +1141,7 @@ export function decodeTextAttachmentBytes(
       ? vCardCharsets
       : declaredEmailCharsets(whole, fileName);
     if (declared.length === 1) {
-      return decodeWithCharset(bytes, declared[0]!, fileName, truncated);
+      return decodeWithCharset(bytes, declared[0], fileName, truncated);
     }
     if (declared.length > 1) {
       // Parts in different encodings cannot be decoded as one unit, and this is not a MIME parser.

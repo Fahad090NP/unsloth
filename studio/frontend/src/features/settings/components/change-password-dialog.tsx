@@ -208,7 +208,7 @@ export function ChangePasswordDialog({
   const [ownOpen, setOwnOpen] = useState(false);
   const controlled = controlledOpen !== undefined;
   const open = controlled ? controlledOpen : ownOpen;
-  const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setOwnOpen(next));
+  const setOpen = (next: boolean) => { controlled ? onOpenChange?.(next) : setOwnOpen(next); };
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -317,7 +317,7 @@ export function ChangePasswordDialog({
                   type="password"
                   autoComplete="current-password"
                   value={current}
-                  onChange={(e) => setCurrent(e.target.value)}
+                  onChange={(e) => { setCurrent(e.target.value); }}
                   minLength={MIN_PASSWORD_LENGTH}
                   disabled={submitting}
                 />
@@ -339,7 +339,7 @@ export function ChangePasswordDialog({
                 type="password"
                 autoComplete="new-password"
                 value={next}
-                onChange={(e) => setNext(e.target.value)}
+                onChange={(e) => { setNext(e.target.value); }}
                 minLength={MIN_PASSWORD_LENGTH}
                 disabled={submitting}
               />
@@ -364,7 +364,7 @@ export function ChangePasswordDialog({
                 type="password"
                 autoComplete="new-password"
                 value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
+                onChange={(e) => { setConfirm(e.target.value); }}
                 minLength={MIN_PASSWORD_LENGTH}
                 disabled={submitting}
               />
@@ -402,7 +402,7 @@ export function useOwnPasswordPending(): [boolean, () => void] {
       live = false;
     };
   }, [owner]);
-  return [initial, () => setInitial(false)];
+  return [initial, () => { setInitial(false); }];
 }
 
 export function AccountPasswordDialog() {

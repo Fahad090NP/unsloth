@@ -132,9 +132,7 @@ function readConsts(
   return found;
 }
 
-const COERCED: ReadonlyArray<
-  readonly [file: string, component: string, props: readonly string[]]
-> = [
+const COERCED: readonly (readonly [file: string, component: string, props: readonly string[]])[] = [
   ["tool-ui-python.tsx", "PythonToolUIImpl", ["code"]],
   ["tool-ui-terminal.tsx", "TerminalToolUIImpl", ["command"]],
   ["tool-ui-knowledge-base.tsx", "KnowledgeBaseToolUIImpl", ["query"]],
@@ -175,7 +173,7 @@ test("every card reads its text arguments through toolArgText", () => {
   }
 });
 
-const TYPEOF_GUARDED: ReadonlyArray<readonly [string, string]> = [
+const TYPEOF_GUARDED: readonly (readonly [string, string])[] = [
   ["tool-ui-render-html.tsx", "RenderHtmlToolUIImpl"],
 ];
 
@@ -206,7 +204,7 @@ test("the image card survives a result whose fields are not strings", () => {
     fileURLToPath(new URL(file, import.meta.url)),
     "utf8",
   );
-  const parser = raw.match(/const parseImageSize = \([\s\S]*?\n\};/);
+  const parser = /const parseImageSize = \([\s\S]*?\n\};/.exec(raw);
   assert.ok(parser, "parseImageSize moved");
 
   const one = (name: string): string => {

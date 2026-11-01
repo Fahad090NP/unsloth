@@ -54,11 +54,11 @@ function storedMessageToRunMessage(record: MessageRecord): ThreadMessage {
       attachments: record.attachments
         ? structuredClone(record.attachments)
         : [],
-      metadata: { custom: (record.metadata as Record<string, unknown>) ?? {} },
+      metadata: { custom: (record.metadata!) ?? {} },
     };
   }
 
-  const custom = (record.metadata as Record<string, unknown>) ?? {};
+  const custom = (record.metadata!) ?? {};
   const savedTiming = custom.timing as
     | import("@assistant-ui/react").MessageTiming
     | undefined;
@@ -275,7 +275,7 @@ export async function refreshContextUsage(
     let countedLastId: string | null = null;
     const fromLiveBranch = liveBranch != null;
     if (fromLiveBranch) {
-      runMessages = liveBranch as readonly ThreadMessage[];
+      runMessages = liveBranch;
     } else {
       const records = threadId ? await listStoredChatMessages(threadId) : [];
       if (stale()) return;

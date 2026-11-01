@@ -5,7 +5,7 @@
 export function isWebKitGTK(platform: string, userAgent: string): boolean {
   return (
     /linux/i.test(`${platform} ${userAgent}`) &&
-    /AppleWebKit/.test(userAgent) &&
+    userAgent.includes('AppleWebKit') &&
     !/android|chrom|edg/i.test(userAgent)
   );
 }

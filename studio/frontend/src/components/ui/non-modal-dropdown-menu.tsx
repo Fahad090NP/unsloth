@@ -36,7 +36,7 @@ export function NonModalDropdownMenu({
       setOpen(false);
     };
     document.addEventListener("scroll", onScroll, { capture: true, passive: true });
-    return () => document.removeEventListener("scroll", onScroll, { capture: true });
+    return () => { document.removeEventListener("scroll", onScroll, { capture: true }); };
   }, [open]);
   return (
     <DropdownMenu modal={false} open={open} onOpenChange={setOpen}>

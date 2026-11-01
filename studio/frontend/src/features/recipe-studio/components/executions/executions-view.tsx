@@ -43,14 +43,14 @@ import {
   parseModelUsageRows,
 } from "./executions-view-helpers";
 
-type ExecutionsViewProps = {
+interface ExecutionsViewProps {
   executions: RecipeExecutionRecord[];
   selectedExecutionId: string | null;
   currentSignature: string;
   onSelectExecution: (id: string) => void;
   onCancelExecution: (id: string) => void;
   onLoadDatasetPage: (id: string, page: number) => void;
-};
+}
 
 function downloadOutcomeMessage(outcome: DownloadOutcome): string {
   if (outcome === "saved") return "Dataset downloaded";
@@ -205,15 +205,13 @@ export function ExecutionsView({
     selectedExecution?.jobId && isExecutionInProgress(selectedExecution.status),
   );
   const canPublish = Boolean(
-    selectedExecution &&
-      selectedExecution.kind === "full" &&
+    selectedExecution?.kind === "full" &&
       selectedExecution.status === "completed" &&
       selectedExecution.jobId &&
       selectedExecution.artifact_path,
   );
   const canDownload = Boolean(
-    selectedExecution &&
-      selectedExecution.status === "completed" &&
+    selectedExecution?.status === "completed" &&
       ((selectedExecution.kind === "full" && selectedExecution.jobId) ||
         selectedExecution.dataset.length > 0),
   );
@@ -224,7 +222,7 @@ export function ExecutionsView({
     ? previewDatasetPageByExecution[selectedExecutionIdSafe] ?? 1
     : 1;
   const previewTotalPages = useMemo(() => {
-    if (!selectedExecution || selectedExecution.kind !== "preview") {
+    if (selectedExecution?.kind !== "preview") {
       return 1;
     }
     return Math.max(
@@ -254,7 +252,7 @@ export function ExecutionsView({
   }, [previewPage, selectedExecution]);
   const currentDatasetPage = selectedExecution?.kind === "preview" ? previewPage : datasetPage;
   const recordsMetric = useMemo(() => {
-    if (!selectedExecution || selectedExecution.status !== "completed") {
+    if (selectedExecution?.status !== "completed") {
       return null;
     }
     if (typeof selectedExecution.analysis?.num_records === "number") {
@@ -272,7 +270,7 @@ export function ExecutionsView({
     return null;
   }, [selectedExecution]);
   const totalMetric = useMemo(() => {
-    if (!selectedExecution || selectedExecution.status !== "completed") {
+    if (selectedExecution?.status !== "completed") {
       return null;
     }
     if (typeof selectedExecution.analysis?.target_num_records === "number") {
@@ -516,7 +514,7 @@ export function ExecutionsView({
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => setPublishDialogOpen(true)}
+                      onClick={() => { setPublishDialogOpen(true); }}
                     >
                       <HugeiconsIcon icon={Share01Icon} className="mr-2 size-4" />
                       Publish to Hugging Face
@@ -527,7 +525,7 @@ export function ExecutionsView({
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => onCancelExecution(selectedExecution.id)}
+                      onClick={() => { onCancelExecution(selectedExecution.id); }}
                     >
                       Cancel
                     </Button>
@@ -571,7 +569,7 @@ export function ExecutionsView({
                   totalPages={totalPages}
                   tableColumns={tableColumns}
                   datasetRowsForTable={datasetRowsForTable}
-                  onOpenOverview={() => setDetailTab("overview")}
+                  onOpenOverview={() => { setDetailTab("overview"); }}
                   onSetHiddenColumns={(updater) => {
                     const selectedId = selectedExecution.id;
                     setHiddenDatasetColumnsByExecution((current) => {

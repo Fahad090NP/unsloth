@@ -16,12 +16,12 @@ export function disposableTimeoutSignal(ms: number): PollSignal {
   const controller = new AbortController();
   const timer = setTimeout(
     () =>
-      controller.abort(
+      { controller.abort(
         new DOMException("The operation timed out.", "TimeoutError"),
-      ),
+      ); },
     ms,
   );
-  return { signal: controller.signal, dispose: () => clearTimeout(timer) };
+  return { signal: controller.signal, dispose: () => { clearTimeout(timer); } };
 }
 
 // Callers MUST dispose() once the request settles so abort listeners don't pile up.
@@ -30,7 +30,7 @@ export function combineAbortSignals(signals: AbortSignal[]): PollSignal {
     return { signal: AbortSignal.any(signals), dispose: () => {} };
   }
   const controller = new AbortController();
-  const detachers: Array<() => void> = [];
+  const detachers: (() => void)[] = [];
   const dispose = () => {
     while (detachers.length > 0) {
       detachers.pop()?.();
@@ -45,9 +45,9 @@ export function combineAbortSignals(signals: AbortSignal[]): PollSignal {
       abort(input.reason);
       break;
     }
-    const handler = () => abort(input.reason);
+    const handler = () => { abort(input.reason); };
     input.addEventListener("abort", handler, { once: true });
-    detachers.push(() => input.removeEventListener("abort", handler));
+    detachers.push(() => { input.removeEventListener("abort", handler); });
   }
   return { signal: controller.signal, dispose };
 }
@@ -78,7 +78,7 @@ export function withAbort<T>(
   if (!signal) return promise;
   if (signal.aborted) return Promise.reject(abortError(signal));
   return new Promise<T>((resolve, reject) => {
-    const onAbort = () => reject(abortError(signal));
+    const onAbort = () => { reject(abortError(signal)); };
     signal.addEventListener("abort", onAbort, { once: true });
     promise.then(resolve, reject).finally(() => {
       signal.removeEventListener("abort", onAbort);

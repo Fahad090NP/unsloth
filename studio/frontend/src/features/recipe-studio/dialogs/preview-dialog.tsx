@@ -31,7 +31,7 @@ import type { RecipeRunSettings } from "../stores/recipe-executions";
 import { FieldLabel } from "./shared/field-label";
 import { RecipeDialogContent } from "./shared/recipe-dialog-content";
 
-type RunDialogProps = {
+interface RunDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   kind: RecipeExecutionKind;
@@ -53,7 +53,7 @@ type RunDialogProps = {
   onRun: () => void;
   onValidate: () => void;
   container?: HTMLDivElement | null;
-};
+}
 
 type ValidationResult = RunDialogProps["validateResult"];
 
@@ -135,7 +135,7 @@ function commitFloat(
   setDraft(String(next));
 }
 
-type DraftInputFieldProps = {
+interface DraftInputFieldProps {
   id: string;
   label: string;
   hint: string;
@@ -144,7 +144,7 @@ type DraftInputFieldProps = {
   onChange: (value: string) => void;
   onBlur: () => void;
   placeholder?: string;
-};
+}
 
 function DraftInputField({
   id,
@@ -164,7 +164,7 @@ function DraftInputField({
         type="text"
         inputMode={inputMode}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => { onChange(event.target.value); }}
         onBlur={onBlur}
         placeholder={placeholder}
       />
@@ -346,7 +346,7 @@ function RunDialogBody({
             variant={kind === "preview" ? "dark" : "outline"}
             className="corner-squircle min-h-10 justify-center whitespace-normal px-3 text-center"
             aria-pressed={kind === "preview"}
-            onClick={() => onKindChange("preview")}
+            onClick={() => { onKindChange("preview"); }}
           >
             Test run
           </Button>
@@ -355,7 +355,7 @@ function RunDialogBody({
             variant={kind === "full" ? "dark" : "outline"}
             className="corner-squircle min-h-10 justify-center whitespace-normal px-3 text-center"
             aria-pressed={kind === "full"}
-            onClick={() => onKindChange("full")}
+            onClick={() => { onKindChange("full"); }}
           >
             Full run
           </Button>
@@ -373,7 +373,7 @@ function RunDialogBody({
             id="run-name"
             type="text"
             value={fullRunName}
-            onChange={(event) => onFullRunNameChange(event.target.value)}
+            onChange={(event) => { onFullRunNameChange(event.target.value); }}
             placeholder="Sprint dataset v2"
             aria-invalid={isFullRunNameMissing}
           />
@@ -392,16 +392,16 @@ function RunDialogBody({
           type="text"
           inputMode="numeric"
           value={rowsDraft}
-          onChange={(event) => setRowsDraft(event.target.value)}
+          onChange={(event) => { setRowsDraft(event.target.value); }}
           onBlur={() =>
-            commitInt(
+            { commitInt(
               rowsDraft,
               rows,
               1,
               MAX_RECORDS,
               onRowsChange,
               setRowsDraft,
-            )
+            ); }
           }
         />
       </div>
@@ -441,7 +441,7 @@ function RunDialogBody({
                   className="mt-[var(--ui-title-cap-inset)]"
                   checked={settings.batchEnabled}
                   onCheckedChange={(checked) =>
-                    onSettingsChange({ batchEnabled: Boolean(checked) })
+                    { onSettingsChange({ batchEnabled: Boolean(checked) }); }
                   }
                 />
               </div>
@@ -494,14 +494,14 @@ function RunDialogBody({
                 value={workersDraft}
                 onChange={setWorkersDraft}
                 onBlur={() =>
-                  commitInt(
+                  { commitInt(
                     workersDraft,
                     settings.nonInferenceWorkers,
                     1,
                     MAX_WORKERS,
-                    (value) => onSettingsChange({ nonInferenceWorkers: value }),
+                    (value) => { onSettingsChange({ nonInferenceWorkers: value }); },
                     setWorkersDraft,
-                  )
+                  ); }
                 }
               />
               {kind === "full" && settings.batchEnabled && (
@@ -514,14 +514,14 @@ function RunDialogBody({
                     value={batchSizeDraft}
                     onChange={setBatchSizeDraft}
                     onBlur={() =>
-                      commitInt(
+                      { commitInt(
                         batchSizeDraft,
                         settings.batchSize,
                         1,
                         MAX_RECORDS,
-                        (value) => onSettingsChange({ batchSize: value }),
+                        (value) => { onSettingsChange({ batchSize: value }); },
                         setBatchSizeDraft,
-                      )
+                      ); }
                     }
                   />
                   <div className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-background/60 px-3 py-2 text-sm text-foreground">
@@ -535,7 +535,7 @@ function RunDialogBody({
                       className="mt-[var(--ui-title-cap-inset)]"
                       checked={settings.mergeBatches}
                       onCheckedChange={(checked) =>
-                        onSettingsChange({ mergeBatches: Boolean(checked) })
+                        { onSettingsChange({ mergeBatches: Boolean(checked) }); }
                       }
                     />
                   </div>
@@ -556,14 +556,14 @@ function RunDialogBody({
                 value={windowDraft}
                 onChange={setWindowDraft}
                 onBlur={() =>
-                  commitInt(
+                  { commitInt(
                     windowDraft,
                     settings.shutdownErrorWindow,
                     1,
                     MAX_SHUTDOWN_WINDOW,
-                    (value) => onSettingsChange({ shutdownErrorWindow: value }),
+                    (value) => { onSettingsChange({ shutdownErrorWindow: value }); },
                     setWindowDraft,
-                  )
+                  ); }
                 }
               />
               <DraftInputField
@@ -574,14 +574,14 @@ function RunDialogBody({
                 value={shutdownRateDraft}
                 onChange={setShutdownRateDraft}
                 onBlur={() =>
-                  commitFloat(
+                  { commitFloat(
                     shutdownRateDraft,
                     settings.shutdownErrorRate,
                     0,
                     1,
-                    (value) => onSettingsChange({ shutdownErrorRate: value }),
+                    (value) => { onSettingsChange({ shutdownErrorRate: value }); },
                     setShutdownRateDraft,
-                  )
+                  ); }
                 }
               />
               <DraftInputField
@@ -592,15 +592,15 @@ function RunDialogBody({
                 value={restartsDraft}
                 onChange={setRestartsDraft}
                 onBlur={() =>
-                  commitInt(
+                  { commitInt(
                     restartsDraft,
                     settings.maxConversationRestarts,
                     0,
                     MAX_RETRY_STEPS,
                     (value) =>
-                      onSettingsChange({ maxConversationRestarts: value }),
+                      { onSettingsChange({ maxConversationRestarts: value }); },
                     setRestartsDraft,
-                  )
+                  ); }
                 }
               />
               <DraftInputField
@@ -611,17 +611,17 @@ function RunDialogBody({
                 value={correctionsDraft}
                 onChange={setCorrectionsDraft}
                 onBlur={() =>
-                  commitInt(
+                  { commitInt(
                     correctionsDraft,
                     settings.maxConversationCorrectionSteps,
                     0,
                     MAX_RETRY_STEPS,
                     (value) =>
-                      onSettingsChange({
+                      { onSettingsChange({
                         maxConversationCorrectionSteps: value,
-                      }),
+                      }); },
                     setCorrectionsDraft,
-                  )
+                  ); }
                 }
               />
               <div className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-background/60 px-3 py-2 text-sm text-foreground md:col-span-2">
@@ -636,9 +636,9 @@ function RunDialogBody({
                   className="mt-[var(--ui-title-cap-inset)]"
                   checked={settings.disableEarlyShutdown}
                   onCheckedChange={(checked) =>
-                    onSettingsChange({
+                    { onSettingsChange({
                       disableEarlyShutdown: Boolean(checked),
-                    })
+                    }); }
                   }
                 />
               </div>
@@ -727,7 +727,7 @@ export function RunDialog({
         <RunDialogBody
           key={draftKey}
           {...contentProps}
-          onClose={() => onOpenChange(false)}
+          onClose={() => { onOpenChange(false); }}
         />
       </RecipeDialogContent>
     </Dialog>

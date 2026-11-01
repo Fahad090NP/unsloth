@@ -10,18 +10,18 @@ import {
   createConversationMarkdownExporter,
 } from "../src/features/chat/utils/conversation-markdown-export.ts";
 
-type TestMessage = {
+interface TestMessage {
   readonly role: unknown;
   readonly text: string;
-};
+}
 
 function exporterFor(
   messages: readonly TestMessage[] | null,
-  downloads: Array<{
+  downloads: {
     content: string;
     filename: string;
     mimeType: string;
-  }>,
+  }[],
   notifications: string[],
 ) {
   return createConversationMarkdownExporter<TestMessage>({
@@ -39,11 +39,11 @@ function exporterFor(
 }
 
 test("downloads a Markdown conversation under the thread's name", async () => {
-  const downloads: Array<{
+  const downloads: {
     content: string;
     filename: string;
     mimeType: string;
-  }> = [];
+  }[] = [];
   const notifications: string[] = [];
   await exporterFor(
     [{ role: "user", text: "Hello" }],
@@ -62,11 +62,11 @@ test("downloads a Markdown conversation under the thread's name", async () => {
 });
 
 test("does nothing when the conversation does not exist", async () => {
-  const downloads: Array<{
+  const downloads: {
     content: string;
     filename: string;
     mimeType: string;
-  }> = [];
+  }[] = [];
   const notifications: string[] = [];
   await exporterFor(null, downloads, notifications)("thread-1");
   assert.deepEqual(downloads, []);
@@ -74,11 +74,11 @@ test("does nothing when the conversation does not exist", async () => {
 });
 
 test("notifies when every message is empty", async () => {
-  const downloads: Array<{
+  const downloads: {
     content: string;
     filename: string;
     mimeType: string;
-  }> = [];
+  }[] = [];
   const notifications: string[] = [];
   await exporterFor(
     [{ role: null, text: " " }],
@@ -138,11 +138,11 @@ test("renderer tokens never leave a thread, downloaded or copied", async () => {
   const stripped = "Golden Retriever\n\nDone.";
   const messages: TestMessage[] = [{ role: "assistant", text: answer }];
 
-  const downloads: Array<{
+  const downloads: {
     content: string;
     filename: string;
     mimeType: string;
-  }> = [];
+  }[] = [];
   await exporterFor(messages, downloads, [])("thread-1");
   assert.equal(downloads.length, 1);
   assert.ok(!downloads[0].content.includes("[[img:"));

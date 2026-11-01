@@ -56,7 +56,7 @@ function SortHeader({
   return (
     <button
       type="button"
-      onClick={() => onSortChange(column)}
+      onClick={() => { onSortChange(column); }}
       aria-sort={active ? (sort.desc ? "descending" : "ascending") : undefined}
       className={cn(
         "flex items-center gap-1 text-left transition-colors hover:text-foreground",
@@ -154,7 +154,7 @@ function Row({
       <button
         type="button"
         aria-pressed={selecting ? selected : undefined}
-        onClick={(event) => (selecting ? onToggle(event.shiftKey) : onOpen())}
+        onClick={(event) => { selecting ? onToggle(event.shiftKey) : onOpen(); }}
         className="flex min-w-0 flex-1 items-center gap-4 rounded-md py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {tile}
@@ -226,7 +226,7 @@ export function LibraryList({
             visible={selecting}
             group="head"
             onToggle={() =>
-              onSelectionChange(allSelected ? new Set() : new Set(targets.map(targetKey)))
+              { onSelectionChange(allSelected ? new Set() : new Set(targets.map(targetKey))); }
             }
             label={t("library.list.selectAll")}
           />
@@ -254,8 +254,8 @@ export function LibraryList({
             target={{ kind: "folder", folder }}
             selected={selection.has(`folder:${folder.id}`)}
             selecting={selecting}
-            onToggle={(range) => onToggle(`folder:${folder.id}`, range)}
-            onOpen={() => actions.openFolder(folder.id)}
+            onToggle={(range) => { onToggle(`folder:${folder.id}`, range); }}
+            onOpen={() => { actions.openFolder(folder.id); }}
             tile={
               <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border/60">
                 <HugeiconsIcon icon={FolderClosedIcon} strokeWidth={1.5} className="size-5" />
@@ -279,8 +279,8 @@ export function LibraryList({
             target={{ kind: "item", item }}
             selected={selection.has(`item:${item.id}`)}
             selecting={selecting}
-            onToggle={(range) => onToggle(`item:${item.id}`, range)}
-            onOpen={() => actions.openItem(item)}
+            onToggle={(range) => { onToggle(`item:${item.id}`, range); }}
+            onOpen={() => { actions.openItem(item); }}
             tile={<ItemTile item={item} />}
             name={
               <>

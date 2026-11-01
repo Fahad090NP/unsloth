@@ -31,7 +31,7 @@ async function captureRetry(
       status: 200,
       headers: { "content-type": "application/json" },
     });
-  }) as typeof globalThis.fetch;
+  });
   try {
     await call();
   } finally {

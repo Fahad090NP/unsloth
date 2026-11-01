@@ -34,7 +34,7 @@ const serializeJs = ts.transpileModule(
 const { toOpenAIMessages } = new Function(serializeJs)() as {
   toOpenAIMessages: (
     message: unknown,
-  ) => Array<{ role: string; content: unknown }>;
+  ) => { role: string; content: unknown }[];
 };
 
 function replayedImageUrl(image: string): string {
@@ -45,10 +45,10 @@ function replayedImageUrl(image: string): string {
       { type: "image", image },
     ],
   });
-  const parts = serialized.content as Array<{
+  const parts = serialized.content as {
     type: string;
     image_url?: { url: string };
-  }>;
+  }[];
   return parts[1].image_url!.url;
 }
 

@@ -3,13 +3,13 @@
 
 // Import-free so it is testable: app-sidebar.tsx pulls in the whole shell.
 
-export type NavRowState = {
+export interface NavRowState {
   disabled?: boolean;
   tooltip?: string;
   spinner?: boolean;
   pending?: boolean;
   pendingTooltip?: string;
-};
+}
 
 /**
  * A pending row stays enabled and spins rather than guessing a gray-out. Both render sites go

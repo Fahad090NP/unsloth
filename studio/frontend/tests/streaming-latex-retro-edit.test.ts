@@ -192,10 +192,10 @@ test("retaining across a rewrite still matches a full Streamdown split", () => {
 
   // Marked reads a run of blank lines as ONE separator block, so the closing `\n$$\n`
   // re-segments the block before the opener though its characters never moved.
-  const displayBody = `${Array.from(
+  const displayBody = Array.from(
     { length: 5 },
     (_, index) => `s${index}\n\n`,
-  ).join("")}`;
+  ).join("");
   const blankRunMerge = `Lead paragraph.\n\n\\[${displayBody}\\]\n\n`;
 
   for (const reply of [
@@ -254,7 +254,7 @@ test("an edit that closes up a blank line cannot keep the block before it", () =
     (_, index) => `body ${index}\n\n`,
   ).join("")}`;
 
-  const cases: Array<[string, string]> = [
+  const cases: [string, string][] = [
     [paragraphs, `${paragraphs.slice(0, 11)}!${paragraphs.slice(12)}`],
     [quoted, `> quote line$\ncost ${quoted.slice(14)}`],
   ];

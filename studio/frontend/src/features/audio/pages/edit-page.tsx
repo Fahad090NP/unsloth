@@ -112,7 +112,7 @@ function EditInputs({
           disabled={transcriber.transcribing || disabled}
           aria-busy={transcriber.transcribing}
           onChange={(event) =>
-            setTranscript(event.target.value, source?.id ?? null)
+            { setTranscript(event.target.value, source?.id ?? null); }
           }
           placeholder={
             transcriber.transcribing
@@ -147,7 +147,7 @@ function EditInputs({
         <PillTabs
           ariaLabel="What to change"
           value={mode}
-          onValueChange={(next) => setMode(next as "words" | "delivery")}
+          onValueChange={(next) => { setMode(next as "words" | "delivery"); }}
           disabled={disabled}
           fit={true}
           compact={true}
@@ -179,7 +179,7 @@ function EditInputs({
                 size="sm"
                 className="h-auto px-3 py-1 text-ui-11p5 font-normal"
                 disabled={disabled}
-                onClick={() => selectLastWord(edit.changesRef.current)}
+                onClick={() => { selectLastWord(edit.changesRef.current); }}
               >
                 Change one word
               </Button>
@@ -199,7 +199,7 @@ function EditInputs({
             step={deliveryRange.speed[2]}
             format={(v) => `${Number(v.toFixed(2))}×`}
             disabled={disabled}
-            onChange={(speed) => setDelivery({ speed })}
+            onChange={(speed) => { setDelivery({ speed }); }}
             commitWhileDragging
           />
           <ParamSlider
@@ -210,7 +210,7 @@ function EditInputs({
             step={1}
             format={(v) => (v > 0 ? `+${v} steps` : "Off")}
             disabled={disabled}
-            onChange={(pitchSteps) => setDelivery({ pitchSteps })}
+            onChange={(pitchSteps) => { setDelivery({ pitchSteps }); }}
             commitWhileDragging
           />
           <p className="text-ui-11p5 leading-snug text-muted-foreground">

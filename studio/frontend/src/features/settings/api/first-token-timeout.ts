@@ -4,13 +4,13 @@
 import { authFetch } from "@/features/auth";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
-export type FirstTokenTimeoutSettings = {
+export interface FirstTokenTimeoutSettings {
   minutes: number;
   // biome-ignore lint/style/useNamingConvention: API schema
   default_minutes: number;
   // biome-ignore lint/style/useNamingConvention: API schema
   max_minutes: number;
-};
+}
 
 export async function firstTokenTimeoutSettings(
   fallbackMessage: string,
@@ -28,5 +28,5 @@ export async function firstTokenTimeoutSettings(
   if (!response.ok) {
     throw new Error(await readFastApiError(response, fallbackMessage));
   }
-  return response.json();
+  return await response.json();
 }

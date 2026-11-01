@@ -3,7 +3,7 @@
 
 // Import-free so it is testable: env.ts reaches import.meta.env, which only vite can load.
 
-export type HealthVerdict = {
+export interface HealthVerdict {
   chat_only?: boolean;
   chat_only_reason?: string | null;
   chat_only_detail?: string | null;
@@ -11,14 +11,14 @@ export type HealthVerdict = {
   chat_only_hint?: string | null;
   hardware_detecting?: boolean;
   hardware_detection_deferred?: boolean;
-};
+}
 
-export type ResolvedVerdict = {
+export interface ResolvedVerdict {
   chatOnly: boolean;
   chatOnlyReason: string | null;
   chatOnlyDetail: string | null;
   chatOnlyHint: string | null;
-};
+}
 
 export function isProvisionalVerdict(data: HealthVerdict): boolean {
   return data.hardware_detecting === true;

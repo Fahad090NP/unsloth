@@ -71,7 +71,7 @@ export function ProjectFolderPicker({
       },
       Math.max(0, soonest - EXPIRY_GRACE_MS - Date.now()),
     );
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [folders, onChange]);
 
   async function add() {
@@ -119,9 +119,9 @@ export function ProjectFolderPicker({
               disabled={disabled}
               aria-label={`Remove ${folder.displayName}`}
               onClick={() =>
-                onChange((current) =>
+                { onChange((current) =>
                   current.filter((f) => f.token !== folder.token),
-                )
+                ); }
               }
             >
               <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />

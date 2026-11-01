@@ -9,13 +9,13 @@ import type { Plugin } from "vite";
 const CHAT_PAGE_MODULE = "/src/features/chat/chat-page.tsx";
 const ENTRY_TAG = /<script type="module"[^>]*\ssrc="[^"]+"[^>]*><\/script>/;
 
-type ChunkLike = {
+interface ChunkLike {
   type: "chunk";
   isEntry: boolean;
   isDynamicEntry: boolean;
   imports: string[];
   moduleIds: string[];
-};
+}
 
 function staticClosure(
   bundle: Record<string, { type: string }>,
@@ -24,7 +24,7 @@ function staticClosure(
   const seen = new Set<string>();
   const stack = [...roots];
   while (stack.length > 0) {
-    const name = stack.pop() as string;
+    const name = stack.pop()!;
     if (seen.has(name)) {
       continue;
     }
@@ -79,7 +79,7 @@ export function chatPagePreload(): Plugin {
     },
     generateBundle(_options, bundle) {
       const html = bundle["index.html"];
-      if (!html || html.type !== "asset") {
+      if (html?.type !== "asset") {
         return;
       }
       const chunks = Object.entries(bundle).filter(

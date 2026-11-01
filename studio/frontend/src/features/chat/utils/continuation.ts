@@ -28,9 +28,9 @@ export type IncompleteReason =
   | "empty"
   | "quote_cut";
 
-export type IncompleteInfo = {
+export interface IncompleteInfo {
   reason: IncompleteReason;
-};
+}
 
 /** Whether a finished turn left anything on screen, which is what separates `empty` from a
  *  real answer. Structured parts (tool calls, images, sources) always count; text and
@@ -349,7 +349,7 @@ export const CONTINUE_INSTRUCTION =
 
 export const CONTINUATION_RUN_CONFIG_KEY = "unslothContinuation";
 
-export type ContinuationRequest = {
+export interface ContinuationRequest {
   partial: string;
   reasoning?: string;
   reasoningDuration?: number;
@@ -366,7 +366,7 @@ export type ContinuationRequest = {
   providerCompactionProviderType?: string;
   providerCompactionModelId?: string;
   providerCompactionConnectionKey?: string;
-};
+}
 
 type ProviderCompactionContinuationFields = Pick<
   Required<ContinuationRequest>,
@@ -548,21 +548,21 @@ export const AUTO_CONTINUE_LOCK_NAME = "unsloth_chat_auto_continue_claim";
 /** `held-elsewhere` restores the manual Continue button; `skipped` is this tab's own duplicate. */
 export type AutoContinueClaim = "started" | "skipped" | "held-elsewhere";
 
-export type AutoContinueLeaseStorage = {
+export interface AutoContinueLeaseStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
   removeItem(key: string): void;
-};
+}
 
-export type AutoContinueLockManager = {
+export interface AutoContinueLockManager {
   request<T>(name: string, callback: () => T | Promise<T>): Promise<T>;
-};
+}
 
-type Lease = {
+interface Lease {
   token: string;
   expires: number;
   done?: boolean;
-};
+}
 
 /** Resolved per call: absent in tests and SSR, and Safari private mode throws on access. */
 function browserLeaseStorage(): AutoContinueLeaseStorage | null {
@@ -571,7 +571,7 @@ function browserLeaseStorage(): AutoContinueLeaseStorage | null {
       return null;
     }
     return (
-      (window.localStorage as AutoContinueLeaseStorage | undefined) ?? null
+      (window.localStorage) ?? null
     );
   } catch {
     return null;
@@ -754,7 +754,7 @@ export function createAutoContinueTab({
     done = false,
   ): boolean {
     const held = ownTokens.get(messageId);
-    if (!held || held.holder !== holder) {
+    if (held?.holder !== holder) {
       return false;
     }
     const store = leaseSeam();
@@ -789,7 +789,7 @@ export function createAutoContinueTab({
       try {
         const outcome = await exclusively(
           () => takeLease(messageId, now, holder),
-          "held-elsewhere" as AutoContinueClaim,
+          "held-elsewhere",
         );
         if (outcome === "started") {
           continued.add(messageId);
@@ -902,15 +902,15 @@ export function releaseAutoContinueLease(
 }
 
 /** Not the on-screen thread: a run keeps streaming after the user opens another chat. */
-export type AutoContinueRunSignal = {
+export interface AutoContinueRunSignal {
   isRunning(threadId: string): boolean;
   subscribe(onChange: () => void): () => void;
-};
+}
 
 /** Must be the run's own promise: the next round is claimed while the previous winds down. */
-export type AutoContinueIssuedRun = {
+export interface AutoContinueIssuedRun {
   whenSettled(onSettled: () => void): void;
-};
+}
 
 /** Holds renew until their own run appears; preflight has no time bound (e.g. GGUF loads). */
 export function createAutoContinueLeaseKeeper({
@@ -936,7 +936,7 @@ export function createAutoContinueLeaseKeeper({
   held: () => number;
   stop: () => void;
 } {
-  type Hold = {
+  interface Hold {
     messageId: string;
     threadId: string;
     idle: boolean;
@@ -944,7 +944,7 @@ export function createAutoContinueLeaseKeeper({
     ownsTheKey: boolean;
     armed: boolean;
     settled: boolean;
-  };
+  }
   const holds = new Map<string, Hold>();
   let unsubscribe: (() => void) | null = null;
 
@@ -1058,7 +1058,7 @@ export function noteRunStartedThisSession(
 export function runStartedThisSession(
   messageId: string | null | undefined,
 ): boolean {
-  return Boolean(messageId) && startedThisSession.has(messageId as string);
+  return Boolean(messageId) && startedThisSession.has(messageId!);
 }
 
 /** The budget is per turn but the claim is per message; check both or a spinner never resolves. */

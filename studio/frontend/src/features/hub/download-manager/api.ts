@@ -84,9 +84,9 @@ export interface ActiveDatasetDownload {
   generation?: number;
 }
 
-type ActiveModelDownloadsOptions = {
+interface ActiveModelDownloadsOptions {
   fresh?: boolean;
-};
+}
 
 const ACTIVE_MODEL_DOWNLOADS_DEDUPE_MS = 750;
 const ACTIVE_MODEL_DOWNLOADS_CACHE_MAX = 200;
@@ -132,11 +132,11 @@ export interface DownloadProgressResponse {
   cache_measured?: boolean;
 }
 
-export type DownloadProgressOptions = {
+export interface DownloadProgressOptions {
   signal?: AbortSignal;
   hfToken?: string | null;
   expectedBytes?: number;
-};
+}
 
 export type GgufDownloadProgressOptions = DownloadProgressOptions & {
   variant: string;
@@ -183,7 +183,7 @@ export async function getDownloadTransportCapabilities(options: {
     return cached.capabilities;
   }
   if (!options.force && !options.probe && downloadTransportCapabilitiesInFlight) {
-    return downloadTransportCapabilitiesInFlight;
+    return await downloadTransportCapabilitiesInFlight;
   }
   const generation = downloadTransportCapabilitiesGeneration;
   const request = authFetch(
@@ -208,7 +208,7 @@ export async function getDownloadTransportCapabilities(options: {
       }
     });
   downloadTransportCapabilitiesInFlight = request;
-  return request;
+  return await request;
 }
 
 export async function startModelDownload(payload: {
@@ -231,7 +231,7 @@ export async function startModelDownload(payload: {
     headers,
     body: JSON.stringify(body),
   });
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 export async function cancelModelDownload(payload: {
@@ -247,7 +247,7 @@ export async function cancelModelDownload(payload: {
     body: JSON.stringify(body),
     signal,
   });
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 export async function getModelDownloadStatus(
@@ -260,7 +260,7 @@ export async function getModelDownloadStatus(
   const response = await authFetch(`/api/hub/download-status?${params}`, {
     signal,
   });
-  return parseJsonOrThrow<DownloadJobStatus>(response);
+  return await parseJsonOrThrow<DownloadJobStatus>(response);
 }
 
 export async function getActiveModelDownloads(
@@ -268,14 +268,14 @@ export async function getActiveModelDownloads(
   signal?: AbortSignal,
   options: ActiveModelDownloadsOptions = {},
 ): Promise<readonly ActiveModelDownload[]> {
-  return getActiveModelDownloadsForKey(repoId, signal, options);
+  return await getActiveModelDownloadsForKey(repoId, signal, options);
 }
 
 export async function getAllActiveModelDownloads(
   signal?: AbortSignal,
   options: ActiveModelDownloadsOptions = {},
 ): Promise<readonly ActiveModelDownload[]> {
-  return getActiveModelDownloadsForKey(null, signal, options);
+  return await getActiveModelDownloadsForKey(null, signal, options);
 }
 
 async function getActiveModelDownloadsForKey(
@@ -285,12 +285,12 @@ async function getActiveModelDownloadsForKey(
 ): Promise<readonly ActiveModelDownload[]> {
   const trimmedRepoId = repoId?.trim() ?? "";
   const key = trimmedRepoId ? trimmedRepoId.toLowerCase() : "*";
-  if (signal?.aborted) return Promise.reject(abortError(signal));
+  if (signal?.aborted) return await Promise.reject(abortError(signal));
   const useCachedResult = !options.fresh;
   const cached = useCachedResult ? activeModelDownloadsCache.get(key) : undefined;
   const now = Date.now();
   if (cached && cached.expiresAt > now) {
-    return withAbort(Promise.resolve(cached.downloads), signal);
+    return await withAbort(Promise.resolve(cached.downloads), signal);
   }
 
   let request = useCachedResult ? activeModelDownloadsInFlight.get(key) : undefined;
@@ -322,7 +322,7 @@ async function getActiveModelDownloadsForKey(
       activeModelDownloadsInFlight.set(key, request);
     }
   }
-  return withAbort(request, signal);
+  return await withAbort(request, signal);
 }
 
 export async function getActiveDatasetDownloads(
@@ -355,7 +355,7 @@ export async function startDatasetDownload(payload: {
     headers,
     body: JSON.stringify(body),
   });
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 export async function cancelDatasetDownload(payload: {
@@ -370,7 +370,7 @@ export async function cancelDatasetDownload(payload: {
     body: JSON.stringify(body),
     signal,
   });
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 export async function getDatasetDownloadStatus(
@@ -381,7 +381,7 @@ export async function getDatasetDownloadStatus(
   const response = await authFetch(`/api/hub/datasets/download-status?${params}`, {
     signal,
   });
-  return parseJsonOrThrow<DownloadJobStatus>(response);
+  return await parseJsonOrThrow<DownloadJobStatus>(response);
 }
 
 export async function getModelTransportStatus(
@@ -396,7 +396,7 @@ export async function getModelTransportStatus(
     headers: hubTokenHeader(hfToken),
     signal,
   });
-  return parseJsonOrThrow<TransportStatus>(response);
+  return await parseJsonOrThrow<TransportStatus>(response);
 }
 
 export async function getDatasetTransportStatus(
@@ -407,7 +407,7 @@ export async function getDatasetTransportStatus(
   const response = await authFetch(`/api/hub/datasets/transport-status?${params}`, {
     signal,
   });
-  return parseJsonOrThrow<TransportStatus>(response);
+  return await parseJsonOrThrow<TransportStatus>(response);
 }
 
 export async function getGgufDownloadProgress(
@@ -424,7 +424,7 @@ export async function getGgufDownloadProgress(
     headers: hubTokenHeader(hfToken),
     signal,
   });
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 export async function getDownloadProgress(
@@ -438,7 +438,7 @@ export async function getDownloadProgress(
     headers: hubTokenHeader(hfToken),
     signal,
   });
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }
 
 export async function getDatasetDownloadProgress(
@@ -452,5 +452,5 @@ export async function getDatasetDownloadProgress(
     headers: hubTokenHeader(hfToken),
     signal,
   });
-  return parseJsonOrThrow(response);
+  return await parseJsonOrThrow(response);
 }

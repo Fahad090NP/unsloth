@@ -34,7 +34,7 @@ test("the KV-save option renders without the chat TTL", () => {
   let row: ts.Node | undefined;
   const visit = (node: ts.Node): void => {
     const tag = openingTag(node);
-    if (tag?.tagName.getText() === "SettingsRow" && /modelAutoSwitch\.keepKv"/.test(tag.getText())) row = node;
+    if (tag?.tagName.getText() === "SettingsRow" && tag.getText().includes('modelAutoSwitch.keepKv"')) row = node;
     ts.forEachChild(node, visit);
   };
   visit(file);

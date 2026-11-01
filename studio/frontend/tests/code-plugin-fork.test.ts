@@ -59,14 +59,14 @@ test("an exact request leaves a streaming sibling's queued refresh in place", as
       if (JSON.stringify(result.tokens) === JSON.stringify(expected.tokens)) resolve(result);
     });
     assert.ok(approximate, "the growing fence is answered with the throttled approximation");
-    assert.notDeepEqual(approximate!.tokens, expected.tokens);
+    assert.notDeepEqual(approximate.tokens, expected.tokens);
   });
   const sibling = plugin.highlightExact(options(a + lines("z", 3)));
   assert.ok(sibling);
   const late = await Promise.race([
     refined,
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+    new Promise<null>((resolve) => setTimeout(() => { resolve(null); }, 2000)),
   ]);
   assert.ok(late, "the streaming fence still receives its refresh");
-  assert.deepEqual(late!.tokens, expected.tokens);
+  assert.deepEqual(late.tokens, expected.tokens);
 });

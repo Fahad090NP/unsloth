@@ -21,12 +21,12 @@ test("a live follow renders every event but saves at checkpoint pace", () => {
   let clock = 0;
   const schedule = createRecoveryPublishSchedule(INTERVAL_MS, () => clock);
   schedule.attach(1595);
-  const events: Array<{
+  const events: {
     seq: number;
     status: "running" | "completed";
     lastEventSeq: number;
     at: number;
-  }> = [];
+  }[] = [];
   for (let seq = 1; seq <= 1595; seq += 1) {
     events.push({ seq, status: "running", lastEventSeq: 1595, at: 0 });
   }

@@ -20,7 +20,7 @@ import {
 
 import { readSrcAsync } from "./helpers/kit.ts";
 
-const ids = (rows: Array<{ id: string }>) => rows.map((row) => row.id);
+const ids = (rows: { id: string }[]) => rows.map((row) => row.id);
 
 test("a dragged row lands on the edge the insertion line was drawn on", () => {
   assert.deepEqual(insertIdAt(["a", "b", "c", "d"], "d", "b", "top"), [

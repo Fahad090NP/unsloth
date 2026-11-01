@@ -14,13 +14,13 @@ export const MCP_SHELL_AGENT_IDS: ReadonlySet<string> = new Set([
   "codex",
 ]);
 
-export type McpSnippet = {
+export interface McpSnippet {
   text: string;
   /** set for agents configured by a file the user edits */
   configPath: string | null;
   /** the text reads UNSLOTH_API_KEY, so it has to be set before the agent starts */
   readsKeyEnv: boolean;
-};
+}
 
 /** `<origin>/mcp/` for any Studio base, or null when the base is not a URL. */
 export function mcpEndpointUrl(base: string | null | undefined): string | null {

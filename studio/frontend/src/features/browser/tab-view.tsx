@@ -199,7 +199,7 @@ function useFrameMessages(tabId: string, origin: string | null, entry: BrowserEn
           toast(t(`browser.error.${message.type}`), {
             ...frameNotice(message.type, tabId),
             action: shown
-              ? { label: t("browser.openExternal"), onClick: () => openExternalLink(pageUrl() ?? shown) }
+              ? { label: t("browser.openExternal"), onClick: () => { openExternalLink(pageUrl() ?? shown); } }
               : undefined,
           });
           break;
@@ -222,7 +222,7 @@ function useFrameMessages(tabId: string, origin: string | null, entry: BrowserEn
         case "zoom":
           // A key goes through the scope, so the View menu repeating it doesn't zoom twice.
           if (message.wheel) zoomTab(tabId, message.direction);
-          else zoomScopeFromChord({ contains: () => true, zoom: (direction) => zoomTab(tabId, direction) }, message.direction);
+          else zoomScopeFromChord({ contains: () => true, zoom: (direction) => { zoomTab(tabId, direction); } }, message.direction);
           break;
       }
     },
@@ -287,7 +287,7 @@ function PageError({
         <Button type="button" variant={botCheck ? "ghost" : "outline"} size="sm" onClick={onRetry}>
           {t("browser.error.retry")}
         </Button>
-        <Button type="button" variant={botCheck ? "dark" : "ghost"} size="sm" onClick={() => openExternalLink(url)}>
+        <Button type="button" variant={botCheck ? "dark" : "ghost"} size="sm" onClick={() => { openExternalLink(url); }}>
           {t("browser.openExternal")}
         </Button>
       </div>
@@ -354,7 +354,7 @@ function WebPage({
     const cached = cachedPage(entry);
     if (cached) {
       show(cached);
-      return () => setPageDownload(tab.id, null);
+      return () => { setPageDownload(tab.id, null); };
     }
     if (blocked) {
       updateTab(tab.id, { loading: false, title: hostOf(url), pageError: true });

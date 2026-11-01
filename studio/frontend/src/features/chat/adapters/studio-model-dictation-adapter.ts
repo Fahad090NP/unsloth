@@ -564,13 +564,13 @@ export class StudioModelDictationAdapter implements DictationAdapter {
     });
 
     // Segments are transcribed independently and stored by index to keep order.
-    type Segment = {
+    interface Segment {
       index: number;
       chunks: Blob[];
       startedAt: number;
       voiced: boolean;
       recorder: SegmentRecorder;
-    };
+    }
     const results: string[] = [];
     const queue: { index: number; blob: Blob }[] = [];
     let worker = false;
@@ -606,7 +606,7 @@ export class StudioModelDictationAdapter implements DictationAdapter {
       toast.error(message, {
         action: {
           label: "Open Voice settings",
-          onClick: () => useSettingsDialogStore.getState().openDialog("voice"),
+          onClick: () => { useSettingsDialogStore.getState().openDialog("voice"); },
         },
       });
       // cache-only preload failures make the session unusable, so stop before more audio is lost
@@ -888,7 +888,7 @@ export class StudioModelDictationAdapter implements DictationAdapter {
             undefined,
             sessionVariant,
           ).catch((error: unknown) =>
-            reportTranscriptionError(error, "preload"),
+            { reportTranscriptionError(error, "preload"); },
           );
         }
         stopLevelMeter = startDictationLevelMeter(stream, (rawRms, now) => {

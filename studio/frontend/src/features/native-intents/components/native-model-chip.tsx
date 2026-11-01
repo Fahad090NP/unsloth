@@ -33,8 +33,8 @@ export function NativeModelChip({
   useEffect(() => {
     if (expired) return;
     const remaining = Math.max(0, intent.path.expiresAtMs - Date.now());
-    const timer = window.setTimeout(() => setNow(Date.now()), remaining);
-    return () => window.clearTimeout(timer);
+    const timer = window.setTimeout(() => { setNow(Date.now()); }, remaining);
+    return () => { window.clearTimeout(timer); };
   }, [expired, intent.path.expiresAtMs]);
 
   async function handleLoad() {
@@ -97,7 +97,7 @@ export function NativeModelChip({
       </button>
       <button
         type="button"
-        onClick={() => clearModelIntent(intent.id)}
+        onClick={() => { clearModelIntent(intent.id); }}
         className="flex size-5 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground"
         aria-label="Dismiss local model"
       >

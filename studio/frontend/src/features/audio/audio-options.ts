@@ -243,7 +243,7 @@ export function readAudioOptionValues(modelId: string | null | undefined): Audio
   const values: AudioOptionValues = {};
   for (const [name, value] of Object.entries(entry)) {
     if (["boolean", "number", "string"].includes(typeof value)) {
-      values[name] = value as AudioOptionValue;
+      values[name] = value;
     }
   }
   return values;

@@ -5,11 +5,11 @@
 
 import type { TrainingPhase } from "@/features/training";
 
-export type PreparationProgress = {
+export interface PreparationProgress {
   title: string;
   detail: string | null;
   percent: number | null;
-};
+}
 
 const PREPARATION_PHASES = new Set<TrainingPhase>([
   "loading_model",

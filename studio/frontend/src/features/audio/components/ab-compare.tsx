@@ -76,7 +76,7 @@ function useClipPeaks(srcs: readonly (string | null)[]) {
             setPeaks((prev) => ({ ...prev, [src]: null }));
         });
     }
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [key]);
   return peaks;
 }
@@ -132,7 +132,7 @@ export function ABCompare({
     const audio = audioRef.current;
     if (!(audio && src)) return;
     if (audio.paused) {
-      audio.play().catch(() => setAb((s) => ({ ...s, playing: false })));
+      audio.play().catch(() => { setAb((s) => ({ ...s, playing: false })); });
     } else {
       audio.pause();
     }
@@ -168,7 +168,7 @@ export function ABCompare({
       <PillTabs
         ariaLabel="Compare"
         value={ab.side}
-        onValueChange={(side) => choose(side as ABSide)}
+        onValueChange={(side) => { choose(side as ABSide); }}
         fit={true}
         compact={true}
         className="[&>button]:px-3"
@@ -247,7 +247,7 @@ export function ABCompare({
           onPause={() => {
             if (!pendingRef.current) setAb((s) => ({ ...s, playing: false }));
           }}
-          onEnded={() => setAb((s) => ({ ...s, playing: false, position: 0 }))}
+          onEnded={() => { setAb((s) => ({ ...s, playing: false, position: 0 })); }}
           onTimeUpdate={(event) => {
             if (pendingRef.current) return;
             const time = event.currentTarget.currentTime;
@@ -270,7 +270,7 @@ export function ABCompare({
             if (play)
               audio
                 .play()
-                .catch(() => setAb((s) => ({ ...s, playing: false })));
+                .catch(() => { setAb((s) => ({ ...s, playing: false })); });
           }}
         />
       ) : null}

@@ -68,7 +68,7 @@ test("a partial import patches only the keys the file names", () => {
   seedTunedModelDefaults();
 
   const changed = keysChangedBy(() =>
-    importConfig("training:\n  max_seq_length: 4096\n"),
+    { importConfig("training:\n  max_seq_length: 4096\n"); },
   );
 
   assert.deepEqual(

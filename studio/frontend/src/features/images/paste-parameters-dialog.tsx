@@ -64,7 +64,7 @@ export function PasteParametersDialog({
             spellCheck={false}
             placeholder={EXAMPLE}
             value={text}
-            onChange={(e) => onTextChange(e.target.value)}
+            onChange={(e) => { onTextChange(e.target.value); }}
             onKeyDown={(e) => {
               if (isModEnter(e)) {
                 e.preventDefault();
@@ -77,7 +77,7 @@ export function PasteParametersDialog({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => onOpenChange(false)}
+              onClick={() => { onOpenChange(false); }}
             >
               Cancel
             </Button>

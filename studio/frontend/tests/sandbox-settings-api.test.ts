@@ -6,7 +6,7 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Api = {
+interface Api {
   loadSandboxStatus: (
     refresh: boolean,
     fallback: string,
@@ -17,9 +17,9 @@ type Api = {
   ) => Promise<Record<string, unknown>>;
   startHostPreparation: (fallback: string) => Promise<Record<string, unknown>>;
   loadHostPreparation: (fallback: string) => Promise<Record<string, unknown>>;
-};
+}
 
-type Call = { url: string; init?: RequestInit };
+interface Call { url: string; init?: RequestInit }
 
 function loadApi(respond: (call: Call) => Response): {
   api: Api;

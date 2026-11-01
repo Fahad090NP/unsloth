@@ -108,10 +108,10 @@ export function useTrainingResourceNotices(): TrainingResourceNotice[] {
     knownCached: modelKnownCached,
     localPath: modelLocalPath,
   });
-  const datasetIsHf = datasetSource === "huggingface" && !!dataset;
+  const datasetIsHf = datasetSource === "huggingface" && Boolean(dataset);
   const modelInventory = useHubInventory({
     kind: "models",
-    enabled: !!selectedModel && !modelIsLocal,
+    enabled: Boolean(selectedModel) && !modelIsLocal,
   });
   const datasetInventory = useHubInventory({
     kind: "datasets",

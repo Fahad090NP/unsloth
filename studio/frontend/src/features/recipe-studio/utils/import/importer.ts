@@ -21,7 +21,7 @@ import { parseSeedConfig } from "./parsers/seed-config-parser";
 import { buildNodes, parseUi } from "./ui";
 import type { ImportResult } from "./types";
 
-type RecipeInput = {
+interface RecipeInput {
   columns?: unknown;
   model_configs?: unknown;
   model_providers?: unknown;
@@ -29,9 +29,9 @@ type RecipeInput = {
   tool_configs?: unknown;
   processors?: unknown;
   seed_config?: unknown;
-};
+}
 
-type UiInput = {
+interface UiInput {
   nodes?: unknown;
   edges?: unknown;
   seed_source_type?: unknown;
@@ -47,18 +47,18 @@ type UiInput = {
   unstructured_chunk_size?: unknown;
   unstructured_chunk_overlap?: unknown;
   advanced_open_by_node?: unknown;
-};
+}
 
-type ImportRecipePayloadOptions = {
+interface ImportRecipePayloadOptions {
   preserveUnstructuredUploads?: boolean;
-};
+}
 
-type UiMarkdownNoteNode = {
+interface UiMarkdownNoteNode {
   name: string;
   markdown: string;
   note_color?: string;
   note_opacity?: string;
-};
+}
 
 function readStringNumber(value: unknown): string | undefined {
   if (typeof value === "string") {
@@ -340,7 +340,7 @@ function applyAdvancedOpen(
   if (!isAdvancedOpenConfig(config)) {
     return;
   }
-  config.advancedOpen = advancedOpenByNode[config.name] === true;
+  config.advancedOpen = advancedOpenByNode[config.name];
 }
 
 function buildToolProfileConfig(

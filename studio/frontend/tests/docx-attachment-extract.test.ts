@@ -27,7 +27,7 @@ const M = 'xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"'
 const W14 = 'xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"';
 const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
-function rels(entries: Array<[string, string]>): Uint8Array {
+function rels(entries: [string, string][]): Uint8Array {
   return strToU8(
     `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${entries
       .map(([type, target], i) => `<Relationship Id="rId${i + 1}" Type="${REL}/${type}" Target="${target}"/>`)
@@ -79,7 +79,7 @@ async function chained(name: string, bytes: Uint8Array): Promise<string> {
   const repacked = repackDocxAttachmentArchive(name, bytes);
   const marked = markDocxNotes(linearizeDocxMath(writeDocxSymbols(repacked, 10 * 1024 * 1024)));
   const archive = writeDocxTableRows(writeDocxBreaksAndCheckboxes(writeDocxListNumbers(marked.archive)));
-  const { value } = await mammoth.extractRawText({ buffer: Buffer.from(archive) } as never);
+  const { value } = await mammoth.extractRawText({ buffer: Buffer.from(archive) });
   return marked.label(value);
 }
 
@@ -96,7 +96,7 @@ async function withDocxGlobals<T>(run: () => Promise<T>): Promise<T> {
   // mammoth's node build takes a buffer, not the browser build's arrayBuffer.
   const extract = mammoth.extractRawText;
   mammoth.extractRawText = ((input: { arrayBuffer?: ArrayBuffer }) =>
-    extract(input.arrayBuffer ? ({ buffer: Buffer.from(input.arrayBuffer) } as never) : (input as never))) as never;
+    extract(input.arrayBuffer ? ({ buffer: Buffer.from(input.arrayBuffer) }) : (input as never))) as never;
   try {
     return await run();
   } finally {
@@ -173,7 +173,7 @@ test("extractDocxAttachmentText matches the chain on names the zip round trip ch
       "proto.docx": withProtoPart({ ...base, __PROTO__: strToU8("<x/>") }, 0),
       "proto-first.docx": withProtoPart({ __PROTO__: strToU8("<x/>"), ...base }, 6),
       "proto-main.docx": withProtoPart(
-        { ...base, __PROTO__: base["word/document.xml"]!, "_rels/.rels": rels([["officeDocument", "/__PROTO__"]]) },
+        { ...base, __PROTO__: base["word/document.xml"], "_rels/.rels": rels([["officeDocument", "/__PROTO__"]]) },
         0,
       ),
       "names.docx": zipSync({ ...base, "word/\ud800x.xml": strToU8(`<w:document ${W}><w:body><w:p><w:r><w:br/></w:r></w:p></w:body></w:document>`), "ünï.xml": strToU8("<a/>"), "1": strToU8("1") }),

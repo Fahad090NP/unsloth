@@ -44,7 +44,7 @@ after(async () => {
 
 function stubFetch(response: Response): () => void {
   const original = globalThis.fetch;
-  globalThis.fetch = (async () => response.clone()) as typeof globalThis.fetch;
+  globalThis.fetch = (async () => response.clone());
   return () => {
     globalThis.fetch = original;
   };
@@ -121,7 +121,7 @@ test("a gateway 401 on the unknown path still keeps the selection", async () => 
     getItem: (key: string) => store.get(key) ?? null,
     setItem: (key: string, value: string) => void store.set(key, String(value)),
     removeItem: (key: string) => void store.delete(key),
-    clear: () => store.clear(),
+    clear: () => { store.clear(); },
     key: () => null,
     length: 0,
   };

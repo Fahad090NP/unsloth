@@ -6,19 +6,19 @@ import { readFastApiError } from "@/lib/format-fastapi-error";
 
 const MCP_ACCESS_PATH = "/api/settings/mcp-access";
 
-export type McpAccessSettings = {
+export interface McpAccessSettings {
   enabled: boolean;
   /** UNSLOTH_STUDIO_ENABLE_MCP=1 forces this on and disables the switch */
   forcedByEnv: boolean;
   /** backend-reported URL used as the snippet fallback */
   url: string;
-};
+}
 
-type ApiMcpAccessSettings = {
+interface ApiMcpAccessSettings {
   enabled: boolean;
   forced_by_env: boolean;
   url: string;
-};
+}
 
 export function mcpAccessFromApi(
   settings: ApiMcpAccessSettings,

@@ -68,7 +68,7 @@ function Slider({
     if (typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(measure);
     observer.observe(thumb);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, []);
   const fillPercent = isSingleThumbHorizontal
     ? Math.min(

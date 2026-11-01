@@ -15,7 +15,7 @@ async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(await readFastApiError(response));
   }
-  return response.json();
+  return await response.json();
 }
 
 export async function validateChatTemplate(
@@ -28,7 +28,7 @@ export async function validateChatTemplate(
     body: JSON.stringify({ template }),
     signal,
   });
-  return parseJsonOrThrow<ValidateChatTemplateResult>(response);
+  return await parseJsonOrThrow<ValidateChatTemplateResult>(response);
 }
 
 export async function fetchDefaultChatTemplate(

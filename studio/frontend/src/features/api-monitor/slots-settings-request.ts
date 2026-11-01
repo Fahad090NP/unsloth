@@ -11,7 +11,7 @@ import {
 } from "@/features/model-picker/model-config/model-config-handoff";
 
 /** The resident model as Chat's runtime holds it: the same fields Chat's own reload sends. */
-export type ResidentRunTarget = {
+export interface ResidentRunTarget {
   checkpoint: string;
   ggufVariant: string | null;
   isGguf: boolean;
@@ -20,7 +20,7 @@ export type ResidentRunTarget = {
   loadId: string | null;
   nativePathToken: string | null;
   nativePathExpiresAtMs: number | null;
-};
+}
 
 /** Run can only apply settings while access to the resident model is still valid. */
 export function residentHasRunSettings(

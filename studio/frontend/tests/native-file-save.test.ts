@@ -120,7 +120,7 @@ test("browser download suggests a name but does not report an unknown final file
         assert.equal(tag, "a");
         return anchor;
       },
-      body: { appendChild: (child: unknown) => assert.equal(child, anchor) },
+      body: { appendChild: (child: unknown) => { assert.equal(child, anchor); } },
     },
   });
   Object.defineProperty(globalThis, "window", {

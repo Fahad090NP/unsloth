@@ -15,12 +15,12 @@ import {
 
 /* Asserts dependency preconditions: sanitize's className allowlist and Streamdown's [&>p]:inline. */
 
-type HastNode = {
+interface HastNode {
   type: string;
   tagName?: string;
   properties?: { className?: unknown; [key: string]: unknown };
   children?: HastNode[];
-};
+}
 
 const el = (
   tagName: string,
@@ -56,7 +56,7 @@ const countMarked = (node: HastNode): number => {
 test("PRECONDITION: the sanitizer would strip this class from a paragraph", async () => {
   const { defaultSchema } = (await import("hast-util-sanitize")) as {
     defaultSchema: {
-      attributes?: Record<string, ReadonlyArray<unknown>>;
+      attributes?: Record<string, readonly unknown[]>;
     };
   };
   const attributes = defaultSchema.attributes ?? {};
@@ -223,7 +223,7 @@ test("the composed attacher marks the tree and then runs the maths renderer", ()
   const fakeMathAttacher = (options: unknown) => {
     optionsSeen = options;
     return (tree: HastNode) => {
-      seen.push(marked(tree.children?.[0] as HastNode) ? "marked" : "unmarked");
+      seen.push(marked(tree.children?.[0]!) ? "marked" : "unmarked");
     };
   };
 

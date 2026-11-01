@@ -58,7 +58,7 @@ function useSegmenterStatus() {
   useEffect(() => {
     if (!downloading) return;
     const id = window.setInterval(refresh, 1000);
-    return () => window.clearInterval(id);
+    return () => { window.clearInterval(id); };
   }, [downloading, refresh]);
   // Re-read once a download ends, so the notice clears without a reload.
   const wasDownloading = useRef(false);
@@ -236,7 +236,7 @@ export function MaskFromTextPanel({
       const result = await segmentImage({ image: source, prompt }, controller.signal);
       if (controller.signal.aborted || latestImage.current !== source) return;
       setOutcome({ image: source, error: null, summary: segmentSummary(result) });
-      if (result.instances.length > 0 || additive === false) {
+      if (result.instances.length > 0 || !additive) {
         // Nothing found with Replace still clears the mask: the painter shows exactly what the text selected.
         onMask({ dataUrl: result.mask, additive, empty: result.instances.length === 0 });
       }
@@ -279,7 +279,7 @@ export function MaskFromTextPanel({
           value={prompt}
           placeholder={MASK_FROM_TEXT_PLACEHOLDER}
           disabled={!ready}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => { setPrompt(e.target.value); }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();

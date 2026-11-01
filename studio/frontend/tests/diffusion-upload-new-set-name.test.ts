@@ -120,11 +120,11 @@ test("the new-set form does not upload into a set that already exists", () => {
     source.indexOf("const onDrop"),
     source.indexOf("const onStart"),
   );
-  assert.ok(drop.indexOf("if (takenName)") >= 0);
+  assert.ok(drop.includes("if (takenName)"));
   assert.ok(drop.indexOf("if (takenName)") < drop.indexOf("await uploadTo("));
-  assert.ok(drop.indexOf("if (namesLoading)") >= 0);
+  assert.ok(drop.includes("if (namesLoading)"));
   assert.ok(drop.indexOf("if (namesLoading)") < drop.indexOf("await uploadTo("));
-  assert.ok(drop.indexOf("if (namesUnavailable)") >= 0);
+  assert.ok(drop.includes("if (namesUnavailable)"));
   assert.ok(drop.indexOf("if (namesUnavailable)") < drop.indexOf("await uploadTo("));
   assert.match(drop, /await uploadTo\(dropTarget, dropped, createsDataset\)/);
 

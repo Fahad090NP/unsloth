@@ -82,12 +82,12 @@ test("a run lists its own clips in the Audio page's order", () => {
     clip("loose", {}),
   ];
   const ids = (list: Item[]) => list.map((item) => item.id);
-  assert.deepEqual(ids(runSiblings(items, items[1]!)), ["vocals", "drums", "bass", "other"]);
-  assert.deepEqual(runSiblings(items, items[5]!), []);
+  assert.deepEqual(ids(runSiblings(items, items[1])), ["vocals", "drums", "bass", "other"]);
+  assert.deepEqual(runSiblings(items, items[5]), []);
   const takes = [2, 1, 3].map((n) =>
     clip(`take${n}`, { workflow: "music", role: "variation", groupId: "song", variation: n }),
   );
-  assert.deepEqual(ids(runSiblings(takes, takes[0]!)), ["take1", "take2", "take3"]);
+  assert.deepEqual(ids(runSiblings(takes, takes[0])), ["take1", "take2", "take3"]);
 });
 
 test("the Workflow filter offers only workflows present and keeps only their clips", () => {
@@ -229,12 +229,12 @@ test("the card player stops a clip whose card is gone and reports a failed strea
   assert.equal(playing("audio:a"), true);
   playback.stopLibraryAudioUnlessShown(new Set(["audio:b"]));
   assert.equal(playing("audio:a"), false);
-  assert.equal(players[0]!.paused, true);
+  assert.equal(players[0].paused, true);
 
   await playback.toggleLibraryAudio({ id: "audio:b", name: "b.wav" });
-  players[0]!.error = { message: "network" };
-  players[0]!.onerror?.();
-  players[0]!.rejectPlay?.(new Error("aborted"));
+  players[0].error = { message: "network" };
+  players[0].onerror?.();
+  players[0].rejectPlay?.(new Error("aborted"));
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(playing("audio:b"), false);
   assert.deepEqual(toasts, ["library.audio.playFailed"]);

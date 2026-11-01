@@ -89,7 +89,7 @@ export const useReembedStore = create<ReembedStore>(() => ({
   },
   start: async () => {
     try {
-      if (!(await request(startReembed, ({ job }) => setJob(job)))) {
+      if (!(await request(startReembed, ({ job }) => { setJob(job); }))) {
         await useReembedStore.getState().load();
       }
     } catch (error) {
@@ -101,7 +101,7 @@ export const useReembedStore = create<ReembedStore>(() => ({
   },
   cancel: async () => {
     try {
-      if (!(await request(cancelReembed, ({ job }) => setJob(job)))) {
+      if (!(await request(cancelReembed, ({ job }) => { setJob(job); }))) {
         await useReembedStore.getState().load();
       }
       return true;
@@ -146,7 +146,7 @@ function follow(job: ReembedJob | null): void {
     schedulePoll();
     return;
   }
-  if (!job || job.id !== watchedJobId) return;
+  if (job?.id !== watchedJobId) return;
   watchedJobId = null;
   if (job.status === "failed") {
     toast.error(translate("settings.general.rag.reembed.stopped"), {

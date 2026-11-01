@@ -6,25 +6,25 @@ export const RUN_CHECKPOINT_INTERVAL_MS = 8_000;
 /** Cap per thread; applies only to durable runs (see isBounded), never to subscriber streams. */
 export const RUN_CHECKPOINT_MAX_DURATION_MS = 30 * 60_000;
 
-export type RunCheckpointTimers = {
+export interface RunCheckpointTimers {
   setTimeout: (callback: () => void, ms: number) => number;
   clearTimeout: (handle: number) => void;
   now?: () => number;
-};
+}
 
-export type RunCheckpointScheduler = {
+export interface RunCheckpointScheduler {
   start: (threadId: string) => void;
   stop: (threadId: string) => void;
   stopAll: () => void;
   /** Checkpoint every live thread now without touching the schedule, e.g. before unload. */
   flushAll: () => void;
-};
+}
 
-type ThreadState = {
+interface ThreadState {
   handle: number | null;
   stopped: boolean;
   startedAt: number;
-};
+}
 
 const noop = (): void => {};
 

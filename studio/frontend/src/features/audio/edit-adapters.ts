@@ -132,7 +132,7 @@ export function deliveryInstructions(
   const lines: string[] = [];
   if (!isUnchangedSpeed(speed))
     lines.push(
-      `adjust the speed to ${Number((speed as number).toPrecision(6))}x`,
+      `adjust the speed to ${Number((speed!).toPrecision(6))}x`,
     );
   if (typeof pitchSteps === "number" && pitchSteps > 0)
     lines.push(`shift the pitch by ${Math.round(pitchSteps)} steps`);
@@ -225,7 +225,7 @@ export const EDIT_ADAPTERS: Readonly<Record<string, EditAdapter>> = {
       if (mode === "delivery") {
         const part: AudioRunEditPart = { mode: "delivery" };
         if (!isUnchangedSpeed(delivery?.speed))
-          part.speed = Math.round((delivery?.speed as number) * 100) / 100;
+          part.speed = Math.round((delivery?.speed!) * 100) / 100;
         if (delivery && delivery.pitchSteps > 0)
           part.pitch_steps = Math.round(delivery.pitchSteps);
         return part;

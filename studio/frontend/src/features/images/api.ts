@@ -111,7 +111,7 @@ export interface DiffusionStatus {
   hires?: HiresCapability | null;
   hires_unavailable_reason?: string | null;
   // Model upscalers the Upscale workflow can use; empty/absent = Lanczos only.
-  upscale_models?: Array<{ id: string; label: string; scale: number }>;
+  upscale_models?: { id: string; label: string; scale: number }[];
 }
 
 export interface DiffusionSamplerOption {
@@ -391,7 +391,7 @@ export async function parseJson<T>(response: Response): Promise<T> {
 export async function getDiffusionStatus(
   signal?: AbortSignal,
 ): Promise<DiffusionStatus> {
-  return parseJson(await authFetch("/api/inference/images/status", { signal }));
+  return await parseJson(await authFetch("/api/inference/images/status", { signal }));
 }
 
 export interface DiffusionInferenceInfo {
@@ -407,28 +407,28 @@ export interface DiffusionInferenceInfoResponse {
 }
 
 export async function getDiffusionInferenceInfo(): Promise<DiffusionInferenceInfoResponse> {
-  return parseJson(await authFetch("/api/inference/images/info"));
+  return await parseJson(await authFetch("/api/inference/images/info"));
 }
 
 export async function getDiffusionLoadProgress(
   signal?: AbortSignal,
 ): Promise<DiffusionLoadProgress> {
-  return parseJson(
+  return await parseJson(
     await authFetch("/api/inference/images/load-progress", { signal }),
   );
 }
 
 export async function getGenerateProgress(): Promise<DiffusionGenerateProgress> {
-  return parseJson(await authFetch("/api/inference/images/generate-progress"));
+  return await parseJson(await authFetch("/api/inference/images/generate-progress"));
 }
 
 export async function loadDiffusionModel(body: DiffusionLoadRequest): Promise<DiffusionStatus> {
   // This POST only starts the load, so the notice settles from load-progress, not the response.
-  return withBackgroundLoadNotice(
+  return await withBackgroundLoadNotice(
     "image",
     body.model_path,
     async () =>
-      parseLoadJson<DiffusionStatus>(
+      await parseLoadJson<DiffusionStatus>(
         await authFetch("/api/inference/images/load", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -461,7 +461,7 @@ export interface DiffusionDownloadPlan {
 export async function getDiffusionDownloadPlan(
   body: DiffusionLoadRequest,
 ): Promise<DiffusionDownloadPlan> {
-  return parseJson(
+  return await parseJson(
     await authFetch("/api/inference/images/download-plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -518,14 +518,14 @@ export async function generateDiffusionImage(
   ) {
     throw new MemoryEstimateRefusalError(await readFastApiError(response));
   }
-  return parseJson(response);
+  return await parseJson(response);
 }
 
 /** Best-effort: stops at the next step boundary and the generate POST unwinds as a 409. */
 export async function cancelDiffusionGeneration(
   signal?: AbortSignal,
 ): Promise<{ cancelled: boolean }> {
-  return parseJson(
+  return await parseJson(
     // No retry: the endpoint targets whatever generation is active NOW, which may be a newer run.
     await authFetch(
       "/api/inference/images/generate/cancel",
@@ -536,7 +536,7 @@ export async function cancelDiffusionGeneration(
 }
 
 export async function unloadDiffusionModel(): Promise<DiffusionStatus> {
-  return parseJson(await authFetch("/api/inference/images/unload", { method: "POST" }));
+  return await parseJson(await authFetch("/api/inference/images/unload", { method: "POST" }));
 }
 
 /** List diffusion LoRA adapters, optionally filtered to a model family. */
@@ -554,7 +554,7 @@ export interface GalleryPage {
 }
 
 export async function getGallery(offset = 0, limit = 50, archived = false): Promise<GalleryPage> {
-  return parseJson(
+  return await parseJson(
     await authFetch(
       `/api/inference/images/gallery?offset=${offset}&limit=${limit}&archived=${archived}`,
     ),
@@ -566,7 +566,7 @@ export async function setGalleryImageFlags(
   id: string,
   flags: { pinned?: boolean; archived?: boolean },
 ): Promise<GalleryImage> {
-  return parseJson(
+  return await parseJson(
     await authFetch(`/api/inference/images/gallery/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -592,7 +592,7 @@ export async function fetchGalleryResponse(url: string): Promise<Response> {
 }
 
 export async function fetchGalleryBlob(url: string): Promise<Blob> {
-  return (await fetchGalleryResponse(url)).blob();
+  return await (await fetchGalleryResponse(url)).blob();
 }
 
 /** Auth-protected, so it cannot be a plain <img src>. Callers must revoke the URL. */
@@ -661,8 +661,8 @@ export interface DiffusionTrainingStartRequest {
 export interface DiffusionMetricHistory {
   steps: number[];
   loss: number[];
-  lr: Array<number | null>;
-  grad_norm?: Array<number | null>;
+  lr: (number | null)[];
+  grad_norm?: (number | null)[];
 }
 
 // One preview image a run rendered; `path` is relative to the run's output dir.
@@ -723,7 +723,7 @@ export interface DiffusionTrainingStatus {
 export async function startDiffusionTraining(
   body: DiffusionTrainingStartRequest,
 ): Promise<{ job_id: string; status: string }> {
-  return parseJson(
+  return await parseJson(
     await authFetch("/api/train/diffusion/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -733,7 +733,7 @@ export async function startDiffusionTraining(
 }
 
 export async function stopDiffusionTraining(save = true): Promise<{ status: string }> {
-  return parseJson(
+  return await parseJson(
     await authFetch("/api/train/diffusion/stop", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -781,17 +781,17 @@ export interface DiffusionTrainingRunDetail extends DiffusionTrainingRunSummary 
 export async function listDiffusionTrainingRuns(
   limit = 20,
 ): Promise<{ runs: DiffusionTrainingRunSummary[] }> {
-  return parseJson(await authFetch(`/api/train/diffusion/runs?limit=${limit}`));
+  return await parseJson(await authFetch(`/api/train/diffusion/runs?limit=${limit}`));
 }
 
 export async function getDiffusionTrainingRun(
   jobId: string,
 ): Promise<DiffusionTrainingRunDetail> {
-  return parseJson(await authFetch(`/api/train/diffusion/runs/${encodeURIComponent(jobId)}`));
+  return await parseJson(await authFetch(`/api/train/diffusion/runs/${encodeURIComponent(jobId)}`));
 }
 
 export async function getDiffusionTrainingStatus(): Promise<DiffusionTrainingStatus> {
-  return parseJson(await authFetch("/api/train/diffusion/status"));
+  return await parseJson(await authFetch("/api/train/diffusion/status"));
 }
 
 export interface DiffusionDatasetSummary {
@@ -869,7 +869,7 @@ export interface DiffusionTrainingInfo {
 }
 
 export async function getDiffusionTrainingInfo(): Promise<DiffusionTrainingInfo> {
-  return parseJson(await authFetch("/api/train/diffusion/info"));
+  return await parseJson(await authFetch("/api/train/diffusion/info"));
 }
 
 export interface DiffusionDatasetUploadResult extends DiffusionDatasetSummary {
@@ -885,7 +885,7 @@ export async function uploadDiffusionDataset(
   form.append("name", name);
   form.append("create_only", createOnly ? "true" : "false");
   for (const f of files) form.append("files", f);
-  return parseJson(
+  return await parseJson(
     await authFetch("/api/train/diffusion/dataset", { method: "POST", body: form }),
   );
 }
@@ -917,7 +917,7 @@ export interface DiffusionDatasetImages {
 export async function listDiffusionDatasetImages(
   name: string,
 ): Promise<DiffusionDatasetImages> {
-  return parseJson(
+  return await parseJson(
     await authFetch(`/api/train/diffusion/dataset/${encodeURIComponent(name)}/images`),
   );
 }
@@ -936,7 +936,7 @@ export async function setDiffusionDatasetCaption(
   filename: string,
   caption: string,
 ): Promise<DiffusionDatasetImageRecord> {
-  return parseJson(
+  return await parseJson(
     await authFetch(
       `/api/train/diffusion/dataset/${encodeURIComponent(name)}/caption/${encodeURIComponent(filename)}`,
       {
@@ -991,7 +991,7 @@ export async function importDiffusionDatasetExample(
   id: string,
   name?: string,
 ): Promise<DiffusionDatasetImportResult> {
-  return parseJson(
+  return await parseJson(
     await authFetch("/api/train/diffusion/dataset/import-example", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

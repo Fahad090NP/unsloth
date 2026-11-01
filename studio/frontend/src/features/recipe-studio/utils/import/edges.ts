@@ -25,13 +25,13 @@ export function buildEdges(
   configs: NodeConfig[],
   nameToId: Map<string, string>,
   uiEdges:
-    | Array<{
+    | {
         from: string;
         to: string;
         type?: string;
         sourceHandle?: string;
         targetHandle?: string;
-      }>
+      }[]
     | null,
   layoutDirection: LayoutDirection,
 ): Edge[] {

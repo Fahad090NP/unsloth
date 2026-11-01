@@ -50,7 +50,7 @@ test("the five native catalog rows are wired to native backend architectures", (
 });
 
 test("the community TTS family list matches what can be decoded", () => {
-  const match = policy.match(/\/\(\?:\^\|\[-_\.\/\]\)\(([^)]+)\)/);
+  const match = /\/\(\?:\^\|\[-_\.\/\]\)\(([^)]+)\)/.exec(policy);
   assert.ok(match, "could not find the family regex");
   const families = match[1].split("|");
   assert.ok(!families.some((f) => /llasa/i.test(f)), families.join("|"));

@@ -106,7 +106,7 @@ export function ResearchMessage(): ReactElement | null {
       <div className="min-w-0">
         <button
           type="button"
-          onClick={() => openResearchRun(run)}
+          onClick={() => { openResearchRun(run); }}
           className="mb-3 flex items-center gap-2 rounded-full text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -191,7 +191,7 @@ export function ResearchMessage(): ReactElement | null {
             size="sm"
             variant={needsApproval ? "dark" : "outline"}
             className="mt-3"
-            onClick={() => openResearchRun(run)}
+            onClick={() => { openResearchRun(run); }}
           >
             {needsApproval ? "Review plan" : "View activity"}
           </Button>

@@ -157,8 +157,7 @@ export function rowsToNotify(
   if (last.messages === next.messages) return "none";
   if (
     last.messages === null ||
-    next.messages === null ||
-    last.messages.length !== next.messages.length
+    last.messages.length !== next.messages?.length
   ) {
     return "all";
   }

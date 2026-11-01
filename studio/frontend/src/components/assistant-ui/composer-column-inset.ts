@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type ViewportBox = {
+export interface ViewportBox {
   left: number;
   right: number;
   offsetWidth: number;
@@ -13,7 +13,7 @@ export type ViewportBox = {
   /** `scrollbar-gutter` reserves both sides. */
   bothEdges: boolean;
   rtl: boolean;
-};
+}
 
 /** Dock padding that lands on the viewport's content box; the scrollbar is measured (0 when overlay). */
 export function composerColumnInset(

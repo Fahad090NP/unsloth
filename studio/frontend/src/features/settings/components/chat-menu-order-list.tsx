@@ -15,7 +15,7 @@ import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Reorder, useDragControls } from "motion/react";
 import { type ReactNode, type RefObject, useRef, useState } from "react";
 
-type ItemMeta = { label: string; icon: ReactNode };
+interface ItemMeta { label: string; icon: ReactNode }
 
 // Same row as the Profile menu customizer (sidebar-menu-customizer.tsx).
 function FixedRow({ icon, label }: { icon: IconSvgElement; label: string }) {
@@ -38,7 +38,7 @@ function ToggleRow({ id, meta }: { id: PlusMenuItemId; meta: ItemMeta }) {
         {meta.icon}
       </span>
       <span className="text-ui-13 text-foreground">{meta.label}</span>
-      <Switch className="ml-auto" aria-label={meta.label} checked={pinned} onCheckedChange={() => togglePin(id)} />
+      <Switch className="ml-auto" aria-label={meta.label} checked={pinned} onCheckedChange={() => { togglePin(id); }} />
     </div>
   );
 }
@@ -121,7 +121,7 @@ function MovableRow({
         className="ml-auto"
         aria-label={meta.label}
         checked={pinned}
-        onCheckedChange={() => togglePin(id)}
+        onCheckedChange={() => { togglePin(id); }}
       />
     </Reorder.Item>
   );
@@ -167,7 +167,7 @@ export function ChatMenuOrderList({
         ref={listRef}
         axis="y"
         values={shown}
-        onReorder={(ids: PlusMenuItemId[]) => setDraft(ids)}
+        onReorder={(ids: PlusMenuItemId[]) => { setDraft(ids); }}
         className="flex flex-col"
       >
         {shown.map((id, index) => (

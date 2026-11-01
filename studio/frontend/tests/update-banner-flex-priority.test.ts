@@ -28,7 +28,7 @@ function classes(source: string, anchor: string): string {
   return source.slice(at, source.indexOf('"', at + anchor.length));
 }
 
-const CARDS: ReadonlyArray<readonly [string, string]> = [
+const CARDS: readonly (readonly [string, string])[] = [
   ["tauri", TAURI],
   ["web", WEB],
 ];
@@ -81,7 +81,7 @@ for (const [name, source] of CARDS) {
       );
     }
     assert.ok(
-      !/12rem\*var\(--ui-font-scale/.test(source),
+      !source.includes('12rem*var(--ui-font-scale'),
       "the whole box is being scaled again, which over-reserves the floor",
     );
     assert.ok(
@@ -292,13 +292,13 @@ function darkShadow(source: string): {
   blur: number;
   spread: number;
 } {
-  const seen = source.match(/dark:shadow-\[0_(\d+)px_(\d+)px_(-?\d+)px_/);
+  const seen = /dark:shadow-\[0_(\d+)px_(\d+)px_(-?\d+)px_/.exec(source);
   assert.ok(seen, "the card has no dark-mode shadow to size the gutter from");
   return { y: Number(seen[1]), blur: Number(seen[2]), spread: Number(seen[3]) };
 }
 
 function gutter(name: string): number {
-  const seen = PROVIDER.match(new RegExp(`const ${name} = (\\d+);`));
+  const seen = new RegExp(`const ${name} = (\\d+);`).exec(PROVIDER);
   assert.ok(seen, `${name} is gone from the provider`);
   return Number(seen[1]);
 }

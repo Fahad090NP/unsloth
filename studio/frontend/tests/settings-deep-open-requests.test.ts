@@ -162,9 +162,9 @@ test("repeated opens preserve the external focus targets", () => {
   store.setState({ open: true, opener, openerFallback: fallback });
 
   const repeatOpens = [
-    () => store.getState().openDialog("keyboard-shortcuts"),
-    () => store.getState().openArchivedChats(),
-    () => store.getState().openArchivedMedia("images"),
+    () => { store.getState().openDialog("keyboard-shortcuts"); },
+    () => { store.getState().openArchivedChats(); },
+    () => { store.getState().openArchivedMedia("images"); },
   ];
   for (const repeatOpen of repeatOpens) {
     repeatOpen();

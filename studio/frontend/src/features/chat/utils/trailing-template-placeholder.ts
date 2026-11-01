@@ -41,12 +41,12 @@ const RESEED_WINDOW = 2 * TRAILING_PLACEHOLDER_WINDOW + 2;
 
 const DOLLAR_BRACE = "${";
 
-export type TrailingPlaceholderWatch = {
+export interface TrailingPlaceholderWatch {
   append(delta: string): void;
   retract(text: string): void;
   /** Never false when the strip would cut something; may be a false positive. */
   isCandidate(): boolean;
-};
+}
 
 /** Decides from deltas alone, since reading the buffer flattens the cons string. */
 export function createTrailingPlaceholderWatch(): TrailingPlaceholderWatch {
@@ -82,7 +82,7 @@ export function createTrailingPlaceholderWatch(): TrailingPlaceholderWatch {
       if (!delta) {
         return;
       }
-      if (overlap === DOLLAR_BRACE[0] && delta[0] === "{") {
+      if (overlap === DOLLAR_BRACE[0] && delta.startsWith("{")) {
         lastDollarBrace = length - 1;
       }
       scan(delta, length);

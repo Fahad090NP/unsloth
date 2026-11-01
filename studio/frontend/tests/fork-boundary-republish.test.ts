@@ -6,8 +6,8 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type SyncOptions = { pruneMissing?: boolean; deletedMessageIds?: string[] };
-type Module = {
+interface SyncOptions { pruneMissing?: boolean; deletedMessageIds?: string[] }
+interface Module {
   syncStoredChatMessages: (
     threadId: string,
     messages: unknown[],
@@ -16,7 +16,7 @@ type Module = {
   readBackendChatThread: (
     threadId: string,
   ) => Promise<Record<string, unknown> | null | undefined>;
-};
+}
 
 type Published = [string, string[], string | null | undefined];
 
@@ -86,7 +86,7 @@ function harness(
         ThreadRecordWriteCoordinator: class {
           async settleCurrent() {}
           async write(_id: string, fn: () => Promise<unknown>) {
-            return fn();
+            return await fn();
           }
           observe() {}
           closeAdmission() {}

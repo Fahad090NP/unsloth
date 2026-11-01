@@ -42,13 +42,13 @@ export function preferFullToolOutput(rawFull: string, rawResult: string): string
   const marker = result.indexOf(TRUNCATION_FOOTER_MARKER);
   const core = marker === -1 ? result : result.slice(0, marker);
   if (!core || full === result || full.startsWith(core)) {
-    const status = result.match(TIMEOUT_STATUS_TAIL)?.[0];
+    const status = (TIMEOUT_STATUS_TAIL.exec(result))?.[0];
     return status ? `${full.replace(/\s+$/, "")}\n\n${status.trimStart()}` : full;
   }
   // Failed runs prefix only the result with "Exit code N:", so reattach that prefix to the stream.
-  const exitMatch = core.match(/^(Exit code -?\d+:\n)([\s\S]*)$/);
+  const exitMatch = /^(Exit code -?\d+:\n)([\s\S]*)$/.exec(core);
   if (exitMatch && full.startsWith(exitMatch[2])) {
-    const hint = result.match(/\nHint:[\s\S]*$/)?.[0] ?? "";
+    const hint = (/\nHint:[\s\S]*$/.exec(result))?.[0] ?? "";
     return `${exitMatch[1]}${full}${hint}`;
   }
   return `${full.replace(/\s+$/, "")}\n\n${result}`;
@@ -63,7 +63,7 @@ export function preferSanitizedFullToolOutput(
   result: string,
 ): string {
   // Strip output, footer and status separately, or an open escape swallows the rest.
-  const status = result.match(TIMEOUT_STATUS_TAIL)?.[0] ?? "";
+  const status = (TIMEOUT_STATUS_TAIL.exec(result))?.[0] ?? "";
   const body = status ? result.slice(0, result.length - status.length) : result;
   const footer = body.lastIndexOf(TRUNCATION_FOOTER_MARKER);
   const cut = footer === -1 ? body.length : footer;

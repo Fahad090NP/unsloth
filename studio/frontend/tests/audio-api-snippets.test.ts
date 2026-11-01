@@ -84,7 +84,7 @@ test("Windows curl runs curl.exe with backtick continuations, bash with backslas
   });
   assert.match(win, /curl\.exe /);
   assert.match(win, / `\n/);
-  assert.ok(!/ \\\n/.test(win));
+  assert.ok(!win.includes(' \\\n'));
   assert.match(win, /"input_id": "\$\(\$source\.id\)"/);
   const unix = S.buildAudioApiSnippet("separate", {
     ...input,

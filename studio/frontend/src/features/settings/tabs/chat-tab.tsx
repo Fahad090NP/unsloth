@@ -506,7 +506,7 @@ export function ChatTab() {
         >
           <Select
             value={String(pastedTextMinChars)}
-            onValueChange={(value) => setPastedTextMinChars(Number(value))}
+            onValueChange={(value) => { setPastedTextMinChars(Number(value)); }}
           >
             <SelectTrigger
               className="w-36"
@@ -563,7 +563,7 @@ export function ChatTab() {
                 key={String(follow)}
                 type="button"
                 aria-pressed={autoScrollWhileGenerating === follow}
-                onClick={() => setAutoScrollWhileGenerating(follow)}
+                onClick={() => { setAutoScrollWhileGenerating(follow); }}
                 className={cn(
                   "relative inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-ui-12 font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                   autoScrollWhileGenerating === follow
@@ -645,7 +645,7 @@ export function ChatTab() {
             aria-label={t("settings.chat.projectAttachments")}
             checked={projectAttachmentTarget === "project"}
             onCheckedChange={(checked) =>
-              setProjectAttachmentTarget(checked ? "project" : "thread")
+              { setProjectAttachmentTarget(checked ? "project" : "thread"); }
             }
           />
         </SettingsRow>
@@ -681,9 +681,9 @@ export function ChatTab() {
           <Select
             value={thinkingVisibility}
             onValueChange={(value) =>
-              setThinkingVisibility(
+              { setThinkingVisibility(
                 normaliseDisplayVisibility(value, DEFAULT_THINKING_VISIBILITY),
-              )
+              ); }
             }
           >
             <SelectTrigger
@@ -712,9 +712,9 @@ export function ChatTab() {
           <Select
             value={toolVisibility}
             onValueChange={(value) =>
-              setToolVisibility(
+              { setToolVisibility(
                 normaliseDisplayVisibility(value, DEFAULT_TOOL_VISIBILITY),
-              )
+              ); }
             }
           >
             <SelectTrigger

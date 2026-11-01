@@ -60,7 +60,7 @@ for (const [relativePath, functionName] of [
 }
 
 function recorder(statuses: number[]) {
-  const calls: Array<{ url: string; method?: string; init: RequestInit }> = [];
+  const calls: { url: string; method?: string; init: RequestInit }[] = [];
   const fetcher = (url: string, init: RequestInit) => {
     calls.push({ url, method: init.method, init });
     const status = statuses[calls.length - 1] ?? 200;

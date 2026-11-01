@@ -25,7 +25,7 @@ const ADAPTER = readSrc("features/chat/adapters/studio-web-speech-dictation-adap
 
 const MAIN_RS = readText("../../src-tauri/src/main.rs");
 
-type StubControl = { calls: { command: string }[]; mode: "ok" | "rejects" };
+interface StubControl { calls: { command: string }[]; mode: "ok" | "rejects" }
 
 let generation = 0;
 
@@ -113,7 +113,7 @@ test("the blocked toast only promises another prompt on the desktop", () => {
 
 test("the browser message still points at the page permission", () => {
   const en = readSrc("i18n/locales/en.ts");
-  const blocked = en.match(/micAccessBlocked:\s*\n?\s*"([^"]+)"/);
+  const blocked = /micAccessBlocked:\s*\n?\s*"([^"]+)"/.exec(en);
   assert.ok(blocked, "micAccessBlocked is missing");
   assert.match(blocked[1], /for this Unsloth page/);
 });

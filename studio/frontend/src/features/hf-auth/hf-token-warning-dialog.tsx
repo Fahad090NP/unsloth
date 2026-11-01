@@ -49,16 +49,16 @@ export function HfTokenWarningDialog() {
           </div>
         </AlertDialogHeader>
         <AlertDialogFooter className="sm:justify-between">
-          <AlertDialogCancel onClick={() => resolve("cancel")}>
+          <AlertDialogCancel onClick={() => { resolve("cancel"); }}>
             Cancel
           </AlertDialogCancel>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
             {allowAnonymous ? (
-              <Button variant="outline" onClick={() => resolve("anonymous")}>
+              <Button variant="outline" onClick={() => { resolve("anonymous"); }}>
                 Continue without token
               </Button>
             ) : null}
-            <AlertDialogAction onClick={() => resolve("replace")}>
+            <AlertDialogAction onClick={() => { resolve("replace"); }}>
               Replace token
             </AlertDialogAction>
           </div>

@@ -86,7 +86,7 @@ let cacheGeneration = 0;
 const listeners = new Set<(info: HardwareInfo) => void>();
 
 function notifyHardwareInfo(info: HardwareInfo) {
-    listeners.forEach((listener) => listener(info));
+    listeners.forEach((listener) => { listener(info); });
 }
 
 export function invalidateHardwareInfo() {
@@ -97,12 +97,12 @@ export function invalidateHardwareInfo() {
 
 export async function refreshHardwareInfo(): Promise<HardwareInfo> {
     invalidateHardwareInfo();
-    return fetchOnce();
+    return await fetchOnce();
 }
 
 async function fetchOnce(): Promise<HardwareInfo> {
     if (cached) return cached;
-    if (fetchPromise) return fetchPromise;
+    if (fetchPromise) return await fetchPromise;
 
     const generation = cacheGeneration;
     fetchPromise = (async () => {
@@ -156,7 +156,7 @@ async function fetchOnce(): Promise<HardwareInfo> {
         }
     })();
 
-    return fetchPromise;
+    return await fetchPromise;
 }
 
 export function useHardwareInfo(): HardwareInfo {

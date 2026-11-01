@@ -25,7 +25,7 @@ type PersistRecipeFn = (input: {
   updatedAt: number;
 }>;
 
-type UseRecipePersistenceParams = {
+interface UseRecipePersistenceParams {
   recipeId: string;
   initialRecipeName: string;
   initialPayload: RecipePayloadResult["payload"];
@@ -35,9 +35,9 @@ type UseRecipePersistenceParams = {
   resetRecipe: () => void;
   loadRecipe: (snapshot: RecipeSnapshot) => void;
   getCurrentPayloadFromStore: () => RecipePayloadResult["payload"];
-};
+}
 
-type UseRecipePersistenceResult = {
+interface UseRecipePersistenceResult {
   initialRecipeReady: boolean;
   workflowName: string;
   setWorkflowName: (value: string) => void;
@@ -51,7 +51,7 @@ type UseRecipePersistenceResult = {
   persistRecipe: () => Promise<void>;
   copyRecipe: () => Promise<void>;
   importRecipe: (value: string) => string | null;
-};
+}
 
 function stripApiKeys(value: unknown): unknown {
   if (Array.isArray(value)) {
@@ -320,7 +320,7 @@ export function useRecipePersistence({
     const timeoutId = window.setTimeout(() => {
       void persistRecipe();
     }, 800);
-    return () => window.clearTimeout(timeoutId);
+    return () => { window.clearTimeout(timeoutId); };
   }, [currentSignature, failedSignature, isDirty, persistRecipe, saveLoading]);
 
   // Drain even when not dirty: a net-zero edit inside the debounce would otherwise leak the upload
@@ -343,7 +343,7 @@ export function useRecipePersistence({
         throw new Error("Clipboard not available.");
       }
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
+      window.setTimeout(() => { setCopied(false); }, 1500);
       toastSuccess("👨‍🍳 Recipe copied");
     } catch (error) {
       console.error("Copy failed:", error);

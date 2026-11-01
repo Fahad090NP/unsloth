@@ -3,14 +3,14 @@
 
 /** Pure math shared by all transfer UIs so rate/ETA semantics match; the caller owns buffer and clock. */
 
-export type TransferSample = { t: number; b: number };
+export interface TransferSample { t: number; b: number }
 
-export type TransferStats = {
+export interface TransferStats {
   rateBytesPerSecond: number;
   etaSeconds: number;
   /** Hide rate/ETA while false so the UI does not flicker absurd rates on the first tick. */
   stable: boolean;
-};
+}
 
 export const MIN_SAMPLES = 3;
 export const MIN_WINDOW_SECONDS = 3;

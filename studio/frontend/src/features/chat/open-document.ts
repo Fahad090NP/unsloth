@@ -21,25 +21,25 @@ const MAX_REPEATED_OPEN_DOCUMENT_ROWS = 100;
 const MAX_REPEATED_OPEN_DOCUMENT_COLUMNS = 100;
 const MAX_OPEN_DOCUMENT_COLUMN_INDEX = Number.MAX_SAFE_INTEGER;
 
-export type OpenDocumentAttachmentContent = {
+export interface OpenDocumentAttachmentContent {
   label: "ODS" | "ODT";
   text: string;
-};
+}
 
-type HiddenOpenDocumentColumnRange = {
+interface HiddenOpenDocumentColumnRange {
   start: number;
   end: number;
-};
+}
 
-type HiddenOpenDocumentColumnRanges = {
+interface HiddenOpenDocumentColumnRanges {
   ranges: HiddenOpenDocumentColumnRange[];
   nextColumn: number;
-};
+}
 
-type OpenDocumentXmlFiles = {
+interface OpenDocumentXmlFiles {
   contentXml: string;
   stylesXml?: string;
-};
+}
 
 type OpenDocumentHiddenState = "hidden" | "visible" | "unset";
 

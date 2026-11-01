@@ -18,7 +18,7 @@ const source = ts.createSourceFile(
 
 function visit(node: ts.Node, fn: (node: ts.Node) => void) {
   fn(node);
-  node.forEachChild((child) => visit(child, fn));
+  node.forEachChild((child) => { visit(child, fn); });
 }
 
 test("every GgufVariantExpander gets the resolver itself, not a stable forwarder", () => {

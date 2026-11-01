@@ -75,7 +75,7 @@ function collectUsedLlmModelAliases(payload: RecipePayload): Set<string> {
   return aliases;
 }
 
-type LocalModelSelection = {
+interface LocalModelSelection {
   target: string;
   ggufVariant: string;
   aliases: string[];
@@ -85,21 +85,21 @@ type LocalModelSelection = {
    *  which no request can express, so comparing against it would reload forever. */
   reasoningBudget?: number;
   reasoningBudgetMessage?: string;
-};
+}
 
 type LocalModelLoadPlan =
   | { selection: LocalModelSelection; error: null; legacyAliases?: never }
   | { selection: null; error: string; legacyAliases?: never }
   | { selection: null; error: null; legacyAliases: string[] };
 
-type RestorableLocalModelSnapshot = {
+interface RestorableLocalModelSnapshot {
   selection: LocalModelSelection | null;
   unrestorableLabel: string | null;
-};
+}
 
 function getLocalProviderNames(payload: RecipePayload): Set<string> {
   const providers = Array.isArray(payload.recipe.model_providers)
-    ? (payload.recipe.model_providers as Record<string, unknown>[])
+    ? (payload.recipe.model_providers)
     : [];
   const localProviderNames = new Set<string>();
   for (const provider of providers) {
@@ -223,7 +223,7 @@ function localSelectionMatchesActive(input: {
   activeVariant: string;
 }): boolean {
   const { target, ggufVariant, activeModel, activeVariant } = input;
-  if (!activeModel || activeModel.toLowerCase() !== target.toLowerCase()) {
+  if (activeModel?.toLowerCase() !== target.toLowerCase()) {
     return false;
   }
   return (
@@ -459,8 +459,7 @@ function isSameLocalModelSelection(
   right: LocalModelSelection,
 ): boolean {
   return Boolean(
-    left &&
-      left.target.toLowerCase() === right.target.toLowerCase() &&
+    left?.target.toLowerCase() === right.target.toLowerCase() &&
       left.ggufVariant === right.ggufVariant &&
       contextIntent(left.requestedContextLength, left.isMlx) ===
         contextIntent(right.requestedContextLength, right.isMlx) &&
@@ -488,7 +487,7 @@ async function ensureLocalModelLoaded(
   if (await isLocalModelAlreadyLoaded(loadPlan.selection)) {
     return null;
   }
-  return loadLocalModelSelection(loadPlan.selection);
+  return await loadLocalModelSelection(loadPlan.selection);
 }
 
 async function prepareLocalModelForRun(payload: RecipePayload): Promise<{
@@ -544,16 +543,16 @@ async function prepareLocalModelForRun(payload: RecipePayload): Promise<{
   };
 }
 
-type UseRecipeExecutionsParams = {
+interface UseRecipeExecutionsParams {
   recipeId: string;
   currentSignature: string;
   payloadResult: RecipePayloadResult;
   initialRunRows?: number | null;
   onExecutionStart?: () => void;
   onPreviewSuccess?: () => void;
-};
+}
 
-type UseRecipeExecutionsResult = {
+interface UseRecipeExecutionsResult {
   runDialogOpen: boolean;
   runDialogKind: RecipeExecutionKind;
   setRunDialogKind: (kind: RecipeExecutionKind) => void;
@@ -585,14 +584,14 @@ type UseRecipeExecutionsResult = {
   runFull: () => Promise<boolean>;
   cancelExecution: (id: string) => Promise<void>;
   loadExecutionDatasetPage: (id: string, page: number) => Promise<void>;
-};
+}
 
 function formatValidationMessages(input: {
-  errors: Array<{
+  errors: {
     message: string;
     path?: string | null;
     code?: string | null;
-  }>;
+  }[];
 }): string[] {
   return input.errors.map((item) => {
     const path = item.path?.trim();
@@ -943,7 +942,7 @@ export function useRecipeExecutions({
         return false;
       }
 
-      return runExecution({
+      return await runExecution({
         kind,
         payload,
         rows: normalizedRows,
@@ -1107,8 +1106,7 @@ export function useRecipeExecutions({
     async (id: string, page: number): Promise<void> => {
       const execution = executions.find((entry) => entry.id === id);
       if (
-        !execution ||
-        execution.kind !== "full" ||
+        execution?.kind !== "full" ||
         !execution.jobId ||
         page < 1
       ) {

@@ -66,7 +66,7 @@ export function DownloadTransportRow() {
     loadDownloadTransportSettings({ refresh: true })
       .then(setSettings)
       .catch(() => undefined)
-      .finally(() => setCapabilityPending(false));
+      .finally(() => { setCapabilityPending(false); });
     return unsubscribe;
   }, []);
 

@@ -68,8 +68,7 @@ export function useRequiredAssetsDownload({
   const resolvePlan = useCallback(() => {
     const previous = cached.current;
     if (
-      previous &&
-      previous.fetch === fetchPlan &&
+      previous?.fetch === fetchPlan &&
       previous.inventory === inventoryVersion &&
       previous.expires > Date.now()
     )
@@ -91,7 +90,7 @@ export function useRequiredAssetsDownload({
     const timer = window.setTimeout(() => {
       void resolvePlan().catch(() => {});
     }, 200);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); };
   }, [resolvePlan, runtime]);
   useEffect(() => {
     ++sequence.current;

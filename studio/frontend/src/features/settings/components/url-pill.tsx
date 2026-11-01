@@ -39,7 +39,7 @@ export function UrlPill({ url, className }: { url: string; className?: string })
           if (copyTimer.current !== null) {
             window.clearTimeout(copyTimer.current);
           }
-          copyTimer.current = window.setTimeout(() => setCopied(false), 1800);
+          copyTimer.current = window.setTimeout(() => { setCopied(false); }, 1800);
         }}
         className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       >

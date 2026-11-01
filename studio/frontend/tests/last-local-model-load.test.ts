@@ -18,7 +18,7 @@ const { readLastLocalModelLoad, recordLastLocalModelLoad } = await import(
   "../src/features/chat/utils/last-local-model-load.ts"
 );
 
-type Backend = { record: Record<string, unknown> | null; status?: number };
+interface Backend { record: Record<string, unknown> | null; status?: number }
 
 let backend: Backend = { record: null };
 let puts: Record<string, unknown>[] = [];

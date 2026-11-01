@@ -218,7 +218,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
 
   useEffect(() => {
     const cache = blobs.current;
-    return () => cache.clear();
+    return () => { cache.clear(); };
   }, []);
 
   // Without IntersectionObserver (jsdom, old webviews) every row counts as visible.
@@ -459,7 +459,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
       () => void showMore(),
       rows.length <= ARCHIVED_PAGE_SIZE ? 250 : 0,
     );
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [
     scanAll,
     loading,
@@ -538,7 +538,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
                 })}
         </span>
         {bulkIntent ? (
-          <Button variant="ghost" size="sm" onClick={() => setBulkIntent(null)}>
+          <Button variant="ghost" size="sm" onClick={() => { setBulkIntent(null); }}>
             {t("common.cancel")}
           </Button>
         ) : (
@@ -547,7 +547,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
               variant="ghost"
               size="sm"
               disabled={busy || (rows.length === 0 && !hasMore)}
-              onClick={() => setBulkIntent("restore")}
+              onClick={() => { setBulkIntent("restore"); }}
             >
               {filters.query.trim()
                 ? t("settings.data.library.unarchiveResults")
@@ -558,7 +558,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
               size="sm"
               disabled={busy || (rows.length === 0 && !hasMore)}
               className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => setBulkIntent("delete")}
+              onClick={() => { setBulkIntent("delete"); }}
             >
               <HugeiconsIcon icon={Delete02Icon} className="mr-1.5 size-4" />
               {filters.query.trim()
@@ -611,7 +611,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
                     title={t("common.delete")}
                     className="text-muted-foreground hover:text-destructive"
                     onClick={() =>
-                      setConfirming({ rows: [row], action: "delete" })
+                      { setConfirming({ rows: [row], action: "delete" }); }
                     }
                   >
                     <HugeiconsIcon icon={Delete02Icon} className="size-4" />
@@ -655,7 +655,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
                 setVisibleCount((count) => count + ARCHIVED_PAGE_SIZE);
               else
                 void showMore().then(() =>
-                  setVisibleCount((count) => count + ARCHIVED_PAGE_SIZE),
+                  { setVisibleCount((count) => count + ARCHIVED_PAGE_SIZE); },
                 );
             }}
           >

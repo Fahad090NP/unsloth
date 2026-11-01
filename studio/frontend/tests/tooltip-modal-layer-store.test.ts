@@ -7,18 +7,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-type ObserverInit = {
+interface ObserverInit {
   attributes?: boolean;
   attributeFilter?: string[];
   attributeOldValue?: boolean;
   subtree?: boolean;
-};
+}
 
-type FakeObserver = {
+interface FakeObserver {
   init: ObserverInit;
   connected: boolean;
   deliver: (records: unknown[]) => void;
-};
+}
 
 const observers: FakeObserver[] = [];
 let attributeReads = 0;
@@ -36,12 +36,12 @@ function fakeElement(pointerEvents = ""): HTMLElement {
 const body = fakeElement();
 
 class FakeMutationObserver {
-  private entry: FakeObserver;
+  private readonly entry: FakeObserver;
   constructor(callback: (records: unknown[]) => void) {
     this.entry = {
       init: {},
       connected: false,
-      deliver: (records) => callback(records),
+      deliver: (records) => { callback(records); },
     };
     observers.push(this.entry);
   }

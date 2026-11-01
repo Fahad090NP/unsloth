@@ -44,7 +44,7 @@ function visibleText(html: string): string {
 }
 
 test("numbers written as inline maths render as maths", () => {
-  const cases: Array<[string, string[]]> = [
+  const cases: [string, string[]][] = [
     ["There are $3$ red balls and $5$ blue balls.", ["3", "5"]],
     ["The answer is $42$.", ["42"]],
     ["$$42$$", ["42"]],
@@ -349,7 +349,7 @@ test("spaced inline math at a line start is not a shell prompt", () => {
     ["$ x = 3 $[source](https://example.com)", ["x = 3"]],
     ["$ x = 3 $*", ["x = 3"]],
     ["$ x +\ny $", ["x +\ny"]],
-  ] as Array<[string, string[]]>) {
+  ] as [string, string[]][]) {
     assert.deepEqual(renderedMath(render(source)), expected, source);
   }
   const prompt = render("$ ls -la\n$ cd /tmp\n\nDone $5 later.");

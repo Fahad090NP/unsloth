@@ -130,7 +130,7 @@ function DomainList({
               className="flex size-4 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(10%*var(--contrast-wash-gain,1)),transparent)] hover:text-foreground"
               aria-label={`Remove ${domain}`}
               onClick={() =>
-                onChange(values.filter((value) => value !== domain))
+                { onChange(values.filter((value) => value !== domain)); }
               }
             >
               <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
@@ -226,7 +226,7 @@ function McpSourceList({
                 values.length >= MAX_RESEARCH_MCP_SOURCES
               }
               onCheckedChange={(checked) =>
-                onChange(
+                { onChange(
                   checked
                     ? [
                         ...values,
@@ -235,7 +235,7 @@ function McpSourceList({
                     : values.filter(
                         (value) => !matches(tool, value),
                       ),
-                )
+                ); }
               }
               aria-label={`Search with ${tool.serverName} ${tool.tool}`}
             />
@@ -258,9 +258,9 @@ function McpSourceList({
             className="text-sm text-muted-foreground hover:text-foreground"
             aria-label={`Remove unavailable source ${value.serverId} ${value.tool}`}
             onClick={() =>
-              onChange(values.filter((item) =>
+              { onChange(values.filter((item) =>
                 item.serverId !== value.serverId || item.tool !== value.tool,
-              ))
+              )); }
             }
           >
             Remove
@@ -297,7 +297,7 @@ export function DeepResearchComposerButton({
         role="button"
         aria-label="Disable deep research"
         tabIndex={-1}
-        onPointerDown={(event) => event.stopPropagation()}
+        onPointerDown={(event) => { event.stopPropagation(); }}
         onClick={(event) => {
           event.stopPropagation();
           setEnabled(false);
@@ -349,7 +349,7 @@ export function DeepResearchWebsiteAccessDialog({
           setModelTimeoutSeconds={setModelTimeoutSeconds}
           mcpSources={mcpSources}
           setMcpSources={setMcpSources}
-          onClose={() => onOpenChange(false)}
+          onClose={() => { onOpenChange(false); }}
         />
       ) : null}
     </Dialog>
@@ -448,13 +448,13 @@ function DeepResearchWebsiteAccessContent({
           label="Allow only"
           description="When set, research can access only these domains and their subdomains."
           values={draft.allowedDomains}
-          onChange={(allowedDomains) => setDraft({ ...draft, allowedDomains })}
+          onChange={(allowedDomains) => { setDraft({ ...draft, allowedDomains }); }}
         />
         <DomainList
           label="Always block"
           description="These domains and their subdomains stay blocked. Blocking takes precedence."
           values={draft.blockedDomains}
-          onChange={(blockedDomains) => setDraft({ ...draft, blockedDomains })}
+          onChange={(blockedDomains) => { setDraft({ ...draft, blockedDomains }); }}
         />
         <McpSourceList values={mcpDraft} onChange={setMcpDraft} />
       </div>

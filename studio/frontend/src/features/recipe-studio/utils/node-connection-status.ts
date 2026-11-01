@@ -4,11 +4,11 @@
 import type { Edge } from "@xyflow/react";
 import { INFRA_NODE_KINDS, type NodeConfig } from "../types";
 
-export type ConnectionStatus = {
+export interface ConnectionStatus {
   isDisconnected: boolean;
   /** No incoming data edge (infra edges only). */
   missingDataInput: boolean;
-};
+}
 
 const CONNECTED: ConnectionStatus = {
   isDisconnected: false,

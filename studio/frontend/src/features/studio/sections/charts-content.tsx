@@ -20,11 +20,11 @@ import {
   toLog1p,
 } from "./charts/utils";
 
-type LossDisplayPoint = {
+interface LossDisplayPoint {
   step: number;
   displayLoss: number;
   displaySmoothed: number;
-};
+}
 
 function isStepVisible(step: number, domain: [number, number]): boolean {
   return step >= domain[0] && step <= domain[1];

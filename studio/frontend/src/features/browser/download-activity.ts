@@ -9,7 +9,7 @@ import { toast } from "@/lib/toast";
 import { create } from "zustand";
 import { useBrowserHistoryStore } from "./history-store";
 
-export type FinishedDownload = {
+export interface FinishedDownload {
   key: string;
   name: string;
   size: number;
@@ -20,9 +20,9 @@ export type FinishedDownload = {
   /** Its Download history row, when history is kept. */
   historyId?: string;
   failed: boolean;
-};
+}
 
-type DownloadActivity = {
+interface DownloadActivity {
   active: Record<string, string>;
   /** The result a Downloads button is showing; null once dismissed or when none was on screen. */
   finished: FinishedDownload | null;
@@ -31,7 +31,7 @@ type DownloadActivity = {
   /** Downloads buttons on screen. With none, a finish has nowhere to show but a toast. */
   buttons: number;
   dismissFinished: () => void;
-};
+}
 
 // Saved from the panel this session, so Open can show the file again without the disk.
 const MAX_KEPT_FILES = 8;

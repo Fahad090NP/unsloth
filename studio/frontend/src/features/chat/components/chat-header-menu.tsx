@@ -258,7 +258,7 @@ function ChatMenuItems({ menu }: { menu: ActiveChatMenu }) {
           />
         }
         onSelect={() =>
-          useChatFavoritesStore.getState().setChats([menu.item.id], !favorite)
+          { useChatFavoritesStore.getState().setChats([menu.item.id], !favorite); }
         }
       >
         {t(
@@ -322,7 +322,7 @@ function ChatMenuItems({ menu }: { menu: ActiveChatMenu }) {
                 <Item
                   key={entry.id}
                   icon={ProjectIcon}
-                  onSelect={() => menu.moveToProject(entry.id)}
+                  onSelect={() => { menu.moveToProject(entry.id); }}
                 >
                   {entry.name}
                 </Item>
@@ -330,7 +330,7 @@ function ChatMenuItems({ menu }: { menu: ActiveChatMenu }) {
             </div>
           )}
           {menu.project && (
-            <Item icon={Cancel01Icon} onSelect={() => menu.moveToProject(null)}>
+            <Item icon={Cancel01Icon} onSelect={() => { menu.moveToProject(null); }}>
               {menu.project.name
                 ? t("shell.sections.removeFrom", { name: menu.project.name })
                 : t("shell.sections.removeFromProject")}
@@ -349,7 +349,7 @@ function ChatMenuItems({ menu }: { menu: ActiveChatMenu }) {
                 <Item
                   key={entry.id}
                   icon={LayerIcon}
-                  onSelect={() => menu.moveToSection(entry.id)}
+                  onSelect={() => { menu.moveToSection(entry.id); }}
                 >
                   {entry.name}
                 </Item>
@@ -357,7 +357,7 @@ function ChatMenuItems({ menu }: { menu: ActiveChatMenu }) {
             </div>
           )}
           {menu.section && (
-            <Item icon={Cancel01Icon} onSelect={() => menu.moveToSection(null)}>
+            <Item icon={Cancel01Icon} onSelect={() => { menu.moveToSection(null); }}>
               {t("shell.sections.removeFrom", { name: menu.section.name })}
             </Item>
           )}

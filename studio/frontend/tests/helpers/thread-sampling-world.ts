@@ -273,7 +273,7 @@ export async function runScenario(
     }
 
     if (strict && applied !== "" && owed.has(applied)) {
-      const want = owed.get(applied) as Record<string, unknown>;
+      const want = owed.get(applied)!;
       for (const [key, value] of Object.entries(want)) {
         if (!Object.is(params[key], value)) {
           record(

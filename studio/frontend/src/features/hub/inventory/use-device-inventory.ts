@@ -34,16 +34,16 @@ export type DeviceInventorySource =
   | "unslothModels"
   | "localDatasets";
 
-export type DeviceInventoryRows = {
+export interface DeviceInventoryRows {
   cachedGguf: CachedGgufRepo[];
   cachedModels: CachedModelRepo[];
   cachedDatasets: CachedDatasetRepo[];
   localModels: LocalModelInfo[];
   unslothModels: LocalModelInfo[];
   localDatasets: LocalDatasetInfo[];
-};
+}
 
-export type DeviceInventorySourceState<Rows extends readonly unknown[]> = {
+export interface DeviceInventorySourceState<Rows extends readonly unknown[]> {
   rows: Rows;
   loading: boolean;
   ready: boolean;
@@ -52,7 +52,7 @@ export type DeviceInventorySourceState<Rows extends readonly unknown[]> = {
   refreshedAt: number | null;
   refreshStartedAt: number | null;
   revalidatedAt: number | null;
-};
+}
 
 type DeviceInventoryState = {
   [K in DeviceInventorySource]: DeviceInventorySourceState<
@@ -60,17 +60,17 @@ type DeviceInventoryState = {
   >;
 };
 
-type FetchInventorySourceOptions = {
+interface FetchInventorySourceOptions {
   hfToken?: string | null;
   tokenFingerprint?: string;
   inventoryVersion: number;
   force?: boolean;
-};
+}
 
-type UseDeviceInventoryOptions = {
+interface UseDeviceInventoryOptions {
   hfToken?: string | null;
   enabled?: boolean;
-};
+}
 
 type UseDeviceInventoryResult<
   Sources extends readonly DeviceInventorySource[],
@@ -79,10 +79,10 @@ type UseDeviceInventoryResult<
   refreshIfOlderThan: (maxAgeMs: number) => Promise<void>;
 };
 
-type InventorySourceFetchResult<K extends DeviceInventorySource> = {
+interface InventorySourceFetchResult<K extends DeviceInventorySource> {
   rows: DeviceInventoryRows[K];
   scanConfirmed: boolean;
-};
+}
 
 const TOKEN_SCOPED_SOURCES = new Set<DeviceInventorySource>([
   "cachedGguf",
@@ -466,7 +466,7 @@ export function useDeviceInventorySources<
         hfToken,
         tokenFingerprint,
         inventoryVersion,
-      }).catch((error) => logInventorySourceFailure(source, error));
+      }).catch((error) => { logInventorySourceFailure(source, error); });
     }
   }, [enabled, sourceList, hfToken, tokenFingerprint, inventoryVersion]);
 
@@ -474,5 +474,5 @@ export function useDeviceInventorySources<
     ...state,
     refresh,
     refreshIfOlderThan,
-  } as UseDeviceInventoryResult<Sources>;
+  };
 }

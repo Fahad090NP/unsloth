@@ -79,7 +79,7 @@ test("markdown transcripts import as conversations", () => {
   assert.deepEqual(
     conversations[0].messages.map(({ role, content }) => ({
       role,
-      content: (content as ReadonlyArray<{ text: string }>)[0]?.text,
+      content: (content as readonly { text: string }[])[0]?.text,
     })),
     [
       { role: "user", content: "Hello" },
@@ -147,7 +147,7 @@ test("ShareGPT import maps role aliases regardless of case and whitespace", () =
 
 function toolCallResults(conversation: ParsedConversation): string[] {
   return conversation.messages.flatMap((message) =>
-    (message.content as ReadonlyArray<{ type: string; result?: unknown }>)
+    (message.content as readonly { type: string; result?: unknown }[])
       .filter((part) => part.type === "tool-call")
       .map((part) => String(part.result)),
   );

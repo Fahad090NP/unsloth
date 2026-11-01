@@ -154,7 +154,7 @@ export function setTheme(next: Theme): void {
     // ignore storage failures
   }
   applyToDocument(resolveTheme(next));
-  listeners.forEach((cb) => cb());
+  listeners.forEach((cb) => { cb(); });
 }
 
 export function useTheme(): {
@@ -192,7 +192,7 @@ export function setPalette(next: Palette): void {
     // ignore storage failures
   }
   applyPaletteToDocument(next);
-  listeners.forEach((cb) => cb());
+  listeners.forEach((cb) => { cb(); });
 }
 
 export function usePalette(): {

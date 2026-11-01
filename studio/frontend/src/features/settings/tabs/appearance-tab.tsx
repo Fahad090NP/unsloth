@@ -184,7 +184,7 @@ export function AppearanceTab() {
       });
       consumeScrollTarget("appearance-sidebar-nav");
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [consumeScrollTarget, scrollTarget]);
   return (
     <div className="settings-page">

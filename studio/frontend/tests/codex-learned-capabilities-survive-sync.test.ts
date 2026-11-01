@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { createServer, type ViteDevServer } from "vite";
 
-type Capability = { vision?: boolean; studio_tools?: boolean };
+interface Capability { vision?: boolean; studio_tools?: boolean }
 type Merge = (
   stored: Record<string, Capability> | undefined,
   registryCapabilities: Record<string, Capability> | undefined,

@@ -20,7 +20,7 @@ export function ToolResultOutput({ text }: { text: string }) {
       {truncated && (
         <button
           type="button"
-          onClick={() => setShowAll(true)}
+          onClick={() => { setShowAll(true); }}
           className="mt-1 rounded-full px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           {tail.hiddenLines > 0

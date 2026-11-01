@@ -68,8 +68,8 @@ test("parallel unsaved runs are bound separately when their first turns are adop
   state().grantChatFullAccess({ ...grant, threadId: "", runId: "run-b" });
   assert.equal(state().permissionMode, "auto", "an unknown thread cannot grant every new chat");
   state().adoptChatFullAccessRun("run-a", "chat-a");
-  assert.equal(state().chatFullAccessGrants["run-a"]!.threadId, "chat-a");
-  assert.equal(state().chatFullAccessGrants["run-b"]!.threadId, "");
+  assert.equal(state().chatFullAccessGrants["run-a"].threadId, "chat-a");
+  assert.equal(state().chatFullAccessGrants["run-b"].threadId, "");
   state().setActiveThreadId("chat-a");
   assert.equal(state().permissionMode, "full");
   state().clearUnadoptedChatFullAccessRun("run-a");
@@ -116,7 +116,7 @@ test("an acknowledgment after first-turn adoption still binds to the original ch
   state().adoptChatFullAccessRun("run-a", "chat-a");
   state().setActiveThreadId("chat-b");
   state().grantChatFullAccess({ ...grant, threadId: "" });
-  assert.equal(state().chatFullAccessGrants["run-a"]!.threadId, "chat-a");
+  assert.equal(state().chatFullAccessGrants["run-a"].threadId, "chat-a");
   assert.equal(state().permissionMode, "auto");
   state().setActiveThreadId("chat-a");
   assert.equal(state().permissionMode, "full");
@@ -165,7 +165,7 @@ test("a first-turn upgrade acknowledged after its run ended still binds to the a
   state().adoptChatFullAccessRun("run-late", "chat-a");
   state().clearUnadoptedChatFullAccessRun("run-late");
   state().grantChatFullAccess({ runId: "run-late", threadId: "", sessionId: "project-shared" });
-  assert.equal(state().chatFullAccessGrants["run-late"]!.threadId, "chat-a");
+  assert.equal(state().chatFullAccessGrants["run-late"].threadId, "chat-a");
   state().setActiveThreadId("chat-a");
   assert.equal(state().permissionMode, "full");
 });

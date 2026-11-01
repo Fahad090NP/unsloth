@@ -63,7 +63,7 @@ test("the action opens Logs on the family that failed", () => {
     .split(".")
     .reduce<unknown>(
       (node, part) => (node as Record<string, unknown> | undefined)?.[part],
-      en as unknown,
+      en,
     );
   assert.equal(
     typeof shipped,

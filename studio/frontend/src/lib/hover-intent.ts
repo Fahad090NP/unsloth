@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type HoverFlyoutIntent = {
+export interface HoverFlyoutIntent {
   readonly openDelay: number;
   readonly closeDelay: number;
-};
+}
 
-type Point = { readonly x: number; readonly y: number };
+interface Point { readonly x: number; readonly y: number }
 
-type Box = {
+interface Box {
   readonly left: number;
   readonly top: number;
   readonly right: number;
   readonly bottom: number;
-};
+}
 
 export const NAV_TOOLTIP_INTENT = {
   delayDuration: 400,

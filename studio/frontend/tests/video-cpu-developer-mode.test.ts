@@ -34,7 +34,7 @@ test("RAM below the minimum warns, at or near it does not", () => {
 
 test("an unreadable RAM figure says nothing either way", () => {
   for (const host of [null, undefined, 0, -1, Number.NaN]) {
-    const check = videoCpuRamCheck(host as number | null, MIN);
+    const check = videoCpuRamCheck(host, MIN);
     assert.equal(check.status, "unknown");
     assert.equal(check.hostGib, null);
     assert.equal(check.minGib, 32);

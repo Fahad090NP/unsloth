@@ -11,7 +11,7 @@ registerBundlerResolver();
 const { createGenerationToolRecovery } =
   await import("../src/features/chat/utils/generation-tool-recovery.ts");
 
-type Registered = { partId: string; approvalId: string; sessionId: string };
+interface Registered { partId: string; approvalId: string; sessionId: string }
 
 function spyConfirmations() {
   const registered: Registered[] = [];

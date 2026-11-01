@@ -29,7 +29,7 @@ test("every non-standard theme is applied by the boot script", () => {
 });
 
 test("the backend accepts every theme id", () => {
-  const literal = backendSettings.match(/palette: Literal\[([\s\S]*?)\]/);
+  const literal = /palette: Literal\[([\s\S]*?)\]/.exec(backendSettings);
   assert.ok(literal);
   const accepted = [...literal[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual([...accepted].sort(), [...COLOR_THEME_IDS].sort());
@@ -106,7 +106,7 @@ test("flavor and Halloween accents used as text meet the accent-text floor", () 
       assert.ok(blocks.length > 0, `${id} ${mode} block`);
       const block = blocks.join("\n");
       const token = (name: string) =>
-        block.match(new RegExp(`\\s${name}: (#[0-9a-f]{6});`))?.[1];
+        (new RegExp(`\\s${name}: (#[0-9a-f]{6});`).exec(block))?.[1];
       const page = token("--th-bg");
       const surface = token("--th-surface");
       const accent = token("--th-accent");

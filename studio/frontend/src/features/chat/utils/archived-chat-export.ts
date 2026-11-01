@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-type ExportThreadView = {
+interface ExportThreadView {
   id?: string;
   archived?: boolean;
   projectId?: string | null;
-};
-type ExportMessageView = { threadId?: string };
-type ExportProjectView = { id?: string };
+}
+interface ExportMessageView { threadId?: string }
+interface ExportProjectView { id?: string }
 
 export interface ChatExportData {
   exportedAt?: string;
@@ -49,8 +49,8 @@ export function filterArchivedChatExport<T extends ChatExportData>(
       ...full,
       threadCount: archivedThreads.length,
       projects: projects ?? [],
-      threads: archivedThreads as unknown[],
-      messages: messages as unknown[],
+      threads: archivedThreads,
+      messages: messages,
     },
     archivedCount: archivedThreads.length,
   };

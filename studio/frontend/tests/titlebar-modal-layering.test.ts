@@ -39,7 +39,7 @@ const COMPONENTS = readdirSync(join(import.meta.dirname, "../src"), {
 }).filter((path) => path.endsWith(".tsx"));
 
 function zIndex(block: string): number {
-  const match = block.match(Z_INDEX_PATTERN);
+  const match = Z_INDEX_PATTERN.exec(block);
   if (!match) throw new Error(`no z-index class in ${block}`);
   return Number(match[1] ?? match[2]);
 }
@@ -51,10 +51,10 @@ test("titlebar decoration stays below modal backdrops and window controls", asyn
     readSrc("components/ui/alert-dialog.tsx"),
   ]);
 
-  const decoration = titlebar.match(DECORATION_PATTERN);
-  const titlebarHeader = titlebar.match(TITLEBAR_PATTERN);
-  const dialogOverlay = dialog.match(DIALOG_OVERLAY_PATTERN);
-  const alertDialogOverlay = alertDialog.match(ALERT_DIALOG_OVERLAY_PATTERN);
+  const decoration = DECORATION_PATTERN.exec(titlebar);
+  const titlebarHeader = TITLEBAR_PATTERN.exec(titlebar);
+  const dialogOverlay = DIALOG_OVERLAY_PATTERN.exec(dialog);
+  const alertDialogOverlay = ALERT_DIALOG_OVERLAY_PATTERN.exec(alertDialog);
 
   assert.ok(decoration);
   assert.ok(titlebarHeader);

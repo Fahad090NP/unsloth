@@ -74,15 +74,15 @@ const js = ts.transpileModule(declarations, {
 }).outputText;
 
 type Target = ReturnType<typeof makeTarget>;
-type Item = { id: string; prompt: string; target: Target; dispatched: boolean };
-type Run = {
+interface Item { id: string; prompt: string; target: Target; dispatched: boolean }
+interface Run {
   id: string;
   items: Item[];
   index: number;
   generation: number;
   paused: boolean;
   waitingForTargetIdle: boolean;
-};
+}
 function makeTarget(id: string, running = true) {
   return {
     getRunningThreadIds: () => (id ? [id] : []),
@@ -193,7 +193,7 @@ function world() {
     setIndexing: (probe: () => Promise<boolean>) => {
       indexing = probe;
     },
-    run: () => [...runs.values()][0]!,
+    run: () => [...runs.values()][0],
   };
 }
 
@@ -417,7 +417,7 @@ test("a new steering queue waits for cancellation and rejects an unidentified ta
   await w.dispatchQueuedPrompt(w.run(), w.run().items[0]);
   assert.deepEqual(w.appended, []);
   assert.throws(
-    () => w.startPromptQueue(["wrong chat"], makeTarget(""), true, "steer"),
+    () => { w.startPromptQueue(["wrong chat"], makeTarget(""), true, "steer"); },
     /no longer available/,
   );
   assert.equal(w.runs.size, 1);

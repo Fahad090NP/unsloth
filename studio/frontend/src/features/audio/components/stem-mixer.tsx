@@ -197,7 +197,7 @@ export function StemMixer({
                     {sendTargets.map((target) => (
                       <DropdownMenuItem
                         key={target.id}
-                        onSelect={() => onSend(target, stem.clipId)}
+                        onSelect={() => { onSend(target, stem.clipId); }}
                       >
                         {target.label}
                       </DropdownMenuItem>
@@ -244,7 +244,7 @@ export function StemMixer({
                   valueNow={position}
                   valueMax={duration}
                   disabled={!ready}
-                  onSeek={(next) => seek(next * duration)}
+                  onSeek={(next) => { seek(next * duration); }}
                   className="h-[calc(28px*var(--ui-space-scale,1))]"
                 />
               </div>
@@ -257,7 +257,7 @@ export function StemMixer({
                   aria-pressed={level.solo}
                   className="size-[calc(24px*var(--ui-space-scale,1))] text-muted-foreground aria-pressed:bg-action aria-pressed:text-background"
                   onClick={() =>
-                    dispatch({ type: "toggleSolo", role: stem.role })
+                    { dispatch({ type: "toggleSolo", role: stem.role }); }
                   }
                 >
                   <HugeiconsIcon icon={HeadphonesIcon} strokeWidth={1.75} />
@@ -270,7 +270,7 @@ export function StemMixer({
                   aria-pressed={level.muted}
                   className="size-[calc(24px*var(--ui-space-scale,1))] text-muted-foreground aria-pressed:bg-action aria-pressed:text-background"
                   onClick={() =>
-                    dispatch({ type: "toggleMute", role: stem.role })
+                    { dispatch({ type: "toggleMute", role: stem.role }); }
                   }
                 >
                   <HugeiconsIcon
@@ -287,11 +287,11 @@ export function StemMixer({
                   aria-label={`${stem.label} volume`}
                   thumbValueText={(value) => `${stem.label} volume ${value} %`}
                   onValueChange={([value]) =>
-                    dispatch({
+                    { dispatch({
                       type: "setVolume",
                       role: stem.role,
                       volume: (value ?? percent) / 100,
-                    })
+                    }); }
                   }
                 />
                 <Button
@@ -301,7 +301,7 @@ export function StemMixer({
                   aria-label={`Download ${stem.label}`}
                   className="size-[calc(24px*var(--ui-space-scale,1))] text-muted-foreground"
                   disabled={!stem.src}
-                  onClick={() => onDownloadStem(stem.clipId)}
+                  onClick={() => { onDownloadStem(stem.clipId); }}
                 >
                   <HugeiconsIcon icon={Download01Icon} strokeWidth={1.75} />
                 </Button>

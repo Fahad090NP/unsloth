@@ -12,7 +12,7 @@ import {
 } from "react"
 import type { ElementType, ReactElement, ReactNode } from "react"
 
-type TerminalProps = {
+interface TerminalProps {
   children: ReactNode
   className?: string
   sequence?: boolean
@@ -21,7 +21,7 @@ type TerminalProps = {
   instant?: boolean
 }
 
-type InternalLineProps = {
+interface InternalLineProps {
   __isActive?: boolean
   __onDone?: () => void
   __sequence?: boolean
@@ -57,7 +57,7 @@ function useStartOnView(enabled: boolean): {
     )
 
     observer.observe(node)
-    return () => observer.disconnect()
+    return () => { observer.disconnect(); }
   }, [enabled])
 
   return { ref, started }
@@ -107,7 +107,7 @@ export function Terminal({
           __sequence: sequence,
           __isActive: instant || !sequence || visibleIndex >= index,
           __instant: instant,
-          __onDone: () => handleLineDone(index),
+          __onDone: () => { handleLineDone(index); },
           key: child.key ?? index,
         } as InternalLineProps)
       )}
@@ -153,7 +153,7 @@ export function AnimatedSpan({
       onDoneRef.current?.()
     }, delay)
 
-    return () => window.clearTimeout(timeout)
+    return () => { window.clearTimeout(timeout); }
   }, [delay, shouldStart])
 
   return (

@@ -7,7 +7,7 @@
 
 export type EngineChoice = "auto" | "diffusers" | "sd_cpp";
 
-export const ENGINE_OPTIONS: Array<[EngineChoice, string]> = [
+export const ENGINE_OPTIONS: [EngineChoice, string][] = [
   ["auto", "Auto"],
   ["diffusers", "Diffusers"],
   ["sd_cpp", "Native (sd.cpp)"],

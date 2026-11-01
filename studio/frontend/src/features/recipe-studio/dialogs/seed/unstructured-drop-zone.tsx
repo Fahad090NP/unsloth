@@ -26,29 +26,29 @@ const ACCEPTED_EXTENSIONS = [
   ".eml", ".msg", ".mht", ".mhtml",
 ];
 
-type UploadCandidate = {
+interface UploadCandidate {
   name: string;
   size: number;
   source: File | { token: string };
-};
+}
 
-type FileEntry = {
+interface FileEntry {
   id: string;
   name: string;
   size: number;
   status: "uploading" | "ok" | "error";
   error?: string;
   abortController?: AbortController;
-};
+}
 
-type UnstructuredDropZoneProps = {
+interface UnstructuredDropZoneProps {
   blockId: string;
   files: FileEntry[];
   onFilesChange: (
     files: FileEntry[] | ((prev: FileEntry[]) => FileEntry[]),
   ) => void;
   disabled?: boolean;
-};
+}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

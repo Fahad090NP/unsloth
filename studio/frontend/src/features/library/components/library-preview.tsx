@@ -449,7 +449,7 @@ function PreviewBody({
           <Zoomed scale={pageScale}>
             <textarea
               value={draft ?? text!}
-              onChange={(event) => onDraftChange(event.target.value)}
+              onChange={(event) => { onDraftChange(event.target.value); }}
               spellCheck={false}
               placeholder={t("library.preview.startWriting")}
               className="size-full resize-none bg-transparent px-6 pb-6 font-mono text-sm leading-relaxed outline-none"
@@ -642,7 +642,7 @@ export function LibraryPreview({
         formatCardTime(item.updatedAt, locale),
       ].filter(Boolean)
     : [];
-  const download = item && isFileItem(item) ? () => void saveThen(() => onDownload(item)) : undefined;
+  const download = item && isFileItem(item) ? () => void saveThen(() => { onDownload(item); }) : undefined;
   const media = (body === "image" || body === "video") && !mediaFailed;
 
   return (
@@ -667,7 +667,7 @@ export function LibraryPreview({
             <ScaleMenu
               value={pageScale}
               scales={PAGE_SCALES}
-              onChange={(value) => setZoom({ itemId: item.id, scale: Number(value) })}
+              onChange={(value) => { setZoom({ itemId: item.id, scale: Number(value) }); }}
             />
           )}
           {item && hasSource(item, body) && (
@@ -675,14 +675,14 @@ export function LibraryPreview({
               <ViewButton
                 label={t("library.preview.code")}
                 active={showCode}
-                onClick={() => setCodeFor(item.id)}
+                onClick={() => { setCodeFor(item.id); }}
               >
                 <CodeToggleIcon className="size-4.5" />
               </ViewButton>
               <ViewButton
                 label={t("library.preview.preview")}
                 active={!showCode}
-                onClick={() => setCodeFor(null)}
+                onClick={() => { setCodeFor(null); }}
               >
                 <PlayIcon strokeWidth={1.75} className="size-5" />
               </ViewButton>
@@ -702,7 +702,7 @@ export function LibraryPreview({
                 label: t(item.model ? "library.menu.chatWithModel" : "library.menu.chatAboutThis"),
                 icon: MessageCircleIcon,
                 disabled: saving,
-                onClick: () => void saveThen(() => onChat(item)),
+                onClick: () => void saveThen(() => { onChat(item); }),
               },
               onDownload: download,
               viewOriginal: origin
@@ -712,18 +712,18 @@ export function LibraryPreview({
                 revealLabel && canReveal(item)
                   ? {
                       label: revealLabel,
-                      onClick: () => void saveThen(() => revealInFolder(item.id)),
+                      onClick: () => void saveThen(() => { revealInFolder(item.id); }),
                     }
                   : undefined,
               favorite: item.favorite,
-              onToggleFavorite: () => onToggleFavorite(item),
+              onToggleFavorite: () => { onToggleFavorite(item); },
               onAddToProject: hasOwnFile(item.id)
                 ? async (projectId) => {
                     if (!(await save())) throw new Error(t("library.toast.saveNoteFirst"));
-                    return addLibraryItemToProject(item.id, projectId);
+                    return await addLibraryItemToProject(item.id, projectId);
                   }
                 : undefined,
-              onDelete: isDeletable(item) ? () => onDelete(item) : undefined,
+              onDelete: isDeletable(item) ? () => { onDelete(item); } : undefined,
             }
           : {}
       }
@@ -737,11 +737,11 @@ export function LibraryPreview({
           showCode={showCode}
           pageScale={pageScale}
           mediaFailed={mediaFailed}
-          onMediaError={() => setBrokenMedia(version)}
+          onMediaError={() => { setBrokenMedia(version); }}
           onDownload={download}
           run={run}
           onOpenItem={onOpenItem}
-          onDownloadRun={() => onDownloadRun(run)}
+          onDownloadRun={() => { onDownloadRun(run); }}
         />
       )}
       <UnsavedChangesDialog
@@ -751,7 +751,7 @@ export function LibraryPreview({
           void handleOpenChange(false);
         }}
         onDiscard={discardAndClose}
-        onKeepEditing={() => setCloseError(null)}
+        onKeepEditing={() => { setCloseError(null); }}
       />
     </MediaViewer>
   );

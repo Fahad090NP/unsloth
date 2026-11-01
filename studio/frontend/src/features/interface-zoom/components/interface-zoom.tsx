@@ -71,7 +71,7 @@ function ZoomPopup() {
   useEffect(() => {
     if (held) return;
     const timer = setTimeout(hide, ZOOM_POPUP_HIDE_MS);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [token, held, hide]);
 
   return (
@@ -80,7 +80,7 @@ function ZoomPopup() {
       className="interface-zoom-position pointer-events-auto fixed right-4"
       style={{ zIndex: Z_LAYER.ZOOM_POPUP }}
       // Keeps an open modal from treating this as an outside click.
-      onPointerDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => { event.stopPropagation(); }}
     >
       <div
         // biome-ignore lint/a11y/useSemanticElements: a labelled group of zoom controls, not a form.
@@ -88,9 +88,9 @@ function ZoomPopup() {
         aria-label={t("shell.zoom.label")}
         data-find-skip=""
         data-testid="interface-zoom-popup"
-        onPointerEnter={() => setHovered(true)}
-        onPointerLeave={() => setHovered(false)}
-        onFocus={() => setFocused(true)}
+        onPointerEnter={() => { setHovered(true); }}
+        onPointerLeave={() => { setHovered(false); }}
+        onFocus={() => { setFocused(true); }}
         onBlur={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget))
             setFocused(false);
@@ -113,7 +113,7 @@ function ZoomPopup() {
           className={ZOOM_BUTTON_CLASS}
           disabled={scale <= INTERFACE_SCALE_RANGE.min}
           onMouseDown={keepFocus}
-          onClick={() => zoomInterface(-1)}
+          onClick={() => { zoomInterface(-1); }}
           aria-label={t("shell.zoom.zoomOut")}
           title={withChord(t("shell.zoom.zoomOut"), -1)}
         >
@@ -128,7 +128,7 @@ function ZoomPopup() {
           className={ZOOM_BUTTON_CLASS}
           disabled={scale >= INTERFACE_SCALE_RANGE.max}
           onMouseDown={keepFocus}
-          onClick={() => zoomInterface(1)}
+          onClick={() => { zoomInterface(1); }}
           aria-label={t("shell.zoom.zoomIn")}
           title={withChord(t("shell.zoom.zoomIn"), 1)}
         >
@@ -144,7 +144,7 @@ function ZoomPopup() {
           className={`rounded-full px-2.5 text-muted-foreground text-ui-14 ${ZOOM_BUTTON_CLASS}`}
           disabled={scale === INTERFACE_SCALE_RANGE.default}
           onMouseDown={keepFocus}
-          onClick={() => zoomInterface(0)}
+          onClick={() => { zoomInterface(0); }}
           title={withChord(t("shell.zoom.reset"), 0)}
         >
           {t("shell.zoom.reset")}

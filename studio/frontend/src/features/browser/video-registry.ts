@@ -30,7 +30,7 @@ export async function copyVideoFrame(video: HTMLVideoElement): Promise<boolean> 
   canvas.height = video.videoHeight;
   canvas.getContext("2d")?.drawImage(video, 0, 0);
   const png = new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("no frame"))), "image/png"),
+    { canvas.toBlob((blob) => { blob ? resolve(blob) : reject(new Error("no frame")); }, "image/png"); },
   );
   try {
     await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);

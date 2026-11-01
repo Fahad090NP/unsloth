@@ -3,11 +3,11 @@
 
 /** Model-only feedback (the tool budget notice) on a finished card, replayed with its result. */
 
-type NotedPart = {
+interface NotedPart {
   toolCallId: string;
   backendToolCallId?: string;
   provenance?: Record<string, unknown>;
-};
+}
 
 /** The LAST match: generated ids restart at call_0 every round. */
 export function toolModelNoteTarget(

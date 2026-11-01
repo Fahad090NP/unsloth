@@ -620,7 +620,7 @@ test("a list read retries when a mutation starts after its pre-read drain", asyn
     readCount += 1;
     if (readCount === 1) {
       firstReadStarted.resolve();
-      return firstReadResult.promise;
+      return await firstReadResult.promise;
     }
     return [...authoritativeRows];
   });
@@ -650,7 +650,7 @@ test("a rejected overlapping list read retries after settlement subscribers join
       readCount += 1;
       if (readCount === 1) {
         firstReadStarted.resolve();
-        return firstReadResult.promise;
+        return await firstReadResult.promise;
       }
       return [...authoritativeRows];
     });
@@ -859,13 +859,9 @@ test("the Decisions row stays hidden while the Decision API is off", () => {
 });
 
 test("an older Decision API settings response cannot replace a newer one", () => {
-  const refresh = MCP_COMPOSER_BUTTON.match(
-    /const refresh = useCallback\(([\s\S]*?)\n    \},\n    \[\],\n  \);/,
-  )?.[1];
+  const refresh = (/const refresh = useCallback\(([\s\S]*?)\n {4}\},\n {4}\[\],\n {2}\);/.exec(MCP_COMPOSER_BUTTON))?.[1];
   assert.ok(refresh);
-  const settingsRequest = refresh.match(
-    /loadSystemOneSettings\(\)\.then\(([\s\S]*?)\n      \);/,
-  )?.[1];
+  const settingsRequest = (/loadSystemOneSettings\(\)\.then\(([\s\S]*?)\n {6}\);/.exec(refresh))?.[1];
   assert.ok(settingsRequest);
   assert.equal(
     settingsRequest.match(

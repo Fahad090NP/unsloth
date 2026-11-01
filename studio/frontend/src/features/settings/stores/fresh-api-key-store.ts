@@ -16,7 +16,7 @@ const RAW_KEY_MARKER = "sk-unsloth-";
 
 export const useFreshApiKeyStore = create<FreshApiKeyState>((set, get) => ({
   key: null,
-  setKey: (key) => set({ key }),
+  setKey: (key) => { set({ key }); },
   forgetIfRevoked: (keyPrefix) => {
     const key = get().key;
     if (

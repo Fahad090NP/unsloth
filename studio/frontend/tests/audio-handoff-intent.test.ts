@@ -138,7 +138,7 @@ test("the chat picker routes music and separation rows to Audio with their workf
     pickers,
     /audioPickSearch\(id, \{ \.\.\.meta, task: pickedTask \}\)/,
   );
-  const tasks = pickers.match(/export const AUDIO_GEN_TASKS = \[([^\]]*)\]/);
+  const tasks = /export const AUDIO_GEN_TASKS = \[([^\]]*)\]/.exec(pickers);
   assert.ok(tasks);
   assert.match(tasks[1], /"text-to-audio"/);
   assert.match(tasks[1], /"audio-to-audio"/);

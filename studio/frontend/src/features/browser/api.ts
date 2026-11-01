@@ -26,7 +26,7 @@ export type BrowserPage =
       attachment?: boolean;
     };
 
-export type BrowserRequest = {
+export interface BrowserRequest {
   url: string;
   method?: "GET" | "POST";
   body?: string;
@@ -34,7 +34,7 @@ export type BrowserRequest = {
   maxBytes?: number;
   /** show the site's HTTP error page; tab loads only. */
   errorPage?: boolean;
-};
+}
 
 let annotateCode: Promise<string> | null = null;
 
@@ -105,18 +105,18 @@ export async function fetchBrowserPage(request: BrowserRequest, signal: AbortSig
   };
 }
 
-export type PageResponse = {
+export interface PageResponse {
   status: number;
   statusText: string;
   url: string;
-  headers: Array<[string, string]>;
+  headers: [string, string][];
   body: ArrayBuffer;
   /** A redirect the request said to stop at ("manual"): the page gets an opaque redirect. */
   opaqueRedirect?: boolean;
   redirected?: boolean;
   /** The chain went through another site, so it reads as a CORS response. */
   cors?: boolean;
-};
+}
 
 function toBase64(bytes: Uint8Array): string {
   let binary = "";

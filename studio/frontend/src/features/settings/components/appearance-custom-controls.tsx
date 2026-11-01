@@ -103,14 +103,14 @@ export function ActiveColorControl({
           variant="ghost"
           size="sm"
           className="h-7 px-2 text-xs text-muted-foreground"
-          onClick={() => setColor(resolved, colorKey, null)}
+          onClick={() => { setColor(resolved, colorKey, null); }}
         >
           {t("settings.appearance.custom.reset")}
         </Button>
       )}
       <ColorPickerSwatch
         value={value}
-        onChange={(hex) => setColor(resolved, colorKey, hex)}
+        onChange={(hex) => { setColor(resolved, colorKey, hex); }}
         label={label}
       />
     </div>
@@ -282,7 +282,7 @@ function FontSelect({
 
   const folderFonts = useFolderFonts();
   const { inputs: uploadInputs, requestUpload, requestFolder, importFile } =
-    useFontImport((name) => select(name));
+    useFontImport((name) => { select(name); });
 
   const knownNames = new Set<string>([
     ...BUNDLED_FONTS,
@@ -294,7 +294,7 @@ function FontSelect({
     <CommandItem
       key={font}
       value={font}
-      onSelect={() => select(font)}
+      onSelect={() => { select(font); }}
       data-checked={value === font}
       className="cursor-pointer rounded-md"
     >
@@ -346,7 +346,7 @@ function FontSelect({
             </CommandEmpty>
             <CommandItem
               value={defaultLabel}
-              onSelect={() => select(null)}
+              onSelect={() => { select(null); }}
               data-checked={value === null}
               className="cursor-pointer rounded-md"
             >
@@ -369,7 +369,7 @@ function FontSelect({
                   <CommandItem
                     key={font.name}
                     value={font.name}
-                    onSelect={() => select(font.name)}
+                    onSelect={() => { select(font.name); }}
                     data-checked={value === font.name}
                     className="cursor-pointer rounded-md"
                   >
@@ -382,7 +382,7 @@ function FontSelect({
                     <button
                       type="button"
                       aria-label={`${t("settings.appearance.custom.importFont.remove")}: ${font.name}`}
-                      onPointerDown={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => { e.stopPropagation(); }}
                       onClick={(e) => {
                         e.stopPropagation();
                         removeImportedFont(font.name);
@@ -406,7 +406,7 @@ function FontSelect({
                     <CommandItem
                       key={`folder-${name}`}
                       value={name}
-                      onSelect={() => importFile(file)}
+                      onSelect={() => { importFile(file); }}
                       className="cursor-pointer rounded-md"
                     >
                       <span className="min-w-0 truncate">{name}</span>
@@ -467,7 +467,7 @@ export function UiFontRow({ className }: { className?: string }) {
     <FontSelect
       value={uiFont}
       defaultFont={DEFAULT_FONT_NAMES.ui}
-      onCommit={(next) => patch({ uiFont: next })}
+      onCommit={(next) => { patch({ uiFont: next }); }}
       ariaLabel={t("settings.appearance.custom.uiFont.label")}
       className={className}
     />
@@ -484,7 +484,7 @@ export function HeadingFontRow({ className }: { className?: string }) {
     <FontSelect
       value={headingFont}
       defaultFont={DEFAULT_FONT_NAMES.heading}
-      onCommit={(next) => patch({ headingFont: next })}
+      onCommit={(next) => { patch({ headingFont: next }); }}
       ariaLabel={t("settings.appearance.custom.headingFont.label")}
       className={className}
     />
@@ -499,7 +499,7 @@ export function ChatFontRow({ className }: { className?: string }) {
     <FontSelect
       value={chatFont}
       defaultFont={DEFAULT_FONT_NAMES.chat}
-      onCommit={(next) => patch({ chatFont: next })}
+      onCommit={(next) => { patch({ chatFont: next }); }}
       ariaLabel={t("settings.appearance.custom.chatFont.label")}
       className={className}
     />
@@ -514,7 +514,7 @@ export function CodeFontRow({ className }: { className?: string }) {
     <FontSelect
       value={codeFont}
       defaultFont={DEFAULT_FONT_NAMES.code}
-      onCommit={(next) => patch({ codeFont: next })}
+      onCommit={(next) => { patch({ codeFont: next }); }}
       ariaLabel={t("settings.appearance.custom.codeFont.label")}
       className={className}
     />
@@ -574,7 +574,7 @@ function familyCandidates(base: string): string[] {
 
 /* ----------------------------- Folder fonts ----------------------------- */
 // Directory-input file handles cannot be persisted, so the scan lives for the session.
-type FolderFont = { name: string; file: File };
+interface FolderFont { name: string; file: File }
 let folderFontsCache: FolderFont[] = [];
 const folderFontsListeners = new Set<() => void>();
 
@@ -781,7 +781,7 @@ function SizeInput({
         max={range.max}
         value={draft}
         placeholder={String(range.default)}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={(e) => { setDraft(e.target.value); }}
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -805,7 +805,7 @@ export function InterfaceScaleRow() {
     <SizeInput
       value={interfaceScale}
       range={INTERFACE_SCALE_RANGE}
-      onCommit={(next) => setScale(next ?? INTERFACE_SCALE_RANGE.default)}
+      onCommit={(next) => { setScale(next ?? INTERFACE_SCALE_RANGE.default); }}
       ariaLabel={t("settings.appearance.custom.interfaceScale.label")}
       unit="%"
     />
@@ -822,7 +822,7 @@ export function UiFontSizeRow() {
     <SizeInput
       value={uiFontSize}
       range={UI_FONT_SIZE_RANGE}
-      onCommit={(next) => patch({ uiFontSize: next })}
+      onCommit={(next) => { patch({ uiFontSize: next }); }}
       ariaLabel={t("settings.appearance.custom.uiFontSize.label")}
       unit="px"
     />
@@ -839,7 +839,7 @@ export function CodeFontSizeRow() {
     <SizeInput
       value={codeFontSize}
       range={CODE_FONT_SIZE_RANGE}
-      onCommit={(next) => patch({ codeFontSize: next })}
+      onCommit={(next) => { patch({ codeFontSize: next }); }}
       ariaLabel={t("settings.appearance.custom.codeFontSize.label")}
       unit="px"
     />
@@ -859,7 +859,7 @@ export function CodeDisplaySwitch({
     <Switch
       aria-label={label}
       checked={checked}
-      onCheckedChange={(next) => patch({ [field]: next })}
+      onCheckedChange={(next) => { patch({ [field]: next }); }}
     />
   );
 }
@@ -872,7 +872,7 @@ export function FontSmoothingSwitch() {
   return (
     <Switch
       checked={fontSmoothing}
-      onCheckedChange={(checked) => patch({ fontSmoothing: checked })}
+      onCheckedChange={(checked) => { patch({ fontSmoothing: checked }); }}
     />
   );
 }
@@ -952,7 +952,7 @@ export function ContrastSliderRow() {
         min={0}
         max={100}
         step={1}
-        onValueChange={(values: number[]) => patch({ contrast: values[0] })}
+        onValueChange={(values: number[]) => { patch({ contrast: values[0] }); }}
         aria-label={t("settings.appearance.custom.contrast.label")}
       />
       <NumericValueInput
@@ -960,7 +960,7 @@ export function ContrastSliderRow() {
         min={0}
         max={100}
         step={1}
-        onChange={(value) => patch({ contrast: value })}
+        onChange={(value) => { patch({ contrast: value }); }}
         ariaLabel={t("settings.appearance.custom.contrast.label")}
         className="panel-field h-8 w-[calc(84px*var(--ui-space-scale,1))] shrink-0"
         fixedWidth={true}
@@ -978,7 +978,7 @@ export function PointerCursorsSwitch() {
   return (
     <Switch
       checked={pointerCursors}
-      onCheckedChange={(checked) => patch({ pointerCursors: checked })}
+      onCheckedChange={(checked) => { patch({ pointerCursors: checked }); }}
     />
   );
 }
@@ -1010,7 +1010,7 @@ export function ReduceMotionSegmented() {
           <button
             key={opt.value}
             type="button"
-            onClick={() => patch({ reduceMotion: opt.value })}
+            onClick={() => { patch({ reduceMotion: opt.value }); }}
             aria-pressed={active}
             className={cn(
               "relative flex h-8 items-center rounded-full px-3 text-xs font-medium transition-colors",

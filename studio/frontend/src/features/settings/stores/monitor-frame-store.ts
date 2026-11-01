@@ -5,12 +5,12 @@
 
 import { create } from "zustand";
 
-export type MonitorFrame = {
+export interface MonitorFrame {
   left: number;
   top: number;
   right: number;
   bottom: number;
-};
+}
 
 /** Identity matters: an exiting monitor unmounts last and must clear only its own box. */
 export type MonitorFramePublisher = object;
@@ -36,17 +36,17 @@ export const useMonitorFrameStore = create<MonitorFrameState>((set) => ({
   frames: new Map(),
   // Written on every reconcile, so no-op writes must not notify.
   setFrame: (publisher, frame) =>
-    set((state) => {
+    { set((state) => {
       if (sameFrame(state.frames.get(publisher) ?? null, frame)) return state;
       return { frames: new Map(state.frames).set(publisher, frame) };
-    }),
+    }); },
   clearFrame: (publisher) =>
-    set((state) => {
+    { set((state) => {
       if (!state.frames.has(publisher)) return state;
       const frames = new Map(state.frames);
       frames.delete(publisher);
       return { frames };
-    }),
+    }); },
 }));
 
 interface CornerCardFrameState {
@@ -57,5 +57,5 @@ interface CornerCardFrameState {
 export const useCornerCardFrameStore = create<CornerCardFrameState>((set) => ({
   frame: null,
   setFrame: (frame) =>
-    set((state) => (sameFrame(state.frame, frame) ? state : { frame })),
+    { set((state) => (sameFrame(state.frame, frame) ? state : { frame })); },
 }));

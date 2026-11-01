@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-type PreviewImagePayload = {
+interface PreviewImagePayload {
   type: "image";
   mime?: string;
   width?: number;
   height?: number;
   data?: string;
-};
+}
 
-type CollectedPreviewImage = {
+interface CollectedPreviewImage {
   image: PreviewImagePayload;
   sourcePath: string;
-};
+}
 
-type PreviewTraversalEntry = {
-  path: Array<string | number>;
+interface PreviewTraversalEntry {
+  path: (string | number)[];
   value: unknown;
-};
+}
 
 export function formatCell(value: unknown): string {
   if (value == null) {
@@ -49,7 +49,7 @@ function isPreviewImagePayload(value: unknown): value is PreviewImagePayload {
 
 function previewChildren(
   value: unknown,
-  path: Array<string | number>,
+  path: (string | number)[],
 ): PreviewTraversalEntry[] {
   if (Array.isArray(value)) {
     return value.map((item, index) => ({

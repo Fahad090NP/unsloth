@@ -146,7 +146,7 @@ export function selectDatasetFiles(input: File[]): DatasetFileSelection {
   const files: File[] = [];
   const collisions: DatasetCollision[] = [];
   const seen = new Map<string, string>();
-  const mediaStems = new Map<string, Array<{ name: string; path: string }>>();
+  const mediaStems = new Map<string, { name: string; path: string }[]>();
   let imageCount = 0;
   let clipCount = 0;
   let captionCount = 0;
@@ -233,20 +233,20 @@ function readAllEntries(reader: FileSystemDirectoryReader): Promise<FileSystemEn
   return new Promise((resolve, reject) => {
     const all: FileSystemEntry[] = [];
     const next = () =>
-      reader.readEntries((batch) => {
+      { reader.readEntries((batch) => {
         if (batch.length === 0) {
           resolve(all);
           return;
         }
         all.push(...batch);
         next();
-      }, reject);
+      }, reject); };
     next();
   });
 }
 
 function fileOf(entry: FileSystemFileEntry): Promise<File> {
-  return new Promise((resolve, reject) => entry.file(resolve, reject));
+  return new Promise((resolve, reject) => { entry.file(resolve, reject); });
 }
 
 async function walkEntry(entry: FileSystemEntry, out: File[], prefix = ""): Promise<void> {

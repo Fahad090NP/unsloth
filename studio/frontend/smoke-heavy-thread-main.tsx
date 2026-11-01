@@ -25,7 +25,7 @@ import { createRoot } from "react-dom/client";
 import "./src/index.css";
 
 // Explicit allowlist, never a blanket `/api/` match: unlisted requests must trip the stray counter.
-const STUBBED_API: ReadonlyArray<readonly [RegExp, string]> = [
+const STUBBED_API: readonly (readonly [RegExp, string])[] = [
   // Fork-count badges, one GET per thread; answer with the real `{"counts":{}}` shape.
   [/\/api\/chat\/threads\/[^/]+\/forks$/, '{"counts":{}}'],
   // The delete action's own persistence (synthetic remoteId is truthy).
@@ -274,7 +274,7 @@ function pngDataUrl(index: number): string {
 
 type Part = NonNullable<Exclude<ThreadMessageLike["content"], string>>[number];
 
-type Block = { user: string; assistant: ThreadMessageLike[] };
+interface Block { user: string; assistant: ThreadMessageLike[] }
 
 function textPart(text: string): Part {
   return { type: "text", text };
@@ -451,10 +451,10 @@ function partChars(part: Part): number {
 
 function messageChars(message: ThreadMessageLike): number {
   if (typeof message.content === "string") return message.content.length;
-  return message.content.reduce((total, part) => total + partChars(part as Part), 0);
+  return message.content.reduce((total, part) => total + partChars(part), 0);
 }
 
-type Plan = {
+interface Plan {
   chars: number;
   messages: number;
   blocks: number;
@@ -462,7 +462,7 @@ type Plan = {
   kinds: number;
   cycleChars: number;
   expectedPerCycle: Record<string, number>;
-};
+}
 
 /** Per-cycle DOM expectations; assistant-ui silently drops bad image parts. */
 const EXPECTED_PER_CYCLE: Record<string, number> = {

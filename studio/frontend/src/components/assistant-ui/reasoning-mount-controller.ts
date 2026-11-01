@@ -3,14 +3,14 @@
 
 import type { ReasoningFragment } from "./reasoning-transcript-index.ts";
 
-export type FragmentGeometry = {
+export interface FragmentGeometry {
   width: number;
   lineHeight: number;
   fontPixels: number;
   codeLineHeight: number;
   codeFontPixels: number;
   codeFooter: number;
-};
+}
 
 export const INITIAL_VIEWPORTS = 1;
 export const INITIAL_CHARACTERS = 4_096;
@@ -135,29 +135,29 @@ export const isCovered = (mounted: number, total: number): boolean =>
 export const CHUNK_CHARACTERS = 8_192;
 export const CHUNK_MAX_GROUPS = 12;
 
-export type FragmentGroup = {
+export interface FragmentGroup {
   readonly key: string;
   readonly code: boolean;
   readonly first: number;
   readonly end: number;
   readonly chars: number;
-};
+}
 
-export type GridChunk = {
+export interface GridChunk {
   readonly key: string;
   readonly groupStart: number;
   readonly groupEnd: number;
   readonly first: number;
   readonly end: number;
-};
+}
 
-export type ChunkGrid = {
+export interface ChunkGrid {
   readonly groups: readonly FragmentGroup[];
   readonly chunks: readonly GridChunk[];
   readonly groupOf: Int32Array;
   readonly chunkOf: Int32Array;
   readonly heights: Float64Array;
-};
+}
 
 type GridFragment = Pick<ReasoningFragment, "key" | "text" | "code" | "document" | "start">;
 
@@ -259,8 +259,7 @@ export const buildChunkGrid = (
     const key = groupKeyOf(fragment);
     const previous = groups[groups.length - 1];
     const sameFence =
-      previous !== undefined
-      && previous.end === i
+      previous?.end === i
       && groupKeyOf(fragments[previous.first]) === key;
     if (sameFence && (previous.chars < maxChars || !startsLine(fragment))) {
       groups[groups.length - 1] = {
@@ -322,14 +321,14 @@ export const chunkStartAt = (grid: ChunkGrid, row: number): number => {
   return grid.chunks[grid.chunkOf[grid.groupOf[row]]].first;
 };
 
-export type ChunkPiece = {
+export interface ChunkPiece {
   readonly key: string;
   readonly first: number;
   readonly end: number;
   readonly whole: boolean;
   readonly last: boolean;
   readonly groups: readonly { index: number; first: number; end: number }[];
-};
+}
 
 export const chunkPieces = (
   grid: ChunkGrid,
@@ -365,20 +364,20 @@ export const chunkPieces = (
   return pieces;
 };
 
-export type ChunkSlice = {
+export interface ChunkSlice {
   readonly key: string;
   readonly code: boolean;
   readonly first: number;
   readonly end: number;
   readonly streaming: boolean;
-};
+}
 
-type ChunkRender = {
+interface ChunkRender {
   readonly slices: readonly ChunkSlice[];
   readonly fragments: readonly unknown[];
   readonly closed: boolean;
   readonly [prop: string]: unknown;
-};
+}
 
 const sameSlice = (a: ChunkSlice, b: ChunkSlice): boolean =>
   a.key === b.key
@@ -415,11 +414,11 @@ export const closedChunkUnchanged = (
   return true;
 };
 
-export type Island = {
+export interface Island {
   readonly id: number;
   readonly start: number;
   readonly end: number;
-};
+}
 
 export const NO_ISLANDS: readonly Island[] = [];
 
@@ -477,11 +476,11 @@ export const mountedRanges = (
   return ranges;
 };
 
-export type MountItem = {
+export interface MountItem {
   readonly from: number;
   readonly to: number;
   readonly reserve?: string;
-};
+}
 
 export const TAIL_RESERVE = "tail";
 

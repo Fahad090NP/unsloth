@@ -116,10 +116,10 @@ function canUseLocalAgentDetection(base: string): boolean {
   return isTauri && isLoopbackBase(base);
 }
 
-type ParsedModel = {
+interface ParsedModel {
   repo: string;
   variant: string | null;
-};
+}
 
 const FALLBACK_AGENT = SUPPORTED_AGENTS[0];
 
@@ -812,7 +812,7 @@ export function AgentsTab() {
       if (active.variant) {
         setKnownVariants((current) => ({
           ...current,
-          [active.model]: active.variant as string,
+          [active.model]: active.variant!,
         }));
       }
       if (!modelSelectionChanged.current) {

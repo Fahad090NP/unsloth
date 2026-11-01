@@ -45,7 +45,7 @@ export function SectionNameDialog({
         <SectionNameForm
           mode={shown.mode}
           initialName={shown.initialName}
-          onCancel={() => onOpenChange(false)}
+          onCancel={() => { onOpenChange(false); }}
           onSubmit={(name) => {
             onSubmit(name);
             onOpenChange(false);
@@ -93,7 +93,7 @@ function SectionNameForm({
       </DialogHeader>
       <input
         value={name}
-        onChange={(event) => setName(event.target.value)}
+        onChange={(event) => { setName(event.target.value); }}
         onKeyDown={(event) => {
           if (event.key === "Enter" && !event.nativeEvent.isComposing) {
             event.preventDefault();

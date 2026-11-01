@@ -29,19 +29,19 @@ interface RemoteCodeScanResponse {
   approvable?: boolean;
   max_severity?: string | null;
   fingerprint?: string | null;
-  findings?: Array<{
+  findings?: {
     severity: string;
     file: string;
     check: string;
     evidence?: string;
     line?: number | null;
     snippet?: SnippetRowResponse[];
-  }>;
+  }[];
   findings_summary?: string;
   model_name?: string;
   created_by_scan?: boolean;
   scan_created_repos?: string[];
-  unsafe_files?: Array<{ path?: string; level?: string }>;
+  unsafe_files?: { path?: string; level?: string }[];
   security_blocked?: boolean;
   already_approved?: boolean;
   provider?: string | null;

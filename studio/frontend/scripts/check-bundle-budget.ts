@@ -452,14 +452,14 @@ export const BUDGET = {
 // Chunk count is not budgeted: splitting a page out raises it while lowering bytes.
 
 /** Lowercased tag name and attributes; a valueless attribute has value "". */
-type StartTag = { name: string; attrs: Map<string, string> };
+interface StartTag { name: string; attrs: Map<string, string> }
 
 /** ASCII whitespace; CR is defensive since the HTML preprocessor turns CR into LF. */
 const WHITESPACE = new Set(["\t", "\n", "\f", "\r", " "]);
 
 function skipWhitespace(html: string, from: number): number {
   let i = from;
-  while (i < html.length && WHITESPACE.has(html[i] as string)) {
+  while (i < html.length && WHITESPACE.has(html[i])) {
     i += 1;
   }
   return i;
@@ -469,8 +469,8 @@ function scanUntil(html: string, from: number, stop: string): number {
   let i = from;
   while (
     i < html.length &&
-    !WHITESPACE.has(html[i] as string) &&
-    !stop.includes(html[i] as string)
+    !WHITESPACE.has(html[i]) &&
+    !stop.includes(html[i])
   ) {
     i += 1;
   }
@@ -504,7 +504,7 @@ function readAttributes(
   const attrs = new Map<string, string>();
   let i = start;
   while (i < html.length) {
-    if (WHITESPACE.has(html[i] as string) || html[i] === "/") {
+    if (WHITESPACE.has(html[i]) || html[i] === "/") {
       i += 1;
       continue;
     }
@@ -597,11 +597,11 @@ function blocksRender(tag: StartTag): boolean {
  * Eager set relative to dist/. entry and preloads stay separate so missing preload links are
  * detectable; `blocking` holds parser-blocking classic scripts like public/theme-boot.js.
  */
-export type EagerSet = {
+export interface EagerSet {
   entry: string[];
   preloads: string[];
   blocking: string[];
-};
+}
 
 /**
  * Types the browser runs as classic script: the full frozen JS MIME essence list, exact strings
@@ -701,7 +701,7 @@ export function eagerChunksContaining(
   return found;
 }
 
-type Measured = { name: string; raw: number; transfer: number };
+interface Measured { name: string; raw: number; transfer: number }
 
 /** Only the `/assets` mount is gzipped by the backend; elsewhere raw size is transfer size. */
 function transferBytes(name: string, bytes: Buffer): number {

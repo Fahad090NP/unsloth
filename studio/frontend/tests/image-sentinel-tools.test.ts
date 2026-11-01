@@ -79,7 +79,7 @@ test("the media chat tools emit the file envelope, and generate_image the image 
 
 test("the frontend media tool set matches the backend's", () => {
   const backend = readText("../../backend/core/inference/media_chat_tools.py");
-  const match = backend.match(/^MEDIA_CHAT_TOOLS = frozenset\(\{([^}]*)\}\)/m);
+  const match = /^MEDIA_CHAT_TOOLS = frozenset\(\{([^}]*)\}\)/m.exec(backend);
   assert.ok(match, "media_chat_tools.py no longer declares MEDIA_CHAT_TOOLS as a frozenset literal");
   const names = [...match[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]).sort();
   assert.deepEqual(names, [...MEDIA_CHAT_TOOLS].sort());

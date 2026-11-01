@@ -118,7 +118,7 @@ export function reapProbeFailed(
   probeKey: string,
   failedKey: string | null | undefined,
 ): boolean {
-  return settings.enabled && !!probeKey && failedKey === probeKey;
+  return settings.enabled && Boolean(probeKey) && failedKey === probeKey;
 }
 
 /** REAP is on, but the probe for this source answered that it cannot be pruned (dense, packed
@@ -133,7 +133,7 @@ export function reapUnavailable(
 ): boolean {
   return (
     settings.enabled &&
-    !!probeKey &&
+    Boolean(probeKey) &&
     answeredKey === probeKey &&
     !probeFailed &&
     !available
@@ -145,5 +145,5 @@ export function reapProbePending(
   probeKey: string,
   answeredKey: string | null | undefined,
 ): boolean {
-  return settings.enabled && !!probeKey && answeredKey !== probeKey;
+  return settings.enabled && Boolean(probeKey) && answeredKey !== probeKey;
 }

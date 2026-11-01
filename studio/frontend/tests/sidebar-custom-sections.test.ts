@@ -186,7 +186,7 @@ test("no sidebar list sorts by priority", () => {
   assert.doesNotMatch(APP_SIDEBAR, /"priority"|PINNED_SORT_OPTIONS/);
   assert.match(
     APP_SIDEBAR,
-    /\}> = \[\n  \{ value: "updated", key: "shell\.organize\.lastUpdated" \},\n  \{ value: "manual", key: "shell\.organize\.manualOrder" \},\n\];/,
+    /\}> = \[\n {2}\{ value: "updated", key: "shell\.organize\.lastUpdated" \},\n {2}\{ value: "manual", key: "shell\.organize\.manualOrder" \},\n\];/,
   );
   const merged = mergePersistedOrganization(
     {
@@ -803,8 +803,8 @@ test("a row id named like an object built-in is unfiled until it is filed", () =
     ),
     useSidebarOrganizationStore.getInitialState(),
   );
-  assert.equal(merged.sectionByChatId["__proto__"], "s");
-  assert.equal(merged.sectionByChatId.toString, "s" as unknown);
+  assert.equal(merged.sectionByChatId.__proto__, "s");
+  assert.equal(merged.sectionByChatId.toString, "s");
   assert.equal(merged.sectionByChatId.constructor, undefined);
   assert.equal(merged.sectionByProjectId.hasOwnProperty, undefined);
   store.deleteCustomSection(a);
@@ -923,7 +923,7 @@ test("signing in as another account drops the previous account's sections", asyn
       getItem: (key: string) => map.get(key) ?? null,
       setItem: (key: string, value: string) => void map.set(key, value),
       removeItem: (key: string) => void map.delete(key),
-      clear: () => map.clear(),
+      clear: () => { map.clear(); },
     };
   };
   const localStorage = memory();

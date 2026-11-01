@@ -192,14 +192,14 @@ export function ArtifactCard({
     [artifact.code, artifact.title, isReact],
   );
   const open = (view: FileViewMode) =>
-    isReact && reactTitle !== null
+    { isReact && reactTitle !== null
       ? openReactInBrowser({
           key: artifact.id,
           name: getArtifactFilename({ title: reactTitle }, lang),
           code: artifact.code,
           view,
         })
-      : openArtifactInBrowser(artifact, view);
+      : openArtifactInBrowser(artifact, view); };
   // Once per mount, and only when the page is complete.
   const autoOpenAttemptedRef = useRef(false);
 
@@ -261,7 +261,7 @@ export function ArtifactCard({
         <button
           type="button"
           disabled={isStreaming}
-          onClick={() => toggle("preview")}
+          onClick={() => { toggle("preview"); }}
           // State rides on aria-expanded, not the name: the startup-bundle harness counts cards by name.
           aria-expanded={shownView === "preview"}
           aria-label={`Open ${artifact.title} preview`}
@@ -300,7 +300,7 @@ export function ArtifactCard({
           <button
             type="button"
             disabled={isStreaming}
-            onClick={() => open("preview")}
+            onClick={() => { open("preview"); }}
             aria-pressed={showing}
             className="btn-fill cursor-pointer pl-3.5 pr-2.5 transition-colors focus-visible:bg-[rgb(0_0_0_/_calc(0.09*var(--contrast-wash-gain,1)))] focus-visible:outline-none disabled:cursor-default disabled:hover:bg-[rgb(0_0_0_/_calc(0.06*var(--contrast-wash-gain,1)))] dark:focus-visible:bg-[rgb(255_255_255_/_calc(0.1*var(--contrast-wash-gain,1)))] dark:disabled:hover:bg-[rgb(255_255_255_/_calc(0.06*var(--contrast-wash-gain,1)))]"
           >
@@ -326,7 +326,7 @@ export function ArtifactCard({
               sideOffset={8}
               className="min-w-56 rounded-lg p-1 [&_[data-slot=dropdown-menu-separator]]:mx-3 [&_[data-slot=dropdown-menu-separator]]:my-1.5"
             >
-              <DropdownMenuItem onSelect={() => open("preview")}>
+              <DropdownMenuItem onSelect={() => { open("preview"); }}>
                 <MenuGlyph icon={InternetIcon} />
                 Unsloth Browser
               </DropdownMenuItem>
@@ -334,7 +334,7 @@ export function ArtifactCard({
                 <MenuGlyph icon={LinkSquare02Icon} />
                 Default browser
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => open("source")}>
+              <DropdownMenuItem onSelect={() => { open("source"); }}>
                 {/* </> draws small, so one size up. */}
                 <MenuGlyph icon={SourceCodeIcon} className="size-4.5" />
                 Code view

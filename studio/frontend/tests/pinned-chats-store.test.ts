@@ -12,7 +12,7 @@ import {
 const STORE = "../src/features/chat/stores/pinned-chats-store.ts";
 
 test("pins made before the sync runtime binds are replayed into it, and sign-out drops them", () => {
-  const calls: Array<[string[], boolean]> = [];
+  const calls: [string[], boolean][] = [];
   usePinnedChatsStore.getState().togglePin("early");
   usePinnedChatsStore.getState().unpin("other");
   assert.deepEqual(usePinnedChatsStore.getState().pinnedIds, ["early"]);
@@ -41,7 +41,7 @@ test("a pin made before the runtime binds survives a reload", async () => {
     const before = await import(`${STORE}?page=1`);
     before.usePinnedChatsStore.getState().togglePin("early");
     const after = await import(`${STORE}?page=2`);
-    const calls: Array<[string[], boolean]> = [];
+    const calls: [string[], boolean][] = [];
     after.setPinnedChatsActions({
       setPinned: (ids: string[], pinned: boolean) => calls.push([ids, pinned]),
     });

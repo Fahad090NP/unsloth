@@ -114,7 +114,7 @@ export function keepUnchangedLines(
 }
 
 const plainLine = (content: string): TokenLine =>
-  [{ content, offset: 0 }] as unknown as TokenLine;
+  [{ content, offset: 0 }];
 
 /** Colours from an earlier, shorter source where they still spell the line; plain otherwise. */
 export function spellLines(

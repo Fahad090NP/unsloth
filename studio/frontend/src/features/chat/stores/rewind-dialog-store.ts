@@ -19,6 +19,6 @@ export const useRewindDialogStore = create<{
   closeRewind: () => void;
 }>((set) => ({
   request: null,
-  openRewind: (request) => set({ request }),
-  closeRewind: () => set({ request: null }),
+  openRewind: (request) => { set({ request }); },
+  closeRewind: () => { set({ request: null }); },
 }));

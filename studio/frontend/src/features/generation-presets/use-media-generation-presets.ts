@@ -274,7 +274,7 @@ export function useMediaGenerationPresets<Params extends object>({
         }),
       );
     }, 400);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); };
   }, [kind, presetsReady, queueWrite, settings]);
 
   useEffect(() => {

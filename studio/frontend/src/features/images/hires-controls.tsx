@@ -62,7 +62,7 @@ function NumberInput({
       value={value ?? ""}
       onChange={(e) => {
         const raw = e.target.value.trim();
-        if (raw === "") return onChange(null);
+        if (raw === "") { onChange(null); return; }
         const n = Number(raw);
         if (!Number.isFinite(n)) return;
         const bounded = Math.min(max, Math.max(min, integer ? Math.round(n) : n));
@@ -98,7 +98,7 @@ export function HiresControls({
         <Switch
           checked={choice.enabled}
           onCheckedChange={(enabled) =>
-            onChange(
+            { onChange(
               enabled && !choice.enabled
                 ? {
                     ...choice,
@@ -107,7 +107,7 @@ export function HiresControls({
                     denoise: choice.denoise ?? capability.defaults.denoise,
                   }
                 : { ...choice, enabled },
-            )
+            ); }
           }
           aria-label="Hires fix"
         />
@@ -122,7 +122,7 @@ export function HiresControls({
               min={1}
               max={4}
               step={0.05}
-              onChange={(v) => onChange({ ...choice, scale: v ?? capability.defaults.scale })}
+              onChange={(v) => { onChange({ ...choice, scale: v ?? capability.defaults.scale }); }}
             />
           </div>
           <div className="flex items-center justify-between gap-2">
@@ -140,7 +140,7 @@ export function HiresControls({
               min={minDenoise}
               max={1}
               step={0.05}
-              onChange={(v) => onChange({ ...choice, denoise: v ?? capability.defaults.denoise })}
+              onChange={(v) => { onChange({ ...choice, denoise: v ?? capability.defaults.denoise }); }}
             />
           </div>
           <div className="flex items-center justify-between gap-2">
@@ -153,7 +153,7 @@ export function HiresControls({
               max={100}
               step={1}
               integer
-              onChange={(steps) => onChange({ ...choice, steps })}
+              onChange={(steps) => { onChange({ ...choice, steps }); }}
             />
           </div>
           <div className="flex items-center justify-between gap-2">
@@ -190,7 +190,7 @@ export function HiresControls({
                 min={0}
                 max={20}
                 step={0.5}
-                onChange={(guidance) => onChange({ ...choice, guidance })}
+                onChange={(guidance) => { onChange({ ...choice, guidance }); }}
               />
             </div>
           )}
@@ -208,7 +208,7 @@ export function UpscaleModelField({
   value,
   onChange,
 }: {
-  models: Array<{ id: string; label: string }> | undefined;
+  models: { id: string; label: string }[] | undefined;
   value: string | null;
   onChange: (id: string | null) => void;
 }) {
@@ -220,7 +220,7 @@ export function UpscaleModelField({
         label="Upscaler"
         hint="Lanczos resizes the pixels. A model upscaler (R-ESRGAN) enlarges first and keeps edges sharper; it downloads on first use."
       />
-      <Select value={current} onValueChange={(id) => onChange(id === "lanczos" ? null : id)}>
+      <Select value={current} onValueChange={(id) => { onChange(id === "lanczos" ? null : id); }}>
         <SelectTrigger className="h-8 w-44 text-xs" aria-label="Upscaler">
           <SelectValue />
         </SelectTrigger>

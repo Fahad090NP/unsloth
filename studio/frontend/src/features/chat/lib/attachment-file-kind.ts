@@ -89,7 +89,7 @@ export function attachmentFileKind(
   if (extension && Object.hasOwn(EXTENSION_KINDS, extension)) {
     return EXTENSION_KINDS[extension];
   }
-  if (WORD_TYPES.has(mime.split(";", 1)[0]!.trim())) return "word";
+  if (WORD_TYPES.has(mime.split(";", 1)[0].trim())) return "word";
   const base = (name ?? "").toLowerCase().split(/[\\/]/).pop() ?? "";
   if (CODE_BASENAMES.has(base)) return "code";
   if (mime.startsWith("text/")) return "text";

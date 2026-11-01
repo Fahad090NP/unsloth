@@ -227,7 +227,7 @@ test("an engine whose clipboard mapping is unproven hands the copy back", () => 
 });
 
 test("the engine check runs after every cheaper refusal", () => {
-  const cheaper: ReadonlyArray<readonly [string, () => unknown]> = [
+  const cheaper: readonly (readonly [string, () => unknown])[] = [
     [
       "already-handled",
       () =>
@@ -410,18 +410,18 @@ test("a multi-range selection is checked against the whole viewport", () => {
 // The fake throws on unimplemented selectors and computes toString() live from the tree.
 // It cannot prove toString() equals the real clipboard; that was measured in a browser.
 
-type StyleEntry = { value: string; priority: string };
+interface StyleEntry { value: string; priority: string }
 
-type FakeText = {
+interface FakeText {
   readonly nodeType: 3;
   readonly data: string;
   parentNode: FakeElement | null;
   readonly ownerDocument: typeof fakeDocument;
-};
+}
 
 type FakeNode = FakeText | FakeElement;
 
-type FakeElement = {
+interface FakeElement {
   readonly nodeType: 1;
   readonly tagName: string;
   readonly attrs: Map<string, string>;
@@ -447,7 +447,7 @@ type FakeElement = {
   querySelectorAll(selectors: string): FakeElement[];
   insertBefore(node: FakeNode, ref: FakeNode | null): FakeNode;
   remove(): void;
-};
+}
 
 /** patchClipboardDeltas checks `instanceof HTMLElement`; only the prototype matters. */
 class FakeHtmlElement {}
@@ -481,7 +481,7 @@ function matchesSelector(node: FakeElement, selectors: string): boolean {
  * Mutating inside a live range collapses it in Chromium, hence the double restore.
  * Listeners outlive their test, so each checks the mutation is inside its own root.
  */
-const mutationListeners: Array<(parent: FakeElement) => void> = [];
+const mutationListeners: ((parent: FakeElement) => void)[] = [];
 
 function notifyMutation(parent: FakeElement): void {
   for (const listener of mutationListeners) listener(parent);
@@ -508,9 +508,9 @@ function el(
   options: {
     alt?: string;
     ruleVisibility?: string;
-    inline?: ReadonlyArray<readonly [string, string, string?]>;
+    inline?: readonly (readonly [string, string, string?])[];
     rule?: string;
-    children?: ReadonlyArray<FakeNode | string>;
+    children?: readonly (FakeNode | string)[];
   } = {},
 ): FakeElement {
   const attrs = new Map<string, string>();
@@ -689,7 +689,7 @@ function snapshot(node: FakeNode): unknown {
   };
 }
 
-type FakeRange = {
+interface FakeRange {
   readonly id: number;
   readonly commonAncestorContainer: FakeElement | null;
   readonly startContainer: FakeNode | null;
@@ -697,7 +697,7 @@ type FakeRange = {
   readonly endContainer: FakeNode | null;
   readonly endOffset: number;
   cloneRange(): FakeRange;
-};
+}
 
 function fakeRange(
   id: number,
@@ -742,12 +742,12 @@ function fakeSelection(
   const bounds = options.bounds ?? {};
   // Direction lives only in anchor/focus; rebuilding from cloned ranges flips backward selections.
   const calls: {
-    setBaseAndExtent: Array<{
+    setBaseAndExtent: {
       anchorNode: FakeNode | null;
       anchorOffset: number;
       focusNode: FakeNode | null;
       focusOffset: number;
-    }>;
+    }[];
   } = { setBaseAndExtent: [] };
   let anchorNode: FakeNode | null = options.anchorNode ?? null;
   let anchorOffset = options.anchorOffset ?? 0;
@@ -871,7 +871,7 @@ function documentOrder(
     return bOffset === aOffset ? 0 : bOffset < aOffset ? -1 : 1;
   }
   const parent = pa[depth - 1];
-  if (!parent || parent.nodeType !== 1) return 0;
+  if (parent?.nodeType !== 1) return 0;
   const kids = parent.childNodes;
   const ia = depth < pa.length ? kids.indexOf(pa[depth]) : aOffset;
   const ib = depth < pb.length ? kids.indexOf(pb[depth]) : bOffset;
@@ -1417,7 +1417,7 @@ test("a serialiser that throws leaves the copy to the browser", () => {
     root: exploding as unknown as FakeElement,
   });
   world.selection.getRangeAt = () =>
-    fakeRange(1, exploding as unknown as FakeElement);
+    fakeRange(1, exploding);
   attachThreadFastCopy(viewport as unknown as HTMLElement);
   const copy = fakeCopyEvent();
 

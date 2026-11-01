@@ -41,12 +41,12 @@ const PIN_TEXT_SIGNATURE =
   /pinGeminiTextThoughtSignature\([\s\S]*legacyGeminiTextSignature,[\s\S]*\)/;
 
 test("every native thought boundary stays separate from signed answer text", () => {
-  const parts: Array<{
+  const parts: {
     type: string;
     text?: string;
     _google_thought_signature?: string;
     _google_thought_parts?: GeminiThoughtReplayPart[];
-  }> = [
+  }[] = [
     { type: "reasoning", text: "first thought" },
     { type: "tool-call" },
     { type: "reasoning", text: "second thought" },
@@ -129,11 +129,11 @@ test("unsigned stream chunks compact without crossing signature or tool boundari
 });
 
 test("signed and unsigned Gemini answer-part boundaries replay exactly", () => {
-  const parts: Array<{
+  const parts: {
     type: string;
     text?: string;
     _google_answer_parts?: GeminiAnswerReplayPart[];
-  }> = [{ type: "text", text: "firstsecond" }];
+  }[] = [{ type: "text", text: "firstsecond" }];
   const answerParts: PositionedGeminiAnswerReplayPart[] = [];
   appendGeminiAnswerReplayPart(answerParts, { text: "first" }, 0);
   appendGeminiAnswerReplayPart(

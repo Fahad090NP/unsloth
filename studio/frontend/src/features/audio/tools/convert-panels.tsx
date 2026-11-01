@@ -74,7 +74,7 @@ function MoreSettings({
       <button
         type="button"
         aria-expanded={open}
-        onClick={() => onOpenChange(!open)}
+        onClick={() => { onOpenChange(!open); }}
         className="flex w-fit items-center gap-1 rounded-full text-ui-11p5 font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         More settings
@@ -112,7 +112,7 @@ export const seedVcPanel: AudioToolPanel<SeedVcValue> = {
             <Select
               value={value.engine}
               onValueChange={(engine) =>
-                onChange({ ...value, engine: engine as SeedVcEngine })
+                { onChange({ ...value, engine: engine as SeedVcEngine }); }
               }
               disabled={disabled}
             >
@@ -143,7 +143,7 @@ export const seedVcPanel: AudioToolPanel<SeedVcValue> = {
               step={0.05}
               disabled={disabled}
               info="Higher follows the target voice more closely."
-              onChange={(similarity) => onChange({ ...value, similarity })}
+              onChange={(similarity) => { onChange({ ...value, similarity }); }}
             />
             <ParamSlider
               label="Keep words clear"
@@ -154,7 +154,7 @@ export const seedVcPanel: AudioToolPanel<SeedVcValue> = {
               disabled={disabled}
               info="Higher keeps the words easier to understand."
               onChange={(intelligibility) =>
-                onChange({ ...value, intelligibility })
+                { onChange({ ...value, intelligibility }); }
               }
             />
           </>
@@ -167,12 +167,12 @@ export const seedVcPanel: AudioToolPanel<SeedVcValue> = {
             step={0.05}
             disabled={disabled}
             info="How strongly the output is pushed toward the target voice."
-            onChange={(guidance) => onChange({ ...value, guidance })}
+            onChange={(guidance) => { onChange({ ...value, guidance }); }}
           />
         )}
         <MoreSettings
           open={value.more === true}
-          onOpenChange={(more) => onChange({ ...value, more })}
+          onOpenChange={(more) => { onChange({ ...value, more }); }}
         >
           <ParamSlider
             label="Length"
@@ -183,7 +183,7 @@ export const seedVcPanel: AudioToolPanel<SeedVcValue> = {
             disabled={disabled}
             format={(v) => `${v.toFixed(2)}×`}
             info="Below 1 speeds the result up, above 1 slows it down."
-            onChange={(length) => onChange({ ...value, length })}
+            onChange={(length) => { onChange({ ...value, length }); }}
           />
           <ParamSlider
             label="Steps"
@@ -193,7 +193,7 @@ export const seedVcPanel: AudioToolPanel<SeedVcValue> = {
             step={1}
             disabled={disabled}
             info="More steps can sound cleaner but take longer."
-            onChange={(steps) => onChange({ ...value, steps })}
+            onChange={(steps) => { onChange({ ...value, steps }); }}
           />
           {v2 ? (
             <div className="grid gap-1.5">
@@ -207,7 +207,7 @@ export const seedVcPanel: AudioToolPanel<SeedVcValue> = {
                   checked={value.anonymize}
                   disabled={disabled}
                   onCheckedChange={(anonymize) =>
-                    onChange({ ...value, anonymize })
+                    { onChange({ ...value, anonymize }); }
                   }
                 />
               </FieldLabel>
@@ -234,7 +234,7 @@ export const rvcPanel: AudioToolPanel<RvcValue> = {
         step={0.05}
         disabled={disabled}
         info="Higher brings in more of the voice's accent and texture; too high can blur words."
-        onChange={(blend) => onChange({ ...value, blend })}
+        onChange={(blend) => { onChange({ ...value, blend }); }}
       />
       <ParamSlider
         label="Protect consonants"
@@ -244,7 +244,7 @@ export const rvcPanel: AudioToolPanel<RvcValue> = {
         step={0.01}
         disabled={disabled}
         info="Keeps breaths and soft consonants from the recording. 0.5 turns it off."
-        onChange={(protect) => onChange({ ...value, protect })}
+        onChange={(protect) => { onChange({ ...value, protect }); }}
       />
       <ParamSlider
         label="Volume envelope mix"
@@ -254,7 +254,7 @@ export const rvcPanel: AudioToolPanel<RvcValue> = {
         step={0.05}
         disabled={disabled}
         info="0 keeps the recording's loudness changes; 1 uses the voice's own."
-        onChange={(rms) => onChange({ ...value, rms })}
+        onChange={(rms) => { onChange({ ...value, rms }); }}
       />
     </PanelSection>
   ),
@@ -272,11 +272,11 @@ export const chatterboxConvertPanel: AudioToolPanel<ChatterboxConvertValue> = {
         step={0.05}
         disabled={disabled}
         info="How strongly the output is pushed toward the target voice."
-        onChange={(guidance) => onChange({ ...value, guidance })}
+        onChange={(guidance) => { onChange({ ...value, guidance }); }}
       />
       <MoreSettings
         open={value.more === true}
-        onOpenChange={(more) => onChange({ ...value, more })}
+        onOpenChange={(more) => { onChange({ ...value, more }); }}
       >
         <ParamSlider
           label="Steps"
@@ -286,7 +286,7 @@ export const chatterboxConvertPanel: AudioToolPanel<ChatterboxConvertValue> = {
           step={1}
           disabled={disabled}
           info="More steps can sound cleaner but take longer."
-          onChange={(steps) => onChange({ ...value, steps })}
+          onChange={(steps) => { onChange({ ...value, steps }); }}
         />
       </MoreSettings>
     </PanelSection>
@@ -315,7 +315,7 @@ export const vevo2StylePanel: AudioToolPanel<Vevo2StyleValue> = {
           ariaLabel="Style"
           value={value.style}
           onValueChange={(style) =>
-            onChange({ style: style === "target" ? "target" : "source" })
+            { onChange({ style: style === "target" ? "target" : "source" }); }
           }
           disabled={disabled}
           fit={true}

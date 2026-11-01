@@ -224,7 +224,7 @@ const stalledStreamFetch = (): typeof fetch =>
       status: 200,
       headers: { "content-type": "application/json" },
     });
-  }) as typeof fetch;
+  });
 
 test("the follower throws on its own deadline instead of returning silently", async () => {
   // A silent return on our own deadline would finalize a still-running run as complete.
@@ -249,7 +249,7 @@ test("a caller Stop still ends the follow cleanly", async () => {
   // Only OUR deadline is a failure; a user Stop stays a clean return.
   globalThis.fetch = stalledStreamFetch();
   const controller = new AbortController();
-  globalThis.setTimeout(() => controller.abort(), 30);
+  globalThis.setTimeout(() => { controller.abort(); }, 30);
   for await (const _update of followChatGenerationRun("run-1", {
     initialRun: run("running", 0),
     replayFrom: 0,
@@ -282,7 +282,7 @@ test("the follower gives up on a run that makes no progress", async () => {
       status: 200,
       headers: { "content-type": "application/json" },
     });
-  }) as typeof fetch;
+  });
 
   const updates: string[] = [];
   const started = Date.now();
@@ -344,7 +344,7 @@ test("progress rearms the deadline instead of ending the follow", async () => {
       ),
       { status: 200, headers: { "content-type": "application/json" } },
     );
-  }) as typeof fetch;
+  });
 
   const seen: number[] = [];
   for await (const update of followChatGenerationRun("run-1", {
@@ -604,10 +604,10 @@ test("advancing keep-alive stamps hold the follower open through a long preparat
   globalThis.fetch = (async (_url: string, init?: RequestInit) => {
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
-        push = (chunk) => controller.enqueue(chunk);
-        close = () => controller.close();
+        push = (chunk) => { controller.enqueue(chunk); };
+        close = () => { controller.close(); };
         init?.signal?.addEventListener("abort", () =>
-          controller.error(new DOMException("aborted", "AbortError")),
+          { controller.error(new DOMException("aborted", "AbortError")); },
         );
       },
     });
@@ -689,9 +689,9 @@ test("a repeated keep-alive stamp does NOT hold the follower open", async () => 
   globalThis.fetch = (async (_url: string, init?: RequestInit) => {
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
-        push = (chunk) => controller.enqueue(chunk);
+        push = (chunk) => { controller.enqueue(chunk); };
         init?.signal?.addEventListener("abort", () =>
-          controller.error(new DOMException("aborted", "AbortError")),
+          { controller.error(new DOMException("aborted", "AbortError")); },
         );
       },
     });
@@ -727,7 +727,7 @@ test("a repeated keep-alive stamp does NOT hold the follower open", async () => 
     const timedOut = Symbol("timed out");
     const outcome = await Promise.race([
       follow.then(() => "settled"),
-      new Promise((r) => setTimeout(() => r(timedOut), 3_000)),
+      new Promise((r) => setTimeout(() => { r(timedOut); }, 3_000)),
     ]);
     clearInterval(pump);
     assert.notEqual(
@@ -785,7 +785,7 @@ test("a frozen stamp does not rearm across SSE reconnects", async () => {
     const timedOut = Symbol("timed out");
     const outcome = await Promise.race([
       follow.then(() => "settled"),
-      new Promise((r) => setTimeout(() => r(timedOut), 20_000)),
+      new Promise((r) => setTimeout(() => { r(timedOut); }, 20_000)),
     ]);
     assert.notEqual(outcome, timedOut, "reconnects kept the follower alive indefinitely");
     assert.equal(stalled, true, "a frozen stamp must not rearm on reconnect");

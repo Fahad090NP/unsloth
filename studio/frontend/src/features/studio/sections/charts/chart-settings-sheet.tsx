@@ -39,7 +39,7 @@ function ChoiceButtons<T extends string>({
           type="button"
           size="xs"
           variant={value === option.value ? "secondary" : "outline"}
-          onClick={() => onChange(option.value)}
+          onClick={() => { onChange(option.value); }}
         >
           {option.label}
         </Button>
@@ -192,7 +192,7 @@ export function ChartSettingsSheet(): ReactElement {
         variant="ghost"
         size="icon-sm"
         className="rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-        onClick={() => setOpen(true)}
+        onClick={() => { setOpen(true); }}
         aria-label={t("studio.charts.openSettings")}
       >
         <HugeiconsIcon icon={Settings01Icon} className="size-4" />
@@ -227,7 +227,7 @@ export function ChartSettingsSheet(): ReactElement {
                 </div>
                 <Slider
                   value={[effectiveWindowSize]}
-                  onValueChange={([value]) => setWindowSize(value)}
+                  onValueChange={([value]) => { setWindowSize(value); }}
                   min={minWindow}
                   max={sliderMax}
                   step={1}
@@ -252,7 +252,7 @@ export function ChartSettingsSheet(): ReactElement {
                 </div>
                 <Slider
                   value={[smoothing]}
-                  onValueChange={([value]) => setSmoothing(value)}
+                  onValueChange={([value]) => { setSmoothing(value); }}
                   min={0}
                   max={0.9}
                   step={0.01}
@@ -320,7 +320,7 @@ export function ChartSettingsSheet(): ReactElement {
             >
               {t("studio.charts.resetDefaults")}
             </Button>
-            <Button type="button" size="sm" onClick={() => setOpen(false)}>
+            <Button type="button" size="sm" onClick={() => { setOpen(false); }}>
               {t("common.done")}
             </Button>
           </SheetFooter>

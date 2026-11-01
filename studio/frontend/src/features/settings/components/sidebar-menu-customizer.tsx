@@ -94,11 +94,11 @@ function MovableRow({ item }: { item: SidebarMenuItemPref }) {
         className="ml-auto"
         checked={item.visible}
         onCheckedChange={(visible) =>
-          patch({
+          { patch({
             sidebarMenu: sidebarMenu.map((entry) =>
               entry.id === item.id ? { ...entry, visible } : entry,
             ),
-          })
+          }); }
         }
       />
     </Reorder.Item>
@@ -118,11 +118,11 @@ export function SidebarMenuCustomizer() {
         axis="y"
         values={sidebarMenu.map((item) => item.id)}
         onReorder={(ids: SidebarMenuItemPref["id"][]) =>
-          patch({
+          { patch({
             sidebarMenu: ids.flatMap(
               (id) => sidebarMenu.find((entry) => entry.id === id) ?? [],
             ),
-          })
+          }); }
         }
         className="flex flex-col"
       >

@@ -42,10 +42,10 @@ export function diffusionTrainingProgress(status: Status | null) {
   const preparing =
     running &&
     !terminal &&
-    (status?.in_model_load === true || (status?.step ?? 0) <= 0);
+    (status?.in_model_load || (status?.step ?? 0) <= 0);
   if (preparing) {
     const note = backendNote(status?.message);
-    const legacy = status?.message?.match(LEGACY_PREPARING);
+    const legacy = LEGACY_PREPARING.exec(status?.message);
     const prep =
       status?.preparation ??
       (legacy
@@ -60,12 +60,12 @@ export function diffusionTrainingProgress(status: Status | null) {
       const known =
         Number.isFinite(done) &&
         Number.isFinite(total) &&
-        (done as number) >= 0 &&
-        (total as number) > 0;
+        (done!) >= 0 &&
+        (total!) > 0;
       // MiniMax-H3 encodes every caption in one go (n/n) and only then caches latents; that is not done yet.
       const finished =
         known &&
-        (done as number) >= (total as number) &&
+        (done!) >= (total!) &&
         prep.stage !== "encode_prompts";
       return {
         preparing: true,
@@ -76,10 +76,10 @@ export function diffusionTrainingProgress(status: Status | null) {
             ? "Finishing model setup before training starts."
             : "Preparing images and captions so the model can train on them."),
         count: known
-          ? `${Math.min(done as number, total as number)} / ${total} prepared`
+          ? `${Math.min(done!, total!)} / ${total} prepared`
           : null,
         percent: known
-          ? Math.min(100, ((done as number) / (total as number)) * 100)
+          ? Math.min(100, ((done!) / (total!)) * 100)
           : null,
       };
     }

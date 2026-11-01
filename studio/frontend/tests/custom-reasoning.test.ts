@@ -91,7 +91,7 @@ for (const style of styles) {
     globalThis.fetch = (async (_url, init) => {
       bodies.push(JSON.parse(String(init?.body)));
       return Response.json({ reasoning_config: config });
-    }) as typeof fetch;
+    });
     try {
       const created = await api.createProviderConfig({
         providerType: "custom",
@@ -248,7 +248,7 @@ test("switching same-model connections never leaks the contract and server sync 
         },
       ]);
     return Response.json({ fetched_at: 1, providers: {} });
-  }) as typeof fetch;
+  });
   try {
     const synced = await sync.syncExternalProvidersFromBackend([a, c]);
     assert.equal(synced[0].reasoningConfig, undefined);

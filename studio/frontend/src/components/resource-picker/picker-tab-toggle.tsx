@@ -70,7 +70,7 @@ export function PickerTabToggle<T extends string>({
             aria-selected={selected}
             aria-controls={panelId}
             tabIndex={selected ? 0 : -1}
-            onClick={() => onTabChange(entry.value)}
+            onClick={() => { onTabChange(entry.value); }}
             className={cn(
               "relative inline-flex h-full flex-1 select-none items-center justify-center rounded-full px-3 text-ui-12p5 font-medium transition-colors",
               PICKER_OPTION_FOCUS_VISIBLE_CLASS,

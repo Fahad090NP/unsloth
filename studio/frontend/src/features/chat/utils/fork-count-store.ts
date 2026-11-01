@@ -17,11 +17,11 @@ type Counts = ReadonlyMap<string, number>;
 
 const EMPTY_COUNTS: Counts = new Map();
 
-type Entry = {
+interface Entry {
   counts: Counts;
   subscribers: Set<() => void>;
   seq: number;
-};
+}
 
 const entries = new Map<string, Entry>();
 let pendingRefresh: ReturnType<typeof setTimeout> | null = null;

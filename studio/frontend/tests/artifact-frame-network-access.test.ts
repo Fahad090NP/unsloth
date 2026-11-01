@@ -234,7 +234,7 @@ test("blocked reports from a stale frame load are rejected", () => {
   const visit = (node: ts.Node): void => {
     if (
       ts.isIfStatement(node) &&
-      /event\.data\.v !== loadVersion/.test(node.expression.getText()) &&
+      node.expression.getText().includes('event.data.v !== loadVersion') &&
       node.thenStatement.getText().includes("return")
     ) {
       guarded = true;
@@ -252,7 +252,7 @@ test("oversized blocked URIs are dropped before anything is stored", () => {
   const visit = (node: ts.Node): void => {
     if (
       ts.isIfStatement(node) &&
-      URI_LENGTH_GUARD.test(node.expression.getText()) &&
+      node.expression.getText().includes('uri.length > BLOCKED_URI_MAX_CHARS') &&
       node.thenStatement.getText().includes("return")
     ) {
       bounded = true;
@@ -280,7 +280,7 @@ test("the grant is not offered for a scheme it cannot widen", () => {
   const visit = (node: ts.Node): void => {
     if (
       ts.isIfStatement(node) &&
-      SCHEME_FILTER.test(node.expression.getText()) &&
+      node.expression.getText().includes('GRANT_CANNOT_FIX_SCHEME[event.data.effectiveDirective] === uri') &&
       node.thenStatement.getText().includes("return")
     ) {
       filtered = true;
@@ -302,7 +302,7 @@ test("the grant is not offered for directives it cannot fix", () => {
   const visit = (node: ts.Node): void => {
     if (
       ts.isIfStatement(node) &&
-      DIRECTIVE_FILTER.test(node.expression.getText()) &&
+      node.expression.getText().includes('GRANT_CANNOT_FIX.has(event.data.effectiveDirective)') &&
       node.thenStatement.getText().includes("return")
     ) {
       filtered = true;

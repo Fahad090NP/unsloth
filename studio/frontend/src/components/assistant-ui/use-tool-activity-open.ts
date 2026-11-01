@@ -46,6 +46,6 @@ export function useToolActivityOpen(isRunning: boolean, hasText: boolean) {
 
   return [
     state.open,
-    (open: boolean) => setState({ open, override: open }),
+    (open: boolean) => { setState({ open, override: open }); },
   ] as const;
 }

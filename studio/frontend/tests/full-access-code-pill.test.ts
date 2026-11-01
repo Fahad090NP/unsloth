@@ -131,7 +131,7 @@ test("Full access does not turn on an external provider's code sandbox", async (
 
 test("the turn-on reaches neither the installation nor the open chat's snapshot", async (t) => {
   enableCountedTimers(t);
-  const tick = (ms: number) => t.mock.timers.tick(ms);
+  const tick = (ms: number) => { t.mock.timers.tick(ms); };
   const { mod, on, state } = await freshStore(false);
   const drain = () =>
     drainMockedTimers(tick, {
@@ -150,7 +150,7 @@ test("the turn-on reaches neither the installation nor the open chat's snapshot"
   assert.equal(on(), true);
   (state().setToolsEnabled as (on: boolean) => void)(true);
   await drain();
-  const row = threadRows.rows.get("A") as Record<string, unknown> | undefined;
+  const row = threadRows.rows.get("A");
   assert.ok(row, "the edit wrote chat A's snapshot");
   assert.notEqual(row.codeToolsEnabled, true);
   assert.equal(localStorageFake.get(CODE_KEY), "false");
@@ -161,7 +161,7 @@ test("the turn-on reaches neither the installation nor the open chat's snapshot"
 
 test("a chat opened after Full access was picked still gets the code tools", async (t) => {
   enableCountedTimers(t);
-  const tick = (ms: number) => t.mock.timers.tick(ms);
+  const tick = (ms: number) => { t.mock.timers.tick(ms); };
   const { mod, store, on, state } = await freshStore(true);
   const drain = () =>
     drainMockedTimers(tick, {
@@ -192,7 +192,7 @@ test("a chat opened after Full access was picked still gets the code tools", asy
 
 test("a Code click under Full access survives a chat switch too", async (t) => {
   enableCountedTimers(t);
-  const tick = (ms: number) => t.mock.timers.tick(ms);
+  const tick = (ms: number) => { t.mock.timers.tick(ms); };
   const { mod, on, state } = await freshStore(false);
   const drain = () =>
     drainMockedTimers(tick, {

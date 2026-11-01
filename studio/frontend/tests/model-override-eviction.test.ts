@@ -23,7 +23,7 @@ async function bodyOf(
   globalThis.fetch = (async (_url, init) => {
     bodies.push(JSON.parse(String(init?.body)));
     return Response.json({ overrides: {}, removed_keys: [] });
-  }) as typeof fetch;
+  });
   try {
     await overrides.putModelOverride("org/model", "Q4_K_M", config, options);
   } finally {

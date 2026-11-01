@@ -13,12 +13,12 @@ import { type ReactElement, useState } from "react";
 import { FieldLabel } from "./shared/field-label";
 import { RecipeDialogContent } from "./shared/recipe-dialog-content";
 
-type ImportDialogProps = {
+interface ImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onImport: (value: string) => string | null;
   container?: HTMLDivElement | null;
-};
+}
 
 export function ImportDialog({
   open,
@@ -66,7 +66,7 @@ export function ImportDialog({
             className="corner-squircle nodrag min-h-[calc(220px*var(--ui-space-scale,1))] max-h-[calc(450px*var(--ui-space-scale,1))]"
             placeholder='{"recipe": { "columns": [] }}'
             value={value}
-            onChange={(event) => setValue(event.target.value)}
+            onChange={(event) => { setValue(event.target.value); }}
           />
           {error && (
             <p className="text-xs text-rose-600" role="alert">

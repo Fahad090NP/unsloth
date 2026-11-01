@@ -6,10 +6,10 @@
  * made thread changes quadratic. Keyed on the revision alone, so it answers ONE question only.
  */
 
-export type ExportedReplyItem = {
+export interface ExportedReplyItem {
   parentId: string | null;
   message: { metadata?: unknown };
-};
+}
 
 // Keyed on the revision object, so a stale entry is unreachable; weak, so dead threads are freed.
 const ownersByRevision = new WeakMap<object, ReadonlySet<string>>();

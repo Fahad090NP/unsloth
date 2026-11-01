@@ -302,7 +302,7 @@ async function loadReadmeFromCache({
 }): Promise<ReadmeCacheEntry> {
   const cached = readmeCache.get(cacheKey);
   if (cached) {
-    if (isReadmeCachePromise(cached)) return cached;
+    if (isReadmeCachePromise(cached)) return await cached;
     if (cached.expiresAt > Date.now()) return cached.entry;
     readmeCache.delete(cacheKey);
   }

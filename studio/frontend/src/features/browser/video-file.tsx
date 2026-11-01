@@ -74,9 +74,9 @@ export function VideoFile({
 
   // Esc and the browser's own controls leave fullscreen too, so follow the document, not the button.
   useEffect(() => {
-    const sync = () => setFullscreened(document.fullscreenElement === rootRef.current);
+    const sync = () => { setFullscreened(document.fullscreenElement === rootRef.current); };
     document.addEventListener("fullscreenchange", sync);
-    return () => document.removeEventListener("fullscreenchange", sync);
+    return () => { document.removeEventListener("fullscreenchange", sync); };
   }, []);
 
   const video = () => videoRef.current;
@@ -129,8 +129,8 @@ export function VideoFile({
     const handlers: Record<string, () => void> = {
       " ": togglePlay,
       k: togglePlay,
-      ArrowLeft: () => seekBy(-SEEK_SECONDS),
-      ArrowRight: () => seekBy(SEEK_SECONDS),
+      ArrowLeft: () => { seekBy(-SEEK_SECONDS); },
+      ArrowRight: () => { seekBy(SEEK_SECONDS); },
       m: toggleMute,
       f: fullscreen,
     };
@@ -165,10 +165,10 @@ export function VideoFile({
             loop={loop}
             onClick={togglePlay}
             onDoubleClick={fullscreen}
-            onPlay={() => setPlaying(true)}
-            onPause={() => setPlaying(false)}
-            onEnded={() => setPlaying(false)}
-            onTimeUpdate={(event) => setTime(event.currentTarget.currentTime)}
+            onPlay={() => { setPlaying(true); }}
+            onPause={() => { setPlaying(false); }}
+            onEnded={() => { setPlaying(false); }}
+            onTimeUpdate={(event) => { setTime(event.currentTarget.currentTime); }}
             onDurationChange={(event) => {
               const value = event.currentTarget.duration;
               if (Number.isFinite(value)) setDuration(value);
@@ -188,7 +188,7 @@ export function VideoFile({
               setMuted(event.currentTarget.muted);
               setVolume(event.currentTarget.volume);
             }}
-            onRateChange={(event) => setRate(event.currentTarget.playbackRate)}
+            onRateChange={(event) => { setRate(event.currentTarget.playbackRate); }}
             onError={onError}
             className="block max-h-[calc(100cqh-clamp(3rem,12cqh,7rem))] max-w-full cursor-pointer rounded-lg bg-black shadow-[0_18px_50px_-12px_rgb(0_0_0/0.35)]"
           />
@@ -278,7 +278,7 @@ export function VideoFile({
               }}
             >
               {RATES.map((value) => (
-                <DropdownMenuRadioItem key={value} value={String(value)} onSelect={(event) => event.preventDefault()}>
+                <DropdownMenuRadioItem key={value} value={String(value)} onSelect={(event) => { event.preventDefault(); }}>
                   {value === 1 ? t("browser.video.normalSpeed") : `${value}×`}
                 </DropdownMenuRadioItem>
               ))}

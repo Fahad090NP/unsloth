@@ -72,7 +72,7 @@ function fixture(t: TestContext, refreshes: Refresh[]) {
         unexpected++;
         return new Response(null, { status: 418 });
       }
-      return next();
+      return await next();
     }
     const auth = new Headers(init?.headers).get("Authorization");
     apiTokens.push(auth);
@@ -90,8 +90,8 @@ function fixture(t: TestContext, refreshes: Refresh[]) {
   const session = {
     getAuthToken: () => tokens.access,
     getRefreshToken: () => tokens.refresh,
-    hasAuthToken: () => !!tokens.access,
-    hasRefreshToken: () => !!tokens.refresh,
+    hasAuthToken: () => Boolean(tokens.access),
+    hasRefreshToken: () => Boolean(tokens.refresh),
     mustChangePassword: () => false,
     setMustChangePassword: () => undefined,
     storeAuthTokens: (access: string, refresh: string) => {

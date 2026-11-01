@@ -45,7 +45,7 @@ test("a refresh that falls behind the stream is tokenized in slices and still se
   await new Promise<void>((resolve) => {
     const immediate = plugin.highlight(
       { code: prefix, language: LANGUAGE, themes: THEMES },
-      () => resolve(),
+      () => { resolve(); },
     );
     if (immediate) resolve();
   });
@@ -57,7 +57,7 @@ test("a refresh that falls behind the stream is tokenized in slices and still se
   const deliveries: HighlightResult[] = [];
   try {
     const settled = await new Promise<HighlightResult>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error("the sliced refresh never settled")), 10_000);
+      const timer = setTimeout(() => { reject(new Error("the sliced refresh never settled")); }, 10_000);
       const immediate = plugin.highlight(
         { code: SOURCE, language: LANGUAGE, themes: THEMES },
         (result) => {

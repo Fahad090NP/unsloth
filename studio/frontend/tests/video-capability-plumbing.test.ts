@@ -60,6 +60,6 @@ test("the video drain names video when a clip cannot be read", async () => {
     "utf8",
   );
   const drain = source.slice(source.indexOf("claimVideoAttachments"));
-  const title = drain.match(/toast\.error\("Could not attach dropped (\w+)"/)?.[1];
+  const title = (/toast\.error\("Could not attach dropped (\w+)"/.exec(drain))?.[1];
   assert.equal(title, "video");
 });

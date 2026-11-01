@@ -38,7 +38,7 @@ export function sandboxAttachmentPath(sha256: string, name: string): string {
 // Backend cap: past it the whole request is refused.
 const MAX_SANDBOX_ATTACHMENTS = 64;
 
-type Attachment = { name?: string; content?: readonly unknown[] };
+interface Attachment { name?: string; content?: readonly unknown[] }
 
 // attachmentContentText's wrapper, which the server-document adapter sends.
 function hasInlineText(content: readonly unknown[]): boolean {
@@ -90,12 +90,12 @@ export function withSandboxAttachmentPaths<
         content: [{ type: "text", text: note }, ...content],
       };
     });
-    return changed ? ({ ...message, attachments } as M) : message;
+    return changed ? ({ ...message, attachments }) : message;
   });
   return { messages: annotated, sandboxAttachments };
 }
 
-const READERS: ReadonlyArray<readonly [string, string]> = [
+const READERS: readonly (readonly [string, string])[] = [
   [".csv", "pandas.read_csv(path)"],
   [".tsv", 'pandas.read_csv(path, sep="\\t")'],
   [".jsonl,.ndjson", "pandas.read_json(path, lines=True)"],

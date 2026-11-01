@@ -81,7 +81,7 @@ export function MediaIdleUnloadRow({
               "settings.general.modelAutoSwitch.mediaIdleSecondsAriaLabel",
             )}
             disabled={disabled}
-            onChange={(event) => onDraftChange(event.target.value)}
+            onChange={(event) => { onDraftChange(event.target.value); }}
             className="h-control w-24"
           />
           <span className="text-xs font-medium text-muted-foreground">s</span>
@@ -418,7 +418,7 @@ export function ModelAutoSwitchSection() {
                 "settings.general.modelAutoSwitch.idleSecondsAriaLabel",
               )}
               disabled={!settings?.enabled || isSaving}
-              onChange={(event) => setDraftIdleSeconds(event.target.value)}
+              onChange={(event) => { setDraftIdleSeconds(event.target.value); }}
               className="h-control w-24"
             />
             <span className="text-xs font-medium text-muted-foreground">s</span>

@@ -523,7 +523,7 @@ export class StudioSpeechSynthesisAdapter implements SpeechSynthesisAdapter {
 
     const res: SpeechSynthesisAdapter.Utterance = {
       status: { type: "starting" },
-      cancel: () => cancelImpl(),
+      cancel: () => { cancelImpl(); },
       subscribe: (callback) => {
         if (res.status.type === "ended") {
           let cancelled = false;
@@ -560,8 +560,8 @@ export class StudioSpeechSynthesisAdapter implements SpeechSynthesisAdapter {
     }
 
     const utterance = createConfiguredUtterance(text);
-    utterance.addEventListener("end", () => handleEnd("finished"));
-    utterance.addEventListener("error", (e) => handleEnd("error", e.error));
+    utterance.addEventListener("end", () => { handleEnd("finished"); });
+    utterance.addEventListener("error", (e) => { handleEnd("error", e.error); });
 
     // Chrome silently drops speak() while a cancelled run's utterance is queued.
     window.speechSynthesis.cancel();

@@ -186,7 +186,7 @@ export async function fetchMoeInfo(
 
 export async function fetchCheckpoints(): Promise<CheckpointListResponse> {
   const response = await authFetch("/api/models/checkpoints");
-  return parseJson<CheckpointListResponse>(response);
+  return await parseJson<CheckpointListResponse>(response);
 }
 
 export async function fetchExportSize(
@@ -203,7 +203,7 @@ export async function fetchExportSize(
     `/api/models/export-size?model=${encodeURIComponent(modelId)}`,
     { signal, headers },
   );
-  return parseJson<ExportSizeEstimate>(response);
+  return await parseJson<ExportSizeEstimate>(response);
 }
 
 export async function loadCheckpoint(params: {
@@ -222,7 +222,7 @@ export async function loadCheckpoint(params: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
   });
-  return parseJson<ExportOperationResponse>(response);
+  return await parseJson<ExportOperationResponse>(response);
 }
 
 export async function exportMerged(params: {
@@ -242,7 +242,7 @@ export async function exportMerged(params: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
   });
-  return parseJson<ExportOperationResponse>(response);
+  return await parseJson<ExportOperationResponse>(response);
 }
 
 export async function exportBase(params: {
@@ -259,7 +259,7 @@ export async function exportBase(params: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
   });
-  return parseJson<ExportOperationResponse>(response);
+  return await parseJson<ExportOperationResponse>(response);
 }
 
 export async function exportGGUF(params: {
@@ -280,7 +280,7 @@ export async function exportGGUF(params: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
   });
-  return parseJson<ExportOperationResponse>(response);
+  return await parseJson<ExportOperationResponse>(response);
 }
 
 export async function convertGgufToQ4nx(params: {
@@ -297,7 +297,7 @@ export async function convertGgufToQ4nx(params: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
   });
-  return parseJson<ExportOperationResponse>(response);
+  return await parseJson<ExportOperationResponse>(response);
 }
 
 /** Copy an image-generation LoRA from the Images catalog (weights plus its .json sidecar) to a folder. */
@@ -310,7 +310,7 @@ export async function exportDiffusionLora(params: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
   });
-  return parseJson<ExportOperationResponse>(response);
+  return await parseJson<ExportOperationResponse>(response);
 }
 
 export async function exportLoRA(params: {
@@ -328,18 +328,18 @@ export async function exportLoRA(params: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
   });
-  return parseJson<ExportOperationResponse>(response);
+  return await parseJson<ExportOperationResponse>(response);
 }
 
 export async function cleanupExport(): Promise<ExportOperationResponse> {
   const response = await authFetch("/api/export/cleanup", { method: "POST" });
-  return parseJson<ExportOperationResponse>(response);
+  return await parseJson<ExportOperationResponse>(response);
 }
 
 /** Terminates the export worker only; always resolves so callers need no guard. */
 export async function cancelExport(): Promise<ExportOperationResponse> {
   const response = await authFetch("/api/export/cancel", { method: "POST" });
-  return parseJson<ExportOperationResponse>(response);
+  return await parseJson<ExportOperationResponse>(response);
 }
 
 export interface ExportStatus {
@@ -361,7 +361,7 @@ export interface ExportStatus {
 /** Used on mount to show an export started in another tab or before a reload. */
 export async function getExportStatus(): Promise<ExportStatus> {
   const response = await authFetch("/api/export/status");
-  return parseJson<ExportStatus>(response);
+  return await parseJson<ExportStatus>(response);
 }
 // ───────────────────────────────────────────────────────────────────── Live export log stream
 
@@ -393,7 +393,7 @@ export async function fetchExportLogs(
       ? `/api/export/logs?since=${since}`
       : "/api/export/logs";
   const response = await authFetch(url);
-  return parseJson<ExportLogsResponse>(response);
+  return await parseJson<ExportLogsResponse>(response);
 }
 
 export type ExportLogEventName = "log" | "heartbeat" | "complete" | "error";

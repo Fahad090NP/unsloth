@@ -66,10 +66,10 @@ import {
 } from "./progress-section-lib";
 import type { RunConfigOverride } from "./run-config-override";
 
-type ConfigGroup = {
+interface ConfigGroup {
   section: string;
   rows: [string, string | number | null | undefined][];
-};
+}
 
 const phaseLabelKeys = {
   idle: "studio.progress.phase.idle",
@@ -178,11 +178,11 @@ export function ProgressSection({
     : null;
   const hasFinishedOutput =
     !data.isTrainingRunning &&
-    !!exportRunName &&
+    Boolean(exportRunName) &&
     !data.resumedLater &&
     (data.phase === "completed" || data.phase === "stopped");
   const canExportGguf = hasFinishedOutput && !data.isDecision;
-  const canUseInDecisionApi = hasFinishedOutput && !!data.isDecision && isOwner;
+  const canUseInDecisionApi = hasFinishedOutput && Boolean(data.isDecision) && isOwner;
   const handleExportGguf = () => {
     if (!exportRunName) return;
     void navigate({ to: "/export", search: { run: exportRunName } });
@@ -482,7 +482,7 @@ function LiveGpuPanel({
           {gpuCount > 1 && (
             <select
               value={selectedGpuIndex}
-              onChange={(e) => setSelectedGpu(Number(e.target.value))}
+              onChange={(e) => { setSelectedGpu(Number(e.target.value)); }}
               // At the 16px coarse-pointer floor a 24px box clips descenders, and a long
               // device name widens the row past the viewport.
               className="h-6 cursor-pointer rounded-full border border-border bg-popover px-1.5 py-0.5 text-ui-11 text-popover-foreground outline-none hover:bg-muted focus:border-ring transition-colors font-medium appearance-none pointer-coarse:h-auto pointer-coarse:min-w-0 pointer-coarse:max-w-full"
@@ -684,7 +684,7 @@ function TrainingHeaderActions({
             "rounded-full text-xs shadow-sm",
             stopRequested ? "cursor-not-allowed opacity-60" : "cursor-pointer",
           )}
-          onClick={() => onOpenStopDialog(true)}
+          onClick={() => { onOpenStopDialog(true); }}
           disabled={!isTrainingRunning || stopRequested}
         >
           <HugeiconsIcon icon={StopIcon} className="size-3" />

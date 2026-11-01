@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type SpeculationGate = {
+export interface SpeculationGate {
   chars: number;
   speculate: (settle: (seeded: boolean) => void) => (() => void) | null;
-};
+}
 
-export type FenceSpeculatorOptions<G extends SpeculationGate> = {
+export interface FenceSpeculatorOptions<G extends SpeculationGate> {
   idle: (callback: () => void, timeout: number) => () => void;
   wait: (callback: () => void, ms: number) => () => void;
   enabled: () => boolean;
@@ -18,9 +18,9 @@ export type FenceSpeculatorOptions<G extends SpeculationGate> = {
   budgetFences: number;
   maxInFlight?: number;
   rankEvery?: number;
-};
+}
 
-export type FenceSpeculator<G> = {
+export interface FenceSpeculator<G> {
   add: (gate: G) => void;
   remove: (gate: G) => void;
   rerank: () => void;
@@ -31,7 +31,7 @@ export type FenceSpeculator<G> = {
     inFlight: boolean;
     inFlightCount: number;
   };
-};
+}
 
 export function createFenceSpeculator<G extends SpeculationGate>(
   options: FenceSpeculatorOptions<G>,
@@ -104,7 +104,7 @@ export function createFenceSpeculator<G extends SpeculationGate>(
     inFlightChars += gate.chars;
     let cancel: (() => void) | null = null;
     try {
-      cancel = gate.speculate((ok) => settle(gate, ok));
+      cancel = gate.speculate((ok) => { settle(gate, ok); });
     } catch {
       settle(gate, false);
       return;

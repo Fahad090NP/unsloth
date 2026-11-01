@@ -77,10 +77,10 @@ export function StopRunningChatsDialog() {
           </ul>
         )}
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => resolve(false)}>
+          <AlertDialogCancel onClick={() => { resolve(false); }}>
             Keep generating
           </AlertDialogCancel>
-          <AlertDialogAction onClick={() => resolve(true)}>
+          <AlertDialogAction onClick={() => { resolve(true); }}>
             {unloads ? "Stop and unload" : "Stop and reload"}
           </AlertDialogAction>
         </AlertDialogFooter>

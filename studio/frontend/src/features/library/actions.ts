@@ -117,7 +117,7 @@ export async function downloadLibraryItems(items: LibraryItem[]): Promise<void> 
     const names = uniqueFileNames(["__proto__", ...files.map((file) => file.name)]).slice(1);
     const entries: Record<string, Uint8Array> = {};
     for (const [index, file] of files.entries()) {
-      entries[names[index]!] = new Uint8Array(await file.arrayBuffer());
+      entries[names[index]] = new Uint8Array(await file.arrayBuffer());
     }
     const archive = zipSync(entries, { level: 0 });
     if (getAuthSessionEpoch() !== epoch) return;
@@ -266,6 +266,6 @@ export async function chatWithModel(
     },
   });
   void navigate({ to: "/chat", search: { new: requestId } }).catch(() =>
-    clearModelConfigHandoff(requestId),
+    { clearModelConfigHandoff(requestId); },
   );
 }

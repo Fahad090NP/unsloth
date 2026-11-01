@@ -95,14 +95,14 @@ test("an older build cannot reach a vision-off record and erase it", () => {
       "would accept this record, drop disableVision, and erase it on its next save",
   );
 
-  const map = JSON.parse(store.get(STORAGE_KEY) as string) as Record<
+  const map = JSON.parse(store.get(STORAGE_KEY)!) as Record<
     string,
     Record<string, unknown>
   >;
   let rewrote = false;
   for (const key of Object.keys(map)) {
     const version =
-      typeof map[key].version === "number" ? (map[key].version as number) : 0;
+      typeof map[key].version === "number" ? (map[key].version) : 0;
     if (version > PRE_VISION_CEILING) continue;
     const { disableVision: _dropped, ...known } = map[key];
     map[key] = known;

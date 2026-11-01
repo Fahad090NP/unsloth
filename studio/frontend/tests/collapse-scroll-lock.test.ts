@@ -14,7 +14,7 @@ import { readSrc } from "./helpers/kit.ts";
 
 class FakeContainer extends EventTarget {
   scrollTop = 1000;
-  writes: Array<{ top: number; behavior: string }> = [];
+  writes: { top: number; behavior: string }[] = [];
 
   scrollTo(options: { top: number; behavior: "instant" }): void {
     this.writes.push(options);

@@ -58,7 +58,7 @@ export function MethodPicker({
                       <button
                         type="button"
                         className="shrink-0 text-foreground/50 hover:text-foreground cursor-help"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.stopPropagation(); }}
                         aria-label={`${m.title} info`}
                       >
                         <HugeiconsIcon

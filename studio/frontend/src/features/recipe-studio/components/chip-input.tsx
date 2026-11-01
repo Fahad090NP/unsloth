@@ -15,13 +15,13 @@ import {
   useState,
 } from "react";
 
-type ChipInputProps = {
+interface ChipInputProps {
   values: string[];
   onAdd: (value: string) => void;
   onRemove: (index: number) => void;
   placeholder?: string;
   suggestions?: string[];
-};
+}
 
 export function ChipInput({
   values,
@@ -52,7 +52,7 @@ export function ChipInput({
     syncWrapped();
     const observer = new ResizeObserver(syncWrapped);
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [values.length, draft, uiSpaceScale]);
 
   function addValue(rawValue: string, allowAny: boolean): void {
@@ -100,7 +100,7 @@ export function ChipInput({
             variant="ghost"
             size="icon-xs"
             className="-ml-1 opacity-50 hover:opacity-100"
-            onClick={() => onRemove(index)}
+            onClick={() => { onRemove(index); }}
           >
             <HugeiconsIcon
               icon={Cancel01Icon}
@@ -115,8 +115,8 @@ export function ChipInput({
         placeholder={values.length === 0 ? placeholder : ""}
         value={draft}
         list={suggestions && suggestions.length > 0 ? listId : undefined}
-        onChange={(event) => handleChange(event.target.value)}
-        onBlur={() => addValue(draft, false)}
+        onChange={(event) => { handleChange(event.target.value); }}
+        onBlur={() => { addValue(draft, false); }}
         onKeyDown={handleKeyDown}
       />
       {suggestions && suggestions.length > 0 && (

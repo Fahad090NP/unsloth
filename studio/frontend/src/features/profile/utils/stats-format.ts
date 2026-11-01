@@ -342,7 +342,7 @@ export function formatProfileCount(
 
   const category = cachedPluralRules(locale).select(
     finiteValue,
-  ) as PluralCategory;
+  );
   const templates: CountTemplate = PROFILE_COUNT_TEMPLATES[locale][unit];
   const template = templates[category] ?? templates.other;
   const formattedValue =
@@ -395,7 +395,7 @@ export function heatLevel(
   return 1;
 }
 
-export type ActivityCell<Day> = { key: string; day: Day | null; value: number };
+export interface ActivityCell<Day> { key: string; day: Day | null; value: number }
 
 /** The latest `columns` Monday-started weeks; days after today stay `null`. */
 export function buildActivityColumns<Day extends { date: string }>(
@@ -440,9 +440,9 @@ function mondayIndex(dayKey: string): number {
 
 /** One label per shown 1st; a leading partial month yields to it, never the reverse (lost Jan). */
 export function monthLabelColumns(
-  grid: ReadonlyArray<ReadonlyArray<{ day: { date: string } | null }>>,
-): Array<{ column: number; date: string }> {
-  const labels: Array<{ column: number; date: string }> = [];
+  grid: readonly (readonly { day: { date: string } | null }[])[],
+): { column: number; date: string }[] {
+  const labels: { column: number; date: string }[] = [];
   for (const [column, week] of grid.entries()) {
     const first = week.find((cell) => cell.day?.date.endsWith("-01"))?.day;
     if (first) labels.push({ column, date: first.date });
@@ -483,9 +483,9 @@ export function windowBaseline(
   return values[start - 1] ?? 0;
 }
 
-export type ActivityGridCell = {
+export interface ActivityGridCell {
   day: { tokens: number } | null;
-};
+}
 
 export type ActivityGridColumn = ActivityGridCell[];
 
@@ -510,7 +510,7 @@ export function activitySummaryForMode(
   );
 }
 
-export type WeekChartPoint = { week: string; tokens: number };
+export interface WeekChartPoint { week: string; tokens: number }
 
 /**
  * One chart point per visible week, keyed by its first shown day. Weekly
@@ -518,7 +518,7 @@ export type WeekChartPoint = { week: string; tokens: number };
  * the week's largest value is its total or its end-of-week running total.
  */
 export function weekChartPoints(
-  grid: Array<Array<{ day: { date: string } | null; value: number }>>,
+  grid: { day: { date: string } | null; value: number }[][],
 ): WeekChartPoint[] {
   const points: WeekChartPoint[] = [];
   for (const column of grid) {
@@ -539,7 +539,7 @@ export function weekChartPoints(
 }
 
 export function seriesForMode(
-  daily: Array<{ date: string; tokens: number }>,
+  daily: { date: string; tokens: number }[],
   mode: ActivityMode,
 ): number[] {
   if (mode === "daily") return daily.map((day) => day.tokens);

@@ -94,7 +94,7 @@ export interface SidebarDropPlace {
 }
 
 export interface SidebarDropEffects {
-  orders: Array<{ scope: string; ids: string[]; place?: SidebarDropPlace }>;
+  orders: { scope: string; ids: string[]; place?: SidebarDropPlace }[];
   pinChat?: string;
   unpinChat?: string;
   pinProject?: string;

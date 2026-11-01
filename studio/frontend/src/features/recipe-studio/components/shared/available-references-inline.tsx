@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { type ReactElement, useLayoutEffect, useRef, useState } from "react";
 import type { AvailableVariableEntry } from "../../utils/variables";
 
-type AvailableReferencesInlineProps = {
+interface AvailableReferencesInlineProps {
   entries: AvailableVariableEntry[];
-};
+}
 
 const MAX_ROWS = 2;
 
@@ -17,7 +17,7 @@ export function AvailableReferencesInline({
   const [expanded, setExpanded] = useState(false);
   const [collapsedCount, setCollapsedCount] = useState(entries.length);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const measureRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const measureRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
   useLayoutEffect(() => {
     if (expanded) {
@@ -54,7 +54,7 @@ export function AvailableReferencesInline({
     compute();
     const observer = new ResizeObserver(compute);
     observer.observe(wrapper);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [entries.length, expanded]);
 
   if (entries.length === 0) {
@@ -111,7 +111,7 @@ export function AvailableReferencesInline({
             <button
               type="button"
               className="corner-squircle h-4 px-1.5 text-ui-10 text-muted-foreground hover:text-foreground"
-              onClick={() => setExpanded(true)}
+              onClick={() => { setExpanded(true); }}
             >
               +{hiddenCount} more
             </button>
@@ -120,7 +120,7 @@ export function AvailableReferencesInline({
             <button
               type="button"
               className="corner-squircle h-4 px-1.5 text-ui-10 text-muted-foreground hover:text-foreground"
-              onClick={() => setExpanded(false)}
+              onClick={() => { setExpanded(false); }}
             >
               Show less
             </button>

@@ -3,13 +3,13 @@
 
 // Plain module so the node test suite can import it without the chat runtime.
 
-export type KnownContextWindowInput = {
+export interface KnownContextWindowInput {
   loadedContextLength: number | null;
   // A load in flight still carries the outgoing model's window.
   modelLoading: boolean;
   isExternalModel: boolean;
   residentCheckpoint: string | null | undefined;
-};
+}
 
 export function hasKnownContextWindow({
   loadedContextLength,

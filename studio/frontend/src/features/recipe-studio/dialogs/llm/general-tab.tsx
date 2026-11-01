@@ -64,14 +64,14 @@ function normalizeTraceMode(value: string): LlmConfig["with_trace"] {
   return "none";
 }
 
-type LlmGeneralTabProps = {
+interface LlmGeneralTabProps {
   config: LlmConfig;
   modelConfigAliases: string[];
   modelProviderOptions: string[];
   toolProfileAliases: string[];
   modelAliasAnchorRef: RefObject<HTMLDivElement | null>;
   onUpdate: (patch: Partial<LlmConfig>) => void;
-};
+}
 
 export function LlmGeneralTab({
   config,
@@ -176,7 +176,7 @@ export function LlmGeneralTab({
     <div className="space-y-4">
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       {needsSetupHelp ? (
         <div className="rounded-lg border border-border/60 bg-muted/10 px-4 py-3 text-xs text-muted-foreground">
@@ -227,7 +227,7 @@ export function LlmGeneralTab({
             filteredItems={modelConfigAliases}
             filter={null}
             value={config.model_alias || null}
-            onValueChange={(value) => onUpdate({ model_alias: value ?? "" })}
+            onValueChange={(value) => { onUpdate({ model_alias: value ?? "" }); }}
             itemToStringValue={(value) => value}
             autoHighlight={true}
           >
@@ -274,7 +274,7 @@ export function LlmGeneralTab({
               filteredItems={toolProfileAliases}
               filter={null}
               value={config.tool_alias || null}
-              onValueChange={(value) => onUpdate({ tool_alias: value ?? "" })}
+              onValueChange={(value) => { onUpdate({ tool_alias: value ?? "" }); }}
               itemToStringValue={(value) => value}
               autoHighlight={true}
             >
@@ -312,7 +312,7 @@ export function LlmGeneralTab({
           />
           <Select
             value={config.code_lang ?? "python"}
-            onValueChange={(value) => onUpdate({ code_lang: value })}
+            onValueChange={(value) => { onUpdate({ code_lang: value }); }}
           >
             <SelectTrigger className="nodrag w-full" id={codeLangId}>
               <SelectValue placeholder="Select language" />
@@ -338,7 +338,7 @@ export function LlmGeneralTab({
           className="corner-squircle nodrag max-h-[calc(450px*var(--ui-space-scale,1))] overflow-auto"
           aria-invalid={invalidPromptRefs.length > 0}
           value={config.prompt}
-          onChange={(event) => onUpdate({ prompt: event.target.value })}
+          onChange={(event) => { onUpdate({ prompt: event.target.value }); }}
         />
         {invalidPromptRefs.length > 0 && (
           <p className="text-xs text-destructive">
@@ -386,13 +386,13 @@ export function LlmGeneralTab({
               <Select
                 value={imageContext.column_name || undefined}
                 onValueChange={(value) =>
-                  onUpdate({
+                  { onUpdate({
                     image_context: {
                       ...imageContext,
                       // biome-ignore lint/style/useNamingConvention: api schema
                       column_name: value,
                     },
-                  })
+                  }); }
                 }
               >
                 <SelectTrigger
@@ -425,14 +425,14 @@ export function LlmGeneralTab({
             className="corner-squircle nodrag"
             value={config.output_format ?? ""}
             onChange={(event) =>
-              onUpdate({ output_format: event.target.value })
+              { onUpdate({ output_format: event.target.value }); }
             }
           />
         </div>
       )}
       <Collapsible
         open={advancedOpen}
-        onOpenChange={(open) => onUpdate({ advancedOpen: open })}
+        onOpenChange={(open) => { onUpdate({ advancedOpen: open }); }}
       >
         <CollapsibleTrigger asChild={true}>
           <CollapsibleSectionTriggerButton
@@ -453,7 +453,7 @@ export function LlmGeneralTab({
               aria-invalid={invalidSystemRefs.length > 0}
               value={config.system_prompt}
               onChange={(event) =>
-                onUpdate({ system_prompt: event.target.value })
+                { onUpdate({ system_prompt: event.target.value }); }
               }
             />
             {invalidSystemRefs.length > 0 && (
@@ -474,10 +474,10 @@ export function LlmGeneralTab({
             <Select
               value={config.with_trace ?? "none"}
               onValueChange={(value) =>
-                onUpdate({
+                { onUpdate({
                   // biome-ignore lint/style/useNamingConvention: api schema
                   with_trace: normalizeTraceMode(value),
-                })
+                }); }
               }
             >
               <SelectTrigger className="nodrag w-full" id={traceModeId}>
@@ -502,10 +502,10 @@ export function LlmGeneralTab({
               id={reasoningToggleId}
               checked={config.extract_reasoning_content === true}
               onCheckedChange={(checked) =>
-                onUpdate({
+                { onUpdate({
                   // biome-ignore lint/style/useNamingConvention: api schema
                   extract_reasoning_content: checked,
-                })
+                }); }
               }
             />
           </div>

@@ -367,7 +367,7 @@ export function useTauriBackend() {
           return;
         case "not_installed":
           setBackendStatus("not-installed");
-          return;
+          
       }
     } catch (e) {
       setBackendError(String(e));
@@ -814,12 +814,12 @@ export function useTauriBackend() {
     const authFailure = getTauriAuthFailure();
     if (authFailure) setAuthFailure(authFailure);
     cleanup.push(() =>
-      window.removeEventListener("tauri-auth-failed", onAuthFailed),
+      { window.removeEventListener("tauri-auth-failed", onAuthFailed); },
     );
 
     return () => {
       disposed = true;
-      cleanup.forEach((fn) => fn());
+      cleanup.forEach((fn) => { fn(); });
       stopExternalServerPoll();
       stopManagedEnvironmentWait();
     };

@@ -25,5 +25,5 @@ export async function consumeNativePathToken(
   if (!handler) {
     throw new Error("consumeNativePathToken: no native shell in tests");
   }
-  return handler(token, operation);
+  return await handler(token, operation);
 }

@@ -5,23 +5,23 @@ import { authFetch } from "@/features/auth";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
 /** Dense: every day in range is present. */
-export type ProfileStatsDay = {
+export interface ProfileStatsDay {
   date: string;
   tokens: number;
   messages: number;
   chats: number;
   /** Absent from older backends. */
   apiRequests?: number;
-};
+}
 
-export type ProfileStatsModel = {
+export interface ProfileStatsModel {
   id: string;
   label: string;
   messages: number;
   tokens: number;
-};
+}
 
-export type ProfileStatsRun = {
+export interface ProfileStatsRun {
   id: string;
   name: string;
   modelLabel: string;
@@ -31,9 +31,9 @@ export type ProfileStatsRun = {
   steps: number;
   seconds: number;
   startedAt: string | null;
-};
+}
 
-export type ProfileStats = {
+export interface ProfileStats {
   generatedAt: number;
   days: number;
   totals: {
@@ -89,7 +89,7 @@ export type ProfileStats = {
     bestLoss: number | null;
     recent: ProfileStatsRun[];
   };
-};
+}
 
 // Bucket days and hours in this browser's timezone, which is not the server's
 // when Unsloth is reached over the network. The IANA name is what gives each

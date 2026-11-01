@@ -118,7 +118,7 @@ export function SegmentedControl<T extends string>({
               value={option.value}
               checked={active}
               disabled={option.disabled}
-              onChange={() => onValueChange(option.value)}
+              onChange={() => { onValueChange(option.value); }}
               className="peer sr-only"
             />
             <span

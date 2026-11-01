@@ -15,7 +15,7 @@ function typeLabel(name: string, contentType: string | undefined): string | null
 export function attachmentViewerMeta(
   source: { name: string; contentType: string | undefined },
   bytes: number | null | undefined,
-  ...extra: Array<string | null | false | undefined>
+  ...extra: (string | null | false | undefined)[]
 ): string {
   return [typeLabel(source.name, source.contentType), bytes ? formatBytes(bytes) : null, ...extra]
     .filter(Boolean)

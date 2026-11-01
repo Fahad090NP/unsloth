@@ -14,10 +14,10 @@ const { useForkBoundaryStore, setForkBoundary, forkBoundaryAnchor } =
   await import("../src/features/chat/stores/fork-boundary-store.ts");
 
 const reset = () =>
-  useForkBoundaryStore.setState(
+  { useForkBoundaryStore.setState(
     { boundaryByThreadId: {}, anchorByThreadId: {} },
     false,
-  );
+  ); };
 
 const ids = (threadId: string) => [
   ...(useForkBoundaryStore.getState().boundaryByThreadId[threadId]?.messageIds ??
@@ -27,7 +27,7 @@ const ids = (threadId: string) => [
 test("a thread with no boundary published has none", () => {
   reset();
   assert.equal(
-    useForkBoundaryStore.getState().boundaryByThreadId["missing"],
+    useForkBoundaryStore.getState().boundaryByThreadId.missing,
     undefined,
   );
 });
@@ -47,7 +47,7 @@ test("an omitted source leaves the divider without a link", () => {
   reset();
   setForkBoundary("t", ["msg-1"]);
   assert.equal(
-    useForkBoundaryStore.getState().boundaryByThreadId["t"].sourceThreadId,
+    useForkBoundaryStore.getState().boundaryByThreadId.t.sourceThreadId,
     null,
   );
 });
@@ -56,17 +56,17 @@ test("an empty set clears the entry, so a chat with nothing inherited shows no d
   reset();
   setForkBoundary("t", ["msg-1"]);
   setForkBoundary("t", []);
-  assert.equal(useForkBoundaryStore.getState().boundaryByThreadId["t"], undefined);
+  assert.equal(useForkBoundaryStore.getState().boundaryByThreadId.t, undefined);
 });
 
 test("null and undefined clear the entry, so a plain chat shows no divider", () => {
   reset();
   setForkBoundary("t", ["msg-1"]);
   setForkBoundary("t", null);
-  assert.equal(useForkBoundaryStore.getState().boundaryByThreadId["t"], undefined);
+  assert.equal(useForkBoundaryStore.getState().boundaryByThreadId.t, undefined);
   setForkBoundary("t", ["msg-1"]);
   setForkBoundary("t", undefined);
-  assert.equal(useForkBoundaryStore.getState().boundaryByThreadId["t"], undefined);
+  assert.equal(useForkBoundaryStore.getState().boundaryByThreadId.t, undefined);
 });
 
 test("republishing the same boundary keeps the identity, so rows do not re-render", () => {

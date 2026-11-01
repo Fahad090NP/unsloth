@@ -18,16 +18,16 @@ function lift(pattern: RegExp, what: string): string {
 }
 
 const body = lift(
-  /const retry = useCallback\(\(\) => \{[\s\S]*?\n  \}, \[\]\);/,
+  /const retry = useCallback\(\(\) => \{[\s\S]*?\n {2}\}, \[\]\);/,
   "the retry callback",
 );
 
-type Run = {
+interface Run {
   repairs: boolean[];
   preflights: number;
   forcedAfter: boolean;
   heldRepairAllowed: boolean;
-};
+}
 
 function runRetry(status: string, forced: boolean): Run {
   const repairs: boolean[] = [];
@@ -67,7 +67,7 @@ function runRetry(status: string, forced: boolean): Run {
   const keys = Object.keys(scope);
   new Function(
     ...keys,
-    `${body.replace(/^const retry = /, "return ")}`.replace(/;\s*$/, ";"),
+    body.replace(/^const retry = /, "return ").replace(/;\s*$/, ";"),
   )(...keys.map((key) => (scope as Record<string, unknown>)[key]))();
   return {
     repairs,

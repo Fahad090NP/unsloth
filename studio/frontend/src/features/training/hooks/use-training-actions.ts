@@ -29,7 +29,7 @@ export function useTrainingActions() {
   const startError = useTrainingRuntimeStore((state) => state.startError);
 
   const startTrainingRun = useCallback(
-    async (): Promise<boolean> => startFreshTrainingRun(),
+    async (): Promise<boolean> => await startFreshTrainingRun(),
     [],
   );
 
@@ -100,7 +100,7 @@ export function useTrainingActions() {
   );
 
   const resumeTrainingRunFromHistory = useCallback(
-    async (runId: string): Promise<boolean> => resumeTrainingRun(runId),
+    async (runId: string): Promise<boolean> => await resumeTrainingRun(runId),
     [],
   );
 

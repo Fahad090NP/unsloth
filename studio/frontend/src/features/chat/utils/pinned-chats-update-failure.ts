@@ -9,7 +9,7 @@ import { PinnedChatsBlockedError } from "./pinned-chats-sync.ts";
 import { isAbortOrTimeout } from "./settings-retry.ts";
 
 // Judged when the request fails: the queue reports after a recovery read, by when the flag may be gone.
-const failedUnderUpdate = new WeakSet<object>();
+const failedUnderUpdate = new WeakSet();
 
 function unreachable(error: unknown, down: boolean): boolean {
   return (

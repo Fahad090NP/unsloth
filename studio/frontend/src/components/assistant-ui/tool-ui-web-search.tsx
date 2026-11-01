@@ -75,9 +75,9 @@ function parseSearchResults(raw: string): ParsedSource[] {
   const blocks = raw.split(RE_BLOCK_SEP).filter(Boolean);
   const sources: ParsedSource[] = [];
   for (const block of blocks) {
-    const titleMatch = block.match(RE_TITLE);
-    const urlMatch = block.match(RE_URL);
-    const snippetMatch = block.match(RE_SNIPPET);
+    const titleMatch = RE_TITLE.exec(block);
+    const urlMatch = RE_URL.exec(block);
+    const snippetMatch = RE_SNIPPET.exec(block);
     if (!titleMatch || !urlMatch) continue;
     const url = urlMatch[1].trim();
     if (!isSafeHttpUrl(url)) continue;
@@ -105,8 +105,8 @@ const WebSearchToolUIImpl: ToolCallMessagePartComponent = ({
     (args as { action_type?: unknown })?.action_type,
   );
   const isFindInPage =
-    actionType === "find_in_page" || (!!url && !!pattern.trim());
-  const isUrlFetch = !!url && !isFindInPage;
+    actionType === "find_in_page" || (Boolean(url) && Boolean(pattern.trim()));
+  const isUrlFetch = Boolean(url) && !isFindInPage;
   const rawImageQueries = (args as { image_queries?: unknown })?.image_queries;
   const imageQueries = Array.isArray(rawImageQueries)
     ? rawImageQueries

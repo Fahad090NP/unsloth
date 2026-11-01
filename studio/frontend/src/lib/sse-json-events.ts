@@ -29,7 +29,7 @@ function readWithStall(
 ): Promise<ReadableStreamReadResult<Uint8Array>> {
   if (stallMs === undefined) return reader.read();
   const stall = setTimeout(onStall, stallMs);
-  return reader.read().finally(() => clearTimeout(stall));
+  return reader.read().finally(() => { clearTimeout(stall); });
 }
 
 /** `stallMs` abandons silent streams (proxies like Cloudflare can buffer SSE); ends without throwing. */

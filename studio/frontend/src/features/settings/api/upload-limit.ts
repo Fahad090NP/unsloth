@@ -9,7 +9,7 @@ export const DEFAULT_UPLOAD_LIMIT_BYTES = DEFAULT_UPLOAD_LIMIT_MB * 1024 * 1024;
 
 const UPLOAD_LIMIT_EVENT = "unsloth-upload-limit-change";
 
-export type UploadLimitSettings = {
+export interface UploadLimitSettings {
   maxUploadSizeMb: number;
   maxUploadSizeBytes: number;
   maxUploadSizeLabel: string;
@@ -18,9 +18,9 @@ export type UploadLimitSettings = {
   maxAllowedUploadSizeMb: number;
   /** The Audio page upload cap; null means none, undefined an older backend. */
   audioInputMaxBytes?: number | null;
-};
+}
 
-type ApiUploadLimitSettings = {
+interface ApiUploadLimitSettings {
   // biome-ignore lint/style/useNamingConvention: API schema
   max_upload_size_mb: number;
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -35,7 +35,7 @@ type ApiUploadLimitSettings = {
   max_allowed_upload_size_mb: number;
   // biome-ignore lint/style/useNamingConvention: API schema
   audio_input_max_bytes?: number | null;
-};
+}
 
 let cachedUploadLimit: UploadLimitSettings | null = null;
 let inFlightUploadLimit: Promise<UploadLimitSettings> | null = null;
@@ -61,7 +61,7 @@ export function subscribeUploadLimitSettings(
     listener((event as CustomEvent<UploadLimitSettings>).detail);
   };
   window.addEventListener(UPLOAD_LIMIT_EVENT, handleChange);
-  return () => window.removeEventListener(UPLOAD_LIMIT_EVENT, handleChange);
+  return () => { window.removeEventListener(UPLOAD_LIMIT_EVENT, handleChange); };
 }
 
 function fromApi(settings: ApiUploadLimitSettings): UploadLimitSettings {
@@ -102,7 +102,7 @@ export async function loadUploadLimitSettings({ force = false } = {}) {
     .finally(() => {
       inFlightUploadLimit = null;
     });
-  return inFlightUploadLimit;
+  return await inFlightUploadLimit;
 }
 
 export async function updateUploadLimitSettings(

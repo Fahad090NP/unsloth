@@ -144,7 +144,7 @@ test("every off spelling counts as an honored off request", () => {
     ["none", "off"],
     ["off", null],
     ["", "off"],
-  ] as Array<[string, string | null]>) {
+  ] as [string, string | null][]) {
     assert.equal(
       isResolvedHonored({ value, requested, source: "explicit", reason: "" }),
       true,

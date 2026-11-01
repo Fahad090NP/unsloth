@@ -15,7 +15,7 @@ import { readSrcAsync } from "./helpers/kit.ts";
 
 const PROBE_WIDTH = 60;
 
-type Node = {
+interface Node {
   style: { cssText: string };
   scrollTop: number;
   children: Node[];
@@ -23,7 +23,7 @@ type Node = {
   offsetWidth: number;
   clientWidth: number;
   getBoundingClientRect: () => { top: number; right: number; height: number };
-};
+}
 
 function optsIntoHitTesting(node: Node): boolean {
   return /(^|;)\s*pointer-events\s*:\s*auto\s*(;|$)/.test(node.style.cssText);

@@ -58,7 +58,7 @@ export function MusicSendToMenuItems({ clip }: { clip: AudioGalleryClip }) {
       {actions.map((action) => (
         <DropdownMenuItem
           key={action}
-          onClick={() => sendClipToMusic(clip, action)}
+          onClick={() => { sendClipToMusic(clip, action); }}
         >
           <HugeiconsIcon
             icon={SEND_ICON[action]}

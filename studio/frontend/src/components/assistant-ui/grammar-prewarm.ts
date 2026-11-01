@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type GrammarSample = { language: string; lines: string[] };
+export interface GrammarSample { language: string; lines: string[] }
 
 export type PrewarmHighlight = (
   code: string,
@@ -9,12 +9,12 @@ export type PrewarmHighlight = (
   late: () => void,
 ) => unknown;
 
-export type PrewarmDeps = {
+export interface PrewarmDeps {
   idle: (callback: () => void, timeout: number) => () => void;
   wait: (callback: () => void, ms: number) => () => void;
   quiet: () => boolean;
   skip: (language: string) => boolean;
-};
+}
 
 export const PREWARM_IDLE_TIMEOUT_MS = 2_000;
 export const PREWARM_RETRY_MS = 1_000;
@@ -125,7 +125,7 @@ export const GRAMMAR_SAMPLES: readonly GrammarSample[] = [
   },
 ];
 
-export type GrammarPrewarm = { start: () => void; cancel: () => void };
+export interface GrammarPrewarm { start: () => void; cancel: () => void }
 
 export function createGrammarPrewarm(
   highlight: PrewarmHighlight,

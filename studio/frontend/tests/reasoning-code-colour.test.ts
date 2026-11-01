@@ -16,7 +16,7 @@ const token = (content: string, color = "#111") => ({ content, offset: 0, color 
 
 test("a row that starts mid-line takes only the tokens it shows", () => {
   const line = [token("const "), token("value"), token(" = 1;")];
-  const clipped = clipLineTokens(line as never, 3, "st value");
+  const clipped = clipLineTokens(line, 3, "st value");
   assert.deepEqual(clipped?.map((t) => t.content), ["st ", "value"]);
   assert.equal(clipped?.[1], line[1], "an untouched token keeps its identity");
 });
@@ -60,9 +60,9 @@ test("colours for a shorter source are kept only on the lines they still spell",
 });
 
 test("evicting a settled colour returns exactly what it added", () => {
-  for (let i = 0; i < 200; i += 1) rememberSettledColour("ts", `${i}`.padStart(9_000, "x"), { tokens: [] } as never);
+  for (let i = 0; i < 200; i += 1) rememberSettledColour("ts", `${i}`.padStart(9_000, "x"), { tokens: [] });
   assert.notEqual(cachedSettledColour("ts", "199".padStart(9_000, "x")), null, "the newest entry survives");
   assert.equal(cachedSettledColour("ts", "0".padStart(9_000, "x")), null, "the oldest is gone");
-  rememberSettledColour("ts", "small", { tokens: [] } as never);
+  rememberSettledColour("ts", "small", { tokens: [] });
   assert.notEqual(cachedSettledColour("ts", "small"), null);
 });

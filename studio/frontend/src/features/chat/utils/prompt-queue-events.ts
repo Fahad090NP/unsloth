@@ -6,13 +6,13 @@
 export const PROMPT_QUEUE_STOP_EVENT = "unsloth:prompt-queue-stop";
 export const PROMPT_QUEUE_RUN_FAILED_EVENT = "unsloth:prompt-queue-run-failed";
 
-export type PromptQueueStopEventDetail = {
+export interface PromptQueueStopEventDetail {
   threadIds?: string[];
   temporaryOnly?: boolean;
   localOnly?: boolean;
-};
+}
 
-export type PromptQueueRunFailedEventDetail = {
+export interface PromptQueueRunFailedEventDetail {
   threadId?: string | null;
   localOnly?: boolean;
-};
+}

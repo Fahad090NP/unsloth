@@ -203,7 +203,7 @@ test("the decode-failure allowance survives an undecodable newest result", () =>
   ];
 
   const bounded = boundMcpImageEnvelopes(messages);
-  const kept = bounded.map((m) => splitMcpImages(m.content as string).images);
+  const kept = bounded.map((m) => splitMcpImages(m.content).images);
 
   assert.equal(kept[2].length, 4, "the newest result is kept as candidates");
   assert.equal(kept[1].length, 4, "the middle result keeps its four real pictures");
@@ -232,7 +232,7 @@ test("a replayed history is bounded by bytes, not only by image count", () => {
   }));
 
   const bounded = boundMcpImageEnvelopes(messages);
-  const kept = bounded.flatMap((m) => splitMcpImages(m.content as string).images);
+  const kept = bounded.flatMap((m) => splitMcpImages(m.content).images);
   const chars = kept.reduce((n, image) => n + image.data.length, 0);
 
   assert.ok(
@@ -240,10 +240,10 @@ test("a replayed history is bounded by bytes, not only by image count", () => {
     `${chars} characters uploaded against a budget of ${MAX_TOTAL_MCP_IMAGE_CHARS}`,
   );
   assert.ok(kept.length > 0, "the budget must not starve the newest result");
-  const newest = splitMcpImages(bounded[5].content as string).images;
+  const newest = splitMcpImages(bounded[5].content).images;
   assert.equal(newest.length, 1, "the newest result keeps its picture");
   assert.equal(
-    splitMcpImages(bounded[0].content as string).images.length,
+    splitMcpImages(bounded[0].content).images.length,
     0,
     "the oldest gives its bytes up first",
   );
@@ -283,7 +283,7 @@ test("an oversized replay image is skipped, not the rest of its result", () => {
   ];
 
   const bounded = boundMcpImageEnvelopes(messages);
-  const older = splitMcpImages(bounded[0].content as string).images;
+  const older = splitMcpImages(bounded[0].content).images;
 
   assert.ok(
     !older.some((image) => image.data === oversized),
@@ -291,7 +291,7 @@ test("an oversized replay image is skipped, not the rest of its result", () => {
   );
   assert.equal(older.length, 2, "the two that DO fit must survive it");
   const chars = bounded
-    .flatMap((m) => splitMcpImages(m.content as string).images)
+    .flatMap((m) => splitMcpImages(m.content).images)
     .reduce((n, image) => n + image.data.length, 0);
   assert.ok(chars <= MAX_TOTAL_MCP_IMAGE_CHARS, `${chars} characters uploaded`);
 });
@@ -301,7 +301,7 @@ test("a bounded envelope records how many the tool returned", () => {
   const [bounded] = boundMcpImageEnvelopes([
     { role: "tool", name: "mcp__s__shot", content: "r" + mcpImagesEnvelope(images) },
   ]);
-  const kept = splitMcpImages(bounded.content as string).images;
+  const kept = splitMcpImages(bounded.content).images;
   assert.ok(kept.length < 20, "the bound must actually have cut");
   assert.equal(kept[0].returned, 20, "the original count survives on the first entry");
 });
@@ -497,7 +497,7 @@ test("the planner is the bound the envelope form applies", () => {
   const batches = Array.from({ length: 8 }, (_, n) =>
     rounds
       .slice(n * 5 + 1, n * 5 + 4)
-      .map((m) => splitMcpImages(m.content as string).images),
+      .map((m) => splitMcpImages(m.content).images),
   );
   const viaPlanner = planMcpImageBound(batches, { localMarkers: true })
     .flat()
@@ -509,7 +509,7 @@ test("the planner is the bound the envelope form applies", () => {
 
 test("a message's results are batched by replay exchange, not as one block", () => {
   // Local rounds share one assistant message but serialize as separate exchanges.
-  type P = { round: number | null; flush: boolean };
+  interface P { round: number | null; flush: boolean }
   const parts: P[] = [
     { round: 0, flush: false },
     { round: 0, flush: false },

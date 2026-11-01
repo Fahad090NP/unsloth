@@ -35,7 +35,7 @@ import { type SiteRule, ruleFor } from "./permissions";
 import { type AgentAnswer, type ElementInfo, pageAgentSource } from "./page-agent";
 import { waitForPage } from "./page-wait";
 
-export type BrowserAction = {
+export interface BrowserAction {
   id: string;
   sessionId: string;
   op: string;
@@ -58,12 +58,12 @@ export type BrowserAction = {
   /** How long the server waits for this answer. */
   timeoutS?: number;
   policy: SitePolicy;
-};
+}
 
 /** `scope`: the chat the run belongs to; sites approved in one chat aren't approved in another.
  *  `chat`: its browser chat when that isn't the thread's own (a compare pane's pair).
  *  `temporary`: the run's chat is temporary, so its pages stay out of history whatever chat is shown. */
-export type ActionContext = {
+export interface ActionContext {
   runKey: string;
   scope?: string;
   chat?: string;
@@ -71,11 +71,11 @@ export type ActionContext = {
   userText: string;
   fullAccess?: boolean;
   signal?: AbortSignal;
-};
+}
 
 type Run = ActionContext & { session: Session };
 
-type Result = { ok: boolean; error?: string; url?: string; title?: string; text?: string; note?: string; image?: string };
+interface Result { ok: boolean; error?: string; url?: string; title?: string; text?: string; note?: string; image?: string }
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_QUIET_MS = 350;
@@ -127,7 +127,7 @@ export function parseBrowserAction(value: unknown): BrowserAction | null {
   };
 }
 
-type Session = {
+interface Session {
   chat: string;
   // Sites the user approved or named, where the model may open addresses it made up; every site the
   // agent has been on (a page's link reaches its site, but the page chose it, not the user); and the
@@ -144,7 +144,7 @@ type Session = {
   pointScale: Map<string, ShotView & { scaleX: number; scaleY: number }>;
   queue: Promise<void>;
   alwaysAllowed: Set<string>;
-};
+}
 
 const sessions = new Map<string, Session>();
 const MAX_SESSIONS = 32;
@@ -232,7 +232,7 @@ export function runBrowserAction(action: BrowserAction, actionContext: ActionCon
     // Ends with the chat run, with Stop, or when the server stops waiting: a question still open
     // then must not be answerable, or a late Allow would act for nobody.
     const controller = new AbortController();
-    const abort = () => controller.abort();
+    const abort = () => { controller.abort(); };
     context.signal?.addEventListener("abort", abort, { once: true });
     if (context.signal?.aborted) abort();
     // Out of time is not "the user declined" or "the tab closed", which an abort reads as below.
@@ -442,7 +442,7 @@ function reducedMotion(): boolean {
   const html = document.documentElement.classList;
   if (html.contains("force-reduced-motion")) return true;
   if (html.contains("force-motion")) return false;
-  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
 async function pageCall(tab: BrowserTab, request: Record<string, unknown>): Promise<AgentAnswer> {
@@ -512,7 +512,7 @@ function waitOnPage(
 async function settle(tabId: string, urlBefore: string, since: number, signal?: AbortSignal): Promise<BrowserTab | null> {
   await sleep(120);
   const state = await waitOnPage(tabId, (tab) => tabUrl(tab) !== urlBefore, since, SETTLE_MAX_MS, signal);
-  if (state === "moved" && findTab(tabId)) return waitForLoad(tabId, signal);
+  if (state === "moved" && findTab(tabId)) return await waitForLoad(tabId, signal);
   return findTab(tabId) ?? null;
 }
 
@@ -550,7 +550,7 @@ function notifyOffScreenQuestion(chat: string): void {
     visibleChatItems(useChatNavigationStore.getState()).find((candidate) => candidate.id === id && candidate.type === type) ?? null;
   toast(translate("browser.agent.waiting", { chat: item?.title || translate("browser.agent.otherChat", undefined, getLocale()) }, getLocale()), {
     id: `browser-agent-question:${chat}`,
-    action: item ? { label: translate("browser.agent.show", undefined, getLocale()), onClick: () => openChatItemById(item) } : undefined,
+    action: item ? { label: translate("browser.agent.show", undefined, getLocale()), onClick: () => { openChatItemById(item); } } : undefined,
   });
 }
 
@@ -631,7 +631,7 @@ async function open(url: string, context: Run): Promise<BrowserTab | null> {
     if (agentChat(context.session.chat).tabId !== existing.id) moveRun(context, existing.id);
     store.navigate(existing.id, { url, temporary: context.temporary }, { replace: false });
     showTab(existing, context);
-    return waitForLoad(existing.id, context.signal);
+    return await waitForLoad(existing.id, context.signal);
   }
   // In its own chat's tabs: a chat off screen gets a tab there, and the panel on screen stays put.
   const tabId = store.openTabIn(context.session.chat, url, { temporary: context.temporary });
@@ -641,7 +641,7 @@ async function open(url: string, context: Run): Promise<BrowserTab | null> {
   moveRun(context, tabId);
   const tab = findTab(tabId);
   if (tab) showTab(tab, context);
-  return waitForLoad(tabId, context.signal);
+  return await waitForLoad(tabId, context.signal);
 }
 
 function stepOf(action: BrowserAction): AgentStep {
@@ -771,10 +771,10 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
     const since = Date.now();
     const tab = await open(url, context);
     if (!tab) return { ok: false, error: "the browser tab closed." };
-    return arrive(tab, url, action, context, since);
+    return await arrive(tab, url, action, context, since);
   }
 
-  if (action.op === "history") return readHistory(action, context);
+  if (action.op === "history") return await readHistory(action, context);
   if (action.op === "evaluate" && useBrowserAgentStore.getState().scriptAccess === "never") {
     return { ok: false, error: SCRIPTS_OFF };
   }
@@ -810,7 +810,7 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
       if (sendFrameCommand(tab.id, { command: "go", delta: action.op === "back" ? -1 : 1 })) {
         const after = await settle(tab.id, before, since, signal);
         if (!after) return { ok: false, error: "the browser tab closed." };
-        return arrive(after, before, action, context, since);
+        return await arrive(after, before, action, context, since);
       }
     }
     if (action.op !== "reload" && !nativeMove && !entry) {
@@ -818,7 +818,7 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
       if (!ready) return { ok: false, error: "the browser tab closed." };
       const refused = await stillAllowed(ready, action, context);
       if (refused) return { ok: false, error: refused };
-      return observe(ready, context, `There is no ${action.op === "back" ? "previous" : "next"} page in this tab's history; this is still the same page.`);
+      return await observe(ready, context, `There is no ${action.op === "back" ? "previous" : "next"} page in this tab's history; this is still the same page.`);
     }
     if (destination) {
       const blocked = navigationBlocks(destination, action.policy, permissions(context));
@@ -840,13 +840,13 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
     const since = Date.now();
     // A native move starts when the view reports it; loading from now, so the wait below sees it.
     if ((nativeMove || (native && action.op === "reload")) && hasNativeView(tab.id)) store.updateTab(tab.id, { loading: true });
-    if (nativeMove) nativeAction(tab.id, action.op as "back" | "forward");
+    if (nativeMove) nativeAction(tab.id, action.op);
     else if (native && action.op === "reload") nativeAction(tab.id, "reload");
     else if (action.op === "back") store.goBack(tab.id);
     else if (action.op === "forward") store.goForward(tab.id);
     else store.reload(tab.id);
     const loaded = await waitForLoad(tab.id, signal);
-    return loaded ? arrive(loaded, before, action, context, since) : { ok: false, error: "the browser tab closed." };
+    return loaded ? await arrive(loaded, before, action, context, since) : { ok: false, error: "the browser tab closed." };
   }
 
   const ready = tab.loading ? await waitForLoad(tab.id, signal) : tab;
@@ -857,9 +857,9 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
 
   switch (action.op) {
     case "snapshot":
-      return observe(ready, context, undefined, { op: "snapshot", fullPage: action.fullPage, ...(action.ref ? { ref: action.ref } : {}) });
+      return await observe(ready, context, undefined, { op: "snapshot", fullPage: action.fullPage, ...(action.ref ? { ref: action.ref } : {}) });
     case "find":
-      return observe(ready, context, undefined, { op: "find", query: action.query ?? "" });
+      return await observe(ready, context, undefined, { op: "find", query: action.query ?? "" });
     case "scroll": {
       const since = Date.now();
       const moved = await pageCall(ready, { op: "scroll", direction: action.direction, ...(action.ref ? { ref: action.ref } : {}) });
@@ -868,17 +868,17 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
       if (!after) return { ok: false, error: "the browser tab closed." };
       // A page can navigate on scroll: the new address is checked like any other arrival.
       const now = tabUrl(after);
-      if (now && now !== here) return arrive(after, here, action, context, since, moved.note);
-      return observe(after, context, moved.note);
+      if (now && now !== here) return await arrive(after, here, action, context, since, moved.note);
+      return await observe(after, context, moved.note);
     }
     case "screenshot":
-      return screenshot(ready, context);
+      return await screenshot(ready, context);
     case "move":
-      return moveTo(ready, action, context, here);
+      return await moveTo(ready, action, context, here);
     case "drag":
-      return dragBetween(ready, action, context, here);
+      return await dragBetween(ready, action, context, here);
     case "evaluate":
-      return runScript(ready, action, context, here);
+      return await runScript(ready, action, context, here);
   }
 
   // Acting on an element: what it is decides whether the user is asked first.
@@ -961,7 +961,7 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
   }
   if (formGate) admit(formAction, formGate, context);
   if (linkGate) admit(linkEnd, linkGate, context);
-  wrappers.forEach((url, index) => admit(url, wrapperGates[index], context));
+  wrappers.forEach((url, index) => { admit(url, wrapperGates[index], context); });
 
   // Before the action goes out, after any question: a request its handler starts at once is the action's too.
   const since = Date.now();
@@ -992,7 +992,7 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
       // Straight to the landing page that was gated: the store unwraps only one redirect hop.
       useBrowserStore.getState().navigate(ready.id, { url: end, from: here, temporary: context.temporary }, { replace: false });
       const loaded = await waitForLoad(ready.id, signal);
-      return loaded ? arrive(loaded, end, action, context, sent) : { ok: false, error: "the browser tab closed." };
+      return loaded ? await arrive(loaded, end, action, context, sent) : { ok: false, error: "the browser tab closed." };
     }
     note = clicked.note;
   } else if (action.op === "type") {
@@ -1013,8 +1013,8 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
   const after = await settle(ready.id, here, since, signal);
   if (!after) return { ok: false, error: "the browser tab closed." };
   const now = tabUrl(after);
-  if (now && now !== here) return arrive(after, here, action, context, since, note);
-  return observe(after, context, note);
+  if (now && now !== here) return await arrive(after, here, action, context, since, note);
+  return await observe(after, context, note);
 }
 
 /** `since`: when the action went out, so the wait covers the requests it started. */
@@ -1029,12 +1029,12 @@ async function afterward(
   const after = await settle(tab.id, before, since, context.signal);
   if (!after) return { ok: false, error: "the browser tab closed." };
   const now = tabUrl(after);
-  if (now && now !== before) return arrive(after, before, action, context, since, note);
-  return observe(after, context, note);
+  if (now && now !== before) return await arrive(after, before, action, context, since, note);
+  return await observe(after, context, note);
 }
 
 // CSS px per screenshot px, per tab; only valid for the page and viewport it was taken of.
-type ShotView = {
+interface ShotView {
   url: string;
   width?: number;
   height?: number;
@@ -1042,7 +1042,7 @@ type ShotView = {
   scrollY?: number;
   scrolls?: number;
   doc?: string;
-};
+}
 const MAX_SHOT_EDGE = 1024;
 const LINK_PRESS_MS = 350;
 
@@ -1081,7 +1081,7 @@ async function moveTo(tab: BrowserTab, action: BrowserAction, context: Run, befo
   const since = Date.now();
   const moved = await pageCall(tab, { op: "pointer", phase: "move", ...at });
   if (!moved.ok) return { ok: false, error: moved.error };
-  return afterward(tab, before, action, context, since, moved.note);
+  return await afterward(tab, before, action, context, since, moved.note);
 }
 
 const DRAG_STEP_PX = 20;
@@ -1152,31 +1152,31 @@ async function dragBetween(tab: BrowserTab, action: BrowserAction, context: Run,
   const left = async (current?: string): Promise<Result> => {
     const error = "the page changed during the drag, so it was not finished; take a snapshot.";
     const now = current ?? (await pageCall(tab, { op: "status" }).catch(() => null))?.doc;
-    return doc && now === doc ? cancel(error) : { ok: false, error };
+    return doc && now === doc ? await cancel(error) : { ok: false, error };
   };
-  if (signal?.aborted) return cancel(STOPPED);
-  if (!doc || !sameTab()) return left();
+  if (signal?.aborted) return await cancel(STOPPED);
+  if (!doc || !sameTab()) return await left();
   // Drop zones can appear or relabel once a drag starts: re-ask unless the end is unchanged. Its doc
   // says whether this is still the document the drag began on.
   const target = await pageCall(tab, { op: "describe", ref: "", ...end }).catch(() => null);
-  if (target?.doc !== doc) return left(target?.doc);
-  if (at.x !== end.x || at.y !== end.y) return cancel("the drag stopped short; take a snapshot to see where things are.");
-  if (!target?.ok || !target.info) return cancel(target?.error ?? "nothing is at the drag's end.");
+  if (target?.doc !== doc) return await left(target?.doc);
+  if (at.x !== end.x || at.y !== end.y) return await cancel("the drag stopped short; take a snapshot to see where things are.");
+  if (!target?.ok || !target.info) return await cancel(target?.error ?? "nothing is at the drag's end.");
   if (target.hit !== hits[1] || JSON.stringify(target.info) !== infos[1]) {
     for (const gate of [gateElement("click", target.info, before, action.policy, permissions(context)), opaqueGate(target.info, before, context)]) {
       if (!gate) continue;
       const refused = await pass(gate, context);
-      if (refused) return cancel(refused);
+      if (refused) return await cancel(refused);
       if (gate.kind === "ask" && gate.ask === "pointer") context.session.opaqueHosts.add(gate.host);
     }
     const again = await pageCall(tab, { op: "describe", ref: "", ...end }).catch(() => null);
-    if (!sameTab() || again?.doc !== doc) return left(again?.doc);
-    if (!again?.ok || again.hit !== target.hit || JSON.stringify(again.info) !== JSON.stringify(target.info)) return cancel(CHANGED_UNDER_POINT);
+    if (!sameTab() || again?.doc !== doc) return await left(again?.doc);
+    if (!again?.ok || again.hit !== target.hit || JSON.stringify(again.info) !== JSON.stringify(target.info)) return await cancel(CHANGED_UNDER_POINT);
   }
-  if (signal?.aborted) return cancel(STOPPED);
+  if (signal?.aborted) return await cancel(STOPPED);
   const up = await pageCall(tab, { op: "pointer", phase: "up", ...end, expect: target.hit ?? "", sig: target.sig ?? "" });
-  if (!up.ok) return cancel(up.error ?? CHANGED_UNDER_POINT);
-  return afterward(tab, before, action, context, since, up.note);
+  if (!up.ok) return await cancel(up.error ?? CHANGED_UNDER_POINT);
+  return await afterward(tab, before, action, context, since, up.note);
 }
 
 /** An unlabelled point (a canvas) may be a Buy button nothing can read: ask once per site per chat. */
@@ -1253,7 +1253,7 @@ async function runScript(tab: BrowserTab, action: BrowserAction, context: Run, b
   const after = await settle(tab.id, before, since, signal);
   if (!after) return { ok: false, error: "the browser tab closed." };
   const now = tabUrl(after);
-  if (now && now !== before) return arrive(after, before, action, context, since, outcome.slice(0, 900));
+  if (now && now !== before) return await arrive(after, before, action, context, since, outcome.slice(0, 900));
   return { ok: true, url: now, title: after.customTitle ?? after.title, text: outcome };
 }
 
@@ -1281,7 +1281,7 @@ async function arrive(
     if (host && context.fullAccess !== true) context.session.reachedHosts.add(host);
     record(context.session, action.op, url);
   }
-  return observeLoaded(tab, context, since, note);
+  return await observeLoaded(tab, context, since, note);
 }
 
 /** The page the tab shows now, before the model reads or acts on it: the page may have moved on
@@ -1315,7 +1315,7 @@ async function observeLoaded(tab: BrowserTab, context: Run, since: number, note?
   }
   // Read at the address its router (same site, shell-checked) moved to while it filled in.
   const fresh = findTab(tab.id);
-  return observe(fresh && !fresh.loading && currentEntry(fresh) === entry ? fresh : tab, context, note);
+  return await observe(fresh && !fresh.loading && currentEntry(fresh) === entry ? fresh : tab, context, note);
 }
 
 async function screenshot(tab: BrowserTab, context: Run): Promise<Result> {
@@ -1344,8 +1344,8 @@ async function screenshot(tab: BrowserTab, context: Run): Promise<Result> {
   blob = await toPointScale(tab, context.session, blob, masked);
   const image = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
+    reader.onload = () => { resolve(String(reader.result)); };
+    reader.onerror = () => { reject(reader.error); };
     reader.readAsDataURL(blob);
   });
   return { ok: true, url: tabUrl(tab), title: tab.title, image };
@@ -1380,7 +1380,7 @@ async function toPointScale(tab: BrowserTab, session: Session, blob: Blob, size:
     canvas.width = width;
     canvas.height = height;
     canvas.getContext("2d")?.drawImage(bitmap, 0, 0, width, height);
-    const scaled = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+    const scaled = await new Promise<Blob | null>((resolve) => { canvas.toBlob(resolve, "image/png"); });
     // Width and height round apart, so each axis keeps its own scale.
     if (scaled) session.pointScale.set(tab.id, { ...at, scaleX: cssWidth / width, scaleY: cssHeight / height });
     return scaled ?? blob;

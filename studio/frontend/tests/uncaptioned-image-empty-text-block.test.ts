@@ -37,7 +37,7 @@ const { toOpenAIMessages, buildReplayContent } = new Function(
 )() as {
   toOpenAIMessages: (
     message: unknown,
-  ) => Array<{ role: string; content: unknown }>;
+  ) => { role: string; content: unknown }[];
   buildReplayContent: (text: string, images: unknown[]) => unknown;
 };
 

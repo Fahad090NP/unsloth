@@ -399,7 +399,7 @@ async function prepareSelectedDataset(
     return false;
   }
   if (recheckCachedDataset || recheckDetectedVisionDataset) {
-    return prepareSelectedDataset(attempt, hfToken);
+    return await prepareSelectedDataset(attempt, hfToken);
   }
   if (hasIncompatibleTrainingModalities(attempt.config)) {
     return attempt.cancel();
@@ -565,7 +565,7 @@ async function submitFreshTrainingRun(
     );
   }
 
-  return attempt.settleAccepted(response.job_id, response.message);
+  return await attempt.settleAccepted(response.job_id, response.message);
 }
 
 async function checkSelectedDataset(

@@ -124,7 +124,7 @@ export function hasSeparateStreamingEvalSplit(
     return true;
   }
   const trainSplit = state.datasetSplit || "train";
-  return !!state.datasetEvalSplit && state.datasetEvalSplit !== trainSplit;
+  return Boolean(state.datasetEvalSplit) && state.datasetEvalSplit !== trainSplit;
 }
 
 export function streamingCompatiblePatch(

@@ -3,10 +3,10 @@
 
 /** Notifies runtimes of Data tab deletions; otherwise a later sync writes the attachment back. */
 
-export type ChatAttachmentDeletedEvent = {
+export interface ChatAttachmentDeletedEvent {
   messageId: string;
   attachmentId: string;
-};
+}
 
 const CONTENT_PART_ID_PREFIX = "content-part-sha256-";
 const URI_SCHEME_RE = /^[A-Za-z][A-Za-z0-9+.-]*:/;

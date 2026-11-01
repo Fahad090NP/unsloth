@@ -23,7 +23,7 @@ export function useSingleLine<T extends HTMLElement>(): [
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [element]);
   return [setElement, single];
 }

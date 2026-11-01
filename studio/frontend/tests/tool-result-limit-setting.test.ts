@@ -6,21 +6,21 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Settings = {
+interface Settings {
   maxChars: number;
   defaultChars: number;
   minChars: number;
   maxAllowedChars: number;
   lockedByEnvironment: boolean;
-};
+}
 
-type Api = {
+interface Api {
   loadToolResultLimit: (fallback: string) => Promise<Settings>;
   updateToolResultLimit: (maxChars: number, fallback: string) => Promise<Settings>;
   toolResultLimitChoices: (settings: Settings) => number[];
-};
+}
 
-type Call = { url: string; init?: RequestInit };
+interface Call { url: string; init?: RequestInit }
 
 function loadApi(respond: (call: Call) => Response): { api: Api; calls: Call[] } {
   const calls: Call[] = [];

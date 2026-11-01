@@ -89,7 +89,7 @@ export function selectionExpired(
   selection: AudioSourceSelection | null,
   nowMs: number,
 ): boolean {
-  if (!selection || selection.kind !== "input" || !selection.expiresAt)
+  if (selection?.kind !== "input" || !selection.expiresAt)
     return false;
   const expires = Date.parse(selection.expiresAt);
   return Number.isFinite(expires) && expires <= nowMs;
@@ -210,7 +210,7 @@ function buildConvertRunBody(
   const params = request.convert;
   const convert: Record<string, unknown> = {
     mode: CONVERT_MODES.has(params?.mode) ? params.mode : "speech",
-    pitch_auto: params?.pitch_auto === true,
+    pitch_auto: params?.pitch_auto,
     pitch:
       typeof params?.pitch === "number" && Number.isFinite(params.pitch)
         ? Math.min(24, Math.max(-24, Math.round(params.pitch)))

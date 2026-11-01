@@ -59,7 +59,7 @@ export const useAudioMusicStore = create<AudioMusicState>()(
           (state) =>
             ({
               [mode]: { ...state[mode], ...patch },
-            }) as Partial<AudioMusicState>,
+            }),
         ),
       pushClipToEdit: (clip, action = null) =>
         set((state) => ({

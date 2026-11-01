@@ -251,7 +251,7 @@ export async function archiveChatItem(
   activeId: string | undefined,
   onSelect: (view: { mode: "single"; newThreadNonce: string }) => void,
 ): Promise<void> {
-  return archiveChatItems([item], activeId, onSelect);
+  await archiveChatItems([item], activeId, onSelect);
 }
 
 export async function archiveAllChatItems(
@@ -361,5 +361,5 @@ export async function deleteChatItem(
   onSelect: (view: { mode: "single"; newThreadNonce: string }) => void,
   args: { deleteFiles?: boolean } = {},
 ) {
-  return deleteChatItems([item], activeId, onSelect, args);
+  await deleteChatItems([item], activeId, onSelect, args);
 }

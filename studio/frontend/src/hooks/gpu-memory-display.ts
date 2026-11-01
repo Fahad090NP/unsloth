@@ -16,9 +16,9 @@ export function hasUnifiedPoolHeadroom(device: GpuDevice): boolean {
     device.shared_memory === true &&
     total > 0 &&
     Number.isFinite(hostBacked) &&
-    (hostBacked as number) >= total &&
+    (hostBacked!) >= total &&
     Number.isFinite(device.vram_free_gb) &&
-    (device.vram_free_gb as number) >= 0
+    (device.vram_free_gb!) >= 0
   );
 }
 
@@ -28,12 +28,12 @@ export function sharedMemoryAvailableGb(devices: GpuDevice[]): number | null {
     devices.some(
       (device) =>
         !Number.isFinite(device.vram_free_gb) ||
-        (device.vram_free_gb as number) < 0,
+        (device.vram_free_gb!) < 0,
     )
   )
     return null;
   // Multiple iGPUs are views of the same host pool, not additive capacity.
-  return Math.max(...devices.map((device) => device.vram_free_gb as number));
+  return Math.max(...devices.map((device) => device.vram_free_gb!));
 }
 
 /** Presentation only. Keep allocation budgets and model-fit capacity unchanged. */

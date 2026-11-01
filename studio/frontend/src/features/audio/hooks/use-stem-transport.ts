@@ -253,7 +253,7 @@ export function useStemTransport({
           element.currentTime = now;
       }
     }, DRIFT_CHECK_MS);
-    return () => window.clearInterval(timer);
+    return () => { window.clearInterval(timer); };
   }, [playing, updatePosition]);
 
   useEffect(() => {

@@ -102,16 +102,16 @@ export function BrowserToggleButton({
         <button
           type="button"
           aria-label={label}
-          onPointerEnter={onMouse(() => hoverTo(true))}
-          onPointerLeave={onMouse(() => hoverTo(false))}
+          onPointerEnter={onMouse(() => { hoverTo(true); })}
+          onPointerLeave={onMouse(() => { hoverTo(false); })}
           // A press opens a tab rather than the menu; hovering, or the arrow keys, open the menu.
-          onPointerDown={(event) => event.preventDefault()}
+          onPointerDown={(event) => { event.preventDefault(); }}
           onKeyDown={(event) => {
             if (event.key !== "Enter" && event.key !== " ") return;
             event.preventDefault();
             openTab();
           }}
-          onClick={() => openTab()}
+          onClick={() => { openTab(); }}
           className="flex size-[calc(30px*var(--ui-space-scale,1))] cursor-pointer items-center justify-center rounded-[10px] text-nav-fg transition-colors hover:bg-nav-surface-hover hover:text-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-expanded:bg-nav-surface-hover aria-expanded:text-black dark:hover:text-white dark:aria-expanded:text-white"
         >
           <HugeiconsIcon icon={InternetIcon} strokeWidth={1.75} className="size-[calc(var(--icon-size)*0.95)]" />
@@ -121,7 +121,7 @@ export function BrowserToggleButton({
         align="end"
         sideOffset={6}
         onPointerEnter={onMouse(clearTimer)}
-        onPointerLeave={onMouse(() => hoverTo(false))}
+        onPointerLeave={onMouse(() => { hoverTo(false); })}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           restore.current?.focus({ preventScroll: true });
@@ -129,12 +129,12 @@ export function BrowserToggleButton({
         }}
         className="browser-menu library-actions-menu w-56"
       >
-        <DropdownMenuItem onSelect={() => openTab()}>
+        <DropdownMenuItem onSelect={() => { openTab(); }}>
           <HugeiconsIcon icon={PlusSignIcon} strokeWidth={1.75} className="size-icon" />
           {label}
           {newTabShortcut ? <DropdownMenuShortcut className="text-ui-11">{newTabShortcut}</DropdownMenuShortcut> : null}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => openTab(true)}>
+        <DropdownMenuItem onSelect={() => { openTab(true); }}>
           {/* Its corner marks sit inside the box, so at the shared size it reads smaller than the plus. */}
           <HugeiconsIcon
             icon={EnterFullViewIcon}

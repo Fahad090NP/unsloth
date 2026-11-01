@@ -97,13 +97,13 @@ const CODEPAGE_ENCODINGS: Record<number, string> = {
   65001: "utf-8",
 };
 
-type Group = {
+interface Group {
   skip: boolean;
   fontTable: boolean;
   inTable: boolean;
   uc: number;
   font: number;
-};
+}
 
 export async function readRtfAttachmentContent(
   file: File,
@@ -264,7 +264,7 @@ function rtfToText(bytes: Uint8Array, filename: string): string {
         group.skip = true;
         group.fontTable ||= word === "fonttbl";
       } else if (CONTROL_WORD_TEXT.has(word)) {
-        emit(CONTROL_WORD_TEXT.get(word) as string);
+        emit(CONTROL_WORD_TEXT.get(word)!);
       }
     } else if (index < bytes.length) {
       const symbol = bytes[index++];

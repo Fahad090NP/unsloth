@@ -6,20 +6,20 @@ import { isAudioAttachment } from "@/features/chat/attachment-content";
 
 export type AttachmentPreviewKind = "image" | "audio" | "video" | "text" | "document";
 
-export type AttachmentAudioPart = { data: string; format: string };
+export interface AttachmentAudioPart { data: string; format: string }
 
-export type AttachmentVideoPart = { data: string; mimeType: string };
+export interface AttachmentVideoPart { data: string; mimeType: string }
 
-type AttachmentContentPart = {
+interface AttachmentContentPart {
   type: string;
   text?: string;
   image?: string;
   audio?: AttachmentAudioPart;
   data?: string;
   mimeType?: string;
-};
+}
 
-export type AttachmentSelection = {
+export interface AttachmentSelection {
   kind: AttachmentPreviewKind;
   name: string;
   contentType: string | undefined;
@@ -29,7 +29,7 @@ export type AttachmentSelection = {
   video: AttachmentVideoPart | undefined;
   text: string | undefined;
   hasOriginal: boolean;
-};
+}
 
 const VIDEO_MIME = /^video\//i;
 
@@ -70,11 +70,11 @@ export const selectAttachmentSource = ({
   );
   const isImage = attachment.type === "image";
   // Before audio: the audio names include .mp4 and .webm, which a clip shares.
-  const isVideo = !isImage && !audio && (!!video || VIDEO_MIME.test(contentType ?? ""));
+  const isVideo = !isImage && !audio && (Boolean(video) || VIDEO_MIME.test(contentType ?? ""));
   const isAudio =
     !isImage &&
     !isVideo &&
-    (!!audio || isAudioAttachment(attachment.name, contentType));
+    (Boolean(audio) || isAudioAttachment(attachment.name, contentType));
   const text = parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)

@@ -50,7 +50,7 @@ function AutoSelect({
   return (
     <Select
       value={value || AUTO}
-      onValueChange={(next) => onChange(next === AUTO ? "" : next)}
+      onValueChange={(next) => { onChange(next === AUTO ? "" : next); }}
       disabled={disabled}
     >
       <SelectTrigger id={id} size="sm" className="w-full">
@@ -86,7 +86,7 @@ export const aceStepMusicalPanel: AudioToolPanel<AceStepMusicalValue> = {
             checked={value.bpm !== null}
             disabled={disabled}
             onCheckedChange={(on) =>
-              onChange({ ...value, bpm: on ? ACE_STEP_BPM.default : null })
+              { onChange({ ...value, bpm: on ? ACE_STEP_BPM.default : null }); }
             }
           />
         </FieldLabel>
@@ -99,7 +99,7 @@ export const aceStepMusicalPanel: AudioToolPanel<AceStepMusicalValue> = {
             step={1}
             valueSize={4}
             disabled={disabled}
-            onChange={(bpm) => onChange({ ...value, bpm })}
+            onChange={(bpm) => { onChange({ ...value, bpm }); }}
           />
         ) : null}
       </div>
@@ -108,7 +108,7 @@ export const aceStepMusicalPanel: AudioToolPanel<AceStepMusicalValue> = {
           <AutoSelect
             id="music-key"
             value={value.keyscale}
-            onChange={(keyscale) => onChange({ ...value, keyscale })}
+            onChange={(keyscale) => { onChange({ ...value, keyscale }); }}
             options={ACE_STEP_KEYS.map((key) => ({ value: key, label: key }))}
             disabled={disabled}
           />
@@ -117,7 +117,7 @@ export const aceStepMusicalPanel: AudioToolPanel<AceStepMusicalValue> = {
           <AutoSelect
             id="music-time-signature"
             value={value.timesignature}
-            onChange={(timesignature) => onChange({ ...value, timesignature })}
+            onChange={(timesignature) => { onChange({ ...value, timesignature }); }}
             options={ACE_STEP_TIME_SIGNATURES}
             disabled={disabled}
           />
@@ -133,7 +133,7 @@ export const aceStepMusicalPanel: AudioToolPanel<AceStepMusicalValue> = {
           value={value.avoid}
           disabled={disabled}
           onChange={(event) =>
-            onChange({ ...value, avoid: event.target.value })
+            { onChange({ ...value, avoid: event.target.value }); }
           }
           className="min-h-12"
         />
@@ -142,7 +142,7 @@ export const aceStepMusicalPanel: AudioToolPanel<AceStepMusicalValue> = {
         <AutoSelect
           id="music-ace-sampler"
           value={value.sampler}
-          onChange={(sampler) => onChange({ ...value, sampler })}
+          onChange={(sampler) => { onChange({ ...value, sampler }); }}
           options={[
             { value: "euler", label: "Euler (faster)" },
             { value: "heun", label: "Heun (smoother, slower)" },
@@ -161,7 +161,7 @@ export const yueCompositionPanel: AudioToolPanel<YueCompositionValue> = {
       <PillTabs
         ariaLabel="Planning"
         value={value.cot}
-        onValueChange={(cot) => onChange({ cot: cot as YueCot })}
+        onValueChange={(cot) => { onChange({ cot: cot as YueCot }); }}
         disabled={disabled}
         fit={true}
         compact={true}
@@ -189,7 +189,7 @@ export const stableAudioSamplerPanel: AudioToolPanel<StableAudioSamplerValue> =
             <AutoSelect
               id="music-sa-sampler"
               value={value.sampler}
-              onChange={(sampler) => onChange({ ...value, sampler })}
+              onChange={(sampler) => { onChange({ ...value, sampler }); }}
               options={STABLE_AUDIO_SAMPLERS}
               disabled={disabled}
             />
@@ -202,7 +202,7 @@ export const stableAudioSamplerPanel: AudioToolPanel<StableAudioSamplerValue> =
             step={1}
             valueSize={4}
             disabled={disabled}
-            onChange={(next) => onChange({ ...value, steps: next })}
+            onChange={(next) => { onChange({ ...value, steps: next }); }}
           />
         </PanelSection>
       );

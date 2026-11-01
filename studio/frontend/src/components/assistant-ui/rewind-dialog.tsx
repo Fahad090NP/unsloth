@@ -173,7 +173,7 @@ const RewindFlow: FC<{
       messageId={messageId}
       preview={entries.find((entry) => entry.id === messageId)?.text ?? ""}
       turnIds={collectRewindTurnIds(branch, messageId)}
-      onBack={initialMessageId === null ? () => setMessageId(null) : undefined}
+      onBack={initialMessageId === null ? () => { setMessageId(null); } : undefined}
       onClose={onClose}
     />
   );
@@ -200,7 +200,7 @@ const RewindPicker: FC<{
               <li key={entry.id}>
                 <button
                   type="button"
-                  onClick={() => onPick(entry.id)}
+                  onClick={() => { onPick(entry.id); }}
                   className="w-full truncate rounded-md px-3 py-2 text-left hover:bg-accent focus-visible:bg-accent outline-none"
                 >
                   {entry.preview || (
@@ -339,7 +339,7 @@ const RewindChoices: FC<{
           <Label htmlFor="rewind-restore">{t("rewind.restoreLabel")}</Label>
           <Select
             value={mode}
-            onValueChange={(value) => setMode(value as RewindMode)}
+            onValueChange={(value) => { setMode(value as RewindMode); }}
             disabled={busy}
           >
             <SelectTrigger id="rewind-restore" className="w-full">

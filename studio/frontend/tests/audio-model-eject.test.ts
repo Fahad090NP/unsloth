@@ -112,7 +112,7 @@ test("a load confirmed after Audio is hidden is deferred, not sent", () => {
   );
   assert.match(
     source,
-    /if \(!active\) \{[\s\S]*?\n    \}\s*\n\s*\/\/[\s\S]*?replayQueuedTtsPick\(\);/,
+    /if \(!active\) \{[\s\S]*?\n {4}\}\s*\n\s*\/\/[\s\S]*?replayQueuedTtsPick\(\);/,
   );
 });
 
@@ -143,9 +143,7 @@ test("the Generate-mode release only unloads a sidecar owned by the current sele
 test("an explicit Transcribe eject unloads what is resident, claimed or not", () => {
   // A reload, Settings > Voice or dictation leave no page claim; the claim-gated release then
   // skipped the unload while the page still toasted success.
-  const eject = source.match(
-    /const ejectTranscribeModel = useCallback\([\s\S]*?\n {2}\}, \[/,
-  )?.[0];
+  const eject = (/const ejectTranscribeModel = useCallback\([\s\S]*?\n {2}\}, \[/.exec(source))?.[0];
   assert.ok(eject);
   assert.match(
     eject,

@@ -79,7 +79,7 @@ async function fetchInstallSource(): Promise<UpdateInstallSource> {
 
 // Every reported runtime: a dual CUDA+XPU build reports both. Module scope keeps AboutTab under
 // the complexity limit.
-type RuntimeRow = { labelKey: TranslationKey; version: string };
+interface RuntimeRow { labelKey: TranslationKey; version: string }
 
 function acceleratorRuntimes(hw: HardwareInfo): RuntimeRow[] {
   const rows: RuntimeRow[] = [];
@@ -157,7 +157,7 @@ export function AboutTab() {
       });
       consumeScrollTarget("about-updates");
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [consumeScrollTarget, scrollTarget]);
 
   return (
@@ -300,7 +300,7 @@ export function AboutTab() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShutdownOpen(true)}
+              onClick={() => { setShutdownOpen(true); }}
               className="text-destructive hover:text-destructive"
             >
               <HugeiconsIcon icon={Cancel01Icon} className="size-3.5 mr-1.5" />

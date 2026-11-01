@@ -3,9 +3,9 @@
 
 // Same sandboxed frame and strict CSP as an HTML page: every script is inline (no eval, blob: or modules).
 
-export type RuntimeScript = { name: string; code: string };
+export interface RuntimeScript { name: string; code: string }
 
-export type CompileDiagnostic = { message: string; line: number; column: number };
+export interface CompileDiagnostic { message: string; line: number; column: number }
 
 // Only `</script` and `<!--` change the tokenizer's state inside a <script>; left as is, the page
 // after them is swallowed with no error at all. `\x21`, not `\!`, which breaks /u regexes.

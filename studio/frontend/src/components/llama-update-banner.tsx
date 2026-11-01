@@ -108,7 +108,7 @@ function useSmoothedProgress(
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => { cancelAnimationFrame(raf); };
   }, [active]);
 
   return display;
@@ -200,7 +200,7 @@ export function LlamaUpdateBanner({
     fromKeyboard: boolean;
     message: string;
   } | null>(null);
-  const clearSkipped = useCallback(() => setSkipped(null), []);
+  const clearSkipped = useCallback(() => { setSkipped(null); }, []);
   // listen regardless of banner preference so muting the UI does not silence cross-tab reload_required resync.
   const { status, visible, applying, apply, dismiss, undoDismiss, snooze } =
     useLlamaUpdateCheck({
@@ -535,7 +535,7 @@ export function LlamaUpdateBanner({
                 type="button"
                 className="-mx-1 mt-1 block rounded-full px-1 text-xs font-medium text-foreground underline decoration-foreground/30 underline-offset-2 hover:decoration-foreground/70"
                 onClick={() =>
-                  setDetailsVersion(detailsOpen ? null : detailsKey)
+                  { setDetailsVersion(detailsOpen ? null : detailsKey); }
                 }
                 aria-expanded={detailsOpen}
                 data-testid="llama-update-changelog-toggle"
@@ -656,7 +656,7 @@ function SkippedNotice({
       return;
     }
     const timer = setTimeout(onExpire, SKIPPED_NOTICE_MS);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [hovered, focused, onExpire]);
   return (
     <div
@@ -666,11 +666,11 @@ function SkippedNotice({
           ? "fixed bottom-4 right-4 z-[9998]"
           : "pointer-events-auto shrink-0",
       )}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
+      onMouseEnter={() => { setHovered(true); }}
+      onMouseLeave={() => { setHovered(false); }}
+      onFocus={() => { setFocused(true); }}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
           setFocused(false);
         }
       }}

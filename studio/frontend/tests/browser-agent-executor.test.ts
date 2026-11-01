@@ -11,7 +11,7 @@ const { useBrowserStore } = await import("../src/features/browser/store.ts");
 
 const globals = globalThis as Record<string, unknown>;
 
-type Posted = { result: { ok: boolean; url?: string; text?: string; error?: string } };
+interface Posted { result: { ok: boolean; url?: string; text?: string; error?: string } }
 
 /** Runs one navigate with the page answering `status` through `onStatus`; returns the posted result. */
 async function navigate(id: string, url: string, onStatus: (tabId: string, call: number) => number) {

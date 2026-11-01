@@ -14,9 +14,9 @@ const { INFRA_NODE_KINDS } = await import(
   "../src/features/recipe-studio/types/index.ts"
 );
 
-type Edge = { id: string; source: string; target: string };
-type Config = { id: string; kind: string; name: string; is_local?: boolean };
-type Status = { isDisconnected: boolean; missingDataInput: boolean };
+interface Edge { id: string; source: string; target: string }
+interface Config { id: string; kind: string; name: string; is_local?: boolean }
+interface Status { isDisconnected: boolean; missingDataInput: boolean }
 
 // The per-node edge scan this replaces, kept verbatim as the oracle.
 function scanEdges(
@@ -66,7 +66,7 @@ const KINDS = [
 
 function randomGraph(seed: number) {
   const r = rng(seed);
-  const pick = <T>(xs: T[]): T => xs[Math.floor(r() * xs.length)] as T;
+  const pick = <T>(xs: T[]): T => xs[Math.floor(r() * xs.length)];
   const ids = Array.from(
     { length: 2 + Math.floor(r() * 30) },
     (_, i) => `n${i}`,
@@ -124,7 +124,7 @@ test("the adjacency index is built once per edges array and a status is a shared
   const before = nodeConnectionStatus(
     "x",
     configs.x as never,
-    edges as never,
+    edges,
     configs as never,
   );
   const typed = { ...configs, y: { ...configs.y } };

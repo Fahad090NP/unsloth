@@ -29,7 +29,7 @@ function activeRunOverride(
   fetched: { jobId: string; override: RunConfigOverride | undefined } | null,
   jobId: string | null,
 ): RunConfigOverride | undefined {
-  if (fetched === null || fetched.jobId !== jobId) {
+  if (fetched?.jobId !== jobId) {
     return undefined;
   }
   return fetched.override;

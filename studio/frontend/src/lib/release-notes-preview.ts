@@ -540,7 +540,7 @@ function tableLines(lines: ContentLine[]): Set<number> {
 
 /** A backtick fence's info string may not contain a backtick. */
 function opensFence(marker: string, rest: string): boolean {
-  return marker[0] !== "`" || !rest.includes("`");
+  return !marker.startsWith("`") || !rest.includes("`");
 }
 
 function nextFence(

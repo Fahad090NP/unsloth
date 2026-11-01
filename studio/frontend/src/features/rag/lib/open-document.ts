@@ -35,7 +35,7 @@ export function openRagDocumentExternally(
   }
   tab.opener = null;
   getDocumentFileUrl(documentId)
-    .then((url) => tab.location.replace(url))
+    .then((url) => { tab.location.replace(url); })
     .catch(() => {
       tab.close();
       failed();
@@ -50,7 +50,7 @@ export function offerRagDocumentOutside(
   toast.message(`${filename} is too large to preview in Unsloth`, {
     action: {
       label: "Open",
-      onClick: () => openRagDocumentExternally(documentId, filename),
+      onClick: () => { openRagDocumentExternally(documentId, filename); },
     },
   });
 }

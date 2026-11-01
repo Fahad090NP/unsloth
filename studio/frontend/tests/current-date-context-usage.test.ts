@@ -8,9 +8,9 @@ import * as messageOrder from "../src/features/chat/utils/message-order.ts";
 import * as contextUsageReasoning from "../src/features/chat/utils/context-usage-reasoning.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type RefreshModule = {
+interface RefreshModule {
   refreshContextUsage: (options?: { invalidate?: boolean }) => Promise<void>;
-};
+}
 
 test("a prompt setting change clears local usage even during a run", async () => {
   const cleared: unknown[] = [];

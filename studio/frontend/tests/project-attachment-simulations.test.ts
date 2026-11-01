@@ -147,7 +147,7 @@ function stubFetch(handler: (url: string) => { status: number; body: unknown }) 
       json: async () => body,
     } as Response;
   });
-  return { urls, restore: () => setAuthFetchHandler(null) };
+  return { urls, restore: () => { setAuthFetchHandler(null); } };
 }
 
 // A watcher can outlive its deleted job; retrying the 404 gates the composer for a minute.

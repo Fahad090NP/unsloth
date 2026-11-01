@@ -135,7 +135,7 @@ test("restoring a Transform record reproduces it as exactly as an unscaled resto
     [1920, 320],
     [3000, 500],
     [4000, 3000],
-  ] as Array<[number, number]>) {
+  ] as [number, number][]) {
     for (const requested of [512, 768, 1024, 2048]) {
       const recorded = transform(source, requested, requested);
       const unscaled = transform(

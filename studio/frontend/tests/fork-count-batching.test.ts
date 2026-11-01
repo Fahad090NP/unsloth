@@ -10,12 +10,12 @@ import { readSrc } from "./helpers/kit.ts";
 
 const CHAT_HISTORY_UPDATED_EVENT = "unsloth-chat-history-updated";
 
-type Store = {
+interface Store {
   FORK_COUNT_REFRESH_DEBOUNCE_MS: number;
   FORK_COUNT_REFRESH_MAX_WAIT_MS: number;
   subscribeForkCounts: (threadId: string, onChange: () => void) => () => void;
   forkCountFor: (threadId: string, messageId: string) => number;
-};
+}
 
 const listeners = new Map<string, Set<() => void>>();
 Object.assign(globalThis, {
@@ -94,7 +94,7 @@ test("a 200-message thread costs one request, not one per message", async () => 
 
 test("a burst of history events collapses into one refresh", async (t) => {
   mock.timers.enable({ apis: ["setTimeout"] });
-  t.after(() => mock.timers.reset());
+  t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
   const unsubscribes = Array.from({ length: 200 }, () =>
     store.subscribeForkCounts("thread-a", () => {}),
@@ -167,7 +167,7 @@ test("the badge no longer owns a listener or a per-message request", () => {
 test("a continuous stream costs one refresh per ceiling, not one per debounce window", async (t) => {
   // Streaming fires the event per chunk, so this measures the max-wait refresh cost.
   mock.timers.enable({ apis: ["setTimeout"] });
-  t.after(() => mock.timers.reset());
+  t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
   const unsubscribe = store.subscribeForkCounts("thread-a", () => {});
   await flush();
@@ -215,7 +215,7 @@ test("a continuous stream costs one refresh per ceiling, not one per debounce wi
 
 test("a chunk every debounce window cannot postpone a refresh forever", async (t) => {
   mock.timers.enable({ apis: ["setTimeout"] });
-  t.after(() => mock.timers.reset());
+  t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
   const unsubscribe = store.subscribeForkCounts("thread-a", () => {});
   await flush();
@@ -239,7 +239,7 @@ test("a chunk every debounce window cannot postpone a refresh forever", async (t
     "the refresh never happened: a chunk per window postponed it indefinitely",
   );
   assert.ok(
-    (firedAfter as number) <= store.FORK_COUNT_REFRESH_MAX_WAIT_MS + step,
+    (firedAfter!) <= store.FORK_COUNT_REFRESH_MAX_WAIT_MS + step,
     `the refresh waited ${firedAfter}ms, past the ${store.FORK_COUNT_REFRESH_MAX_WAIT_MS}ms bound`,
   );
   unsubscribe();
@@ -247,7 +247,7 @@ test("a chunk every debounce window cannot postpone a refresh forever", async (t
 
 test("the ceiling does not fire while the burst is still inside the debounce window", async (t) => {
   mock.timers.enable({ apis: ["setTimeout"] });
-  t.after(() => mock.timers.reset());
+  t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
   const unsubscribe = store.subscribeForkCounts("thread-a", () => {});
   await flush();
@@ -269,7 +269,7 @@ test("the ceiling does not fire while the burst is still inside the debounce win
 
 test("the ceiling restarts for the next burst rather than firing once per lifetime", async (t) => {
   mock.timers.enable({ apis: ["setTimeout"] });
-  t.after(() => mock.timers.reset());
+  t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
   const unsubscribe = store.subscribeForkCounts("thread-a", () => {});
   await flush();
@@ -294,7 +294,7 @@ test("the ceiling restarts for the next burst rather than firing once per lifeti
 
 test("unsubscribing cancels the ceiling as well as the trailing edge", async (t) => {
   mock.timers.enable({ apis: ["setTimeout"] });
-  t.after(() => mock.timers.reset());
+  t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
   const first = store.subscribeForkCounts("thread-a", () => {});
   await flush();
@@ -325,7 +325,7 @@ test("unsubscribing cancels the ceiling as well as the trailing edge", async (t)
 test("a chat created in the app asks for its fork counts", async (t) => {
   // `__LOCALID_` ids are permanent primary keys, so the prefix must not skip the fetch.
   mock.timers.enable({ apis: ["setTimeout"] });
-  t.after(() => mock.timers.reset());
+  t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore({ m1: 2 });
 
   const unsubscribe = store.subscribeForkCounts("__LOCALID_abc123", () => {});
@@ -338,7 +338,7 @@ test("a chat created in the app asks for its fork counts", async (t) => {
 
 test("a temporary chat is the one thread that never asks", async (t) => {
   mock.timers.enable({ apis: ["setTimeout"] });
-  t.after(() => mock.timers.reset());
+  t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore({ m1: 2 }, ["__LOCALID_temp"]);
 
   const stop = [
@@ -364,7 +364,7 @@ test("a temporary chat is the one thread that never asks", async (t) => {
 
 test("every subscribed thread refreshes, whatever its id looks like", async (t) => {
   mock.timers.enable({ apis: ["setTimeout"] });
-  t.after(() => mock.timers.reset());
+  t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore({ m1: 2 });
 
   const stop = [

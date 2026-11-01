@@ -63,7 +63,7 @@ export function DatasetUploadField({ uploads }: { uploads: DatasetUploads }) {
         onClick={() => fileInputRef.current?.click()}
         onDrop={uploads.handleDatasetDrop}
         onDragOver={uploads.handleDatasetDragOver}
-        onDragLeave={() => uploads.setIsDatasetDragOver(false)}
+        onDragLeave={() => { uploads.setIsDatasetDragOver(false); }}
         className={cn(
           "group relative flex h-9 w-full select-none items-center justify-center gap-2 rounded-full border border-dashed px-3 text-center transition-colors",
           "border-[color-mix(in_oklab,var(--foreground)_calc(15%*var(--contrast-edge-gain,1)),transparent)] dark:border-[rgb(255_255_255_/_calc(0.15*var(--contrast-edge-gain,1)))]",
@@ -156,7 +156,7 @@ export function EvaluationDatasetUpload({
               "studio.dataset.evalDataset",
             )}`}
             className="h-6 w-6 shrink-0 cursor-pointer p-0"
-            onClick={() => setUploadedEvalFile(null)}
+            onClick={() => { setUploadedEvalFile(null); }}
           >
             <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
           </Button>

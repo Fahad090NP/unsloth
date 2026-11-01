@@ -9,7 +9,7 @@ import {
   openWebUIRecordToConversation,
 } from "../src/features/chat/utils/openwebui-import.ts";
 
-type Part = { type: string; [key: string]: unknown };
+interface Part { type: string; [key: string]: unknown }
 
 function parts(conversation: { messages: { content: unknown }[] }, index: number): Part[] {
   return conversation.messages[index].content as Part[];
@@ -279,7 +279,7 @@ test("an inline image survives; a document keeps its name but not the text Open 
   );
 
   const attachments = conversation.messages[0]
-    .attachments as unknown as Array<Record<string, unknown>>;
+    .attachments as unknown as Record<string, unknown>[];
   assert.equal(attachments.length, 1);
   assert.equal(attachments[0].name, "spec.pdf");
   // Replaying the extracted text into attachment content would resend a whole PDF on the next turn.
@@ -401,7 +401,7 @@ test("a user turn that uploaded a file without typing survives, and keeps its de
   assert.ok(conversation);
   assert.equal(conversation.messages.length, 2);
   const attachments = conversation.messages[0]
-    .attachments as unknown as Array<Record<string, unknown>>;
+    .attachments as unknown as Record<string, unknown>[];
   assert.equal(attachments[0].name, "spec.pdf");
   assert.equal(conversation.messages[1].parentId, conversation.messages[0].id);
 

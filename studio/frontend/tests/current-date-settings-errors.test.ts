@@ -6,13 +6,13 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type CurrentDateApi = {
+interface CurrentDateApi {
   loadCurrentDatePrompt: (fallbackMessage: string) => Promise<unknown>;
   updateCurrentDatePrompt: (
     enabled: boolean,
     fallbackMessage: string,
   ) => Promise<unknown>;
-};
+}
 
 function loadApi(): CurrentDateApi {
   return loadWithStubs<CurrentDateApi>(

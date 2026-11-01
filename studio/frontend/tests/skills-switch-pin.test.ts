@@ -8,18 +8,18 @@ import { loadWithStubs } from "./helpers/module-stubs.ts";
 // The module opens a channel to other tabs when it can; an open one keeps the test process alive.
 (globalThis as { BroadcastChannel?: unknown }).BroadcastChannel = undefined;
 
-type Skill = {
+interface Skill {
   name: string;
   source: string;
   valid: boolean;
   shadowed: boolean;
   enabled: boolean;
-};
-type Api = {
+}
+interface Api {
   listSkills: (force?: boolean) => Promise<readonly Skill[]>;
   setSkillEnabled: (name: string, enabled: boolean) => Promise<Skill>;
   setAllSkillsEnabled: (enabled: boolean | null) => Promise<readonly Skill[]>;
-};
+}
 
 const skill = (name: string, enabled: boolean): Skill => ({
   name,

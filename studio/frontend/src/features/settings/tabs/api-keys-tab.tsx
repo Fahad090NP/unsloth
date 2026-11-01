@@ -213,7 +213,7 @@ export function ApiKeysTab() {
             >
               <KeyRevealCard
                 rawKey={revealed}
-                onDone={() => setRevealed(null)}
+                onDone={() => { setRevealed(null); }}
               />
             </motion.div>
           ) : (
@@ -332,7 +332,7 @@ export function ApiKeysTab() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRevokeTarget(null)}>
+            <Button variant="outline" onClick={() => { setRevokeTarget(null); }}>
               {t("common.cancel")}
             </Button>
             <Button

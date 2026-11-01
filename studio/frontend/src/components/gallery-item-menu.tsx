@@ -87,7 +87,7 @@ export function GalleryItemMenu({
   const overlay = variant === "overlay";
   const row = variant === "row";
   const menu = (
-    <DropdownMenu open={active && open} onOpenChange={(o) => setOpen(active && o)}>
+    <DropdownMenu open={active && open} onOpenChange={(o) => { setOpen(active && o); }}>
       <DropdownMenuTrigger asChild={true}>
         <Button
           size={overlay || row ? "icon-xs" : "icon-sm"}

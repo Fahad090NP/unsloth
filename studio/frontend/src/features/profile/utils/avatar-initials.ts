@@ -4,7 +4,7 @@
 export function initialsFromName(name: string): string {
   const trimmed = name.trim();
   if (!trimmed) return "?";
-  return trimmed[0]!.toUpperCase();
+  return trimmed[0].toUpperCase();
 }
 
 /** Uses --control-accent so the avatar follows the palette and any custom accent. */

@@ -141,7 +141,7 @@ function SpeakerChip({
           placeholder={speakers[index]?.label ?? id}
           maxLength={SPEAKER_NAME_MAX_LENGTH}
           autoFocus={true}
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={(event) => { setDraft(event.target.value); }}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
               event.preventDefault();
@@ -157,7 +157,7 @@ function SpeakerChip({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setOpen(false)}
+            onClick={() => { setOpen(false); }}
           >
             Cancel
           </Button>

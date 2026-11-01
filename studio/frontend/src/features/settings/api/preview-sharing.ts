@@ -4,16 +4,16 @@
 import { authFetch } from "@/features/auth";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
-export type PreviewSharingSettings = {
+export interface PreviewSharingSettings {
   enabled: boolean;
   defaultEnabled: boolean;
-};
+}
 
-type ApiPreviewSharingSettings = {
+interface ApiPreviewSharingSettings {
   enabled: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   default_enabled: boolean;
-};
+}
 
 function fromApi(settings: ApiPreviewSharingSettings): PreviewSharingSettings {
   return {

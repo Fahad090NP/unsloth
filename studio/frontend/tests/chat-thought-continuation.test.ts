@@ -186,7 +186,7 @@ test("Gemini continuations retain the provider turn boundary", () => {
 function stream(
   seed: string,
   openAtStart: boolean,
-  deltas: Array<{ reasoning?: string; content?: string }>,
+  deltas: { reasoning?: string; content?: string }[],
 ): string {
   let text = seed;
   let open = openAtStart;

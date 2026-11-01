@@ -4,7 +4,7 @@
 import { authFetch } from "@/features/auth";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
-export type ModelAlias = { name: string; model: string };
+export interface ModelAlias { name: string; model: string }
 
 function parseAliases(body: unknown): ModelAlias[] {
   const aliases = (body as { aliases?: unknown } | null)?.aliases;

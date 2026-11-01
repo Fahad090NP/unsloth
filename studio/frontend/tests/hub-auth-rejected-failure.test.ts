@@ -95,7 +95,7 @@ test("a 401 answer does not back the Hub off or record an outage", async () => {
     new Response(JSON.stringify({ error: "OAuth token verification failed" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
-    })) as typeof fetch;
+    }));
   try {
     const response = await fetchWithTimeout(`${HF}/api/models?search=qwen`, {}, 1_000);
     assert.equal(response.status, 401);

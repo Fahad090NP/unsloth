@@ -111,10 +111,10 @@ export function ProjectMenuItems({
       <Item icon={Settings01Icon} onSelect={onEdit}>
         {t("library.chats.menu.edit")}
       </Item>
-      <Item icon={pinned ? PinOffIcon : PinIcon} onSelect={() => togglePin(project.id)}>
+      <Item icon={pinned ? PinOffIcon : PinIcon} onSelect={() => { togglePin(project.id); }}>
         {t(pinned ? "settings.data.library.unpin" : "settings.data.library.pin")}
       </Item>
-      <DropdownMenuItem onSelect={() => setFavorites([project.id], !favorite)}>
+      <DropdownMenuItem onSelect={() => { setFavorites([project.id], !favorite); }}>
         <HugeiconsIcon
           icon={StarPointedIcon}
           strokeWidth={1.75}
@@ -146,13 +146,13 @@ export function ProjectMenuItems({
               <Item
                 key={section.id}
                 icon={LayerIcon}
-                onSelect={() => fileProjectInSection(project, section.id)}
+                onSelect={() => { fileProjectInSection(project, section.id); }}
               >
                 {section.name}
               </Item>
             ))}
           {sectionId && (
-            <Item icon={Cancel01Icon} onSelect={() => fileProjectInSection(project, null)}>
+            <Item icon={Cancel01Icon} onSelect={() => { fileProjectInSection(project, null); }}>
               {leaving
                 ? t("shell.sections.removeFrom", { name: leaving.name })
                 : t("shell.sections.removeFromSection")}

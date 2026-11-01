@@ -8,10 +8,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import ts from "@typescript/typescript6";
 
-export type StubElement = {
+export interface StubElement {
   type: unknown;
   props: Record<string, unknown>;
-};
+}
 
 function resolveSibling(fromPath: string, specifier: string): URL {
   const base = new URL(specifier, pathToFileURL(fromPath));

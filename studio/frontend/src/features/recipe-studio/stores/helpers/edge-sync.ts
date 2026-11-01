@@ -107,7 +107,7 @@ export function syncEdgesForConfigPatch(
       nextEdges,
       configs,
       current.id,
-      (source) => Boolean(source && source.kind === "model_provider"),
+      (source) => Boolean(source?.kind === "model_provider"),
     );
     if (nextProvider) {
       const providerId = findNodeIdByName(configs, nextProvider);
@@ -145,8 +145,7 @@ export function syncEdgesForConfigPatch(
       current.id,
       (source) =>
         Boolean(
-          source &&
-            source.kind === "sampler" &&
+          source?.kind === "sampler" &&
             source.sampler_type === "datetime",
         ),
     );
@@ -155,8 +154,7 @@ export function syncEdgesForConfigPatch(
       const source = referenceId ? configs[referenceId] : null;
       if (
         referenceId &&
-        source &&
-        source.kind === "sampler" &&
+        source?.kind === "sampler" &&
         source.sampler_type === "datetime"
       ) {
         nextEdges = addRecipeEdge(nextEdges, referenceId, current.id);
@@ -178,7 +176,7 @@ export function syncEdgesForConfigPatch(
       nextEdges,
       configs,
       current.id,
-      (source) => Boolean(source && source.kind === "model_config"),
+      (source) => Boolean(source?.kind === "model_config"),
     );
     if (nextAlias) {
       const modelConfigId = findNodeIdByName(configs, nextAlias);
@@ -213,7 +211,7 @@ export function syncEdgesForConfigPatch(
       nextEdges,
       configs,
       current.id,
-      (source) => Boolean(source && source.kind === "tool_config"),
+      (source) => Boolean(source?.kind === "tool_config"),
     );
     if (nextAlias) {
       const toolConfigId = findNodeIdByName(configs, nextAlias);

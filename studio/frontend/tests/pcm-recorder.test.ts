@@ -352,14 +352,14 @@ test("a MediaRecorder that refuses to start falls back to PCM", () => {
   const stream = { active: true } as unknown as MediaStream;
 
   // Anything but the engine's refusal is still the caller's error.
-  assert.throws(() => createAudioRecorder(stream).start(250), /device lost/);
+  assert.throws(() => { createAudioRecorder(stream).start(250); }, /device lost/);
 
   startError = Object.assign(new Error("unsupported"), {
     name: "NotSupportedError",
   });
   // So is the same error name for a stream whose tracks have ended.
   const ended = { active: false } as unknown as MediaStream;
-  assert.throws(() => createAudioRecorder(ended).start(250), /unsupported/);
+  assert.throws(() => { createAudioRecorder(ended).start(250); }, /unsupported/);
   const recorder = createAudioRecorder(stream, "audio/webm;codecs=opus");
   const events: string[] = [];
   let recorded: { data: Blob } | null = null;

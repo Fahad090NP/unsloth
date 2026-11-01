@@ -527,7 +527,7 @@ function skipNode(options: {
       return null;
     },
   };
-  return node as unknown as ReturnType<typeof skipNode>;
+  return node;
 }
 
 function record(
@@ -1534,7 +1534,7 @@ test("the reveal looks again while the scroll is still moving", async () => {
   assert.match(body, /range\.startContainer\.isConnected/);
   assert.match(USE_FIND_IN_PAGE, /revealRangeWhenPainted\(activeRange\)/);
   assert.equal(
-    /scrollRangeIntoView\(activeRange\)/.test(USE_FIND_IN_PAGE),
+    USE_FIND_IN_PAGE.includes('scrollRangeIntoView(activeRange)'),
     false,
   );
 });
@@ -1830,7 +1830,7 @@ test("the grapheme boundary is the platform's answer, not a list of ranges", () 
 
 test("an engine whose `containing` is off by one is not trusted with it", () => {
   // WebKit reads 0, 0, 1 here where Chromium and Firefox read 0, 1, 1.
-  const body = `x${"\u{1f44d}"} and caf\u00e9`;
+  const body = `x\u{1f44d} and caf\u00e9`;
   const withReal = buildTextIndex(el("DIV", [el("P", [text(body)])]));
   const correct = findMatches(withReal, "x", 10);
   assert.deepEqual(correct, [{ start: 0, end: 1 }]);
@@ -2302,14 +2302,14 @@ test("a match with no geometry is aimed at through its nearest laid-out ancestor
   );
   assert.match(USE_FIND_IN_PAGE, /const top = rangeTop\(range\);/);
   assert.equal(
-    /range\.getBoundingClientRect\(\)/.test(USE_FIND_IN_PAGE),
+    USE_FIND_IN_PAGE.includes('range.getBoundingClientRect()'),
     false,
   );
 });
 
 test("a fresh query starts from the scroll container's top, not the window's", async () => {
   assert.match(USE_FIND_IN_PAGE, /top >= scrollViewportTop\(range\)/);
-  assert.equal(/top >= 0/.test(USE_FIND_IN_PAGE), false);
+  assert.equal(USE_FIND_IN_PAGE.includes('top >= 0'), false);
 });
 
 test("a pending query clears the previous highlight before the next paint", async () => {
@@ -2326,7 +2326,7 @@ test("a pending query clears the previous highlight before the next paint", asyn
 
 test("re-indexing while the document changes is a throttle, and says so", async () => {
   assert.match(USE_FIND_IN_PAGE, /REINDEX_INTERVAL_MS/);
-  assert.equal(/REINDEX_DEBOUNCE_MS/.test(USE_FIND_IN_PAGE), false);
+  assert.equal(USE_FIND_IN_PAGE.includes('REINDEX_DEBOUNCE_MS'), false);
   assert.match(USE_FIND_IN_PAGE, /A throttle rather than a debounce/);
 });
 

@@ -9,7 +9,7 @@ import type {
   NodeConfig,
 } from "../../types";
 
-export type RecipeSnapshot = {
+export interface RecipeSnapshot {
   configs: Record<string, NodeConfig>;
   nodes: RecipeNode[];
   edges: Edge[];
@@ -18,9 +18,9 @@ export type RecipeSnapshot = {
   layoutDirection: LayoutDirection;
   nextId: number;
   nextY: number;
-};
+}
 
-export type ImportResult = {
+export interface ImportResult {
   errors: string[];
   snapshot: RecipeSnapshot | null;
-};
+}

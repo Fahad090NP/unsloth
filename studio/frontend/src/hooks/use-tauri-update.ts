@@ -430,14 +430,14 @@ export function useTauriUpdate(isExternalServer = false) {
 
       const backendResult = await new Promise<"complete" | string>(
         (resolve) => {
-          listen<void>("update-complete", () => resolve("complete")).then(
+          listen<void>("update-complete", () => { resolve("complete"); }).then(
             (u) => cleanups.push(u),
           );
           listen<string>("update-failed", (e) =>
-            resolve(e.payload),
+            { resolve(e.payload); },
           ).then((u) => cleanups.push(u));
 
-          invoke("start_backend_update").catch((e) => resolve(String(e)));
+          invoke("start_backend_update").catch((e) => { resolve(String(e)); });
         },
       );
 

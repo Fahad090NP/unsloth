@@ -8,15 +8,15 @@ const DOWNLOAD_TRANSPORT_EVENT = "unsloth-download-transport-change";
 
 export type DownloadTransportMode = "auto" | "xet" | "http";
 
-export type DownloadTransportSettings = {
+export interface DownloadTransportSettings {
   mode: DownloadTransportMode;
   xetAvailable: boolean;
   xetUnavailableReason: string | null;
   autoResolvesTo: "xet" | "http";
   autoReason: string | null;
-};
+}
 
-type ApiDownloadTransportSettings = {
+interface ApiDownloadTransportSettings {
   mode: string;
   // biome-ignore lint/style/useNamingConvention: API schema
   xet_available: boolean;
@@ -26,7 +26,7 @@ type ApiDownloadTransportSettings = {
   auto_resolves_to: string;
   // biome-ignore lint/style/useNamingConvention: API schema
   auto_reason: string | null;
-};
+}
 
 let cachedTransport: DownloadTransportSettings | null = null;
 let inFlightTransport: Promise<DownloadTransportSettings> | null = null;
@@ -43,7 +43,7 @@ export function subscribeDownloadTransportSettings(
   };
   window.addEventListener(DOWNLOAD_TRANSPORT_EVENT, handleChange);
   return () =>
-    window.removeEventListener(DOWNLOAD_TRANSPORT_EVENT, handleChange);
+    { window.removeEventListener(DOWNLOAD_TRANSPORT_EVENT, handleChange); };
 }
 
 function asMode(value: string, fallback: DownloadTransportMode) {
@@ -91,7 +91,7 @@ export async function loadDownloadTransportSettings(
     return cachedTransport;
   }
   if (inFlightTransport && (!opts.refresh || inFlightIsRefresh)) {
-    return inFlightTransport;
+    return await inFlightTransport;
   }
   const request = ++latestRequest;
   inFlightIsRefresh = Boolean(opts.refresh);
@@ -110,7 +110,7 @@ export async function loadDownloadTransportSettings(
       }
     });
   inFlightTransport = pending;
-  return pending;
+  return await pending;
 }
 
 // Serialize writes so the last selection is also the last PUT to land.

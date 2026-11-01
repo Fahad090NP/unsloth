@@ -47,7 +47,7 @@ export function usePinnedChatsSync(): void {
       // Synchronous, so a runtime that fails to load cannot carry edits into the next session.
       discardUnboundPinEdits();
       void loadRuntime()
-        .then((sync) => sync.resetPinnedChats({ clearPending: true }))
+        .then((sync) => { sync.resetPinnedChats({ clearPending: true }); })
         .catch(() => undefined);
       sessionMark = localStorage.getItem(AUTH_SESSION_MARK_KEY);
       refresh();
@@ -84,7 +84,7 @@ export function usePinnedChatsSync(): void {
         localStorage.getItem(AUTH_SESSION_MARK_KEY) !== sessionMark;
       if (clearPending) discardUnboundPinEdits();
       void loadRuntime()
-        .then((sync) => sync.resetPinnedChats({ clearPending }))
+        .then((sync) => { sync.resetPinnedChats({ clearPending }); })
         .catch(() => undefined);
     };
   }, []);

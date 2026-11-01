@@ -47,7 +47,7 @@ export function HubSettingsSection() {
       sectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
       consumeScrollTarget("general-hub");
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [consumeScrollTarget, scrollTarget]);
 
   useEffect(() => {
@@ -185,7 +185,7 @@ export function HubSettingsSection() {
                 placeholder={DEFAULT_HF_ENDPOINT}
                 disabled={locked}
                 aria-label={t("settings.general.hub.endpoint")}
-                onChange={(event) => setDraftEndpoint(event.target.value)}
+                onChange={(event) => { setDraftEndpoint(event.target.value); }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && endpointChanged) {
                     saveEndpoint();

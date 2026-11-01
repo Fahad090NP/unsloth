@@ -16,7 +16,7 @@ export function decisionRuntimeLabel(backend: string): string {
   return backend === "mlx" ? "MLX" : backend;
 }
 
-export type SystemOneModel = {
+export interface SystemOneModel {
   name: string;
   description: string;
   downloadBytes: number;
@@ -25,9 +25,9 @@ export type SystemOneModel = {
   available: boolean;
   unavailableReason: string | null;
   llamaCppOnly: boolean;
-};
+}
 
-export type SystemOneSettings = {
+export interface SystemOneSettings {
   enabled: boolean;
   enabledLocked: boolean;
   model: string;
@@ -50,24 +50,24 @@ export type SystemOneSettings = {
   fallbackReason: string | null;
   inputModalities: string[];
   layout: string | null;
-};
+}
 
-export type SystemOneConnection = {
+export interface SystemOneConnection {
   name: string;
   providerId: string;
   provider: string;
   model: string;
-};
+}
 
-export type SystemOneDownloadPlan = {
+export interface SystemOneDownloadPlan {
   repo: string | null;
   files: string[];
   sizeBytes: number;
   cached: boolean;
   error: string | null;
-};
+}
 
-export type SystemOneSettingsPatch = {
+export interface SystemOneSettingsPatch {
   enabled?: boolean;
   model?: string;
   device?: SystemOneDevice;
@@ -75,17 +75,17 @@ export type SystemOneSettingsPatch = {
   nativeCtx?: number;
   expectedEnabled?: boolean;
   expectedModel?: string;
-};
+}
 
-type ApiSystemOneConnection = {
+interface ApiSystemOneConnection {
   name: string;
   // biome-ignore lint/style/useNamingConvention: API schema
   provider_id: string;
   provider: string;
   model: string;
-};
+}
 
-type ApiSystemOneSettings = {
+interface ApiSystemOneSettings {
   enabled: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   enabled_locked: boolean;
@@ -134,16 +134,16 @@ type ApiSystemOneSettings = {
   // biome-ignore lint/style/useNamingConvention: API schema
   input_modalities?: string[];
   layout?: string | null;
-};
+}
 
-type ApiSystemOneDownloadPlan = {
+interface ApiSystemOneDownloadPlan {
   repo: string | null;
   files: string[];
   // biome-ignore lint/style/useNamingConvention: API schema
   size_bytes: number;
   cached: boolean;
   error: string | null;
-};
+}
 
 const SETTINGS_PATH = "/api/settings/systemone";
 const SYSTEMONE_SETTINGS_EVENT = "unsloth-systemone-settings-change";
@@ -156,7 +156,7 @@ export function subscribeSystemOneSettings(
   };
   window.addEventListener(SYSTEMONE_SETTINGS_EVENT, handleChange);
   return () =>
-    window.removeEventListener(SYSTEMONE_SETTINGS_EVENT, handleChange);
+    { window.removeEventListener(SYSTEMONE_SETTINGS_EVENT, handleChange); };
 }
 
 function publishSystemOneSettings(settings: SystemOneSettings) {
@@ -222,7 +222,7 @@ async function readSettings(res: Response, fallback: string) {
 }
 
 export async function loadSystemOneSettings(): Promise<SystemOneSettings> {
-  return readSettings(
+  return await readSettings(
     await authFetch(SETTINGS_PATH),
     "Failed to load Decision API settings",
   );
@@ -262,7 +262,7 @@ export async function validateSystemOneSettings(
 }
 
 export async function unloadSystemOneModel(): Promise<SystemOneSettings> {
-  return readSettings(
+  return await readSettings(
     await authFetch(`${SETTINGS_PATH}/unload`, { method: "POST" }),
     "Failed to unload the Decision API model",
   );

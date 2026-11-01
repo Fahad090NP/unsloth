@@ -17,11 +17,11 @@ export function TrainSubNav({
   showTrainingView: boolean;
 }): ReactElement {
   const t = useT();
-  const items: ReadonlyArray<{
+  const items: readonly {
     value: TrainSubTab;
     label: string;
     disabled: boolean;
-  }> = [
+  }[] = [
     {
       value: "configure",
       label: t("studio.tabs.configure"),

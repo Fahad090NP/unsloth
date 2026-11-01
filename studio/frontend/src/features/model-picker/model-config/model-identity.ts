@@ -28,10 +28,10 @@ export {
 
 const MODEL_STORAGE_KEY_PREFIX = "v2:";
 
-type ParsedModelStorageKey = {
+interface ParsedModelStorageKey {
   modelId: string;
   ggufVariant: string;
-};
+}
 
 function parseVersionedModelStorageKey(
   key: string,

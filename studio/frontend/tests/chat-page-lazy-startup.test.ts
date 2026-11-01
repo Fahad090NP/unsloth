@@ -75,7 +75,7 @@ function preloadsFor(
         }) => {
           assert.equal(link.rel, "modulepreload");
           assert.equal(link.crossOrigin, "");
-          appended.push(link.href as string);
+          appended.push(link.href!);
         },
       },
     },

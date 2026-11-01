@@ -89,7 +89,7 @@ export function DownloadLocationPicker() {
           <DropdownMenuLabel>Download to</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             value={dir ?? MODELS_FOLDER}
-            onValueChange={(value) => setDownloadDir(value || null)}
+            onValueChange={(value) => { setDownloadDir(value || null); }}
           >
             <DropdownMenuRadioItem value={MODELS_FOLDER}>
               Models folder
@@ -113,7 +113,7 @@ export function DownloadLocationPicker() {
       <FolderBrowser
         open={!isTauri && browserOpen}
         onOpenChange={setBrowserOpen}
-        onSelect={(path) => setDownloadDir(path)}
+        onSelect={(path) => { setDownloadDir(path); }}
         initialPath={dir ?? undefined}
         title="Choose download folder"
         confirmLabel="Download here"

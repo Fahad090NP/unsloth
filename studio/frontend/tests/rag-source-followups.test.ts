@@ -129,7 +129,7 @@ test("a picked folder past the cap keeps the first files and counts the rest", (
 /** Drives useUploadQueue renders with a stub React whose effects run after each render. */
 function queueHarness() {
   const slots: unknown[] = [];
-  const effects: Array<() => void> = [];
+  const effects: (() => void)[] = [];
   const toasts: string[] = [];
   let cursor = 0;
   const react = {

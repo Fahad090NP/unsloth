@@ -11,11 +11,11 @@ function isPathLikeId(id: string): boolean {
   return PATH_LIKE_ID_RE.test(id);
 }
 
-export type LastLocalModelLoad = {
+export interface LastLocalModelLoad {
   id: string;
   kind: LastLocalModelKind;
   ggufVariant: string | null;
-};
+}
 
 const API_PATH = "/api/settings/last-local-model";
 // Legacy pre-backend key; still read so an upgrade does not forget the model.
@@ -73,11 +73,11 @@ function writeLegacyRecord(
   }
 }
 
-type LegacyEntry = {
+interface LegacyEntry {
   record: LastLocalModelLoad;
   pendingSync: boolean;
   loadedAt: number | null;
-};
+}
 
 function readLegacyEntry(): LegacyEntry | null {
   try {

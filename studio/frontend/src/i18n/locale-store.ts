@@ -25,7 +25,7 @@ export type LocaleChangeResult =
   | "failed"
   | "cancelled";
 
-export type SetLocaleOptions = {
+export interface SetLocaleOptions {
   loadMessages?: (locale: Locale) => Promise<void> | undefined;
   signal?: AbortSignal;
   /** For hydration only: the server already holds this preference, so refusing it would let the
@@ -33,7 +33,7 @@ export type SetLocaleOptions = {
   adoptOnFailure?: boolean;
   /** A stalled request rejects nothing, so bound the wait; a late catalog still commits. */
   timeoutMs?: number;
-};
+}
 
 export const DEFAULT_LOCALE_PREFERENCE: LocalePreference = AUTO_LOCALE;
 
@@ -246,7 +246,7 @@ function applyPreference(
   pendingPreference = preference;
   pendingPreferenceShouldPersist = persist;
   notifySubscribers();
-  const cancel = () => cancelPreference(revision);
+  const cancel = () => { cancelPreference(revision); };
   signal?.addEventListener("abort", cancel, { once: true });
   if (signal?.aborted) cancel();
   const settled = pending.then<LocaleChangeResult, LocaleChangeResult>(

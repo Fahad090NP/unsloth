@@ -20,7 +20,7 @@ interface FloatingPanelOrderState {
 export const useFloatingPanelOrderStore = create<FloatingPanelOrderState>(
   (set) => ({
     top: null,
-    raise: (id) => set((state) => (state.top === id ? state : { top: id })),
+    raise: (id) => { set((state) => (state.top === id ? state : { top: id })); },
   }),
 );
 

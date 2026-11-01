@@ -13,7 +13,7 @@ const { chatKeyOfThread, useBrowserStore } = await import("../src/features/brows
 const globals = globalThis as Record<string, unknown>;
 // The stub page loads at once, as tab-view marks a real tab loaded; else each action waits out LOAD_TIMEOUT_MS.
 useBrowserStore.subscribe(({ tabs }) => {
-  for (const tab of tabs) if (tab.loading) queueMicrotask(() => useBrowserStore.getState().updateTab(tab.id, { loading: false }));
+  for (const tab of tabs) if (tab.loading) queueMicrotask(() => { useBrowserStore.getState().updateTab(tab.id, { loading: false }); });
 });
 globals.__authFetch = async () => new Response(null, { status: 200 });
 const policy = { allowedDomains: [], blockedDomains: [] };
@@ -31,9 +31,9 @@ globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
   return { installed: true, result: { ok: true, text: "page", links: [] } };
 };
 
-type Run = { runKey: string; scope: string; userText: string };
+interface Run { runKey: string; scope: string; userText: string }
 const chatOf = (scope: string) => chatKeyOfThread(scope);
-const show = (scope: string) => useBrowserStore.getState().showChat(chatKeyOfThread(scope));
+const show = (scope: string) => { useBrowserStore.getState().showChat(chatKeyOfThread(scope)); };
 const pending = () => Object.values(useBrowserAgentStore.getState().chats).find((chat) => chat.question)?.question ?? null;
 const navigate = (id: string, run: Run, url = "https://shop.example.com/") =>
   runBrowserAction({ id, sessionId: "s", op: "navigate", url, direction: "down", policy }, run);
@@ -61,18 +61,18 @@ test("Always allow stops asking about that action on that site, in that chat onl
   const a = run("chat-a");
   show("chat-a");
   await navigate("a0", a);
-  assert.equal(await askedBy(click("a1", a), (id) => answerQuestion(id, true, true)), "click+always");
+  assert.equal(await askedBy(click("a1", a), (id) => { answerQuestion(id, true, true); }), "click+always");
   const clicks = sent.filter((op) => op === "click").length;
-  assert.equal(await askedBy(click("a2", a), (id) => answerQuestion(id, false)), null, "asked again after Always allow");
+  assert.equal(await askedBy(click("a2", a), (id) => { answerQuestion(id, false); }), null, "asked again after Always allow");
   assert.equal(sent.filter((op) => op === "click").length, clicks + 1);
 
   const b = run("chat-b");
   show("chat-b");
   await navigate("b0", b);
-  assert.equal(await askedBy(click("b1", b), (id) => answerQuestion(id, false)), "click+always", "another chat inherited Always allow");
+  assert.equal(await askedBy(click("b1", b), (id) => { answerQuestion(id, false); }), "click+always", "another chat inherited Always allow");
 
   show("chat-a");
-  assert.equal(await askedBy(click("a3", a), (id) => answerQuestion(id, false)), null, "Always allow lost on coming back to the chat");
+  assert.equal(await askedBy(click("a3", a), (id) => { answerQuestion(id, false); }), null, "Always allow lost on coming back to the chat");
 });
 
 test("Always allow on a click covers only the button it named", async () => {
@@ -80,11 +80,11 @@ test("Always allow on a click covers only the button it named", async () => {
   show("chat-c");
   info = buy;
   await navigate("c0", c);
-  assert.equal(await askedBy(click("c1", c), (id) => answerQuestion(id, true, true)), "click+always");
+  assert.equal(await askedBy(click("c1", c), (id) => { answerQuestion(id, true, true); }), "click+always");
   info = { ...buy, name: "Delete account" };
-  assert.equal(await askedBy(click("c2", c), (id) => answerQuestion(id, true)), "click+always");
+  assert.equal(await askedBy(click("c2", c), (id) => { answerQuestion(id, true); }), "click+always");
   info = buy;
-  assert.equal(await askedBy(click("c3", c), (id) => answerQuestion(id, true)), null);
+  assert.equal(await askedBy(click("c3", c), (id) => { answerQuestion(id, true); }), null);
 });
 
 test("Always allow isn't offered or kept for a new chat's first turn before it has an id", async () => {
@@ -92,8 +92,8 @@ test("Always allow isn't offered or kept for a new chat's first turn before it h
   const first = run("__default");
   useBrowserStore.getState().showChat("new:e");
   await navigate("e0", first);
-  assert.equal(await askedBy(click("e1", first), (id) => answerQuestion(id, true, true)), "click");
-  assert.equal(await askedBy(click("e2", first), (id) => answerQuestion(id, true)), "click");
+  assert.equal(await askedBy(click("e1", first), (id) => { answerQuestion(id, true, true); }), "click");
+  assert.equal(await askedBy(click("e2", first), (id) => { answerQuestion(id, true); }), "click");
 });
 
 test("Always allow isn't offered or kept for a native Back whose destination is unknown", async () => {
@@ -110,10 +110,10 @@ test("Always allow isn't offered or kept for a native Back whose destination is 
       useBrowserStore.getState().updateTab(tabId, { nativeHistory: { back: true, forward: false } });
       return runBrowserAction({ id, sessionId: "s", op: "back", direction: "down", policy }, g);
     };
-    assert.equal(await askedBy(back("g1"), (id) => answerQuestion(id, true, true)), "open");
+    assert.equal(await askedBy(back("g1"), (id) => { answerQuestion(id, true, true); }), "open");
     // The user browsed on in the view, so where Back leads is unknown again.
     useBrowserStore.getState().updateTab(tabId, { displayUrl: "https://shop.example.com/elsewhere" });
-    assert.equal(await askedBy(back("g2"), (id) => answerQuestion(id, false)), "open", "an unnamed Back reused Always allow");
+    assert.equal(await askedBy(back("g2"), (id) => { answerQuestion(id, false); }), "open", "an unnamed Back reused Always allow");
   } finally {
     globals.__native = false;
     delete globals.__callNative;
@@ -125,10 +125,10 @@ test("Always allow doesn't answer for an action that was stopped", async () => {
   const d = run("chat-d");
   show("chat-d");
   await navigate("d0", d);
-  assert.equal(await askedBy(click("d1", d), (id) => answerQuestion(id, true, true)), "click+always");
+  assert.equal(await askedBy(click("d1", d), (id) => { answerQuestion(id, true, true); }), "click+always");
   const clicks = sent.filter((op) => op === "click").length;
   // Stop lands while the next click on that button is being read, before it is asked about.
-  onClick = () => stopBrowserAgent(chatOf("chat-d"));
+  onClick = () => { stopBrowserAgent(chatOf("chat-d")); };
   try {
     await click("d2", d);
   } finally {

@@ -1003,7 +1003,7 @@ test("a cleared alternate keeps its row, so it can be restored", async () => {
 test("the chords that need one target do not fire where there are two", async () => {
   // No React renderer here, so this asserts on source, like its siblings.
   const read = async (path: string) =>
-    readFile(new URL(path, import.meta.url), "utf8");
+    await readFile(new URL(path, import.meta.url), "utf8");
   const chatPage = await read("../src/features/chat/chat-page.tsx");
   const thread = await read("../src/components/assistant-ui/thread.tsx");
   const toolCard = await read(
@@ -1031,7 +1031,7 @@ test("the chords that need one target do not fire where there are two", async ()
 // These surfaces' open flags outlive what they open, so leaving without closing reopens them.
 test("a chord's surface does not come back open on the next visit", async () => {
   const read = async (path: string) =>
-    readFile(new URL(path, import.meta.url), "utf8");
+    await readFile(new URL(path, import.meta.url), "utf8");
   const chatPage = await read("../src/features/chat/chat-page.tsx");
   const mcp = await read("../src/features/chat/mcp-composer-button.tsx");
 
@@ -1081,7 +1081,7 @@ test("only bare Escape drops the selection", async () => {
 // The mobile drawer is owned by SidebarProvider outside the Outlet, so it survives navigation.
 test("the workspace chords do not leave the mobile drawer over the workspace", async () => {
   const read = async (path: string) =>
-    readFile(new URL(path, import.meta.url), "utf8");
+    await readFile(new URL(path, import.meta.url), "utf8");
   const root = await read("../src/app/routes/__root.tsx");
   const sidebar = await read("../src/components/app-sidebar.tsx");
 
@@ -1198,7 +1198,7 @@ test("every sidebar chat rename opens the dialog", () => {
 // The sidebar answers bare Escape without consuming it, so one press could also deny a tool call.
 test("one Escape does not both drop a selection and deny a tool call", async () => {
   const read = async (path: string) =>
-    readFile(new URL(path, import.meta.url), "utf8");
+    await readFile(new URL(path, import.meta.url), "utf8");
   const sidebar = await read("../src/components/app-sidebar.tsx");
   const toolCard = await read(
     "../src/components/assistant-ui/tool-confirmation-controls.tsx",
@@ -1515,7 +1515,7 @@ test("the Recents loop registers every numbered slot the registry declares", () 
 // Held chords auto-repeat past the OS delay; toggles and archives must not.
 test("auto-repeat only reaches the actions that walk a list", async () => {
   const read = async (path: string) =>
-    readFile(new URL(path, import.meta.url), "utf8");
+    await readFile(new URL(path, import.meta.url), "utf8");
   const hook = await read("../src/features/settings/hooks/use-shortcut.ts");
   const at = hook.indexOf("event.preventDefault();");
   assert.ok(at !== -1, "the hook stopped consuming the chord");

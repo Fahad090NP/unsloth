@@ -6,21 +6,21 @@ export const DEEP_RESEARCH_STARTED_MARKER = "Deep Research has started";
 /** `CreateResearchRun.question`'s max_length; a longer question would 422. */
 export const DEEP_RESEARCH_QUESTION_MAX_CHARS = 2000;
 
-export type DeepResearchToolEvent = {
+export interface DeepResearchToolEvent {
   type?: unknown;
   tool_call_id?: unknown;
   arguments?: unknown;
   result?: unknown;
   awaiting_confirmation?: unknown;
-};
+}
 
-export type DeepResearchHandoff = {
+export interface DeepResearchHandoff {
   /** The question to research; "" means the user's own message, null means no handoff yet. */
   question: string | null;
   pendingCallId: string;
   pendingQuestion: string;
   hiddenCallIds: Set<string>;
-};
+}
 
 export function newDeepResearchHandoff(): DeepResearchHandoff {
   return {

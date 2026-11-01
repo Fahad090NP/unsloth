@@ -43,7 +43,7 @@ export function useSliderDraft(
     if (event.target === document) release(event);
   });
   useLayoutEffect(() => {
-    const onLostCapture = (event: PointerEvent) => releaseRemoved(event);
+    const onLostCapture = (event: PointerEvent) => { releaseRemoved(event); };
     document.addEventListener("lostpointercapture", onLostCapture);
     return () => {
       document.removeEventListener("lostpointercapture", onLostCapture);
@@ -61,7 +61,7 @@ export function useSliderDraft(
         if (pointers.current.size === 0) return;
         const drag = { value: next, base: owner.current };
         dragged.current = drag;
-        flushSync(() => show(next));
+        flushSync(() => { show(next); });
         drag.base = owner.current;
       },
       onValueCommit: ([next]: number[]) => {

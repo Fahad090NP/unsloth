@@ -7,7 +7,7 @@ import { DEFAULT_NODE_HEIGHT, DEFAULT_NODE_WIDTH } from "../constants";
 import { INFRA_NODE_KINDS, type LayoutDirection, type NodeConfig } from "../types";
 import { readNodeHeight, readNodeWidth } from "./rf-node-dimensions";
 
-type LayoutOptions = {
+interface LayoutOptions {
   direction?: LayoutDirection;
   nodesep?: number;
   ranksep?: number;
@@ -15,7 +15,7 @@ type LayoutOptions = {
   nodeWidth?: number;
   nodeHeight?: number;
   configs?: Record<string, NodeConfig>;
-};
+}
 
 function getPipelineRank(config: NodeConfig | undefined): number {
   if (!config) {

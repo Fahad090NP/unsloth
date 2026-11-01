@@ -38,7 +38,7 @@ export function parseJsonObject(
   label: string,
   errors: string[],
 ): Record<string, unknown> | undefined {
-  if (!value || !value.trim()) {
+  if (!value?.trim()) {
     return undefined;
   }
   try {

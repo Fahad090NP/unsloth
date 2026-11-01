@@ -64,7 +64,7 @@ export function AudioOptionFields({
                   id={id}
                   checked={value === true}
                   disabled={disabled}
-                  onCheckedChange={(checked) => onChange(spec.name, checked)}
+                  onCheckedChange={(checked) => { onChange(spec.name, checked); }}
                 />
               </FieldLabel>
               <OptionHint text={spec.description} />
@@ -84,7 +84,7 @@ export function AudioOptionFields({
               disabled={disabled}
               info={spec.description ?? undefined}
               onChange={(next) =>
-                onChange(spec.name, coerceAudioOptionValue(spec, next))
+                { onChange(spec.name, coerceAudioOptionValue(spec, next)); }
               }
             />
           );
@@ -97,7 +97,7 @@ export function AudioOptionFields({
               </FieldLabel>
               <Select
                 value={typeof value === "string" ? value : undefined}
-                onValueChange={(next) => onChange(spec.name, next)}
+                onValueChange={(next) => { onChange(spec.name, next); }}
                 disabled={disabled}
               >
                 <SelectTrigger id={id} size="sm" className="w-full">

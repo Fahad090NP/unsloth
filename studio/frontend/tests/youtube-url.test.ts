@@ -49,7 +49,7 @@ test("rejects look-alike hosts and non-video URLs", () => {
 
 test("finds YouTube links in clipboard text and URI payloads", () => {
   const shortUrl = `https://youtu.be/${ID}`;
-  const cases: Array<[Record<string, string>, string | null]> = [
+  const cases: [Record<string, string>, string | null][] = [
     [{ "text/plain": `Rick Astley\n${shortUrl}` }, shortUrl],
     [{ "text/uri-list": `# copied link\r\n${shortUrl}\r\n` }, shortUrl],
     [{ "text/plain": "Rick Astley", "text/uri-list": shortUrl }, shortUrl],

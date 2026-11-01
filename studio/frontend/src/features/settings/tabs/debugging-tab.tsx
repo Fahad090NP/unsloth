@@ -273,7 +273,7 @@ export function DebuggingTab() {
   useEffect(() => {
     const controller = new AbortController();
     void refreshSources({ signal: controller.signal });
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [refreshSources]);
 
   const pendingLogRequest = useSettingsDialogStore(pendingLogRequestKey);
@@ -281,7 +281,7 @@ export function DebuggingTab() {
     if (pendingLogRequest === NO_PENDING_LOG_REQUEST) return;
     const controller = new AbortController();
     void refreshSources({ signal: controller.signal });
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [pendingLogRequest, refreshSources]);
 
   const onPollFailed = useCallback(
@@ -467,7 +467,7 @@ export function DebuggingTab() {
       const startHeight = frame.getBoundingClientRect().height;
       handle.setPointerCapture(event.pointerId);
       const move = (moveEvent: PointerEvent) =>
-        resizePane(startHeight + moveEvent.clientY - startY);
+        { resizePane(startHeight + moveEvent.clientY - startY); };
       const end = () => {
         handle.removeEventListener("pointermove", move);
         handle.removeEventListener("pointerup", end);
@@ -597,7 +597,7 @@ export function DebuggingTab() {
         <SettingsRow label={t("settings.debugging.source")} wideControl={true}>
           <Select
             value={sourceId ?? ""}
-            onValueChange={(value) => setSourceId(value || null)}
+            onValueChange={(value) => { setSourceId(value || null); }}
             disabled={sources.length === 0}
           >
             <SelectTrigger
@@ -654,7 +654,7 @@ export function DebuggingTab() {
                     role="radio"
                     data-testid={`debug-log-mode-${candidate}`}
                     aria-checked={active}
-                    onClick={() => setMode(candidate)}
+                    onClick={() => { setMode(candidate); }}
                     className={cn(
                       "relative flex h-8 items-center rounded-full px-3 text-xs font-medium transition-colors",
                       active
@@ -702,7 +702,7 @@ export function DebuggingTab() {
             <InputGroupInput
               type="search"
               value={filter}
-              onChange={(event) => setFilter(event.target.value)}
+              onChange={(event) => { setFilter(event.target.value); }}
               placeholder={t("settings.debugging.filterPlaceholder")}
               aria-label={t("settings.debugging.filterPlaceholder")}
               data-testid="debug-log-filter"
@@ -812,7 +812,7 @@ export function DebuggingTab() {
                 variant="ghost"
                 aria-pressed={wrap}
                 aria-label={t("settings.debugging.wrapLines")}
-                onClick={() => setWrap((previous) => !previous)}
+                onClick={() => { setWrap((previous) => !previous); }}
                 data-testid="debug-log-wrap"
                 className={cn(
                   "absolute top-1.5 right-3.5 size-7 bg-background/80 shadow-sm backdrop-blur-sm hover:bg-background [&_svg]:size-3.5",
@@ -848,7 +848,7 @@ export function DebuggingTab() {
           title={t("settings.debugging.resizeLog")}
           onPointerDown={onResizeStart}
           onKeyDown={onResizeKey}
-          onDoubleClick={() => resizePane(null)}
+          onDoubleClick={() => { resizePane(null); }}
           data-testid="debug-log-resize"
           className="group/resize -mt-2.5 flex h-3 w-full cursor-row-resize touch-none items-center justify-center rounded-full focus-visible:outline-none"
         >

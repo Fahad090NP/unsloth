@@ -93,14 +93,14 @@ function userMarkdown(index: number): string {
  * `"all"` makes every reply plain; omitting it keeps the default fenced body everywhere, so
  * the existing weight measurements are untouched.
  */
-type SeedOptions = {
+interface SeedOptions {
   plainAssistants?: readonly number[] | "all";
   /**
    * `rounds` x reasoning, tool call, answer per reply; truncation every `compactionEvery`th.
    * `sources` adds six URL source parts after every web_search call.
    */
   agent?: { rounds: number; compactionEvery?: number; sources?: boolean };
-};
+}
 
 const AGENT_TOOLS = ["web_search", "terminal", "python"] as const;
 
@@ -380,7 +380,7 @@ const MEMORY_THREAD_LIST: unstable_RemoteThreadListAdapter = {
   delete: async () => {},
   initialize: async (threadId) => ({ remoteId: threadId, externalId: undefined }),
   generateTitle: async () =>
-    new ReadableStream({ start: (controller) => controller.close() }) as never,
+    new ReadableStream({ start: (controller) => { controller.close(); } }) as never,
   fetch: async (threadId) => ({
     status: "regular",
     remoteId: threadId,

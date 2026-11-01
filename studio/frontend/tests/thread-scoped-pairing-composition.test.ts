@@ -134,7 +134,7 @@ test("the whole attempt, waits included, sits inside one deadline", () => {
       (element) =>
         element !== gate &&
         element.getText().includes("THREAD_READ_TIMEOUT_MS") &&
-        /reject\(/.test(element.getText()),
+        element.getText().includes('reject('),
     ),
     "the deadline does not reject on THREAD_READ_TIMEOUT_MS; a deadline that RESOLVES " +
       "would fall through to the read, find no row, and release this chat's held edits " +

@@ -48,7 +48,7 @@ export function AppReadinessBoundary({
   revealed: boolean;
   children: ReactNode;
 }): ReactNode {
-  const [scope] = useState(() => createAppReadinessScope(() => onReady(true)));
+  const [scope] = useState(() => createAppReadinessScope(() => { onReady(true); }));
   useLayoutEffect(() => {
     scope.activate();
     return scope.dispose;

@@ -64,7 +64,7 @@ function useMissing(downloads: DownloadItem[], enabled: boolean) {
       window.removeEventListener("focus", check);
     };
   }, [ids, enabled, checks]);
-  return { missing, recheck: () => setChecks((count) => count + 1) };
+  return { missing, recheck: () => { setChecks((count) => count + 1); } };
 }
 
 function KindTile({ name, contentType, muted }: { name: string; contentType: string; muted?: boolean }) {
@@ -164,7 +164,7 @@ function DownloadRow({
               {t("browser.downloads.copyLink")}
             </DropdownMenuItem>
           ) : null}
-          <DropdownMenuItem onSelect={() => useBrowserHistoryStore.getState().removeDownload(item.id)}>
+          <DropdownMenuItem onSelect={() => { useBrowserHistoryStore.getState().removeDownload(item.id); }}>
             <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.75} className="size-4" />
             {t("browser.pages.removeFromHistory")}
           </DropdownMenuItem>
@@ -355,13 +355,13 @@ export function DownloadsButton({
       setMode("closed");
       useDownloadActivity.getState().dismissFinished();
     }, COMPLETE_SHOWN_MS);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); };
   }, [mode, hovered, finishedSequence]);
   const label = t(active ? "browser.downloads.inProgressLabel" : "browser.downloads.title");
   const lit = active || mode === "finished";
 
   return (
-    <Popover open={mode !== "closed"} onOpenChange={(open) => (open ? setMode("list") : close())}>
+    <Popover open={mode !== "closed"} onOpenChange={(open) => { open ? setMode("list") : close(); }}>
       <PopoverAnchor asChild={true}>
         <span
           ref={anchorRef}
@@ -376,7 +376,7 @@ export function DownloadsButton({
                 type="button"
                 aria-label={label}
                 aria-expanded={mode !== "closed"}
-                onClick={() => (mode === "list" ? close() : setMode("list"))}
+                onClick={() => { mode === "list" ? close() : setMode("list"); }}
                 className={cn(className, lit && "text-primary hover:text-primary")}
               >
                 {active ? (
@@ -401,8 +401,8 @@ export function DownloadsButton({
         onPointerDownOutside={(event) => {
           if (anchorRef.current?.contains(event.target as Node)) event.preventDefault();
         }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseEnter={() => { setHovered(true); }}
+        onMouseLeave={() => { setHovered(false); }}
         className={cn(
           "browser-menu gap-2 rounded-xl p-2",
           mode === "finished" ? "w-80 p-3" : "w-96 max-h-[min(32rem,var(--radix-popover-content-available-height))]",

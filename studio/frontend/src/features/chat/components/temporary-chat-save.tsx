@@ -62,13 +62,13 @@ function rememberSkipConfirm(): void {
   }
 }
 
-type SaveTarget = {
+interface SaveTarget {
   hasMessages: boolean;
   running: boolean;
   queued: boolean;
   save: () => Promise<void>;
   markdown: () => string;
-};
+}
 
 const useSaveTarget = create<{ target: SaveTarget | null }>(() => ({ target: null }));
 
@@ -115,7 +115,7 @@ export function TemporaryChatSaveBridge() {
           ),
       },
     });
-    return () => useSaveTarget.setState({ target: null });
+    return () => { useSaveTarget.setState({ target: null }); };
   }, [aui, incognito, remoteId, hasMessages, running, queued]);
 
   return null;
@@ -268,7 +268,7 @@ export function SaveTemporaryChatMenu({
                 id={checkboxId}
                 checked={dontShowAgain}
                 onCheckedChange={(checked) =>
-                  setDontShowAgain(checked === true)
+                  { setDontShowAgain(checked === true); }
                 }
                 disabled={saving}
               />
@@ -278,7 +278,7 @@ export function SaveTemporaryChatMenu({
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => setOpen(false)}
+                onClick={() => { setOpen(false); }}
                 disabled={saving}
               >
                 Keep temporary

@@ -29,7 +29,7 @@ async function parseResponse<Result>(response: Response) {
 export async function getMediaGenerationPresetSettings<Params>(
   kind: MediaGenerationKind,
 ) {
-  return parseResponse<MediaGenerationPresetSettings<Params>>(
+  return await parseResponse<MediaGenerationPresetSettings<Params>>(
     await authFetch(`/api/settings/generation-presets/${kind}`),
   );
 }
@@ -39,7 +39,7 @@ export async function saveMediaGenerationPresetSettings<Params>(
   settings: MediaGenerationPresetState<Params>,
   keepalive = false,
 ) {
-  return parseResponse<{ saved: boolean }>(
+  return await parseResponse<{ saved: boolean }>(
     await authFetch(`/api/settings/generation-presets/${kind}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -53,7 +53,7 @@ export async function upsertMediaGenerationPreset<Params>(
   kind: MediaGenerationKind,
   preset: MediaGenerationPreset<Params>,
 ) {
-  return parseResponse<{ saved: boolean }>(
+  return await parseResponse<{ saved: boolean }>(
     await authFetch(`/api/settings/generation-presets/${kind}/custom`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -67,7 +67,7 @@ export async function deleteMediaGenerationPreset(
   name: string,
 ) {
   const query = new URLSearchParams({ name });
-  return parseResponse<{ deleted: boolean }>(
+  return await parseResponse<{ deleted: boolean }>(
     await authFetch(
       `/api/settings/generation-presets/${kind}/custom?${query}`,
       { method: "DELETE", keepalive: true },

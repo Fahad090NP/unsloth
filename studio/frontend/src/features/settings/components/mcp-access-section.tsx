@@ -216,7 +216,7 @@ export function McpAccessSection({
                         <button
                           key={option.os}
                           type="button"
-                          onClick={() => setStoredOs(option.os)}
+                          onClick={() => { setStoredOs(option.os); }}
                           aria-pressed={os === option.os}
                           className={cn(
                             "relative inline-flex h-8 items-center rounded-full px-3.5 text-ui-12 font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",

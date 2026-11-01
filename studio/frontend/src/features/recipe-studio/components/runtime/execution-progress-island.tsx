@@ -19,13 +19,13 @@ import {
   formatPercent,
 } from "../executions/executions-view-helpers";
 
-type ExecutionProgressIslandProps = {
+interface ExecutionProgressIslandProps {
   execution: RecipeExecutionRecord;
   currentColumnIcon: typeof Flag02Icon;
   minimized: boolean;
   onMinimizedChange: (value: boolean) => void;
   onViewExecutions: () => void;
-};
+}
 
 function formatEta(value: number | null | undefined): string {
   const metric = formatMetricValue(value);
@@ -59,7 +59,7 @@ function formatGitHubSourceSummary(
   execution: RecipeExecutionRecord,
 ): string | null {
   const source = execution.source_progress;
-  if (!source || source.source !== "github") {
+  if (source?.source !== "github") {
     return null;
   }
   if (source.status === "rate_limited") {
@@ -161,7 +161,7 @@ export function ExecutionProgressIsland({
           </span>
           <button
             type="button"
-            onClick={() => onMinimizedChange(!minimized)}
+            onClick={() => { onMinimizedChange(!minimized); }}
             className="btn-fill inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition "
             aria-label={minimized ? "Expand progress" : "Minimize progress"}
             title={minimized ? "Expand" : "Minimize"}

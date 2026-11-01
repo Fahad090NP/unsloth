@@ -146,7 +146,7 @@ test("a backstop rejection is not mistaken for a caller cancellation", async () 
 
 test("a caller abort stays silent even when the backstop races it", async () => {
   const controller = new AbortController();
-  setTimeout(() => controller.abort(), 10);
+  setTimeout(() => { controller.abort(); }, 10);
   await assert.rejects(
     () => withRequestTimeout(neverAnswers, 10, controller.signal),
     (error: Error) => isAbort(error) && !isRequestTimeout(error),

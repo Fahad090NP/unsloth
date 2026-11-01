@@ -17,12 +17,12 @@ import {
 
 type PickerViewInput = PickerDeviceInventoryState;
 
-type PickerViewState = {
+interface PickerViewState {
   activeQuery: string;
   handleOpenChange: (nextOpen: boolean) => void;
   handleQueryChange: (next: string) => void;
   tab: PickerTab;
-};
+}
 
 export function usePickerState({
   storageKey,

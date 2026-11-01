@@ -276,7 +276,7 @@ export function useChatAudioUpload({
       return;
     }
     const timer = window.setInterval(() => void refreshReadiness(true), 1500);
-    return () => window.clearInterval(timer);
+    return () => { window.clearInterval(timer); };
   }, [dialogOpen, readiness.state, refreshReadiness]);
 
   const openDialog = useCallback(() => {
@@ -284,7 +284,7 @@ export function useChatAudioUpload({
     setDialogOpen(true);
   }, [busy, disabled]);
 
-  const closeDialog = useCallback(() => clearOperation(), [clearOperation]);
+  const closeDialog = useCallback(() => { clearOperation(); }, [clearOperation]);
 
   const snapshotForPicker = useCallback((): ChatAudioUploadSnapshot | null => {
     if (disabled || busy || accountTransitionPending()) return null;
@@ -293,7 +293,7 @@ export function useChatAudioUpload({
       toast.error(t("settings.voice.dictation.audioUploadChooseModel"), {
         action: {
           label: t("settings.voice.dictation.sttOpenVoiceSettings"),
-          onClick: () => useSettingsDialogStore.getState().openDialog("voice"),
+          onClick: () => { useSettingsDialogStore.getState().openDialog("voice"); },
         },
       });
       return null;

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-type MessagePartLike = {
+interface MessagePartLike {
   type?: unknown;
   text?: unknown;
-};
+}
 
-type ReasoningMetadata = {
+interface ReasoningMetadata {
   reasoningDuration?: unknown;
   reasoningDurations?: unknown;
-};
+}
 
 function asDuration(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) && value >= 0

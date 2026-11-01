@@ -32,7 +32,7 @@ export async function recipeRequest<T>(
       headers: init?.body ? { "Content-Type": "application/json" } : undefined,
     },
     // A write retried after a refresh must not land in an account that signed in meanwhile.
-    { beforeRetry: () => assertSameSession(epoch) },
+    { beforeRetry: () => { assertSameSession(epoch); } },
   );
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => null);

@@ -3,11 +3,11 @@
 
 // The frame is an opaque origin, so the parent fetches (once per session) and inlines the files.
 
-export type PreviewRuntimeManifest = {
+export interface PreviewRuntimeManifest {
   files: Record<string, { url: string; bytes: number; version: string }>;
   modules: Record<string, string>;
   tailwind: string;
-};
+}
 
 export type FetchBytes = (url: string) => Promise<Uint8Array>;
 

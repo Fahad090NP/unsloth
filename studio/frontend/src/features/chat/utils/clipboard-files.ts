@@ -19,17 +19,17 @@ const MAX_CLIPBOARD_VIDEO_BYTES = 75_497_280;
 const MAX_CLIPBOARD_BYTES = MAX_CLIPBOARD_VIDEO_BYTES;
 const MAX_CLIPBOARD_FILES = 8;
 
-type ClipboardPasteEvent = {
+interface ClipboardPasteEvent {
   readonly clipboardData: DataTransfer | null;
   readonly defaultPrevented: boolean;
   readonly isTrusted: boolean;
   preventDefault: () => void;
-};
-type NativeClipboardFile = {
+}
+interface NativeClipboardFile {
   readonly name: string;
   readonly mimeType: string;
   readonly base64: string;
-};
+}
 
 function validDimension(value: number): boolean {
   return (
@@ -40,7 +40,7 @@ function validDimension(value: number): boolean {
 }
 
 function canvasPng(canvas: HTMLCanvasElement): Promise<Blob | null> {
-  return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+  return new Promise((resolve) => { canvas.toBlob(resolve, "image/png"); });
 }
 
 function isLinuxDesktop(): boolean {

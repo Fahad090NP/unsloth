@@ -10,11 +10,11 @@ const frames: (() => void)[] = [];
 const mutations: (() => void)[] = [];
 const rect = (x: number, y: number, width: number, height: number) =>
   ({ left: x, top: y, right: x + width, bottom: y + height, width, height }) as DOMRect;
-type Overlay = {
+interface Overlay {
   getBoundingClientRect: () => DOMRect;
   closest: () => null;
   querySelector: (selector: string) => object | null;
-};
+}
 const overlay = (box: DOMRect): Overlay => ({
   getBoundingClientRect: () => box,
   closest: () => null,
@@ -93,7 +93,7 @@ Object.assign(globalThis, {
   },
 });
 
-type Call = { command: string; args?: Record<string, unknown> };
+interface Call { command: string; args?: Record<string, unknown> }
 const calls: Call[] = [];
 (globalThis as { nativeViewCall?: unknown }).nativeViewCall = (command: string, args?: Record<string, unknown>) => {
   calls.push({ command, args });

@@ -8,12 +8,12 @@ import type * as NpuCatalogStore from "../src/features/npu/npu-catalog-store.ts"
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
 type Progress = (event: { event: string; percent?: number }) => void;
-type Pull = {
+interface Pull {
   id: string;
   follow: boolean;
   onProgress: Progress;
   finish: (error?: Error) => void;
-};
+}
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -36,7 +36,7 @@ function harness() {
         id,
         follow,
         onProgress,
-        finish: (error) => (error ? reject(error) : resolve()),
+        finish: (error) => { error ? reject(error) : resolve(); },
       });
     });
   const store = loadWithStubs<typeof NpuCatalogStore>(
@@ -77,10 +77,10 @@ const tick = () => new Promise((resolve) => setImmediate(resolve));
 
 class NpuDownloadError extends Error {}
 
-type Clock = {
+interface Clock {
   enable: (options: { apis: "setTimeout"[] }) => void;
   tick: (ms: number) => void;
-};
+}
 
 const settle = async () => {
   for (let i = 0; i < 20; i++) await tick();

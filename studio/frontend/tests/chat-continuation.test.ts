@@ -232,7 +232,7 @@ test("a reloaded empty turn keeps its reason instead of reading as a Stop", () =
       ? "cancelled"
       : stamped?.reason;
   assert.equal(reason, "empty");
-  assert.notEqual(incompleteRemedy(reason!), null);
+  assert.notEqual(incompleteRemedy(reason), null);
 
   assert.equal(resolveIncompleteReason("cancelled", false), "cancelled");
 });
@@ -392,7 +392,7 @@ test("a tool-using turn that fills the window is the case the bar must not miss"
   assert.equal(isContinuableContent(content), false);
   const reason = resolveIncompleteReason("length", true);
   assert.equal(reason, "context_window");
-  assert.notEqual(incompleteRemedy(reason!), null);
+  assert.notEqual(incompleteRemedy(reason), null);
 });
 
 test("the bar offers the way out in place of a Continue that cannot help", () => {
@@ -2238,7 +2238,7 @@ test("only what the runtime actually hands back is treated as the run", () => {
   const parked: { settle?: (ok: boolean) => void } = {};
   const thenable = {
     then: (onOk: () => void, onErr: () => void) => {
-      parked.settle = (ok: boolean) => (ok ? onOk() : onErr());
+      parked.settle = (ok: boolean) => { ok ? onOk() : onErr(); };
     },
   };
   const custom = issuedRunFrom(thenable);

@@ -43,7 +43,7 @@ export function memoOnArrayByKey<K, V>(
   return value;
 }
 
-type PartLike = { readonly type: string; readonly text?: unknown };
+interface PartLike { readonly type: string; readonly text?: unknown }
 
 export const partsHaveRenderableRenderHtmlTool = memoOnArray(
   (parts: readonly unknown[]) => parts.some(isRenderableRenderHtmlToolPart),
@@ -66,13 +66,13 @@ export const partsHaveNonEmptyText = memoOnArray((parts: readonly PartLike[]) =>
 
 export const partsSearchImagesSignature = memoOnArray(
   (
-    parts: ReadonlyArray<{ type: string; toolName?: string; result?: unknown }>,
+    parts: readonly { type: string; toolName?: string; result?: unknown }[],
   ) => searchImagesSignature(parts),
 );
 
 // Slices of one joined string (as answerTextFromParts joins); a string per part was quadratic.
 const precedingTextLayout = memoOnArray(
-  (parts: ReadonlyArray<{ type: string; text?: unknown }>) => {
+  (parts: readonly { type: string; text?: unknown }[]) => {
     const texts: string[] = [];
     const ends: number[] = [];
     let end = 0;
@@ -90,7 +90,7 @@ const precedingTextLayout = memoOnArray(
 );
 
 export function partsPrecedingText(
-  parts: ReadonlyArray<{ type: string; text?: unknown }>,
+  parts: readonly { type: string; text?: unknown }[],
   partIndex: number,
 ): string {
   const layout = precedingTextLayout(parts);
@@ -103,11 +103,11 @@ export function partsPrecedingText(
   return text;
 }
 
-type MessageLike = {
+interface MessageLike {
   readonly id: string;
   readonly role: string;
   readonly metadata?: unknown;
-};
+}
 
 export const compactionNoticeMessageIds = memoOnArray(
   (messages: readonly MessageLike[]): ReadonlySet<string> => {
@@ -129,11 +129,11 @@ export const compactionNoticeMessageIds = memoOnArray(
   },
 );
 
-type CompactionDividers = {
+interface CompactionDividers {
   rows: ReadonlyMap<string, ContextTruncation>;
   /** Keyed by reply: tool call ids are only unique within one. */
   afterToolCalls: ReadonlyMap<string, CompactionMarker>;
-};
+}
 
 const NO_COMPACTION_DIVIDERS: CompactionDividers = {
   rows: new Map(),

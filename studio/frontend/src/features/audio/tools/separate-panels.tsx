@@ -19,7 +19,7 @@ export const roformerOverlapPanel: AudioToolPanel<OverlapValue> = {
           id="separate-overlap"
           checked={value.overlap}
           disabled={disabled}
-          onCheckedChange={(overlap) => onChange({ overlap })}
+          onCheckedChange={(overlap) => { onChange({ overlap }); }}
         />
       </FieldLabel>
       <p className="text-ui-11p5 leading-snug text-muted-foreground">

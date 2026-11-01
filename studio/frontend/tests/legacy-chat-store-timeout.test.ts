@@ -7,7 +7,7 @@ import test from "node:test";
 import type { ThreadRecord } from "../src/features/chat/types";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Storage = {
+interface Storage {
   buildStoredChatExport: () => Promise<{
     threadCount: number;
     threads: unknown[];
@@ -16,7 +16,7 @@ type Storage = {
   clearStoredChats: () => Promise<{ backend: string; legacy: string }>;
   deleteStoredChatThreads: (ids: string[]) => Promise<string[]>;
   listStoredChatThreads: () => Promise<ThreadRecord[]>;
-};
+}
 
 const thread = (id: string): ThreadRecord => ({
   id,
@@ -93,7 +93,7 @@ async function settlesWithin<T>(promise: Promise<T>): Promise<T> {
       promise,
       new Promise<T>((_, reject) => {
         timer = setTimeout(
-          () => reject(new Error("operation did not settle")),
+          () => { reject(new Error("operation did not settle")); },
           1_500,
         );
       }),

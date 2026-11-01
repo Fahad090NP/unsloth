@@ -60,7 +60,7 @@ export type SharedConfigKey = Exclude<
   // A named drafter can be a local directory.
   | "specDraftModel"
 >;
-type Field = { label: string; valid: Validator; error?: string };
+interface Field { label: string; valid: Validator; error?: string }
 
 export const SHARED_CONFIG_FIELDS: Record<SharedConfigKey, Field> = {
   customContextLength: {

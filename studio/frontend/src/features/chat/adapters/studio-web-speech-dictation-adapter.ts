@@ -361,7 +361,7 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
           action: {
             label: "Open Voice settings",
             onClick: () =>
-              useSettingsDialogStore.getState().openDialog("voice"),
+              { useSettingsDialogStore.getState().openDialog("voice"); },
           },
         });
       } else {
@@ -402,7 +402,7 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
           return;
         }
         const audioTrack = stream.getAudioTracks()[0];
-        if (!audioTrack || audioTrack.readyState !== "live") {
+        if (audioTrack?.readyState !== "live") {
           throw new DOMException(
             "No live microphone track is available.",
             "NotFoundError",

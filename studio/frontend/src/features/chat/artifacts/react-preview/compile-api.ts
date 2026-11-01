@@ -22,8 +22,8 @@ export async function compileReactPreview(
 ): Promise<CompileResult> {
   // Linked by hand rather than with AbortSignal.any, which Safari only got in 17.4.
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), COMPILE_TIMEOUT_MS);
-  const onAbort = () => controller.abort();
+  const timer = setTimeout(() => { controller.abort(); }, COMPILE_TIMEOUT_MS);
+  const onAbort = () => { controller.abort(); };
   signal?.addEventListener("abort", onAbort, { once: true });
   // The body read stays inside the timeout and the caller's abort, not just the headers.
   try {

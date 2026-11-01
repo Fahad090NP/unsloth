@@ -121,7 +121,7 @@ export async function asPng(blob: Blob): Promise<Blob> {
   canvas.height = bitmap.height;
   canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
   bitmap.close();
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((png) => (png ? resolve(png) : reject(new Error("PNG encoding failed"))), "image/png"),
+  return await new Promise((resolve, reject) =>
+    { canvas.toBlob((png) => { png ? resolve(png) : reject(new Error("PNG encoding failed")); }, "image/png"); },
   );
 }

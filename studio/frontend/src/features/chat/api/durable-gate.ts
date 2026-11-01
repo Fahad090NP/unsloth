@@ -37,7 +37,7 @@ export function turnRequiresLegacyStream(requestPayload: unknown): boolean {
 }
 
 /** Plain values the adapter already resolved, so the gate is a truth table. */
-export type DurableRunCandidate = {
+export interface DurableRunCandidate {
   /** A passthrough/external-provider turn: its own client owns the stream, so there is nothing to make durable. */
   externalProvider?: boolean;
   /** The resolved model is an audio model - it runs on its own legacy path regardless of the gate. */
@@ -56,7 +56,7 @@ export type DurableRunCandidate = {
   /** The assistant message the run writes into. Without one there is no row for a follower to reattach to. */
   assistantMessageId?: string | null;
   hasUserMessage?: boolean;
-};
+}
 
 /** The adapter's durability conjunction, extracted unchanged so it can be tested as a truth table. */
 export function isDurableRunCandidate(input: DurableRunCandidate): boolean {

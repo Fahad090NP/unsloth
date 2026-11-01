@@ -56,7 +56,7 @@ const html = messages.map((message) =>
 process.stdout.write(JSON.stringify(html), () => process.exit(0));
 `;
 
-type Part = { type: string; [key: string]: unknown };
+interface Part { type: string; [key: string]: unknown }
 
 const COMPLETE = { type: "complete", reason: "stop" };
 const SOURCE: Part = {

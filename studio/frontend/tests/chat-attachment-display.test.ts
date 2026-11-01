@@ -32,7 +32,7 @@ import { readSrcAsync } from "./helpers/kit.ts";
 const ATTACHMENT = await readSrcAsync("components/assistant-ui/attachment.tsx");
 
 test("each file kind is read off the name, with a decisive MIME type first", () => {
-  const cases: Array<[string, string, string]> = [
+  const cases: [string, string, string][] = [
     ["invoice_INV-6.pdf", "", "pdf"],
     ["scan", "application/pdf", "pdf"],
     ["Rain 2.6-1.mp3", "audio/mpeg", "audio"],

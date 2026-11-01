@@ -187,7 +187,7 @@ test("the rail-facing wrapper can still be squeezed by the rail's cap", () => {
     new URL(`../src/${PANEL_PATH}`, import.meta.url),
     "utf8",
   );
-  const ternary = source.match(/positioned\s*\?\s*"([^"]*)"\s*:\s*"([^"]*)"/);
+  const ternary = /positioned\s*\?\s*"([^"]*)"\s*:\s*"([^"]*)"/.exec(source);
   assert.ok(
     ternary,
     `${PANEL_PATH}: the positioned/stacked className ternary is gone, so the

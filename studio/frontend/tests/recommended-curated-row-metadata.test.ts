@@ -205,7 +205,7 @@ function declarationText(name: string): string {
   };
   walk(source);
   assert.ok(found, `no const ${name} = ... in pickers.tsx`);
-  return found as unknown as string;
+  return found;
 }
 
 test("the search list is built from the seeds as well as the listing pool", () => {

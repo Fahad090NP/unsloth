@@ -16,14 +16,10 @@ const STORE = readFileSync(
 const HOOK = readFileSync(new URL("hooks/use-model-memory.ts", SRC), "utf8");
 
 test("the bar is off unless the user turns it on", () => {
-  const key = STORE.match(
-    /CHAT_SHOW_MEMORY_BAR_KEY\s*=\s*"([^"]+)"/,
-  );
+  const key = /CHAT_SHOW_MEMORY_BAR_KEY\s*=\s*"([^"]+)"/.exec(STORE);
   assert.ok(key, "no CHAT_SHOW_MEMORY_BAR_KEY");
 
-  const hydrate = STORE.match(
-    /showMemoryBar:\s*loadBool\(\s*CHAT_SHOW_MEMORY_BAR_KEY\s*,\s*(true|false)\s*\)/,
-  );
+  const hydrate = /showMemoryBar:\s*loadBool\(\s*CHAT_SHOW_MEMORY_BAR_KEY\s*,\s*(true|false)\s*\)/.exec(STORE);
   assert.ok(hydrate, "showMemoryBar is not hydrated through loadBool");
   assert.equal(
     hydrate[1],
@@ -51,9 +47,7 @@ test("a disabled bar issues no estimate request", () => {
 
 test("the settings request is gated on a row that will draw a bar", () => {
   // loadVramBudgetSettings has no cache, so gating on plan avoids one request per row.
-  const effect = HOOK.match(
-    /useEffect\(\(\) => \{\s*if \(!plan\) return;[\s\S]*?loadVramBudgetSettings/,
-  );
+  const effect = /useEffect\(\(\) => \{\s*if \(!plan\) return;[\s\S]*?loadVramBudgetSettings/.exec(HOOK);
   assert.ok(
     effect,
     "the vram budget request is not gated on the row having a plan",
@@ -65,7 +59,7 @@ test("Reset All clears the memory-bar opt-in", () => {
     new URL("features/settings/tabs/general-tab.tsx", SRC),
     "utf8",
   );
-  const key = STORE.match(/CHAT_SHOW_MEMORY_BAR_KEY\s*=\s*"([^"]+)"/);
+  const key = /CHAT_SHOW_MEMORY_BAR_KEY\s*=\s*"([^"]+)"/.exec(STORE);
   assert.ok(key, "no CHAT_SHOW_MEMORY_BAR_KEY");
   // The reset list spells the key out to avoid an import cycle (TDZ), so drift is possible.
   assert.match(

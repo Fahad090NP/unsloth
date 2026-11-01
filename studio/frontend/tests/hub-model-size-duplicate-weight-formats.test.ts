@@ -22,7 +22,7 @@ function stubSiblings(sizes: Record<string, number>): void {
         })),
       }),
       { status: 200, headers: { "content-type": "application/json" } },
-    )) as typeof fetch;
+    ));
 }
 
 test("a gpt-oss shaped repo is sized by its root safetensors only", async () => {

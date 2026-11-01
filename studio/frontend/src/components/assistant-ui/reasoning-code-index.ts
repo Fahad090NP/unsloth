@@ -9,23 +9,23 @@ import type {
 
 const CHARACTERS = 8192;
 const LINES = 16;
-type Options = {
+interface Options {
   bodyStart: number;
   indent: number;
   language: string | null;
   key: string;
   document: number;
   start: number;
-};
+}
 
 export class ReasoningCodeIndex {
-  private rows: ReasoningFragment[] = [];
+  private readonly rows: ReasoningFragment[] = [];
   private cursor: number;
   private line = 0;
   private column = 0;
   private committedSource = "";
-  private context = { source: "", incomplete: true };
-  private options: Options;
+  private readonly context = { source: "", incomplete: true };
+  private readonly options: Options;
   private previousText = "";
   private previousEnd = -1;
   private result: ReasoningFragment[] = [];

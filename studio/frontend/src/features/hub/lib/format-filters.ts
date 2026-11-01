@@ -58,7 +58,7 @@ export function detectResultFormat(result: {
 }
 
 // Strictest first: a mixed "NVFP4-FP8" checkpoint still holds NVFP4 weights and needs Blackwell.
-const CHECKPOINT_QUANT_NAME: ReadonlyArray<readonly [string, RegExp]> = [
+const CHECKPOINT_QUANT_NAME: readonly (readonly [string, RegExp])[] = [
   ["nvfp4", /(?:^|[-_/.])nvfp4(?:[-_/.]|$)/i],
   ["fp8", /(?:^|[-_/.])fp8(?:[-_/.]|$)/i],
 ];

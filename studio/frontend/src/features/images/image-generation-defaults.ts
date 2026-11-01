@@ -5,11 +5,11 @@ import { explicitFamily } from "../model-picker/components/model-selector/family
 
 export const DEFAULT_GEN = { steps: 9, guidance: 0 };
 
-const MODEL_DEFAULTS: Array<{
+const MODEL_DEFAULTS: {
   match: string;
   steps: number;
   guidance: number;
-}> = [
+}[] = [
   { match: "z-image-turbo", steps: 8, guidance: 0 },
   // Krea 2 Raw is undistilled and must precede the distilled Krea key.
   { match: "krea-2-raw", steps: 52, guidance: 3.5 },
@@ -148,18 +148,18 @@ export function residentDefaultsKey(
 export const DEFAULT_RESOLUTION = { width: 1024, height: 1024 } as const;
 
 // Families trained at a smaller canvas on every build (incl. GGUF); SDXL-Turbo is a 512x512 model.
-const NATIVE_CANVAS: Array<{ match: string; width: number; height: number }> = [
+const NATIVE_CANVAS: { match: string; width: number; height: number }[] = [
   { match: "sdxl-turbo", width: 512, height: 512 },
 ];
 
 // Quantised builds of activation-heavy families default to a smaller canvas so they fit 24 GB
 // (Qwen-Image-2.1: ~26 GB at 1024 vs ~19 GB at 512). Only a picked quant shrinks it; GGUF keeps 1024.
-const QUANTISED_CANVAS: Array<{
+const QUANTISED_CANVAS: {
   match: string;
   schemes: readonly string[];
   width: number;
   height: number;
-}> = [
+}[] = [
   {
     match: "qwen-image-2.1",
     schemes: ["fp8", "fp8_dynamic", "int8", "nvfp4"],

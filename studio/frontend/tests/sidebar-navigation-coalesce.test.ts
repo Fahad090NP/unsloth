@@ -9,8 +9,8 @@ import { readSrcAsync } from "./helpers/kit.ts";
 const { createNavigationCoalescer } =
   await import("../src/components/sidebar-navigation.ts");
 
-type Nav = { to: string; replace?: boolean };
-type Entry = { href: string; key: string };
+interface Nav { to: string; replace?: boolean }
+interface Entry { href: string; key: string }
 
 // Fake router: push/replace mint fresh keys like TanStack; `blocked` waits on a blocker.
 function fakeRouter(start = "/chat", { blocked = false } = {}) {
@@ -37,8 +37,8 @@ function fakeRouter(start = "/chat", { blocked = false } = {}) {
     asReplace: (o) => ({ ...o, replace: true }),
   });
   return {
-    click: (to: string) => nav.go({ to }),
-    render: () => nav.resolved(),
+    click: (to: string) => { nav.go({ to }); },
+    render: () => { nav.resolved(); },
     back: () => {
       index -= 1;
     },

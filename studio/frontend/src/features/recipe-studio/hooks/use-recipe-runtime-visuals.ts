@@ -89,7 +89,7 @@ function resolveExecutionColumnIcon(config: NodeConfig | null): IconType {
   return PencilEdit02Icon;
 }
 
-type UseRecipeRuntimeVisualsArgs = {
+interface UseRecipeRuntimeVisualsArgs {
   executions: RecipeExecutionRecord[];
   configs: Record<string, NodeConfig>;
   nodes: RecipeBuilderNode[];
@@ -97,15 +97,15 @@ type UseRecipeRuntimeVisualsArgs = {
   layoutDirection: LayoutDirection;
   auxNodePositions: Record<string, { x: number; y: number }>;
   llmAuxVisibility: Record<string, boolean>;
-};
+}
 
-type UseRecipeRuntimeVisualsResult = {
+interface UseRecipeRuntimeVisualsResult {
   activeExecution: RecipeExecutionRecord | null;
   runtimeVisualState: ReturnType<typeof deriveGraphRuntimeVisualState>;
   displayGraph: ReturnType<typeof deriveDisplayGraph>;
   displayNodeIds: string[];
   currentColumnIcon: IconType;
-};
+}
 
 export function useRecipeRuntimeVisuals({
   executions,

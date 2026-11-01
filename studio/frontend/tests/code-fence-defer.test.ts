@@ -36,7 +36,7 @@ test("a completing stream cannot downgrade a fence that was highlighted while it
     /if\s*\(!enabled\s*\|\|\s*latched\s*\|\|\s*!streaming\)\s*return;/.test(SOURCE),
     "a streaming fence must LATCH, not merely read as reached while the flag is live",
   );
-  const derived = SOURCE.match(/const reached = [^;]+;/)?.[0] ?? "";
+  const derived = (/const reached = [^;]+;/.exec(SOURCE))?.[0] ?? "";
   assert.ok(
     derived.includes("latched"),
     `the derived value must include the latch; found ${derived}`,
@@ -46,11 +46,11 @@ test("a completing stream cannot downgrade a fence that was highlighted while it
 test("the observer is rooted at the nearest SCROLLING ancestor, found not named", () => {
   // `root: null` makes rootMargin useless, and matching known selectors skips the reasoning pane.
   assert.ok(
-    /const near = scrollerOf\(node\);/.test(SOURCE) && /\{ root, rootMargin: REACH_MARGIN \}/.test(SOURCE),
+    SOURCE.includes('const near = scrollerOf(node);') && SOURCE.includes('{ root, rootMargin: REACH_MARGIN }'),
     "the observer root must be the fence's own scrolling ancestor",
   );
   assert.ok(
-    !/closest<HTMLElement>\("\[data-slot='thread-viewport'\]"\)/.test(SOURCE),
+    !SOURCE.includes('closest<HTMLElement>("[data-slot=\'thread-viewport\']")'),
     "a named-selector lookup walks past the reasoning pane's scroller, which matches neither name",
   );
   const fn = SOURCE.slice(SOURCE.indexOf("const scrollerOf"), SOURCE.indexOf("const scrollerOf") + 320);
@@ -72,7 +72,7 @@ test("the pre-paint gate re-runs when the roots are rebound", () => {
   );
   assert.ok(prepaint.length > 200, "the pre-paint effect must still be findable by its comment");
   assert.ok(
-    /\}, \[reached, host, generation\]\);/.test(prepaint),
+    prepaint.includes('}, [reached, host, generation]);'),
     "the pre-paint gate must depend on the rebind generation, not just on reached and host",
   );
   assert.ok(
@@ -87,7 +87,7 @@ test("with the flag off the hook writes no state, builds no observer and reads n
     assert.ok(hook.includes(guard), `expected the early return ${guard}`);
   }
   assert.ok(
-    /const reached = !enabled \|\|/.test(hook),
+    hook.includes('const reached = !enabled ||'),
     "the disabled path must short-circuit to reached, so every effect below takes its early return",
   );
 });
@@ -122,12 +122,11 @@ test("a nested scroller is gated by the outermost one as well", () => {
     "the latch must need EVERY gate, not any of them",
   );
   assert.ok(
-    /inBand\(node, near\) && \(near === outer \|\| inBand\(near as HTMLElement, outer\)\)/
-      .test(SOURCE),
+    SOURCE.includes('inBand(node, near) && (near === outer || inBand(near as HTMLElement, outer))'),
     "the pre-paint door must ask the same two questions of the same two elements",
   );
   assert.ok(
-    !/\[\[node, near\], \[node, outer\]\]/.test(SOURCE),
+    !SOURCE.includes('[[node, near], [node, outer]]'),
     "watching the FENCE through the outer root clips it at the pane and cancels the lookahead "
       + "it was rooted at the pane to get: measured 2 of 10 against 4 with the pane in view",
   );
@@ -138,11 +137,11 @@ test("a nested scroller is gated by the outermost one as well", () => {
     "the gates must be rebuilt when the nested scroller stops being one",
   );
   assert.ok(
-    /\}, \[reached, host, generation\]\);/.test(SOURCE),
+    SOURCE.includes('}, [reached, host, generation]);'),
     "and the rebind has to be a dependency of the effect that builds them",
   );
   assert.ok(
-    /if \(near !== null && near !== outer && typeof ResizeObserver !== "undefined"\)/.test(SOURCE),
+    SOURCE.includes('if (near !== null && near !== outer && typeof ResizeObserver !== "undefined")'),
     "watched only for fences that actually have a nested scroller, and only one element",
   );
   assert.ok(
@@ -227,7 +226,7 @@ test("the shell trims trailing newlines the way streamdown does", () => {
     "the shell must reproduce streamdown's empty line rather than collapse to no line at all",
   );
   assert.ok(
-    !/<code>\{trimTrailingNewlines\(source\)\}<\/code>/.test(SOURCE),
+    !SOURCE.includes('<code>{trimTrailingNewlines(source)}</code>'),
     "the raw trim must not be rendered directly; it loses the empty-line case",
   );
 });
@@ -246,7 +245,7 @@ test("the gate does not mount a wrapper element of its own", () => {
 
 test("the tokenize arm is measurement only and is not reachable from a boolean flag", () => {
   assert.ok(
-    !/"tokenize"/.test(SOURCE),
+    !SOURCE.includes('"tokenize"'),
     "this module must not name the measurement arm at all; it only consumes a resolved mode",
   );
   assert.ok(
@@ -264,7 +263,7 @@ test("a print upgrades the whole document, and never puts it back", () => {
     );
   }
   /* Latches never revert; an afterprint handler may clear only the print flag. */
-  const afterPrint = SOURCE.match(/addEventListener\("afterprint", (.*?)\);/);
+  const afterPrint = /addEventListener\("afterprint", (.*?)\);/.exec(SOURCE);
   if (afterPrint) {
     assert.equal(
       afterPrint[1],
@@ -279,7 +278,7 @@ test("a print upgrades the whole document, and never puts it back", () => {
   );
   // Printing must not be a session-wide switch that disables deferral for later mounts.
   assert.ok(
-    /const reached = !enabled \|\| !CAN_OBSERVE \|\| streaming \|\| latched;/.test(SOURCE),
+    SOURCE.includes('const reached = !enabled || !CAN_OBSERVE || streaming || latched;'),
     "no print state may be folded into a fence's reached: a fence mounted after a print was not " +
       "on the printed page and has nothing to latch for",
   );
@@ -312,7 +311,7 @@ test("an upgrade taken inside one task warms, flushes, and flushes again", () =>
 
 test("a jump is recognised from the lookahead, not from a tuned number", () => {
   assert.ok(
-    /Math\.abs\(top - before\) <= height/.test(SOURCE),
+    SOURCE.includes('Math.abs(top - before) <= height'),
     "the jump test compares the movement against the root height the margin is one of",
   );
   assert.ok(
@@ -323,12 +322,12 @@ test("a jump is recognised from the lookahead, not from a tuned number", () => {
 
 test("nothing is watched once there is nothing left to defer", () => {
   assert.ok(
-    /document\.addEventListener\("scroll", onScroll, \{ capture: true, passive: true \}\)/.test(SOURCE),
+    SOURCE.includes('document.addEventListener("scroll", onScroll, { capture: true, passive: true })'),
     "one capturing, passive listener sees scrolling on nested panes as well as on the thread",
   );
   assert.ok(
-    /unreached\.size > 0/.test(SOURCE) &&
-      /document\.removeEventListener\("scroll", onScroll/.test(SOURCE),
+    SOURCE.includes('unreached.size > 0') &&
+      SOURCE.includes('document.removeEventListener("scroll", onScroll'),
     "the listener is removed when the register empties",
   );
 });
@@ -376,8 +375,7 @@ test("a settled alternative fence is not marked incomplete", () => {
 test("the fence language is a language, not the whole info string", () => {
   // Only the first word of the info string names the grammar; the rest is metadata.
   assert.ok(
-    /const languageToken = language\?\.trim\(\)\.split\(\/\\s\+\/\)\[0\] \|\| null;/
-      .test(MARKDOWN_TEXT),
+    MARKDOWN_TEXT.includes('const languageToken = language?.trim().split(/\\s+/)[0] || null;'),
     "the info string must be split before it is used as a language",
   );
   for (const use of [
@@ -390,7 +388,7 @@ test("the fence language is a language, not the whole info string", () => {
     );
   }
   assert.ok(
-    !/language: \(language \?\? "text"\)/.test(MARKDOWN_TEXT),
+    !MARKDOWN_TEXT.includes('language: (language ?? "text")'),
     "no path may pass the unparsed info string to the highlighter",
   );
 
@@ -457,7 +455,7 @@ test("a speculative warm is capped, and the cap is the shared one", () => {
     "a local redefinition would let this cap drift away from the one every other reader uses",
   );
   assert.ok(
-    /gate\.chars === 0 \|\| gate\.chars > MAX_HIGHLIGHT_CHARS/.test(SOURCE),
+    SOURCE.includes('gate.chars === 0 || gate.chars > MAX_HIGHLIGHT_CHARS'),
     "the warm must consult the fence's size before tokenizing it",
   );
   // An empty fence teaches the grammar nothing but would still mark the language warmed.

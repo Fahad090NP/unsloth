@@ -243,8 +243,8 @@ export function LoadedModelsIndicator({
   }
   useEffect(() => {
     if (!justEnabled) return;
-    const timer = window.setTimeout(() => setJustEnabled(false), EMPTY_HINT_MS);
-    return () => window.clearTimeout(timer);
+    const timer = window.setTimeout(() => { setJustEnabled(false); }, EMPTY_HINT_MS);
+    return () => { window.clearTimeout(timer); };
   }, [justEnabled]);
   const dismissed = useLoadedModelsDismissed();
   const reachable = canShowIndicator(pathname);
@@ -430,7 +430,7 @@ export function LoadedModelsIndicator({
                 <button
                   type="button"
                   aria-label={t("floatingPanels.loadedModels.collapseLabel")}
-                  onClick={() => setCollapsed(true)}
+                  onClick={() => { setCollapsed(true); }}
                   className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(7%*var(--contrast-wash-gain,1)),transparent)] hover:text-foreground"
                 >
                   <HugeiconsIcon
@@ -449,7 +449,7 @@ export function LoadedModelsIndicator({
                 <button
                   type="button"
                   aria-label={t("floatingPanels.loadedModels.closeLabel")}
-                  onClick={() => setLoadedModelsDismissed(true)}
+                  onClick={() => { setLoadedModelsDismissed(true); }}
                   className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(7%*var(--contrast-wash-gain,1)),transparent)] hover:text-foreground"
                 >
                   <HugeiconsIcon
@@ -490,7 +490,7 @@ export function LoadedModelsIndicator({
                 entry={entry}
                 ejecting={ejecting.has(entry.id)}
                 onEject={() => void eject(entry)}
-                onOpen={() => openEntry(entry)}
+                onOpen={() => { openEntry(entry); }}
               />
             ))}
           </div>

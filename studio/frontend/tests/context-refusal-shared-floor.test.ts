@@ -64,7 +64,7 @@ test("the built-in catalogue alone is diagnosed the same way", () => {
 });
 
 test("the catalogue does not cancel at any catalogue size", () => {
-  const measured: Array<[number, number, number]> = [
+  const measured: [number, number, number][] = [
     [997, 1003, 3598],
     [2951, 2957, 5552],
     [29166, 29172, 31767],

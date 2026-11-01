@@ -97,10 +97,10 @@ export function toggleCptTargetModule(
     : [...namedTargetModules, module];
 }
 
-export const OPTIMIZER_OPTIONS: ReadonlyArray<{
+export const OPTIMIZER_OPTIONS: readonly {
   value: string;
   label: string;
-}> = [
+}[] = [
   { value: "adamw_8bit", label: "AdamW 8-bit" },
   { value: "paged_adamw_8bit", label: "Paged AdamW 8-bit" },
   { value: "adamw_bnb_8bit", label: "AdamW BNB 8-bit" },
@@ -110,10 +110,10 @@ export const OPTIMIZER_OPTIONS: ReadonlyArray<{
 ];
 
 // Must match SUPPORTED_MLX_OPTIMIZERS in unsloth-zoo's mlx/trainer.py.
-export const MLX_OPTIMIZER_OPTIONS: ReadonlyArray<{
+export const MLX_OPTIMIZER_OPTIONS: readonly {
   value: string;
   label: string;
-}> = [
+}[] = [
   { value: "adamw", label: "AdamW" },
   { value: "adam", label: "Adam" },
   { value: "lion", label: "Lion" },
@@ -122,10 +122,10 @@ export const MLX_OPTIMIZER_OPTIONS: ReadonlyArray<{
   { value: "adafactor", label: "Adafactor" },
 ];
 
-export const LR_SCHEDULER_OPTIONS: ReadonlyArray<{
+export const LR_SCHEDULER_OPTIONS: readonly {
   value: string;
   label: string;
-}> = [
+}[] = [
   { value: "linear", label: "Linear" },
   { value: "cosine", label: "Cosine" },
 ];

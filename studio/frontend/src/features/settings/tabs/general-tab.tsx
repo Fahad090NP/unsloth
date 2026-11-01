@@ -580,7 +580,7 @@ export function GeneralTab() {
               ) : null}
               <button
                 type="button"
-                onClick={() => setShowToken((s) => !s)}
+                onClick={() => { setShowToken((s) => !s); }}
                 className="absolute right-1.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
                 aria-label={
                   showToken
@@ -710,7 +710,7 @@ export function GeneralTab() {
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => setRevokePreviewOpen(true)}
+            onClick={() => { setRevokePreviewOpen(true); }}
             className="text-destructive hover:text-destructive"
           >
             {t("settings.general.previewSharing.revokeAction")}
@@ -749,7 +749,7 @@ export function GeneralTab() {
                 step={1}
                 value={draftUploadLimit}
                 aria-label={t("settings.general.uploads.maxUploadSize")}
-                onChange={(event) => setDraftUploadLimit(event.target.value)}
+                onChange={(event) => { setDraftUploadLimit(event.target.value); }}
                 className="h-control w-24"
               />
               <span className="text-xs font-medium text-muted-foreground">
@@ -881,7 +881,7 @@ export function GeneralTab() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setConfirmOpen(true)}
+            onClick={() => { setConfirmOpen(true); }}
             className="text-destructive hover:text-destructive"
           >
             {t("settings.general.resetPreferences.action")}
@@ -904,7 +904,7 @@ export function GeneralTab() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+            <Button variant="outline" onClick={() => { setConfirmOpen(false); }}>
               {t("common.cancel")}
             </Button>
             <Button
@@ -930,7 +930,7 @@ export function GeneralTab() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setRevokePreviewOpen(false)}
+              onClick={() => { setRevokePreviewOpen(false); }}
             >
               {t("common.cancel")}
             </Button>

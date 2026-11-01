@@ -147,7 +147,7 @@ export function LocalizedEditCanvas({
           ? "#ffffff"
           : "rgba(244,114,114,0.55)";
     const stored = mode === "annotate" ? color : "#ffffff";
-    const layers: Array<[CanvasRenderingContext2D | null, string]> = [
+    const layers: [CanvasRenderingContext2D | null, string][] = [
       [disp.getContext("2d"), shown],
       [layer.getContext("2d"), stored],
     ];

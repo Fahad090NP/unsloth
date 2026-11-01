@@ -45,11 +45,11 @@ const MASKED_SHADES = [
 ];
 const TEXT_DEBOUNCE_MS = 300;
 
-type PreviewState = {
+interface PreviewState {
   data: TokenPreviewResponse | null;
   error: string | null;
   loading: boolean;
-};
+}
 
 const IDLE: PreviewState = { data: null, error: null, loading: false };
 
@@ -227,13 +227,13 @@ export function TokenPreviewDialog({
   );
 }
 
-type PreviewQuery = {
+interface PreviewQuery {
   config: TrainingConfigState;
   hfToken: string | null;
   text?: string;
   finalFormat?: string | null;
   seed?: number;
-};
+}
 
 /** The latest preview for `query`; a newer query aborts the request before it. */
 function useTokenPreview(query: PreviewQuery | null, debounceMs = 0) {
@@ -246,7 +246,7 @@ function useTokenPreview(query: PreviewQuery | null, debounceMs = 0) {
     setState((prev) => ({ ...prev, error: null, loading: true }));
     const timer = window.setTimeout(() => {
       fetchTokenPreview({ ...query, signal: controller.signal })
-        .then((data) => setState({ data, error: null, loading: false }))
+        .then((data) => { setState({ data, error: null, loading: false }); })
         .catch((error: unknown) => {
           if (controller.signal.aborted) {
             return;
@@ -355,7 +355,7 @@ function TextPlayground({
     <>
       <Textarea
         value={text}
-        onChange={(event) => onTextChange(event.target.value)}
+        onChange={(event) => { onTextChange(event.target.value); }}
         placeholder={t("studio.dataset.tokenPreview.textPlaceholder")}
         className="min-h-28 font-mono text-ui-12p5"
       />
@@ -368,7 +368,7 @@ function TextPlayground({
             variant="outline"
             size="sm"
             className="ml-auto"
-            onClick={() => onTextChange(exampleText)}
+            onClick={() => { onTextChange(exampleText); }}
           >
             {t("studio.dataset.tokenPreview.insertExample")}
           </Button>
@@ -478,7 +478,7 @@ function TokenPreviewContent() {
             <DatasetSamples
               state={datasetState}
               showIds={showIds}
-              onShuffle={() => setSeed((value) => value + 1)}
+              onShuffle={() => { setSeed((value) => value + 1); }}
             />
           )}
         </TabsContent>

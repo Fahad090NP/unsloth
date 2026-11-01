@@ -13,18 +13,18 @@ export interface CompactRequestState {
 export const useCompactRequestStore = create<CompactRequestState>()((set) => ({
   requested: {},
   request: (threadId) =>
-    set((state) =>
+    { set((state) =>
       state.requested[threadId]
         ? state
         : { requested: { ...state.requested, [threadId]: true } },
-    ),
+    ); },
   clear: (threadId) =>
-    set((state) => {
+    { set((state) => {
       if (!state.requested[threadId]) return state;
       const requested = { ...state.requested };
       delete requested[threadId];
       return { requested };
-    }),
+    }); },
 }));
 
 export function requestThreadCompaction(threadId: string): void {

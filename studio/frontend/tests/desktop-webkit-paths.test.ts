@@ -15,7 +15,7 @@ test("a fence body becomes skippable only once it carries its measured height", 
   );
   assert.match(defer, /const NO_WINDOW = \{ window: null, pins: null, measured: false \} as const;\s*const EMPTY_WINDOW = \{ window: EMPTY_LINE_WINDOW, pins: null, measured: false \} as const;/);
   const measure = defer.slice(defer.indexOf("measure.current = () => {"), defer.indexOf("setState({ measured: true, window: next, pins });"));
-  assert.ok(measure.indexOf("region.style.setProperty(FENCE_HEIGHT_PROPERTY, declared);") >= 0, "the measure that first marks a fence measured writes its height before it does");
+  assert.ok(measure.includes("region.style.setProperty(FENCE_HEIGHT_PROPERTY, declared);"), "the measure that first marks a fence measured writes its height before it does");
   const autoscroll = readSrc("components/assistant-ui/use-intent-aware-autoscroll.tsx");
   assert.match(autoscroll, /const onMutation = \(\): void => \{\s*if \(el\.ownerDocument\.hidden\) \{\s*onLayoutChange\(\);\s*return;\s*\}\s*layoutChanged = true;\s*if \(!parkIfHeld\(\)\) \{\s*extendFollow\(\);\s*\}\s*requestTick\(\);\s*\};/, "a mutation on a shown page never forces layout, following stays the frame loop's job; a hidden page runs no frames, so it pins at once and a reply that ends there is at the bottom when the tab comes back");
   assert.match(autoscroll, /const adjustForContentInsertedAbove = useCallback\(\(deltaPx: number\) => \{\s*adjustImplRef\.current\(deltaPx\);\s*return userDetachedRef\.current;\s*\}, \[\]\);/, "the hold learns whether its correction was written, even when the engine rounded it to nothing");
@@ -86,5 +86,5 @@ test("find in page defers rebuilds during scrolling with a maximum wait", () => 
   assert.match(find, /const flush = \(\) => \{\s*const now = performance\.now\(\);\s*const wait = Math\.min\(\s*REINDEX_INTERVAL_MS - \(now - scrolledAt\),\s*reindexBy - now,\s*\);\s*if \(wait > 0\) \{\s*timerRef\.current = setTimeout\(flush, wait\);\s*return;\s*\}/);
   assert.match(find, /window\.addEventListener\("wheel", noteScroll, \{ capture: true, passive: true \}\);/);
   assert.match(find, /window\.removeEventListener\("wheel", noteScroll, \{ capture: true \}\);/);
-  assert.equal(/addEventListener\("scroll", noteScroll/.test(find), false, "autoscroll's own scrolling must not starve a followed stream of rebuilds");
+  assert.equal(find.includes('addEventListener("scroll", noteScroll'), false, "autoscroll's own scrolling must not starve a followed stream of rebuilds");
 });

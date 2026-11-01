@@ -26,7 +26,7 @@ const BUTTONS = [
   ["More", EllipsisIcon],
 ] as const;
 
-createRoot(document.getElementById("root") as HTMLElement).render(
+createRoot(document.getElementById("root")!).render(
   <TooltipProvider>
     <div className="aui-root" style={{ padding: 48 }}>
       <div className="aui-assistant-action-bar-root flex min-w-0 flex-wrap items-center gap-1 text-chat-icon-fg [&_button]:size-8 [&_button]:!rounded-full [&_button:hover]:bg-chat-icon-bg-hover">

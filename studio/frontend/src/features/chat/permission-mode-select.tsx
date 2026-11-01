@@ -58,7 +58,7 @@ import {
   useChatRuntimeStore,
 } from "./stores/chat-runtime-store";
 
-type GlyphProps = { className?: string; strokeWidth?: number };
+interface GlyphProps { className?: string; strokeWidth?: number }
 
 function ApprovalHandIcon({ className, strokeWidth }: GlyphProps) {
   return (
@@ -198,7 +198,7 @@ function SandboxLevelMenuPicker({ onOsSandboxMissing }: { onOsSandboxMissing?: (
       setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown, true);
-    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+    return () => { document.removeEventListener("pointerdown", onPointerDown, true); };
   }, [open, picker]);
 
   // Places the picker a gap clear of the menu, tops aligned. Radix applies one sideOffset to
@@ -233,7 +233,7 @@ function SandboxLevelMenuPicker({ onOsSandboxMissing }: { onOsSandboxMissing?: (
         ref={chipRef}
         aria-describedby={descriptionId}
         // Opens on click or arrow key, not hover.
-        onPointerMove={(event) => event.preventDefault()}
+        onPointerMove={(event) => { event.preventDefault(); }}
         onClick={(event) => {
           if (!open) return;
           event.preventDefault();
@@ -269,7 +269,7 @@ function SandboxLevelMenuPicker({ onOsSandboxMissing }: { onOsSandboxMissing?: (
           <DropdownMenuPrimitive.Item
             // my-0!: drops the menu item margin so it lines up with the question.
             className="my-0! shrink-0 cursor-pointer rounded-sm font-normal text-muted-foreground underline decoration-muted-foreground/50 underline-offset-[3px] outline-hidden transition-colors hover:text-foreground hover:decoration-foreground/60 data-[highlighted]:text-foreground data-[highlighted]:decoration-foreground/60"
-            onSelect={() => openExternalLink(SANDBOX_DOCS_URL)}
+            onSelect={() => { openExternalLink(SANDBOX_DOCS_URL); }}
           >
             {t("settings.sandbox.learnMore")}
           </DropdownMenuPrimitive.Item>
@@ -282,7 +282,7 @@ function SandboxLevelMenuPicker({ onOsSandboxMissing }: { onOsSandboxMissing?: (
               if (option.value === active || option.value === "off") return;
               void pickSandboxLevel(option.value, setSandboxLevel, () =>
                 // Deferred past the menu's focus restore.
-                setTimeout(onOsSandboxMissing ?? (() => setSandboxSetupOpen(true)), 0),
+                setTimeout(onOsSandboxMissing ?? (() => { setSandboxSetupOpen(true); }), 0),
               );
             }}
             className={cn("items-start gap-2 py-2", active === option.value && "font-medium")}
@@ -529,7 +529,7 @@ export function FullAccessConfirmDialog({
           setPermissionMode("full");
           onOpenChange(false);
         }}
-        onClose={() => onOpenChange(false)}
+        onClose={() => { onOpenChange(false); }}
       />
     </AlertDialog>
   );
@@ -580,12 +580,12 @@ export function PermissionModeDropdown({
         >
           <PermissionMenuLabel
             sandboxControls={sandboxControls}
-            onOsSandboxMissing={() => setSandboxSetupOpen(true)}
+            onOsSandboxMissing={() => { setSandboxSetupOpen(true); }}
           />
           <PermissionModeMenuItems
             // Defer past menu-close focus restore so the dialog focus trap holds.
             onRequestFullAccess={() =>
-              setTimeout(() => setConfirmOpen(true), 0)
+              setTimeout(() => { setConfirmOpen(true); }, 0)
             }
           />
         </DropdownMenuContent>
@@ -646,7 +646,7 @@ export function PermissionModeComposerPill({
         <PermissionMenuLabel sandboxControls={true} />
         <PermissionModeMenuItems
           onRequestFullAccess={() =>
-            setTimeout(() => setBypassConfirmOpen(true), 0)
+            setTimeout(() => { setBypassConfirmOpen(true); }, 0)
           }
         />
       </DropdownMenuContent>

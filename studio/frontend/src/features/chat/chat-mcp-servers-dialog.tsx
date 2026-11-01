@@ -62,11 +62,11 @@ import {
 import { McpImageMappings } from "./mcp-image-mappings";
 import { RefreshGlyph } from "@/lib/refresh-icon";
 
-type HeaderRow = { id: string; key: string; value: string };
-type ArgumentRow = { id: string; value: string };
+interface HeaderRow { id: string; key: string; value: string }
+interface ArgumentRow { id: string; value: string }
 type FormTransport = "unknown" | "http" | "stdio";
 
-type FormState = {
+interface FormState {
   displayName: string;
   url: string;
   transport: FormTransport;
@@ -78,7 +78,7 @@ type FormState = {
   oauthClientId: string;
   oauthClientSecret: string;
   imageInputMappings: McpImageInputMapping[];
-};
+}
 
 // What image-field discovery reads: it probes the SAVED server, so it waits for these to be saved.
 function connectionKey(form: FormState): string {
@@ -223,9 +223,9 @@ function ArgumentsEditor({
   disabled: boolean;
 }) {
   const update = (id: string, value: string) =>
-    onChange(rows.map((row) => (row.id === id ? { ...row, value } : row)));
-  const add = () => onChange([...rows, { id: newRowId(), value: "" }]);
-  const remove = (id: string) => onChange(rows.filter((row) => row.id !== id));
+    { onChange(rows.map((row) => (row.id === id ? { ...row, value } : row))); };
+  const add = () => { onChange([...rows, { id: newRowId(), value: "" }]); };
+  const remove = (id: string) => { onChange(rows.filter((row) => row.id !== id)); };
 
   return (
     <div className="grid gap-2">
@@ -256,13 +256,13 @@ function ArgumentsEditor({
                 disabled={disabled}
                 aria-label={`Argument ${index + 1}`}
                 placeholder={index === 0 ? "e.g. -y" : undefined}
-                onChange={(event) => update(row.id, event.target.value)}
+                onChange={(event) => { update(row.id, event.target.value); }}
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => remove(row.id)}
+                onClick={() => { remove(row.id); }}
                 disabled={disabled}
                 aria-label={`Remove argument ${index + 1}`}
               >
@@ -289,9 +289,9 @@ function HeadersEditor({
   disabled: boolean;
 }) {
   const update = (id: string, patch: Partial<HeaderRow>) =>
-    onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
-  const add = () => onChange([...rows, { id: newRowId(), key: "", value: "" }]);
-  const remove = (id: string) => onChange(rows.filter((row) => row.id !== id));
+    { onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row))); };
+  const add = () => { onChange([...rows, { id: newRowId(), key: "", value: "" }]); };
+  const remove = (id: string) => { onChange(rows.filter((row) => row.id !== id)); };
 
   const copy = stdio
     ? {
@@ -343,20 +343,20 @@ function HeadersEditor({
                 value={row.key}
                 disabled={disabled}
                 placeholder={copy.keyPlaceholder}
-                onChange={(e) => update(row.id, { key: e.target.value })}
+                onChange={(e) => { update(row.id, { key: e.target.value }); }}
               />
               <Input
                 data-reload-snapshot-sensitive={true}
                 value={row.value}
                 disabled={disabled}
                 placeholder={copy.valuePlaceholder}
-                onChange={(e) => update(row.id, { value: e.target.value })}
+                onChange={(e) => { update(row.id, { value: e.target.value }); }}
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => remove(row.id)}
+                onClick={() => { remove(row.id); }}
                 disabled={disabled}
                 aria-label={copy.remove}
               >
@@ -981,7 +981,7 @@ export function ChatMcpServersDialog({
                 value={form.displayName}
                 disabled={formPending}
                 onChange={(e) =>
-                  setForm((prev) => ({ ...prev, displayName: e.target.value }))
+                  { setForm((prev) => ({ ...prev, displayName: e.target.value })); }
                 }
                 placeholder="e.g. GitHub MCP"
               />
@@ -1042,7 +1042,7 @@ export function ChatMcpServersDialog({
                 rows={form.arguments}
                 disabled={formPending}
                 onChange={(arguments_) =>
-                  setForm((prev) => ({ ...prev, arguments: arguments_ }))
+                  { setForm((prev) => ({ ...prev, arguments: arguments_ })); }
                 }
               />
             )}
@@ -1093,7 +1093,7 @@ export function ChatMcpServersDialog({
                   checked={form.useOauth}
                   disabled={formPending}
                   onCheckedChange={(useOauth) =>
-                    setForm((prev) => ({ ...prev, useOauth }))
+                    { setForm((prev) => ({ ...prev, useOauth })); }
                   }
                 />
               </div>
@@ -1107,10 +1107,10 @@ export function ChatMcpServersDialog({
                     id="mcp-oauth-client-id"
                     value={form.oauthClientId}
                     onChange={(e) =>
-                      setForm((prev) => ({
+                      { setForm((prev) => ({
                         ...prev,
                         oauthClientId: e.target.value,
-                      }))
+                      })); }
                     }
                     placeholder="Optional pre-registered client ID"
                   />
@@ -1125,10 +1125,10 @@ export function ChatMcpServersDialog({
                     autoComplete="new-password"
                     value={form.oauthClientSecret}
                     onChange={(e) =>
-                      setForm((prev) => ({
+                      { setForm((prev) => ({
                         ...prev,
                         oauthClientSecret: e.target.value,
-                      }))
+                      })); }
                     }
                     placeholder={oauthSecretPlaceholder()}
                   />
@@ -1141,7 +1141,7 @@ export function ChatMcpServersDialog({
               serverId={view.kind === "edit" ? view.id : undefined}
               value={form.imageInputMappings}
               onChange={(imageInputMappings) =>
-                setForm((prev) => ({ ...prev, imageInputMappings }))
+                { setForm((prev) => ({ ...prev, imageInputMappings })); }
               }
               disabled={formPending}
               connectionUnsaved={
@@ -1154,7 +1154,7 @@ export function ChatMcpServersDialog({
               <HeadersEditor
                 rows={form.headers}
                 onChange={(headers) =>
-                  setForm((prev) => ({ ...prev, headers }))
+                  { setForm((prev) => ({ ...prev, headers })); }
                 }
                 stdio={addressIsCommand}
                 disabled={formPending}
@@ -1276,7 +1276,7 @@ export function ChatMcpServersDialog({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => setConfirmingDelete(server)}
+                        onClick={() => { setConfirmingDelete(server); }}
                         aria-label="Delete server"
                         disabled={importing || busyIds.has(server.id)}
                       >

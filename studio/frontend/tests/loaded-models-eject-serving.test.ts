@@ -81,7 +81,7 @@ function answerEmbeddingStatus() {
 }
 
 test("the embedder ejects through its own unload and is confirmed gone", async (t) => {
-  t.after(() => auth.setAuthFetchHandler(null));
+  t.after(() => { auth.setAuthFetchHandler(null); });
   stub.resetStub({ embeddingLoaded: true });
   answerEmbeddingStatus();
   assert.deepEqual(await ejectLoadedModel(embeddingRow()), {
@@ -91,7 +91,7 @@ test("the embedder ejects through its own unload and is confirmed gone", async (
 });
 
 test("an embedder already released is reported as free", async (t) => {
-  t.after(() => auth.setAuthFetchHandler(null));
+  t.after(() => { auth.setAuthFetchHandler(null); });
   stub.resetStub({ embeddingLoaded: false });
   answerEmbeddingStatus();
   assert.deepEqual(await ejectLoadedModel(embeddingRow()), {
@@ -100,7 +100,7 @@ test("an embedder already released is reported as free", async (t) => {
 });
 
 test("an embedder swapped in since the poll is reported, not unloaded", async (t) => {
-  t.after(() => auth.setAuthFetchHandler(null));
+  t.after(() => { auth.setAuthFetchHandler(null); });
   stub.resetStub({ embeddingLoaded: true });
   answerEmbeddingStatus();
   const outcome = await ejectLoadedModel({ ...embeddingRow(), name: "org/Old" });

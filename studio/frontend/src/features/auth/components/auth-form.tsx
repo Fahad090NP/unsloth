@@ -47,9 +47,9 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 type AuthMode = "login" | "change-password";
 
-type AuthFormProps = {
+interface AuthFormProps {
   mode: AuthMode;
-};
+}
 
 const HIDDEN_LOGIN_USERNAME = "unsloth";
 
@@ -88,8 +88,8 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
     if (deadlineAt === null) {
       return;
     }
-    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
-    return () => window.clearInterval(id);
+    const id = window.setInterval(() => { setNowMs(Date.now()); }, 1000);
+    return () => { window.clearInterval(id); };
   }, [deadlineAt]);
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
             if (hasAuthToken()) {
               if (!canceled) setStatusLoading(false);
               navigate({ to: getPostAuthRoute() });
-              return;
+              
             }
           }
         }
@@ -411,7 +411,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
               autoCapitalize="none"
               spellCheck={false}
               value={enteredUsername}
-              onChange={(event) => setEnteredUsername(event.target.value)}
+              onChange={(event) => { setEnteredUsername(event.target.value); }}
               required
             />
             <p id="setup-code-hint" className="text-sm text-muted-foreground">
@@ -433,7 +433,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
                 className="pr-10"
                 autoComplete="current-password"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) => { setPassword(event.target.value); }}
                 minLength={8}
                 required
               />
@@ -442,7 +442,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
                 variant="ghost"
                 size="icon"
                 className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:bg-transparent"
-                onClick={() => setShowPassword((prev) => !prev)}
+                onClick={() => { setShowPassword((prev) => !prev); }}
               >
                 {showPassword ? (
                   <HugeiconsIcon icon={ViewOffSlashIcon} className="h-4 w-4" />
@@ -469,7 +469,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
                     className="pr-10"
                     autoComplete="current-password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => { setPassword(event.target.value); }}
                     minLength={8}
                     required
                   />
@@ -478,7 +478,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
                     variant="ghost"
                     size="icon"
                     className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:bg-transparent"
-                    onClick={() => setShowPassword((prev) => !prev)}
+                    onClick={() => { setShowPassword((prev) => !prev); }}
                   >
                     {showPassword ? (
                       <HugeiconsIcon icon={ViewOffSlashIcon} className="h-4 w-4" />
@@ -506,7 +506,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
                   className="pr-10"
                   autoComplete="new-password"
                   value={newPassword}
-                  onChange={(event) => setNewPassword(event.target.value)}
+                  onChange={(event) => { setNewPassword(event.target.value); }}
                   minLength={8}
                   required
                 />
@@ -515,7 +515,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
                   variant="ghost"
                   size="icon"
                   className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:bg-transparent"
-                  onClick={() => setShowNewPassword((prev) => !prev)}
+                  onClick={() => { setShowNewPassword((prev) => !prev); }}
                 >
                   {showNewPassword ? (
                     <HugeiconsIcon icon={ViewOffSlashIcon} className="h-4 w-4" />
@@ -532,7 +532,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
                 type="password"
                 autoComplete="new-password"
                 value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
+                onChange={(event) => { setConfirmPassword(event.target.value); }}
                 minLength={8}
                 required
               />

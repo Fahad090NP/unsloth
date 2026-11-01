@@ -49,10 +49,7 @@ function setDeviceType(deviceType: string): void {
 }
 
 function patchFor(training: Record<string, unknown>): Record<string, unknown> {
-  return mapBackendModelConfigToTrainingPatch({ training } as never) as Record<
-    string,
-    unknown
-  >;
+  return mapBackendModelConfigToTrainingPatch({ training });
 }
 
 test("gradient_checkpointing only ever maps to a value the picker can show", () => {

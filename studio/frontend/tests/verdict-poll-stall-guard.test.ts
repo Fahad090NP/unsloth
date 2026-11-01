@@ -65,7 +65,7 @@ function harness() {
   let clock = 1_700_000_000_000; // any non-zero start: the guard reads its marker as truthy
   let tick: (() => void) | undefined;
   let cadence = 0;
-  const pending: Array<{ resolve: () => void; reject: () => void }> = [];
+  const pending: { resolve: () => void; reject: () => void }[] = [];
   let cleared = 0;
 
   const stop = startPoll(
@@ -84,7 +84,7 @@ function harness() {
     { now: () => clock },
     () =>
       new Promise<void>((resolve, reject) => {
-        pending.push({ resolve: () => resolve(), reject: () => reject(new Error("offline")) });
+        pending.push({ resolve: () => { resolve(); }, reject: () => { reject(new Error("offline")); } });
       }),
     true,
     STALL_MS,

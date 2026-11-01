@@ -39,7 +39,7 @@ export function MlxPrecisionCard({
       })
       .catch(() => {
       });
-    return () => controller.abort();
+    return () => { controller.abort(); };
   }, [repoId, hfToken]);
 
   if (!listing) return null;
@@ -62,7 +62,7 @@ export function MlxPrecisionCard({
             type="button"
             role="radio"
             aria-checked={v.quant === chosen.quant}
-            onClick={() => setPicked(v.quant)}
+            onClick={() => { setPicked(v.quant); }}
             className={cn(
               "flex h-8 items-center gap-2 rounded-md px-1.5 text-left text-ui-12",
               v.quant === chosen.quant
@@ -87,13 +87,13 @@ export function MlxPrecisionCard({
             label={`Configure and run ${repoId} ${chosen.quant}`}
             loading={runPending}
             onClick={() =>
-              onRun({
+              { onRun({
                 ggufVariant: chosen.quant,
                 ggufFilename: chosen.filename,
                 expectedBytes: chosen.size_bytes,
                 precisionFolder: true,
                 downloaded: chosen.downloaded === true,
-              })
+              }); }
             }
           />
         </div>

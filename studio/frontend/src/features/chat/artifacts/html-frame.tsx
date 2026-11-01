@@ -79,7 +79,7 @@ const GRANT_CANNOT_FIX = new Set(["object-src", "base-uri", "form-action"]);
 // after the grant. Kept in step by test_the_permissive_policy_widens_every_hostless_scheme_but_one.
 const GRANT_CANNOT_FIX_SCHEME: Record<string, string> = { "worker-src": "data" };
 
-type BlockedState = { code: string; uris: string[]; hosts: string[] };
+interface BlockedState { code: string; uris: string[]; hosts: string[] }
 
 const NOTHING_BLOCKED: BlockedState = { code: "", uris: [], hosts: [] };
 const NO_OUTPUT: CanvasConsoleState = emptyCanvasConsole("");
@@ -328,7 +328,7 @@ export function ArtifactHtmlFrame({
       );
     };
     window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
+    return () => { window.removeEventListener("message", handler); };
   }, [postArtifactHtml, code, loadVersion, queueEntry]);
 
   const showBlockedBanner =
@@ -494,7 +494,7 @@ export function ArtifactHtmlFrame({
                   <Button
                     size="xs"
                     className={NOTICE_PRIMARY}
-                    onClick={() => onFixWithModel(buildCanvasFixPrompt(title, errors, kind))}
+                    onClick={() => { onFixWithModel(buildCanvasFixPrompt(title, errors, kind)); }}
                     title={t("settings.chat.artifacts.errorHint")}
                   >
                     {t("settings.chat.artifacts.errorBannerAction")}
@@ -505,7 +505,7 @@ export function ArtifactHtmlFrame({
                     size="xs"
                     variant="outline"
                     className={NOTICE_SECONDARY}
-                    onClick={() => onConsoleOpenChange(!consoleOpen)}
+                    onClick={() => { onConsoleOpenChange(!consoleOpen); }}
                   >
                     {t(
                       consoleOpen

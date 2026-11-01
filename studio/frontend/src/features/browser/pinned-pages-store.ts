@@ -9,12 +9,12 @@ import { accountDatabaseName } from "@/lib/account-transition";
 import { syncAcrossWindows } from "@/lib/sync-across-windows";
 import { MAX_TITLE_CHARS, MAX_URL_CHARS } from "./history-store";
 
-export type PinnedPage = {
+export interface PinnedPage {
   id: string;
   url: string;
   title: string;
   pinnedAt: number;
-};
+}
 
 const MAX_PINNED_PAGES = 100;
 

@@ -195,12 +195,12 @@ function Harness() {
       setWorkspace,
       setShell,
       prepend: (count) =>
-        setOlder(
+        { setOlder(
           Array.from(
             { length: count },
             (_, i) => `An older message about unsloth, number ${i + 1}.`,
           ),
-        ),
+        ); },
       timeIndex: () => {
         const scope = scopeRef.current;
         if (!scope) return -1;
@@ -227,7 +227,7 @@ function Harness() {
           type="button"
           className="rounded-md border border-border px-2 py-1"
           onClick={() =>
-            stream("A streamed reply mentioning unsloth as it arrives.")
+            { stream("A streamed reply mentioning unsloth as it arrives."); }
           }
         >
           Stream a reply
@@ -298,7 +298,7 @@ function Harness() {
 }
 
 // StrictMode as in main.tsx: effects mount, unmount and remount in development.
-createRoot(document.getElementById("root") as HTMLElement).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Harness />
   </StrictMode>,

@@ -93,13 +93,13 @@ const Zoomed: FC<{ scale: number; children: ReactNode }> = ({ scale, children })
 
 type ImageActions = Omit<MediaViewerActions, "primary" | "onDownload">;
 
-type GalleryImage = {
+interface GalleryImage {
   id: string;
   name: string;
   contentType: string | undefined;
   file: File | undefined;
   image: string | undefined;
-};
+}
 
 type AttachmentState = Parameters<typeof selectAttachmentSource>[0]["attachment"] & { id: string };
 
@@ -125,7 +125,7 @@ const useObjectUrl = (file: File | undefined): string | undefined => {
     if (!file) return;
     const next = URL.createObjectURL(file);
     setUrl({ file, url: next });
-    return () => URL.revokeObjectURL(next);
+    return () => { URL.revokeObjectURL(next); };
   }, [file]);
   return file && url?.file === file ? url.url : undefined;
 };
@@ -180,7 +180,7 @@ const ImageGalleryDialog: FC<
       redactFromReload={redactFromReload}
       load={() => loadGalleryImage(current)}
       libraryActions={{
-        copy: { label: t("imageViewer.copy"), onClick: () => copyImage(current, t) },
+        copy: { label: t("imageViewer.copy"), onClick: () => { copyImage(current, t); } },
         ...actionsFor(current),
       }}
       variant="lightbox"
@@ -188,8 +188,8 @@ const ImageGalleryDialog: FC<
       gallery={
         images.length > 1
           ? {
-              onPrevious: previous ? () => onShow(previous.id) : undefined,
-              onNext: next ? () => onShow(next.id) : undefined,
+              onPrevious: previous ? () => { onShow(previous.id); } : undefined,
+              onNext: next ? () => { onShow(next.id); } : undefined,
             }
           : undefined
       }
@@ -201,7 +201,7 @@ const ImageGalleryDialog: FC<
           key={current.id}
           src={src}
           alt={current.name || "Image attachment"}
-          onError={() => setFailedId(current.id)}
+          onError={() => { setFailedId(current.id); }}
           className="size-full object-contain shadow-[0_1px_10px_rgba(0,0,0,0.08)] dark:shadow-[0_1px_10px_rgba(0,0,0,0.3)]"
         />
       ) : (
@@ -358,7 +358,7 @@ const SentImageDialog: FC<PropsWithChildren<{ source: AttachmentSource; src: str
           onToggleFavorite: toggleFavorite,
           onAddToProject: (projectId) =>
             addLibraryItemToProject(attachmentItemId(messageId, image.id), projectId),
-          onDelete: () => setDeleting(image),
+          onDelete: () => { setDeleting(image); },
         })}
       >
         {children}
@@ -563,17 +563,17 @@ const AttachmentTextDialog: FC<
           <ScaleMenu
             value={scale}
             scales={ATTACHMENT_PAGE_SCALES}
-            onChange={(value) => setScale(Number(value))}
+            onChange={(value) => { setScale(Number(value)); }}
           />
           {webPage && (
             <div className="mr-1 flex items-center gap-1">
-              <ViewButton label={t("library.preview.code")} active={showCode} onClick={() => setShowCode(true)}>
+              <ViewButton label={t("library.preview.code")} active={showCode} onClick={() => { setShowCode(true); }}>
                 <CodeToggleIcon className="size-4.5" />
               </ViewButton>
               <ViewButton
                 label={t("library.preview.preview")}
                 active={!showCode}
-                onClick={() => setShowCode(false)}
+                onClick={() => { setShowCode(false); }}
               >
                 <PlayIcon strokeWidth={1.75} className="size-5" />
               </ViewButton>
@@ -677,7 +677,7 @@ const AttachmentVideoDialog: FC<
       {failed ? (
         <p className="m-auto text-sm text-muted-foreground">{t("library.preview.cannotPreview")}</p>
       ) : (
-        <AttachmentVideoBody source={source} onError={() => setFailed(true)} />
+        <AttachmentVideoBody source={source} onError={() => { setFailed(true); }} />
       )}
     </AttachmentViewer>
   );

@@ -43,7 +43,7 @@ export function CopyBtn({ text }: { text: string }) {
       if (timer.current) {
         clearTimeout(timer.current);
       }
-      timer.current = setTimeout(() => setCopied(false), COPY_RESET_MS);
+      timer.current = setTimeout(() => { setCopied(false); }, COPY_RESET_MS);
     }
   }, [text]);
 
@@ -108,7 +108,7 @@ function HighlightedCode({
       { rootMargin: "200px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    return () => { io.disconnect(); };
   }, [nearViewport]);
 
   useEffect(() => {

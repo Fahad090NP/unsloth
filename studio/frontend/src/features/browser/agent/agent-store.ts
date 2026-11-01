@@ -23,7 +23,7 @@ export type AgentPrompt = Question & { id: number; always: boolean };
 export type Answer = false | "once" | "always";
 
 /** Action in flight for the agent bar; `detail` is a host, query, key, or element ref then name. */
-export type AgentStep = {
+export interface AgentStep {
   kind:
     | "open"
     | "back"
@@ -42,10 +42,10 @@ export type AgentStep = {
     | "move"
     | "drag";
   detail: string;
-};
+}
 
 /** One chat's use of the browser tools; chats run theirs side by side, each in its own tab. */
-export type AgentChat = {
+export interface AgentChat {
   /** The tab the agent drives in this chat; the model can't reach any other. */
   tabId: string | null;
   working: boolean;
@@ -57,11 +57,11 @@ export type AgentChat = {
   stoppedRun: string | null;
   /** When its last run ended (ms), for downloads that land after it. */
   endedAt: number;
-};
+}
 
 export const IDLE_AGENT: AgentChat = { tabId: null, working: false, step: null, question: null, runKey: null, stoppedRun: null, endedAt: 0 };
 
-type BrowserAgentState = {
+interface BrowserAgentState {
   /** The composer's Browser tool: offer the model the browser tools. */
   enabled: boolean;
   setEnabled: (enabled: boolean) => void;
@@ -77,7 +77,7 @@ type BrowserAgentState = {
   setShowCursor: (show: boolean) => void;
   /** By chat key (browser store `chat`). */
   chats: Record<string, AgentChat>;
-};
+}
 
 export const useBrowserAgentStore = create<BrowserAgentState>()(
   persist(
@@ -180,7 +180,7 @@ export function askUser(chat: string, question: Question, signal?: AbortSignal, 
       if (agentChat(chat).question?.id === id) patchAgentChat(chat, { question: null });
       resolve(answer);
     };
-    const onAbort = () => finish(false);
+    const onAbort = () => { finish(false); };
     if (signal?.aborted) {
       resolve(false);
       return;

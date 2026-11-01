@@ -56,7 +56,7 @@ test("the dialog loads every tab panel on demand", async () => {
   const statics = staticSpecifiers(DIALOG, source).filter(isTabPanel);
   assert.deepEqual(statics, [], `settings-dialog still statically imports: ${statics}`);
 
-  const panels = (await readdir(TABS_DIR)).filter((f) => /-tab\.tsx$/.test(f));
+  const panels = (await readdir(TABS_DIR)).filter((f) => f.endsWith("-tab.tsx"));
   assert.ok(panels.length >= 12, `only found ${panels.length} tab panels`);
   for (const file of panels) {
     const specifier = `./tabs/${file.replace(/\.tsx$/, "")}`;

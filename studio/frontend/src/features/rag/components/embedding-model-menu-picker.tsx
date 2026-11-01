@@ -137,7 +137,7 @@ export function EmbeddingModelMenuList({ onBack }: { onBack: () => void }) {
           description: t("settings.general.rag.switchedNeedsDownloadDescription"),
           action: {
             label: t("settings.general.rag.openSettings"),
-            onClick: () => openSettings("general", { scrollTarget: "general-rag-embedding" }),
+            onClick: () => { openSettings("general", { scrollTarget: "general-rag-embedding" }); },
           },
         });
       } else if (result.status === "saved" && result.needsDownload === null) {
@@ -146,7 +146,7 @@ export function EmbeddingModelMenuList({ onBack }: { onBack: () => void }) {
           description: t("settings.general.rag.switchedUncheckedDescription"),
           action: {
             label: t("settings.general.rag.openSettings"),
-            onClick: () => openSettings("general", { scrollTarget: "general-rag-embedding" }),
+            onClick: () => { openSettings("general", { scrollTarget: "general-rag-embedding" }); },
           },
         });
       } else if (result.status === "saved") {
@@ -215,7 +215,7 @@ export function EmbeddingModelMenuList({ onBack }: { onBack: () => void }) {
           className={cn(HEADING_LINK_CLASS, "mt-px text-ui-12")}
           // Deferred past the menu's focus restore.
           onSelect={() =>
-            setTimeout(() => openSettings("general", { scrollTarget: "general-rag-embedding" }), 0)
+            setTimeout(() => { openSettings("general", { scrollTarget: "general-rag-embedding" }); }, 0)
           }
         >
           {t("settings.general.rag.moreModels")}
@@ -285,7 +285,7 @@ export function EmbeddingModelMenuList({ onBack }: { onBack: () => void }) {
                           ? neighbourRowItem(event.currentTarget as HTMLElement)
                           : null;
                         togglePin(model);
-                        if (neighbour) requestAnimationFrame(() => neighbour.focus());
+                        if (neighbour) requestAnimationFrame(() => { neighbour.focus(); });
                       }}
                       // As on Recents: grey, unpin glyph once pinned. Shown on row hover or focus, always on touch.
                       className="pointer-events-auto flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground opacity-0 outline-hidden transition-colors group-hover/row:opacity-100 group-has-[[data-highlighted]]/row:opacity-100 [@media(hover:none)]:opacity-100 hover:bg-[rgb(0_0_0_/_calc(0.06*var(--contrast-wash-gain,1)))] data-[highlighted]:bg-[rgb(0_0_0_/_calc(0.06*var(--contrast-wash-gain,1)))] dark:hover:bg-[rgb(255_255_255_/_calc(0.1*var(--contrast-wash-gain,1)))] dark:data-[highlighted]:bg-[rgb(255_255_255_/_calc(0.1*var(--contrast-wash-gain,1)))]"
@@ -309,7 +309,7 @@ export function EmbeddingModelMenuList({ onBack }: { onBack: () => void }) {
             className={cn(HEADING_LINK_CLASS, "mx-3 mt-1 mb-2 inline-flex w-fit text-xs")}
             // Deferred past the menu's focus restore, as More models is.
             onSelect={() =>
-              setTimeout(() => openSettings("general", { scrollTarget: "general-rag-embedding" }), 0)
+              setTimeout(() => { openSettings("general", { scrollTarget: "general-rag-embedding" }); }, 0)
             }
           >
             {t("settings.general.rag.pinMoreModels")}

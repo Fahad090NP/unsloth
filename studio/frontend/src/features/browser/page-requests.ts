@@ -21,7 +21,7 @@ function schedule() {
   }
 }
 
-type Job = { id: string; request: PageRequest; controller: AbortController };
+interface Job { id: string; request: PageRequest; controller: AbortController }
 
 /** One page's requests to its own site (routes/browser_network.py), made by `send` for the page at
  *  `pageUrl()`. Each gets one `reply`, null when it failed; one the page aborted gets none. */
@@ -35,7 +35,7 @@ export function pageRequests(
   /** Starts this page's next request; whether more are waiting. */
   const startOne = () => {
     while (queue.length) {
-      const job = queue.shift() as Job;
+      const job = queue.shift()!;
       if (job.controller.signal.aborted) continue;
       const page = pageUrl();
       if (!page) {

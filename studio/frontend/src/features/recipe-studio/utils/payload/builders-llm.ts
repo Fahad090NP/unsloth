@@ -11,7 +11,7 @@ import type {
 function buildImageContext(
   config: LlmConfig,
   errors: string[],
-): Array<Record<string, unknown>> | undefined {
+): Record<string, unknown>[] | undefined {
   const imageContext = config.image_context;
   if (!imageContext?.enabled) {
     return undefined;

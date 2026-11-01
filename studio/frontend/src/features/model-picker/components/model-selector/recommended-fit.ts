@@ -200,7 +200,7 @@ export function fitsDevice(opts: {
       }) !== "oom"
     );
   }
-  return requireKnown ? false : true;
+  return !requireKnown;
 }
 
 /** A safetensors load on a discrete GPU: a prequantized checkpoint as stored (Studio rebuilds none
@@ -505,12 +505,12 @@ export function orderRecommendedRows<
     .map(({ row }) => row);
 }
 
-export type CuratedBudget = {
+export interface CuratedBudget {
   allowanceGb: number;
   deviceGb: number;
   device: "GPU" | "RAM" | "GPU + RAM";
   sizeGb: number;
-};
+}
 
 export function curatedBudget(
   fit: Omit<NonNullable<ReturnType<typeof curatedArtifactFit>>, "device"> & { device?: CuratedBudget["device"] },

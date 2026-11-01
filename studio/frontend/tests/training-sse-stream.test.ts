@@ -161,12 +161,12 @@ test("malformed frames are skipped without interrupting valid frames", async () 
       streamController.close();
     },
   });
-  const received: Array<{
+  const received: {
     event: string;
     jobId: string;
     step: number;
     elapsedSeconds: number | null;
-  }> = [];
+  }[] = [];
 
   await consumeTrainingProgressStream({
     body,

@@ -74,7 +74,7 @@ for (const [label, source] of [
     assert.equal(result.edges.length, 1);
     assert.equal(result.edges[0].type, "semantic");
     const next = result.configs?.[validator.id];
-    assert.ok(next && next.kind === "validator");
+    assert.ok(next?.kind === "validator");
     assert.deepEqual(next.target_columns, [source.name]);
   });
 }

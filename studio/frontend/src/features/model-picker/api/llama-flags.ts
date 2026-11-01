@@ -3,7 +3,7 @@
 
 import { authFetch } from "@/features/auth";
 
-export type LlamaFlagCatalog = {
+export interface LlamaFlagCatalog {
   flags: Record<string, string>;
   managed: ReadonlySet<string>;
   switches: ReadonlySet<string>;
@@ -16,9 +16,9 @@ export type LlamaFlagCatalog = {
   parallelSlotsClamped: boolean;
   /** False when `--help` could not be read: an unverifiable flag is not a typo. */
   probeOk: boolean;
-};
+}
 
-type ApiLlamaFlagCatalog = {
+interface ApiLlamaFlagCatalog {
   flags?: Record<string, string>;
   managed?: string[];
   // biome-ignore lint/style/useNamingConvention: API schema
@@ -33,7 +33,7 @@ type ApiLlamaFlagCatalog = {
   parallel_slots_clamped?: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   probe_ok?: boolean;
-};
+}
 
 // Short TTL: an update or backend switch replaces the binary while the tab stays open.
 const CATALOG_TTL_MS = 60_000;
@@ -43,13 +43,13 @@ let cachedAt = 0;
 // Bumped per invalidation so a read of the old binary is neither cached nor handed out.
 let catalogGeneration = 0;
 
-export type LlamaManagedFlags = {
+export interface LlamaManagedFlags {
   managed: ReadonlySet<string>;
   maxBytes: number;
   windowsCommandBudget: number;
   defaultParallelSlots: number;
   parallelSlotsClamped: boolean;
-};
+}
 
 let inFlightManaged: Promise<LlamaManagedFlags | null> | null = null;
 let cachedManaged: LlamaManagedFlags | null = null;

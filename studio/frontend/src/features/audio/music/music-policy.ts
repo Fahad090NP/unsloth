@@ -192,7 +192,7 @@ export function reloadNotice(
   modelName: string | null,
 ): string | null {
   const rules = rule.variations;
-  if (!rules || rules.how !== "batch" || variations <= rules.loaded)
+  if (rules?.how !== "batch" || variations <= rules.loaded)
     return null;
   const name = modelName?.trim() || "the model";
   return `Reloads ${name} to make ${variations} variations at once, about 15 s the first time.`;

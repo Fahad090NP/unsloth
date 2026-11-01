@@ -37,7 +37,7 @@ function fromRaw(raw: RawSummary): OpenAIContainerSummary {
 }
 
 async function parseError(response: Response): Promise<string> {
-  return readFastApiError(response, "HTTP");
+  return await readFastApiError(response, "HTTP");
 }
 
 interface AuthInputs {

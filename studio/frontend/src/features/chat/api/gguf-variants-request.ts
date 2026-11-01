@@ -70,5 +70,5 @@ export function runBoundedVariantsRequest<T>(
     abort.dispose();
     return Promise.reject(err);
   }
-  return withAbort(started, abort.signal).finally(() => abort.dispose());
+  return withAbort(started, abort.signal).finally(() => { abort.dispose(); });
 }

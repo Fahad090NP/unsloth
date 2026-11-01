@@ -122,7 +122,7 @@ export function ChatMemorySection() {
           value={draft}
           disabled={!settings}
           aria-invalid={tooLarge || undefined}
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={(event) => { setDraft(event.target.value); }}
         />
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <span className="min-w-0 text-xs text-muted-foreground">

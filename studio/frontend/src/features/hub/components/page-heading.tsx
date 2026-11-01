@@ -5,12 +5,12 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-type PageHeadingProps = {
+interface PageHeadingProps {
   title: ReactNode;
   subtitle?: ReactNode;
   className?: string;
   onTitleClick?: () => void;
-};
+}
 
 const TITLE_CLASS =
   "text-ui-30 font-semibold leading-[1.04] tracking-[-0.028em] text-foreground sm:text-ui-34";

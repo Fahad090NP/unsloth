@@ -9,7 +9,7 @@ import {
   createStreamActivity,
 } from "../src/components/assistant-ui/stream-activity.ts";
 
-type Running = { runningByThreadId: Record<string, boolean> };
+interface Running { runningByThreadId: Record<string, boolean> }
 
 const stubStore = () => {
   let state: Running = { runningByThreadId: {} };

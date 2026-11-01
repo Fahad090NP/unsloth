@@ -9,7 +9,7 @@ import { SettingsRouteAbsentError } from "./settings-route-absent";
 const VRAM_BUDGET_EVENT = "unsloth-vram-budget-change";
 const VRAM_BUDGET_LOCK_EVENT = "unsloth-vram-budget-lock";
 
-export type VramBudgetSettings = {
+export interface VramBudgetSettings {
   fraction: number;
   /** False when inherited from UNSLOTH_VRAM_FRACTION or the default. */
   isStored: boolean;
@@ -17,9 +17,9 @@ export type VramBudgetSettings = {
   minFraction: number;
   maxFraction: number;
   reloadRequired: boolean;
-};
+}
 
-type ApiVramBudgetSettings = {
+interface ApiVramBudgetSettings {
   fraction: number;
   // biome-ignore lint/style/useNamingConvention: API schema
   is_stored: boolean;
@@ -31,7 +31,7 @@ type ApiVramBudgetSettings = {
   max_fraction: number;
   // biome-ignore lint/style/useNamingConvention: API schema
   reload_required: boolean;
-};
+}
 
 let inFlightVramBudget: Promise<VramBudgetSettings> | null = null;
 
@@ -89,7 +89,7 @@ export function subscribeVramBudgetLock(listener: (locked: boolean) => void) {
     listener((event as CustomEvent<boolean>).detail);
   };
   window.addEventListener(VRAM_BUDGET_LOCK_EVENT, handleChange);
-  return () => window.removeEventListener(VRAM_BUDGET_LOCK_EVENT, handleChange);
+  return () => { window.removeEventListener(VRAM_BUDGET_LOCK_EVENT, handleChange); };
 }
 
 export function subscribeVramBudgetSettings(
@@ -99,7 +99,7 @@ export function subscribeVramBudgetSettings(
     listener((event as CustomEvent<VramBudgetSettings>).detail);
   };
   window.addEventListener(VRAM_BUDGET_EVENT, handleChange);
-  return () => window.removeEventListener(VRAM_BUDGET_EVENT, handleChange);
+  return () => { window.removeEventListener(VRAM_BUDGET_EVENT, handleChange); };
 }
 
 function fromApi(settings: ApiVramBudgetSettings): VramBudgetSettings {

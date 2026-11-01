@@ -12,7 +12,7 @@ export type RemoteAccessState =
 export type RemoteAccessOwner = "launch" | "settings" | "colab" | null;
 const TRAILING_SLASHES_RE = /\/+$/;
 
-export type RemoteAccessStatus = {
+export interface RemoteAccessStatus {
   state: RemoteAccessState;
   url: string | null;
   error: string | null;
@@ -25,9 +25,9 @@ export type RemoteAccessStatus = {
   blockReason: string | null;
   passwordPending: boolean;
   streamingSupported: boolean;
-};
+}
 
-export type ApiRemoteAccessStatus = {
+export interface ApiRemoteAccessStatus {
   state: RemoteAccessState;
   url?: string | null;
   error?: string | null;
@@ -48,7 +48,7 @@ export type ApiRemoteAccessStatus = {
   password_pending?: boolean;
   // biome-ignore lint/style/useNamingConvention: API schema
   streaming_supported: boolean;
-};
+}
 
 export function normalizeRemoteAccessStatus(
   status: ApiRemoteAccessStatus,

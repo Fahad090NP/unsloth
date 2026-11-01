@@ -15,17 +15,17 @@ export class PromptQueueModelBoundary {
 
 export const localPromptQueueModelBoundary = new PromptQueueModelBoundary();
 
-export type PromptQueueModelStopItem = {
+export interface PromptQueueModelStopItem {
   usesLocalModel: boolean;
   dispatched: boolean;
-};
+}
 
-export type LocalPromptQueueStopPlan = {
+export interface LocalPromptQueueStopPlan {
   cancelActiveItem: boolean;
   retainedItemIndexes: number[];
   /** Indexes into the original items of unsent local prompts to hold until Resume. */
   heldItemIndexes: number[];
-};
+}
 
 /** A local model change ends the local reply in flight, so that item is cancelled and dropped as a
  *  Stop drops it. Unsent local prompts are held for Resume instead of discarded (#10428), and

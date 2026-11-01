@@ -177,7 +177,7 @@ export function ShareRunConfigDialog({
           }
           checked={checked}
           disabled={disabled}
-          onCheckedChange={(value) => change(value === true)}
+          onCheckedChange={(value) => { change(value === true); }}
         />
         <label
           htmlFor={`${id}-${key}`}
@@ -250,14 +250,14 @@ export function ShareRunConfigDialog({
                   SHARED_CONFIG_FIELDS[key].label,
                   selected.has(key),
                   (checked) =>
-                    setSelected(
+                    { setSelected(
                       (current) =>
                         new Set(
                           checked
                             ? [...current, key]
                             : [...current].filter((item) => item !== key),
                         ),
-                    ),
+                    ); },
                   detail,
                   !valid,
                 ),

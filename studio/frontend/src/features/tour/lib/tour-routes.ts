@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 /** Longest prefix first: the recipe editor sits under the Data Recipes route. */
-export const TOUR_ROUTES: ReadonlyArray<{ prefix: string; id: string }> = [
+export const TOUR_ROUTES: readonly { prefix: string; id: string }[] = [
   { prefix: "/data-recipes/", id: "recipe-editor" },
   { prefix: "/data-recipes", id: "data-recipes" },
   { prefix: "/api-monitor", id: "api-monitor" },

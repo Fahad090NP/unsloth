@@ -38,7 +38,7 @@ export function renderBlockDialog(
     return null;
   }
 
-  const update = (patch: Partial<NodeConfig>) => onUpdate(config.id, patch);
+  const update = (patch: Partial<NodeConfig>) => { onUpdate(config.id, patch); };
 
   switch (definition.dialogKey) {
     case "seed":

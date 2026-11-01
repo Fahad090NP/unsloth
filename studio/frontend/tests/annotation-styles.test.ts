@@ -23,7 +23,7 @@ test("annotation sheets work without inserting inline styles and preserve existi
   const target = { adoptedStyleSheets: [existing] };
   const remove = addStyle(target, ".mark { position: fixed; border: 1px dashed blue; }");
   assert.equal(target.adoptedStyleSheets[0], existing);
-  assert.equal(target.adoptedStyleSheets[1]!.css, ".mark { position: fixed; border: 1px dashed blue; }");
+  assert.equal(target.adoptedStyleSheets[1].css, ".mark { position: fixed; border: 1px dashed blue; }");
   const other = new Sheet();
   target.adoptedStyleSheets.push(other);
   remove();
@@ -44,7 +44,7 @@ test("older webviews retain their inline-style path", () => {
 
 
 test("annotation controls can be built when Trusted Types rejects HTML sinks", () => {
-  const children: Array<{ className: string }> = [];
+  const children: { className: string }[] = [];
   const root = {
     set innerHTML(_value: string) { throw new TypeError("TrustedHTML required"); },
     appendChild: (element: { className: string }) => children.push(element),

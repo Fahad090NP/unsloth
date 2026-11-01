@@ -137,7 +137,7 @@ test("a stream seeded with a continuation partial is tracked", () => {
 
 test("a suffix removed from the buffer is accounted for", () => {
   // The adapter strips a trailing ${...} fragment, so the buffer can shrink.
-  const cases: Array<{ steps: string[]; label: string }> = [
+  const cases: { steps: string[]; label: string }[] = [
     { steps: ["<think>a", "<think>a ${x}", "<think>a"], label: "plain strip" },
     {
       steps: ["<think>a</think>", "<think>a</think> ${x}", "<think>a</think>"],

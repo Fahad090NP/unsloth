@@ -103,7 +103,7 @@ export function useDownloadCardState({
   const onClick = useCallback(() => {
     if (disabled || cancelling || starting) return;
     if (downloading) {
-      void job.cancelDownload(variant);
+      job.cancelDownload(variant);
       return;
     }
     setStarting(true);

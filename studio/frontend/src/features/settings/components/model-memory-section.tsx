@@ -203,7 +203,7 @@ export function ModelMemorySection({
 
   // Keyed on the toggles, not mlockActive, which is also false when nothing was in host RAM.
   const mlockVetoed =
-    settings?.keepResident === true && settings.noRamReserve === true;
+    settings?.keepResident === true && settings.noRamReserve;
   // A finite memlock cap makes llama.cpp log "failed to mlock" and carry on.
   const memlockCap =
     settings?.mlockActive === true && settings.memlockLimitBytes !== null
@@ -220,9 +220,9 @@ export function ModelMemorySection({
             type="button"
             className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-ui-11 font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             onClick={() =>
-              useSettingsDialogStore
+              { useSettingsDialogStore
                 .getState()
-                .openDialog("resources", { scrollTarget: "resources-model-memory" })
+                .openDialog("resources", { scrollTarget: "resources-model-memory" }); }
             }
           >
             {t("settings.resources.modelMemory.openSystemSettings")}

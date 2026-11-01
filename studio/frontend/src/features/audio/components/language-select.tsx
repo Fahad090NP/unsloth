@@ -43,7 +43,7 @@ export function LanguageSelect({
       </FieldLabel>
       <Select
         value={value || AUTO}
-        onValueChange={(next) => onChange(next === AUTO ? "" : next)}
+        onValueChange={(next) => { onChange(next === AUTO ? "" : next); }}
         disabled={disabled}
       >
         <SelectTrigger id={id} size="sm" className="w-full">

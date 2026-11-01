@@ -24,9 +24,9 @@ const HEADER_SELECTOR = '[data-sidebar="group-label"]';
 const HEADER_ACTION_SELECTOR = ".sidebar-header-action";
 const SETTLE_MS = 180;
 
-export type SectionLanding = { target: string; edge: DropEdge };
+export interface SectionLanding { target: string; edge: DropEdge }
 
-export type SectionBlock = { key: string; top: number; bottom: number };
+export interface SectionBlock { key: string; top: number; bottom: number }
 
 export function sectionLandingAt(
   blocks: readonly SectionBlock[],
@@ -266,7 +266,7 @@ export function useSectionDrag(
         clicked.stopPropagation();
       };
       window.addEventListener("click", stop, { capture: true, once: true });
-      window.setTimeout(() => window.removeEventListener("click", stop, { capture: true }), 0);
+      window.setTimeout(() => { window.removeEventListener("click", stop, { capture: true }); }, 0);
     };
 
     const settle = (from: number) => {

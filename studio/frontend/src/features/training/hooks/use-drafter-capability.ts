@@ -35,7 +35,7 @@ export function useDrafterCapability(active: boolean): void {
         setRetry((n) => n + 1);
       }
     }, RETRY_MS);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); };
   }, [active]);
 
   useEffect(() => {

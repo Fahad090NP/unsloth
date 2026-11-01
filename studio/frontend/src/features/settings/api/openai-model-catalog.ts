@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type OpenAIModel = {
+export interface OpenAIModel {
   id: string;
   loaded?: boolean;
   // Ids stay bare for OpenAI compat; append `:quant` to pin one.
   quant?: string;
-};
+}
 
-type ApiOpenAIModelList = {
+interface ApiOpenAIModelList {
   data?: {
     id?: unknown;
     loaded?: unknown;
@@ -16,7 +16,7 @@ type ApiOpenAIModelList = {
     task?: unknown;
     audio_workflows?: unknown;
   }[];
-};
+}
 
 const CHAT_TASKS = new Set(["text-generation"]);
 
@@ -25,13 +25,13 @@ export type AudioApiTask =
   | "automatic-speech-recognition"
   | "audio-to-audio";
 
-export type AudioApiModel = {
+export interface AudioApiModel {
   id: string;
   loaded: boolean;
   // text-to-speech also covers music models, which /v1/audio/speech serves too.
   task: AudioApiTask;
   workflows?: string[];
-};
+}
 
 const AUDIO_TASKS = new Set<string>([
   "text-to-speech",

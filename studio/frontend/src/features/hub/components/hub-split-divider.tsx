@@ -69,11 +69,11 @@ export function useHubSplitWidth(): {
   return { width, setWidth, style };
 }
 
-type HubSplitDividerProps = {
+interface HubSplitDividerProps {
   paneRef: RefObject<HTMLElement | null>;
   width: number | null;
   onWidthChange: (px: number | null) => void;
-};
+}
 
 export function HubSplitDivider({
   paneRef,
@@ -114,7 +114,7 @@ export function HubSplitDivider({
     const observer = new ResizeObserver(update);
     observer.observe(pane);
     observer.observe(pane.parentElement);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [paneRef, limits]);
 
   const clamp = useCallback(
@@ -216,7 +216,7 @@ export function HubSplitDivider({
         onPointerUp={finishDrag}
         onPointerCancel={finishDrag}
         onLostPointerCapture={finishDrag}
-        onDoubleClick={() => onWidthChange(null)}
+        onDoubleClick={() => { onWidthChange(null); }}
         onKeyDown={handleKeyDown}
         className={
           // Centred on the list's 1px border, which the hover line recolours.

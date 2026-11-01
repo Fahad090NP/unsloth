@@ -174,7 +174,7 @@ export function DimensionSelect({
         aria-label={label}
         inputMode="numeric"
         value={draft}
-        onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ""))}
+        onChange={(e) => { setDraft(e.target.value.replace(/[^0-9]/g, "")); }}
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -196,7 +196,7 @@ export function DimensionSelect({
           className="max-h-[min(--spacing(72),var(--radix-dropdown-menu-content-available-height))] overflow-y-auto"
         >
           {options.map((n) => (
-            <DropdownMenuItem key={n} onSelect={() => pick(n)}>
+            <DropdownMenuItem key={n} onSelect={() => { pick(n); }}>
               <span className="tabular-nums">{n}</span>
             </DropdownMenuItem>
           ))}

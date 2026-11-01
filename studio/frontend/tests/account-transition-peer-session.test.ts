@@ -27,7 +27,7 @@ function storage(): Storage {
     removeItem: (key: string) => {
       values.delete(key);
     },
-    clear: () => values.clear(),
+    clear: () => { values.clear(); },
   };
 }
 
@@ -77,7 +77,7 @@ test("peer-tab account switch clears Alice's training handoff before Bob reloads
     await transitionBrowserAccount(
       { username: "bob", accountId: "b1" },
       "/chat",
-      () => localStorage.setItem("unsloth_auth_token", "bob-token"),
+      () => { localStorage.setItem("unsloth_auth_token", "bob-token"); },
       loginTab,
     );
     listener!({

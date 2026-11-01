@@ -9,7 +9,7 @@ import { estimateContextUsage, estimateMessagesTokenCount } from "./estimate-cha
 
 type BranchRecord = Pick<MessageRecord, "id" | "role" | "content" | "metadata">;
 
-export type BranchContextUsage = {
+export interface BranchContextUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
@@ -22,7 +22,7 @@ export type BranchContextUsage = {
   estimatedTokens?: number;
   revision?: number;
   estimated?: boolean;
-};
+}
 
 export function isSummedToolLoopUsage(
   usage: { modelId?: unknown; contextTokens?: unknown } | null | undefined,
@@ -90,11 +90,11 @@ function branchTokenEstimate(
   return estimateMessagesTokenCount(inBranchOrder(branch));
 }
 
-export type ContextUsageMarkers = {
+export interface ContextUsageMarkers {
   messageCount: number;
   revision: number;
   estimatedTokens: number;
-};
+}
 
 export function contextUsageMarkers(branch: readonly BranchRecord[]): ContextUsageMarkers {
   let revision = 0;

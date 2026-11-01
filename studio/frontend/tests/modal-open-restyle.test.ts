@@ -25,7 +25,7 @@ test("dark menus take their dialog or picker glow from an attribute, not a sibli
   const css = rules(await readSrcAsync("index.css"));
   const context = css.filter(
     ([, body]) =>
-      /--dropdown-glow:/.test(body) || /var\(--dropdown-lift-surface\)/.test(body),
+      body.includes('--dropdown-glow:') || body.includes('var(--dropdown-lift-surface)'),
   );
   assert.ok(context.length >= 3, "the glow and lift context rules are present");
   for (const [selector] of context) {

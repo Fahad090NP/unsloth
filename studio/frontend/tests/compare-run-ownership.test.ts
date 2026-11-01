@@ -41,7 +41,7 @@ test("cancelCurrent aborts the owner without releasing it early", () => {
   assert.equal(run.controller.signal.aborted, true);
   assert.equal(ownership.current(), run);
   assert.throws(
-    () => throwIfCompareCancelled(run.controller.signal),
+    () => { throwIfCompareCancelled(run.controller.signal); },
     (error) =>
       error instanceof DOMException &&
       error.name === "AbortError" &&

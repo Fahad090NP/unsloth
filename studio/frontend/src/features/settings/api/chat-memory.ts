@@ -4,15 +4,15 @@
 import { authFetch } from "@/features/auth";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
-export type ChatMemorySettings = {
+export interface ChatMemorySettings {
   enabled: boolean;
   text: string;
   path: string;
   maxBytes: number;
   lockedByEnvironment: boolean;
-};
+}
 
-type ApiChatMemorySettings = {
+interface ApiChatMemorySettings {
   enabled: boolean;
   text: string;
   path: string;
@@ -20,7 +20,7 @@ type ApiChatMemorySettings = {
   max_bytes: number;
   // biome-ignore lint/style/useNamingConvention: API schema
   locked_by_environment: boolean;
-};
+}
 
 function fromApi(settings: ApiChatMemorySettings): ChatMemorySettings {
   return {

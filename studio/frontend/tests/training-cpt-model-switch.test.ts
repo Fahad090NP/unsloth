@@ -53,7 +53,7 @@ function deferLfmDefaults(): () => void {
       }),
   );
   return () =>
-    resolveModelConfig(
+    { resolveModelConfig(
       Response.json({
         id: "LiquidAI/LFM2-1.2B",
         config: { lora: { target_modules: ["all-linear"] } },
@@ -66,10 +66,10 @@ function deferLfmDefaults(): () => void {
         model_size_bytes: null,
         max_position_embeddings: 32768,
       }),
-    );
+    ); };
 }
 
-after(() => setAuthFetchHandler(null));
+after(() => { setAuthFetchHandler(null); });
 
 test("leaving CPT after a model switch restores the new model targets", async () => {
   useTrainingConfigStore.getState().reset();
@@ -981,7 +981,7 @@ function deferModelDefaults(): (response: Response) => void {
         resolveDefaults = resolve;
       }),
   );
-  return (response) => resolveDefaults(response);
+  return (response) => { resolveDefaults(response); };
 }
 
 test("entering CPT before the new model's defaults load restores that model's train on completions", async () => {

@@ -74,7 +74,7 @@ function bezierCurve(): number[] {
 
 const HAS_LINEAR =
   typeof CSS !== "undefined" &&
-  !!CSS.supports?.("transition-timing-function", "linear(0, 1)");
+  Boolean(CSS.supports?.("transition-timing-function", "linear(0, 1)"));
 
 const EASING = HAS_LINEAR
   ? `linear(0, ${STOPS.map(
@@ -234,8 +234,7 @@ function place(group: string, root: HTMLElement, segment: HTMLElement) {
   }
   pills.set(group, state);
   if (
-    !prev ||
-    prev.track !== track ||
+    prev?.track !== track ||
     !prev.segment.isConnected ||
     prefersReducedMotion()
   ) {
@@ -264,5 +263,5 @@ export function watchSegmentedPill(group: string, root: HTMLElement) {
     place(group, root, segment);
   });
   observer.observe(segment);
-  return () => observer.disconnect();
+  return () => { observer.disconnect(); };
 }

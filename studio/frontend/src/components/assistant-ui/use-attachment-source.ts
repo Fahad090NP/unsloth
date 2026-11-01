@@ -15,7 +15,7 @@ import { useShallow } from "zustand/shallow";
 
 export type { AttachmentPreviewKind };
 
-export type AttachmentSource = {
+export interface AttachmentSource {
   kind: AttachmentPreviewKind;
   name: string;
   contentType: string | undefined;
@@ -25,7 +25,7 @@ export type AttachmentSource = {
   video: AttachmentVideoPart | undefined;
   text: string | undefined;
   hasOriginal: boolean;
-};
+}
 
 const useFileSrc = (file: File | undefined): string | undefined => {
   const [objectUrl, setObjectUrl] = useState<string | undefined>(undefined);
@@ -37,7 +37,7 @@ const useFileSrc = (file: File | undefined): string | undefined => {
     }
     const url = URL.createObjectURL(file);
     setObjectUrl(url);
-    return () => URL.revokeObjectURL(url);
+    return () => { URL.revokeObjectURL(url); };
   }, [file]);
 
   return objectUrl;

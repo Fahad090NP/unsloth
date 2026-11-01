@@ -123,7 +123,7 @@ function escapeRegExp(value: string): string {
 function tokenPlacedOutsideCode(
   text: string,
   id: string,
-  codeRegions: Array<[number, number]>,
+  codeRegions: [number, number][],
 ): boolean {
   const needle = `[[img:${id}]]`;
   for (let at = text.indexOf(needle); at !== -1; at = text.indexOf(needle, at + 1)) {
@@ -135,7 +135,7 @@ function tokenPlacedOutsideCode(
 function firstMatchOutsideCode(
   pattern: RegExp,
   text: string,
-  regions: Array<[number, number]>,
+  regions: [number, number][],
 ): number | null {
   if (!text) return null;
   pattern.lastIndex = 0;
@@ -153,8 +153,8 @@ const BLOCK_BREAK_RE = /^(?:\s*$|\s*(?:[-*+•]|\d{1,2}[.)])\s|\s*#{1,6}\s|\s*(?
 // Display math, invisible to BLOCK_BREAK_RE; bounded so an unclosed `$$` cannot scan everything.
 const DISPLAY_MATH_RE = /\$\$[\s\S]{0,4096}?\$\$|\\\[[\s\S]{0,4096}?\\\]/g;
 
-function findDisplayMathRegions(text: string): Array<[number, number]> {
-  const regions: Array<[number, number]> = [];
+function findDisplayMathRegions(text: string): [number, number][] {
+  const regions: [number, number][] = [];
   if (!text.includes("$$") && !text.includes("\\[")) return regions;
   DISPLAY_MATH_RE.lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -168,7 +168,7 @@ function findDisplayMathRegions(text: string): Array<[number, number]> {
 function blockEndFrom(
   text: string,
   index: number,
-  mathRegions: Array<[number, number]> = [],
+  mathRegions: [number, number][] = [],
 ): number {
   let at = text.indexOf("\n", index);
   while (at !== -1) {
@@ -207,7 +207,7 @@ export function placeSubjectImages(
 
   const codeRegions = findCodeBlockRegions(text);
   const mathRegions = findDisplayMathRegions(text);
-  const insertions: Array<{ at: number; chunk: string }> = [];
+  const insertions: { at: number; chunk: string }[] = [];
   const namedRegions = findCodeBlockRegions(alreadyNamed);
   const messageParts = messageTexts.map((part) => ({
     text: part,
@@ -397,7 +397,7 @@ function isAbstractHead(name: string): boolean {
 
 /** Text parts only: a model's reasoning must never be illustrated. */
 export function answerTextFromParts(
-  parts: ReadonlyArray<{ type: string; text?: unknown }>,
+  parts: readonly { type: string; text?: unknown }[],
 ): string {
   return parts
     .filter(
@@ -409,7 +409,7 @@ export function answerTextFromParts(
 }
 
 export function precedingTextForMessagePart(
-  parts: ReadonlyArray<{ type: string; text?: unknown }>,
+  parts: readonly { type: string; text?: unknown }[],
   partIndex: number,
 ): string {
   return answerTextFromParts(parts.slice(0, partIndex));
@@ -458,7 +458,7 @@ export function extractListSubjects(text: string): string[] {
 
 export function missingListSubjects(
   text: string,
-  parts: ReadonlyArray<{ type: string; toolName?: string; result?: unknown }>,
+  parts: readonly { type: string; toolName?: string; result?: unknown }[],
 ): string[] {
   const listed = extractListSubjects(text);
   if (listed.length === 0) return [];
@@ -486,7 +486,7 @@ export function holdBackPartialSearchImageToken(
 }
 
 export function collectSearchImages(
-  parts: ReadonlyArray<{ type: string; toolName?: string; result?: unknown }>,
+  parts: readonly { type: string; toolName?: string; result?: unknown }[],
 ): Map<string, SearchImageEntry> {
   const images = new Map<string, SearchImageEntry>();
   for (const part of parts) {
@@ -504,7 +504,7 @@ export function collectSearchImages(
 }
 
 export function searchImagesSignature(
-  parts: ReadonlyArray<{ type: string; toolName?: string; result?: unknown }>,
+  parts: readonly { type: string; toolName?: string; result?: unknown }[],
 ): string {
   const entries = Array.from(collectSearchImages(parts).values());
   return entries.length === 0 ? "" : JSON.stringify(entries);

@@ -80,12 +80,12 @@ import {
   useSkillsCatalog,
 } from "../api/skills-api";
 
-type EditDraft = { description: string; instructions: string };
+interface EditDraft { description: string; instructions: string }
 type View = { kind: "library" } | { kind: "new" } | { kind: "skill"; key: string };
 
 const EMPTY_DRAFT: SkillDraft = { name: "", description: "", instructions: "" };
 const LIBRARY: View = { kind: "library" };
-const SECTIONS: ReadonlyArray<SkillRecord["source"]> = ["agents", "claude", "bundled"];
+const SECTIONS: readonly SkillRecord["source"][] = ["agents", "claude", "bundled"];
 // `*` is the bulk-change sentinel because skill names cannot contain it.
 const ALL_SKILLS = "*";
 
@@ -274,28 +274,28 @@ export function ChatSkillsDialog({
     else next();
   };
   const goLibrary = () =>
-    leaveTo(() => {
+    { leaveTo(() => {
       setView(LIBRARY);
       setDraft(null);
       setNewDraft(EMPTY_DRAFT);
-    });
+    }); };
   const openSkill = (skill: SkillRecord) =>
-    leaveTo(() => {
+    { leaveTo(() => {
       setDraft(null);
       setNewDraft(EMPTY_DRAFT);
       setView({ kind: "skill", key: keyOf(skill) });
       if (!manifests.has(skill.name)) readManifest(skill);
-    });
+    }); };
   const openNew = () =>
-    leaveTo(() => {
+    { leaveTo(() => {
       setDraft(null);
       setView({ kind: "new" });
-    });
+    }); };
 
   function handleOpenChange(next: boolean) {
     if (!next && busy) return;
     if (!next && dirty) {
-      setConfirmingDiscard(() => () => onOpenChange(false));
+      setConfirmingDiscard(() => () => { onOpenChange(false); });
       return;
     }
     onOpenChange(next);
@@ -485,7 +485,7 @@ export function ChatSkillsDialog({
                 />
                 <Input
                   value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
+                  onChange={(event) => { setSearchQuery(event.target.value); }}
                   onKeyDown={(event) => {
                     if (event.key === "Escape" && searchQuery) {
                       event.stopPropagation();
@@ -539,7 +539,7 @@ export function ChatSkillsDialog({
                     {t("skills.disableAll")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => setConfirmingReset(true)}>
+                  <DropdownMenuItem onSelect={() => { setConfirmingReset(true); }}>
                     {t("skills.resetAll")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -596,7 +596,7 @@ export function ChatSkillsDialog({
                           key={keyOf(skill)}
                           skill={skill}
                           changing={changing !== null}
-                          onOpen={() => openSkill(skill)}
+                          onOpen={() => { openSkill(skill); }}
                           onToggle={(enabled) => void toggle(skill.name, enabled)}
                         />
                       ))}
@@ -611,7 +611,7 @@ export function ChatSkillsDialog({
                   {t("skills.noMatch", { query: searchQuery.trim() })}{" "}
                   <button
                     type="button"
-                    onClick={() => setSearchQuery("")}
+                    onClick={() => { setSearchQuery(""); }}
                     className="text-primary hover:underline"
                   >
                     {t("skills.clearSearch")}
@@ -677,7 +677,7 @@ export function ChatSkillsDialog({
                         aria-invalid={nameInvalid || undefined}
                         placeholder={t("skills.namePlaceholder")}
                         onChange={(event) =>
-                          setNewDraft((prev) => ({ ...prev, name: event.target.value }))
+                          { setNewDraft((prev) => ({ ...prev, name: event.target.value })); }
                         }
                         className="font-mono text-sm"
                       />
@@ -687,9 +687,9 @@ export function ChatSkillsDialog({
                   instructions={newDraft.instructions}
                   readOnly={false}
                   disabled={creating}
-                  onDescription={(value) => setNewDraft((prev) => ({ ...prev, description: value }))}
+                  onDescription={(value) => { setNewDraft((prev) => ({ ...prev, description: value })); }}
                   onInstructions={(value) =>
-                    setNewDraft((prev) => ({ ...prev, instructions: value }))
+                    { setNewDraft((prev) => ({ ...prev, instructions: value })); }
                   }
                   onSubmit={() => void create()}
                 />
@@ -728,8 +728,8 @@ export function ChatSkillsDialog({
                                     : t("skills.readOnlyBundled"),
                               }
                     }
-                    onDescription={(value) => editDraft({ description: value })}
-                    onInstructions={(value) => editDraft({ instructions: value })}
+                    onDescription={(value) => { editDraft({ description: value }); }}
+                    onInstructions={(value) => { editDraft({ instructions: value }); }}
                     details={detailsOf(selected, t)}
                     onSubmit={() => void save()}
                   />
@@ -784,7 +784,7 @@ export function ChatSkillsDialog({
                       type="button"
                       variant="destructive"
                       disabled={pending !== null}
-                      onClick={() => setConfirmingDelete(selected)}
+                      onClick={() => { setConfirmingDelete(selected); }}
                       aria-label={t("skills.delete", { name: selected.name })}
                       className="text-destructive hover:text-destructive"
                     >
@@ -794,7 +794,7 @@ export function ChatSkillsDialog({
                       type="button"
                       variant="outline"
                       disabled={!dirty || pending !== null}
-                      onClick={() => setDraft(null)}
+                      onClick={() => { setDraft(null); }}
                     >
                       {t("skills.revert")}
                     </Button>
@@ -903,7 +903,7 @@ function sectionSuffix(source: SkillRecord["source"]): "Agents" | "Claude" | "Bu
 function detailsOf(
   skill: SkillRecord,
   t: ReturnType<typeof useT>,
-): Array<[string, string]> {
+): [string, string][] {
   return [
     ...(skill.license ? [[t("skills.licenseLabel"), skill.license] as [string, string]] : []),
     ...(skill.compatibility
@@ -1047,7 +1047,7 @@ function Editor({
   readOnly: boolean;
   disabled: boolean;
   notice?: { tone: "muted" | "error"; text: string } | null;
-  details?: Array<[string, string]>;
+  details?: [string, string][];
   onDescription: (value: string) => void;
   onInstructions: (value: string) => void;
   onSubmit: () => void;
@@ -1111,7 +1111,7 @@ function Editor({
             disabled={disabled}
             aria-label={t("skills.descriptionLabel")}
             placeholder={t("skills.descriptionPlaceholder")}
-            onChange={(event) => onDescription(event.target.value)}
+            onChange={(event) => { onDescription(event.target.value); }}
             className={cn(
               SCROLL_FIELD_TEXTAREA,
               "max-h-[min(12rem,30vh)] min-h-[calc(3rem*var(--ui-space-scale,1))] overflow-y-auto leading-relaxed",
@@ -1140,7 +1140,7 @@ function Editor({
             spellCheck={false}
             aria-label={t("skills.instructionsLabel")}
             placeholder={t("skills.instructionsPlaceholder")}
-            onChange={(event) => onInstructions(event.target.value)}
+            onChange={(event) => { onInstructions(event.target.value); }}
             className={cn(
               SCROLL_FIELD_TEXTAREA,
               "h-[min(13.5rem,29dvh)] min-h-22 font-mono text-ui-12 leading-relaxed md:text-ui-12",

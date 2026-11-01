@@ -139,7 +139,7 @@ export function useChatProjects(): {
     // Cached rows render immediately, then one shared request reconciles changes made by another
     // browser tab or API client.
     // one function per consumer: a shared reference is one DOM listener the first unmount would remove
-    const onActivity = () => onChatActivity();
+    const onActivity = () => { onChatActivity(); };
     void refresh(
       projectsLoaded && Date.now() - projectsLoadedAt > MOUNT_REVALIDATE_AFTER_MS,
     );
@@ -170,7 +170,7 @@ export async function createChatProject(
   nativePathLease?: string,
   id?: string,
 ): Promise<ProjectRecord> {
-  return createStoredChatProject(name, nativePathLease, id);
+  return await createStoredChatProject(name, nativePathLease, id);
 }
 
 export async function renameChatProject(

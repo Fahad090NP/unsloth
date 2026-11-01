@@ -203,7 +203,7 @@ function base(over: Partial<DiffusionGenerateRequest> = {}): DiffusionGenerateRe
   };
 }
 
-const plan = (inputs: Array<{ axisId: string; text: string }>, ctx = sdxl(), keepRandom = false) => {
+const plan = (inputs: { axisId: string; text: string }[], ctx = sdxl(), keepRandom = false) => {
   const r = planCompare(inputs, ctx, { keepRandomSeeds: keepRandom, rng: () => 0.5 });
   assert.ok(r.ok, r.ok ? "" : r.error);
   return r.plan;
@@ -589,7 +589,7 @@ test("grid metadata: one every-cell-agrees rule for Flux shift, fitted size, see
   const random = Object.fromEntries(gridRecipeFields(steps, [base({ seed: 1 }), base({ seed: 2 })], form));
   assert.equal(random.Seed, undefined);
   // The implicit Vary strength a Variation seed axis adds reaches the grid's parameters and parses back.
-  const ctx = sdxl({ sdControls: { variation_seed: true, vary_strength: 0.2 } as never });
+  const ctx = sdxl({ sdControls: { variation_seed: true, vary_strength: 0.2 } });
   const vp = plan([{ axisId: "variation_seed", text: "1, 2" }], ctx);
   const reqs = vp.order.map((cell) => buildCellRequest(vp, cell, base(), ctx, { base: 5, keepRandom: false, seedFieldEmpty: false }));
   const info = gridParameters(vp, ctx, reqs, { ...form, keepRandomSeeds: false });
@@ -723,7 +723,7 @@ test("grid metadata, every field x shared / varied / axis / absent: written only
   const axesOf = (ids: string[]) => ({ axes: ids.map((id) => ({ def: { id } })) }) as unknown as CompareGridPlan;
   const cn = (strength: number) => ({ id: "xinsir/canny", image: "data:image/png;base64,AAAA", control_type: "canny", strength });
   // [request key, axis id, field, value a, value b, the field's text when every cell sent a, its text when absent]
-  const table: Array<[string, string, string, unknown, unknown, string | number, string | number | undefined]> = [
+  const table: [string, string, string, unknown, unknown, string | number, string | number | undefined][] = [
     ["steps", "steps", "Steps", 20, 30, 20, undefined],
     ["sampler", "sampler", "Sampler", "euler", "dpmpp_2m", "Euler", "Model default"],
     ["schedule_type", "schedule", "Schedule type", "karras", "exponential", "Karras", undefined],
@@ -809,7 +809,7 @@ test("variation seed table: a Var. strength sweep shares one seed across every c
   const ctx = sdxl({ sdControls });
   const p = plan([{ axisId: "variation_strength", text: "0, 0.3, 0.6" }], ctx);
   // [typed Variation seed, Keep -1 for seeds, seed box empty, expected per-cell variation seeds]
-  const rows: Array<[number | null, boolean, boolean, Array<number | undefined>]> = [
+  const rows: [number | null, boolean, boolean, (number | undefined)[]][] = [
     [1234, false, false, [1234, 1234, 1234]], // typed with the form's strength at 0: the typed seed, not a fresh draw
     [1234, true, true, [1234, 1234, 1234]], // typed wins over Keep -1 too
     [null, false, false, [2 ** 30, 2 ** 30, 2 ** 30]], // empty: one draw for the run
@@ -834,7 +834,7 @@ test("canvas table: the final, reflowed layout fits the side and pixel limits", 
   const wordy = Array.from({ length: 1000 }, (_, i) => `${"x".repeat(11)}${i % 10}`).join(" ");
   const huge = Array.from({ length: 5000 }, (_, i) => `w${i}`).join(" ");
   // [cols, rows, cell side, column label, row label]
-  const rows: Array<[number, number, number, string, string]> = [
+  const rows: [number, number, number, string, string][] = [
     [8, 8, 2752, "", ""],
     [1, 64, 2752, long, ""],
     // Narrower cells rewrap labels onto more lines: one shrink pass leaves this at 97x19218 (over the side limit).
@@ -871,7 +871,7 @@ test("canvas table: the final, reflowed layout fits the side and pixel limits", 
 
 test("Prompt S/R table: empty replacements kept, an empty search value refused, other text axes drop empties", () => {
   // [input, Prompt S/R values or an error pattern]
-  const rows: Array<[string, string[] | RegExp]> = [
+  const rows: [string, string[] | RegExp][] = [
     ['red, ""', ["red", ""]],
     ["red,", ["red", ""]],
     ['red, "", blue', ["red", "", "blue"]],
@@ -896,7 +896,7 @@ test("Prompt S/R table: empty replacements kept, an empty search value refused, 
 
 test("sampler x schedule table: every cell must take its effective schedule, the form's included", () => {
   // [form sampler, form schedule, axes, ok or an error pattern]
-  const rows: Array<[string, string, Array<{ axisId: string; text: string }>, true | RegExp]> = [
+  const rows: [string, string, { axisId: string; text: string }[], true | RegExp][] = [
     ["euler", "karras", [{ axisId: "sampler", text: "euler, euler_a" }], /Euler a does not take the form's Karras schedule/],
     ["euler", "karras", [{ axisId: "sampler", text: "euler, dpmpp_2m" }], true],
     ["euler", "automatic", [{ axisId: "sampler", text: "euler, euler_a" }], true],
@@ -929,7 +929,7 @@ test("compare wiring: the request's ControlNet predicate gates CFG rescale; a fa
 
 test("LoRA ids with commas or quotes round-trip through the grid's LoRAs field", () => {
   // [ids, expected restored entries]
-  const rows: Array<[string[], string[]]> = [
+  const rows: [string[], string[]][] = [
     [["style, blue"], ["style, blue:0.5"]],
     [['say "hi"', "plain"], ['say "hi":0.5', "plain:0.5"]],
     [["a, b", "hub:odd/id", "c"], ["a, b:0.5", "hub:odd/id:0.5", "c:0.5"]],

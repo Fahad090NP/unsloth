@@ -48,7 +48,7 @@ function snapshot(
     active_requests: 0,
     queue: { active: 0, capacity: 4, queued: 0, free: 4 },
     entries,
-  } as ApiMonitorResponse;
+  };
 }
 
 test("a poll that only moved server_time keeps the previous snapshot", () => {

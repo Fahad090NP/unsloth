@@ -13,14 +13,14 @@ const ID = "__LOCALID_attachment";
 const SAVED_ID = "saved-target";
 const OUTGOING_ID = "__LOCALID_outgoing";
 const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
-type Scope = { type: "thread"; threadId: string };
+interface Scope { type: "thread"; threadId: string }
 
-type AnnouncedRow = {
+interface AnnouncedRow {
   id: string;
   projectId?: string | null;
   updatedAt?: number;
   modifiedAt?: number | null;
-};
+}
 
 function harness(
   options: {
@@ -41,18 +41,18 @@ function harness(
   let nativePending = false;
   let cursor = 0;
   const slots: unknown[] = [];
-  const effects: Array<() => void> = [];
-  const cleanups: Array<() => void> = [];
+  const effects: (() => void)[] = [];
+  const cleanups: (() => void)[] = [];
   const uploads: Scope[] = [];
   const errors: string[] = [];
-  const toasts: Array<{
+  const toasts: {
     title: string;
     data: { duration?: number; action?: { label: string; onClick: () => void } };
-  }> = [];
+  }[] = [];
   const dismissed: number[] = [];
   const adopted: string[] = [];
   let threadReads = 0;
-  const announce: Array<(detail: { thread?: AnnouncedRow }) => void> = [];
+  const announce: ((detail: { thread?: AnnouncedRow }) => void)[] = [];
   const scopes: unknown[] = [];
   const itemId = options.itemId ?? ID;
   const storedIds = new Set(options.storedIds ?? []);
@@ -293,8 +293,8 @@ function harness(
       threadId: options.propId === undefined ? ID : options.propId,
     });
     effects.splice(0).forEach((effect) => {
-      const cleanup = (effect as () => unknown)();
-      if (typeof cleanup === "function") cleanups.push(cleanup as () => void);
+      const cleanup = (effect)();
+      if (typeof cleanup === "function") cleanups.push(cleanup);
     });
   }
   function pick() {
@@ -311,7 +311,7 @@ function harness(
     dismissed,
     adopted,
     unmount() {
-      cleanups.splice(0).forEach((cleanup) => cleanup());
+      cleanups.splice(0).forEach((cleanup) => { cleanup(); });
     },
     setRagSource(source: { type: "thread" } | { type: "kb"; kbId: string }) {
       state.ragSource = source;
@@ -531,7 +531,7 @@ test("a native drop into a knowledge base chat offers to add the files to that k
   assert.equal(title, 'Add "report.docx" to "Product docs"?');
   assert.equal(data.action?.label, "Add");
   assert.ok(data.duration! > 60_000, `duration ${data.duration}`);
-  data.action!.onClick();
+  data.action.onClick();
   app.render();
   const dialog = kbDialog(app.tree)!;
   assert.equal(dialog.props.open, true);

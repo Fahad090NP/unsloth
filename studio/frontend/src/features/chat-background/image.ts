@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 export function canvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 	return new Promise((resolve, reject) =>
-		canvas.toBlob(
-			(blob) => (blob ? resolve(blob) : reject(new Error("decode"))),
+		{ canvas.toBlob(
+			(blob) => { blob ? resolve(blob) : reject(new Error("decode")); },
 			"image/png",
-		),
+		); },
 	);
 }
 export async function decodeImage(blob: Blob): Promise<{
@@ -19,7 +19,7 @@ export async function decodeImage(blob: Blob): Promise<{
 			source: image,
 			width: image.width,
 			height: image.height,
-			close: () => image.close(),
+			close: () => { image.close(); },
 		};
 	}
 	const url = URL.createObjectURL(blob),
@@ -31,7 +31,7 @@ export async function decodeImage(blob: Blob): Promise<{
 			source: image,
 			width: image.naturalWidth,
 			height: image.naturalHeight,
-			close: () => URL.revokeObjectURL(url),
+			close: () => { URL.revokeObjectURL(url); },
 		};
 	} catch (error) {
 		URL.revokeObjectURL(url);

@@ -81,7 +81,7 @@ export function TrainingApiExamples({
   const [os, setOs] = useExampleOs(base);
   const key = audioApiKey(apiKey, {
     base,
-    tunnel: useTunnel && !!cloudflareUrl,
+    tunnel: useTunnel && Boolean(cloudflareUrl),
     scope: keylessScope,
     exposure: keylessExposure,
   });
@@ -107,7 +107,7 @@ export function TrainingApiExamples({
   };
 
   const notes = [
-    request == null || request.model == null
+    request?.model == null
       ? t("settings.apiKeys.trainingApi.placeholder")
       : null,
     request?.datasetFromHub ? t("settings.apiKeys.trainingApi.hubDataset") : null,

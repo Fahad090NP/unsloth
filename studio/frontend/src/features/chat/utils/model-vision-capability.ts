@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type ModelVisionCapability = {
+export interface ModelVisionCapability {
   isVision?: boolean;
   isGguf?: boolean;
-};
+}
 
 /** GGUF catalog rows can report `isVision: false` before variant metadata; prefer the variant hint. */
 export function isKnownTextOnlySelection(
@@ -12,7 +12,7 @@ export function isKnownTextOnlySelection(
   catalogModel?: ModelVisionCapability,
 ): boolean {
   if (selection.isVision !== undefined) {
-    return selection.isVision === false;
+    return !selection.isVision;
   }
   if (selection.isGguf === true || catalogModel?.isGguf === true) {
     return false;

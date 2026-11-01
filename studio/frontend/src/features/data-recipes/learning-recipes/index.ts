@@ -36,7 +36,7 @@ const booksAndDocumentsUrl = new URL(
 ).href;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function toRecordArray(value: unknown): Record<string, unknown>[] {
@@ -103,12 +103,12 @@ async function loadPayloadFromUrl(url: string): Promise<RecipePayload> {
   return coerceRecipePayload(json);
 }
 
-export type LearningRecipeDef = {
+export interface LearningRecipeDef {
   id: string;
   title: string;
   description: string;
   loadPayload: () => Promise<RecipePayload>;
-};
+}
 
 export const LEARNING_RECIPES: LearningRecipeDef[] = [
   {

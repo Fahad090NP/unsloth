@@ -11,7 +11,7 @@ import {
 import { toast } from "@/lib/toast";
 
 export type EvictedKind = "chat" | "audio" | "image" | "video";
-export type EvictedSlot = { kind: EvictedKind; model: string };
+export interface EvictedSlot { kind: EvictedKind; model: string }
 
 const KINDS: readonly EvictedKind[] = ["chat", "audio", "image", "video"];
 
@@ -39,7 +39,7 @@ export function evictedSlotsFrom(answer: unknown): EvictedSlot[] {
   }
   if (Array.isArray(evicted)) {
     return evicted
-      .filter((model): model is string => typeof model === "string" && !!model)
+      .filter((model): model is string => typeof model === "string" && Boolean(model))
       .map((model) => ({ kind: "chat" as const, model }));
   }
   return [];

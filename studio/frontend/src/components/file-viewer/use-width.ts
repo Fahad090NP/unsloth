@@ -7,11 +7,11 @@ export function useWidth(element: HTMLElement | null): number {
   const [width, setWidth] = useState(0);
   useLayoutEffect(() => {
     if (!element) return;
-    const measure = () => setWidth(element.clientWidth);
+    const measure = () => { setWidth(element.clientWidth); };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [element]);
   return width;
 }

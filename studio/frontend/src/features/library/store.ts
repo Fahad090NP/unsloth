@@ -28,8 +28,8 @@ import {
 import { useLibraryFavoritesStore } from "./favorites-store";
 import { clearCachedObjectUrls } from "./object-url-cache";
 
-type ItemPatch = { name?: string; favorite?: boolean; folderId?: string | null };
-type FolderPatch = { name?: string; parentId?: string | null };
+interface ItemPatch { name?: string; favorite?: boolean; folderId?: string | null }
+interface FolderPatch { name?: string; parentId?: string | null }
 
 interface LibraryState {
   items: LibraryItem[];

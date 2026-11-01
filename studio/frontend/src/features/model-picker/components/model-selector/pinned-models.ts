@@ -104,16 +104,16 @@ interface PinnedModelsState {
 export const usePinnedModelsStore = create<PinnedModelsState>((set) => ({
   pinned: readPinned(),
   togglePinned: (repoId, quant) =>
-    set((state) => {
+    { set((state) => {
       const key = pinKey(repoId, quant);
       const next = state.pinned.includes(key)
         ? state.pinned.filter((id) => id !== key)
         : [key, ...state.pinned];
       writePinned(next);
       return { pinned: next };
-    }),
+    }); },
   unpinRepo: (repoId) =>
-    set((state) => {
+    { set((state) => {
       const prefix = `${pinKey(repoId)}::`;
       const next = state.pinned.filter(
         (key) => key !== pinKey(repoId) && !key.startsWith(prefix),
@@ -121,18 +121,18 @@ export const usePinnedModelsStore = create<PinnedModelsState>((set) => ({
       if (next.length === state.pinned.length) return state;
       writePinned(next);
       return { pinned: next };
-    }),
+    }); },
   replacePinned: (fromKey, toKey) =>
-    set((state) => {
+    { set((state) => {
       if (!state.pinned.includes(fromKey) || fromKey === toKey) return state;
       const next = state.pinned.includes(toKey)
         ? state.pinned.filter((key) => key !== fromKey)
         : state.pinned.map((key) => (key === fromKey ? toKey : key));
       writePinned(next);
       return { pinned: next };
-    }),
+    }); },
   movePinned: (fromKey, toKey) =>
-    set((state) => {
+    { set((state) => {
       const from = state.pinned.indexOf(fromKey);
       const to = state.pinned.indexOf(toKey);
       if (from < 0 || to < 0 || from === to) return state;
@@ -140,15 +140,15 @@ export const usePinnedModelsStore = create<PinnedModelsState>((set) => ({
       next.splice(to, 0, ...next.splice(from, 1));
       if (dragSnapshot === null) writePinned(next);
       return { pinned: next };
-    }),
+    }); },
   beginPinnedDrag: () =>
-    set((state) => {
+    { set((state) => {
       dragSnapshot = [...state.pinned];
       dragExternalOrder = null;
       return state;
-    }),
+    }); },
   endPinnedDrag: (commit) =>
-    set((state) => {
+    { set((state) => {
       const snapshot = dragSnapshot;
       const external = dragExternalOrder;
       dragSnapshot = null;
@@ -163,11 +163,11 @@ export const usePinnedModelsStore = create<PinnedModelsState>((set) => ({
       // A cancel writes nothing, so it must land on the order already in localStorage.
       if (sameOrder(base, state.pinned)) return state;
       return { pinned: base };
-    }),
+    }); },
 }));
 
 onPinsRestored("pinned", () =>
-  usePinnedModelsStore.setState({ pinned: readPinned() }),
+  { usePinnedModelsStore.setState({ pinned: readPinned() }); },
 );
 
 if (typeof window !== "undefined") {

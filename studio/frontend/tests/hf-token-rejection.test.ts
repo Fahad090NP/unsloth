@@ -29,7 +29,7 @@ const OAUTH = `hf_oauth_${"A1b2C3d4E5".repeat(4)}`;
 const CLASSIC = `hf_${"a".repeat(34)}`;
 const API = "https://huggingface.co/api/models?search=qwen";
 
-type Sent = { url: string; authorization: string | null; hfAuthorization: string | null };
+interface Sent { url: string; authorization: string | null; hfAuthorization: string | null }
 
 function stubHub(opts: {
   rejectedToken?: string;
@@ -167,7 +167,7 @@ test("a network failure propagates without a retry", async () => {
   globalThis.fetch = (async () => {
     calls += 1;
     throw new TypeError("Failed to fetch");
-  }) as typeof fetch;
+  });
   try {
     await assert.rejects(fetchHub(API, withToken(OAUTH)), TypeError);
     assert.equal(calls, 1);
@@ -236,7 +236,7 @@ test("a relay 401 without the upstream marker is the session, not the token", as
   globalThis.fetch = (async () => {
     calls += 1;
     return new Response("{}", { status: 401 });
-  }) as typeof fetch;
+  });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
     value: { getItem: () => "session" },
@@ -503,7 +503,7 @@ test("a failed anonymous probe keeps the Hub's 401 instead of throwing", async (
       });
     }
     throw new TypeError("Failed to fetch");
-  }) as typeof fetch;
+  });
   try {
     const response = await fetchHub("https://huggingface.co/api/models", withToken(OAUTH));
     assert.equal(response.status, 401);

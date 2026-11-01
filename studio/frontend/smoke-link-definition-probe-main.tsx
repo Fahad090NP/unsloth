@@ -109,7 +109,7 @@ function ProbeApi(): null {
   useEffect(() => {
     const which = new URLSearchParams(window.location.search).get("case") ?? "code";
     const text = CASES[which] ?? CODE_REPLY;
-    void aui
+    aui
       .thread()
       .import(ExportedMessageRepository.fromArray(reply(text)));
 

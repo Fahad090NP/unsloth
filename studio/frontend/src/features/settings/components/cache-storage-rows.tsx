@@ -291,7 +291,7 @@ export function HuggingFaceCacheFolders({
         variant="ghost"
         size="xs"
         aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => { setOpen((value) => !value); }}
       >
         {t(
           open
@@ -399,7 +399,7 @@ export function CacheStorageRows({ cache }: { cache: CacheStorage }) {
           variant="outline"
           size="sm"
           disabled={loading || clearing}
-          onClick={() => setExpanded((open) => !open)}
+          onClick={() => { setExpanded((open) => !open); }}
         >
           {expanded
             ? t("settings.resources.storage.caches.hideDetailsAction")
@@ -411,7 +411,7 @@ export function CacheStorageRows({ cache }: { cache: CacheStorage }) {
           disabled={
             loading || clearing || loadError !== null || bulkKeys.length === 0
           }
-          onClick={() => setTarget({ kind: "bulk" })}
+          onClick={() => { setTarget({ kind: "bulk" }); }}
         >
           <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
           {t("settings.resources.storage.caches.clearAction")}
@@ -442,7 +442,7 @@ export function CacheStorageRows({ cache }: { cache: CacheStorage }) {
                   </span>
                   {entry.optIn && OPT_IN_COST_KEYS[entry.key] ? (
                     <span className="text-xs text-amber-600 dark:text-amber-400">
-                      {t(OPT_IN_COST_KEYS[entry.key] as TranslationKey)}
+                      {t(OPT_IN_COST_KEYS[entry.key]!)}
                     </span>
                   ) : null}
                   {entry.blockedReason ? (
@@ -475,9 +475,9 @@ export function CacheStorageRows({ cache }: { cache: CacheStorage }) {
                       (entry.clearEntryCount ?? entry.entryCount) === 0
                     }
                     onClick={() =>
-                      entry.optIn
+                      { entry.optIn
                         ? setTarget({ kind: "single", key: entry.key })
-                        : void runPurge([entry.key])
+                        : void runPurge([entry.key]); }
                     }
                   >
                     {t("settings.resources.storage.caches.clearOneAction")}
@@ -511,7 +511,7 @@ export function CacheStorageRows({ cache }: { cache: CacheStorage }) {
             <DialogDescription>{confirmDescription}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTarget(null)}>
+            <Button variant="outline" onClick={() => { setTarget(null); }}>
               {t("common.cancel")}
             </Button>
             <Button

@@ -14,10 +14,10 @@ import type { SamplerConfig } from "../../types";
 import { NameField } from "../shared/name-field";
 import { FieldLabel } from "../shared/field-label";
 
-type UniformDialogProps = {
+interface UniformDialogProps {
   config: SamplerConfig;
   onUpdate: (patch: Partial<SamplerConfig>) => void;
-};
+}
 
 export function UniformDialog({
   config,
@@ -30,7 +30,7 @@ export function UniformDialog({
     <div className="space-y-4">
       <NameField
         value={config.name}
-        onChange={(value) => onUpdate({ name: value })}
+        onChange={(value) => { onUpdate({ name: value }); }}
       />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-1.5">
@@ -44,7 +44,7 @@ export function UniformDialog({
             type="number"
             className="nodrag"
             value={config.low ?? ""}
-            onChange={(event) => onUpdate({ low: event.target.value })}
+            onChange={(event) => { onUpdate({ low: event.target.value }); }}
           />
         </div>
         <div className="grid gap-1.5">
@@ -58,7 +58,7 @@ export function UniformDialog({
             type="number"
             className="nodrag"
             value={config.high ?? ""}
-            onChange={(event) => onUpdate({ high: event.target.value })}
+            onChange={(event) => { onUpdate({ high: event.target.value }); }}
           />
         </div>
       </div>
@@ -71,10 +71,10 @@ export function UniformDialog({
         <Select
           value={config.convert_to ?? "none"}
           onValueChange={(value) =>
-            onUpdate({
+            { onUpdate({
               // biome-ignore lint/style/useNamingConvention: api schema
               convert_to: value === "none" ? undefined : (value as "int" | "float" | "str"),
-            })
+            }); }
           }
         >
           <SelectTrigger className="nodrag w-full" id={convertId}>

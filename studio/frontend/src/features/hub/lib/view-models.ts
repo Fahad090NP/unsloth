@@ -38,10 +38,10 @@ export {
 } from "@/features/hub/inventory";
 export { isGgufLike } from "./hf-model-meta";
 
-export const CAPABILITY_FILTER_OPTIONS: ReadonlyArray<{
+export const CAPABILITY_FILTER_OPTIONS: readonly {
   value: HubCapabilityFilter;
   label: string;
-}> = [
+}[] = [
   // Models with none of the others, so ticking every box lists every model.
   { value: "text", label: "Text only" },
   { value: "reasoning", label: "Reasoning" },
@@ -52,10 +52,10 @@ export const CAPABILITY_FILTER_OPTIONS: ReadonlyArray<{
   { value: "video-gen", label: "Video gen" },
 ];
 
-export const FORMAT_FILTER_OPTIONS: ReadonlyArray<{
+export const FORMAT_FILTER_OPTIONS: readonly {
   value: ModelFormatFilter;
   label: string;
-}> = [
+}[] = [
   { value: "all", label: "All formats" },
   { value: "recommended", label: "Recommended" },
   { value: "gguf", label: "GGUF" },
@@ -300,7 +300,7 @@ const MEDIA_OUTPUT_TASKS: ReadonlySet<string> = new Set([
 /** One Hub filter pick against a row; image and video gen split the shared "diffusion" capability. */
 export function matchesHubCapability(
   row: {
-    capabilities: Array<{ key: CapabilityKey }>;
+    capabilities: { key: CapabilityKey }[];
     result: Pick<HfModelResult, "tags" | "pipelineTag" | "id">;
   },
   key: HubCapabilityFilter,
@@ -338,7 +338,7 @@ export function matchesHubCapability(
 }
 
 export function matchesCapability(
-  capabilities: Array<{ key: CapabilityKey }>,
+  capabilities: { key: CapabilityKey }[],
   capabilityFilter: CapabilityFilter,
 ): boolean {
   if (capabilityFilter === "all") return true;

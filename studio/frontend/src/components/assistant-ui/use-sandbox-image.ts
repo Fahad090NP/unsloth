@@ -58,7 +58,7 @@ export function useSandboxImage<T extends Element = HTMLImageElement>(
       { rootMargin: "200px" },
     );
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [nearViewport, url]);
 
   useEffect(() => {

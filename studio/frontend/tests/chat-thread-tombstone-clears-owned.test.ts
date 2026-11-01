@@ -43,7 +43,7 @@ function tombstoneCallers(sf: ts.SourceFile): string[] {
       const { line } = sf.getLineAndCharacterOfPosition(node.getStart(sf));
       callers.push(`${node.expression.text} at line ${line + 1} in ${scope ?? "<top level>"}`);
     }
-    ts.forEachChild(node, (child) => visit(child, scope));
+    ts.forEachChild(node, (child) => { visit(child, scope); });
   };
   visit(sf, null);
   return callers;
@@ -83,7 +83,7 @@ test("both wrappers exist and each clears the map", () => {
     ) {
       cleared.push(scope);
     }
-    ts.forEachChild(node, (child) => visit(child, scope));
+    ts.forEachChild(node, (child) => { visit(child, scope); });
   };
   visit(sf, null);
   for (const wrapper of WRAPPERS) {

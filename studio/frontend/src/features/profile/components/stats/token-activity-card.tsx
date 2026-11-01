@@ -70,7 +70,7 @@ function useVisibleColumns(maxColumns: number) {
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [maxColumns]);
 
   return { ref, columns };
@@ -369,7 +369,7 @@ export function TokenActivityCard({ daily }: { daily: ProfileStatsDay[] }) {
             <button
               key={option}
               type="button"
-              onClick={() => setMode(option)}
+              onClick={() => { setMode(option); }}
               aria-pressed={mode === option}
               className={cn(
                 "relative inline-flex h-8 items-center rounded-full px-3 text-ui-13 font-medium transition-colors",

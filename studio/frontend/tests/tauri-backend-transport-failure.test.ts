@@ -10,7 +10,7 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type AuthApi = {
+interface AuthApi {
   authFetch: (
     input: string,
     init?: RequestInit,
@@ -18,7 +18,7 @@ type AuthApi = {
   ) => Promise<Response>;
   BACKEND_NOT_RUNNING_MESSAGE: string;
   BACKEND_NOT_ANSWERING_MESSAGE: string;
-};
+}
 
 function loadAuthApi(options: {
   port: number | null;
@@ -55,12 +55,12 @@ function loadAuthApi(options: {
         invoke: async (command: string, args: Record<string, unknown>) => {
           options.onInvoke?.(command, args);
           if (command === "check_backend_is_gone") {
-            return options.checkGone?.(args.port as number) ?? false;
+            return await (options.checkGone?.(args.port as number) ?? false);
           }
           if (command !== "check_backend_present") {
             throw new Error(`unexpected command ${command}`);
           }
-          return options.checkHealth?.(args.port as number) ?? false;
+          return await (options.checkHealth?.(args.port as number) ?? false);
         },
       },
     },
@@ -80,7 +80,7 @@ async function reserveLoopbackPort(): Promise<number> {
       resolve(address.port);
     });
   });
-  await new Promise<void>((resolve) => probe.close(() => resolve()));
+  await new Promise<void>((resolve) => probe.close(() => { resolve(); }));
   return port;
 }
 
@@ -131,13 +131,13 @@ test("a backend that accepts late is reached instead of declared not running", a
     );
   } finally {
     globalThis.fetch = originalFetch;
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await new Promise<void>((resolve) => server.close(() => { resolve(); }));
   }
 });
 
 test("a backend the launcher still sees is not reported as not running", async () => {
   const port = 61799;
-  const probed: Array<Record<string, unknown>> = [];
+  const probed: Record<string, unknown>[] = [];
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => {
     throw new TypeError("fetch failed");
@@ -690,6 +690,6 @@ test("a port nobody here owns that binds late is given up on, and that is the tr
     );
   } finally {
     globalThis.fetch = originalFetch;
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await new Promise<void>((resolve) => server.close(() => { resolve(); }));
   }
 });

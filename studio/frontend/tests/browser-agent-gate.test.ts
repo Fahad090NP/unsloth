@@ -19,7 +19,7 @@ const {
 const open = { allowedDomains: [], blockedDomains: [] };
 const navigation = (overrides: Partial<Parameters<typeof gateNavigation>[1]> = {}) => ({
   policy: open,
-  permissions: NONE as AgentPermissions,
+  permissions: NONE,
   currentUrl: "",
   knownHosts: new Set<string>(),
   pageLinks: new Set<string>(),

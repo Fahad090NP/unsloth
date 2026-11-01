@@ -33,7 +33,7 @@ export function isRunConfigModelInput(model: string): boolean {
   );
 }
 
-type ModelSelection = {
+interface ModelSelection {
   params: { checkpoint: string };
   activeGgufVariant: string | null;
   loadedIsGguf: boolean | null;
@@ -41,7 +41,7 @@ type ModelSelection = {
   activeLoadId: string | null;
   models: readonly Pick<ChatModelSummary, "id" | "isGguf" | "isLora">[];
   loras: readonly Pick<ChatLoraSummary, "id" | "exportType">[];
-};
+}
 
 function knownModel(id: string, selection: ModelSelection) {
   const sameModel = residentModelIdMatches(id, selection.params.checkpoint);

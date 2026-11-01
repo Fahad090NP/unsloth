@@ -182,7 +182,7 @@ function ViewToggle<T extends string>({
   options: { id: T; label: string; icon: IconSvgElement; disabled?: boolean }[];
 }): ReactElement {
   return (
-    <Tabs value={value} onValueChange={(next) => onChange(next as T)}>
+    <Tabs value={value} onValueChange={(next) => { onChange(next as T); }}>
       <TabsList className="group-data-horizontal/tabs:h-8">
         {options.map((option) => (
           <TabsTrigger
@@ -225,7 +225,7 @@ function CodeBlock({
           spellCheck={false}
           value={value}
           aria-label={title}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => { onChange(e.target.value); }}
           className="field-sizing-content min-h-72 w-full resize-none bg-transparent px-3.5 py-3 font-mono text-ui-12 leading-relaxed text-foreground outline-none"
         />
       ) : (
@@ -323,7 +323,7 @@ function NoulCriteria({
           <Textarea
             id={`decision-${side.key}`}
             value={draft[side.key]}
-            onChange={(e) => update({ [side.key]: e.target.value })}
+            onChange={(e) => { update({ [side.key]: e.target.value }); }}
             className={cn("min-h-20 dark:border", side.border)}
           />
         </div>
@@ -344,11 +344,11 @@ function ChoiceCriteria({
     index: number,
     patch: Partial<DecisionDraft["options"][number]>,
   ) =>
-    update({
+    { update({
       options: draft.options.map((option, i) =>
         i === index ? { ...option, ...patch } : option,
       ),
-    });
+    }); };
   return (
     <div className="flex flex-col gap-2">
       <div className="hidden gap-2 px-1 text-ui-11 text-muted-foreground sm:flex">
@@ -363,14 +363,14 @@ function ChoiceCriteria({
         >
           <Input
             value={option.name}
-            onChange={(e) => setOption(i, { name: e.target.value })}
+            onChange={(e) => { setOption(i, { name: e.target.value }); }}
             placeholder={t("decisions.optionNamePlaceholder")}
             aria-label={t("decisions.optionNameLabel", { n: i + 1 })}
             className="font-mono text-ui-12 max-sm:min-w-0 max-sm:flex-1 sm:w-36 sm:shrink-0"
           />
           <Input
             value={option.description}
-            onChange={(e) => setOption(i, { description: e.target.value })}
+            onChange={(e) => { setOption(i, { description: e.target.value }); }}
             placeholder={t("decisions.optionDescriptionPlaceholder")}
             aria-label={t("decisions.optionDescriptionLabel", { n: i + 1 })}
             className="flex-1 max-sm:order-last max-sm:basis-full"
@@ -379,16 +379,16 @@ function ChoiceCriteria({
             label={t("decisions.removeOption", { n: i + 1 })}
             disabled={draft.options.length <= 1}
             onClick={() =>
-              update({ options: draft.options.filter((_, j) => j !== i) })
+              { update({ options: draft.options.filter((_, j) => j !== i) }); }
             }
           />
         </div>
       ))}
       <AddButton
         onClick={() =>
-          update({
+          { update({
             options: [...draft.options, { name: "", description: "" }],
-          })
+          }); }
         }
       >
         {t("decisions.addOption")}
@@ -419,11 +419,11 @@ function ScoreCriteria({
           <Input
             value={level}
             onChange={(e) =>
-              update({
+              { update({
                 levels: draft.levels.map((l, j) =>
                   j === i ? e.target.value : l,
                 ),
-              })
+              }); }
             }
             aria-label={t("decisions.levelLabel", { n: i })}
             className="flex-1"
@@ -432,12 +432,12 @@ function ScoreCriteria({
             label={t("decisions.removeLevel", { n: i })}
             disabled={draft.levels.length <= 1}
             onClick={() =>
-              update({ levels: draft.levels.filter((_, j) => j !== i) })
+              { update({ levels: draft.levels.filter((_, j) => j !== i) }); }
             }
           />
         </div>
       ))}
-      <AddButton onClick={() => update({ levels: [...draft.levels, ""] })}>
+      <AddButton onClick={() => { update({ levels: [...draft.levels, ""] }); }}>
         {t("decisions.addLevel")}
       </AddButton>
     </div>
@@ -874,7 +874,7 @@ export function DecisionTryDialog({
 
   const update = useCallback<Update>(
     (patch) =>
-      setDrafts((all) => ({ ...all, [type]: { ...all[type], ...patch } })),
+      { setDrafts((all) => ({ ...all, [type]: { ...all[type], ...patch } })); },
     [type],
   );
 
@@ -1087,7 +1087,7 @@ export function DecisionTryDialog({
         <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border/70 px-4 py-3 sm:px-6">
           <Tabs
             value={type}
-            onValueChange={(next) => changeType(next as DecisionType)}
+            onValueChange={(next) => { changeType(next as DecisionType); }}
             className="max-sm:w-full"
           >
             <TabsList className="max-sm:w-full">
@@ -1144,7 +1144,7 @@ export function DecisionTryDialog({
                     <Textarea
                       id="decision-state"
                       value={draft.state}
-                      onChange={(e) => update({ state: e.target.value })}
+                      onChange={(e) => { update({ state: e.target.value }); }}
                       spellCheck={false}
                       className="min-h-28 font-mono text-ui-13 leading-relaxed"
                     />
@@ -1157,7 +1157,7 @@ export function DecisionTryDialog({
                     <Textarea
                       id="decision-question"
                       value={draft.instructions}
-                      onChange={(e) => update({ instructions: e.target.value })}
+                      onChange={(e) => { update({ instructions: e.target.value }); }}
                       className="min-h-20"
                     />
                   </Field>
@@ -1214,7 +1214,7 @@ export function DecisionTryDialog({
                   {PRESETS.map((preset) => (
                     <DropdownMenuItem
                       key={preset.id}
-                      onSelect={() => applyPreset(preset.id)}
+                      onSelect={() => { applyPreset(preset.id); }}
                       className="justify-between gap-3"
                     >
                       <span className="truncate">

@@ -16,11 +16,11 @@ import { readSrc } from "./helpers/kit.ts";
 
 const USE_TAURI_BACKEND = readSrc("hooks/use-tauri-backend.ts");
 
-type Storage = {
+interface Storage {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
   removeItem: (key: string) => void;
-};
+}
 
 function installSessionStorage(): Map<string, string> {
   const store = new Map<string, string>();
@@ -86,8 +86,8 @@ test("storage that throws never reaches the caller", () => {
     false,
     "unreadable storage must read as no intent",
   );
-  assert.doesNotThrow(() => markServerStopIntent());
-  assert.doesNotThrow(() => clearServerStopIntent());
+  assert.doesNotThrow(() => { markServerStopIntent(); });
+  assert.doesNotThrow(() => { clearServerStopIntent(); });
 
   uninstallSessionStorage();
 });
@@ -96,8 +96,8 @@ test("storage missing entirely reads as a fresh session", () => {
   uninstallSessionStorage();
 
   assert.equal(hasServerStopIntent(), false);
-  assert.doesNotThrow(() => markServerStopIntent());
-  assert.doesNotThrow(() => clearServerStopIntent());
+  assert.doesNotThrow(() => { markServerStopIntent(); });
+  assert.doesNotThrow(() => { clearServerStopIntent(); });
 });
 
 test("the marker key belongs to nothing else in the app", async () => {

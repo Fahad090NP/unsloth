@@ -31,7 +31,7 @@ test("toasts and the composer read one shadow variable", () => {
 });
 
 test("the shadow is set per theme and per palette", () => {
-  const defs = rules().filter(([, body]) => /--composer-shadow:/.test(body)).map(([selector]) => selector);
+  const defs = rules().filter(([, body]) => body.includes('--composer-shadow:')).map(([selector]) => selector);
   assert.ok(defs.includes(":root"), "light");
   assert.ok(defs.includes(".dark"), "dark");
   assert.ok(defs.includes(':root[data-palette="neon-cyberpunk"]:not(.dark)'), "Neon Cyberpunk light");

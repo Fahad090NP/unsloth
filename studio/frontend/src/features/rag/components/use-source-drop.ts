@@ -114,7 +114,7 @@ export function useSourceDrop({
       }
       void addNativePaths(paths);
     },
-    onDragOver: (over) => setDragging(over && !disabled),
+    onDragOver: (over) => { setDragging(over && !disabled); },
   });
 
   const endDrag = useCallback(() => {

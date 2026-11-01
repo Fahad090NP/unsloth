@@ -155,7 +155,7 @@ function gatedByHas(literal: ts.Node): boolean {
   return (
     tokens.length > 0 &&
     tokens.every((token) => {
-      const slot = token.match(/has-\[\[data-slot=([^\]]+)\]\]:min-h-/);
+      const slot = /has-\[\[data-slot=([^\]]+)\]\]:min-h-/.exec(token);
       return slot !== null && NOTES.slots.has(slot[1]);
     })
   );

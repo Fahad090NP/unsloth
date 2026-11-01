@@ -16,7 +16,7 @@ const revoked: string[] = [];
   revokeObjectURL: (url: string) => {
     revoked.push(url);
   },
-} as never;
+};
 
 test("a protected id survives eviction, so a stale one would pin its bytes forever", () => {
   const cache = new BlobUrlCache(100);

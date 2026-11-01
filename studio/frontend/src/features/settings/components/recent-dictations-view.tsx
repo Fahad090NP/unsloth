@@ -193,7 +193,7 @@ export function RecentDictationsView({
       <header className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => (selected ? onSelect(null) : onBack())}
+          onClick={() => { selected ? onSelect(null) : onBack(); }}
           aria-label={
             selected
               ? t("settings.voice.recents.backToRecents")
@@ -233,7 +233,7 @@ export function RecentDictationsView({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => openChat(selected.chatId as string)}
+                onClick={() => { openChat(selected.chatId!); }}
               >
                 <HugeiconsIcon
                   icon={MessageCircleIcon}
@@ -285,7 +285,7 @@ export function RecentDictationsView({
               </InputGroupAddon>
               <InputGroupInput
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); }}
                 placeholder={t("settings.voice.recents.searchPlaceholder")}
                 aria-label={t("settings.voice.recents.searchPlaceholder")}
                 className="text-sm"
@@ -293,7 +293,7 @@ export function RecentDictationsView({
             </InputGroup>
             <Select
               value={sortOrder}
-              onValueChange={(value) => setSortOrder(value as SortOrder)}
+              onValueChange={(value) => { setSortOrder(value as SortOrder); }}
             >
               <SelectTrigger
                 className="w-36 shrink-0 data-[size=default]:h-control"
@@ -316,7 +316,7 @@ export function RecentDictationsView({
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => setPendingDelete({ kind: "all" })}
+              onClick={() => { setPendingDelete({ kind: "all" }); }}
               className="shrink-0 text-destructive hover:text-destructive"
             >
               <HugeiconsIcon icon={Delete02Icon} className="mr-1.5 size-3.5" />
@@ -350,9 +350,9 @@ export function RecentDictationsView({
                   <button
                     type="button"
                     onClick={() =>
-                      dictation.chatId
+                      { dictation.chatId
                         ? openChat(dictation.chatId)
-                        : onSelect(dictation.id)
+                        : onSelect(dictation.id); }
                     }
                     aria-label={
                       dictation.chatId
@@ -396,7 +396,7 @@ export function RecentDictationsView({
                     {dictation.chatId ? (
                       <button
                         type="button"
-                        onClick={() => onSelect(dictation.id)}
+                        onClick={() => { onSelect(dictation.id); }}
                         aria-label={t("settings.voice.recents.view")}
                         title={t("settings.voice.recents.view")}
                         className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -453,7 +453,7 @@ export function RecentDictationsView({
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  setPage({ key: pageKey, count: visibleCount + PAGE_SIZE })
+                  { setPage({ key: pageKey, count: visibleCount + PAGE_SIZE }); }
                 }
               >
                 {t("settings.voice.recents.showMore", {

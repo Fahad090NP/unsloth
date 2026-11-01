@@ -77,13 +77,13 @@ export async function getAudioDownloadPlan(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model_path: modelPath, hf_token: hfToken }),
   });
-  return parseJson<AudioDownloadPlan>(response);
+  return await parseJson<AudioDownloadPlan>(response);
 }
 
 /** Every audio.cpp model the backend can place: umbrella folders plus Community repos. */
 export async function fetchAudioCatalog(): Promise<AudioCatalogResponse> {
   const response = await authFetch("/api/inference/audio/catalog");
-  return parseJson<AudioCatalogResponse>(response);
+  return await parseJson<AudioCatalogResponse>(response);
 }
 
 // The speech model kept beside the chat model (routing id, status name); null when it is the active one.
@@ -131,7 +131,7 @@ export async function generateAudio(
     ),
     signal,
   });
-  return parseJson<GenerateAudioResponse>(response);
+  return await parseJson<GenerateAudioResponse>(response);
 }
 
 export interface AudioGalleryClip {
@@ -204,7 +204,7 @@ export async function listAudioGallery(
   const response = await authFetch(
     `/api/inference/audio/gallery?offset=${offset}&limit=${limit}&archived=${archived}${cursor}`,
   );
-  return parseJson<AudioGalleryListResponse>(response);
+  return await parseJson<AudioGalleryListResponse>(response);
 }
 
 export async function setAudioClipFlags(
@@ -219,7 +219,7 @@ export async function setAudioClipFlags(
       body: JSON.stringify(flags),
     },
   );
-  return parseJson<AudioGalleryClip>(response);
+  return await parseJson<AudioGalleryClip>(response);
 }
 
 export async function moveAudioClip(
@@ -234,7 +234,7 @@ export async function moveAudioClip(
       body: JSON.stringify({ after_id: afterId }),
     },
   );
-  return parseJson<AudioGalleryClip>(response);
+  return await parseJson<AudioGalleryClip>(response);
 }
 
 export async function addAudioClipToProject(
@@ -249,7 +249,7 @@ export async function addAudioClipToProject(
       body: JSON.stringify({ project_id: projectId }),
     },
   );
-  return parseJson<{ path: string; already: boolean }>(response);
+  return await parseJson<{ path: string; already: boolean }>(response);
 }
 
 export async function deleteAudioClip(id: string): Promise<void> {
@@ -282,7 +282,7 @@ export async function clearAudioGallery(
 export async function fetchClipBlob(url: string): Promise<Blob> {
   const response = await authFetch(url);
   if (!response.ok) throw new Error(await readFastApiError(response));
-  return response.blob();
+  return await response.blob();
 }
 
 /** Let the media element buffer and seek without downloading the entire WAV first. */
@@ -308,7 +308,7 @@ export async function listTranscripts(
     limit: "50",
   });
   if (before) params.set("before", before);
-  return parseJson(
+  return await parseJson(
     await authFetch(`/api/inference/audio/transcripts?${params}`),
   );
 }
@@ -405,19 +405,19 @@ function uploadWithProgress(
     );
     xhr.responseType = "json";
     xhr.upload.onprogress = (event) =>
-      onProgress(event.lengthComputable ? event.loaded / event.total : null);
-    xhr.onload = () => resolve({ status: xhr.status, body: xhr.response });
+      { onProgress(event.lengthComputable ? event.loaded / event.total : null); };
+    xhr.onload = () => { resolve({ status: xhr.status, body: xhr.response }); };
     xhr.onerror = () =>
-      reject(
+      { reject(
         new Error("The upload failed. Check the connection and try again."),
-      );
-    xhr.onabort = () => reject(new DOMException("Aborted", "AbortError"));
+      ); };
+    xhr.onabort = () => { reject(new DOMException("Aborted", "AbortError")); };
     if (signal) {
       if (signal.aborted) {
         reject(new DOMException("Aborted", "AbortError"));
         return;
       }
-      signal.addEventListener("abort", () => xhr.abort(), { once: true });
+      signal.addEventListener("abort", () => { xhr.abort(); }, { once: true });
     }
     xhr.send(blob);
   });
@@ -453,7 +453,7 @@ export async function uploadAudioInput(
     body: blob,
     signal: options.signal,
   });
-  return parseAudioJson<AudioInputRecord>(response);
+  return await parseAudioJson<AudioInputRecord>(response);
 }
 
 /** Upload alive unless 404. GET, not HEAD: FastAPI answers HEAD with 405. */
@@ -478,7 +478,7 @@ export async function fetchAudioBlob(
   if (!response.ok) {
     throw new AudioApiError(await readFastApiError(response), response.status);
   }
-  return response.blob();
+  return await response.blob();
 }
 
 interface TranscribeInputResponse {
@@ -504,7 +504,7 @@ export async function transcribeAudioInput(
     body: JSON.stringify(body),
     signal,
   });
-  return parseAudioJson<TranscribeInputResponse>(response);
+  return await parseAudioJson<TranscribeInputResponse>(response);
 }
 
 export interface AudioRunResponse {
@@ -533,7 +533,7 @@ export async function runAudio(
     body: JSON.stringify(withAudioSlotModel(buildAudioRunBody(request))),
     signal,
   });
-  return parseAudioJson<AudioRunResponse>(response);
+  return await parseAudioJson<AudioRunResponse>(response);
 }
 
 export async function runSpeechOnConnection(
@@ -561,7 +561,7 @@ export async function runSpeechOnConnection(
     }),
     signal,
   });
-  return parseAudioJson<AudioRunResponse>(response);
+  return await parseAudioJson<AudioRunResponse>(response);
 }
 
 export interface AudioVoice {
@@ -585,7 +585,7 @@ export async function listVoices(): Promise<AudioVoice[]> {
 export async function createVoice(
   request: AudioVoiceCreateRequest,
 ): Promise<AudioVoice> {
-  return parseAudioJson<AudioVoice>(
+  return await parseAudioJson<AudioVoice>(
     await authFetch("/api/inference/audio/voices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -602,7 +602,7 @@ export async function updateVoice(
     language?: string | null;
   },
 ): Promise<AudioVoice> {
-  return parseAudioJson<AudioVoice>(
+  return await parseAudioJson<AudioVoice>(
     await authFetch(`/api/inference/audio/voices/${encodeURIComponent(id)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

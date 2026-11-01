@@ -61,13 +61,13 @@ function App() {
         >
           Reset fixture
         </button>
-        <button type="button" onClick={() => setRejectMoves(true)}>
+        <button type="button" onClick={() => { setRejectMoves(true); }}>
           Simulate dispatch race
         </button>
-        <button type="button" onClick={() => setPaused(true)}>
+        <button type="button" onClick={() => { setPaused(true); }}>
           Simulate paused queue
         </button>
-        <button type="button" onClick={() => setItems((old) => old.slice(1))}>
+        <button type="button" onClick={() => { setItems((old) => old.slice(1)); }}>
           Dispatch first
         </button>
         <button
@@ -90,13 +90,13 @@ function App() {
         <button
           type="button"
           onClick={() =>
-            setItems((old) =>
+            { setItems((old) =>
               old.map((item) => ({
                 ...item,
                 canEdit: false,
                 canRemove: false,
               })),
-            )
+            ); }
           }
         >
           Lock prompts
@@ -157,12 +157,12 @@ function App() {
             setPaused(false);
             return true;
           }}
-          onResume={() => setPaused(false)}
+          onResume={() => { setPaused(false); }}
         />
         <textarea
           aria-label="Composer draft"
           value={draft}
-          onChange={(event) => setDraft(event.currentTarget.value)}
+          onChange={(event) => { setDraft(event.currentTarget.value); }}
         />
         <output aria-label="Composer submissions">{submissions}</output>
       </form>

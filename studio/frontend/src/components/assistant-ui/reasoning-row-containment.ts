@@ -41,6 +41,6 @@ export const applyReasoningRowContainment = (
 };
 
 export const watchReasoningRowContainmentOverride = (
-  scope: Record<string, unknown> = globalThis as Record<string, unknown>,
+  scope: Record<string, unknown> = globalThis,
   apply: () => ReasoningRowContainmentMode = applyReasoningRowContainment,
 ): boolean => REASONING_ROW_CONTAINMENT.installWatcher(scope, apply);

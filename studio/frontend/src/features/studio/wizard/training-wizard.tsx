@@ -62,7 +62,7 @@ function ParamModeToggle({
   return (
     <Tabs
       value={mode}
-      onValueChange={(value) => onChange(value as ParamMode)}
+      onValueChange={(value) => { onChange(value as ParamMode); }}
       className="contents"
     >
       <SegmentedTabsList
@@ -112,7 +112,7 @@ function TrainingMethodSelect() {
   return (
     <Select
       value={trainingMethod}
-      onValueChange={(v) => setTrainingMethod(v as TrainingMethod)}
+      onValueChange={(v) => { setTrainingMethod(v as TrainingMethod); }}
     >
       <SelectTrigger
         aria-label={`${t("studio.wizard.methodLabel")}: ${activeLabel}`}
@@ -206,7 +206,7 @@ function TrainAsSelect() {
   return (
     <Select
       value={value}
-      onValueChange={(next) => setTrainAsDecision(next === "decision")}
+      onValueChange={(next) => { setTrainAsDecision(next === "decision"); }}
     >
       <SelectTrigger
         aria-label={`${t("studio.wizard.trainAsLabel")}: ${label(value)}`}
@@ -319,7 +319,7 @@ function ModelPanel() {
       >
         <HfTokenIndicator
           showLabel={true}
-          onOpenSettings={() => openSettings("general")}
+          onOpenSettings={() => { openSettings("general"); }}
         />
       </SetupField>
       {canTrainAsDecision ? (

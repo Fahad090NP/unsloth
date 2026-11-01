@@ -46,7 +46,7 @@ function watchBodyChildren(): void {
 }
 
 export function subscribeViewportBackdrop(listener: () => void): () => void {
-  const subscription = () => listener();
+  const subscription = () => { listener(); };
   backdropListeners.add(subscription);
   if (!bodyChildObserver && typeof MutationObserver !== "undefined") {
     backdropStateObserver = new MutationObserver(readViewportBackdrop);

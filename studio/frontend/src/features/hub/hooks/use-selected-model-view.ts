@@ -7,7 +7,7 @@ import { detectCapabilities, detectLicense } from "../lib/model-capabilities";
 import {
   buildSummary,
   localSourceLabel,
-  toHfModelResult,
+  type toHfModelResult,
 } from "../lib/view-models";
 import type {
   CachedInventoryRow,
@@ -21,7 +21,7 @@ type HfResult = ReturnType<typeof toHfModelResult>;
 function detectViewCapabilities(
   tags: string[] | undefined,
   pipelineTag: string | undefined,
-  ...identifiers: Array<string | null | undefined>
+  ...identifiers: (string | null | undefined)[]
 ) {
   const modelId = identifiers.filter(Boolean).join(" ");
   return detectCapabilities(tags, pipelineTag, modelId);
@@ -280,8 +280,8 @@ export function useSelectedModelView({
       const localDisplayId = selectedLocalRow.repoId ?? selectedLocalRow.loadId;
       const isPartialHubCache =
         selectedLocalRow.source === "hf_cache" &&
-        !!selectedLocalRow.partial &&
-        !!selectedLocalRow.repoId;
+        Boolean(selectedLocalRow.partial) &&
+        Boolean(selectedLocalRow.repoId);
       const isCompanionPrefetch = selectedLocalRow.companionPrefetch === true;
       const mergedTags = selectedHfResult?.tags ?? selectedLocalRow.tags;
       const mergedPipelineTag =

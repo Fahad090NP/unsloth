@@ -15,14 +15,14 @@ import * as modelCatalog from "../src/features/settings/api/openai-model-catalog
 import * as formatError from "../src/lib/format-fastapi-error.ts";
 import { readSrc } from "./helpers/kit.ts";
 
-type Adapter = {
+interface Adapter {
   generateStudioTtsAudio: (
     text: string,
     signal?: AbortSignal,
   ) => Promise<string>;
-};
+}
 
-type Reply = { status: number; body: unknown };
+interface Reply { status: number; body: unknown }
 
 const KOKORO = "audio-cpp/audio.cpp-gguf/Kokoro-82M-GGUF";
 const CLONER = "audio-cpp/audio.cpp-gguf/PocketTTS-GGUF";

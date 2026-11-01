@@ -149,7 +149,7 @@ test("separates live inventory rows for hybrid repository formats", () => {
     ["gguf", "model"],
   );
   assert.equal(
-    liveInventorySelectionKey(rows[0]!) === liveInventorySelectionKey(rows[1]!),
+    liveInventorySelectionKey(rows[0]) === liveInventorySelectionKey(rows[1]),
     false,
     "two formats of one repo collapsed onto a single live row",
   );

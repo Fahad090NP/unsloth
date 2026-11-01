@@ -63,7 +63,7 @@ test("a signed link refused with 401 or 403 is minted afresh once; other statuse
       const seen: string[] = [];
       globalThis.fetch = (async (url: string) => {
         seen.push(url);
-        const status = (statuses as Record<string, number>)[url]!;
+        const status = (statuses as Record<string, number>)[url];
         return new Response(status === 200 ? "clip" : null, { status });
       }) as typeof fetch;
       const response = await fetchWithFreshLink("/old", async () => "/new");

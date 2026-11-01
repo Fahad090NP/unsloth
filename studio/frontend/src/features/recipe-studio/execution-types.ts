@@ -14,7 +14,7 @@ export type RecipeExecutionStatus =
   | "completed"
   | "error";
 
-export type RecipeExecutionProgress = {
+export interface RecipeExecutionProgress {
   done?: number | null;
   total?: number | null;
   percent?: number | null;
@@ -23,14 +23,14 @@ export type RecipeExecutionProgress = {
   rate?: number | null;
   ok?: number | null;
   failed?: number | null;
-};
+}
 
-export type RecipeExecutionBatch = {
+export interface RecipeExecutionBatch {
   idx?: number | null;
   total?: number | null;
-};
+}
 
-export type RecipeSourceProgress = {
+export interface RecipeSourceProgress {
   source?: string | null;
   status?: string | null;
   repo?: string | null;
@@ -50,7 +50,7 @@ export type RecipeSourceProgress = {
   message?: string | null;
   // biome-ignore lint/style/useNamingConvention: backend schema
   updated_at?: number | null;
-};
+}
 
 export type RecipeExecutionAnalysis = {
   num_records?: number;
@@ -63,7 +63,7 @@ export type RecipeExecutionAnalysis = {
   column_profiles?: Record<string, unknown>[] | null;
 } & Record<string, unknown>;
 
-export type RecipeExecutionRecord = {
+export interface RecipeExecutionRecord {
   id: string;
   recipeId: string;
   // biome-ignore lint/style/useNamingConvention: backend schema
@@ -103,4 +103,4 @@ export type RecipeExecutionRecord = {
   // biome-ignore lint/style/useNamingConvention: api schema
   processor_artifacts: Record<string, unknown> | null;
   error: string | null;
-};
+}

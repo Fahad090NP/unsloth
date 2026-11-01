@@ -351,7 +351,7 @@ const dateTokens = memo((code) => {
   const tokens = code.match(DATE_TOKEN) ?? [];
   return {
     tokens,
-    kinds: tokens.map((token) => (/^[ymdhs]/i.test(token) && !token.startsWith("\\") ? token[0]!.toLowerCase() : "")),
+    kinds: tokens.map((token) => (/^[ymdhs]/i.test(token) && !token.startsWith("\\") ? token[0].toLowerCase() : "")),
     twelve: tokens.some((token) => /^(am\/pm|a\/p)$/i.test(token)),
     fraction: /s\.(0+)/i.exec(code)?.[1]?.length ?? 0,
   };
@@ -375,7 +375,7 @@ function formatDate(serial: number, code: string): string | null {
         case "y":
           return n <= 2 ? pad(date.getUTCFullYear() % 100) : String(date.getUTCFullYear());
         case "d": {
-          const weekday = DAYS[(((whole + 6) % 7) + 7) % 7]!;
+          const weekday = DAYS[(((whole + 6) % 7) + 7) % 7];
           const day = whole === 60 ? 29 : date.getUTCDate();
           if (n >= 4) return weekday;
           if (n === 3) return weekday.slice(0, 3);
@@ -394,9 +394,9 @@ function formatDate(serial: number, code: string): string | null {
             return n === 2 ? pad(date.getUTCMinutes()) : String(date.getUTCMinutes());
           }
           const month = date.getUTCMonth();
-          if (n >= 5) return MONTHS[month]![0]!;
-          if (n === 4) return MONTHS[month]!;
-          if (n === 3) return MONTHS[month]!.slice(0, 3);
+          if (n >= 5) return MONTHS[month][0];
+          if (n === 4) return MONTHS[month];
+          if (n === 3) return MONTHS[month].slice(0, 3);
           return n === 2 ? pad(month + 1) : String(month + 1);
         }
       }
@@ -473,9 +473,9 @@ function formatElapsed(value: number, format: string): string {
         const per = unit[1] === "h" ? 3600 : unit[1] === "m" ? 60 : 1;
         return pad(Math.floor(total / per), unit.length - 2);
       }
-      if (unit[0] === "h") return pad(Math.floor(total / 3600) % 24, unit.length);
-      if (unit[0] === "m") return pad(Math.floor((total % 3600) / 60), unit.length);
-      if (unit[0] === "s") return pad(total % 60, unit.length);
+      if (unit.startsWith("h")) return pad(Math.floor(total / 3600) % 24, unit.length);
+      if (unit.startsWith("m")) return pad(Math.floor((total % 3600) / 60), unit.length);
+      if (unit.startsWith("s")) return pad(total % 60, unit.length);
       if (/^\.0+$/.test(token)) return `.${String(ticks % scale).padStart(digits - 1, "0")}`;
       if (token.startsWith('"')) return token.slice(1, -1);
       return token.startsWith("\\") ? token.slice(1) : token;
@@ -535,7 +535,7 @@ function placeDigits(number: number, format: string): string {
     let left = significant;
     const out = whole.map(() => "");
     for (let i = whole.length - 1; i >= 0; i--) {
-      const token = whole[i]!;
+      const token = whole[i];
       if (!isPlaceholder(token)) out[i] = literalText(token);
       else if (i === first) out[i] = left || emptyPlaceholder(token);
       else out[i] = left.slice(-1) || emptyPlaceholder(token);
@@ -546,7 +546,7 @@ function placeDigits(number: number, format: string): string {
   if (dot === -1) return integer;
   const digits = fracDigits.padEnd(places.length, "0").split("");
   for (let i = places.length - 1; i >= 0 && digits[i] === "0" && places[i] !== "0"; i--) {
-    digits[i] = emptyPlaceholder(places[i]!);
+    digits[i] = emptyPlaceholder(places[i]);
   }
   let next = 0;
   return `${integer}.${part.map((token) => (isPlaceholder(token) ? digits[next++] : literalText(token))).join("")}`;
@@ -615,8 +615,8 @@ const SCALE_COMMAS = /([0#?])(,+)(?=\.|[^0#?]*$)/;
 const readSection = memo((section) => {
   const tagged = (section.match(/"[^"]*"|\\[\s\S]|\[[^\]]*\]|[_*][\s\S]?|[\s\S]/g) ?? [])
     .map((token) => {
-      if (token[0] === "_" || token[0] === "*") return "";
-      if (token[0] !== "[" || /^\[[hms]+\]$/i.test(token)) return token;
+      if (token.startsWith("_") || token.startsWith("*")) return "";
+      if (!token.startsWith("[") || /^\[[hms]+\]$/i.test(token)) return token;
       const symbol = /^\[\$([^\]-]*)/.exec(token)?.[1];
       return symbol ? `"${symbol}"` : "";
     })
@@ -634,7 +634,7 @@ const readSection = memo((section) => {
           : /E[+-]/i.test(bare)
             ? "scientific"
             : "number";
-  const scale = 1000 ** (bare.match(SCALE_COMMAS)?.[2]?.length ?? 0);
+  const scale = 1000 ** ((SCALE_COMMAS.exec(bare))?.[2]?.length ?? 0);
   return { tagged, code, kind, percents: bare.split("%").length - 1, scale };
 });
 
@@ -692,7 +692,7 @@ export function formatNumber(value: number, rawCode: string | undefined, date190
 function formatText(text: string, rawCode: string | undefined): string {
   if (!rawCode || rawCode === "@" || rawCode === "General") return text;
   const sections = splitSections(rawCode);
-  const tokens: string[] = readSection(sections[3] ?? sections[0]!).tagged.match(/"[^"]*"|\\.|[\s\S]/g) ?? [];
+  const tokens: string[] = readSection(sections[3] ?? sections[0]).tagged.match(/"[^"]*"|\\.|[\s\S]/g) ?? [];
   if (sections.length < 4 && (sections.length > 1 || !tokens.includes("@"))) return text;
   return tokens
     .map((token) => (token === "@" ? text : token.startsWith('"') ? token.slice(1, -1) : token.startsWith("\\") ? token.slice(1) : token))
@@ -775,9 +775,9 @@ function shiftFormula(formula: string, rows: number, columns: number): string {
         ? part
         : part.replace(REFERENCE, (...m: string[]) => {
             const [, lead, ca, c, ra, r, c1a, c1, c2a, c2, r1a, r1, r2a, r2] = m;
-            if (c !== undefined) return `${lead}${column(ca!, c)}${row(ra!, r!)}`;
-            if (c1 !== undefined) return `${lead}${column(c1a!, c1)}:${column(c2a!, c2!)}`;
-            return `${lead}${row(r1a!, r1!)}:${row(r2a!, r2!)}`;
+            if (c !== undefined) return `${lead}${column(ca, c)}${row(ra, r)}`;
+            if (c1 !== undefined) return `${lead}${column(c1a, c1)}:${column(c2a, c2)}`;
+            return `${lead}${row(r1a, r1)}:${row(r2a, r2)}`;
           }),
     )
     .join("");
@@ -791,7 +791,7 @@ function decodeXml(text: string): string {
   if (!text.includes("&") && !text.includes("<!")) return text;
   return text.replace(ENTITY, (match, hex?: string, dec?: string, name?: string, cdata?: string) => {
     if (cdata !== undefined) return cdata;
-    if (name) return NAMED_ENTITIES[name.toLowerCase()]!;
+    if (name) return NAMED_ENTITIES[name.toLowerCase()];
     const code = hex ? parseInt(hex, 16) : Number(dec);
     return code <= 0x10ffff ? String.fromCodePoint(code) : match;
   });
@@ -816,7 +816,7 @@ function* elements(text: string, open: RegExp, close: RegExp): Generator<[string
   open.lastIndex = 0;
   for (let match = open.exec(text); match; match = open.exec(text)) {
     if (match[2]) {
-      yield [match[1]!, ""];
+      yield [match[1], ""];
       continue;
     }
     close.lastIndex = open.lastIndex;
@@ -824,7 +824,7 @@ function* elements(text: string, open: RegExp, close: RegExp): Generator<[string
     if (!end) return;
     const inner = text.slice(open.lastIndex, end.index);
     open.lastIndex = close.lastIndex;
-    yield [match[1]!, inner];
+    yield [match[1], inner];
   }
 }
 
@@ -852,7 +852,7 @@ function flattenMarkup(text: string): string {
 function stringText(xmlText: string): string {
   let out = "";
   for (const match of flattenMarkup(xmlText).replace(PHONETIC, "").matchAll(TEXT_RUN)) {
-    out += decodeXml(match[1]!.slice(0, MAX_CELL_BYTES));
+    out += decodeXml(match[1].slice(0, MAX_CELL_BYTES));
     if (out.length >= MAX_CELL_TEXT) return out.slice(0, MAX_CELL_TEXT);
   }
   return out;
@@ -1000,7 +1000,7 @@ const CDATA_END = [0x5d, 0x5d, 0x3e]; // ]]>
 const COMMENT_END = [0x2d, 0x2d, 0x3e]; // -->
 
 function indexOfBytes(bytes: Uint8Array, seq: number[], from: number): number {
-  for (let i = bytes.indexOf(seq[0]!, from); i !== -1; i = bytes.indexOf(seq[0]!, i + 1)) {
+  for (let i = bytes.indexOf(seq[0], from); i !== -1; i = bytes.indexOf(seq[0], i + 1)) {
     if (seq.every((byte, n) => bytes[i + n] === byte)) return i;
   }
   return -1;
@@ -1026,7 +1026,7 @@ function findTag(bytes: Uint8Array, from: number, name: string, closing: boolean
     if ((bytes[j] === 0x2f) !== closing) continue;
     if (closing) j++;
     let k = j;
-    while (k < bytes.length && bytes[k]! > 0x20 && bytes[k] !== 0x3e && bytes[k] !== 0x2f) {
+    while (k < bytes.length && bytes[k] > 0x20 && bytes[k] !== 0x3e && bytes[k] !== 0x2f) {
       if (bytes[k] === 0x3a) j = k + 1;
       k++;
     }
@@ -1071,8 +1071,8 @@ function sharedStrings(part: Growing | undefined): (index: number) => string | u
     if (!part || !Number.isInteger(index) || index < 0 || index >= count) return "";
     let text = texts.get(index);
     if (text === undefined) {
-      const start = starts[index]!;
-      text = stringText(strFromU8(part.data.subarray(start, Math.min(ends[index]!, start + MAX_CELL_BYTES))));
+      const start = starts[index];
+      text = stringText(strFromU8(part.data.subarray(start, Math.min(ends[index], start + MAX_CELL_BYTES))));
       texts.set(index, text);
     }
     return text;
@@ -1193,7 +1193,7 @@ export function readDelimited(
     else truncated = true;
   };
   for (let i = 0; i < text.length; i++) {
-    const char = text[i]!;
+    const char = text[i];
     if (quoted) {
       if (char === '"' && text[i + 1] === '"') {
         append('"');
@@ -1315,7 +1315,7 @@ function imagePixels(b: Uint8Array): number | undefined {
   if (b[0] === 0xff && b[1] === 0xd8) {
     for (let at = 2; at + 9 <= b.length; ) {
       if (b[at] !== 0xff) return undefined;
-      const marker = b[at + 1]!;
+      const marker = b[at + 1];
       if (marker === 0xff) at++;
       else if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd8)) at += 2;
       else if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
@@ -1637,7 +1637,7 @@ export function readPptx(bytes: Uint8Array, { images = true, maxSlides = MAX_SLI
           return false;
         }
         pictureBytes += data.length;
-        picture = { image: new Blob([data as Uint8Array<ArrayBuffer>], { type }), pixels };
+        picture = { image: new Blob([data], { type }), pixels };
         pictures.set(target, picture);
       }
       if (picture.pixels > pixelsLeft) {

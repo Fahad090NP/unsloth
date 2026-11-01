@@ -108,7 +108,7 @@ function CloneInputs({
             value={clone.referenceText}
             disabled={transcriber.transcribing}
             aria-busy={transcriber.transcribing}
-            onChange={(event) => setReferenceText(event.target.value)}
+            onChange={(event) => { setReferenceText(event.target.value); }}
             placeholder="Type the words in the clip exactly, or press Transcribe."
             className="min-h-16"
           />
@@ -151,7 +151,7 @@ function CloneInputs({
           data-type-to-activate="prompt"
           id={CLONE_TEXT_FIELD_ID}
           value={clone.text}
-          onChange={(event) => setText(event.target.value)}
+          onChange={(event) => { setText(event.target.value); }}
           placeholder="Type what the voice should say…"
           className="min-h-28"
         />
@@ -168,7 +168,7 @@ function CloneInputs({
                 size="sm"
                 className="h-auto max-w-full px-3 py-1 text-ui-11p5 font-normal"
                 title={example}
-                onClick={() => setText(example)}
+                onClick={() => { setText(example); }}
               >
                 <span className="truncate">{example}</span>
               </Button>
@@ -270,7 +270,7 @@ export function CloneFooter({
               variant="outline"
               className="text-ui-13"
               disabled={!canSave}
-              onClick={() => setSaving(true)}
+              onClick={() => { setSaving(true); }}
             >
               Save voice…
             </Button>

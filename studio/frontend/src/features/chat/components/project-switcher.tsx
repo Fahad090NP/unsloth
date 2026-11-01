@@ -57,7 +57,7 @@ export function ProjectSwitcher({
   const setOpen = onOpenChange ?? setUncontrolledOpen;
 
   return (
-    <DropdownMenu open={active && open} onOpenChange={(o) => setOpen(active && o)}>
+    <DropdownMenu open={active && open} onOpenChange={(o) => { setOpen(active && o); }}>
       <DropdownMenuTrigger asChild={true}>
         <button
           type="button"
@@ -113,7 +113,7 @@ export function ProjectSwitcher({
           return (
             <DropdownMenuItem
               key={project.id}
-              onSelect={() => onSelectProject(project.id)}
+              onSelect={() => { onSelectProject(project.id); }}
               className="justify-between"
             >
               <span className="flex min-w-0 items-center gap-2">

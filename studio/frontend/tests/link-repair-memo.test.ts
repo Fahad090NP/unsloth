@@ -6,10 +6,10 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Module = {
+interface Module {
   hasIncompleteLinkRepair: (source: string, repaired?: string) => boolean;
   repairStreamingMarkdown: (source: string) => string;
-};
+}
 
 function harness() {
   let calls = 0;

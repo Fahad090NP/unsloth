@@ -6,17 +6,17 @@ import type { CheckFormatResponse } from "../types/datasets";
 
 export type DatasetPreviewDialogMode = "preview" | "mapping";
 
-type DatasetPreviewDialogState = {
+interface DatasetPreviewDialogState {
   open: boolean;
   mode: DatasetPreviewDialogMode;
   initialData: CheckFormatResponse | null;
-};
+}
 
-type DatasetPreviewDialogActions = {
+interface DatasetPreviewDialogActions {
   openPreview: () => void;
   openMapping: (data: CheckFormatResponse) => void;
   close: () => void;
-};
+}
 
 const initialState: DatasetPreviewDialogState = {
   open: false,
@@ -29,8 +29,8 @@ export const useDatasetPreviewDialogStore = create<
 >()((set) => ({
   ...initialState,
 
-  openPreview: () => set({ open: true, mode: "preview", initialData: null }),
-  openMapping: (data) => set({ open: true, mode: "mapping", initialData: data }),
-  close: () => set({ open: false, initialData: null, mode: "preview" }),
+  openPreview: () => { set({ open: true, mode: "preview", initialData: null }); },
+  openMapping: (data) => { set({ open: true, mode: "mapping", initialData: data }); },
+  close: () => { set({ open: false, initialData: null, mode: "preview" }); },
 }));
 

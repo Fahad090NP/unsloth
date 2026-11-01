@@ -11,12 +11,12 @@ import {
   clearMonitor,
 } from "../src/features/api-monitor/clear-monitor.ts";
 
-type Trace = {
+interface Trace {
   deps: ClearMonitorDeps;
   errors: string[];
   detailsReset: number;
   reloads: number;
-};
+}
 
 function trace(remote: () => Promise<void>): Trace {
   const state: Trace = {

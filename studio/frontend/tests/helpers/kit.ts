@@ -39,11 +39,11 @@ export function registerStoreStubResolver(): void {
   register("../store-stub-resolver.mjs", import.meta.url);
 }
 
-export type StorageFake = {
+export interface StorageFake {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
   removeItem: (key: string) => void;
-};
+}
 
 /** In-memory localStorage plus a window whose listeners `fireWindowEvent` can drive. */
 export function installLocalStorageFake(): {
@@ -177,5 +177,5 @@ export function fakeTargets(): ResidentStatusRefreshTargets & {
       return total;
     },
   };
-  return state as never;
+  return state;
 }

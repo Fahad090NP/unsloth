@@ -34,12 +34,12 @@ export const useImageWorkflowStore = create<ImageWorkflowState>((set, get) => ({
   pageMode: "create",
   supported: null,
   navExpanded: false,
-  setNavExpanded: (navExpanded) => set({ navExpanded }),
-  setWorkflow: (workflow) => set({ workflow, pageMode: "create" }),
-  setPageMode: (pageMode) => set({ pageMode }),
-  setSupported: (supported) => set({ supported }),
+  setNavExpanded: (navExpanded) => { set({ navExpanded }); },
+  setWorkflow: (workflow) => { set({ workflow, pageMode: "create" }); },
+  setPageMode: (pageMode) => { set({ pageMode }); },
+  setSupported: (supported) => { set({ supported }); },
   pendingDeploy: null,
-  requestDeploy: (pendingDeploy) => set({ pendingDeploy }),
+  requestDeploy: (pendingDeploy) => { set({ pendingDeploy }); },
   takeDeploy: () => {
     const request = get().pendingDeploy;
     if (request) set({ pendingDeploy: null });
@@ -47,7 +47,7 @@ export const useImageWorkflowStore = create<ImageWorkflowState>((set, get) => ({
   },
   trainingCompletions: 0,
   noteTrainingComplete: () =>
-    set((s) => ({ trainingCompletions: s.trainingCompletions + 1 })),
+    { set((s) => ({ trainingCompletions: s.trainingCompletions + 1 })); },
 }));
 
 export function isWorkflowEnabled(

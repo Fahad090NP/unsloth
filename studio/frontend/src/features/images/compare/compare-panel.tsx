@@ -113,7 +113,7 @@ async function composeGrid(
     records,
     async (r, i) => {
       const rect = layout.cells[i];
-      return createImageBitmap(await fetchGalleryBlob(r.url), {
+      return await createImageBitmap(await fetchGalleryBlob(r.url), {
         resizeWidth: rect.w,
         resizeHeight: rect.h,
         resizeQuality: "high",
@@ -125,7 +125,7 @@ async function composeGrid(
       bitmap.close();
     },
   );
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+  const blob = await new Promise<Blob | null>((resolve) => { canvas.toBlob(resolve, "image/png"); });
   if (!blob) return null;
   const png = withPngText(new Uint8Array(await blob.arrayBuffer()), "parameters", infotext);
   const out = new Blob([Uint8Array.from(png).buffer], { type: "image/png" });
@@ -158,16 +158,16 @@ export default function ComparePanel(props: ComparePanelProps) {
     };
   }, []);
   // Object URLs of replaced results are released; the last ones live as long as the page.
-  useEffect(() => () => grids.forEach((g) => URL.revokeObjectURL(g.url)), [grids]);
+  useEffect(() => () => { grids.forEach((g) => { URL.revokeObjectURL(g.url); }); }, [grids]);
 
   const setAxis = (i: number, next: Partial<AxisInput>) =>
-    setAxes((prev) => prev.map((a, j) => (j === i ? { ...effective[j], ...next } : effective[j] ?? a)));
+    { setAxes((prev) => prev.map((a, j) => (j === i ? { ...effective[j], ...next } : effective[j] ?? a))); };
   const swap = (a: number, b: number) =>
-    setAxes(() => {
+    { setAxes(() => {
       const next = [...effective];
       [next[a], next[b]] = [next[b], next[a]];
       return next;
-    });
+    }); };
 
   const run = async () => {
     if (active.current) return;
@@ -255,7 +255,7 @@ export default function ComparePanel(props: ComparePanelProps) {
         <InfoHint>{HINT}</InfoHint>
         <div className="ml-auto flex items-center gap-2">
           {grids.length > 0 && !running && (
-            <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setOpen(true)}>
+            <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => { setOpen(true); }}>
               Last grid
             </Button>
           )}
@@ -269,7 +269,7 @@ export default function ComparePanel(props: ComparePanelProps) {
             return (
               <div key={AXIS_NAMES[i]} className="flex items-center gap-1.5">
                 <span className="w-3 shrink-0 text-xs font-medium text-muted-foreground">{AXIS_NAMES[i]}</span>
-                <Select value={axis.axisId} onValueChange={(v) => setAxis(i, { axisId: v })}>
+                <Select value={axis.axisId} onValueChange={(v) => { setAxis(i, { axisId: v }); }}>
                   <SelectTrigger className="h-8 w-32 shrink-0 text-xs" aria-label={`${AXIS_NAMES[i]} type`}>
                     <SelectValue />
                   </SelectTrigger>
@@ -286,7 +286,7 @@ export default function ComparePanel(props: ComparePanelProps) {
                   disabled={axis.axisId === NOTHING}
                   placeholder={def?.placeholder}
                   aria-label={`${AXIS_NAMES[i]} values`}
-                  onChange={(e) => setAxis(i, { text: e.target.value })}
+                  onChange={(e) => { setAxis(i, { text: e.target.value }); }}
                   className="h-8 min-w-0 flex-1 text-xs"
                 />
                 {def?.choices && (
@@ -296,7 +296,7 @@ export default function ComparePanel(props: ComparePanelProps) {
                     size="sm"
                     className="h-8 shrink-0 px-2 text-xs"
                     title={`Fill every ${def.label.toLowerCase()}`}
-                    onClick={() => setAxis(i, { text: joinAxisList(def.choices!.map((c) => c.label)) })}
+                    onClick={() => { setAxis(i, { text: joinAxisList(def.choices!.map((c) => c.label)) }); }}
                   >
                     All
                   </Button>
@@ -321,12 +321,12 @@ export default function ComparePanel(props: ComparePanelProps) {
                 max={200}
                 step={2}
                 value={margin}
-                onChange={(e) => setMargin(Math.max(0, Math.min(200, Math.round(Number(e.target.value) || 0))))}
+                onChange={(e) => { setMargin(Math.max(0, Math.min(200, Math.round(Number(e.target.value) || 0)))); }}
                 className="h-7 w-16 text-xs"
                 aria-label="Grid margin in pixels"
               />
             </label>
-            <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => swap(0, 1)}>
+            <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => { swap(0, 1); }}>
               Swap X/Y
             </Button>
           </div>
@@ -364,7 +364,7 @@ export default function ComparePanel(props: ComparePanelProps) {
                     {g.title ? `${g.title}, ` : ""}
                     {g.width} x {g.height}
                   </span>
-                  <Button type="button" size="sm" variant="secondary" onClick={() => download(g, i)}>
+                  <Button type="button" size="sm" variant="secondary" onClick={() => { download(g, i); }}>
                     Download PNG
                   </Button>
                 </figcaption>

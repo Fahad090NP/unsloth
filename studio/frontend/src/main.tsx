@@ -87,7 +87,7 @@ watchInputModality(window);
 watchSpellCheck(window);
 
 // The macOS app types a control character for a key the page leaves unhandled (#14764).
-if (isTauri && /Mac/.test(navigator.platform)) {
+if (isTauri && navigator.platform.includes('Mac')) {
   watchMacStrayKeyText(window);
 }
 

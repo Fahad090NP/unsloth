@@ -77,12 +77,12 @@ export type SeedBlockType =
 
 type IconType = typeof CodeIcon;
 
-export type BlockGroup = {
+export interface BlockGroup {
   kind: BlockKind;
   title: string;
   description: string;
   icon: IconType;
-};
+}
 
 export type BlockDialogKey =
   | "seed"
@@ -103,7 +103,7 @@ export type BlockDialogKey =
   | "tool_config"
   | "expression";
 
-export type BlockDefinition = {
+export interface BlockDefinition {
   kind: BlockKind;
   type: BlockType;
   title: string;
@@ -111,7 +111,7 @@ export type BlockDefinition = {
   icon: IconType;
   dialogKey: BlockDialogKey;
   createConfig: (id: string, existing: NodeConfig[]) => NodeConfig;
-};
+}
 
 export const BLOCK_GROUPS: BlockGroup[] = [
   {

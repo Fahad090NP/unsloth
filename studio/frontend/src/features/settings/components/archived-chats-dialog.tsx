@@ -232,7 +232,7 @@ export function ArchivedChatsView() {
           size="sm"
           className="text-destructive hover:bg-destructive/10 hover:text-destructive"
           disabled={busy || filtered.length === 0}
-          onClick={() => requestDelete(filtered, true)}
+          onClick={() => { requestDelete(filtered, true); }}
         >
           <HugeiconsIcon icon={Delete02Icon} className="mr-1.5 size-4" />
           {narrowed
@@ -280,7 +280,7 @@ export function ArchivedChatsView() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     variant="destructive"
-                    onSelect={() => requestDelete(groupItems, true)}
+                    onSelect={() => { requestDelete(groupItems, true); }}
                   >
                     <HugeiconsIcon icon={Delete02Icon} className="size-4" />
                     {group.id
@@ -298,14 +298,14 @@ export function ArchivedChatsView() {
               date={
                 filters.sort === "updated" ? item.updatedAt : item.createdAt
               }
-              onOpen={() => openChat(item)}
+              onOpen={() => { openChat(item); }}
               actions={
                 <>
                   <Button
                     variant="ghost"
                     size="icon"
                     disabled={busy}
-                    onClick={() => requestDelete([item])}
+                    onClick={() => { requestDelete([item]); }}
                     aria-label={t("settings.data.library.deleteItem", {
                       title: item.title,
                     })}
@@ -338,7 +338,7 @@ export function ArchivedChatsView() {
             variant="outline"
             size="sm"
             onClick={() =>
-              setVisibleCount((count) => count + ARCHIVED_PAGE_SIZE)
+              { setVisibleCount((count) => count + ARCHIVED_PAGE_SIZE); }
             }
           >
             {t("settings.voice.recents.showMore", {
@@ -392,7 +392,7 @@ export function ArchivedChatsView() {
               onClick={(event) => {
                 event.preventDefault();
                 void run(confirmingDelete, "delete", deleteFilesOnDelete).then(
-                  () => setConfirmingDelete([]),
+                  () => { setConfirmingDelete([]); },
                 );
               }}
             >

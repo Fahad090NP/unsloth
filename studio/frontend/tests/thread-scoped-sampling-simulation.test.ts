@@ -92,7 +92,7 @@ test("A1: every ordering of edit / load / Think / model switch / reopen", async 
     "reopenA",
   ]).map((tail) => ["hydrate", "openA", ...tail] as Op[]);
   assert.equal(orderings.length, 120);
-  await sweep("A1", orderings, (ms) => t.mock.timers.tick(ms));
+  await sweep("A1", orderings, (ms) => { t.mock.timers.tick(ms); });
 });
 
 test("A2: every ordering of prompt edit / post-load defaults / external / unload / second chat", async (t) => {
@@ -107,7 +107,7 @@ test("A2: every ordering of prompt edit / post-load defaults / external / unload
     (tail) => ["hydrate", "loadQwen", "openA", ...tail, "reopenA"] as Op[],
   );
   assert.equal(orderings.length, 120);
-  await sweep("A2", orderings, (ms) => t.mock.timers.tick(ms));
+  await sweep("A2", orderings, (ms) => { t.mock.timers.tick(ms); });
 });
 
 test("A3: both chats, both edits, both Think positions, in every order", async (t) => {
@@ -123,7 +123,7 @@ test("A3: both chats, both edits, both Think positions, in every order", async (
       ["hydrate", "loadQwen", "openA", ...tail, "reopenA", "openB"] as Op[],
   );
   assert.equal(orderings.length, 120);
-  await sweep("A3", orderings, (ms) => t.mock.timers.tick(ms));
+  await sweep("A3", orderings, (ms) => { t.mock.timers.tick(ms); });
 });
 
 test("A4: every four-step interleaving over the wider alphabet", async (t) => {
@@ -141,7 +141,7 @@ test("A4: every four-step interleaving over the wider alphabet", async (t) => {
     (middle) => ["hydrate", "openA", ...middle, "reopenA"] as Op[],
   );
   assert.equal(orderings.length, 840);
-  await sweep("A4", orderings, (ms) => t.mock.timers.tick(ms));
+  await sweep("A4", orderings, (ms) => { t.mock.timers.tick(ms); });
 });
 
 test("A5: hydration interleaved -- nothing leaks, whatever the order", async (t) => {
@@ -155,7 +155,7 @@ test("A5: hydration interleaved -- nothing leaks, whatever the order", async (t)
     "openB",
   ]).map((ops) => [...ops, "reopenA"] as Op[]);
   assert.equal(orderings.length, 120);
-  await sweep("A5", orderings, (ms) => t.mock.timers.tick(ms), false);
+  await sweep("A5", orderings, (ms) => { t.mock.timers.tick(ms); }, false);
 });
 
 test("A6: hand-picked long sequences", async (t) => {
@@ -249,7 +249,7 @@ test("A6: hand-picked long sequences", async (t) => {
       "openB",
     ],
   ];
-  await sweep("A6", long, (ms) => t.mock.timers.tick(ms));
+  await sweep("A6", long, (ms) => { t.mock.timers.tick(ms); });
 });
 
 // Positive checks, so the matrix cannot pass by storing nothing.
@@ -258,9 +258,9 @@ test("the pinned values really are stored on the chat's own row", async (t) => {
   enableCountedTimers(t);
   await runScenario(
     ["hydrate", "openA", "editTemp", "editPrompt", "openB", "reopenA"],
-    (ms) => t.mock.timers.tick(ms),
+    (ms) => { t.mock.timers.tick(ms); },
   );
-  const row = threadRows.rows.get("A") as Record<string, unknown>;
+  const row = threadRows.rows.get("A")!;
   assert.equal(row.temperature, 1.37);
   assert.equal(row.systemPrompt, "CHAT A ONLY 5f3a");
   for (const key of SAMPLING_KEYS) {
@@ -271,7 +271,7 @@ test("the pinned values really are stored on the chat's own row", async (t) => {
 test("I3: an edit with no chat open reaches the installation-wide settings", async (t) => {
   enableCountedTimers(t);
   await runScenario(["hydrate", "editTemp", "editPrompt"], (ms) =>
-    t.mock.timers.tick(ms),
+    { t.mock.timers.tick(ms); },
   );
   const sent = JSON.stringify(settingsHttp.puts);
   assert.match(sent, /0\.83/);
@@ -282,7 +282,7 @@ test("I4: a model's recommendation reaches the installation and the model's memo
   enableCountedTimers(t);
   await runScenario(
     ["hydrate", "openA", "editTemp", "editPrompt", "loadQwen", "switchLlama"],
-    (ms) => t.mock.timers.tick(ms),
+    (ms) => { t.mock.timers.tick(ms); },
   );
   const sent = JSON.stringify(settingsHttp.puts);
   assert.match(sent, /"temperature":0\.31/);
@@ -354,7 +354,7 @@ test("B1: a slider moved while /api/chat/settings is still in flight survives it
   w.store().setParams({ ...w.store().params, temperature: 1.42 });
   settingsHttp.release?.();
   await hydrating;
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   assert.equal(
     w.store().params.temperature,
     1.42,
@@ -367,7 +367,7 @@ test("B2: an edit made while the chat's own read is out is stored on that chat",
   enableCountedTimers(t);
   const w = await raceWorld();
   await w.store().hydratePersistedSettings();
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   settingsHttp.puts.length = 0;
 
   w.beginOpen("A");
@@ -377,12 +377,12 @@ test("B2: an edit made while the chat's own read is out is stored on that chat",
     systemPrompt: "HELD EDIT 5f3a",
   });
   w.finishOpen("A", { temperature: 0.22, topP: 0.33, systemPrompt: "STORED" });
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   assert.equal(w.store().params.temperature, 1.37);
   assert.equal(w.store().params.systemPrompt, "HELD EDIT 5f3a");
   assert.equal(w.store().params.topP, 0.33);
-  const row = threadRows.rows.get("A") as Record<string, unknown>;
+  const row = threadRows.rows.get("A")!;
   assert.equal(row.temperature, 1.37);
   assert.equal(row.systemPrompt, "HELD EDIT 5f3a");
   assert.doesNotMatch(JSON.stringify(settingsHttp.puts), /HELD EDIT 5f3a/);
@@ -393,7 +393,7 @@ test("B3: leaving mid-read sends the held edit to its own chat, not the next one
   enableCountedTimers(t);
   const w = await raceWorld();
   await w.store().hydratePersistedSettings();
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   settingsHttp.puts.length = 0;
 
   w.beginOpen("A");
@@ -404,7 +404,7 @@ test("B3: leaving mid-read sends the held edit to its own chat, not the next one
   });
   await w.mod.commitHeldThreadScopedEditsToTheirThread();
   w.open("B");
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   const merged = threadRows
     .writesFor("A")
@@ -424,7 +424,7 @@ test("B4: a model load landing during the pairing window does not take the chat'
   enableCountedTimers(t);
   const w = await raceWorld();
   await w.store().hydratePersistedSettings();
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   settingsHttp.puts.length = 0;
 
   w.beginOpen("A");
@@ -434,10 +434,10 @@ test("B4: a model load landing during the pairing window does not take the chat'
     { fromModelDefaults: true },
   );
   w.finishOpen("A", null);
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   assert.equal(w.store().params.temperature, 1.37, "the load took the edit");
-  const row = threadRows.rows.get("A") as Record<string, unknown>;
+  const row = threadRows.rows.get("A")!;
   assert.equal(
     row.temperature,
     1.37,
@@ -452,7 +452,7 @@ test("B4b: the held sampling edit that survives a load is the LAST one made", as
   enableCountedTimers(t);
   const w = await raceWorld();
   await w.store().hydratePersistedSettings();
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   w.beginOpen("A");
   w.store().setParams({ ...w.store().params, temperature: 1.2 });
@@ -462,7 +462,7 @@ test("B4b: the held sampling edit that survives a load is the LAST one made", as
     { fromModelDefaults: true },
   );
   w.finishOpen("A", null);
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   assert.equal(w.store().params.temperature, 1.37);
 });
 
@@ -470,7 +470,7 @@ test("B4c: a falsy held edit is not treated as no edit at all", async (t) => {
   enableCountedTimers(t);
   const w = await raceWorld();
   await w.store().hydratePersistedSettings();
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   w.beginOpen("A");
   w.store().setParams({
@@ -485,14 +485,14 @@ test("B4c: a falsy held edit is not treated as no edit at all", async (t) => {
     { fromModelDefaults: true },
   );
   w.finishOpen("A", null);
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   const params = w.store().params;
   assert.equal(params.temperature, 0);
   assert.equal(params.minP, 0);
   assert.equal(params.topK, -1);
   assert.equal(params.systemPrompt, "");
-  const row = threadRows.rows.get("A") as Record<string, unknown>;
+  const row = threadRows.rows.get("A")!;
   assert.equal(row.temperature, 0);
   assert.equal(row.minP, 0);
   assert.equal(row.topK, -1);
@@ -503,19 +503,19 @@ test("B5: two rapid model switches with a pinned chat open", async (t) => {
   enableCountedTimers(t);
   const w = await raceWorld();
   await w.store().hydratePersistedSettings();
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   w.open("A");
   w.store().setParams({
     ...w.store().params,
     temperature: 1.37,
     systemPrompt: "CHAT A ONLY 5f3a",
   });
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   settingsHttp.puts.length = 0;
 
   w.store().setCheckpoint(LLAMA, null);
   w.store().setCheckpoint(EXTERNAL, null);
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   assert.equal(w.store().params.temperature, 1.37);
   assert.equal(w.store().params.systemPrompt, "CHAT A ONLY 5f3a");
@@ -537,10 +537,10 @@ test("B6: a thread switch while a load is in flight keeps each chat's own values
   enableCountedTimers(t);
   const w = await raceWorld();
   await w.store().hydratePersistedSettings();
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   w.open("A");
   w.store().setParams({ ...w.store().params, temperature: 1.37 });
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   w.beginOpen("B");
   w.store().setParams(
@@ -548,7 +548,7 @@ test("B6: a thread switch while a load is in flight keeps each chat's own values
     { fromModelDefaults: true },
   );
   w.finishOpen("B", null);
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   assert.notEqual(
     w.store().params.temperature,
     1.37,
@@ -556,7 +556,7 @@ test("B6: a thread switch while a load is in flight keeps each chat's own values
   );
 
   w.open("A");
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   assert.equal(w.store().params.temperature, 1.37, "A lost its temperature");
 });
 
@@ -564,7 +564,7 @@ test("B7: a tab closing with a held edit beacons it to the chat it was made in",
   enableCountedTimers(t);
   const w = await raceWorld();
   await w.store().hydratePersistedSettings();
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   settingsHttp.puts.length = 0;
 
   w.beginOpen("A");
@@ -575,7 +575,7 @@ test("B7: a tab closing with a held edit beacons it to the chat it was made in",
   });
   const delivered = fireWindowEvent("pagehide", {});
   assert.ok(delivered > 0, "the store is not listening for the terminal event");
-  await settle(w.mod, (ms) => t.mock.timers.tick(ms));
+  await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   // The beacon is a PATCH, so check the queued replay record instead of `puts`.
   const beaconed = JSON.parse(

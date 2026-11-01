@@ -295,7 +295,7 @@ async function chatInstructionsTurn(threadId: string): Promise<MessageRecord[]> 
 function branchHeadId(
   threadId: string,
   liveBranch: string[] | null,
-  raw: Array<{ id: string }>,
+  raw: { id: string }[],
 ): string | null | undefined {
   // an empty live branch means history has not refilled after a chat switch
   // off-screen chats export the branch that reopening them would show
@@ -320,7 +320,7 @@ function messageToText(msg: { content: unknown; attachments?: unknown }): string
   const main = contentBlocksToText(msg.content);
   if (main) parts.push(main);
   if (Array.isArray(msg.attachments)) {
-    for (const attachment of msg.attachments as Array<{ content?: unknown }>) {
+    for (const attachment of msg.attachments as { content?: unknown }[]) {
       if (!attachment?.content) continue;
       const attText = unwrapPastedTextContent(
         contentBlocksToText(attachment.content),
@@ -335,7 +335,7 @@ function messageToMarkdown(msg: { content: unknown; attachments?: unknown }): st
   const normalizeToolResult = toolResultModelText;
   const blocks = contentBlocksToMarkdownBlocks(msg.content, normalizeToolResult);
   if (Array.isArray(msg.attachments)) {
-    for (const attachment of msg.attachments as Array<{ content?: unknown }>) {
+    for (const attachment of msg.attachments as { content?: unknown }[]) {
       if (!attachment?.content) continue;
       blocks.push(
         ...contentBlocksToMarkdownBlocks(
@@ -358,11 +358,11 @@ type OAIContentPart =
   | { type: "text"; text: string }
   | { type: "image_url"; image_url: { url: string } };
 
-type OAIToolCall = {
+interface OAIToolCall {
   id: string;
   type: "function";
   function: { name: string; arguments: string };
-};
+}
 
 type OAIMessage =
   | { role: "user" | "system"; content: string | OAIContentPart[] }
@@ -481,7 +481,7 @@ export async function exportConversationShareGPT(threadId: string): Promise<void
   });
   if (!messages) return;
 
-  const conversations: Array<{ from: string; value: string }> = [];
+  const conversations: { from: string; value: string }[] = [];
   for (const msg of messages) {
     const role = msg.role as string;
     const from = role === "user" ? "human" : role === "system" ? "system" : "gpt";
@@ -499,11 +499,11 @@ export async function exportConversationShareGPT(threadId: string): Promise<void
 
 // OpenAI/ChatML JSONL: {"messages": [{"role","content"}, ...]} per conversation; Unsloth reads this as a ChatML dataset.
 export async function exportConversationRawJsonl(threadId: string): Promise<void> {
-  return exportConversationJsonl(threadId, "training");
+  await exportConversationJsonl(threadId, "training");
 }
 
 export async function exportConversationMessagesJsonl(threadId: string): Promise<void> {
-  return exportConversationJsonl(threadId, "messages");
+  await exportConversationJsonl(threadId, "messages");
 }
 
 async function exportConversationJsonl(
@@ -534,7 +534,7 @@ export async function exportConversationCsv(threadId: string): Promise<void> {
   for (const msg of messages) {
     const content = messageToText(msg);
     if (!content.trim()) continue;
-    rows.push(`${csvEscape(msg.role as string)},${csvEscape(content)}`);
+    rows.push(`${csvEscape(msg.role)},${csvEscape(content)}`);
   }
 
   if (rows.length <= 1) { toast.info("No exportable content."); return; }
@@ -628,7 +628,7 @@ export async function buildChatItemMarkdown(item: {
     item,
     item.type === "single" ? [] : await listStoredChatThreads({ pairId: item.id }),
   );
-  return buildNamedConversationsMarkdown(
+  return await buildNamedConversationsMarkdown(
     plans,
     buildConversationMarkdownForThread,
   );
@@ -676,7 +676,7 @@ async function buildThreadContent(
   }
 
   if (format === "sharegpt") {
-    const conversations: Array<{ from: string; value: string }> = [];
+    const conversations: { from: string; value: string }[] = [];
     for (const msg of messages) {
       const role = msg.role as string;
       const value = messageToText(msg);
@@ -694,7 +694,7 @@ async function buildThreadContent(
   for (const msg of messages) {
     const content = messageToText(msg);
     if (!content.trim()) continue;
-    rows.push(`${csvEscape(msg.role as string)},${csvEscape(content)}`);
+    rows.push(`${csvEscape(msg.role)},${csvEscape(content)}`);
   }
   return rows.length > 0 ? rows.join("\n") : null;
 }
@@ -727,7 +727,7 @@ export async function exportBulkConversationsMerged(
   }
 
   if (format === "markdown" && threadIds.length > 1) {
-    const conversations: Array<{ id: string; title: string }> = [];
+    const conversations: { id: string; title: string }[] = [];
     const pairs = new Map<string, ThreadRecord[]>();
     for (const id of threadIds) {
       const thread = await getStoredChatThread(id);
@@ -856,10 +856,10 @@ export async function exportProjectConversations(
 
 // One JSONL line per conversation, string-only content in system/user/assistant turns: the training tab detects this as ChatML natively and it works with train-on-completions masking. Reasoning, tool calls and images are dropped for clean SFT targets.
 
-export type FineTuneMessage = {
+export interface FineTuneMessage {
   role: "system" | "user" | "assistant";
   content: string;
-};
+}
 
 const FINE_TUNE_ROLES = new Set(["system", "user", "assistant"]);
 
@@ -890,7 +890,7 @@ function messageToPlainText(msg: {
   };
   collect(msg.content);
   if (Array.isArray(msg.attachments)) {
-    for (const attachment of msg.attachments as Array<{ content?: unknown }>) {
+    for (const attachment of msg.attachments as { content?: unknown }[]) {
       collect(attachment?.content, true);
     }
   }
@@ -901,7 +901,7 @@ function mergeSameRoleTurns(turns: FineTuneMessage[]): FineTuneMessage[] {
   const merged: FineTuneMessage[] = [];
   for (const turn of turns) {
     const last = merged[merged.length - 1];
-    if (last && last.role === turn.role) {
+    if (last?.role === turn.role) {
       last.content += `\n\n${turn.content}`;
     } else {
       merged.push({ ...turn });
@@ -912,7 +912,7 @@ function mergeSameRoleTurns(turns: FineTuneMessage[]): FineTuneMessage[] {
 
 /** Merges same-role turns and drops leading assistant and trailing non-assistant turns. */
 function messagesToFineTuneTurns(
-  messages: Array<{ role: unknown; content: unknown; attachments?: unknown }>,
+  messages: { role: unknown; content: unknown; attachments?: unknown }[],
 ): FineTuneMessage[] | null {
   const raw: FineTuneMessage[] = [];
   for (const msg of messages) {
@@ -935,11 +935,11 @@ function messagesToFineTuneTurns(
   return hasUser && hasAssistant ? turns : null;
 }
 
-export type FineTuneExportResult = {
+export interface FineTuneExportResult {
   lines: string[];
   conversations: number;
   skipped: number;
-};
+}
 
 export type FineTuneFormat = "openai" | "sharegpt" | "alpaca";
 
@@ -1019,7 +1019,7 @@ export async function buildFineTuneJsonl(
       ? (orderByParentChain(raw, {
           includeSiblings: false,
           headId: branchHeadId(id, liveBranch, raw),
-        }) as typeof raw)
+        }))
       : raw;
     const turns = messagesToFineTuneTurns([...instructions, ...ordered]);
     const converted = turns ? turnsToFineTuneLines(turns, format) : [];
@@ -1156,7 +1156,7 @@ async function importListsFromText(text: string, isCsv: boolean): Promise<{ coun
   let skipped = 0;
   if (isCsv) {
     const rows = parseCsv(text).slice(1);
-    const listMap = new Map<string, Array<{ order: number; text: string }>>();
+    const listMap = new Map<string, { order: number; text: string }[]>();
     for (const cells of rows) {
       const listName = cells[0]?.trim();
       const promptText = cells[2]?.trim();
@@ -1357,7 +1357,7 @@ function ExportModal({
                   name="export-scope"
                   value="single"
                   checked={scope === "single"}
-                  onChange={() => setScope("single")}
+                  onChange={() => { setScope("single"); }}
                   className="accent-primary shrink-0"
                 />
                 <div className="min-w-0">
@@ -1379,7 +1379,7 @@ function ExportModal({
                   name="export-scope"
                   value="training"
                   checked={scope === "training"}
-                  onChange={() => setScope("training")}
+                  onChange={() => { setScope("training"); }}
                   className="mt-0.5 accent-primary shrink-0"
                 />
                 <div className="min-w-0 flex-1">
@@ -1452,8 +1452,8 @@ function ExportModal({
 }
 
 // Drafts live in the parent so switching rows never drops typed text.
-type PromptDraft = { name: string; text: string };
-type ListDraft = { name: string; items: string[] };
+interface PromptDraft { name: string; text: string }
+interface ListDraft { name: string; items: string[] }
 
 // Factories, not constants, so resets never share a mutable `items` array.
 const emptyPromptDraft = (): PromptDraft => ({ name: "", text: "" });
@@ -1684,7 +1684,7 @@ function PromptDetail({
     <div className="flex h-full min-h-0 flex-col gap-3">
       <input
         value={name}
-        onChange={(e) => update({ name: e.target.value })}
+        onChange={(e) => { update({ name: e.target.value }); }}
         placeholder="Prompt name..."
         className="w-full shrink-0 rounded-full border-0 bg-background/80 px-3 py-2 text-sm font-medium ring-1 ring-border/60 outline-none focus:ring-ring transition-shadow"
       />
@@ -1696,7 +1696,7 @@ function PromptDetail({
       ) : (
         <textarea
           value={text}
-          onChange={(e) => update({ text: e.target.value })}
+          onChange={(e) => { update({ text: e.target.value }); }}
           placeholder="Prompt text..."
           className="min-h-0 flex-1 w-full resize-none rounded-xl border-0 bg-background/80 px-3 py-2.5 text-sm ring-1 ring-border/60 outline-none focus:ring-ring transition-shadow leading-relaxed"
         />
@@ -1715,7 +1715,7 @@ function PromptDetail({
       <div className="flex shrink-0 flex-wrap items-center gap-1 border-t border-border/50 pt-3">
         <button
           type="button"
-          onClick={() => togglePinnedPrompt(entry.id)}
+          onClick={() => { togglePinnedPrompt(entry.id); }}
           className={cn(
             "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
             isPinned
@@ -1728,7 +1728,7 @@ function PromptDetail({
         </button>
         <button
           type="button"
-          onClick={() => onExport(exportValue)}
+          onClick={() => { onExport(exportValue); }}
           className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Export"
         >
@@ -1737,7 +1737,7 @@ function PromptDetail({
         <button
           type="button"
           disabled={pending}
-          onClick={() => (dirty ? setConfirmingDelete(true) : void handleDelete())}
+          onClick={() => { dirty ? setConfirmingDelete(true) : void handleDelete(); }}
           className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
           title="Delete"
         >
@@ -1745,11 +1745,11 @@ function PromptDetail({
         </button>
         <div className="flex-1" />
         {dirty && (
-          <Button size="sm" variant="ghost" onClick={() => onDraftChange(undefined)}>
+          <Button size="sm" variant="ghost" onClick={() => { onDraftChange(undefined); }}>
             <HugeiconsIcon icon={UndoIcon} className="size-3.5 mr-1" />Revert
           </Button>
         )}
-        <Button size="sm" variant="outline" onClick={() => setPreview((v) => !v)}>
+        <Button size="sm" variant="outline" onClick={() => { setPreview((v) => !v); }}>
           {preview ? (
             <><HugeiconsIcon icon={Edit03Icon} className="size-3.5 mr-1" />Edit</>
           ) : (
@@ -1759,7 +1759,7 @@ function PromptDetail({
         <Button size="sm" variant="outline" disabled={pending || !dirty || !text.trim()} onClick={handleSave}>
           <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-3.5 mr-1" />Save
         </Button>
-        <Button size="sm" onClick={() => onUse(text)} disabled={!text.trim()}>
+        <Button size="sm" onClick={() => { onUse(text); }} disabled={!text.trim()}>
           <PlayIcon className="size-3 mr-1" />Use
         </Button>
       </div>
@@ -1817,8 +1817,8 @@ function NewPromptForm({
   create: (fn: () => Promise<void>) => Promise<void>;
 }): ReactElement {
   const { name, text } = draft;
-  const setName = (value: string) => onDraftChange({ ...draft, name: value });
-  const setText = (value: string) => onDraftChange({ ...draft, text: value });
+  const setName = (value: string) => { onDraftChange({ ...draft, name: value }); };
+  const setText = (value: string) => { onDraftChange({ ...draft, text: value }); };
   // Set in setup, not just at the ref: StrictMode replays setup/cleanup.
   const mounted = useRef(true);
   useEffect(() => {
@@ -1862,14 +1862,14 @@ function NewPromptForm({
       <p className="shrink-0 text-xs font-semibold text-muted-foreground">New Prompt</p>
       <input
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => { setName(e.target.value); }}
         placeholder="Prompt name (optional)..."
         autoFocus
         className="w-full shrink-0 rounded-full border-0 bg-background/80 px-3 py-2 text-sm font-medium ring-1 ring-border/60 outline-none focus:ring-ring transition-shadow"
       />
       <textarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => { setText(e.target.value); }}
         placeholder="Write your prompt here..."
         className="min-h-0 flex-1 w-full resize-none rounded-xl border-0 bg-background/80 px-3 py-2.5 text-sm ring-1 ring-border/60 outline-none focus:ring-ring transition-shadow leading-relaxed"
       />
@@ -1990,7 +1990,7 @@ function PromptListDetail({
     <div className="flex h-full min-h-0 flex-col gap-3">
       <input
         value={name}
-        onChange={(e) => update({ name: e.target.value })}
+        onChange={(e) => { update({ name: e.target.value }); }}
         placeholder="List name..."
         className="w-full shrink-0 rounded-full border-0 bg-background/80 px-3 py-2 text-sm font-medium ring-1 ring-border/60 outline-none focus:ring-ring transition-shadow"
       />
@@ -2002,13 +2002,13 @@ function PromptListDetail({
           <>
             <SortablePromptItems
               items={items}
-              onChange={(next) => update({ items: next })}
+              onChange={(next) => { update({ items: next }); }}
               preview={preview}
             />
             {preview ? null : (
               <button
                 type="button"
-                onClick={() => update({ items: [...items, ""] })}
+                onClick={() => { update({ items: [...items, ""] }); }}
                 className="flex items-center gap-1.5 self-start text-xs font-medium text-foreground hover:text-foreground/80 transition-colors"
               >
                 <HugeiconsIcon icon={PlusSignIcon} className="size-3.5" />Add prompt
@@ -2031,7 +2031,7 @@ function PromptListDetail({
             </p>
             <button
               type="button"
-              onClick={() => setEditorMounted(true)}
+              onClick={() => { setEditorMounted(true); }}
               className="flex items-center gap-1.5 self-start text-xs font-medium text-foreground hover:text-foreground/80 transition-colors"
             >
               <HugeiconsIcon icon={Edit03Icon} className="size-3.5" />Edit all {items.length} prompts
@@ -2053,7 +2053,7 @@ function PromptListDetail({
       <div className="flex shrink-0 flex-wrap items-center gap-1 border-t border-border/50 pt-3">
         <button
           type="button"
-          onClick={() => togglePinnedList(entry.id)}
+          onClick={() => { togglePinnedList(entry.id); }}
           className={cn(
             "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
             isPinned
@@ -2066,7 +2066,7 @@ function PromptListDetail({
         </button>
         <button
           type="button"
-          onClick={() => onExport(exportValue)}
+          onClick={() => { onExport(exportValue); }}
           className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           title="Export"
         >
@@ -2075,7 +2075,7 @@ function PromptListDetail({
         <button
           type="button"
           disabled={pending}
-          onClick={() => (dirty ? setConfirmingDelete(true) : void handleDelete())}
+          onClick={() => { dirty ? setConfirmingDelete(true) : void handleDelete(); }}
           className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
           title="Delete"
         >
@@ -2083,12 +2083,12 @@ function PromptListDetail({
         </button>
         <div className="flex-1" />
         {dirty && (
-          <Button size="sm" variant="ghost" onClick={() => onDraftChange(undefined)}>
+          <Button size="sm" variant="ghost" onClick={() => { onDraftChange(undefined); }}>
             <HugeiconsIcon icon={UndoIcon} className="size-3.5 mr-1" />Revert
           </Button>
         )}
         {editorMounted && (
-          <Button size="sm" variant="outline" onClick={() => setPreview((v) => !v)}>
+          <Button size="sm" variant="outline" onClick={() => { setPreview((v) => !v); }}>
             {preview ? (
               <><HugeiconsIcon icon={Edit03Icon} className="size-3.5 mr-1" />Edit</>
             ) : (
@@ -2100,7 +2100,7 @@ function PromptListDetail({
           <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-3.5 mr-1" />Save
         </Button>
         {onRunList && (
-          <Button size="sm" onClick={() => onRunList(runnableItems)} disabled={runnableItems.length === 0}>
+          <Button size="sm" onClick={() => { onRunList(runnableItems); }} disabled={runnableItems.length === 0}>
             <PlayIcon className="size-3 mr-1" />Run
           </Button>
         )}
@@ -2138,8 +2138,8 @@ function NewPromptListForm({
   create: (fn: () => Promise<void>) => Promise<void>;
 }): ReactElement {
   const { name, items } = draft;
-  const setName = (value: string) => onDraftChange({ ...draft, name: value });
-  const setItems = (value: string[]) => onDraftChange({ ...draft, items: value });
+  const setName = (value: string) => { onDraftChange({ ...draft, name: value }); };
+  const setItems = (value: string[]) => { onDraftChange({ ...draft, items: value }); };
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -2176,14 +2176,14 @@ function NewPromptListForm({
     [name, items, create, onRefresh, onCreated],
   );
 
-  const addItem = () => setItems([...items, ""]);
+  const addItem = () => { setItems([...items, ""]); };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
       <p className="shrink-0 text-xs font-semibold text-muted-foreground">New Prompt List</p>
       <input
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => { setName(e.target.value); }}
         placeholder="List name..."
         autoFocus
         className="w-full shrink-0 rounded-full border-0 bg-background/80 px-3 py-2 text-sm font-medium ring-1 ring-border/60 outline-none focus:ring-ring transition-shadow"
@@ -2592,7 +2592,7 @@ export function PromptStorageDialog({
                 <button
                   key={tab}
                   type="button"
-                  onClick={() => selectTab(tab)}
+                  onClick={() => { selectTab(tab); }}
                   className={cn(
                     "rounded-full px-4 py-1.5 text-xs font-medium transition-all",
                     activeTab === tab
@@ -2609,9 +2609,9 @@ export function PromptStorageDialog({
               <HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/60" />
               <input
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                onChange={(e) => { setSearchQuery(e.target.value); }}
+                onFocus={() => { setShowSuggestions(true); }}
+                onBlur={() => setTimeout(() => { setShowSuggestions(false); }, 150)}
                 placeholder={`Search ${activeTab === "prompts" ? "prompts by name or text" : "prompt lists by name"}…`}
                 className="w-full rounded-full border-0 bg-muted/50 pl-9 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60 transition-shadow"
               />
@@ -2621,7 +2621,7 @@ export function PromptStorageDialog({
                     <button
                       key={name}
                       type="button"
-                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseDown={(e) => { e.preventDefault(); }}
                       onClick={() => { setSearchQuery(name); setShowSuggestions(false); }}
                       className="flex w-full items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors text-left"
                     >
@@ -2742,15 +2742,15 @@ export function PromptStorageDialog({
                     key={selectedPrompt.id}
                     entry={selectedPrompt}
                     draft={promptDrafts.get(selectedPrompt.id)}
-                    onDraftChange={(d) => setPromptDraft(selectedPrompt.id, d)}
+                    onDraftChange={(d) => { setPromptDraft(selectedPrompt.id, d); }}
                     onUse={handleUsePrompt}
-                    onExport={(e) => setExportCtx({ kind: "prompt", entry: e })}
+                    onExport={(e) => { setExportCtx({ kind: "prompt", entry: e }); }}
                     onRefresh={refreshEntries}
                     onDeleted={(deletedId) =>
-                      setSelectedPromptId((prev) => (prev === deletedId ? null : prev))
+                      { setSelectedPromptId((prev) => (prev === deletedId ? null : prev)); }
                     }
                     onSaved={(submitted) =>
-                      clearPromptDraftIfSaved(selectedPrompt.id, submitted)
+                      { clearPromptDraftIfSaved(selectedPrompt.id, submitted); }
                     }
                     pending={mutatingIds.has(lockKey("prompt", selectedPrompt.id))}
                     runMutation={runMutation}
@@ -2760,7 +2760,7 @@ export function PromptStorageDialog({
                     icon={<HugeiconsIcon icon={Bookmark02Icon} className="size-5 text-muted-foreground/40" />}
                     title={searchQuery.trim() ? `No prompts match “${searchQuery}”` : "No saved prompts yet"}
                     hint={searchQuery.trim() ? undefined : "Save prompts you use often for quick reuse"}
-                    onClearSearch={searchQuery.trim() ? () => setSearchQuery("") : undefined}
+                    onClearSearch={searchQuery.trim() ? () => { setSearchQuery(""); } : undefined}
                   />
                 ))}
 
@@ -2783,15 +2783,15 @@ export function PromptStorageDialog({
                     key={selectedList.id}
                     entry={selectedList}
                     draft={listDrafts.get(selectedList.id)}
-                    onDraftChange={(d) => setListDraft(selectedList.id, d)}
+                    onDraftChange={(d) => { setListDraft(selectedList.id, d); }}
                     onRunList={onRunList}
-                    onExport={(e) => setExportCtx({ kind: "list", entry: e })}
+                    onExport={(e) => { setExportCtx({ kind: "list", entry: e }); }}
                     onRefresh={refreshLists}
                     onDeleted={(deletedId) =>
-                      setSelectedListId((prev) => (prev === deletedId ? null : prev))
+                      { setSelectedListId((prev) => (prev === deletedId ? null : prev)); }
                     }
                     onSaved={(submitted) =>
-                      clearListDraftIfSaved(selectedList.id, submitted)
+                      { clearListDraftIfSaved(selectedList.id, submitted); }
                     }
                     pending={mutatingIds.has(lockKey("list", selectedList.id))}
                     runMutation={runMutation}
@@ -2801,7 +2801,7 @@ export function PromptStorageDialog({
                     icon={<LayoutListIcon className="size-5 text-muted-foreground/40" />}
                     title={searchQuery.trim() ? `No prompt lists match “${searchQuery}”` : "No prompt lists yet"}
                     hint={searchQuery.trim() ? undefined : "A prompt list queues a sequence of prompts for quick reuse"}
-                    onClearSearch={searchQuery.trim() ? () => setSearchQuery("") : undefined}
+                    onClearSearch={searchQuery.trim() ? () => { setSearchQuery(""); } : undefined}
                   />
                 ))}
             </div>
@@ -2810,7 +2810,7 @@ export function PromptStorageDialog({
       </Dialog>
 
       {exportCtx && (
-        <ExportModal ctx={exportCtx} onClose={() => setExportCtx(null)} />
+        <ExportModal ctx={exportCtx} onClose={() => { setExportCtx(null); }} />
       )}
     </>
   );

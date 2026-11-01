@@ -15,11 +15,11 @@ register("./helpers/tauri-core-resolver.mjs", import.meta.url);
 const MODULE = new URL("../src/features/native-intents/api.ts", import.meta.url)
   .href;
 
-type StubControl = {
+interface StubControl {
   calls: { command: string }[];
   mode: "ok" | "rejects";
   result?: unknown;
-};
+}
 
 let generation = 0;
 

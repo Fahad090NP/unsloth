@@ -56,7 +56,7 @@ function renderEditor(
   key: string,
   loadedConfig: PerModelConfig | null,
 ): { key: string; editing: PerModelConfig } {
-  if (previous && previous.key === key) {
+  if (previous?.key === key) {
     return previous;
   }
   return { key, editing: loadedConfig ?? SAVED };

@@ -7,13 +7,13 @@ import { loadWithStubs } from "./helpers/module-stubs.ts";
 
 // Every KB list reader keeps its own copy, so every create, rename and delete must announce itself.
 
-type RagApi = {
+interface RagApi {
   createKnowledgeBase: (payload: { name: string }) => Promise<unknown>;
   updateKnowledgeBase: (kbId: string, payload: { name: string }) => Promise<unknown>;
   deleteKnowledgeBase: (kbId: string) => Promise<unknown>;
   listKnowledgeBases: () => Promise<unknown>;
   subscribeKnowledgeBasesChanged: (onChanged: () => void) => () => void;
-};
+}
 
 function load(responses: Response[]) {
   const requests: string[] = [];

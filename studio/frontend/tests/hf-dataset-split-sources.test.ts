@@ -103,7 +103,7 @@ test("a datasets-server that fails or knows nothing falls back to the repo files
     assert.deepEqual([result.source, result.entries], ["hub", [remoteEntry]]);
   }
   const failed = await load(fail("Failed to fetch splits (502)"), fail("Dataset scripts are no longer supported"));
-  assert.deepEqual([failed.source, /legacy custom script/.test(failed.error ?? "")], ["manual", true]);
+  assert.deepEqual([failed.source, (failed.error ?? "").includes('legacy custom script')], ["manual", true]);
   setHfEndpoints("http://127.0.0.1:8888/api/hub/modelscope", undefined, "modelscope");
   t.after(resetHfEndpoints);
   assert.equal((await load(async () => [remoteEntry], async () => [remoteEntry])).source, "hub");

@@ -163,13 +163,13 @@ function App() {
 
   useEffect(() => {
     const w = window as unknown as Record<string, unknown>;
-    w.__setRunning = (v: boolean) => setIsRunning(v);
-    w.__setHasText = (v: boolean) => setHasText(v);
-    w.__setAwaitingApproval = (v: boolean) => setAwaitingApproval(v);
-    w.__remount = () => setGeneration((g) => g + 1);
+    w.__setRunning = (v: boolean) => { setIsRunning(v); };
+    w.__setHasText = (v: boolean) => { setHasText(v); };
+    w.__setAwaitingApproval = (v: boolean) => { setAwaitingApproval(v); };
+    w.__remount = () => { setGeneration((g) => g + 1); };
     // Scenes drive the old boolean: true is "collapsed", false is "auto".
     w.__setPreference = (v: boolean) =>
-      useChatPreferencesStore.getState().setToolVisibility(v ? "collapsed" : "auto");
+      { useChatPreferencesStore.getState().setToolVisibility(v ? "collapsed" : "auto"); };
     w.__getPreference = () =>
       useChatPreferencesStore.getState().toolVisibility === "collapsed";
     w.__getDefaultPreference = () =>

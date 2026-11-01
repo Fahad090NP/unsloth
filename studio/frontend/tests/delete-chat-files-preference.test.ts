@@ -45,7 +45,7 @@ test("every chat delete path honours the preference", async () => {
 });
 
 test("every confirmation discloses the file deletion and can undo it", async () => {
-  const dialogs: Array<[string, string]> = [
+  const dialogs: [string, string][] = [
     ["../src/components/app-sidebar.tsx", "deleteFilesOnDelete"],
     ["../src/features/chat/chat-page.tsx", "deleteFilesOnDelete"],
     [
@@ -85,11 +85,11 @@ test("the confirmed delete follows the switch, not the preference", async () => 
       /confirmDeleteWithChat\(deleteFiles: boolean\)/,
     ],
     ["../src/features/settings/tabs/data-tab.tsx", /deleteFiles: deleteFilesOnClear/],
-  ] as Array<[string, RegExp]>) {
+  ] as [string, RegExp][]) {
     const source = await readFile(new URL(file, import.meta.url), "utf8");
     assert.match(source, signature, `${file} does not take the confirmed value`);
     assert.equal(
-      /deleteFiles: alwaysDeleteChatFiles/.test(source),
+      source.includes('deleteFiles: alwaysDeleteChatFiles'),
       false,
       `${file} still reads the preference past its own switch`,
     );

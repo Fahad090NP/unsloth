@@ -90,7 +90,7 @@ export function DocumentsRagSection(): ReactElement {
       sectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
       consumeScrollTarget("general-rag-embedding");
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => { window.cancelAnimationFrame(frame); };
   }, [consumeScrollTarget, scrollTarget]);
 
   useEffect(() => {

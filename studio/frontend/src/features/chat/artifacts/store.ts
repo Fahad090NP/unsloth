@@ -18,7 +18,7 @@ export function clearAutoOpenedArtifacts(): void {
   autoOpenedArtifactIds.clear();
 }
 
-type ChatArtifactsState = {
+interface ChatArtifactsState {
   // Fix text waiting for a composer. Never sent.
   pendingFixPrompt: string | null;
   stageFixPrompt: (prompt: string) => void;
@@ -26,12 +26,12 @@ type ChatArtifactsState = {
   // Whether the last React compile found no Node, so every React card can say why.
   reactPreviewUnavailable: boolean;
   setReactPreviewUnavailable: (unavailable: boolean) => void;
-};
+}
 
 export const useChatArtifactsStore = create<ChatArtifactsState>((set) => ({
   pendingFixPrompt: null,
-  stageFixPrompt: (prompt) => set({ pendingFixPrompt: prompt }),
-  clearFixPrompt: () => set({ pendingFixPrompt: null }),
+  stageFixPrompt: (prompt) => { set({ pendingFixPrompt: prompt }); },
+  clearFixPrompt: () => { set({ pendingFixPrompt: null }); },
   reactPreviewUnavailable: false,
-  setReactPreviewUnavailable: (reactPreviewUnavailable) => set({ reactPreviewUnavailable }),
+  setReactPreviewUnavailable: (reactPreviewUnavailable) => { set({ reactPreviewUnavailable }); },
 }));

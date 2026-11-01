@@ -47,7 +47,7 @@ function restartedReading(): ProgressLike {
     expected_bytes: EXPECTED,
     progress: (6 * 1024 * 1024) / EXPECTED,
     cache_measured: true,
-  } as ProgressLike;
+  };
 }
 
 test("a new generation wins over an attempt change, and an unknown side is no change", () => {
@@ -99,7 +99,7 @@ function reading(
     expected_bytes: expected,
     progress,
     cache_measured: true,
-  } as ProgressLike;
+  };
 }
 
 function replayRetry(polls: ProgressLike[], hold: boolean): number[] {

@@ -9,7 +9,7 @@ import {
   orderBySelectedBranch,
 } from "../src/features/chat/utils/message-order.ts";
 
-type Shape = { id: string; parentId?: string | null };
+interface Shape { id: string; parentId?: string | null }
 
 function resolveAll(rows: Shape[]): (string | null)[] {
   const resolveParent = createParentResolver();
@@ -137,12 +137,12 @@ test("retrying a reply mid-thread still selects the newest branch", () => {
   );
 });
 
-type Row = {
+interface Row {
   id: string;
   parentId?: string | null;
   createdAt?: number;
   role?: string;
-};
+}
 
 function rng(seed: number) {
   let s = seed;

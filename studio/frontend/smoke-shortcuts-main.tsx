@@ -181,13 +181,13 @@ function Harness() {
       />
       <div id="smoke-editable" contentEditable suppressContentEditableWarning />
       <span id="smoke-selection">{selectionCount}</span>
-      <button type="button" id="smoke-select" onClick={() => setSelectionCount(3)}>
+      <button type="button" id="smoke-select" onClick={() => { setSelectionCount(3); }}>
         select
       </button>
       <button
         type="button"
         id="smoke-tool-pending"
-        onClick={() => setToolPending((value) => !value)}
+        onClick={() => { setToolPending((value) => !value); }}
       >
         {String(toolPending)}
       </button>
@@ -212,4 +212,4 @@ window.__shortcutsSmoke = {
   },
 };
 
-createRoot(document.getElementById("root") as HTMLElement).render(<Harness />);
+createRoot(document.getElementById("root")!).render(<Harness />);

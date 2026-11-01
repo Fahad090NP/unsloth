@@ -133,7 +133,7 @@ export function ToolConfirmationControls({
   useEffect(() => {
     if (showControls && (autoAllowed || chatFullAccess) && pending === null && !failed) {
       // A sibling loop in this chat needs its own backend policy upgrade.
-      void resolve("allow", false, !!chatFullAccess);
+      void resolve("allow", false, Boolean(chatFullAccess));
     }
   }, [showControls, autoAllowed, chatFullAccess, pending, failed, resolve]);
 
@@ -215,7 +215,7 @@ export function ToolConfirmationControls({
             size="xs"
             variant="destructive"
             disabled={pending !== null || failure === "gone"}
-            onClick={() => setFullAccessOpen(true)}
+            onClick={() => { setFullAccessOpen(true); }}
           >
             Full Access
           </Button>
@@ -225,7 +225,7 @@ export function ToolConfirmationControls({
                 setFullAccessOpen(false);
                 void resolve("allow", false, true);
               }}
-              onClose={() => setFullAccessOpen(false)}
+              onClose={() => { setFullAccessOpen(false); }}
             />
           </AlertDialog>
         </>

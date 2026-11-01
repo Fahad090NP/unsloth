@@ -287,7 +287,7 @@ export function useModelsSelection({
   const metadataUnavailable =
     !isDatasetMode &&
     !selectedResultFromFeed &&
-    !!selectedHubRepoId &&
+    Boolean(selectedHubRepoId) &&
     selectedRepoMetadata.error;
 
   const selectedDiscoverRowForView = useMemo(() => {
@@ -295,8 +295,7 @@ export function useModelsSelection({
     if (discoverRowById.has(selectedDiscoverRow.id)) return selectedDiscoverRow;
     if (
       !isDatasetMode &&
-      selectedHfResult &&
-      selectedHfResult.id.toLowerCase() === selectedDiscoverRow.id.toLowerCase()
+      selectedHfResult?.id.toLowerCase() === selectedDiscoverRow.id.toLowerCase()
     ) {
       return (
         buildDiscoverRows([selectedHfResult], cachedRows, localRows)[0] ??

@@ -165,11 +165,11 @@ export function CommandPalette() {
   const setOpen = useCommandPaletteStore((s) => s.setOpen);
 
   useShortcut("openCommandPalette", () =>
-    useCommandPaletteStore.getState().toggle(),
+    { useCommandPaletteStore.getState().toggle(); },
   );
 
   // Auth routes unmount the palette; close it so it does not come back open.
-  useEffect(() => () => useCommandPaletteStore.getState().setOpen(false), []);
+  useEffect(() => () => { useCommandPaletteStore.getState().setOpen(false); }, []);
 
   // A chord pressed over the palette (⌘, / ⌘K, a workspace or new chat) acts behind it; it gives way.
   const settingsOpen = useSettingsDialogStore((s) => s.open);
@@ -341,9 +341,9 @@ function PaletteContent() {
           )}
           <PaletteItem
             onSelect={runAndClose(() =>
-              useChatSearchStore.getState().open({
+              { useChatSearchStore.getState().open({
                 opener: useCommandPaletteStore.getState().opener,
-              }),
+              }); },
             )}
           >
             <HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} />

@@ -4,7 +4,7 @@
 import { foldOverrideKey } from "@/features/model-picker/api/model-overrides";
 import { splitModelOverrideKey } from "@/features/model-picker/model-config/model-identity";
 
-export type ForgetModelOverrideDeps = {
+export interface ForgetModelOverrideDeps {
   listedKeys: readonly string[];
   removeRemote: (
     modelId: string,
@@ -16,7 +16,7 @@ export type ForgetModelOverrideDeps = {
   removeLocal: (overrideKeys: readonly string[]) => boolean;
   reload: () => Promise<void>;
   onError: (message: string) => void;
-};
+}
 
 export const FORGET_MODEL_OVERRIDE_FAILED = "Failed to forget these settings";
 export const FORGET_MODEL_OVERRIDE_LOCAL_FAILED =

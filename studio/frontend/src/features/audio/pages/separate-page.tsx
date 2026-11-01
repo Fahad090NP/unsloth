@@ -321,7 +321,7 @@ function SelectedSeparation({
             variant="link"
             size="sm"
             className="h-auto p-0"
-            onClick={() => setAttempt((n) => n + 1)}
+            onClick={() => { setAttempt((n) => n + 1); }}
           >
             Try again
           </Button>
@@ -594,7 +594,7 @@ export function SeparateOutput({
                     <GalleryPinBadge
                       noun="clip"
                       className="static shrink-0"
-                      onUnpin={() => pinGroup(group, false)}
+                      onUnpin={() => { pinGroup(group, false); }}
                     />
                   )}
                   <GalleryItemMenu
@@ -603,7 +603,7 @@ export function SeparateOutput({
                     active={active}
                     pinned={group.pinned}
                     archived={false}
-                    onTogglePin={() => pinGroup(group, !group.pinned)}
+                    onTogglePin={() => { pinGroup(group, !group.pinned); }}
                     onToggleArchive={() => void archiveGroup(group)}
                     onDelete={() => void deleteGroup(group)}
                     onDownload={() => void downloadGroup(group)}

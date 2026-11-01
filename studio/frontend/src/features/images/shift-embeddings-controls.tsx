@@ -43,7 +43,7 @@ function NumberBox({
       className={cn("h-8 text-xs", shiftFieldInvalid(value, exclusiveMin) && "border-destructive")}
       placeholder={placeholder}
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => { onChange(e.target.value); }}
     />
   );
 }
@@ -71,7 +71,7 @@ export function ShiftField({
           value={value.shift}
           placeholder={control.shift != null ? `Model default (${roundShift(control.shift)})` : "Model default"}
           exclusiveMin
-          onChange={(shift) => onChange({ ...value, shift })}
+          onChange={(shift) => { onChange({ ...value, shift }); }}
         />
       </div>
     );
@@ -88,14 +88,14 @@ export function ShiftField({
           value={value.baseShift}
           placeholder={`Base (${roundShift(control.base_shift ?? 0.5)})`}
           exclusiveMin={false}
-          onChange={(baseShift) => onChange({ ...value, baseShift })}
+          onChange={(baseShift) => { onChange({ ...value, baseShift }); }}
         />
         <NumberBox
           ariaLabel="Max shift"
           value={value.maxShift}
           placeholder={`Max (${roundShift(control.max_shift ?? 1.15)})`}
           exclusiveMin={false}
-          onChange={(maxShift) => onChange({ ...value, maxShift })}
+          onChange={(maxShift) => { onChange({ ...value, maxShift }); }}
         />
       </div>
     </div>
@@ -164,7 +164,7 @@ export function EmbeddingsField({
                 size="sm"
                 className="h-6 px-1.5 text-xs"
                 aria-label={`Add ${e.trigger} to the prompt`}
-                onClick={() => onInsert(e.trigger, "prompt")}
+                onClick={() => { onInsert(e.trigger, "prompt"); }}
               >
                 + Prompt
               </Button>
@@ -174,7 +174,7 @@ export function EmbeddingsField({
                 size="sm"
                 className="h-6 px-1.5 text-xs"
                 aria-label={`Add ${e.trigger} to the negative prompt`}
-                onClick={() => onInsert(e.trigger, "negative")}
+                onClick={() => { onInsert(e.trigger, "negative"); }}
               >
                 + Negative
               </Button>

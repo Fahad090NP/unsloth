@@ -92,7 +92,7 @@ export function LibraryActionsMenu({
           type="button"
           aria-label={t("library.menu.moreActions")}
           data-open={open || undefined}
-          onClick={(event) => event.stopPropagation()}
+          onClick={(event) => { event.stopPropagation(); }}
           className={cn(
             "flex shrink-0 items-center justify-center rounded-full outline-none transition-opacity focus-visible:opacity-100 data-open:opacity-100",
             variant === "overlay"
@@ -110,14 +110,14 @@ export function LibraryActionsMenu({
       <DropdownMenuContent
         align="end"
         className="library-actions-menu w-52"
-        onClick={(event) => event.stopPropagation()}
+        onClick={(event) => { event.stopPropagation(); }}
       >
-        <DropdownMenuItem onSelect={() => actions.chatAbout(target)}>
+        <DropdownMenuItem onSelect={() => { actions.chatAbout(target); }}>
           <HugeiconsIcon icon={MessageCircleIcon} strokeWidth={1.75} className={ICON} />
           {t(item && isModelItem(item) ? "library.menu.chatWithModel" : "library.menu.chatAboutThis")}
         </DropdownMenuItem>
         {item && hasImagePreview(item) && (
-          <DropdownMenuItem onSelect={() => actions.editImage(item)}>
+          <DropdownMenuItem onSelect={() => { actions.editImage(item); }}>
             <HugeiconsIcon icon={Edit03Icon} strokeWidth={1.75} className={ICON} />
             {t("library.menu.editImage")}
           </DropdownMenuItem>
@@ -129,7 +129,7 @@ export function LibraryActionsMenu({
           </DropdownMenuItem>
         )}
         {item && (
-          <DropdownMenuItem onSelect={() => actions.toggleFavorite(item)}>
+          <DropdownMenuItem onSelect={() => { actions.toggleFavorite(item); }}>
             <HugeiconsIcon
               icon={StarPointedIcon}
               strokeWidth={1.75}
@@ -139,18 +139,18 @@ export function LibraryActionsMenu({
           </DropdownMenuItem>
         )}
         {item && isFileItem(item) && (
-          <DropdownMenuItem onSelect={() => actions.download(item)}>
+          <DropdownMenuItem onSelect={() => { actions.download(item); }}>
             <HugeiconsIcon icon={Download01Icon} strokeWidth={1.75} className={ICON} />
             {t("library.menu.download")}
           </DropdownMenuItem>
         )}
         {item && revealLabel && canReveal(item) && (
-          <DropdownMenuItem onSelect={() => revealInFolder(item.id)}>
+          <DropdownMenuItem onSelect={() => { revealInFolder(item.id); }}>
             <HugeiconsIcon icon={Folder01Icon} strokeWidth={1.75} className={ICON} />
             {revealLabel}
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onSelect={() => actions.rename(target)}>
+        <DropdownMenuItem onSelect={() => { actions.rename(target); }}>
           <HugeiconsIcon icon={Edit03Icon} strokeWidth={1.75} className={ICON} />
           {t("common.rename")}
         </DropdownMenuItem>
@@ -160,12 +160,12 @@ export function LibraryActionsMenu({
             {t("library.menu.addToFolder")}
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="library-actions-menu max-h-[min(--spacing(80),var(--radix-dropdown-menu-content-available-height))] w-48">
-            <DropdownMenuItem onSelect={() => actions.moveToNewFolder(target)}>
+            <DropdownMenuItem onSelect={() => { actions.moveToNewFolder(target); }}>
               <HugeiconsIcon icon={FolderAddIcon} strokeWidth={1.75} className={ICON} />
               {t("library.menu.newFolder")}
             </DropdownMenuItem>
             {inFolder && (
-              <DropdownMenuItem onSelect={() => actions.moveTo(target, null)}>
+              <DropdownMenuItem onSelect={() => { actions.moveTo(target, null); }}>
                 <HugeiconsIcon icon={Folder01Icon} strokeWidth={1.75} className={ICON} />
                 {t("library.menu.noFolder")}
               </DropdownMenuItem>
@@ -175,7 +175,7 @@ export function LibraryActionsMenu({
               <DropdownMenuItem
                 key={folder.id}
                 disabled={folder.id === inFolder}
-                onSelect={() => actions.moveTo(target, folder.id)}
+                onSelect={() => { actions.moveTo(target, folder.id); }}
                 style={{ paddingLeft: `${12 + depth * 14}px` }}
               >
                 <HugeiconsIcon icon={FolderClosedIcon} strokeWidth={1.75} className={ICON} />
@@ -185,7 +185,7 @@ export function LibraryActionsMenu({
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         {(!item || isDeletable(item)) && (
-          <DropdownMenuItem variant="destructive" onSelect={() => actions.remove(target)}>
+          <DropdownMenuItem variant="destructive" onSelect={() => { actions.remove(target); }}>
             <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.75} className={ICON} />
             {target.kind === "folder" ? t("library.menu.deleteFolder") : t("common.delete")}
           </DropdownMenuItem>

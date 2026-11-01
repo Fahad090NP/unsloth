@@ -4,7 +4,7 @@
 // Kept apart from the overlay so the rules are testable without mounting it.
 
 // Restated, not imported, to stay out of the chat feature's type graph.
-export type DownloadProgressReading = {
+export interface DownloadProgressReading {
   downloaded_bytes: number;
   completed_bytes: number;
   expected_bytes: number;
@@ -13,9 +13,9 @@ export type DownloadProgressReading = {
   complete_on_disk?: boolean;
   // omitted, not nulled, when the cache could not be scanned at all.
   cache_path?: string | null;
-};
+}
 
-export type DownloadState = {
+export interface DownloadState {
   downloadedBytes: number;
   // `.incomplete` blobs are not counted.
   completedBytes: number;
@@ -26,7 +26,7 @@ export type DownloadState = {
   settled: boolean;
   // Not `!settled`: an orphaned `.incomplete` blob never settles but is not transferring.
   moving: boolean;
-};
+}
 
 export const EMPTY_DOWNLOAD_STATE: DownloadState = {
   downloadedBytes: 0,

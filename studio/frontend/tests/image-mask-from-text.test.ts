@@ -145,7 +145,7 @@ test("the summary names what was found and what was not", () => {
   assert.equal(segmentSummary({ prompts: [], instances: [] }), "Nothing found.");
   for (const text of ["x"]) {
     const line = segmentSummary({ prompts: [{ text, max_detections: 1, found: 1 }], instances: [] });
-    assert.ok(!/—/.test(line));
+    assert.ok(!line.includes('—'));
   }
 });
 
@@ -184,7 +184,7 @@ test("the panel releases the segmenter on unmount and uses the shared download i
   assert.match(panel, /hfApiToken\(getHfToken\(\)\)/);
   assert.match(api, /MASK_SEGMENT_ROUTES\.segment/);
   assert.match(api, /readFastApiError/);
-  for (const src of [panel, api]) assert.ok(!/—/.test(src), "no em dashes in UI copy");
+  for (const src of [panel, api]) assert.ok(!src.includes('—'), "no em dashes in UI copy");
 });
 
 test("a text mask that went stale while it decoded never touches the reused canvases", async () => {

@@ -627,7 +627,7 @@ export function LanAccessSection() {
                       checked={addressDraft.includes(choice.address)}
                       disabled={addressesReadOnly}
                       onCheckedChange={(checked) =>
-                        toggleAddress(choice.address, checked === true)
+                        { toggleAddress(choice.address, checked === true); }
                       }
                     />
                     <label

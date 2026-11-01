@@ -11,10 +11,10 @@ const { currentEntry, useBrowserStore } = await import("../src/features/browser/
 
 const globals = globalThis as Record<string, unknown>;
 useBrowserStore.subscribe(({ tabs }) => {
-  for (const tab of tabs) if (tab.loading) queueMicrotask(() => useBrowserStore.getState().updateTab(tab.id, { loading: false }));
+  for (const tab of tabs) if (tab.loading) queueMicrotask(() => { useBrowserStore.getState().updateTab(tab.id, { loading: false }); });
 });
 
-type Posted = { result: { ok: boolean; url?: string; error?: string } };
+interface Posted { result: { ok: boolean; url?: string; error?: string } }
 
 async function navigate(id: string, url: string) {
   const posted: Posted[] = [];

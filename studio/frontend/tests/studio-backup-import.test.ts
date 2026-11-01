@@ -16,11 +16,11 @@ import { buildNamedConversationsMarkdown } from "../src/features/chat/utils/conv
 import { buildConversationMarkdown } from "../src/features/chat/utils/conversation-markdown.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type ImportSource = {
+interface ImportSource {
   name: string;
   size?: number;
   chunks(): AsyncIterable<{ text: string; bytes: number }>;
-};
+}
 
 /** Stands in for ChatThreadWriteError so chat-import's instanceof check sees a real class. */
 class ChatThreadWriteError extends Error {
@@ -32,13 +32,13 @@ class ChatThreadWriteError extends Error {
   }
 }
 
-type Module = {
+interface Module {
   importConversationsFromSource: (
     source: ImportSource,
     projectId?: string | null,
     options?: ImportOptions,
   ) => Promise<{ imported: number; failed: number }>;
-};
+}
 
 function harness(
   existingProjects: ProjectRecord[] = [],
@@ -127,7 +127,7 @@ for (const rejectAt of ["thread", "messages"] as const) {
       async (id) => buildConversationMarkdown([{ role: "user", content: id }]),
     );
     const saved: string[] = [];
-    const progress: Array<{ imported: number; failed: number }> = [];
+    const progress: { imported: number; failed: number }[] = [];
     const result = await module.importConversationsFromSource(
       sourceText("combined.md", text),
       null,
@@ -236,8 +236,8 @@ test("a Studio backup restores one chat per thread, with titles, branches, archi
   assert.deepEqual(result, { imported: 2, failed: 0 });
   assert.deepEqual(threads.map(({ title }) => title).sort(), ["Old recipe", "Trip plan"]);
 
-  const trip = threads.find(({ title }) => title === "Trip plan") as ThreadRecord;
-  const recipe = threads.find(({ title }) => title === "Old recipe") as ThreadRecord;
+  const trip = threads.find(({ title }) => title === "Trip plan")!;
+  const recipe = threads.find(({ title }) => title === "Old recipe")!;
   assert.notEqual(trip.id, "t1");
   assert.equal(trip.archived, false);
   assert.equal(trip.projectId, "p1");
@@ -256,7 +256,7 @@ test("a Studio backup restores one chat per thread, with titles, branches, archi
     ],
   );
 
-  const tripMessages = messages.get(trip.id) as MessageRecord[];
+  const tripMessages = messages.get(trip.id)!;
   assert.deepEqual(
     tripMessages.map(({ content }) => (content[0] as { text: string }).text),
     ["Where to?", "Lisbon", "Porto"],
@@ -266,7 +266,7 @@ test("a Studio backup restores one chat per thread, with titles, branches, archi
   assert.equal(tripMessages[1].parentId, tripMessages[0].id);
   assert.equal(tripMessages[2].parentId, tripMessages[0].id);
 
-  const recipeMessages = messages.get(recipe.id) as MessageRecord[];
+  const recipeMessages = messages.get(recipe.id)!;
   assert.equal(recipeMessages.length, 2);
   assert.equal(recipeMessages[1].parentId, recipeMessages[0].id);
   assert.equal(recipe.forkedFromThreadId, trip.id);
@@ -347,7 +347,7 @@ test("a compare pair stays paired under a new pair id, and legacy rows without p
   assert.deepEqual(threads.map(({ modelType }) => modelType).sort(), ["model1", "model2"]);
   assert.equal(threads[0].pairId, threads[1].pairId);
   assert.notEqual(threads[0].pairId, "pair");
-  const left = messages.get(threads.find(({ title }) => title === "Left")?.id ?? "") as MessageRecord[];
+  const left = messages.get(threads.find(({ title }) => title === "Left")?.id ?? "")!;
   assert.deepEqual(left.map(({ role }) => role), ["user", "assistant"]);
   assert.deepEqual(left.map(({ createdAt }) => createdAt), [5, 6]);
   assert.notEqual(left[0].metadata?.createdAtEstimated, true);
@@ -442,7 +442,7 @@ test("a chat whose last message was deleted comes back, and so does a project wi
   const result = await module.importConversationsFromSource(sourceOf("backup.json", data));
 
   assert.deepEqual(result, { imported: 3, failed: 0 });
-  const emptied = threads.find(({ title }) => title === "Emptied out") as ThreadRecord;
+  const emptied = threads.find(({ title }) => title === "Emptied out")!;
   assert.notEqual(emptied, undefined);
   assert.equal(emptied.createdAt, 3000);
   assert.equal(emptied.updatedAt, 3100);
@@ -459,8 +459,8 @@ test("a fork keeps its badge when only the branch-point message is gone", async 
 
   await module.importConversationsFromSource(sourceOf("backup.json", data));
 
-  const trip = threads.find(({ title }) => title === "Trip plan") as ThreadRecord;
-  const recipe = threads.find(({ title }) => title === "Old recipe") as ThreadRecord;
+  const trip = threads.find(({ title }) => title === "Trip plan")!;
+  const recipe = threads.find(({ title }) => title === "Old recipe")!;
   assert.equal(recipe.forkedFromThreadId, trip.id);
   assert.equal(recipe.forkedFromMessageId, undefined);
 });
@@ -504,7 +504,7 @@ test("a settings snapshot this build rejects costs the settings, not the chat", 
   const data = backup();
   data.threads[0].settings = {
     temperature: 5,
-  } as unknown as ThreadRecord["settings"];
+  };
 
   const result = await module.importConversationsFromSource(
     sourceOf("backup.json", data),
@@ -541,7 +541,7 @@ test("a backup cannot arm a restored chat with tools, bypassed approval or a sys
   );
 
   assert.deepEqual(result, { imported: 2, failed: 0 });
-  const trip = threads.find(({ title }) => title === "Trip plan") as ThreadRecord;
+  const trip = threads.find(({ title }) => title === "Trip plan")!;
   assert.deepEqual(trip.settings, { temperature: 0.4, reasoningEffort: "high" });
 });
 
@@ -555,7 +555,7 @@ test("a settings snapshot with nothing restorable in it leaves no settings behin
 
   await module.importConversationsFromSource(sourceOf("backup.json", data));
 
-  const trip = threads.find(({ title }) => title === "Trip plan") as ThreadRecord;
+  const trip = threads.find(({ title }) => title === "Trip plan")!;
   assert.equal(trip.settings, undefined);
 });
 
@@ -614,7 +614,7 @@ test("a backend that is merely down keeps the settings instead of quietly droppi
   const data = backup();
   data.threads[0].settings = {
     temperature: 0.7,
-  } as unknown as ThreadRecord["settings"];
+  };
 
   const result = await module.importConversationsFromSource(
     sourceOf("backup.json", data),
@@ -674,7 +674,7 @@ test("a backup cannot restore a message that speaks with the system role", async
   );
 
   assert.deepEqual(result, { imported: 1, failed: 0 });
-  const records = messages.get(threads[0].id) as MessageRecord[];
+  const records = messages.get(threads[0].id)!;
   assert.deepEqual(records.map(({ role }) => role), ["user", "user"]);
   assert.equal(
     (records[0].content[0] as { text: string }).text,
@@ -705,7 +705,7 @@ test("a message whose content was stored as a plain string keeps its text", asyn
   );
 
   assert.deepEqual(result, { imported: 1, failed: 0 });
-  const records = messages.get(threads[0].id) as MessageRecord[];
+  const records = messages.get(threads[0].id)!;
   assert.deepEqual(records.map(({ content }) => content), [
     [{ type: "text", text: "plain string turn" }],
     [{ type: "text", text: "array turn" }],

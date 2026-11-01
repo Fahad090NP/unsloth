@@ -75,7 +75,7 @@ test("disk free space and download progress use decimal units", async () => {
   for (const source of [folders, training]) {
     assert.doesNotMatch(source, /\/ 1024 \*\* 3/);
   }
-  const toast = chat.match(/function formatDownloadBytes[\s\S]*?\n}/);
+  const toast = /function formatDownloadBytes[\s\S]*?\n}/.exec(chat);
   assert.ok(toast, "formatDownloadBytes not found");
   assert.doesNotMatch(toast[0], /1024/);
 });

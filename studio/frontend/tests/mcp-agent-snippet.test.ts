@@ -254,7 +254,7 @@ test("no snippet carries a key unless one is passed", () => {
           assert.equal(result.readsKeyEnv, true, `${agent.id} ${os}`);
           assert.match(result.text, /UNSLOTH_API_KEY/);
           assert.ok(
-            result.text.includes(mcpEndpointUrl(base) as string),
+            result.text.includes(mcpEndpointUrl(base)!),
             `${agent.id} ${os} ${base}`,
           );
         }

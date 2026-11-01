@@ -109,7 +109,7 @@ function rowUnder(scope: string, x: number, y: number): PinnedRowDrop | null {
   if (typeof document === "undefined") return null;
   for (const element of document.elementsFromPoint(x, y)) {
     const row = element.closest(`[${KEY_ATTR}]`);
-    if (!row || row.getAttribute(SCOPE_ATTR) !== scope) continue;
+    if (row?.getAttribute(SCOPE_ATTR) !== scope) continue;
     const key = row.getAttribute(KEY_ATTR);
     if (key) return { key, edge: edgeAt(row.getBoundingClientRect(), y) };
   }
@@ -218,7 +218,7 @@ export function usePinnedRowDrag(
       [SCOPE_ATTR]: optionsRef.current.scope,
       [KEY_ATTR]: key,
       // A native drag of the row's link or text would cancel the pointer stream.
-      onDragStart: (event: React.DragEvent) => event.preventDefault(),
+      onDragStart: (event: React.DragEvent) => { event.preventDefault(); },
       onKeyDownCapture: (event: React.KeyboardEvent) => {
         if (!event.altKey || event.shiftKey || event.metaKey || event.ctrlKey) {
           return;

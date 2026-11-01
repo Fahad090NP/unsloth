@@ -29,7 +29,7 @@ function Draft() {
     <div className="mt-8">
       <ComposerPrimitive.Root
         className="rounded-3xl border border-border bg-background p-5 shadow-sm"
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={(e) => { e.preventDefault(); }}
       >
         <ComposerDraftPreview text={text} />
         <ComposerPrimitive.Input

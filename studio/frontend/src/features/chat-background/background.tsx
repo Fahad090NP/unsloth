@@ -11,7 +11,7 @@ import { acquireRender } from "./render";
 import { safeArtworkOpacity, type RGB } from "./contrast";
 import type { ChatBackgroundValue, ImageSizing } from "./model";
 
-type Frame = { url: string; value: ChatBackgroundValue };
+interface Frame { url: string; value: ChatBackgroundValue }
 const BACKGROUND_SIZE: Record<ImageSizing, string> = {
 	cover: "cover",
 	contain: "contain",
@@ -134,9 +134,9 @@ export function ChatBackground({ active = true }: { active?: boolean }) {
 		setFrames({ current, previous });
 		timer.current = setTimeout(
 			() =>
-				setFrames((s) =>
+				{ setFrames((s) =>
 					s.current === current ? { current, previous: null } : s,
-				),
+				); },
 			skin.reduced ? 0 : 180,
 		);
 	});

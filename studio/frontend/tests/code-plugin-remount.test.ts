@@ -35,7 +35,7 @@ async function withTimeout(
       arrived,
       new Promise<never>((_, reject) => {
         timer = setTimeout(
-          () => reject(new Error("the highlighter never produced tokens")),
+          () => { reject(new Error("the highlighter never produced tokens")); },
           timeoutMs,
         );
       }),
@@ -64,7 +64,7 @@ test("a remount gets already highlighted code back in the same tick", async () =
     arrived = resolve;
   });
   assert.equal(
-    mounted.highlight(options, () => arrived()),
+    mounted.highlight(options, () => { arrived(); }),
     null,
     "a cold highlight is expected to answer through its callback",
   );
@@ -110,9 +110,9 @@ function codePluginCalls(): { atModuleScope: boolean }[] {
       ts.isFunctionExpression(node) ||
       ts.isArrowFunction(node) ||
       ts.isMethodDeclaration(node);
-    node.forEachChild((child) => visit(child, entersFunction));
+    node.forEachChild((child) => { visit(child, entersFunction); });
   };
-  markdownText.forEachChild((node) => visit(node, false));
+  markdownText.forEachChild((node) => { visit(node, false); });
   return calls;
 }
 

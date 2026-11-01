@@ -52,7 +52,7 @@ function userMessage(threadId: string, text: string): MessageRecord {
     role: "user",
     content: [{ type: "text", text }],
     createdAt: 1,
-  } as MessageRecord;
+  };
 }
 
 const UNPAIRED_SURROGATE =

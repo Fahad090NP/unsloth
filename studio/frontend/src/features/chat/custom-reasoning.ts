@@ -10,10 +10,10 @@ export const CUSTOM_REASONING_STYLES = [
 ] as const;
 
 export type CustomReasoningStyle = (typeof CUSTOM_REASONING_STYLES)[number];
-export type CustomReasoningConfig = {
+export interface CustomReasoningConfig {
   enabled: boolean;
   style: CustomReasoningStyle;
-};
+}
 
 /** Cached or legacy malformed contracts fail closed. */
 export function normalizeCustomReasoningConfig(

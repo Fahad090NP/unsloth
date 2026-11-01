@@ -50,7 +50,7 @@ export function buildReply(totalChars: number): string {
   return text.slice(0, totalChars);
 }
 
-type Results = {
+interface Results {
   startedAt: number;
   arrivals: number;
   sentChars: number;
@@ -64,9 +64,9 @@ type Results = {
   framesOver33ms: number;
   settledChars: number;
   done: boolean;
-};
+}
 
-type RunOptions = { totalChars?: number; chunkChars?: number; gapMs?: number };
+interface RunOptions { totalChars?: number; chunkChars?: number; gapMs?: number }
 
 declare global {
   interface Window {
@@ -230,7 +230,7 @@ function Harness(): ReactElement {
         state.framesOver33ms = 0;
         // Append from a later task so its long tasks start after measureFrom.
         setTimeout(() => {
-          void runtime.thread.append({
+          runtime.thread.append({
             role: "user",
             content: [{ type: "text", text: "stream the fixture" }],
           });
@@ -260,4 +260,4 @@ function Harness(): ReactElement {
   );
 }
 
-createRoot(document.getElementById("root") as HTMLElement).render(<Harness />);
+createRoot(document.getElementById("root")!).render(<Harness />);

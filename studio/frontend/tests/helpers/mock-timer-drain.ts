@@ -48,8 +48,8 @@ function inheritSymbols(from: object, to: object): void {
 export function enableCountedTimers(t: TestContext): (ms: number) => void {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   if (countedSetTimeout() === null) {
-    const mockedSetTimeout = globalThis.setTimeout as SetTimeoutFn;
-    const mockedClearTimeout = globalThis.clearTimeout as ClearTimeoutFn;
+    const mockedSetTimeout = globalThis.setTimeout;
+    const mockedClearTimeout = globalThis.clearTimeout;
     const state: TimerCounter = {
       outstanding: 0,
       activity: 0,
@@ -79,7 +79,7 @@ export function enableCountedTimers(t: TestContext): (ms: number) => void {
         run as never,
         ms as never,
         ...(args as never[]),
-      ) as TimerHandle;
+      );
       if (!entry.done) state.entries.set(entry.handle, entry);
       return entry.handle;
     }) as SetTimeoutFn & { [COUNTED]?: true };
@@ -96,14 +96,14 @@ export function enableCountedTimers(t: TestContext): (ms: number) => void {
         }
         state.entries.delete(handle);
       }
-      return mockedClearTimeout(handle as never);
+      mockedClearTimeout(handle as never);
     }) as ClearTimeoutFn;
     inheritSymbols(mockedClearTimeout, wrappedClearTimeout);
 
     globalThis.setTimeout = wrappedSetTimeout;
     globalThis.clearTimeout = wrappedClearTimeout;
   }
-  return (ms: number) => t.mock.timers.tick(ms);
+  return (ms: number) => { t.mock.timers.tick(ms); };
 }
 
 /** Caller-supplied wait for pending work with no timer, such as hooks-thread imports. */

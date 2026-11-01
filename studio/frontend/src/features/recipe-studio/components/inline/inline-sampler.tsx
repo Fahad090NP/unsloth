@@ -13,10 +13,10 @@ import type { ReactElement } from "react";
 import type { SamplerConfig } from "../../types";
 import { InlineField } from "./inline-field";
 
-type InlineSamplerProps = {
+interface InlineSamplerProps {
   config: SamplerConfig;
   onUpdate: (patch: Partial<SamplerConfig>) => void;
-};
+}
 
 type ConvertTo = "int" | "float" | "str";
 
@@ -31,7 +31,7 @@ function ConvertToField({
     <Select
       value={value ?? "none"}
       onValueChange={(next) =>
-        onValueChange(next === "none" ? undefined : (next as ConvertTo))
+        { onValueChange(next === "none" ? undefined : (next as ConvertTo)); }
       }
     >
       <SelectTrigger className="nodrag h-8 w-full text-xs">
@@ -60,7 +60,7 @@ export function InlineSampler({
             type="number"
             placeholder="0"
             value={config.low ?? ""}
-            onChange={(event) => onUpdate({ low: event.target.value })}
+            onChange={(event) => { onUpdate({ low: event.target.value }); }}
           />
         </InlineField>
         <InlineField label="High">
@@ -69,17 +69,17 @@ export function InlineSampler({
             type="number"
             placeholder="100"
             value={config.high ?? ""}
-            onChange={(event) => onUpdate({ high: event.target.value })}
+            onChange={(event) => { onUpdate({ high: event.target.value }); }}
           />
         </InlineField>
         <InlineField label="Convert to">
           <ConvertToField
             value={config.convert_to}
             onValueChange={(value) =>
-              onUpdate({
+              { onUpdate({
                 // biome-ignore lint/style/useNamingConvention: api schema
                 convert_to: value,
-              })
+              }); }
             }
           />
         </InlineField>
@@ -96,7 +96,7 @@ export function InlineSampler({
             type="number"
             placeholder="0"
             value={config.mean ?? ""}
-            onChange={(event) => onUpdate({ mean: event.target.value })}
+            onChange={(event) => { onUpdate({ mean: event.target.value }); }}
           />
         </InlineField>
         <InlineField label="Std dev">
@@ -105,17 +105,17 @@ export function InlineSampler({
             type="number"
             placeholder="1"
             value={config.std ?? ""}
-            onChange={(event) => onUpdate({ std: event.target.value })}
+            onChange={(event) => { onUpdate({ std: event.target.value }); }}
           />
         </InlineField>
         <InlineField label="Convert to">
           <ConvertToField
             value={config.convert_to}
             onValueChange={(value) =>
-              onUpdate({
+              { onUpdate({
                 // biome-ignore lint/style/useNamingConvention: api schema
                 convert_to: value,
-              })
+              }); }
             }
           />
         </InlineField>
@@ -134,7 +134,7 @@ export function InlineSampler({
           step="0.01"
           placeholder="0.5"
           value={config.p ?? ""}
-          onChange={(event) => onUpdate({ p: event.target.value })}
+          onChange={(event) => { onUpdate({ p: event.target.value }); }}
         />
       </InlineField>
     );
@@ -148,10 +148,10 @@ export function InlineSampler({
           placeholder="uuid4"
           value={config.uuid_format ?? ""}
           onChange={(event) =>
-            onUpdate({
+            { onUpdate({
               // biome-ignore lint/style/useNamingConvention: api schema
               uuid_format: event.target.value,
-            })
+            }); }
           }
         />
       </InlineField>

@@ -45,7 +45,7 @@ function formatSourceMessage(execution: RecipeExecutionRecord): string {
   return source.message ?? "Crawling GitHub source.";
 }
 
-type ExecutionOverviewTabProps = {
+interface ExecutionOverviewTabProps {
   execution: RecipeExecutionRecord;
   showSummaryCards: boolean;
   recordsMetric: number | null;
@@ -60,7 +60,7 @@ type ExecutionOverviewTabProps = {
   terminalLines: string[];
   terminalRef: RefObject<HTMLDivElement | null>;
   onTerminalScroll: (event: UIEvent<HTMLDivElement>) => void;
-};
+}
 
 export function ExecutionOverviewTab({
   execution,

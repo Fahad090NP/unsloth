@@ -13,17 +13,17 @@ export type Json =
   | Json[]
   | { [key: string]: Json };
 
-export type WireQuestion = {
+export interface WireQuestion {
   type: string;
   instructions?: Json;
   criteria?: Json;
-};
+}
 
-export type DecisionRequest = {
+export interface DecisionRequest {
   state: Json;
   model: string;
   questions: Record<string, WireQuestion>;
-};
+}
 
 export type DecisionAnswer =
   | { type: "noul"; noul: number }
@@ -41,7 +41,7 @@ export type DecisionAnswer =
       probabilities: Record<string, number>;
     };
 
-export type DecisionResponse = {
+export interface DecisionResponse {
   model: string;
   answers: Record<string, DecisionAnswer>;
   usage: {
@@ -50,11 +50,11 @@ export type DecisionResponse = {
     // biome-ignore lint/style/useNamingConvention: API schema
     output_tokens: number;
   };
-};
+}
 
-export type ChoiceOption = { name: string; description: string };
+export interface ChoiceOption { name: string; description: string }
 
-export type DecisionDraft = {
+export interface DecisionDraft {
   name: string;
   state: string;
   instructions: string;
@@ -62,7 +62,7 @@ export type DecisionDraft = {
   noWhen: string;
   options: ChoiceOption[];
   levels: string[];
-};
+}
 
 export type PresetId =
   | "toolApproval"
@@ -72,11 +72,11 @@ export type PresetId =
   | "intent"
   | "grading";
 
-export type DecisionPreset = {
+export interface DecisionPreset {
   id: PresetId;
   type: DecisionType;
   draft: DecisionDraft;
-};
+}
 
 export const DEFAULT_MODEL = "default";
 
@@ -361,7 +361,7 @@ export function noulCriterion(
 ): string | undefined {
   const criteria = question?.criteria;
   if (!isRecord(criteria)) return undefined;
-  return criterionText(criteria[yes ? "true" : "false"] as Json | undefined);
+  return criterionText(criteria[yes ? "true" : "false"]);
 }
 
 export function choiceCriterion(
@@ -370,7 +370,7 @@ export function choiceCriterion(
 ): string | undefined {
   const criteria = question?.criteria;
   if (!isRecord(criteria)) return undefined;
-  return criterionText(criteria[option] as Json | undefined);
+  return criterionText(criteria[option]);
 }
 
 export function scoreLevels(

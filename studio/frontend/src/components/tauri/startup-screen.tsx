@@ -84,7 +84,7 @@ function CheckingContent() {
   );
 }
 
-type InstallOptions = { skipLongPaths?: boolean; chatOnly?: boolean };
+interface InstallOptions { skipLongPaths?: boolean; chatOnly?: boolean }
 
 function NotInstalledContent({
   onInstall,
@@ -168,7 +168,7 @@ function NotInstalledContent({
             id="install-chat-only"
             checked={chatOnly}
             disabled={phase !== "idle"}
-            onCheckedChange={(checked) => setChatOnly(checked === true)}
+            onCheckedChange={(checked) => { setChatOnly(checked === true); }}
           />
           <Label
             htmlFor="install-chat-only"
@@ -233,10 +233,10 @@ function useRotatingMessageIndex(): number {
 
   useEffect(() => {
     const interval = window.setInterval(
-      () => setMessageIndex((current) => current + 1),
+      () => { setMessageIndex((current) => current + 1); },
       STATUS_MESSAGE_ROTATION_MS,
     );
-    return () => window.clearInterval(interval);
+    return () => { window.clearInterval(interval); };
   }, []);
 
   return messageIndex;

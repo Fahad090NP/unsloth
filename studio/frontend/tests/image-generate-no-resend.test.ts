@@ -6,11 +6,11 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type AuthApi = { authFetch: (...args: unknown[]) => Promise<Response> };
-type ImagesApi = {
+interface AuthApi { authFetch: (...args: unknown[]) => Promise<Response> }
+interface ImagesApi {
   generateDiffusionImage: (body: unknown) => Promise<unknown>;
   GenerateResponseLostError: new (message: string) => Error;
-};
+}
 
 function loadApis(): ImagesApi {
   const auth = loadWithStubs<AuthApi>(
@@ -53,7 +53,7 @@ test("a dropped generate reply is surfaced as lost, not re-sent", async () => {
   globalThis.fetch = (async () => {
     posts += 1;
     throw new TypeError("Load failed");
-  }) as typeof fetch;
+  });
   try {
     await assert.rejects(
       api.generateDiffusionImage({ prompt: "x" }),

@@ -7,15 +7,15 @@ import { test } from "node:test";
 
 Object.assign(globalThis, { window: globalThis });
 
-type Answer = { installed: boolean; events: unknown[] };
-type Call = { command: Record<string, unknown>; answer: (value: Answer) => void; fail: () => void };
+interface Answer { installed: boolean; events: unknown[] }
+interface Call { command: Record<string, unknown>; answer: (value: Answer) => void; fail: () => void }
 const calls: Call[] = [];
 (globalThis as { nativeViewCall?: unknown }).nativeViewCall = (
   _name: string,
   args: { command: Record<string, unknown> },
 ) =>
   new Promise<Answer>((answer, reject) =>
-    calls.push({ command: args.command, answer, fail: () => reject(new Error("no such tab")) }),
+    calls.push({ command: args.command, answer, fail: () => { reject(new Error("no such tab")); } }),
   );
 
 register("./helpers/browser-store-resolver.mjs", import.meta.url);

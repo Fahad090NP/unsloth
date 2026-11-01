@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type ContextUsageReasoningFields = {
+export interface ContextUsageReasoningFields {
   enable_thinking?: unknown;
   thinking?: unknown;
   reasoning_effort?: unknown;
   preserve_thinking?: unknown;
-};
+}
 
 export function contextUsageReasoningKey(fields: ContextUsageReasoningFields): string {
   const thinking = fields.thinking as { type?: unknown } | undefined;

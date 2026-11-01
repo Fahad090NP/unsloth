@@ -57,7 +57,7 @@ test("On Device publishes cached quants before a stalled remote request finishes
   const pending = loadPickerGgufVariants(
     async (localOnly) => {
       calls.push(localOnly);
-      return localOnly ? local : remote;
+      return localOnly ? local : await remote;
     },
     options,
     (response) => {
@@ -152,7 +152,7 @@ test("collapsing the row after its cached answer prevents remote work", async ()
       return local;
     },
     { ...options, signal: controller.signal },
-    () => controller.abort(),
+    () => { controller.abort(); },
   );
   assert.deepEqual(calls, [true]);
 });

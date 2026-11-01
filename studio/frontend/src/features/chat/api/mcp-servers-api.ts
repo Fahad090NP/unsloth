@@ -11,11 +11,11 @@ import {
   trackMcpServerMutation,
 } from "./mcp-server-mutation-tracker";
 
-export type McpImageInputMapping = {
+export interface McpImageInputMapping {
   tool: string;
   field: string;
   encoding: "base64" | "data_url";
-};
+}
 
 export interface McpServerConfig {
   id: string;

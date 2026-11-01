@@ -8,14 +8,14 @@ import { syncAcrossWindows } from "@/lib/sync-across-windows";
 import { MAX_TITLE_CHARS, MAX_URL_CHARS } from "./history-store";
 
 export type BookmarkFolder = "toolbar" | "other";
-export type Bookmark = {
+export interface Bookmark {
   id: string;
   url: string;
   title: string;
   folder: BookmarkFolder;
   addedAt: number;
   icon?: string;
-};
+}
 
 export const MAX_BOOKMARKS = 2000;
 // A 32px PNG is a few KB; anything far bigger isn't one, and would eat into Studio's storage.

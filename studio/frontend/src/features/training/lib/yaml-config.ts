@@ -41,9 +41,9 @@ export function parseYamlConfig(text: string): BackendModelConfig {
   }
 
   return {
-    training: trainingObj as BackendModelConfig["training"],
-    lora: (raw.lora ?? undefined) as BackendModelConfig["lora"],
-    logging: (raw.logging ?? undefined) as BackendModelConfig["logging"],
+    training: trainingObj,
+    lora: (raw.lora ?? undefined),
+    logging: (raw.logging ?? undefined),
   };
 }
 

@@ -5,13 +5,13 @@ import { Input } from "@/components/ui/input";
 import { type ReactElement, useId } from "react";
 import { FieldLabel } from "./field-label";
 
-type NameFieldProps = {
+interface NameFieldProps {
   id?: string;
   value: string;
   onChange: (value: string) => void;
   label?: string;
   hint?: string;
-};
+}
 
 export function NameField({
   id,
@@ -36,7 +36,7 @@ export function NameField({
         id={inputId}
         className="nodrag"
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => { onChange(event.target.value); }}
       />
     </div>
   );

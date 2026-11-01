@@ -81,12 +81,12 @@ export function NewProjectDialog({
   const [pickingFolder, setPickingFolder] = useState(false);
   const nameImeRef = useRef(newInputImeState());
   const nameImeHandlers = {
-    onFocus: () => inputImeHandlers(nameImeRef.current).onFocus(),
-    onBlur: () => inputImeHandlers(nameImeRef.current).onBlur(),
+    onFocus: () => { inputImeHandlers(nameImeRef.current).onFocus(); },
+    onBlur: () => { inputImeHandlers(nameImeRef.current).onBlur(); },
     onCompositionStart: () =>
-      inputImeHandlers(nameImeRef.current).onCompositionStart(),
+      { inputImeHandlers(nameImeRef.current).onCompositionStart(); },
     onCompositionEnd: (event: { timeStamp: number }) =>
-      inputImeHandlers(nameImeRef.current).onCompositionEnd(event),
+      { inputImeHandlers(nameImeRef.current).onCompositionEnd(event); },
   };
   // Uploads outlive this component, so a slow one must not yank the user to the new project after
   // they have navigated away.
@@ -224,7 +224,7 @@ export function NewProjectDialog({
           </span>
           <input
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => { setName(e.target.value); }}
             {...nameImeHandlers}
             onKeyDown={(e) => {
               if (
@@ -239,7 +239,7 @@ export function NewProjectDialog({
               }
             }}
             autoFocus={true}
-            disabled={busy || !!createdProject}
+            disabled={busy || Boolean(createdProject)}
             maxLength={120}
             placeholder="Project name"
             aria-label="Project name"
@@ -252,7 +252,7 @@ export function NewProjectDialog({
             setWorkingFolder(value);
             setNeedsReselect(false);
           }}
-          disabled={busy || (!!createdProject && !needsReselect)}
+          disabled={busy || (Boolean(createdProject) && !needsReselect)}
           needsReselect={needsReselect}
           onPendingChange={setPickingWorkingFolder}
         />

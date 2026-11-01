@@ -60,11 +60,11 @@ test("the run the bar started reaches the keeper, so stopping it gives the lease
     renewalTicks.push(handler);
     return renewalId;
   }) as unknown as typeof globalThis.setInterval;
-  globalThis.clearInterval = ((id: unknown) => {
+  globalThis.clearInterval = (id: unknown) => {
     if (id === renewalId) {
       renewalStopped = true;
     }
-  }) as unknown as typeof globalThis.clearInterval;
+  };
   t.after(() => {
     globalThis.setInterval = realSetInterval;
     globalThis.clearInterval = realClearInterval;

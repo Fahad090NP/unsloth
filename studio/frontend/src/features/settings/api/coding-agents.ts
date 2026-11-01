@@ -4,15 +4,15 @@
 import { authFetch } from "@/features/auth";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
-export type CodingAgentsInfo = {
+export interface CodingAgentsInfo {
   agents: string[];
   detected: string[];
-};
+}
 
-type ApiCodingAgentsInfo = {
+interface ApiCodingAgentsInfo {
   agents: string[];
   detected: string[];
-};
+}
 
 // Which CLIs are on PATH is environment state, not a persisted setting -- it can change any time
 // the user installs something new, so this only de-duplicates concurrent in-flight calls (e.g.
@@ -38,5 +38,5 @@ export async function loadCodingAgents(): Promise<CodingAgentsInfo> {
   inFlightInfo ??= fetchCodingAgents().finally(() => {
     inFlightInfo = null;
   });
-  return inFlightInfo;
+  return await inFlightInfo;
 }

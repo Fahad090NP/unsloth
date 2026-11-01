@@ -4,7 +4,7 @@
 /** What the page reports (agent/page-agent.ts `status`); null when it didn't answer. */
 export type PageStatus = { requests?: number; quietMs?: number } | null;
 
-export type PageWait = {
+export interface PageWait {
   /** Give up after about this long (one more status call can run past it). */
   maxMs: number;
   /** A DOM that keeps changing with no request open is waited on only this long. */
@@ -18,7 +18,7 @@ export type PageWait = {
   status: () => Promise<PageStatus>;
   moved: () => boolean;
   aborted?: () => boolean;
-};
+}
 
 const POLL_MS = 120;
 

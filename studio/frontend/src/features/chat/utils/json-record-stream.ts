@@ -103,7 +103,7 @@ function salvageLines(region: string, proven: boolean): Salvage {
 export async function* streamJsonRecords(
   chunks: AsyncIterable<TextChunk>,
   options: StreamJsonOptions = {},
-): AsyncGenerator<unknown> {
+): AsyncGenerator {
   const QUOTE = 34; // "
   const BACKSLASH = 92; // \
   const OPEN_BRACE = 123; // {

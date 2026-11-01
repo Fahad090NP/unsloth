@@ -10,11 +10,11 @@ import { loadWithStubs } from "./helpers/module-stubs.ts";
 const { store } = installLocalStorageFake();
 const DAY = 24 * 60 * 60 * 1000;
 
-type Effect = {
+interface Effect {
   deps?: unknown[];
   cleanup?: () => void;
   pending?: () => undefined | (() => void);
-};
+}
 
 /** A one-component React: renders until no state or effect changes anything. */
 function fakeReact() {

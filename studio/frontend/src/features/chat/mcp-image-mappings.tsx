@@ -26,7 +26,7 @@ import {
   refreshMcpServerTools,
 } from "./api/mcp-servers-api";
 
-type Option = { tool: string; field: string };
+interface Option { tool: string; field: string }
 
 export function McpImageMappings({
   serverId,
@@ -117,13 +117,13 @@ export function McpImageMappings({
                 value={mapping.encoding}
                 disabled={disabled}
                 onValueChange={(next) =>
-                  onChange(
+                  { onChange(
                     withImageField(
                       value,
                       mapping,
                       next as McpImageInputMapping["encoding"],
                     ),
-                  )
+                  ); }
                 }
               >
                 <SelectTrigger
@@ -143,7 +143,7 @@ export function McpImageMappings({
                 variant="ghost"
                 disabled={disabled}
                 onClick={() =>
-                  onChange(value.filter((m) => m.tool !== mapping.tool))
+                  { onChange(value.filter((m) => m.tool !== mapping.tool)); }
                 }
               >
                 Remove

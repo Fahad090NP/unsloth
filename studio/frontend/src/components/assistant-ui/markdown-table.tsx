@@ -147,7 +147,7 @@ export function MarkdownTable({
   }, []);
   // Repainted on each approach, so a theme switch since mount is picked up.
   const repaint = (event: { currentTarget: HTMLDivElement }) =>
-    paintSurface(event.currentTarget);
+    { paintSurface(event.currentTarget); };
   return (
     <div
       ref={wrapper}
@@ -167,7 +167,7 @@ export function MarkdownTable({
           title={label}
           aria-label={label}
           disabled={isAnimating}
-          onClick={() => setExpanded(true)}
+          onClick={() => { setExpanded(true); }}
         >
           <HugeiconsIcon icon={ExpandArrowsIcon} size={14} />
         </button>

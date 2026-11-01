@@ -422,8 +422,7 @@ export function renumbersMatches(
     );
     return (
       !workspaceGrewAtTail ||
-      afterSurface === undefined ||
-      afterSurface.start !== beforeSurface.start
+      afterSurface?.start !== beforeSurface.start
     );
   }
   return !workspaceGrewAtTail || after.rootLength !== before.rootLength;
@@ -625,7 +624,7 @@ function exactTail(before: string): string | null {
 function firstPointOf(text: string): string {
   return text.length === 0
     ? ""
-    : String.fromCodePoint(text.codePointAt(0) as number);
+    : String.fromCodePoint(text.codePointAt(0)!);
 }
 
 /** False without a segmenter, keeping the old behaviour. */

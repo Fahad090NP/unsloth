@@ -185,7 +185,7 @@ test("never persists a hole when one delta reveals several groups", () => {
   tracker.finishGroup();
 
   const metadata = tracker.metadata();
-  const durations = metadata.reasoningDurations as number[];
+  const durations = metadata.reasoningDurations!;
   assert.equal(durations.length, 2);
   assert.ok(durations.every((value) => typeof value === "number"));
   assert.deepEqual(JSON.parse(JSON.stringify(durations)), [0, 4]);

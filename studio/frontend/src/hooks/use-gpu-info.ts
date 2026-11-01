@@ -186,7 +186,7 @@ function toGpuInfo(
     systemRamAvailableHostGb: data?.memory?.available_gb ?? 0,
     systemRamAvailableKnown:
       Number.isFinite(data?.memory?.available_gb) &&
-      (data?.memory?.available_gb as number) >= 0,
+      (data?.memory?.available_gb!) >= 0,
     systemRamTotalGb: data?.memory?.total_gb ?? 0,
   };
   const gpuData =
@@ -244,13 +244,13 @@ function toGpuDevices(
     return (inference.devices ?? [])
       .filter((d) => typeof d.index === "number")
       .map((d) => ({
-        index: d.index as number,
+        index: d.index!,
         indexKind: d.index_kind === "vulkan" ? ("vulkan" as const) : null,
         name: d.name ?? `GPU ${d.index}`,
         memoryTotalGb: d.memory_total_gb ?? 0,
         memoryFreeGb: d.vram_free_gb ?? 0,
         memoryFreeKnown:
-          Number.isFinite(d.vram_free_gb) && (d.vram_free_gb as number) >= 0,
+          Number.isFinite(d.vram_free_gb) && (d.vram_free_gb!) >= 0,
         sharedMemory: d.shared_memory === true,
         sharedMemoryHostBackedGb: d.shared_memory_host_backed_gb,
         unifiedMemory: d.unified_memory === true,
@@ -267,7 +267,7 @@ function toGpuDevices(
   return (data?.gpu?.devices ?? [])
     .filter((d) => typeof d.index === "number")
     .map((d) => ({
-      index: d.index as number,
+      index: d.index!,
       indexKind:
         d.index_kind === "physical" ||
         d.index_kind === "vulkan" ||
@@ -278,7 +278,7 @@ function toGpuDevices(
       memoryTotalGb: d.memory_total_gb ?? 0,
       memoryFreeGb: d.vram_free_gb ?? 0,
       memoryFreeKnown:
-        Number.isFinite(d.vram_free_gb) && (d.vram_free_gb as number) >= 0,
+        Number.isFinite(d.vram_free_gb) && (d.vram_free_gb!) >= 0,
       sharedMemory: d.shared_memory === true,
       sharedMemoryHostBackedGb: d.shared_memory_host_backed_gb,
       unifiedMemory: d.unified_memory === true,

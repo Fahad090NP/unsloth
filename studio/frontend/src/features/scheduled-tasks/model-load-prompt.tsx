@@ -63,7 +63,7 @@ export default function ModelLoadPrompt({
           <Checkbox
             id={checkboxId}
             checked={always}
-            onCheckedChange={(on) => setAlways(on === true)}
+            onCheckedChange={(on) => { setAlways(on === true); }}
             className="mt-0.5"
           />
           {t("scheduledTasks.loadPrompt.always")}

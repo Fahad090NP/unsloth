@@ -27,7 +27,7 @@ globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
     body: init?.body ? JSON.parse(String(init.body)) : undefined,
   });
   return new Response(JSON.stringify(nextBody), { status: 200 });
-}) as typeof fetch;
+});
 
 const {
   isMultiModelMode,

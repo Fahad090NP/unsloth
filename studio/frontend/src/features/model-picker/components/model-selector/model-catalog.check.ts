@@ -1200,7 +1200,7 @@ for (const [id, repo] of PREQUANT_ROWS) {
   for (const scheme of ["fp8", "int8"] as const) {
     const size = hit.artifact.prequantSizeGb?.[scheme];
     assert.ok(typeof size === "number" && size > 0, `${id} ${scheme}`);
-    assert.ok((size as number) < (hit.artifact.approxSizeGb ?? 0), `${id} ${scheme}`);
+    assert.ok((size) < (hit.artifact.approxSizeGb ?? 0), `${id} ${scheme}`);
   }
   assert.ok(hit.artifact.totalParams, id);
   assert.ok(hit.artifact.approxSizeGb, id);

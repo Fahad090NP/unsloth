@@ -56,7 +56,7 @@ test("no module statically imports the fine-tuning workflow", async () => {
   for await (const file of walk(SRC)) {
     const text = await readFile(file, "utf8");
     for (const specifier of staticSpecifiers(file, text)) {
-      if (RECIPE_MODULE.test(specifier))
+      if (specifier.includes('finetune-recipe'))
         offenders.push(`${path.relative(SRC, file)}: ${specifier}`);
     }
   }

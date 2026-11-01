@@ -96,7 +96,7 @@ function gatedScheduler(
 }
 
 function createGatedSave() {
-  const releases: Array<() => void> = [];
+  const releases: (() => void)[] = [];
   const calls: string[] = [];
   return {
     calls,
@@ -209,7 +209,7 @@ test("an empty options object still uses the production interval", async () => {
 });
 
 test("the original no-options call shape arms a window timer at the production interval", () => {
-  const armed: Array<{ ms: number; callback: () => void }> = [];
+  const armed: { ms: number; callback: () => void }[] = [];
   const cleared: number[] = [];
   const globals = globalThis as unknown as { window?: unknown };
   const original = globals.window;
@@ -482,10 +482,10 @@ test("a save that throws synchronously does not stop the schedule", async () => 
   const clock = createFakeTimers();
   let attempts = 0;
   const scheduler = createRunCheckpointScheduler(
-    (() => {
+    () => {
       attempts += 1;
       throw new Error("serialiser blew up");
-    }) as unknown as (threadId: string) => Promise<unknown>,
+    },
     { intervalMs: INTERVAL, timers: clock.timers },
   );
 
@@ -506,9 +506,9 @@ test("a save that throws synchronously does not stop the schedule", async () => 
 test("a synchronous throw does not escape the timer callback", async () => {
   const clock = createFakeTimers();
   const scheduler = createRunCheckpointScheduler(
-    (() => {
+    () => {
       throw new Error("boom");
-    }) as unknown as (threadId: string) => Promise<unknown>,
+    },
     { intervalMs: INTERVAL, timers: clock.timers },
   );
 
@@ -579,10 +579,10 @@ test("a synchronous throw leaves no stranded map entry", async () => {
   const clock = createFakeTimers();
   let attempts = 0;
   const scheduler = createRunCheckpointScheduler(
-    (() => {
+    () => {
       attempts += 1;
       throw new Error("boom");
-    }) as unknown as (threadId: string) => Promise<unknown>,
+    },
     { intervalMs: INTERVAL, timers: clock.timers },
   );
 
@@ -607,10 +607,10 @@ test("a synchronously throwing save can still be stopped mid-schedule", async ()
   const clock = createFakeTimers();
   let attempts = 0;
   const scheduler = createRunCheckpointScheduler(
-    (() => {
+    () => {
       attempts += 1;
       throw new Error("boom");
-    }) as unknown as (threadId: string) => Promise<unknown>,
+    },
     { intervalMs: INTERVAL, timers: clock.timers },
   );
 
@@ -626,10 +626,10 @@ test("a throwing probe and a throwing save still terminate cleanly", async () =>
   const clock = createFakeTimers();
   let attempts = 0;
   const scheduler = createRunCheckpointScheduler(
-    (() => {
+    () => {
       attempts += 1;
       throw new Error("save boom");
-    }) as unknown as (threadId: string) => Promise<unknown>,
+    },
     {
       intervalMs: INTERVAL,
       timers: clock.timers,
@@ -757,11 +757,11 @@ test("a synchronous throw inside flushAll does not break the scheduler", async (
   const clock = createFakeTimers();
   const saved: string[] = [];
   const scheduler = createRunCheckpointScheduler(
-    ((threadId: string) => {
+    (threadId: string) => {
       saved.push(threadId);
       if (threadId === "thread-a") throw new Error("boom");
       return Promise.resolve();
-    }) as unknown as (threadId: string) => Promise<unknown>,
+    },
     { intervalMs: INTERVAL, timers: clock.timers },
   );
 

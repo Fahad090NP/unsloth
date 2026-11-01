@@ -53,7 +53,7 @@ const KIND_CATEGORIES: Partial<Record<string, StorageCategory>> = {
 
 function diskSource(id: string): string {
   const [source, origin] = id.split(":", 2);
-  return source === "model" ? `${source}:${origin}` : source!;
+  return source === "model" ? `${source}:${origin}` : source;
 }
 
 const STALE_EVENT = "unsloth:library-storage-stale";
@@ -72,9 +72,9 @@ export function useLibraryStorage(): LibraryStorage {
   }>({ status: "loading", items: [], disk: null, unlisted: {} });
   const [version, setVersion] = useState(0);
   useEffect(() => {
-    const stale = () => setVersion((current) => current + 1);
+    const stale = () => { setVersion((current) => current + 1); };
     window.addEventListener(STALE_EVENT, stale);
-    return () => window.removeEventListener(STALE_EVENT, stale);
+    return () => { window.removeEventListener(STALE_EVENT, stale); };
   }, []);
   useEffect(() => {
     let cancelled = false;

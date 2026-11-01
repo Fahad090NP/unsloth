@@ -8,7 +8,7 @@ import test from "node:test";
 
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
-type Module = {
+interface Module {
   saveStoredChatMessage: (message: Record<string, unknown>) => Promise<unknown>;
   clearServerOwnedChatMessages: () => void;
   syncStoredChatMessages: (
@@ -16,7 +16,7 @@ type Module = {
     messages: unknown[],
     options?: { pruneMissing?: boolean; deletedMessageIds?: string[] },
   ) => Promise<unknown>;
-};
+}
 
 class FakeProtectedError extends Error {}
 
@@ -52,7 +52,7 @@ function harness(options: { rejectIds?: Set<string>; failWith?: Error } = {}) {
         ThreadRecordWriteCoordinator: class {
           async settleCurrent() {}
           async write(_id: string, fn: () => Promise<unknown>) {
-            return fn();
+            return await fn();
           }
           observe() {}
           closeAdmission() {}

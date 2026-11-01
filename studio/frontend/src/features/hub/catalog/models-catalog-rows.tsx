@@ -147,13 +147,13 @@ function CachedSizeChipLive({
   const trigger = (
     <span
       className="pointer-events-auto hub-modal-pe-guard"
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => { e.stopPropagation(); }}
     >
       <StatChip icon={PackageIcon} value={formatBytes(totalBytes)} />
     </span>
   );
 
-  const rows: Array<{ label: string; size_bytes: number }> | null =
+  const rows: { label: string; size_bytes: number }[] | null =
     needsVariantFetch
       ? currentVariantState.status === "loaded" &&
         currentVariantState.variants.length > 0
@@ -258,7 +258,7 @@ function CatalogRow({
   variant?: "flat" | "card";
 }) {
   const [interactive, setInteractive] = useState(COARSE_POINTER);
-  const arm = useCallback(() => setInteractive(true), []);
+  const arm = useCallback(() => { setInteractive(true); }, []);
   const card = variant === "card";
   const button = (
     <div
@@ -473,7 +473,7 @@ export const DiscoverModelRow = memo(function DiscoverModelRow({
     [isDataset, row.id, row.result, deviceType, vllmAvailable, vllmPlatform],
   );
   const unsupported = support?.status === "unsupported" && !support?.supportedIn;
-  const handleClick = useCallback(() => onSelect(row.id), [onSelect, row.id]);
+  const handleClick = useCallback(() => { onSelect(row.id); }, [onSelect, row.id]);
   const partialRepoId =
     row.isAvailableOnDevice && row.isPartialOnDevice
       ? row.result.id
@@ -614,7 +614,7 @@ export const InventoryRow = memo(function InventoryRow({
     vllmAvailable,
     vllmPlatform,
   ]);
-  const handleClick = useCallback(() => onSelect(row.id), [onSelect, row.id]);
+  const handleClick = useCallback(() => { onSelect(row.id); }, [onSelect, row.id]);
   const title = row.kind === "cache" ? row.repo : row.title;
 
   const subLabel = row.owner;
@@ -747,7 +747,7 @@ export const InventoryRow = memo(function InventoryRow({
                 pinned: rowPinned,
                 pinLabel: "Pin",
                 unpinLabel: "Unpin",
-                onToggle: () => togglePinned(deletableRepoId),
+                onToggle: () => { togglePinned(deletableRepoId); },
               }
         }
         cachePath={

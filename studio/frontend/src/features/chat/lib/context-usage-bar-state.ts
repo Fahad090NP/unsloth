@@ -13,7 +13,7 @@ export const formatTokenCountFull = (n: number): string => {
   return n.toLocaleString();
 };
 
-export type ContextUsageBarInput = {
+export interface ContextUsageBarInput {
   used?: number | null;
   total?: number | null;
   cached?: number;
@@ -28,7 +28,7 @@ export type ContextUsageBarInput = {
   contextEnforced?: boolean | null;
   contextBudget?: number | null;
   estimated?: boolean;
-};
+}
 
 export type ContextUsageRows = Pick<
   ContextUsageBarInput,
@@ -111,7 +111,7 @@ function contextLimitAdvice(
   return used > total ? "mlx-past-limit" : "mlx-near-limit";
 }
 
-export type ContextUsageBarState = {
+export interface ContextUsageBarState {
   face: string;
   compactFace: string | null;
   label: string;
@@ -120,7 +120,7 @@ export type ContextUsageBarState = {
   percent: number | null;
   hasUsageDetails: boolean;
   advice: ContextLimitAdvice;
-};
+}
 
 // An unmeasured prompt must not read as 0% of the window.
 export function deriveContextUsageBar({

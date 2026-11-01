@@ -49,7 +49,7 @@ export function useLoadAnywayPrompt(): {
       duration: 20_000,
       action: {
         label: LOAD_ANYWAY_LABEL,
-        onClick: () => setPending({ message, retry }),
+        onClick: () => { setPending({ message, retry }); },
       },
     });
   }, []);
@@ -63,7 +63,7 @@ export function useLoadAnywayPrompt(): {
       open={pending !== null}
       onOpenChange={(open) => !open && setPending(null)}
     >
-      <AlertDialogContent onOverlayClick={() => setPending(null)}>
+      <AlertDialogContent onOverlayClick={() => { setPending(null); }}>
         <AlertDialogHeader>
           <AlertDialogTitle>{LOAD_ANYWAY_CONFIRM_TITLE}</AlertDialogTitle>
           <AlertDialogDescription className="break-words">
@@ -76,7 +76,7 @@ export function useLoadAnywayPrompt(): {
           ) : null}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setPending(null)}>
+          <AlertDialogCancel onClick={() => { setPending(null); }}>
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction

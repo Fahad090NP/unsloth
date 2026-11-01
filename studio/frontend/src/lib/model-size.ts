@@ -6,7 +6,7 @@ const PARAM_COUNT_RE = /(?:^|[-_])(\d+(?:\.\d+)?)[Bb](?:[-_]|$)/;
 
 function matchParamCount(id: string): RegExpMatchArray | null {
   const name = id.split("/").pop() ?? id;
-  return name.match(PARAM_COUNT_RE);
+  return PARAM_COUNT_RE.exec(name);
 }
 
 export function extractParamLabel(id: string): string | null {

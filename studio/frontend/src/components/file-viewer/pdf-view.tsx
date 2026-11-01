@@ -30,12 +30,12 @@ const MAX_PAGE_OPERATIONS = 1_000_000;
 const MAX_PDF_PAGES = 10_000;
 const clampAspect = (aspect: number) => Math.min(Math.max(aspect, 0.05), 20);
 
-type PdfDocument = {
+interface PdfDocument {
   getPage(page: number): Promise<{
     getViewport(options: { scale: number }): { width: number; height: number };
     streamTextContent(): ReadableStream<{ items: unknown[] }>;
   }>;
-};
+}
 
 const overflowed = new WeakMap<object, Set<number>>();
 const PageOverflow = createContext<() => void>(() => {});
@@ -67,7 +67,7 @@ function PdfCanvas() {
         if (index < MAX_PAGE_OPERATIONS) return true;
         if (!over) {
           over = true;
-          queueMicrotask(() => task.cancel());
+          queueMicrotask(() => { task.cancel(); });
         }
         return false;
       },

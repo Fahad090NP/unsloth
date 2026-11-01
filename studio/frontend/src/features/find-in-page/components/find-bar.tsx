@@ -24,7 +24,7 @@ import {
   resolveDismissiblePortalSurfaces,
   resolveFindScope,
 } from "../lib/find-dom.ts";
-export type FindBarProps = {
+export interface FindBarProps {
   query: string;
   setQuery: (query: string) => void;
   /** What it searches: the chat (null), or a find target's id. */
@@ -35,7 +35,7 @@ export type FindBarProps = {
   restoreSelection: (input: HTMLInputElement) => boolean;
   pendingSteps: { query: string; delta: -1 | 1 }[];
   clearPendingSteps: () => void;
-};
+}
 
 function keepFocusInField(event: { preventDefault: () => void }): void {
   event.preventDefault();
@@ -58,10 +58,10 @@ function useSettledQuery(query: string): [string, () => void] {
       setSettled("");
       return;
     }
-    const timer = setTimeout(() => setSettled(query), FIND_QUERY_SETTLE_MS);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => { setSettled(query); }, FIND_QUERY_SETTLE_MS);
+    return () => { clearTimeout(timer); };
   }, [query]);
-  return [settled, () => setSettled(query)];
+  return [settled, () => { setSettled(query); }];
 }
 
 function useTargetFind(target: FindTarget | undefined, query: string) {
@@ -71,7 +71,7 @@ function useTargetFind(target: FindTarget | undefined, query: string) {
   }, [target, query]);
   useEffect(() => {
     if (!target) return;
-    return () => target.search("");
+    return () => { target.search(""); };
   }, [target]);
   const result = useSyncExternalStore(subscribeFindTargets, () => target?.result() ?? EMPTY_FIND_RESULT);
   return {
@@ -205,7 +205,7 @@ export default function FindBar({
       close();
     };
     window.addEventListener("keydown", onEscape, true);
-    return () => window.removeEventListener("keydown", onEscape, true);
+    return () => { window.removeEventListener("keydown", onEscape, true); };
   }, [close]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: each token requests a fresh focus/select.
@@ -245,7 +245,7 @@ export default function FindBar({
         ref={inputRef}
         type="text"
         value={query}
-        onChange={(event) => setQuery(event.target.value)}
+        onChange={(event) => { setQuery(event.target.value); }}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             // An IME candidate commit Enter arrives here too and must not walk.
@@ -278,7 +278,7 @@ export default function FindBar({
         className={FIND_BUTTON_CLASS}
         disabled={!canStep}
         onMouseDown={keepFocusInField}
-        onClick={() => stepWhenSettled(-1)}
+        onClick={() => { stepWhenSettled(-1); }}
         aria-label={t("shell.find.previous")}
         title={t("shell.find.previous")}
       >
@@ -290,7 +290,7 @@ export default function FindBar({
         className={FIND_BUTTON_CLASS}
         disabled={!canStep}
         onMouseDown={keepFocusInField}
-        onClick={() => stepWhenSettled(1)}
+        onClick={() => { stepWhenSettled(1); }}
         aria-label={t("shell.find.next")}
         title={t("shell.find.next")}
       >
@@ -312,7 +312,7 @@ export default function FindBar({
                 )}
                 aria-pressed={selected}
                 onMouseDown={keepFocusInField}
-                onClick={() => setScope(id)}
+                onClick={() => { setScope(id); }}
                 aria-label={label}
                 title={label}
               >

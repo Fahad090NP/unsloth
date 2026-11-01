@@ -77,7 +77,7 @@ async function registerDroppedPaths(
   register: (path: string) => Promise<NativeIntent>,
   asIntents: boolean,
 ): Promise<{
-  ready: Array<NativeIntent | File>;
+  ready: (NativeIntent | File)[];
   failed: number;
   reason?: unknown;
 }> {
@@ -200,7 +200,7 @@ export function useNativeFileDrop(
 
   const ref = useNativeDropTarget({
     onDrop: (paths) => void handleNativePaths(paths),
-    onDragOver: (over) => setDragging(over && !latest.current.disabled),
+    onDragOver: (over) => { setDragging(over && !latest.current.disabled); },
   });
 
   const endDrag = useCallback(() => {
@@ -284,7 +284,7 @@ export function useNativeFileDrop(
             });
           }
         },
-        (reason) => toastReadFailures(1, reason),
+        (reason) => { toastReadFailures(1, reason); },
       );
     },
   };

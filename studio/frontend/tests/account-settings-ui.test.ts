@@ -42,13 +42,13 @@ function translate(key: string, values: Record<string, string> = {}) {
     (_match, name: string) => values[name] ?? "",
   );
 }
-type TabOptions = {
+interface TabOptions {
   stallRefresh?: boolean;
   accounts?: Record<string, unknown>[];
   // What the sidebar footer shows: the local profile store.
   localProfile?: { displayName: string; avatarDataUrl: string | null };
   ownerPasswordPending?: boolean;
-};
+}
 function tab(
   owner = true,
   mutationError: string | null = null,

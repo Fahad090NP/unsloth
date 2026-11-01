@@ -30,12 +30,12 @@ function applyStopCancel(
   return mode;
 }
 
-const plans: Array<{
+const plans: {
   name: string;
-  items: Array<{ dispatched: boolean }>;
+  items: { dispatched: boolean }[];
   index: number;
   want: ReturnType<typeof planUserPromptQueueStop>;
-}> = [
+}[] = [
   {
     name: "a dispatched stop keeps pending follow-ups and pauses",
     items: [{ dispatched: true }, { dispatched: false }, { dispatched: false }],

@@ -24,10 +24,10 @@ export const TRANSPORT_MODE_STORAGE_KEY = "unsloth.studio.transportMode";
 const STORAGE_KEY = TRANSPORT_MODE_STORAGE_KEY;
 const CHANGE_EVENT = "unsloth:transport-preference-change";
 
-type TransportCapabilitiesState = {
+interface TransportCapabilitiesState {
   capabilities: DownloadTransportCapabilities | null;
   isLoading: boolean;
-};
+}
 
 // Cached because the download path reads it synchronously.
 let installMode: TransportMode | null = null;
@@ -94,7 +94,7 @@ export function useTransportMode(): [
   const [mode, setMode] = useState<TransportMode>(getTransportMode);
 
   useEffect(() => {
-    const handleLocal = () => setMode(getTransportMode());
+    const handleLocal = () => { setMode(getTransportMode()); };
     const handleStorage = (event: StorageEvent) => {
       if (event.storageArea !== window.localStorage) {
         return;
@@ -113,7 +113,7 @@ export function useTransportMode(): [
       setMode(getTransportMode());
     });
     // Refresh rather than read the cache, or the toggle shows a stale mode.
-    void hydrateInstallMode(true).then(() => setMode(getTransportMode()));
+    void hydrateInstallMode(true).then(() => { setMode(getTransportMode()); });
     return () => {
       window.removeEventListener(CHANGE_EVENT, handleLocal);
       window.removeEventListener("storage", handleStorage);

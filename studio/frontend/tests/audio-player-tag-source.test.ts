@@ -8,7 +8,7 @@ import { readSrc } from "./helpers/kit.ts";
 const MARKDOWN_TEXT = readSrc("components/assistant-ui/markdown-text.tsx");
 
 function audioPlayerRe(): RegExp {
-  const literal = MARKDOWN_TEXT.match(/const AUDIO_PLAYER_RE = \/(.+)\/;/);
+  const literal = /const AUDIO_PLAYER_RE = \/(.+)\/;/.exec(MARKDOWN_TEXT);
   assert.ok(literal, "AUDIO_PLAYER_RE not found");
   return new RegExp(literal[1]);
 }

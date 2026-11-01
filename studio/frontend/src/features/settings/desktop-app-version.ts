@@ -5,7 +5,7 @@ type VersionReader = () => Promise<string>;
 
 async function readTauriAppVersion(): Promise<string> {
   const { getVersion } = await import("@tauri-apps/api/app");
-  return getVersion();
+  return await getVersion();
 }
 
 // Callers gate this on isTauri; null means desktop without a readable version.

@@ -6,12 +6,12 @@ import test from "node:test";
 
 import { readSrc, registerBundlerResolver } from "./helpers/kit.ts";
 
-type FakeElement = {
+interface FakeElement {
   attributes: Map<string, string>;
   style: Record<string, string>;
   setAttribute(name: string, value: string): void;
   remove(): void;
-};
+}
 
 const htmlAttributes = new Map<string, string>();
 const body: FakeElement[] = [];

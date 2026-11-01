@@ -163,11 +163,11 @@ function FloatingMonitorPanel({
     if (!monitor) {
       return;
     }
-    const measure = () => onRenderedWidth(monitor.offsetWidth);
+    const measure = () => { onRenderedWidth(monitor.offsetWidth); };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(monitor);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [monitorRef, onRenderedWidth]);
 
   const zIndex = useFloatingPanelZIndex("resource-monitor");
@@ -259,7 +259,7 @@ function FloatingMonitorPanel({
       <motion.div
         {...{ [FIND_PORTAL_ATTRIBUTE]: "" }}
         ref={monitorRef}
-        onPointerDownCapture={() => raisePanel("resource-monitor")}
+        onPointerDownCapture={() => { raisePanel("resource-monitor"); }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -572,7 +572,7 @@ export function FloatingMonitor() {
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(panel);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [isOpen, isChatRoute, settingsPanelOpen, isMobile]);
 
   // The sidebar paints per frame and commits on release, so track painted width for docking.
@@ -597,14 +597,14 @@ export function FloatingMonitor() {
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(sidebar);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); };
   }, [isOpen, isMobile]);
 
   // useIsMobile and the width stores do not notify on every resize, so subscribe directly.
   const viewportWidth = useSyncExternalStore(
     (onChange) => {
       window.addEventListener("resize", onChange);
-      return () => window.removeEventListener("resize", onChange);
+      return () => { window.removeEventListener("resize", onChange); };
     },
     () => window.innerWidth,
     () => 0,
@@ -654,7 +654,7 @@ export function FloatingMonitor() {
           uiSpaceScale={uiSpaceScale}
           onRenderedWidth={setMonitorWidth}
           systemInfo={systemInfo}
-          onClose={() => setIsOpen(false)}
+          onClose={() => { setIsOpen(false); }}
         />
       )}
     </AnimatePresence>

@@ -57,9 +57,9 @@ export async function toggleLibraryAudio(item: LibraryItem): Promise<void> {
   player ??= new Audio();
   player.onended = () => mine === generation && setPlaying(null);
   // A stream that fails after play() resolved never rejects it.
-  player.onerror = () => failed(item, player?.error?.message ?? "", mine);
+  player.onerror = () => { failed(item, player?.error?.message ?? "", mine); };
   player.src = url;
-  player.play().catch((error: unknown) => failed(item, error, mine));
+  player.play().catch((error: unknown) => { failed(item, error, mine); });
 }
 
 function subscribe(listener: () => void): () => void {

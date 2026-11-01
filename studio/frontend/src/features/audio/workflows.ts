@@ -26,7 +26,7 @@ export type AudioWorkflowId =
 
 export type AudioWorkflowSlot = "speak" | "transcribe";
 
-export const AUDIO_WORKFLOWS: ReadonlyArray<{
+export const AUDIO_WORKFLOWS: readonly {
   id: AudioWorkflowId;
   label: string;
   heading: string;
@@ -34,7 +34,7 @@ export const AUDIO_WORKFLOWS: ReadonlyArray<{
   hint: string;
   slot: AudioWorkflowSlot;
   createTrain: boolean;
-}> = [
+}[] = [
   {
     id: "speak",
     label: "Text to Speech",

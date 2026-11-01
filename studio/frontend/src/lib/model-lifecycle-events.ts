@@ -12,11 +12,11 @@ export type EjectedModelRuntime = "image" | "video";
 /** "tts" shares the chat slot; it is named apart so chat can tell loads it did not start. */
 export type ModelRuntime = "chat" | "image" | "video" | "stt" | "tts";
 
-export type ModelLifecycle = {
+export interface ModelLifecycle {
   runtime: ModelRuntime;
   loading: boolean;
   model: string | null;
-};
+}
 
 export function notifyModelEjected(runtime: EjectedModelRuntime): void {
   if (typeof window === "undefined") return;
@@ -35,7 +35,7 @@ export function subscribeModelEjected(
     if (detail?.runtime === runtime) onEjected();
   };
   window.addEventListener(MODEL_EJECTED_EVENT, handler);
-  return () => window.removeEventListener(MODEL_EJECTED_EVENT, handler);
+  return () => { window.removeEventListener(MODEL_EJECTED_EVENT, handler); };
 }
 
 export function notifyModelLifecycle(detail: ModelLifecycle): void {
@@ -52,7 +52,7 @@ export function subscribeModelLifecycle(
     if (detail?.runtime) onChange(detail);
   };
   window.addEventListener(MODEL_LIFECYCLE_EVENT, handler);
-  return () => window.removeEventListener(MODEL_LIFECYCLE_EVENT, handler);
+  return () => { window.removeEventListener(MODEL_LIFECYCLE_EVENT, handler); };
 }
 
 export const MODEL_DELETED_EVENT = "unsloth:model-deleted";
@@ -75,7 +75,7 @@ export function subscribeModelDeleted(
     if (repoId) onDeleted(repoId);
   };
   window.addEventListener(MODEL_DELETED_EVENT, handler);
-  return () => window.removeEventListener(MODEL_DELETED_EVENT, handler);
+  return () => { window.removeEventListener(MODEL_DELETED_EVENT, handler); };
 }
 
 /**
@@ -117,11 +117,11 @@ export const BACKGROUND_READ_TIMEOUT_MS = 10_000;
 /** Timed from the last healthy read, not load start: huge downloads legitimately take hours. */
 export const BACKGROUND_STALL_TIMEOUT_MS = 60 * 60 * 1000;
 
-export type BackgroundLoadTiming = {
+export interface BackgroundLoadTiming {
   pollMs?: number;
   readTimeoutMs?: number;
   stallMs?: number;
-};
+}
 
 /**
  * Image and video loads return at once and load in the background, so settle from
@@ -191,7 +191,7 @@ async function boundedRead(
   readTimeoutMs: number,
 ): Promise<LoadPhase | undefined> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), readTimeoutMs);
+  const timer = setTimeout(() => { controller.abort(); }, readTimeoutMs);
   try {
     return await readPhase(controller.signal);
   } catch {

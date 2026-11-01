@@ -75,7 +75,7 @@ export function AutoTextarea({
     <textarea
       ref={ref}
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => { onChange(e.target.value); }}
       placeholder={placeholder}
       rows={minRows}
       className={cn(
@@ -322,7 +322,7 @@ export function SortablePromptItems({
             <button
               type="button"
               aria-label={`Reorder prompt ${i + 1}`}
-              onPointerDown={(e) => handlePointerDown(uid, e)}
+              onPointerDown={(e) => { handlePointerDown(uid, e); }}
               onKeyDown={(e) => {
                 if (e.key === "ArrowUp") {
                   e.preventDefault();
@@ -351,7 +351,7 @@ export function SortablePromptItems({
               ) : (
                 <AutoTextarea
                   value={item}
-                  onChange={(v) => onChange(items.map((x, idx) => (idx === i ? v : x)))}
+                  onChange={(v) => { onChange(items.map((x, idx) => (idx === i ? v : x))); }}
                   placeholder={`Prompt ${i + 1}...`}
                 />
               )}

@@ -49,7 +49,7 @@ function setup() {
       values = [];
       const actions = store.useWidth();
       const unmount = cleanups;
-      return { actions, values, unmount: () => unmount.forEach((stop) => stop()) };
+      return { actions, values, unmount: () => { unmount.forEach((stop) => { stop(); }); } };
     },
     setScale(next: number) {
       scale = next;

@@ -83,7 +83,7 @@ export async function confirmManagedEngineIfNeeded(
 ): Promise<ManagedEngine | null> {
   const engines = offeredEngines(offer);
   if (!offer || engines.length === 0) return null;
-  return useManagedEngineOfferStore
+  return await useManagedEngineOfferStore
     .getState()
     .request(modelName, { ...offer, engines }, signal);
 }

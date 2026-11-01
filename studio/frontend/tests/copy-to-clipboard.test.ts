@@ -14,7 +14,7 @@ const MODULE = new URL("../src/lib/copy-to-clipboard.ts", import.meta.url).href;
 
 type StubMode = "ok" | "write-fails" | "module-missing";
 
-type Recorder = {
+interface Recorder {
   webWrites: string[];
   execCommands: string[];
   appended: number;
@@ -23,15 +23,15 @@ type Recorder = {
   clipboardData: string[];
   copyHandling: string[];
   copyListeners: number;
-};
+}
 
-type EnvOptions = {
+interface EnvOptions {
   tauri: boolean;
   stub?: StubMode;
   clipboard?: "ok" | "reject" | "absent";
   execCommandResult?: boolean;
   copyEvent?: boolean;
-};
+}
 
 let generation = 0;
 

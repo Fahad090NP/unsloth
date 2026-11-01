@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-export type DiffusionTrainingFacts = {
+export interface DiffusionTrainingFacts {
   params?: string | null;
   qlora_vram_gb?: number | null;
   gated?: boolean | null;
   note?: string | null;
-};
+}
 
 type FamilyWithBaseFacts = DiffusionTrainingFacts & {
   base_specs?: Record<string, DiffusionTrainingFacts>;

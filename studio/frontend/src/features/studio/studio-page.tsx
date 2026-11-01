@@ -174,13 +174,13 @@ export function StudioPage(): ReactElement {
   const hydratingMessage = capabilitiesUnknown
     ? t("studio.checkingSupport")
     : t("studio.loadingRuntime");
-  const showHistoryBack = activeTab === "history" && !!selectedHistoryRunId;
+  const showHistoryBack = activeTab === "history" && Boolean(selectedHistoryRunId);
 
   return (
     <div data-wallpaper-page-canvas="" className="flex h-full min-h-0 flex-col bg-background">
       <Tabs
         value={activeTab}
-        onValueChange={(value) => handleTabChange(value as TrainSubTab)}
+        onValueChange={(value) => { handleTabChange(value as TrainSubTab); }}
         className="contents"
       >
         <div className="mx-auto flex w-full max-w-[calc(1180px*var(--ui-space-scale,1))] 3xl:max-w-[calc(1440px*var(--ui-space-scale,1))] 4xl:max-w-[calc(1760px*var(--ui-space-scale,1))] flex-col gap-7 px-5 pb-20 pt-8 max-sm:px-4 sm:px-9">
@@ -216,7 +216,7 @@ export function StudioPage(): ReactElement {
                     label={t("studio.imageTraining")}
                     tooltip={t("studio.goToImageTraining")}
                     icon={Image03Icon}
-                    onNavigate={() => setImagesPageMode("train")}
+                    onNavigate={() => { setImagesPageMode("train"); }}
                     labelClassName="max-sm:hidden"
                     arrowClassName="max-sm:hidden"
                   />

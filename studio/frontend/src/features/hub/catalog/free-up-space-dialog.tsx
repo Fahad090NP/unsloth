@@ -137,12 +137,12 @@ export function FreeUpSpaceDialog({
                   id={`orphan-${index}`}
                   checked={selected.has(companionIdentity(companion))}
                   onCheckedChange={(checked) =>
-                    setSelected((prev) => {
+                    { setSelected((prev) => {
                       const next = new Set(prev);
                       if (checked) next.add(companionIdentity(companion));
                       else next.delete(companionIdentity(companion));
                       return next;
-                    })
+                    }); }
                   }
                 />
                 <label
@@ -162,7 +162,7 @@ export function FreeUpSpaceDialog({
           <Button
             variant="ghost"
             disabled={deleting}
-            onClick={() => onOpenChange(false)}
+            onClick={() => { onOpenChange(false); }}
           >
             Cancel
           </Button>

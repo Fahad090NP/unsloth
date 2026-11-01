@@ -17,12 +17,12 @@ import { useState } from "react";
 import { SettingsRow } from "./settings-row";
 import { SettingsSection } from "./settings-section";
 
-type EngineRow = {
+interface EngineRow {
   key: "llama" | "whisper" | "audio" | "mlx";
   labelKey: TranslationKey;
   installed: string | null;
   offer: ComponentOffer | null;
-};
+}
 
 export function EngineVersionsSection() {
   const t = useT();

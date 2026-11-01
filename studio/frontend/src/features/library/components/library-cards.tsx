@@ -98,7 +98,7 @@ function ImageThumb({
             const { naturalWidth, naturalHeight } = event.currentTarget;
             setRatio(naturalWidth > 0 ? naturalHeight / naturalWidth : 1);
           }}
-          onError={() => setBrokenUrl(url)}
+          onError={() => { setBrokenUrl(url); }}
           className={cn(
             "absolute inset-0 block size-full object-cover",
             !loaded && "opacity-0",
@@ -145,7 +145,7 @@ function CardFrame({
         aria-label={label}
         aria-pressed={select && selecting ? selected : undefined}
         onClick={
-          select && selecting ? (event) => select.toggle(selectKey, event.shiftKey) : onOpen
+          select && selecting ? (event) => { select.toggle(selectKey, event.shiftKey); } : onOpen
         }
         className={cn(
           "block w-full overflow-hidden rounded-2xl text-left outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -221,7 +221,7 @@ export function ItemCard({ item }: { item: LibraryItem }) {
     <CardFrame
       selectKey={`item:${item.id}`}
       label={item.name}
-      onOpen={() => actions.openItem(item)}
+      onOpen={() => { actions.openItem(item); }}
       control={playable ? <PlayButton item={item} /> : undefined}
       menu={
         <LibraryActionsMenu
@@ -296,7 +296,7 @@ function FolderCard({
       <CardFrame
         selectKey={selectKey}
         label={folder.name}
-        onOpen={() => actions.openFolder(folder.id)}
+        onOpen={() => { actions.openFolder(folder.id); }}
         menu={<LibraryActionsMenu target={{ kind: "folder", folder }} variant="overlay" />}
         className={CARD_SURFACE}
       >
@@ -311,7 +311,7 @@ function FolderCard({
       <button
         type="button"
         onClick={(event) =>
-          selecting ? select.toggle(selectKey, event.shiftKey) : actions.openFolder(folder.id)
+          { selecting ? select.toggle(selectKey, event.shiftKey) : actions.openFolder(folder.id); }
         }
         className="mt-2 block w-full px-1 text-left"
       >
@@ -343,7 +343,7 @@ export function Masonry<T>({
   const container = useRef<HTMLDivElement>(null);
   const columns = useCardColumns(container);
   const buckets: T[][] = Array.from({ length: columns }, () => []);
-  items.forEach((item, index) => buckets[index % columns]!.push(item));
+  items.forEach((item, index) => buckets[index % columns].push(item));
   return (
     <div ref={container} className="flex items-start gap-5">
       {buckets.map((bucket, column) => (

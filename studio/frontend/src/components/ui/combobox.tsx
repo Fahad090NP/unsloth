@@ -28,7 +28,7 @@ import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 const ComboboxOpenContext = createContext(false);
-type ComboboxRootProps = ComboboxPrimitive.Root.Props<string, false>;
+type ComboboxRootProps = ComboboxPrimitive.Root.Props<string>;
 
 function Combobox({
   onOpenChange,
@@ -175,7 +175,7 @@ function ComboboxContent({
           ref={snappedRef}
           data-slot="combobox-content"
           data-dropdown-glow={useDropdownGlow()}
-          data-chips={!!anchor}
+          data-chips={Boolean(anchor)}
           onWheel={(event) => {
             onWheel?.(event);
             // Dialog scroll locks cancel native wheel scrolling on this body-portaled popup.

@@ -82,7 +82,7 @@ test("TI hashes names stay reported unless an installed embedding matches", () =
     "textual inversion easynegative",
     "textual inversion badhandv4",
   ]);
-  assert.deepEqual(splitInstalledEmbeddings(r.textual_inversions as string[], ["EasyNegative", "other"]), {
+  assert.deepEqual(splitInstalledEmbeddings(r.textual_inversions, ["EasyNegative", "other"]), {
     installed: ["easynegative"],
     missing: ["badhandv4"],
   });

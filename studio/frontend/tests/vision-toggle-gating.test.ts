@@ -197,7 +197,7 @@ test("the rollback seeds the Vision control from the restored model, not the tar
     "the control must not be seeded from the snapshot the pending config overwrote",
   );
   assert.ok(
-    !/rollbackResponse\.disable_vision/.test(line),
+    !line.includes('rollbackResponse.disable_vision'),
     "the control must not be seeded from the echo, which is false for a text-only GGUF",
   );
 });
@@ -230,7 +230,7 @@ test("a compare pane with no saved config does not inherit the live Vision value
     `an unremembered pane must take the per-model default, got: ${decl.trim()}`,
   );
   assert.ok(
-    !/fallbackDisableVision/.test(composer),
+    !composer.includes('fallbackDisableVision'),
     "the store-derived fallback should be gone entirely, not just unused",
   );
 });

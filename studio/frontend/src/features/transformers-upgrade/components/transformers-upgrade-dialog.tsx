@@ -142,7 +142,7 @@ export function TransformersUpgradeDialog() {
                 // the only way a 4-bit run on this model can start.
                 <AlertDialogAction
                   className="bg-transparent text-foreground hover:bg-accent"
-                  onClick={() => resolve(true)}
+                  onClick={() => { resolve(true); }}
                 >
                   Continue with custom code
                 </AlertDialogAction>
@@ -169,7 +169,7 @@ export function TransformersUpgradeDialog() {
               </AlertDialogAction>
             </>
           ) : customCode ? (
-            <AlertDialogAction onClick={() => resolve(true)}>
+            <AlertDialogAction onClick={() => { resolve(true); }}>
               Continue with custom code
             </AlertDialogAction>
           ) : null}

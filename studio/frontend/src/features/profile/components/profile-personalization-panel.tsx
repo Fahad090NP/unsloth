@@ -111,7 +111,7 @@ export function ProfilePersonalizationPanel() {
     if (trimmed !== displayName) {
       setDisplayName(trimmed);
       const persisted = readPersistedProfile();
-      if (persisted && persisted.displayName === trimmed) {
+      if (persisted?.displayName === trimmed) {
         toastSuccess(t("settings.profile.nameSaved"));
       } else {
         toastError(
@@ -128,7 +128,7 @@ export function ProfilePersonalizationPanel() {
     if (trimmed !== nickname) {
       setNickname(trimmed);
       const persisted = readPersistedProfile();
-      if (persisted && persisted.nickname === trimmed) {
+      if (persisted?.nickname === trimmed) {
         toastSuccess(t("settings.profile.nicknameSaved"));
       } else {
         toastError(
@@ -147,12 +147,12 @@ export function ProfilePersonalizationPanel() {
       saveNickname();
     };
   });
-  useEffect(() => () => flushDrafts.current(), []);
+  useEffect(() => () => { flushDrafts.current(); }, []);
 
   const applyAvatar = (value: string | null) => {
     setAvatarDataUrl(value);
     const persisted = readPersistedProfile();
-    if (persisted && persisted.avatarDataUrl === value) {
+    if (persisted?.avatarDataUrl === value) {
       toastSuccess(t("settings.profile.photoUpdated"));
     } else {
       toastError(
@@ -183,7 +183,7 @@ export function ProfilePersonalizationPanel() {
   const shownAvatar = pendingAvatar ? pendingAvatar.value : avatarDataUrl;
 
   useEffect(() => {
-    if (pendingAvatar && avatarDataUrl === pendingAvatar.value) {
+    if (avatarDataUrl === pendingAvatar?.value) {
       setPendingAvatar(null);
     }
   }, [avatarDataUrl, pendingAvatar]);
@@ -191,7 +191,7 @@ export function ProfilePersonalizationPanel() {
   const pickAvatarValue = (value: string | null) => {
     setImageError(null);
     setPendingAvatar({ value });
-    requestAnimationFrame(() => applyAvatar(value));
+    requestAnimationFrame(() => { applyAvatar(value); });
   };
 
   return (
@@ -259,7 +259,7 @@ export function ProfilePersonalizationPanel() {
                     <button
                       key={shape}
                       type="button"
-                      onClick={() => setAvatarShape(shape)}
+                      onClick={() => { setAvatarShape(shape); }}
                       aria-pressed={avatarShape === shape}
                       className={cn(
                         "relative inline-flex h-8 items-center justify-center rounded-full px-3.5 text-ui-13 font-medium transition-colors",
@@ -296,7 +296,7 @@ export function ProfilePersonalizationPanel() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => pickAvatarValue(null)}
+                  onClick={() => { pickAvatarValue(null); }}
                   disabled={shownAvatar === null}
                   aria-label={t("settings.profile.removePhoto")}
                   title={t("settings.profile.removePhoto")}
@@ -329,7 +329,7 @@ export function ProfilePersonalizationPanel() {
                       <button
                         key={path}
                         type="button"
-                        onClick={() => pickAvatarValue(url)}
+                        onClick={() => { pickAvatarValue(url); }}
                         aria-pressed={selected}
                         aria-label={label}
                         title={label}
@@ -373,7 +373,7 @@ export function ProfilePersonalizationPanel() {
               type="text"
               value={draftName}
               maxLength={PROFILE_TEXT_MAX_LENGTH}
-              onChange={(e) => setDraftName(e.target.value)}
+              onChange={(e) => { setDraftName(e.target.value); }}
               onBlur={saveName}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -402,7 +402,7 @@ export function ProfilePersonalizationPanel() {
               type="text"
               value={draftNickname}
               maxLength={PROFILE_TEXT_MAX_LENGTH}
-              onChange={(e) => setDraftNickname(e.target.value)}
+              onChange={(e) => { setDraftNickname(e.target.value); }}
               onBlur={saveNickname}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {

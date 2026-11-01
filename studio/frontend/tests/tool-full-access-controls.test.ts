@@ -18,7 +18,7 @@ function harness({ owner = true, disclosure = false, grantedThread = "", scopedF
   const requests: unknown[][] = [], grants: ChatFullAccessGrant[] = [];
   const values: unknown[] = [];
   let index = 0, epoch = 0;
-  let effects: Array<() => void> = [];
+  let effects: (() => void)[] = [];
   let answer: () => Promise<boolean> = async () => true;
   const confirmation = {
     approvalId: "approval-a", sessionId: "project-shared", threadId: "chat-a",
@@ -59,7 +59,7 @@ function harness({ owner = true, disclosure = false, grantedThread = "", scopedF
       "@/features/chat/permission-mode-select": { FullAccessConfirmContent: "FullAccessWarning" },
       "@/features/chat/utils/chat-full-access": { hasChatFullAccess, withChatFullAccess },
       "@/features/chat/api/chat-api": {
-        resolveToolConfirmation: async (...args: unknown[]) => { requests.push(args); return answer(); },
+        resolveToolConfirmation: async (...args: unknown[]) => { requests.push(args); return await answer(); },
         ToolApprovalGoneError: class Gone extends Error {},
       },
       "@/features/chat/stores/chat-runtime-store": { useChatRuntimeStore: store },

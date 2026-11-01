@@ -86,7 +86,7 @@ function FindBarLoading({
     if (!input) return;
     input.focus();
     input.select();
-    return () => rememberSelection(input);
+    return () => { rememberSelection(input); };
   }, [focusToken, rememberSelection]);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ function FindBarLoading({
       close();
     };
     window.addEventListener("keydown", onEscape, true);
-    return () => window.removeEventListener("keydown", onEscape, true);
+    return () => { window.removeEventListener("keydown", onEscape, true); };
   }, [close]);
 
   return (
@@ -122,10 +122,10 @@ function FindBarLoading({
         ref={inputRef}
         type="text"
         value={query}
-        onChange={(event) => setQuery(event.target.value)}
+        onChange={(event) => { setQuery(event.target.value); }}
         onCompositionStart={beginComposition}
         onCompositionEnd={endComposition}
-        onSelect={(event) => rememberSelection(event.currentTarget)}
+        onSelect={(event) => { rememberSelection(event.currentTarget); }}
         onKeyDown={(event) => {
           if (event.key !== "Enter" || isImeComposing(event.nativeEvent))
             return;
@@ -240,7 +240,7 @@ export function FindInPage({ enabled = true }: { enabled?: boolean }) {
     },
     [query],
   );
-  const clearPendingSteps = useCallback(() => setPendingSteps([]), []);
+  const clearPendingSteps = useCallback(() => { setPendingSteps([]); }, []);
   const restoreLoadingSelection = useCallback((input: HTMLInputElement) => {
     const selection = loadingSelectionRef.current;
     if (!selection) return false;
@@ -283,7 +283,7 @@ export function FindInPage({ enabled = true }: { enabled?: boolean }) {
     [enabled, requestFocus],
   );
 
-  useShortcut("findInPage", () => requestFocus(), {
+  useShortcut("findInPage", () => { requestFocus(); }, {
     enabled,
     claims: () => !isFindScopeBackgrounded(),
   });

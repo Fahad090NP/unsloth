@@ -204,11 +204,11 @@ export function getDefaultSemanticSourceHandle(
   return direction === "TB" ? HANDLE_IDS.semanticOutBottom : HANDLE_IDS.semanticOut;
 }
 
-type RecipeEdgeHandles = {
+interface RecipeEdgeHandles {
   sourceHandle?: string | null;
   targetHandle?: string | null;
   type?: string | null;
-};
+}
 
 export function remapRecipeEdgeHandlesForLayout(
   edge: RecipeEdgeHandles,

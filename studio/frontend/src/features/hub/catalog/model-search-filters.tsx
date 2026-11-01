@@ -239,7 +239,7 @@ function RangeStops({
   const minValue = value[spec.min];
   const maxValue = value[spec.max];
   // biome-ignore lint/correctness/useExhaustiveDependencies: clears on a committed change
-  useEffect(() => setDragging(null), [minValue, maxValue]);
+  useEffect(() => { setDragging(null); }, [minValue, maxValue]);
   const [lo, hi] = dragging ?? committed;
   const set = lo !== 0 || hi !== last;
   // Thumbs stay inside the track, so stop i sits half a thumb in from each end.
@@ -258,11 +258,11 @@ function RangeStops({
           <button
             type="button"
             onClick={() =>
-              onChange({
+              { onChange({
                 ...value,
                 [spec.min]: undefined,
                 [spec.max]: undefined,
-              })
+              }); }
             }
             className="flex cursor-pointer items-center gap-1 transition-colors hover:text-foreground"
           >
@@ -307,7 +307,7 @@ function RangeStops({
           step={1}
           minStepsBetweenThumbs={0}
           value={[lo, hi]}
-          onValueChange={(next) => setDragging([next[0], next[1]])}
+          onValueChange={(next) => { setDragging([next[0], next[1]]); }}
           onValueCommit={(next) => {
             setDragging(null);
             onChange({
@@ -495,8 +495,8 @@ function HoverInfo({ label, children }: { label: string; children: string }) {
     <Tooltip open={open}>
       <TooltipTrigger asChild={true}>
         <span
-          onPointerEnter={() => setOpen(true)}
-          onPointerLeave={() => setOpen(false)}
+          onPointerEnter={() => { setOpen(true); }}
+          onPointerLeave={() => { setOpen(false); }}
           className="group/title flex cursor-help items-center gap-1 transition-colors hover:text-foreground"
         >
           {label}
@@ -542,7 +542,7 @@ function CapabilityTiles({
         {capabilities.length > 0 && (
           <button
             type="button"
-            onClick={() => onChange([])}
+            onClick={() => { onChange([]); }}
             className="cursor-pointer transition-colors hover:text-foreground"
           >
             Select all
@@ -577,13 +577,13 @@ function CapabilityTiles({
               checked={checked}
               locked={next.length === 0}
               onToggle={() =>
-                onChange(
+                { onChange(
                   capabilities.length === 0 && isolateFirst
                     ? [option.value]
                     : next.length === CAPABILITY_FILTER_OPTIONS.length
                       ? []
                       : next,
-                )
+                ); }
               }
             />
           );
@@ -681,7 +681,7 @@ export function ModelSearchFiltersControl({
         align="end"
         sideOffset={8}
         collisionPadding={12}
-        onCloseAutoFocus={(event) => event.preventDefault()}
+        onCloseAutoFocus={(event) => { event.preventDefault(); }}
         // The sections scroll inside the padding, so a short window keeps the corners round and
         // Reset all in view; flex children would otherwise shrink the separators away.
         className="hub-menu-instant hub-composer-menu menu-soft-surface gap-0 overflow-hidden w-[calc(392px*var(--ui-space-scale,1))] max-w-[calc(100vw-1rem)] ring-0"
@@ -720,7 +720,7 @@ export function ModelSearchFiltersControl({
                   {modalities.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => onModalitiesChange([])}
+                      onClick={() => { onModalitiesChange([]); }}
                       className="cursor-pointer transition-colors hover:text-foreground"
                     >
                       Select all
@@ -749,14 +749,14 @@ export function ModelSearchFiltersControl({
                         checked={checked}
                         locked={next.length === 0}
                         onToggle={() =>
-                          onModalitiesChange(
+                          { onModalitiesChange(
                             // Like Capabilities: the first pick from the defaults keeps just that one.
                             modalities.length === 0 && isolateFirstCapability
                               ? [modality]
                               : next.length === DATASET_MODALITIES.length
                                 ? []
                                 : next,
-                          )
+                          ); }
                         }
                       />
                     );
@@ -781,9 +781,9 @@ export function ModelSearchFiltersControl({
                 ["all", "All uploaders"],
               ]}
               onChange={(next) =>
-                onUploadersChange(
+                { onUploadersChange(
                   next === "unsloth" ? ["unsloth"] : [...HUB_UPLOADERS],
-                )
+                ); }
               }
             />
           )}

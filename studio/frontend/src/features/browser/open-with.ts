@@ -4,12 +4,12 @@
 
 import { NATIVE_FILE_NAME_HEADER, encodeNativeFilename } from "@/lib/native-files";
 
-export type LocalCopy = { id: string; path: string };
-export type OpenWithApp = { path: string; name: string; icon: string | null; default: boolean };
+export interface LocalCopy { id: string; path: string }
+export interface OpenWithApp { path: string; name: string; icon: string | null; default: boolean }
 
 async function invoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   const core = await import("@tauri-apps/api/core");
-  return core.invoke<T>(command, args);
+  return await core.invoke<T>(command, args);
 }
 
 // By blob: a tab's bytes never change, so its copy is written once however often it is opened.
@@ -22,7 +22,7 @@ export function localCopy(blob: Blob, name: string): Promise<LocalCopy> {
   if (known) return known;
   const pending = blob.arrayBuffer().then(async (bytes) => {
     const core = await import("@tauri-apps/api/core");
-    return core.invoke<LocalCopy>("browser_file_local_copy", new Uint8Array(bytes), {
+    return await core.invoke<LocalCopy>("browser_file_local_copy", new Uint8Array(bytes), {
       headers: { [NATIVE_FILE_NAME_HEADER]: encodeNativeFilename(name) },
     });
   });
@@ -37,7 +37,7 @@ export async function withLocalCopy<T>(blob: Blob, name: string, use: (copy: Loc
     return await use(await pending);
   } catch {
     if (copies.get(blob)?.get(name) === pending) copies.get(blob)?.delete(name);
-    return use(await localCopy(blob, name));
+    return await use(await localCopy(blob, name));
   }
 }
 

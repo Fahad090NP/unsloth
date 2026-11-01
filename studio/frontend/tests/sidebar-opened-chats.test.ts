@@ -87,7 +87,7 @@ function renderHook(slots: Record<string, unknown>) {
     useMemo: (fn: () => unknown) => fn(),
     useEffect: (fn: () => unknown, deps?: unknown[]) => {
       const c = cell<{ deps?: unknown[] } | null>(() => null);
-      const same = c.v?.deps && deps && deps.every((dep, k) => Object.is(dep, c.v?.deps?.[k]));
+      const same = c.v?.deps && deps?.every((dep, k) => Object.is(dep, c.v?.deps?.[k]));
       if (!same) {
         c.v = { deps };
         fn();

@@ -40,7 +40,7 @@ const highlightOnce = (
 test("the highlighter uses the JavaScript regex engine, not the WASM one", () => {
   // assert.match prints the whole subject, burying the message, so assert a boolean.
   assert.ok(
-    /createJavaScriptRegexEngine/.test(PLUGIN_SOURCE),
+    PLUGIN_SOURCE.includes('createJavaScriptRegexEngine'),
     "code-plugin must build its highlighter with shiki's JavaScript regex engine",
   );
   assert.ok(

@@ -142,7 +142,7 @@ export function normalizePresetLoadConfig(
 
   const normalized: PresetLoadConfig = {
     customContextLength: requestableContextLength(partial.customContextLength),
-    maxSeqLength: normalizeMaxSeqLength(partial.maxSeqLength as number | null),
+    maxSeqLength: normalizeMaxSeqLength(partial.maxSeqLength),
     mlxKvQuant: normalizeMlxKvQuant(partial.mlxKvQuant, partial.mlxKvBits),
     kvCacheDtype:
       typeof partial.kvCacheDtype === "string" &&

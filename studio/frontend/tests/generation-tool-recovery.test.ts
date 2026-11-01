@@ -505,10 +505,10 @@ async function recoverRun(
   };
   const imports: unknown[][] = [];
   let replayFrom: number | undefined;
-  const snapshots: Array<{
+  const snapshots: {
     content: Record<string, unknown>[];
     metadata: Record<string, unknown>;
-  }> = [];
+  }[] = [];
   const generationRecoveries = new Map();
   const runtime = {
     models: [],
@@ -1377,7 +1377,7 @@ test("repeated source ids pair one to one instead of multiplying", () => {
     carriedView = recovery.recoveredContentToImport(
       carriedView,
       recovered,
-    ) as typeof view;
+    );
     assert.equal(
       carriedView.filter((part) => part.type === "source").length,
       2,
@@ -1452,7 +1452,7 @@ test("the id-less sentinel keeps the file searchable and cannot collide", () => 
   assert.ok(!src.includes("\0"), "a NUL byte makes the file read as binary");
   // A backend tool call id must satisfy ^[a-zA-Z0-9_-]+$, so '#' can never appear in one.
   for (const key of src.matchAll(/`(#idless:[^`]*)`/g)) {
-    assert.ok(/^#/.test(key[1]), key[1]);
+    assert.ok(key[1].startsWith("#"), key[1]);
   }
   assert.equal(src.match(/`#idless:/g)?.length, 3);
 });

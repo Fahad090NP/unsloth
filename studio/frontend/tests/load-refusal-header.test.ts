@@ -43,7 +43,7 @@ for (const [page, load] of LOADS) {
     for (const [status, headers, detail, want] of cases) {
       const body = JSON.stringify({ detail });
       globalThis.fetch = (async () =>
-        new Response(body, { status, headers })) as typeof fetch;
+        new Response(body, { status, headers }));
       await assert.rejects(load(), (err: unknown) => {
         assert.ok(err instanceof refusal.LoadRequestError);
         assert.deepEqual(
@@ -173,7 +173,7 @@ test("the wording matched here is the backend's", (t) => {
   );
   const source = existsSync(arbiter) ? readFileSync(arbiter, "utf8") : "";
   if (!source.includes("MULTI_MODEL_REFUSAL_MARKERS ="))
-    return t.skip("the backend exports no refusal markers yet");
+    { t.skip("the backend exports no refusal markers yet"); return; }
   for (const marker of refusal.MULTI_MODEL_REFUSAL_MARKERS)
     assert.ok(source.includes(marker), marker);
 });

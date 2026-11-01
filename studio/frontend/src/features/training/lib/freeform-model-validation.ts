@@ -12,7 +12,7 @@ import type { TranslationKey } from "@/i18n";
 const ADAPTER_ARTIFACT_PATTERN =
   /(?:^|[/\\])adapter_(?:config\.json|model\.(?:safetensors|bin))$/i;
 
-export type TrainingModelValidationCandidate = {
+export interface TrainingModelValidationCandidate {
   id: string;
   modelFormat?: ModelInventoryFormat | null;
   capabilities?: ModelInventoryCapabilities | null;
@@ -20,7 +20,7 @@ export type TrainingModelValidationCandidate = {
   tags?: readonly string[] | null;
   libraryName?: string | null;
   quantMethod?: string | null;
-};
+}
 
 export type TrainingModelValidationResult =
   | { ok: true }

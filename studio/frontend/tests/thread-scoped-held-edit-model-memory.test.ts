@@ -52,7 +52,7 @@ async function freshStore(scenario: string): Promise<Store> {
   };
   settingsHttp.puts.length = 0;
   const mod = (await import(`${STORE_URL}?scenario=${scenario}`)) as never;
-  return mod as Store;
+  return mod;
 }
 
 test("an edit held for an unpaired chat stays out of the outgoing model's memory", async () => {

@@ -46,7 +46,7 @@ export function showCarveoutAdvice(
     toast.dismiss(IGPU_CARVEOUT_TOAST_ID);
     return;
   }
-  advisedModelPaths = [...new Set(modelPaths.filter((path): path is string => !!path))];
+  advisedModelPaths = [...new Set(modelPaths.filter((path): path is string => Boolean(path)))];
   toast.info(IGPU_CARVEOUT_NOTICE_TITLE, {
     id: IGPU_CARVEOUT_TOAST_ID,
     description: advice.message,

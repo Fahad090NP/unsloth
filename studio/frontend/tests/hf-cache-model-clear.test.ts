@@ -9,7 +9,7 @@ import {
   type StubElement,
 } from "./helpers/module-stubs.ts";
 
-type ClearProps = { repoId: string; cachePath: string; disabled?: boolean };
+interface ClearProps { repoId: string; cachePath: string; disabled?: boolean }
 type Delete = (...args: unknown[]) => Promise<void>;
 
 function drive(
@@ -87,10 +87,10 @@ function drive(
       return {
         button,
         dialog,
-        open: () => (button.props.onClick as () => void)(),
-        confirm: () => (dialog.props.onConfirm as () => void)(),
+        open: () => { (button.props.onClick as () => void)(); },
+        confirm: () => { (dialog.props.onConfirm as () => void)(); },
         close: () =>
-          (dialog.props.onOpenChange as (open: boolean) => void)(false),
+          { (dialog.props.onOpenChange as (open: boolean) => void)(false); },
       };
     },
   };

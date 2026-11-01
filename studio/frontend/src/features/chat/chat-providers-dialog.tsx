@@ -224,7 +224,7 @@ export function codexCapabilitiesWithPlanModels(
   listed: CodexSubscriptionModels | null,
   stored: Record<string, { vision?: boolean; studio_tools?: boolean }> | undefined,
 ): Record<string, { vision?: boolean; studio_tools?: boolean }> | null {
-  if (!listed || listed.source !== "subscription") return null;
+  if (listed?.source !== "subscription") return null;
   // Without the registry row every model reads as unlisted and persisted capabilities go wrong.
   if (!entry) return null;
   const registryCapabilities = entry.model_capabilities ?? {};
@@ -1002,9 +1002,9 @@ export function ChatProvidersSettings({
               action: {
                 label: "Use it for the Decision API",
                 onClick: () =>
-                  useSettingsDialogStore.getState().openDialog("api-keys", {
+                  { useSettingsDialogStore.getState().openDialog("api-keys", {
                     scrollTarget: "api-keys-decision-api",
-                  }),
+                  }); },
               },
             }
           : undefined,
@@ -1622,7 +1622,7 @@ export function ChatProvidersSettings({
                     />
                     <button
                       type="button"
-                      onClick={() => setShowApiKey((visible) => !visible)}
+                      onClick={() => { setShowApiKey((visible) => !visible); }}
                       className="absolute top-1/2 right-1.5 flex size-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       aria-label={showApiKey ? "Hide API key" : "Show API key"}
                       aria-pressed={showApiKey}
@@ -1670,7 +1670,7 @@ export function ChatProvidersSettings({
                     type="text"
                     value={customProviderName}
                     onChange={(event) =>
-                      setCustomProviderName(event.target.value)
+                      { setCustomProviderName(event.target.value); }
                     }
                     placeholder={CUSTOM_PROVIDER_DISPLAY_NAME}
                     className="h-9 text-sm"
@@ -1729,7 +1729,7 @@ export function ChatProvidersSettings({
                     id="provider-base-url"
                     type="text"
                     value={baseUrlDraft}
-                    onChange={(event) => setBaseUrlDraft(event.target.value)}
+                    onChange={(event) => { setBaseUrlDraft(event.target.value); }}
                     placeholder={customProviderBaseUrlPlaceholder(providerType)}
                     className="mt-[var(--ui-title-cap-inset)] h-9 text-sm @max-[520px]:mt-0"
                   />
@@ -1764,7 +1764,7 @@ export function ChatProvidersSettings({
                       spellCheck={false}
                       value={maxOutputTokensDraft}
                       onChange={(event) =>
-                        setMaxOutputTokensDraft(event.target.value)
+                        { setMaxOutputTokensDraft(event.target.value); }
                       }
                       placeholder="32768"
                       aria-describedby="provider-max-output-tokens-help provider-max-output-tokens-warning"
@@ -1851,10 +1851,10 @@ export function ChatProvidersSettings({
                         id="provider-reasoning-support"
                         checked={reasoningConfig?.enabled === true}
                         aria-describedby="provider-reasoning-support-help"
-                        onCheckedChange={(checked) => setReasoningConfig({
+                        onCheckedChange={(checked) => { setReasoningConfig({
                           enabled: checked === true,
                           style: reasoningConfig?.style ?? "reasoning_effort",
-                        })}
+                        }); }}
                       />
                       Enable reasoning controls
                     </label>
@@ -1872,10 +1872,10 @@ export function ChatProvidersSettings({
                       <div className="mt-[var(--ui-title-cap-inset)] flex min-w-0 flex-col gap-1.5 @max-[520px]:mt-0">
                         <Select
                           value={reasoningConfig.style}
-                          onValueChange={(style) => setReasoningConfig({
+                          onValueChange={(style) => { setReasoningConfig({
                             enabled: true,
                             style: style as CustomReasoningConfig["style"],
-                          })}
+                          }); }}
                         >
                           <SelectTrigger id="provider-reasoning-style" className="h-9 w-full text-sm" aria-describedby="provider-reasoning-style-help">
                             <SelectValue />
@@ -1917,7 +1917,7 @@ export function ChatProvidersSettings({
                       id="provider-is-reasoning"
                       checked={isReasoningModel}
                       onCheckedChange={(checked) =>
-                        setIsReasoningModel(checked === true)
+                        { setIsReasoningModel(checked === true); }
                       }
                     />
                     This server runs a reasoning model
@@ -2048,7 +2048,7 @@ export function ChatProvidersSettings({
                         id="provider-manual-models"
                         value={manualModelIds}
                         onChange={(event) =>
-                          setManualModelIds(event.target.value)
+                          { setManualModelIds(event.target.value); }
                         }
                         placeholder={customProviderModelIdsPlaceholder(providerType)}
                         rows={5}
@@ -2072,7 +2072,7 @@ export function ChatProvidersSettings({
                             type="search"
                             value={modelSearchQuery}
                             onChange={(event) =>
-                              setModelSearchQuery(event.target.value)
+                              { setModelSearchQuery(event.target.value); }
                             }
                             placeholder="Search"
                             aria-label="Search models"
@@ -2112,13 +2112,13 @@ export function ChatProvidersSettings({
                               <li
                                 key={model}
                                 className="flex min-h-9 cursor-pointer items-center gap-2.5 px-4 py-1.5 hover:bg-muted/35"
-                                onClick={() => toggleModel(model)}
+                                onClick={() => { toggleModel(model); }}
                               >
                                 <Checkbox
                                   id={`provider-model-curated-${modelsPanelKey}-${index}`}
                                   checked={selectedModelIds.includes(model)}
-                                  onCheckedChange={() => toggleModel(model)}
-                                  onClick={(event) => event.stopPropagation()}
+                                  onCheckedChange={() => { toggleModel(model); }}
+                                  onClick={(event) => { event.stopPropagation(); }}
                                 />
                                 <span
                                   className="min-w-0 break-all text-sm leading-tight"
@@ -2142,7 +2142,7 @@ export function ChatProvidersSettings({
                         <Textarea
                           id="provider-manual-models"
                           value={manualModelIds}
-                          onChange={(event) => setManualModelIds(event.target.value)}
+                          onChange={(event) => { setManualModelIds(event.target.value); }}
                           placeholder={"model-id-1\nmodel-id-2"}
                           rows={5}
                           className="min-h-[calc(100px*var(--ui-space-scale,1))] resize-y font-mono text-sm"
@@ -2164,7 +2164,7 @@ export function ChatProvidersSettings({
                             type="search"
                             value={modelSearchQuery}
                             onChange={(event) =>
-                              setModelSearchQuery(event.target.value)
+                              { setModelSearchQuery(event.target.value); }
                             }
                             placeholder="Search"
                             aria-label="Search models"
@@ -2201,13 +2201,13 @@ export function ChatProvidersSettings({
                               <li
                                 key={model}
                                 className="flex min-h-9 cursor-pointer items-center gap-2.5 px-4 py-1.5 hover:bg-muted/35"
-                                onClick={() => toggleModel(model)}
+                                onClick={() => { toggleModel(model); }}
                               >
                                 <Checkbox
                                   id={`provider-model-remote-${modelsPanelKey}-${index}`}
                                   checked={selectedModelIds.includes(model)}
-                                  onCheckedChange={() => toggleModel(model)}
-                                  onClick={(event) => event.stopPropagation()}
+                                  onCheckedChange={() => { toggleModel(model); }}
+                                  onClick={(event) => { event.stopPropagation(); }}
                                 />
                                 <span
                                   className="min-w-0 break-all text-sm leading-tight"
@@ -2234,7 +2234,7 @@ export function ChatProvidersSettings({
                           id="provider-manual-models"
                           value={manualModelIds}
                           onChange={(event) =>
-                            setManualModelIds(event.target.value)
+                            { setManualModelIds(event.target.value); }
                           }
                           placeholder={customProviderModelIdsPlaceholder(
                             providerType,
@@ -2442,7 +2442,7 @@ export function ChatProvidersSettings({
                         variant="ghost"
                         className="size-7 hover:text-destructive"
                         disabled={mutatingProvider}
-                        onClick={() => setPendingDeleteProvider(provider)}
+                        onClick={() => { setPendingDeleteProvider(provider); }}
                         title="Delete connection"
                         aria-label={`Delete ${provider.name}`}
                       >

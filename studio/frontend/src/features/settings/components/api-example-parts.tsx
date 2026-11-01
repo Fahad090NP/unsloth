@@ -137,7 +137,7 @@ export function ExampleToggle<T extends string>({
           <button
             key={option.id}
             type="button"
-            onClick={() => onChange(option.id)}
+            onClick={() => { onChange(option.id); }}
             aria-pressed={value === option.id}
             className={cn(
               "relative whitespace-nowrap rounded-full font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -260,7 +260,7 @@ export function ExampleCodeBox({
   const handleCopy = async () => {
     if (await copyToClipboard(code)) {
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      setTimeout(() => { setCopied(false); }, 1800);
     }
   };
 

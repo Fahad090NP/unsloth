@@ -44,14 +44,14 @@ window.fetch = (input, init) => {
 };
 useChatPreferencesStore.setState({ thinkingVisibility: "expanded" });
 
-type Options = {
+interface Options {
   size?: number;
   kind?: "mixed" | "code" | "line";
   chunk?: number;
   gap?: number;
   userPrompt?: string;
   text?: string;
-};
+}
 let source = "";
 let config: Required<Options> = {
   size: 100000,
@@ -179,7 +179,7 @@ function Api() {
       },
     };
     Object.assign(window, { __reasoning: api });
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); };
   }, [aui]);
   return null;
 }

@@ -28,13 +28,13 @@ const DONE_UPSTREAM_KINDS: ReadonlySet<NodeConfig["kind"]> = new Set([
   "tool_config",
 ]);
 
-export type GraphRuntimeVisualState = {
+export interface GraphRuntimeVisualState {
   executionLocked: boolean;
   runningNodeId: string | null;
   doneNodeIds: Set<string>;
   activeEdgeIds: Set<string>;
   batch: RecipeExecutionBatch | null;
-};
+}
 
 function isAuxEdge(edge: Edge): boolean {
   return edge.source.startsWith("aux-") || edge.target.startsWith("aux-");

@@ -119,7 +119,7 @@ export function detailerAvailable(
   external: boolean,
   segmenter: DetailerSegmenterStatus | null | undefined,
 ): boolean {
-  return detailerModelCapable(status, external) && segmenter?.supported === true && segmenter.downloaded === true;
+  return detailerModelCapable(status, external) && segmenter?.supported === true && segmenter.downloaded;
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
@@ -134,7 +134,7 @@ export function detailerRequestField(
   const out: DetailerRequest = { targets };
   const prompt = options.prompt.trim();
   if (prompt) out.prompt = prompt;
-  const numeric: Array<[keyof DetailerRequest, number, number, number, number]> = [
+  const numeric: [keyof DetailerRequest, number, number, number, number][] = [
     ["denoise", options.denoise, DETAILER_DEFAULTS.denoise, 0.01, 1],
     ["confidence", options.confidence, DETAILER_DEFAULTS.confidence, 0, 1],
     ["crop_factor", options.cropFactor, DETAILER_DEFAULTS.cropFactor, 1, 10],
@@ -217,7 +217,7 @@ export function restoredDetailer(image: { detailer?: unknown }): {
   const options: Partial<DetailerOptions> = { ...DETAILER_DEFAULTS };
   if (record.targets) options.targets = record.targets;
   options.prompt = record.prompt ?? "";
-  const pairs: Array<[keyof DetailerOptions, number | undefined]> = [
+  const pairs: [keyof DetailerOptions, number | undefined][] = [
     ["denoise", record.denoise],
     ["confidence", record.confidence],
     ["cropFactor", record.crop_factor],
@@ -316,7 +316,7 @@ export function detailerSummary(record: DetailerRecord | null | undefined): stri
   return `${targets}: ${count} fixed, denoise ${record.denoise ?? DETAILER_DEFAULTS.denoise}`;
 }
 
-export function detailerErrors(images: Array<{ detailer?: unknown }>): string[] {
+export function detailerErrors(images: { detailer?: unknown }[]): string[] {
   const errors = new Set<string>();
   for (const image of images) {
     const error = detailerRecordOf(image.detailer)?.error;
@@ -332,7 +332,7 @@ export function readDetailerOptions(): DetailerOptions {
     const value = JSON.parse(localStorage.getItem(KEY) ?? "{}");
     if (!value || typeof value !== "object" || Array.isArray(value)) return { ...DETAILER_DEFAULTS };
     const out = { ...DETAILER_DEFAULTS };
-    for (const key of Object.keys(DETAILER_DEFAULTS) as Array<keyof DetailerOptions>) {
+    for (const key of Object.keys(DETAILER_DEFAULTS) as (keyof DetailerOptions)[]) {
       const v = (value as Record<string, unknown>)[key];
       if (key === "steps" || key === "guidance")
         out[key] = typeof v === "number" && Number.isFinite(v) ? v : null;

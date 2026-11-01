@@ -13,14 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { type ReactElement } from "react";
+import type { ReactElement } from "react";
 import type { LlmConfig, Score } from "../../types";
 import { FieldLabel } from "../shared/field-label";
 
-type LlmScoresTabProps = {
+interface LlmScoresTabProps {
   config: LlmConfig;
   onUpdate: (patch: Partial<LlmConfig>) => void;
-};
+}
 
 export function LlmScoresTab({
   config,
@@ -139,7 +139,7 @@ export function LlmScoresTab({
               type="button"
               size="xs"
               variant="ghost"
-              onClick={() => removeScore(index)}
+              onClick={() => { removeScore(index); }}
             >
               Remove
             </Button>
@@ -149,7 +149,7 @@ export function LlmScoresTab({
             placeholder="Score name"
             value={score.name}
             onChange={(event) =>
-              updateScore(index, { name: event.target.value })
+              { updateScore(index, { name: event.target.value }); }
             }
           />
           <Textarea
@@ -157,7 +157,7 @@ export function LlmScoresTab({
             placeholder="Score description"
             value={score.description}
             onChange={(event) =>
-              updateScore(index, { description: event.target.value })
+              { updateScore(index, { description: event.target.value }); }
             }
           />
           <div className="space-y-1">
@@ -171,9 +171,9 @@ export function LlmScoresTab({
                   placeholder="Value"
                   value={option.value}
                   onChange={(event) =>
-                    updateOption(index, optionIndex, {
+                    { updateOption(index, optionIndex, {
                       value: event.target.value,
-                    })
+                    }); }
                   }
                 />
                 <Input
@@ -181,16 +181,16 @@ export function LlmScoresTab({
                   placeholder="Description"
                   value={option.description}
                   onChange={(event) =>
-                    updateOption(index, optionIndex, {
+                    { updateOption(index, optionIndex, {
                       description: event.target.value,
-                    })
+                    }); }
                   }
                 />
                 <Button
                   type="button"
                   size="xs"
                   variant="ghost"
-                  onClick={() => removeOption(index, optionIndex)}
+                  onClick={() => { removeOption(index, optionIndex); }}
                 >
                   x
                 </Button>
@@ -200,7 +200,7 @@ export function LlmScoresTab({
               type="button"
               size="xs"
               variant="outline"
-              onClick={() => addOption(index)}
+              onClick={() => { addOption(index); }}
             >
               <HugeiconsIcon icon={PlusSignIcon} data-icon="inline-start" />
               Add option

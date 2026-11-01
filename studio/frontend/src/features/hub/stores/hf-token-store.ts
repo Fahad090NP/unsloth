@@ -8,7 +8,7 @@ import { create } from "zustand";
 type HfTokenApi = typeof import("../api/hf-token-api");
 
 async function loadHfTokenApi(): Promise<HfTokenApi> {
-  return import("../api/hf-token-api");
+  return await import("../api/hf-token-api");
 }
 
 const HF_TOKEN_KEY = "unsloth_hf_token";
@@ -282,7 +282,7 @@ export function hydrateHfTokenFromBackend(): Promise<void> {
 export async function refreshHfTokenFromBackend(): Promise<void> {
 
   backendNotificationRevision += 1;
-  if (!hydrationPromise) return hydrateHfTokenFromBackend();
+  if (!hydrationPromise) { await hydrateHfTokenFromBackend(); return; }
   hydrationReplayRequested = true;
   try {
     await hydrationPromise;
@@ -291,7 +291,7 @@ export async function refreshHfTokenFromBackend(): Promise<void> {
   }
   if (!hydrationReplayRequested) return;
   hydrationReplayRequested = false;
-  return hydrateHfTokenFromBackend();
+  await hydrateHfTokenFromBackend();
 }
 
 function resetHfCredentialSession(): void {

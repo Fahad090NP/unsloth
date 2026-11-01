@@ -13,13 +13,13 @@ export interface VideoSizeLimits {
   minPixels: number;
   maxPixels: number;
   maxAspect: number;
-  presets: Array<[number, number]>;
+  presets: [number, number][];
   // An older backend refuses anything off the presets.
   presetsOnly: boolean;
 }
 
 /** Mirrors the backend's video_custom_size_bounds for the pre-load fallback presets. */
-function boundsFromPresets(presets: Array<[number, number]>) {
+function boundsFromPresets(presets: [number, number][]) {
   const areas = presets.map(([w, h]) => w * h);
   const smallest = Math.min(...areas);
   const largest = Math.max(...areas);
@@ -35,7 +35,7 @@ function boundsFromPresets(presets: Array<[number, number]>) {
 
 export function videoSizeLimits(
   defaults: VideoGenerationDefaults | null | undefined,
-  presets: Array<[number, number]>,
+  presets: [number, number][],
 ): VideoSizeLimits {
   const multiple = defaults?.resolution_multiple || 32;
   if (defaults?.custom_size_max_pixels && defaults.custom_size_min_pixels) {

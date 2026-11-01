@@ -53,7 +53,7 @@ function serveAdapterDetails(overrides: Record<string, unknown>): void {
   );
 }
 
-after(() => setAuthFetchHandler(null));
+after(() => { setAuthFetchHandler(null); });
 
 test("a vision adapter picked for LoRA keeps its vision capability", async () => {
   useTrainingConfigStore.getState().reset();

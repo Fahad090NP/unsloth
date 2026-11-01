@@ -8,12 +8,12 @@ import test from "node:test";
 // The desktop sidebar collapses to zero, so it must not wear the icon rail's styling mid-way.
 
 async function source(path: string): Promise<string> {
-  return readFile(new URL(path, import.meta.url), "utf8");
+  return await readFile(new URL(path, import.meta.url), "utf8");
 }
 
 test("a sidebar that collapses to zero never enters icon-rail mode", async () => {
   const sidebar = await source("../src/components/ui/sidebar.tsx");
-  const attribute = sidebar.match(/data-collapsible=\{([\s\S]*?)\n\s*\}/);
+  const attribute = /data-collapsible=\{([\s\S]*?)\n\s*\}/.exec(sidebar);
   assert.ok(attribute, "data-collapsible is no longer written as an expression");
   const expression = attribute[1];
   assert.match(

@@ -10,8 +10,8 @@ import { readSrcAsync } from "./helpers/kit.ts";
 
 test("the bottom fade re-measures off the list's size, not its row inputs", async () => {
   const source = await readSrcAsync("components/app-sidebar.tsx");
-  assert.equal(/Recompute bottom-fade on mount/.test(source), false);
-  assert.equal(/window\.addEventListener\("resize"/.test(source), false);
+  assert.equal(source.includes('Recompute bottom-fade on mount'), false);
+  assert.equal(source.includes('window.addEventListener("resize"'), false);
   assert.match(source, /observer\.observe\(el\);/);
   assert.match(source, /for \(const section of el\.children\) observer\.observe\(section\);/);
   assert.match(source, /sections\.observe\(el, \{ childList: true \}\);/);
@@ -25,5 +25,5 @@ test("the bottom fade re-measures off the list's size, not its row inputs", asyn
   // React never owns the attribute, so a render cannot reset it.
   assert.match(source, /ref=\{attachFade\}/);
   assert.match(source, /"opacity-0 data-\[visible=true\]:opacity-100"/);
-  assert.equal(/data-visible=/.test(source), false);
+  assert.equal(source.includes('data-visible='), false);
 });

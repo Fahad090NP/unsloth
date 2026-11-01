@@ -21,13 +21,13 @@ const BACKEND_LABELS: Record<string, string> = {
   "mxc-processcontainer": "MXC",
 };
 
-export type ToolRowView = {
+export interface ToolRowView {
   isolated: boolean;
   backendLabel: string;
   reason: string;
   remediation: string;
   runsInCmd: boolean;
-};
+}
 
 export function toolRowView(
   tool: SandboxToolStatus,
@@ -50,7 +50,7 @@ export type HostPrepStatus =
   | "needsPreparingAgain"
   | "unknown";
 
-export type WindowsView = {
+export interface WindowsView {
   unsupported: RuntimeUnsupported | null;
   runtimeMissing: boolean;
   showInstallRuntime: boolean;
@@ -67,7 +67,7 @@ export type WindowsView = {
   prepareDisabled: boolean;
   /** A Windows update adds the built-in container, which needs no administrator step. */
   builtinUpdate: { current: string; required: string } | null;
-};
+}
 
 export function hostPrepStatus(windows: WindowsSandboxStatus): HostPrepStatus {
   if (!windows.runtimeInstalled) return "runtimeMissing";
@@ -172,18 +172,18 @@ export function isOlderJob(
 
 // Only failures show output; the last lines name the cause.
 export function jobOutputLines(job: HostPrepJob | null, max = 6): string[] {
-  if (!job || job.state !== "failed") return [];
+  if (job?.state !== "failed") return [];
   return job.outputTail.filter((line) => line.trim() !== "").slice(-max);
 }
 
-export type SetupRowView = {
+export interface SetupRowView {
   show: boolean;
   builtIn: boolean;
   showInstall: boolean;
   installDisabled: boolean;
   command: string;
   reason: string;
-};
+}
 
 const HIDDEN_SETUP_ROW: SetupRowView = {
   show: false,

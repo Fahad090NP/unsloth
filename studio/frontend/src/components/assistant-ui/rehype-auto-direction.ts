@@ -66,7 +66,7 @@ function wrapTightItemText(item: Element): void {
     type: "element",
     tagName: "span",
     properties: { dir: "auto" },
-    children: inline as Element["children"],
+    children: inline,
   };
   item.children.splice(0, end, wrapper);
 }
