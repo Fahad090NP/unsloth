@@ -3,8 +3,8 @@
 
 import {
   ILabShell,
-  JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  type JupyterFrontEnd,
+  type JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { Widget } from '@lumino/widgets';

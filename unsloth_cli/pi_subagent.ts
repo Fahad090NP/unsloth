@@ -39,11 +39,16 @@ function positiveInt(value: unknown, fallback: number): number {
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function finalText(message: any): string {
-	if (message?.role !== "assistant" || !Array.isArray(message.content)) return "";
-	return message.content
-		.filter((part: any) => part?.type === "text" && typeof part.text === "string")
-		.map((part: any) => part.text)
+function finalText(message: unknown): string {
+	const value = message as { role?: unknown; content?: unknown };
+	if (value.role !== "assistant" || !Array.isArray(value.content)) return "";
+	return value.content
+		.filter(
+			(part): part is { type?: unknown; text?: unknown } =>
+				typeof part === "object" && part !== null && "text" in part,
+		)
+		.filter((part) => part.type === "text" && typeof part.text === "string")
+		.map((part) => part.text as string)
 		.join("\n")
 		.trim();
 }
@@ -59,7 +64,8 @@ function agentSlotRelease(): () => void {
 		if (released) return;
 		released = true;
 		while (waitingAgents.length) {
-			if (waitingAgents.shift()!()) return;
+			const next = waitingAgents.shift();
+			if (next?.()) return;
 		}
 		activeAgents -= 1;
 	};
@@ -155,7 +161,7 @@ async function stopChildTree(child: ChildProcess): Promise<void> {
 interface LocalAgentResult {
 	task: string;
 	response: string;
-	transcript: any[];
+	transcript: unknown[];
 	error?: string;
 }
 
@@ -163,7 +169,7 @@ async function runLocalAgent(
 	task: string,
 	cwd: string,
 	signal: AbortSignal | undefined,
-	onProgress: (result: LocalAgentResult) => void,
+	onProgress: (_result: LocalAgentResult) => void,
 ): Promise<LocalAgentResult> {
 	const extension = fileURLToPath(import.meta.url);
 	const args = [
@@ -188,7 +194,7 @@ async function runLocalAgent(
 	let aborted = false;
 	const result: LocalAgentResult = { task, response: "", transcript: [] };
 	const transcriptEntries = new Set<string>();
-	const appendTranscript = (messages: any[]): boolean => {
+	const appendTranscript = (messages: unknown[]): boolean => {
 		let changed = false;
 		for (const message of messages) {
 			const entry = JSON.stringify(message);

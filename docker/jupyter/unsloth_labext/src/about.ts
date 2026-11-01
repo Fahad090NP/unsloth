@@ -4,8 +4,8 @@
 // "About Unsloth Docker Studio": the AGPLv3 license, copyright and source links.
 
 import {
-  JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  type JupyterFrontEnd,
+  type JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { Dialog, ICommandPalette, showDialog } from '@jupyterlab/apputils';
 import { IMainMenu } from '@jupyterlab/mainmenu';

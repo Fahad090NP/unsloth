@@ -501,7 +501,7 @@
       };
     },
     reset() {
-      try { window.sessionStorage.removeItem(FOLLOW_KEY); } catch (e) {}
+      try { window.sessionStorage.removeItem(FOLLOW_KEY); } catch (e) { /* storage may be unavailable */ }
       F.samples = 0;
       F.running_samples = 0;
       F.running_pinned = 0;

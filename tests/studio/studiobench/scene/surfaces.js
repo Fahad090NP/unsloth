@@ -169,7 +169,7 @@
       }
       if (spec.js) {
         try {
-          // eslint-disable-next-line no-new-func
+           
           const got = Function("return (" + spec.js + ")")();
           return { ok: Boolean(got), detail: "js -> " + String(got) };
         } catch (err) {

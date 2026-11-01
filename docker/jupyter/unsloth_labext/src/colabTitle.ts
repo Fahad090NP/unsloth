@@ -2,11 +2,11 @@
 // Copyright 2026-Present the Unsloth team. See /studio/LICENSE.AGPL-3.0
 
 import {
-  JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  type JupyterFrontEnd,
+  type JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
-import { Cell } from '@jupyterlab/cells';
+import { INotebookTracker, type NotebookPanel } from '@jupyterlab/notebook';
+import { type Cell } from '@jupyterlab/cells';
 
 /**
  * Colab "#@title" form cells: a clickable title bar that hides the input via a CSS

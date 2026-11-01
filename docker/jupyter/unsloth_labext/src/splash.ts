@@ -4,9 +4,9 @@
 // Replace the JupyterLab loading splash with a spinning Unsloth logo. The stock
 // splash is disabled + locked at build, so this is the only ISplashScreen provider.
 
-import { JupyterFrontEndPlugin } from '@jupyterlab/application';
+import { type JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { ISplashScreen } from '@jupyterlab/apputils';
-import { DisposableDelegate, IDisposable } from '@lumino/disposable';
+import { DisposableDelegate, type IDisposable } from '@lumino/disposable';
 import { UNSLOTH_LOGO_DATA_URI } from './logo';
 import { SPLASH_LABEL } from './branding';
 

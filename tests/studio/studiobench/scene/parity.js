@@ -150,7 +150,7 @@
       };
       for (const child of el.childNodes) {
         if (child.nodeType === 3) {
-          const v = child.nodeValue == null ? "" : child.nodeValue;
+          const v = child.nodeValue ?? "";
           run += v;
           if (fence !== null) {
             fence.all += v;

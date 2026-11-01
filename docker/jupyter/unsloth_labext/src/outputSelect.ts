@@ -2,8 +2,8 @@
 // Copyright 2026-Present the Unsloth team. See /studio/LICENSE.AGPL-3.0
 
 import {
-  JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  type JupyterFrontEnd,
+  type JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
 /**
@@ -16,7 +16,7 @@ const OUTPUT_SELECTORS = ['.jp-OutputArea-output', '.jp-Cell-outputWrapper'];
 
 function closestOutput(node: Node | null): HTMLElement | null {
   const el =
-    node == null
+    node === null || node === undefined
       ? null
       : node.nodeType === Node.ELEMENT_NODE
         ? (node as HTMLElement)

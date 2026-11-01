@@ -2,8 +2,8 @@
 // Copyright 2026-Present the Unsloth team. See /studio/LICENSE.AGPL-3.0
 
 import {
-  JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  type JupyterFrontEnd,
+  type JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { CodeMirrorEditor } from '@jupyterlab/codemirror';
 import { INotebookTracker } from '@jupyterlab/notebook';

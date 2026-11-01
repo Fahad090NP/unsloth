@@ -12,16 +12,16 @@
 (function () {
 	"use strict";
 
-	var PREFIX = "CVPOT ";
-	var MESSAGE_SELECTOR = "[data-message-id]";
-	var VIEWPORT_SELECTOR = ".aui-thread-viewport";
-	var SAMPLE_MS = 2000;
-	var MAX_ROOTS_SCANNED = 60;
-	var MAX_DESCENDANTS_PER_ROOT = 40;
+	const PREFIX = "CVPOT ";
+	const MESSAGE_SELECTOR = "[data-message-id]";
+	const VIEWPORT_SELECTOR = ".aui-thread-viewport";
+	const SAMPLE_MS = 2000;
+	const MAX_ROOTS_SCANNED = 60;
+	const MAX_DESCENDANTS_PER_ROOT = 40;
 	/* A skipped root lands on either its declared fallback (fine) or its padding alone (a remembered
 	 * size of zero, the trap). They collide on this app, so each is matched against its own target,
 	 * fallback first. */
-	var ROLE_PX = {
+	const ROLE_PX = {
 		assistant: { fallback: 300, padding: 18 },
 		user: { fallback: 60, padding: 40 }
 	};
@@ -30,7 +30,7 @@
 		return (which === "fallback" ? px.fallback : 0) + px.padding;
 	}
 	/* Sub-pixel layout defeats exact equality; too small for either test to reach the other target. */
-	var PX_EPS = 2;
+	const PX_EPS = 2;
 
 	if (typeof window === "undefined" || !window.document) {
 		return;
@@ -40,17 +40,17 @@
 	}
 	window.__cvPotInstalled = true;
 
-	var doc = window.document;
-	var watched = [];
-	var watchedSet = typeof WeakSet === "function" ? new WeakSet() : null;
+	const doc = window.document;
+	let watched = [];
+	const watchedSet = typeof WeakSet === "function" ? new WeakSet() : null;
 	/* Weak so a discarded root is not kept alive. */
-	var recOf = typeof WeakMap === "function" ? new WeakMap() : null;
-	var ev = { stateChange: 0, skip: 0, unskip: 0, watchers: 0, listenerErrors: 0 };
-	var seq = 0;
+	const recOf = typeof WeakMap === "function" ? new WeakMap() : null;
+	const ev = { stateChange: 0, skip: 0, unskip: 0, watchers: 0, listenerErrors: 0 };
+	let seq = 0;
 
 	function computed(el, prop) {
 		try {
-			var s = window.getComputedStyle(el);
+			const s = window.getComputedStyle(el);
 			return s ? String(s.getPropertyValue(prop) || "").trim() : "";
 		} catch (e) {
 			return "";
@@ -59,10 +59,10 @@
 
 	function all(selector, scope) {
 		try {
-			var root = scope || doc;
-			var list = root.querySelectorAll(selector);
-			var out = [];
-			for (var i = 0; i < list.length; i++) {
+			const root = scope || doc;
+			const list = root.querySelectorAll(selector);
+			const out = [];
+			for (let i = 0; i < list.length; i++) {
 				out.push(list[i]);
 			}
 			return out;
@@ -99,7 +99,7 @@
 			} else {
 				el.__cvPotWatched = true;
 			}
-			var rec = { el: el, skipped: null, events: 0 };
+			const rec = { el: el, skipped: null, events: 0 };
 			el.addEventListener("contentvisibilityautostatechange", function (e) {
 				ev.stateChange += 1;
 				rec.events += 1;
@@ -126,15 +126,15 @@
 	/* A KNOWN FALSE NEGATIVE, KEPT ON PURPOSE: `getClientRects()` inside a locked subtree makes
 	 * Chromium render it to answer. Use `ev_skip`. */
 	function descendantBoxes(el, cap) {
-		var kids;
+		let kids;
 		try {
 			kids = el.querySelectorAll("*");
 		} catch (e) {
 			return -1;
 		}
-		var limit = Math.min(kids.length, cap);
-		var n = 0;
-		for (var i = 0; i < limit; i++) {
+		const limit = Math.min(kids.length, cap);
+		let n = 0;
+		for (let i = 0; i < limit; i++) {
 			try {
 				if (kids[i].getClientRects().length > 0) {
 					n += 1;
@@ -148,7 +148,7 @@
 
 	/* `null` means no transition seen, which is not "rendered". */
 	function skippedState(el) {
-		var rec = null;
+		let rec = null;
 		try {
 			rec = recOf ? recOf.get(el) : el.__cvPotRec;
 		} catch (e) {
@@ -169,27 +169,27 @@
 		if (sorted.length === 0) {
 			return 0;
 		}
-		var i = Math.min(sorted.length - 1, Math.max(0, Math.round((sorted.length - 1) * q)));
+		const i = Math.min(sorted.length - 1, Math.max(0, Math.round((sorted.length - 1) * q)));
 		return sorted[i];
 	}
 
 	function sample() {
 		seq += 1;
-		var roots = all(MESSAGE_SELECTOR);
-		var i;
+		const roots = all(MESSAGE_SELECTOR);
+		let i;
 		for (i = 0; i < roots.length; i++) {
 			watch(roots[i]);
 		}
 
-		var vp = null;
+		let vp = null;
 		try {
 			vp = doc.querySelector(VIEWPORT_SELECTOR);
 		} catch (e) {
 			vp = null;
 		}
-		var vpRect = vp ? rect(vp) : null;
+		const vpRect = vp ? rect(vp) : null;
 
-		var out = {
+		const out = {
 			seq: seq,
 			origin: String(window.location.origin || ""),
 			href_thread: String(window.location.hash || window.location.pathname || ""),
@@ -211,11 +211,11 @@
 			codeBlocksAuto: 0
 		};
 
-		var heights = [];
-		var scanned = 0;
+		const heights = [];
+		let scanned = 0;
 		for (i = 0; i < roots.length; i++) {
-			var el = roots[i];
-			var cv = computed(el, "content-visibility");
+			const el = roots[i];
+			const cv = computed(el, "content-visibility");
 			if (cv === "auto") {
 				out.cvAuto += 1;
 			} else if (cv === "visible") {
@@ -225,13 +225,13 @@
 				out.cis = computed(el, "contain-intrinsic-size");
 				out.cis_role = roleOf(el);
 			}
-			var r = rect(el);
+			const r = rect(el);
 			if (r) {
 				heights.push(Math.round(r.height));
 				/* Mutually exclusive buckets; the fallback wins ties so a root behaving as declared
 				 * is not charged to the trap. */
 				/* Only while skipped: size containment applies only then. */
-				var px = ROLE_PX[roleOf(el)];
+				const px = ROLE_PX[roleOf(el)];
 				if (cv === "auto" && px && skippedState(el) === true) {
 					if (Math.abs(r.height - targetHeight(px, "fallback")) <= PX_EPS) {
 						out.fallbackBite += 1;
@@ -243,9 +243,9 @@
 			/* Forces layout, so capped: the probe must not become the load. */
 			if (cv === "auto" && r && vpRect && scanned < MAX_ROOTS_SCANNED) {
 				scanned += 1;
-				var hasOwnBox = r.width > 0 || r.height > 0;
-				var boxes = descendantBoxes(el, MAX_DESCENDANTS_PER_ROOT);
-				var off = !intersects(r, vpRect);
+				const hasOwnBox = r.width > 0 || r.height > 0;
+				const boxes = descendantBoxes(el, MAX_DESCENDANTS_PER_ROOT);
+				const off = !intersects(r, vpRect);
 				if (off) {
 					out.armedOffscreen += 1;
 					if (hasOwnBox && boxes === 0) {
@@ -265,7 +265,7 @@
 		}
 		out.scanned = scanned;
 
-		var blocks = all('[data-streamdown="code-block"]');
+		const blocks = all('[data-streamdown="code-block"]');
 		out.codeBlocks = blocks.length;
 		for (i = 0; i < blocks.length; i++) {
 			if (computed(blocks[i], "content-visibility") === "auto") {
@@ -274,10 +274,10 @@
 		}
 
 		/* Connected roots only: `thread_reopen` detaches old roots, whose last `skipped` would stick. */
-		var live = [];
+		const live = [];
 		for (i = 0; i < watched.length; i++) {
-			var wel = watched[i].el;
-			var connected = false;
+			const wel = watched[i].el;
+			let connected = false;
 			try {
 				connected = wel.isConnected !== false && doc.contains(wel);
 			} catch (e) {
@@ -335,18 +335,18 @@
 	 * only event once. So roots are adopted at insertion by a MutationObserver on the Document (not
 	 * `documentElement`, which may not exist yet); the interval catches later-acquired properties. */
 	function adoptAll() {
-		var roots = all(MESSAGE_SELECTOR);
-		for (var i = 0; i < roots.length; i++) {
+		const roots = all(MESSAGE_SELECTOR);
+		for (let i = 0; i < roots.length; i++) {
 			watch(roots[i]);
 		}
 	}
 
 	/* Added nodes only: a document-wide re-scan per mutation would make the probe the load. */
 	function adoptAdded(records) {
-		for (var i = 0; i < records.length; i++) {
-			var added = records[i].addedNodes;
-			for (var j = 0; j < (added ? added.length : 0); j++) {
-				var node = added[j];
+		for (let i = 0; i < records.length; i++) {
+			const added = records[i].addedNodes;
+			for (let j = 0; j < (added ? added.length : 0); j++) {
+				const node = added[j];
 				if (!node || node.nodeType !== 1) {
 					continue;
 				}
@@ -357,8 +357,8 @@
 				} catch (e) {
 					ev.listenerErrors += 1;
 				}
-				var inner = all(MESSAGE_SELECTOR, node);
-				for (var k = 0; k < inner.length; k++) {
+				const inner = all(MESSAGE_SELECTOR, node);
+				for (let k = 0; k < inner.length; k++) {
 					watch(inner[k]);
 				}
 			}

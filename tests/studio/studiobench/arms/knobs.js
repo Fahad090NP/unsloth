@@ -31,7 +31,7 @@
 		return;
 	}
 
-	var W = window;
+	const W = window;
 
 	// Idempotence: add_init_script runs for every document including iframes.
 	if (W.__sbArmsInstalled) {
@@ -39,29 +39,29 @@
 	}
 	W.__sbArmsInstalled = true;
 
-	var VERSION = "1.0.0";
-	var CANONICAL_FORMAT_VERSION = 1;
+	const VERSION = "1.0.0";
+	const CANONICAL_FORMAT_VERSION = 1;
 
-	var VIEWPORT_SELECTOR = ".aui-thread-viewport.aui-stream-viewport";
-	var VIEWPORT_CLASS = "aui-stream-viewport";
-	var MESSAGE_SELECTOR = "[data-message-id]";
-	var CODE_BLOCK_SELECTOR = '[data-streamdown="code-block"]';
-	var RUNNING_SELECTOR = '[data-status="running"]';
-	var STABILIZER_PROP = "--aui-scroll-stabilizer";
-	var MARKER_ATTR = "data-sb-arm";
+	const VIEWPORT_SELECTOR = ".aui-thread-viewport.aui-stream-viewport";
+	const VIEWPORT_CLASS = "aui-stream-viewport";
+	const MESSAGE_SELECTOR = "[data-message-id]";
+	const CODE_BLOCK_SELECTOR = '[data-streamdown="code-block"]';
+	const RUNNING_SELECTOR = '[data-status="running"]';
+	const STABILIZER_PROP = "--aui-scroll-stabilizer";
+	const MARKER_ATTR = "data-sb-arm";
 
-	var ARM_IDS = ["A", "B", "C", "D", "E", "F", "G"];
-	var PREBOOT_ARMS = { D: true, E: true, F: true };
+	const ARM_IDS = ["A", "B", "C", "D", "E", "F", "G"];
+	const PREBOOT_ARMS = { D: true, E: true, F: true };
 
-	var MAX_RETAINED_SCHEDULER_EVENTS = 256;
-	var MAX_CAPTURED_CHANNELS = 64;
-	var DEFAULT_MAX_CANONICAL_CHARS = 4000000;
-	var DEFAULT_CONTROL_VISIBLE_TARGET = 3;
-	var MAX_STYLESHEET_DEPTH = 8;
+	const MAX_RETAINED_SCHEDULER_EVENTS = 256;
+	const MAX_CAPTURED_CHANNELS = 64;
+	const DEFAULT_MAX_CANONICAL_CHARS = 4000000;
+	const DEFAULT_CONTROL_VISIBLE_TARGET = 3;
+	const _MAX_STYLESHEET_DEPTH = 8;
 
 	// Absent config is not permission to patch a control run.
 
-	var cfg = {};
+	let cfg = {};
 	try {
 		if (W.__sbArmConfig && typeof W.__sbArmConfig === "object") {
 			cfg = W.__sbArmConfig;
@@ -70,7 +70,7 @@
 		cfg = {};
 	}
 
-	var debugOn = false;
+	let debugOn = false;
 	try {
 		debugOn = cfg.debug === true;
 	} catch (e) {
@@ -82,8 +82,8 @@
 			return;
 		}
 		try {
-			var args = ["[sbArms]"];
-			for (var i = 0; i < arguments.length; i++) {
+			const args = ["[sbArms]"];
+			for (let i = 0; i < arguments.length; i++) {
 				args.push(arguments[i]);
 			}
 			if (W.console && typeof W.console.debug === "function") {
@@ -94,12 +94,12 @@
 		}
 	}
 
-	var armedPreboot = [];
+	let armedPreboot = [];
 	try {
-		var rawPreboot = cfg.preboot;
+		const rawPreboot = cfg.preboot;
 		if (rawPreboot && typeof rawPreboot.length === "number") {
-			for (var pi = 0; pi < rawPreboot.length; pi++) {
-				var pid = String(rawPreboot[pi]).toUpperCase();
+			for (let pi = 0; pi < rawPreboot.length; pi++) {
+				const pid = String(rawPreboot[pi]).toUpperCase();
 				if (PREBOOT_ARMS[pid] === true && armedPreboot.indexOf(pid) === -1) {
 					armedPreboot.push(pid);
 				}
@@ -109,9 +109,9 @@
 		armedPreboot = [];
 	}
 
-	var controlVisibleTarget = DEFAULT_CONTROL_VISIBLE_TARGET;
+	let controlVisibleTarget = DEFAULT_CONTROL_VISIBLE_TARGET;
 	try {
-		var rawTarget = cfg.controlVisibleTarget;
+		const rawTarget = cfg.controlVisibleTarget;
 		if (typeof rawTarget === "number" && isFinite(rawTarget) && rawTarget > 0) {
 			controlVisibleTarget = Math.floor(rawTarget);
 		}
@@ -119,7 +119,7 @@
 		controlVisibleTarget = DEFAULT_CONTROL_VISIBLE_TARGET;
 	}
 
-	var redeliverOnUnfreeze = true;
+	let redeliverOnUnfreeze = true;
 	try {
 		if (cfg.redeliverOnUnfreeze === false) {
 			redeliverOnUnfreeze = false;
@@ -128,7 +128,7 @@
 		redeliverOnUnfreeze = true;
 	}
 
-	var doc = null;
+	let doc = null;
 	try {
 		doc = W.document || null;
 	} catch (e) {
@@ -175,10 +175,10 @@
 		};
 	}
 
-	var counters = freshEventCounters();
-	var gauges = freshGauges();
+	const counters = freshEventCounters();
+	const gauges = freshGauges();
 
-	var state = {
+	const state = {
 		applied: {},
 		frozen: false,
 		markers: [],
@@ -196,7 +196,7 @@
 		installed: { D: false, E: false, F: false }
 	};
 
-	var unavailable = {};
+	const unavailable = {};
 
 	function markUnavailable(armId, reason) {
 		try {
@@ -231,12 +231,12 @@
 	// A failed query returns [] and the caller turns that into a reason, not a zero.
 
 	function toArray(nodeList) {
-		var out = [];
+		const out = [];
 		try {
 			if (!nodeList) {
 				return out;
 			}
-			for (var i = 0; i < nodeList.length; i++) {
+			for (let i = 0; i < nodeList.length; i++) {
 				out.push(nodeList[i]);
 			}
 		} catch (e) {
@@ -247,7 +247,7 @@
 
 	function queryAll(selector, root) {
 		try {
-			var scope = root || doc;
+			const scope = root || doc;
 			if (!scope || typeof scope.querySelectorAll !== "function") {
 				return [];
 			}
@@ -259,7 +259,7 @@
 
 	function queryOne(selector, root) {
 		try {
-			var scope = root || doc;
+			const scope = root || doc;
 			if (!scope || typeof scope.querySelector !== "function") {
 				return null;
 			}
@@ -291,9 +291,9 @@
 
 	// Filter in JS, not `:has()`: an unsupported selector drops the whole rule at parse time.
 	function completedMessageRoots() {
-		var roots = messageRoots();
-		var out = [];
-		for (var i = 0; i < roots.length; i++) {
+		const roots = messageRoots();
+		const out = [];
+		for (let i = 0; i < roots.length; i++) {
 			if (!isRunning(roots[i])) {
 				out.push(roots[i]);
 			}
@@ -302,9 +302,9 @@
 	}
 
 	function runningMessageRoots() {
-		var roots = messageRoots();
-		var out = [];
-		for (var i = 0; i < roots.length; i++) {
+		const roots = messageRoots();
+		const out = [];
+		for (let i = 0; i < roots.length; i++) {
 			if (isRunning(roots[i])) {
 				out.push(roots[i]);
 			}
@@ -347,7 +347,7 @@
 			if (!el || typeof W.getComputedStyle !== "function") {
 				return "";
 			}
-			var cs = W.getComputedStyle(el);
+			const cs = W.getComputedStyle(el);
 			if (!cs) {
 				return "";
 			}
@@ -361,9 +361,9 @@
 	}
 
 	function countComputed(els, prop, expected) {
-		var n = 0;
-		for (var i = 0; i < els.length; i++) {
-			var v = computedValue(els[i], prop);
+		let n = 0;
+		for (let i = 0; i < els.length; i++) {
+			const v = computedValue(els[i], prop);
 			if (v.trim() === expected) {
 				n += 1;
 			}
@@ -391,11 +391,11 @@
 			if (!el || typeof el.getAttribute !== "function") {
 				return false;
 			}
-			var prev = el.getAttribute(MARKER_ATTR);
-			var tokens = prev ? String(prev).split(/\s+/) : [];
-			var seen = false;
-			var clean = [];
-			for (var i = 0; i < tokens.length; i++) {
+			const prev = el.getAttribute(MARKER_ATTR);
+			const tokens = prev ? String(prev).split(/\s+/) : [];
+			let seen = false;
+			const clean = [];
+			for (let i = 0; i < tokens.length; i++) {
 				if (!tokens[i]) {
 					continue;
 				}
@@ -417,8 +417,8 @@
 	}
 
 	function markAll(els, armId) {
-		var n = 0;
-		for (var i = 0; i < els.length; i++) {
+		let n = 0;
+		for (let i = 0; i < els.length; i++) {
 			if (markElement(els[i], armId)) {
 				n += 1;
 			}
@@ -427,8 +427,8 @@
 	}
 
 	function unmarkAll() {
-		for (var i = state.markers.length - 1; i >= 0; i--) {
-			var rec = state.markers[i];
+		for (let i = state.markers.length - 1; i >= 0; i--) {
+			const rec = state.markers[i];
 			try {
 				if (rec.prev === null || rec.prev === undefined) {
 					rec.el.removeAttribute(MARKER_ATTR);
@@ -447,8 +447,8 @@
 			if (!el || !el.style || typeof el.style.setProperty !== "function") {
 				return false;
 			}
-			var prevValue = "";
-			var prevPriority = "";
+			let prevValue = "";
+			let prevPriority = "";
 			try {
 				prevValue = el.style.getPropertyValue(prop) || "";
 				prevPriority = el.style.getPropertyPriority(prop) || "";
@@ -456,7 +456,7 @@
 				prevValue = "";
 				prevPriority = "";
 			}
-			var hadStyleAttr = false;
+			let hadStyleAttr = false;
 			try {
 				hadStyleAttr =
 					typeof el.hasAttribute === "function" ? el.hasAttribute("style") : true;
@@ -479,8 +479,8 @@
 	}
 
 	function restoreInline() {
-		for (var i = state.inline.length - 1; i >= 0; i--) {
-			var rec = state.inline[i];
+		for (let i = state.inline.length - 1; i >= 0; i--) {
+			const rec = state.inline[i];
 			try {
 				if (rec.prevValue === "") {
 					rec.el.style.removeProperty(rec.prop);
@@ -488,7 +488,7 @@
 					rec.el.style.setProperty(rec.prop, rec.prevValue, rec.prevPriority);
 				}
 				if (!rec.hadStyleAttr) {
-					var left = "";
+					let left = "";
 					try {
 						left = String(rec.el.getAttribute("style") || "").trim();
 					} catch (e2) {
@@ -516,11 +516,11 @@
 			if (!doc || typeof doc.createElement !== "function") {
 				return false;
 			}
-			var parent = doc.head || doc.documentElement || doc.body;
+			const parent = doc.head || doc.documentElement || doc.body;
 			if (!parent || typeof parent.appendChild !== "function") {
 				return false;
 			}
-			var el = doc.createElement("style");
+			const el = doc.createElement("style");
 			el.setAttribute("data-sb-arm-sheet", armId);
 			el.textContent = cssBody + "\n@layer utilities {\n" + cssBody + "\n}\n";
 			parent.appendChild(el);
@@ -534,7 +534,7 @@
 
 	function removeStyleSheet(armId) {
 		try {
-			var el = state.sheets[armId];
+			const el = state.sheets[armId];
 			if (!el) {
 				return false;
 			}
@@ -576,19 +576,19 @@
 		);
 	}
 
-	var CSS_A =
+	const CSS_A =
 		"body [data-message-id][" + MARKER_ATTR + '~="A"],\n' +
 		"[data-message-id][" + MARKER_ATTR + '~="A"] {\n' +
 		"\tvisibility: hidden !important;\n" +
 		"}\n";
 
-	var CSS_B =
+	const CSS_B =
 		"html body .aui-thread-root [data-streamdown=\"code-block\"][" + MARKER_ATTR + '~="B"],\n' +
 		"html body [data-streamdown=\"code-block\"][" + MARKER_ATTR + '~="B"] {\n' +
 		"\tcontent-visibility: auto !important;\n" +
 		"}\n";
 
-	var CSS_C =
+	const CSS_C =
 		"body [data-message-id][" + MARKER_ATTR + '~="C"],\n' +
 		"[data-message-id][" + MARKER_ATTR + '~="C"] {\n' +
 		"\tdisplay: none !important;\n" +
@@ -597,11 +597,11 @@
 	// `k` is a 1-based nth-child bound; `roots` are the completed roots inside it.
 	function prefixInfo() {
 		try {
-			var vp = viewportEl();
+			const vp = viewportEl();
 			if (!vp) {
 				return null;
 			}
-			var kids = [];
+			let kids = [];
 			try {
 				kids = toArray(vp.children);
 			} catch (e) {
@@ -610,11 +610,11 @@
 			if (kids.length === 0) {
 				return null;
 			}
-			var firstRunning = -1;
-			var i;
+			let firstRunning = -1;
+			let i;
 			for (i = 0; i < kids.length; i++) {
-				var kid = kids[i];
-				var isMessage = false;
+				const kid = kids[i];
+				let isMessage = false;
 				try {
 					isMessage =
 						typeof kid.getAttribute === "function" &&
@@ -627,11 +627,11 @@
 					break;
 				}
 			}
-			var k = firstRunning === -1 ? kids.length : firstRunning;
+			const k = firstRunning === -1 ? kids.length : firstRunning;
 			if (k <= 0) {
 				return null;
 			}
-			var roots = [];
+			const roots = [];
 			for (i = 0; i < k; i++) {
 				try {
 					if (
@@ -647,7 +647,7 @@
 			if (roots.length === 0) {
 				return null;
 			}
-			var skipped = completedMessageRoots().length - roots.length;
+			const skipped = completedMessageRoots().length - roots.length;
 			return { vp: vp, k: k, roots: roots, skipped: skipped > 0 ? skipped : 0 };
 		} catch (e) {
 			return null;
@@ -655,22 +655,22 @@
 	}
 
 
-	var imul =
+	const imul =
 		typeof Math.imul === "function"
 			? Math.imul
 			: function (a, b) {
-					var ah = (a >>> 16) & 0xffff;
-					var al = a & 0xffff;
-					var bh = (b >>> 16) & 0xffff;
-					var bl = b & 0xffff;
+					const ah = (a >>> 16) & 0xffff;
+					const al = a & 0xffff;
+					const bh = (b >>> 16) & 0xffff;
+					const bl = b & 0xffff;
 					return ((al * bl + (((ah * bl + al * bh) << 16) >>> 0)) | 0);
 			  };
 
 	// Non-cryptographic: compare with canonicalLength.
 	function fnv1a32(str) {
-		var h = 0x811c9dc5;
-		for (var i = 0; i < str.length; i++) {
-			var c = str.charCodeAt(i);
+		let h = 0x811c9dc5;
+		for (let i = 0; i < str.length; i++) {
+			const c = str.charCodeAt(i);
 			h ^= c & 0xff;
 			h = imul(h, 16777619);
 			h ^= (c >>> 8) & 0xff;
@@ -705,9 +705,9 @@
 		// Use the CSS parser: splitting on ";" breaks on url(data:...).
 		try {
 			if (doc && typeof doc.createElement === "function") {
-				var scratch = doc.createElement("div");
+				const scratch = doc.createElement("div");
 				scratch.style.cssText = String(value);
-				for (var i = 0; i < skipStyleProps.length; i++) {
+				for (let i = 0; i < skipStyleProps.length; i++) {
 					scratch.style.removeProperty(String(skipStyleProps[i]));
 				}
 				return String(scratch.style.cssText || "");
@@ -715,17 +715,17 @@
 		} catch (e) {
 			/* fall through to the textual fallback */
 		}
-		var parts = String(value).split(";");
-		var kept = [];
-		for (var j = 0; j < parts.length; j++) {
-			var seg = parts[j];
-			var colon = seg.indexOf(":");
+		const parts = String(value).split(";");
+		const kept = [];
+		for (let j = 0; j < parts.length; j++) {
+			const seg = parts[j];
+			const colon = seg.indexOf(":");
 			if (colon < 0) {
 				continue;
 			}
-			var name = seg.slice(0, colon).trim().toLowerCase();
-			var drop = false;
-			for (var k = 0; k < skipStyleProps.length; k++) {
+			const name = seg.slice(0, colon).trim().toLowerCase();
+			let drop = false;
+			for (let k = 0; k < skipStyleProps.length; k++) {
 				if (String(skipStyleProps[k]).trim().toLowerCase() === name) {
 					drop = true;
 					break;
@@ -740,13 +740,13 @@
 
 	// One walk feeds both serialisations, or the page could change between them.
 	function collectRecords() {
-		var roots = messageRoots();
-		var records = [];
-		var totalCodeBlocks = 0;
-		var totalCodeSpans = 0;
-		for (var i = 0; i < roots.length; i++) {
-			var el = roots[i];
-			var rec = {
+		const roots = messageRoots();
+		const records = [];
+		let totalCodeBlocks = 0;
+		let totalCodeSpans = 0;
+		for (let i = 0; i < roots.length; i++) {
+			const el = roots[i];
+			const rec = {
 				tag: "",
 				id: "",
 				attrs: [],
@@ -765,9 +765,9 @@
 				rec.id = "";
 			}
 			try {
-				var attrs = el.attributes;
-				var list = [];
-				for (var a = 0; a < attrs.length; a++) {
+				const attrs = el.attributes;
+				const list = [];
+				for (let a = 0; a < attrs.length; a++) {
 					list.push({
 						name: String(attrs[a].name),
 						value: String(attrs[a].value === undefined ? "" : attrs[a].value)
@@ -785,10 +785,10 @@
 			} catch (e) {
 				rec.text = "";
 			}
-			var blocks = codeBlocksIn(el);
+			const blocks = codeBlocksIn(el);
 			rec.codeBlocks = blocks.length;
-			var spans = 0;
-			for (var b = 0; b < blocks.length; b++) {
+			let spans = 0;
+			for (let b = 0; b < blocks.length; b++) {
 				spans += queryAll("span", blocks[b]).length;
 			}
 			rec.codeSpans = spans;
@@ -805,7 +805,7 @@
 	}
 
 	function serialise(collected, skipAttributes, skipStyleProps, observedKeys) {
-		var lines = [];
+		const lines = [];
 		lines.push("V|" + CANONICAL_FORMAT_VERSION);
 		lines.push("S|messages|" + collected.messages);
 		lines.push("S|codeBlocks|" + collected.codeBlocks);
@@ -817,21 +817,21 @@
 		observedKeys.tag = true;
 		observedKeys.text = true;
 
-		var skip = {};
-		for (var s = 0; s < skipAttributes.length; s++) {
+		const skip = {};
+		for (let s = 0; s < skipAttributes.length; s++) {
 			skip[String(skipAttributes[s]).toLowerCase()] = true;
 		}
 
-		for (var i = 0; i < collected.records.length; i++) {
-			var rec = collected.records[i];
+		for (let i = 0; i < collected.records.length; i++) {
+			const rec = collected.records[i];
 			lines.push("M|" + i + "|" + enc(rec.tag) + "|" + enc(rec.id));
-			for (var a = 0; a < rec.attrs.length; a++) {
-				var name = rec.attrs[a].name;
-				var lower = String(name).toLowerCase();
+			for (let a = 0; a < rec.attrs.length; a++) {
+				const name = rec.attrs[a].name;
+				const lower = String(name).toLowerCase();
 				if (skip[lower] === true) {
 					continue;
 				}
-				var value = rec.attrs[a].value;
+				let value = rec.attrs[a].value;
 				if (lower === "style") {
 					value = normaliseStyleValue(value, skipStyleProps);
 				}
@@ -845,30 +845,30 @@
 	}
 
 	function digest(options) {
-		var opts = options && typeof options === "object" ? options : {};
-		var skipAttributes = ["style"];
+		const opts = options && typeof options === "object" ? options : {};
+		let skipAttributes = ["style"];
 		try {
 			if (opts.skipAttributes && typeof opts.skipAttributes.length === "number") {
 				skipAttributes = [];
-				for (var i = 0; i < opts.skipAttributes.length; i++) {
+				for (let i = 0; i < opts.skipAttributes.length; i++) {
 					skipAttributes.push(String(opts.skipAttributes[i]));
 				}
 			}
 		} catch (e) {
 			skipAttributes = ["style"];
 		}
-		var skipStyleProps = [];
+		let skipStyleProps = [];
 		try {
 			if (opts.skipStyleProps && typeof opts.skipStyleProps.length === "number") {
-				for (var j = 0; j < opts.skipStyleProps.length; j++) {
+				for (let j = 0; j < opts.skipStyleProps.length; j++) {
 					skipStyleProps.push(String(opts.skipStyleProps[j]));
 				}
 			}
 		} catch (e) {
 			skipStyleProps = [];
 		}
-		var keepCanonical = opts.keepCanonical === true;
-		var maxCanonicalChars = DEFAULT_MAX_CANONICAL_CHARS;
+		const keepCanonical = opts.keepCanonical === true;
+		let maxCanonicalChars = DEFAULT_MAX_CANONICAL_CHARS;
 		try {
 			if (typeof opts.maxCanonicalChars === "number" && isFinite(opts.maxCanonicalChars) && opts.maxCanonicalChars >= 0) {
 				maxCanonicalChars = Math.floor(opts.maxCanonicalChars);
@@ -877,7 +877,7 @@
 			maxCanonicalChars = DEFAULT_MAX_CANONICAL_CHARS;
 		}
 
-		var out = {
+		const out = {
 			raw: null,
 			normalised: null,
 			canonicalLength: 0,
@@ -897,25 +897,25 @@
 		};
 
 		try {
-			var collected = collectRecords();
+			const collected = collectRecords();
 			out.messages = collected.messages;
 			out.codeBlocks = collected.codeBlocks;
 			out.codeSpans = collected.codeSpans;
 
-			var rawKeys = {};
+			const rawKeys = {};
 			// `raw` skips nothing, so an EXACT arm that touches an attribute is caught here.
-			var rawCanonical = serialise(collected, [], [], rawKeys);
+			const rawCanonical = serialise(collected, [], [], rawKeys);
 
-			var normKeys = {};
-			var normCanonical = serialise(collected, skipAttributes, skipStyleProps, normKeys);
+			const normKeys = {};
+			const normCanonical = serialise(collected, skipAttributes, skipStyleProps, normKeys);
 
 			out.raw = fnv1a32(rawCanonical);
 			out.normalised = fnv1a32(normCanonical);
 			out.rawLength = rawCanonical.length;
 			out.canonicalLength = normCanonical.length;
 
-			var keys = [];
-			for (var k in rawKeys) {
+			const keys = [];
+			for (const k in rawKeys) {
 				if (Object.prototype.hasOwnProperty.call(rawKeys, k)) {
 					keys.push(k);
 				}
@@ -942,16 +942,16 @@
 	// `__unavailable:` key that no declared diff contains.
 
 	function parseCanonical(text) {
-		var entries = {};
-		var indexToId = {};
-		var lines = String(text).split("\n");
-		for (var i = 0; i < lines.length; i++) {
-			var line = lines[i];
+		const entries = {};
+		const indexToId = {};
+		const lines = String(text).split("\n");
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
 			if (!line) {
 				continue;
 			}
-			var f = line.split("|");
-			var kind = f[0];
+			const f = line.split("|");
+			const kind = f[0];
 			if (kind === "V") {
 				continue;
 			}
@@ -962,10 +962,10 @@
 				entries["#global"]["structure:" + f[1]] = f[2];
 				continue;
 			}
-			var idx = f[1];
+			const idx = f[1];
 			if (kind === "M") {
-				var id = dec(f[3] === undefined ? "" : f[3]);
-				var entryId = id ? "id:" + id : "idx:" + idx;
+				const id = dec(f[3] === undefined ? "" : f[3]);
+				const entryId = id ? "id:" + id : "idx:" + idx;
 				indexToId[idx] = entryId;
 				if (!entries[entryId]) {
 					entries[entryId] = {};
@@ -974,7 +974,7 @@
 				entries[entryId]["structure:order"] = String(idx);
 				continue;
 			}
-			var owner = indexToId[idx];
+			const owner = indexToId[idx];
 			if (!owner || !entries[owner]) {
 				continue;
 			}
@@ -999,19 +999,19 @@
 			if (a.truncated === true || b.truncated === true) {
 				return ["__unavailable:canonical-truncated__"];
 			}
-			var ca = a.canonicalRaw;
-			var cb = b.canonicalRaw;
+			const ca = a.canonicalRaw;
+			const cb = b.canonicalRaw;
 			if (typeof ca !== "string" || typeof cb !== "string") {
 				return ["__unavailable:canonical-not-retained__"];
 			}
 			if (ca === cb) {
 				return [];
 			}
-			var ea = parseCanonical(ca);
-			var eb = parseCanonical(cb);
-			var found = {};
-			var ids = {};
-			var id;
+			const ea = parseCanonical(ca);
+			const eb = parseCanonical(cb);
+			const found = {};
+			const ids = {};
+			let id;
 			for (id in ea) {
 				if (Object.prototype.hasOwnProperty.call(ea, id)) {
 					ids[id] = true;
@@ -1026,14 +1026,14 @@
 				if (!Object.prototype.hasOwnProperty.call(ids, id)) {
 					continue;
 				}
-				var ra = ea[id];
-				var rb = eb[id];
+				const ra = ea[id];
+				const rb = eb[id];
 				if (!ra || !rb) {
 					found["structure:messagePresence"] = true;
 					continue;
 				}
-				var keys = {};
-				var key;
+				const keys = {};
+				let key;
 				for (key in ra) {
 					if (Object.prototype.hasOwnProperty.call(ra, key)) {
 						keys[key] = true;
@@ -1053,8 +1053,8 @@
 					}
 				}
 			}
-			var out = [];
-			for (var k in found) {
+			const out = [];
+			for (const k in found) {
 				if (Object.prototype.hasOwnProperty.call(found, k)) {
 					out.push(k);
 				}
@@ -1067,16 +1067,16 @@
 	}
 
 	function diffDetail(a, b, limit) {
-		var cap = typeof limit === "number" && limit > 0 ? Math.floor(limit) : 20;
-		var out = [];
+		const cap = typeof limit === "number" && limit > 0 ? Math.floor(limit) : 20;
+		const out = [];
 		try {
 			if (!a || !b || typeof a.canonicalRaw !== "string" || typeof b.canonicalRaw !== "string") {
 				return out;
 			}
-			var ea = parseCanonical(a.canonicalRaw);
-			var eb = parseCanonical(b.canonicalRaw);
-			var ids = {};
-			var id;
+			const ea = parseCanonical(a.canonicalRaw);
+			const eb = parseCanonical(b.canonicalRaw);
+			const ids = {};
+			let id;
 			for (id in ea) {
 				if (Object.prototype.hasOwnProperty.call(ea, id)) {
 					ids[id] = true;
@@ -1091,10 +1091,10 @@
 				if (!Object.prototype.hasOwnProperty.call(ids, id) || out.length >= cap) {
 					continue;
 				}
-				var ra = ea[id] || {};
-				var rb = eb[id] || {};
-				var keys = {};
-				var key;
+				const ra = ea[id] || {};
+				const rb = eb[id] || {};
+				const keys = {};
+				let key;
 				for (key in ra) {
 					if (Object.prototype.hasOwnProperty.call(ra, key)) {
 						keys[key] = true;
@@ -1127,7 +1127,7 @@
 
 
 	function counts() {
-		var out = {
+		const out = {
 			messages: 0,
 			assistantMessages: 0,
 			userMessages: 0,
@@ -1143,14 +1143,14 @@
 			viewportFound: false
 		};
 		try {
-			var roots = messageRoots();
+			const roots = messageRoots();
 			out.messages = roots.length;
-			var vp = viewportEl();
+			const vp = viewportEl();
 			out.viewportFound = !!vp;
-			var vpRect = vp ? rectOf(vp) : null;
-			for (var i = 0; i < roots.length; i++) {
-				var el = roots[i];
-				var role = "";
+			const vpRect = vp ? rectOf(vp) : null;
+			for (let i = 0; i < roots.length; i++) {
+				const el = roots[i];
+				let role = "";
 				try {
 					role = String(el.getAttribute("data-role") || "");
 				} catch (e) {
@@ -1172,21 +1172,21 @@
 					/* a node that cannot be read contributes nothing */
 				}
 				if (vpRect) {
-					var r = rectOf(el);
+					const r = rectOf(el);
 					if (rectsIntersect(r, vpRect)) {
 						out.visibleMessages += 1;
 					}
 				}
 			}
-			var blocks = allCodeBlocks();
+			const blocks = allCodeBlocks();
 			out.codeBlocks = blocks.length;
-			for (var b = 0; b < blocks.length; b++) {
-				var spans = queryAll("span", blocks[b]);
+			for (let b = 0; b < blocks.length; b++) {
+				const spans = queryAll("span", blocks[b]);
 				out.codeSpans += spans.length;
-				for (var s = 0; s < spans.length; s++) {
+				for (let s = 0; s < spans.length; s++) {
 					// Partial highlighting moves both counts; span nesting changes move only codeSpans.
-					var sp = spans[s];
-					var hasElementChild = false;
+					const sp = spans[s];
+					let hasElementChild = false;
 					try {
 						hasElementChild = !!(sp.children && sp.children.length > 0);
 					} catch (e3) {
@@ -1195,7 +1195,7 @@
 					if (hasElementChild) {
 						continue;
 					}
-					var txt = "";
+					let txt = "";
 					try {
 						txt = String(sp.textContent || "");
 					} catch (e4) {
@@ -1222,19 +1222,19 @@
 
 	function measureGauges() {
 		try {
-			var roots = messageRoots();
+			const roots = messageRoots();
 			gauges.visibilityHiddenConfirmed = countComputed(roots, "visibility", "hidden");
 			gauges.displayNoneConfirmed = countComputed(roots, "display", "none");
 			gauges.cvAutoMessages = countComputed(roots, "content-visibility", "auto");
 			gauges.cvAutoCodeBlocks = countComputed(allCodeBlocks(), "content-visibility", "auto");
 			gauges.contentVisibilityAutoConfirmed = gauges.cvAutoMessages + gauges.cvAutoCodeBlocks;
 
-			var vp = viewportEl();
-			var vpRect = vp ? rectOf(vp) : null;
-			var visible = 0;
-			var visiblePrior = 0;
+			const vp = viewportEl();
+			const vpRect = vp ? rectOf(vp) : null;
+			let visible = 0;
+			let visiblePrior = 0;
 			if (vpRect) {
-				for (var i = 0; i < roots.length; i++) {
+				for (let i = 0; i < roots.length; i++) {
 					if (rectsIntersect(rectOf(roots[i]), vpRect)) {
 						visible += 1;
 						if (i < roots.length - 1) {
@@ -1251,7 +1251,7 @@
 	}
 
 	function potency(options) {
-		var opts = options && typeof options === "object" ? options : {};
+		const opts = options && typeof options === "object" ? options : {};
 		try {
 			if (opts.live !== false) {
 				measureGauges();
@@ -1259,8 +1259,8 @@
 		} catch (e) {
 			/* fall through and return the stored values */
 		}
-		var out = {};
-		var k;
+		const out = {};
+		let k;
 		for (k in counters) {
 			if (Object.prototype.hasOwnProperty.call(counters, k)) {
 				out[k] = Math.floor(counters[k]);
@@ -1273,7 +1273,7 @@
 		}
 		out.frozen = state.frozen ? 1 : 0;
 		out.armsAppliedNow = 0;
-		for (var id in state.applied) {
+		for (const id in state.applied) {
 			if (Object.prototype.hasOwnProperty.call(state.applied, id)) {
 				out.armsAppliedNow += 1;
 			}
@@ -1283,9 +1283,9 @@
 
 
 	function applyA() {
-		var info = prefixInfo();
-		var roots;
-		var via;
+		const info = prefixInfo();
+		let roots;
+		let via;
 		if (info) {
 			roots = info.roots;
 			ensureStyleSheet("A", cssPrefixA(info.k));
@@ -1313,11 +1313,11 @@
 				"viewport's children, so " + MARKER_ATTR + " was added and this arm is " +
 				"EQUIVALENT, not EXACT";
 		}
-		var confirmed = countComputed(roots, "visibility", "hidden");
+		let confirmed = countComputed(roots, "visibility", "hidden");
 		if (confirmed === 0) {
 			// Inline important sorts before layers, so this escalation cannot lose.
 			counters.inlineFallbacks += 1;
-			for (var i = 0; i < roots.length; i++) {
+			for (let i = 0; i < roots.length; i++) {
 				setInline(roots[i], "visibility", "hidden", "important");
 			}
 			confirmed = countComputed(roots, "visibility", "hidden");
@@ -1346,9 +1346,9 @@
 	// in one pass and write in a second.
 
 	function readHeights(els) {
-		var heights = [];
-		for (var i = 0; i < els.length; i++) {
-			var h = 0;
+		const heights = [];
+		for (let i = 0; i < els.length; i++) {
+			let h = 0;
 			try {
 				h = Number(els[i].offsetHeight) || 0;
 			} catch (e) {
@@ -1360,8 +1360,8 @@
 	}
 
 	function applyB() {
-		var info = prefixInfo();
-		var roots = info ? info.roots : completedMessageRoots();
+		const info = prefixInfo();
+		const roots = info ? info.roots : completedMessageRoots();
 		if (roots.length === 0) {
 			return result(
 				false,
@@ -1371,17 +1371,17 @@
 		}
 
 		// Only completed messages: containment on the streaming block would change its finalised output.
-		var blocks = [];
-		for (var r = 0; r < roots.length; r++) {
-			var bs = codeBlocksIn(roots[r]);
-			for (var b = 0; b < bs.length; b++) {
+		const blocks = [];
+		for (let r = 0; r < roots.length; r++) {
+			const bs = codeBlocksIn(roots[r]);
+			for (let b = 0; b < bs.length; b++) {
 				blocks.push(bs[b]);
 			}
 		}
 
 		// Read pass: every height before any write.
-		var blockHeights = readHeights(blocks);
-		var rootHeights = readHeights(roots);
+		const blockHeights = readHeights(blocks);
+		const rootHeights = readHeights(roots);
 
 		// The prefix selector keeps a marker attribute off the code blocks.
 		if (info) {
@@ -1390,7 +1390,7 @@
 			ensureStyleSheet("B", CSS_B);
 			markAll(blocks, "B");
 		}
-		var i;
+		let i;
 		for (i = 0; i < blocks.length; i++) {
 			// contain-intrinsic-size is per element, so it has to be inline.
 			setInline(
@@ -1401,7 +1401,7 @@
 			);
 		}
 
-		var cvBlocks = countComputed(blocks, "content-visibility", "auto");
+		let cvBlocks = countComputed(blocks, "content-visibility", "auto");
 		if (blocks.length > 0 && cvBlocks === 0) {
 			// The layered copy should beat index.css:2537; inline important is the guaranteed escalation.
 			counters.inlineFallbacks += 1;
@@ -1420,7 +1420,7 @@
 				"important"
 			);
 		}
-		var cvRoots = countComputed(roots, "content-visibility", "auto");
+		const cvRoots = countComputed(roots, "content-visibility", "auto");
 
 		gauges.cvAutoCodeBlocks = cvBlocks;
 		gauges.cvAutoMessages = cvRoots;
@@ -1445,9 +1445,9 @@
 
 
 	function applyC() {
-		var info = prefixInfo();
-		var roots;
-		var via;
+		const info = prefixInfo();
+		let roots;
+		let via;
 		if (info) {
 			roots = info.roots;
 			ensureStyleSheet("C", cssPrefixC(info.k));
@@ -1473,10 +1473,10 @@
 				"viewport's children, so " + MARKER_ATTR + " was added and this arm is " +
 				"EQUIVALENT, not EXACT";
 		}
-		var confirmed = countComputed(roots, "display", "none");
+		let confirmed = countComputed(roots, "display", "none");
 		if (confirmed === 0) {
 			counters.inlineFallbacks += 1;
-			for (var i = 0; i < roots.length; i++) {
+			for (let i = 0; i < roots.length; i++) {
 				setInline(roots[i], "display", "none", "important");
 			}
 			confirmed = countComputed(roots, "display", "none");
@@ -1509,11 +1509,11 @@
 			if (!target || target.nodeType !== 1) {
 				return false;
 			}
-			var list = target.classList;
+			const list = target.classList;
 			if (list && typeof list.contains === "function") {
 				return list.contains(VIEWPORT_CLASS) === true;
 			}
-			var cn = String(target.className || "");
+			const cn = String(target.className || "");
 			return (" " + cn + " ").indexOf(" " + VIEWPORT_CLASS + " ") >= 0;
 		} catch (e) {
 			return false;
@@ -1525,11 +1525,11 @@
 			if (!options || typeof options !== "object") {
 				return false;
 			}
-			var filter = options.attributeFilter;
+			const filter = options.attributeFilter;
 			if (!filter || typeof filter.length !== "number") {
 				return false;
 			}
-			for (var i = 0; i < filter.length; i++) {
+			for (let i = 0; i < filter.length; i++) {
 				if (String(filter[i]) === "aria-expanded") {
 					return true;
 				}
@@ -1541,7 +1541,7 @@
 	}
 
 	function installD() {
-		var proto = null;
+		let proto = null;
 		try {
 			proto = W.MutationObserver && W.MutationObserver.prototype;
 		} catch (e) {
@@ -1551,7 +1551,7 @@
 			markUnavailable("D", "window.MutationObserver is missing in this browser");
 			return false;
 		}
-		var descriptor = null;
+		let descriptor = null;
 		try {
 			descriptor = Object.getOwnPropertyDescriptor(proto, "observe");
 		} catch (e) {
@@ -1569,11 +1569,11 @@
 			);
 			return false;
 		}
-		var original = descriptor.value;
+		const original = descriptor.value;
 
 		function observe(target, options) {
 			counters.observeCallsTotal += 1;
-			var matched = false;
+			let matched = false;
 			try {
 				matched = targetIsStreamViewport(target) || optionsHaveAriaExpanded(options);
 			} catch (e) {
@@ -1616,7 +1616,7 @@
 	// Only one property by exact name; all other setProperty calls forward verbatim.
 
 	function installE() {
-		var proto = null;
+		let proto = null;
 		try {
 			proto = W.CSSStyleDeclaration && W.CSSStyleDeclaration.prototype;
 		} catch (e) {
@@ -1626,7 +1626,7 @@
 			markUnavailable("E", "window.CSSStyleDeclaration is missing in this browser");
 			return false;
 		}
-		var descriptor = null;
+		let descriptor = null;
 		try {
 			descriptor = Object.getOwnPropertyDescriptor(proto, "setProperty");
 		} catch (e) {
@@ -1643,11 +1643,11 @@
 			);
 			return false;
 		}
-		var original = descriptor.value;
+		const original = descriptor.value;
 
-		function setProperty(property, value, priority) {
+		function setProperty(property, _value, _priority) {
 			counters.setPropertyCallsTotal += 1;
-			var name = null;
+			let name = null;
 			try {
 				// A Symbol makes String() throw; then the original throws exactly its own TypeError.
 				name = typeof property === "string" ? property : String(property);
@@ -1697,12 +1697,12 @@
 	// Suppressing can wedge React: revert() posts one resume kick per suppressed channel.
 
 	function instrumentSchedulerPort(channel) {
-		var port = channel.port1;
-		var stored = null;
-		var record = { channel: channel, pendingSuppressed: 0 };
+		const port = channel.port1;
+		let stored = null;
+		const record = { channel: channel, pendingSuppressed: 0 };
 
 		function dispatch(event) {
-			var fn = stored;
+			const fn = stored;
 			if (typeof fn !== "function") {
 				counters.schedulerCallbacksWithoutHandler += 1;
 				return undefined;
@@ -1738,9 +1738,9 @@
 
 		// Some builds use addEventListener instead of onmessage.
 		try {
-			var origAdd = port.addEventListener;
-			var origRemove = port.removeEventListener;
-			var wrappedByOriginal = typeof WeakMap === "function" ? new WeakMap() : null;
+			const origAdd = port.addEventListener;
+			const origRemove = port.removeEventListener;
+			const wrappedByOriginal = typeof WeakMap === "function" ? new WeakMap() : null;
 			if (typeof origAdd === "function") {
 				Object.defineProperty(port, "addEventListener", {
 					configurable: true,
@@ -1749,7 +1749,7 @@
 					value: function (type, listener, opts) {
 						if (type === "message" && typeof listener === "function") {
 							counters.schedulerListenerAdds += 1;
-							var wrapped = function (event) {
+							const wrapped = function (event) {
 								if (state.frozen) {
 									counters.suppressedSchedulerCallbacks += 1;
 									record.pendingSuppressed += 1;
@@ -1779,7 +1779,7 @@
 					enumerable: false,
 					value: function (type, listener, opts) {
 						if (type === "message" && typeof listener === "function" && wrappedByOriginal) {
-							var wrapped = wrappedByOriginal.get(listener);
+							const wrapped = wrappedByOriginal.get(listener);
 							if (wrapped) {
 								return origRemove.call(this, type, wrapped, opts);
 							}
@@ -1799,7 +1799,7 @@
 	}
 
 	function installF() {
-		var Original = null;
+		let Original = null;
 		try {
 			Original = W.MessageChannel;
 		} catch (e) {
@@ -1812,7 +1812,7 @@
 
 		// A port refusing a redefined onmessage must read UNAVAILABLE.
 		try {
-			var probe = new Original();
+			const probe = new Original();
 			Object.defineProperty(probe.port1, "onmessage", {
 				configurable: true,
 				enumerable: true,
@@ -1833,7 +1833,7 @@
 		}
 
 		function WrappedMessageChannel() {
-			var channel = new Original();
+			const channel = new Original();
 			try {
 				instrumentSchedulerPort(channel);
 			} catch (e) {
@@ -1898,10 +1898,10 @@
 			return revertResult(true, "not frozen");
 		}
 		state.frozen = false;
-		var kicks = 0;
-		var suppressed = 0;
-		for (var i = 0; i < state.channels.length; i++) {
-			var rec = state.channels[i];
+		let kicks = 0;
+		let suppressed = 0;
+		for (let i = 0; i < state.channels.length; i++) {
+			const rec = state.channels[i];
 			if (rec.pendingSuppressed <= 0) {
 				continue;
 			}
@@ -1939,18 +1939,18 @@
 	// Autoscroll may pull it back, so controlVisibleMessages is re-measured as a gauge.
 
 	function applyG() {
-		var vp = viewportEl();
+		const vp = viewportEl();
 		if (!vp) {
 			return result(false, "no element matched " + VIEWPORT_SELECTOR + "; nothing to scroll", 0);
 		}
-		var roots = messageRoots();
+		const roots = messageRoots();
 		if (roots.length === 0) {
 			return result(false, "no message roots to bring into view", 0);
 		}
 
-		var prevBehavior = "";
-		var prevBehaviorPriority = "";
-		var hadStyleAttr = true;
+		let prevBehavior = "";
+		let prevBehaviorPriority = "";
+		let hadStyleAttr = true;
 		try {
 			prevBehavior = vp.style.getPropertyValue("scroll-behavior") || "";
 			prevBehaviorPriority = vp.style.getPropertyPriority("scroll-behavior") || "";
@@ -1959,7 +1959,7 @@
 			prevBehavior = "";
 			prevBehaviorPriority = "";
 		}
-		var prevScrollTop = 0;
+		let prevScrollTop = 0;
 		try {
 			prevScrollTop = Number(vp.scrollTop) || 0;
 		} catch (e) {
@@ -1979,15 +1979,15 @@
 			debug("could not force scroll-behavior:auto", e);
 		}
 
-		var target = Math.min(controlVisibleTarget, Math.max(1, roots.length - 1));
-		var anchorIndex = Math.max(0, roots.length - 1 - target);
+		const target = Math.min(controlVisibleTarget, Math.max(1, roots.length - 1));
+		const anchorIndex = Math.max(0, roots.length - 1 - target);
 
 		function visibleCounts() {
-			var vpRect = rectOf(vp);
-			var visible = 0;
-			var prior = 0;
+			const vpRect = rectOf(vp);
+			let visible = 0;
+			let prior = 0;
 			if (vpRect) {
-				for (var i = 0; i < roots.length; i++) {
+				for (let i = 0; i < roots.length; i++) {
 					if (rectsIntersect(rectOf(roots[i]), vpRect)) {
 						visible += 1;
 						if (i < roots.length - 1) {
@@ -1999,11 +1999,11 @@
 			return { visible: visible, prior: prior };
 		}
 
-		var attempts = 0;
-		var seen = visibleCounts();
+		let attempts = 0;
+		let seen = visibleCounts();
 		try {
-			var vpRect0 = rectOf(vp);
-			var anchorRect = rectOf(roots[anchorIndex]);
+			const vpRect0 = rectOf(vp);
+			const anchorRect = rectOf(roots[anchorIndex]);
 			if (vpRect0 && anchorRect) {
 				vp.scrollTop = Number(vp.scrollTop) + (anchorRect.top - vpRect0.top);
 			}
@@ -2015,15 +2015,15 @@
 		// Bounded: a hang is unusable, "could not reach the target" is not.
 		while (seen.prior < target && attempts < 16) {
 			attempts += 1;
-			var before = 0;
+			let before = 0;
 			try {
 				before = Number(vp.scrollTop) || 0;
-				var step = Math.max(64, Math.floor((Number(vp.clientHeight) || 400) / 2));
+				const step = Math.max(64, Math.floor((Number(vp.clientHeight) || 400) / 2));
 				vp.scrollTop = Math.max(0, before - step);
 			} catch (e) {
 				break;
 			}
-			var after = 0;
+			let after = 0;
 			try {
 				after = Number(vp.scrollTop) || 0;
 			} catch (e) {
@@ -2042,7 +2042,7 @@
 				vp.style.setProperty("scroll-behavior", prevBehavior, prevBehaviorPriority);
 			}
 			if (!hadStyleAttr) {
-				var left = String(vp.getAttribute("style") || "").trim();
+				const left = String(vp.getAttribute("style") || "").trim();
 				if (left === "") {
 					vp.removeAttribute("style");
 				}
@@ -2072,7 +2072,7 @@
 	}
 
 	function revertG() {
-		var rec = state.scrollRestore;
+		const rec = state.scrollRestore;
 		if (!rec) {
 			return revertResult(true, "arm G was never applied");
 		}
@@ -2086,7 +2086,7 @@
 				rec.el.style.setProperty("scroll-behavior", rec.behavior, rec.behaviorPriority);
 			}
 			if (!rec.hadStyleAttr) {
-				var left = String(rec.el.getAttribute("style") || "").trim();
+				const left = String(rec.el.getAttribute("style") || "").trim();
 				if (left === "") {
 					rec.el.removeAttribute("style");
 				}
@@ -2099,7 +2099,7 @@
 
 
 	function apply(armId) {
-		var id;
+		let id;
 		try {
 			id = String(armId).toUpperCase();
 		} catch (e) {
@@ -2121,7 +2121,7 @@
 			);
 		}
 
-		var out;
+		let out;
 		try {
 			if (id === "A") {
 				out = applyA();
@@ -2164,7 +2164,7 @@
 	}
 
 	function revert(armId) {
-		var id;
+		let id;
 		try {
 			id = String(armId).toUpperCase();
 		} catch (e) {
@@ -2174,7 +2174,7 @@
 			return revertResult(false, "unknown arm id " + JSON.stringify(id));
 		}
 
-		var out;
+		let out;
 		try {
 			if (id === "A" || id === "B" || id === "C") {
 				removeStyleSheet(id);
@@ -2183,7 +2183,7 @@
 				unmarkAll();
 				out = revertResult(true, "stylesheet removed, inline properties and markers restored");
 			} else if (id === "D") {
-				var hadSuppressed = counters.suppressedViewportObserves > 0;
+				const hadSuppressed = counters.suppressedViewportObserves > 0;
 				if (state.originals.observe && W.MutationObserver) {
 					try {
 						Object.defineProperty(W.MutationObserver.prototype, "observe", {
@@ -2306,14 +2306,14 @@
 		}
 	}
 
-	var available = [];
-	for (var ai = 0; ai < ARM_IDS.length; ai++) {
+	const available = [];
+	for (let ai = 0; ai < ARM_IDS.length; ai++) {
 		if (!Object.prototype.hasOwnProperty.call(unavailable, ARM_IDS[ai])) {
 			available.push(ARM_IDS[ai]);
 		}
 	}
 
-	var api = {
+	const api = {
 		version: VERSION,
 		available: available,
 		unavailable: unavailable,
@@ -2341,8 +2341,8 @@
 			stabilizerProperty: STABILIZER_PROP
 		},
 		appliedArms: function () {
-			var out = [];
-			for (var id in state.applied) {
+			const out = [];
+			for (const id in state.applied) {
 				if (Object.prototype.hasOwnProperty.call(state.applied, id)) {
 					out.push(id);
 				}
