@@ -483,7 +483,7 @@ function RootLayout() {
   // Uses Navbar's hook, not the md breakpoint: a narrowed desktop window keeps the desktop navbar.
   const nonChatTopInset = useIsMobileShell()
     ? "pt-14"
-    : "pt-[calc(var(--studio-non-chat-content-top-inset,var(--studio-content-top-inset,0px))-var(--studio-non-chat-scroller-top,0px))] [--studio-titlebar-height:var(--studio-non-chat-content-top-inset,var(--studio-content-top-inset,0px))]";
+    : "pt-[calc(var(--studio-non-chat-content-top-inset,var(--studio-content-top-inset,0))-var(--studio-non-chat-scroller-top,0))] [--studio-titlebar-height:var(--studio-non-chat-content-top-inset,var(--studio-content-top-inset,0))]";
 
   useTrainingUnloadGuard();
   useTypeToActivate();
@@ -712,7 +712,7 @@ function RootLayout() {
       {!hideNavbar && <CommandPalette />}
       {!hideNavbar && <SpookyDecorations />}
       {hideNavbar ? (
-        <main className="flex-1 pt-[var(--studio-hidden-route-top-inset,0px)] [--studio-titlebar-height:var(--studio-hidden-route-top-inset,0px)]">
+        <main className="flex-1 pt-(--studio-hidden-route-top-inset,0) [--studio-titlebar-height:var(--studio-hidden-route-top-inset,0)]">
           <RouteBoundary readyWhenCommitted={!routeOwnsReloadReadiness}>
             <Outlet />
           </RouteBoundary>
@@ -724,7 +724,7 @@ function RootLayout() {
           togglePinned={togglePinned}
           data-wallpaper-workspace=""
           data-wallpaper-route={isChatRoute ? "chat" : "page"}
-          className="relative !min-h-0 h-[calc(100dvh-var(--studio-titlebar-height,0px))] overflow-hidden"
+          className="relative min-h-0! h-[calc(100dvh-var(--studio-titlebar-height,0))] overflow-hidden"
         >
           <ChatBackground route={isChatRoute ? "chat" : "page"} />
           <AppSidebar />
@@ -735,8 +735,8 @@ function RootLayout() {
                 ? "overflow-hidden"
                 :
                   isLibraryRoute
-                  ? "mt-[var(--studio-non-chat-scroller-top,0px)] overflow-y-auto [scrollbar-gutter:stable]"
-                  : "mt-[var(--studio-non-chat-scroller-top,0px)] overflow-y-auto"
+                  ? "mt-(--studio-non-chat-scroller-top,0) overflow-y-auto scrollbar-gutter-stable"
+                  : "mt-(--studio-non-chat-scroller-top,0) overflow-y-auto"
             }
           >
             <Navbar />
