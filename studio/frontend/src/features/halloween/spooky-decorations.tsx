@@ -176,7 +176,7 @@ export function SpookyDecorations() {
       aria-hidden="true"
       data-testid="spooky-decorations"
       className={cn(
-        "pointer-events-none fixed inset-0 z-[45] overflow-hidden text-foreground",
+        "pointer-events-none fixed inset-0 z-45 overflow-hidden text-foreground",
         reduced && "spooky-still",
       )}
     >

@@ -198,7 +198,7 @@ export function LibraryPage() {
     void refresh();
     const onFocus = () => void refresh();
     window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    return () => { window.removeEventListener("focus", onFocus); };
   }, [refresh]);
 
   return (
@@ -494,21 +494,19 @@ function LibraryView({ search }: { search: LibrarySearch }) {
 
   const actions: LibraryActions = {
     folders,
-    openItem: (item) => openPreview(item.id),
-    openFolder: (id) => go({ folder: id }),
-    chatAbout: (target) =>
-      target.kind === "item"
+    openItem: (item) => { openPreview(item.id); },
+    openFolder: (id) => { go({ folder: id }); },
+    chatAbout: (target) => { target.kind === "item"
         ? chatAbout(target.item)
-        : void chatAboutItems(navigate, filesInFolder(target.folder.id)),
+        : void chatAboutItems(navigate, filesInFolder(target.folder.id)); },
     editImage: (item) => void editLibraryImage(navigate, item),
     toggleFavorite: (item) =>
       void patchItem(item.id, { favorite: !item.favorite }).catch(fail(t("library.toast.favoritesFailed"))),
     download: (item) => void downloadLibraryItem(item),
-    rename: (target) => setNameDialog({ mode: "rename", target }),
+    rename: (target) => { setNameDialog({ mode: "rename", target }); },
     moveTo: (target, destination) => void moveAll([target], destination),
-    moveToNewFolder: (target) =>
-      setNameDialog({ mode: "create", parentId: folderId, thenMove: target }),
-    remove: (target) => requestDelete([target]),
+    moveToNewFolder: (target) => { setNameDialog({ mode: "create", parentId: folderId, thenMove: target }); },
+    remove: (target) => { requestDelete([target]); },
   };
 
   async function uploadBatch(batch: LibraryUploadBatch, count: number, label: string) {
@@ -610,8 +608,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
     }
   }
 
-  const requestDelete = (targets: LibraryTarget[]) =>
-    settings.confirmDelete ? setPendingDelete(targets) : void confirmDelete(targets);
+  const requestDelete = (targets: LibraryTarget[]) => { settings.confirmDelete ? setPendingDelete(targets) : void confirmDelete(targets); };
 
   async function confirmDelete(targets: LibraryTarget[]) {
     setPendingDelete(null);
@@ -638,7 +635,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
         description: t("library.dialog.deleteManyDescription"),
       };
     }
-    const target = targets[0]!;
+    const target = targets[0];
     if (target.kind === "folder") {
       const parent = target.folder.parentId ? folderById.get(target.folder.parentId) : null;
       return {
@@ -648,7 +645,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
           : t("library.dialog.deleteFolderIntoLibrary"),
       };
     }
-    const source = target.item.id.split(":", 1)[0]!;
+    const source = target.item.id.split(":", 1)[0];
     return {
       title: t("library.dialog.deleteTitle", { name: target.item.name }),
       description: t(DELETE_NOTES[source] ?? "library.dialog.deleteUpload"),
@@ -668,7 +665,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
     setSelectionState(next);
     selectionAnchor.current = next.size > 0 ? key : null;
   };
-  const selectAll = () => setSelection(new Set(orderedKeys));
+  const selectAll = () => { setSelection(new Set(orderedKeys)); };
   const selectionBar = useRef<HTMLDivElement>(null);
 
   const cardSelection = { selection, toggle: toggleSelected };
@@ -701,7 +698,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => { window.removeEventListener("keydown", onKey); };
   }, [showsChats, selecting, orderedKeys, setSelection]);
 
   const selectedTargets = (): LibraryTarget[] => {
@@ -731,7 +728,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
     <nav className="flex min-w-0 items-center gap-2 text-[calc(1.6875rem*var(--ui-font-scale,1))] font-semibold tracking-[-0.028em]" aria-label={t("library.breadcrumb")}>
       <button
         type="button"
-        onClick={() => go({ show: "folders" })}
+        onClick={() => { go({ show: "folders" }); }}
         className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
       >
         {t("shell.navigation.library")}
@@ -744,7 +741,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
           ) : (
             <button
               type="button"
-              onClick={() => go({ folder: folder.id })}
+              onClick={() => { go({ folder: folder.id }); }}
               className="truncate text-muted-foreground transition-colors hover:text-foreground"
             >
               {folder.name}
@@ -755,7 +752,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
     </nav>
   ) : (
     // truncate clips at the padding box, which the y overhangs; the margins give it back.
-    <h1 className="-my-[0.15em] min-w-0 truncate py-[0.15em] pr-[0.08em] text-[calc(1.6875rem*var(--ui-font-scale,1))] font-semibold leading-[1.04] tracking-[-0.028em] text-foreground">
+    <h1 className="my-[-0.15em] min-w-0 truncate py-[0.15em] pr-[0.08em] text-[calc(1.6875rem*var(--ui-font-scale,1))] font-semibold leading-[1.04] tracking-[-0.028em] text-foreground">
       {t("shell.navigation.library")}
     </h1>
   );
@@ -817,7 +814,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
         <Button
           variant="muted"
           className="rounded-full"
-          onClick={() => setNameDialog({ mode: "create", parentId: null })}
+          onClick={() => { setNameDialog({ mode: "create", parentId: null }); }}
         >
           {t("library.empty.createFolder")}
         </Button>
@@ -859,7 +856,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
                   onSelectionChange={setSelection}
                   onToggle={toggleSelected}
                   sort={sort}
-                  onSortChange={(key) => go({ ...search, sort: sortParam(nextSort(sort, key)) }, true)}
+                  onSortChange={(key) => { go({ ...search, sort: sortParam(nextSort(sort, key)) }, true); }}
                   activity={false}
                   leading={entries.rows}
                   favoriteMarks={false}
@@ -943,7 +940,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
             onSelectionChange={setSelection}
             onToggle={toggleSelected}
             sort={sort}
-            onSortChange={(key) => go({ ...search, sort: sortParam(nextSort(sort, key)) }, true)}
+            onSortChange={(key) => { go({ ...search, sort: sortParam(nextSort(sort, key)) }, true); }}
             activity={tab === "suggested" && !folderId}
             favoriteMarks={tab !== "favorites"}
           />
@@ -1012,7 +1009,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   const headerTabs = {
     items: shownTabs.map((key) => ({ key, label: t(TAB_LABELS[key]) })),
     active: tab,
-    onChange: (next: string) => go({ show: next as LibraryTab }),
+    onChange: (next: string) => { go({ show: next as LibraryTab }); },
   };
 
   if (tab === "chats" && !folderId) {
@@ -1051,7 +1048,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
               onSearchChange={setQuery}
               searchPlaceholder={t(folderId ? "library.searchFolder" : "library.searchLibrary")}
               onNew={handleNew}
-              onSettings={() => openSettings("library")}
+              onSettings={() => { openSettings("library"); }}
             />
           }
           tabs={folderId ? null : headerTabs}
@@ -1078,7 +1075,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
             role="toolbar"
             aria-label={t("library.selection.countOfTotal", { count: selectedCount, total: orderedKeys.length })}
             tabIndex={-1}
-            className="fixed bottom-8 left-1/2 z-30 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 items-center gap-2 rounded-full bg-sidebar py-2 pl-6 pr-2 text-sidebar-foreground shadow-[0_2px_8px_-2px_rgba(0,0,0,0.16)] outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[0_8px_28px_-6px_var(--background)]"
+            className="fixed bottom-8 left-1/2 z-30 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden *:shrink-0 items-center gap-2 rounded-full bg-sidebar py-2 pl-6 pr-2 text-sidebar-foreground shadow-[0_2px_8px_-2px_rgba(0,0,0,0.16)] outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[0_8px_28px_-6px_var(--background)]"
           >
             <span className="mr-4 flex items-center whitespace-nowrap text-sm font-medium">
               <span aria-live="polite">
@@ -1118,7 +1115,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
               onClick={bulkDownload}
               className={cn(
                 BAR_PILL,
-                "btn-fill transition-colors ",
+                "btn-fill transition-colors",
               )}
             >
               <HugeiconsIcon icon={Download01Icon} strokeWidth={1.75} className="size-4" />
@@ -1127,7 +1124,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
             <button
               type="button"
               disabled={deletableSelection().length === 0}
-              onClick={() => requestDelete(deletableSelection())}
+              onClick={() => { requestDelete(deletableSelection()); }}
               className={cn(
                 BAR_PILL,
                 "bg-destructive/10 text-destructive transition-colors hover:bg-destructive/15",
@@ -1153,12 +1150,12 @@ function LibraryView({ search }: { search: LibrarySearch }) {
                     {t("library.selection.move")}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="library-menu max-h-[min(--spacing(80),var(--radix-dropdown-menu-content-available-height))] w-56">
-                    <DropdownMenuItem onSelect={() => bulkMove(null)}>
+                    <DropdownMenuItem onSelect={() => { bulkMove(null); }}>
                       <HugeiconsIcon icon={Folder01Icon} strokeWidth={1.75} className="size-icon" />
                       {t("library.menu.noFolder")}
                     </DropdownMenuItem>
                     {bulkDestinations().map((folder) => (
-                      <DropdownMenuItem key={folder.id} onSelect={() => bulkMove(folder.id)}>
+                      <DropdownMenuItem key={folder.id} onSelect={() => { bulkMove(folder.id); }}>
                         <HugeiconsIcon icon={FolderClosedIcon} strokeWidth={1.75} className="size-icon" />
                         <span className="truncate">{folder.name}</span>
                       </DropdownMenuItem>
@@ -1170,7 +1167,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
             <button
               type="button"
               aria-label={t("library.selection.clear")}
-              onClick={() => setSelection(new Set())}
+              onClick={() => { setSelection(new Set()); }}
               className={BAR_ROUND}
             >
               <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.75} className="size-5" />
@@ -1199,7 +1196,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
         onChat={chatAbout}
         onDownload={(item) => void downloadLibraryItem(item)}
         onToggleFavorite={actions.toggleFavorite}
-        onDelete={(item) => actions.remove({ kind: "item", item })}
+        onDelete={(item) => { actions.remove({ kind: "item", item }); }}
         onSaved={() => void refresh()}
         run={previewRun}
         onOpenItem={switchPreview}

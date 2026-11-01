@@ -50,7 +50,10 @@ export function groupLayersByCard<T extends { index: number }>(
   layerDevice: Record<string, number> | undefined,
   cards: readonly T[],
 ): { card: T | null; layers: number[] }[] {
-  const groups = cards.map((card) => ({ card: card as T | null, layers: [] as number[] }));
+  const groups: { card: T | null; layers: number[] }[] = cards.map((card) => ({
+    card,
+    layers: [] as number[],
+  }));
   const byIndex = new Map(cards.map((card, k) => [card.index, k]));
   const unplaced: number[] = [];
   for (let layer = 0; layer < total; layer++) {

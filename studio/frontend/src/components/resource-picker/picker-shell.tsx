@@ -52,7 +52,7 @@ function OfflineHubState({
       <p className="text-ui-12p5 font-medium text-foreground">
         {t("picker.offlineTitle")}
       </p>
-      <p className="text-ui-11 leading-snug text-muted-foreground">
+      <p className="text-ui-11/snug text-muted-foreground">
         {t("picker.offlineBody", { noun })}
       </p>
       <button
@@ -365,7 +365,7 @@ export function PickerShell({
             <output
               aria-live="polite"
               aria-atomic="true"
-              className="block px-2 text-ui-10p5 leading-snug text-muted-foreground"
+              className="block px-2 text-ui-10p5/snug text-muted-foreground"
             >
               {queryStatus}
             </output>
@@ -373,7 +373,7 @@ export function PickerShell({
 
           <div
             ref={scrollRef}
-            className="min-h-0 max-h-[calc(320px*var(--ui-space-scale,1))] flex-1 overflow-y-auto overscroll-contain rounded-md [scrollbar-width:thin]"
+            className="min-h-0 max-h-[calc(320px*var(--ui-space-scale,1))] flex-1 overflow-y-auto overscroll-contain rounded-md scrollbar-thin"
           >
             {canUseThis && (
               <button

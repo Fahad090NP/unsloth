@@ -260,7 +260,7 @@ export function ApiKeysTab() {
               {t("settings.apiKeys.noAccess")}
             </p>
           ) : (
-            <div className="hover-scrollbar flex max-h-72 min-w-0 flex-col overflow-y-auto pr-1 [scrollbar-gutter:stable]">
+            <div className="hover-scrollbar flex max-h-72 min-w-0 flex-col overflow-y-auto pr-1 scrollbar-gutter-stable">
               <div className={cn("overlay-scrollbar-gutter", TOKEN_TABLE)}>
                 <ApiKeyTableHeader />
                 {keys.map((k) => (

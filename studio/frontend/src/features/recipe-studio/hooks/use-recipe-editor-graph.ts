@@ -54,11 +54,11 @@ function parseRecipeBlockDragPayload(raw: string): RecipeBlockDragPayload | null
   }
 }
 
-type UseRecipeEditorGraphArgs = {
+interface UseRecipeEditorGraphArgs {
   nodes: RecipeBuilderNode[];
   edges: Edge[];
   configs: Record<string, NodeConfig>;
-  reactFlowInstance: ReactFlowInstance<Node<RecipeNodeData | RecipeGraphAuxNodeData>, Edge> | null;
+  reactFlowInstance: ReactFlowInstance<Node<RecipeNodeData | RecipeGraphAuxNodeData>> | null;
   flowContainerRef: RefObject<HTMLDivElement | null>;
   selectConfig: (id: string) => void;
   openConfig: (id: string) => void;
@@ -78,9 +78,9 @@ type UseRecipeEditorGraphArgs = {
     openDialog?: boolean,
   ) => void;
   addMarkdownNoteNode: (position?: XYPosition, openDialog?: boolean) => void;
-};
+}
 
-type UseRecipeEditorGraphResult = {
+interface UseRecipeEditorGraphResult {
   handleNodeClick: (_: unknown, node: Node<RecipeNodeData | RecipeGraphAuxNodeData>) => void;
   handleNodeDoubleClick: (_: unknown, node: Node<RecipeNodeData | RecipeGraphAuxNodeData>) => void;
   handleNodesChange: (
@@ -100,7 +100,7 @@ type UseRecipeEditorGraphResult = {
     type: ValidatorBlockType,
   ) => void;
   handleAddMarkdownNoteFromSheet: () => void;
-};
+}
 
 export function useRecipeEditorGraph({
   nodes,

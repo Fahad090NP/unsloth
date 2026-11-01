@@ -223,8 +223,10 @@ function formatRunRelativeTime(
 
 function hasTextSelectionWithin(element: HTMLElement): boolean {
   const selection = window.getSelection();
+  if (selection === null) {
+    return false;
+  }
   return (
-    !!selection &&
     !selection.isCollapsed &&
     element.contains(selection.anchorNode) &&
     element.contains(selection.focusNode)
@@ -435,7 +437,7 @@ export function HistoryCardGrid({
 
   const deleteTargetRun = runs.find((run) => run.id === deleteTarget);
   const deleteTargetShared =
-    !!deleteTargetRun &&
+    deleteTargetRun !== undefined &&
     (deleteTargetRun.resumed_later ||
       sharesOutputDirInVisibleRuns(deleteTargetRun, runs));
 
@@ -463,13 +465,13 @@ export function HistoryCardGrid({
               ? run.project_name
               : null;
           // The /p link 404s without the signature.
-          const canCopyPreview = !!run.preview_ref && !!run.preview_sig;
+          const canCopyPreview = Boolean(run.preview_ref) && Boolean(run.preview_sig);
           return (
             <div
               key={run.id}
               className={cn(
                 "elevated-card group relative h-[calc(11.5rem*var(--ui-space-scale,1))] cursor-pointer bg-card transition-colors hover:bg-accent/30",
-                isRunning && "!border-blue-400/50 dark:!border-blue-500/30",
+                isRunning && "border-blue-400/50! dark:border-blue-500/30!",
               )}
             >
               <button
@@ -477,7 +479,7 @@ export function HistoryCardGrid({
                 aria-labelledby={`${cardId}-title`}
                 aria-describedby={`${cardId}-status ${cardId}-details ${cardId}-metrics`}
                 className={cn(
-                  "relative z-0 flex h-full w-full cursor-pointer select-text flex-col gap-3 rounded-[inherit] border-0 bg-transparent p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  "relative z-0 flex size-full cursor-pointer select-text flex-col gap-3 rounded-[inherit] border-0 bg-transparent p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   (canResume || canCopyPreview) && "gap-2",
                 )}
                 onClick={(event) => {
@@ -507,7 +509,7 @@ export function HistoryCardGrid({
                     )}
                   </span>
                   {artifactsMissing && (
-                    <span className="inline-flex items-center rounded-full bg-[color-mix(in_oklab,var(--foreground)_calc(5%*var(--contrast-wash-gain,1)),transparent)] px-2 py-0.5 text-ui-10 font-medium text-muted-foreground dark:bg-[rgb(255_255_255_/_calc(0.06*var(--contrast-wash-gain,1)))]">
+                    <span className="inline-flex items-center rounded-full bg-[color-mix(in_oklab,var(--foreground)_calc(5%*var(--contrast-wash-gain,1)),transparent)] px-2 py-0.5 text-ui-10 font-medium text-muted-foreground dark:bg-[rgb(255_255_255/calc(0.06*var(--contrast-wash-gain,1)))]">
                       {t("studio.history.filesDeleted")}
                     </span>
                   )}
@@ -637,7 +639,7 @@ export function HistoryCardGrid({
                   type="button"
                   className="absolute right-3 top-3 z-10 rounded-full p-1 text-muted-foreground/50 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
                   aria-label={t("studio.history.deleteRun")}
-                  onClick={() => setDeleteTarget(run.id)}
+                  onClick={() => { setDeleteTarget(run.id); }}
                 >
                   <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
                 </button>
@@ -698,7 +700,7 @@ export function HistoryCardGrid({
                 checked={!deleteTargetShared && deleteArtifacts}
                 onCheckedChange={(value) => {
                   if (!deleteTargetShared) {
-                    setDeleteArtifacts(!!value);
+                    setDeleteArtifacts(Boolean(value));
                   }
                 }}
                 disabled={deleteTargetShared}

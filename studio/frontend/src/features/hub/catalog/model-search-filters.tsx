@@ -327,7 +327,7 @@ function RangeStops({
                   key={i}
                   aria-hidden={true}
                   style={{ left: at(i) }}
-                  className="absolute top-1/2 h-3 w-px -translate-x-1/2 -translate-y-1/2 bg-[color-mix(in_oklab,var(--foreground)_calc(28%*var(--contrast-wash-gain,1)),transparent)]"
+                  className="absolute top-1/2 h-3 w-px -translate-1/2 bg-[color-mix(in_oklab,var(--foreground)_calc(28%*var(--contrast-wash-gain,1)),transparent)]"
                 />
               ),
             )}
@@ -686,7 +686,7 @@ export function ModelSearchFiltersControl({
         // Reset all in view; flex children would otherwise shrink the separators away.
         className="hub-menu-instant hub-composer-menu menu-soft-surface gap-0 overflow-hidden w-[calc(392px*var(--ui-space-scale,1))] max-w-[calc(100vw-1rem)] ring-0"
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-4.25 overflow-y-auto overscroll-contain pt-2.25 pb-4.25 [scrollbar-width:thin]">
+        <div className="flex min-h-0 flex-1 flex-col gap-4.25 overflow-y-auto overscroll-contain pt-2.25 pb-4.25 scrollbar-thin">
           {onDeviceModels && (
             <CapabilityTiles
               capabilities={onDevice.capabilities}
@@ -801,7 +801,7 @@ export function ModelSearchFiltersControl({
             variant="ghost"
             size="xs"
             // "Reset all" has no descenders: its ink sits 0.25em inside the text box on each side.
-            className={cn(TEXT_BOX, "-my-[0.25em]")}
+            className={cn(TEXT_BOX, "my-[-0.25em]")}
             disabled={!filtered}
             onClick={onDevice ? onDevice.onReset : onReset}
           >

@@ -433,12 +433,10 @@ export function buildRecipePayload(
         ...(firstSeed?.seed_total_rows !== undefined && {
           seed_total_rows: firstSeed.seed_total_rows,
         }),
-        ...(firstSeed &&
-          firstSeed.local_file_name !== undefined && {
+        ...(firstSeed?.local_file_name !== undefined && {
             local_file_name: firstSeed.local_file_name,
           }),
-        ...(firstSeed &&
-          firstSeed.unstructured_file_ids !== undefined && {
+        ...(firstSeed?.unstructured_file_ids !== undefined && {
             unstructured_file_ids: firstSeed.unstructured_file_ids,
             unstructured_file_names: firstSeed.unstructured_file_names,
             unstructured_file_sizes: firstSeed.unstructured_file_sizes,
@@ -446,12 +444,10 @@ export function buildRecipePayload(
         ...(firstSeed?.unstructured_upload_uid?.trim() && {
           unstructured_upload_uid: firstSeed.unstructured_upload_uid,
         }),
-        ...(firstSeed &&
-          firstSeed.unstructured_chunk_size !== undefined && {
+        ...(firstSeed?.unstructured_chunk_size !== undefined && {
             unstructured_chunk_size: firstSeed.unstructured_chunk_size,
           }),
-        ...(firstSeed &&
-          firstSeed.unstructured_chunk_overlap !== undefined && {
+        ...(firstSeed?.unstructured_chunk_overlap !== undefined && {
             unstructured_chunk_overlap: firstSeed.unstructured_chunk_overlap,
           }),
         ...(Object.keys(uiAdvancedOpenByNode).length > 0 && {

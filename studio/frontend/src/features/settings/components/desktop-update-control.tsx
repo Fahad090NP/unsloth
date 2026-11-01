@@ -16,7 +16,7 @@ export function DesktopUpdateNote(): ReactElement | null {
   const update = useTauriUpdateController();
   if (!update) return null;
   return (
-    <p className="pb-1 text-xs text-muted-foreground leading-relaxed">
+    <p className="pb-1 text-ui-12/relaxed text-muted-foreground">
       {t("settings.about.update.desktopManaged")}
     </p>
   );

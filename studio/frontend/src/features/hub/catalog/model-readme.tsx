@@ -163,7 +163,7 @@ function ReadmeLink({
   children,
   ...props
 }: ComponentProps<"a"> & { node?: unknown }) {
-  void node;
+  node;
   const online = useContext(ReadmeOnlineContext);
   const rawHref = typeof href === "string" ? href.trim() : "";
   const disabledExternal =
@@ -208,7 +208,7 @@ function ReadmeImage({
   decoding,
   ...props
 }: ComponentProps<"img"> & { node?: unknown }) {
-  void node;
+  node;
   return (
     <img
       {...props}

@@ -33,8 +33,11 @@ export interface EngineStatus {
 }
 
 export function isEngineReady(engine: EngineStatus | undefined): boolean {
+  if (engine === undefined) {
+    return false;
+  }
   return (
-    !!engine?.installed &&
+    engine.installed &&
     (engine.current || engine.restored === true) &&
     !engine.unsupported_reason &&
     engine.job.state !== "running"
@@ -94,7 +97,7 @@ export async function listEngines(): Promise<EngineStatus[]> {
       await readFastApiError(response, "Could not read inference engines"),
     );
   }
-  return response.json();
+  return await response.json();
 }
 
 export async function changeEngine(

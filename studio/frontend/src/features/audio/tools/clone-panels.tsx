@@ -48,7 +48,7 @@ export function PanelSection({
       <div className="grid gap-0.5">
         <h3 className="text-ui-13 font-medium text-foreground">{title}</h3>
         {hint ? (
-          <p className="text-ui-11p5 leading-snug text-muted-foreground">
+          <p className="text-ui-11p5/snug text-muted-foreground">
             {hint}
           </p>
         ) : null}
@@ -74,7 +74,7 @@ const qwen3TimbrePanel: AudioToolPanel<TimbreOnlyValue> = {
           onCheckedChange={(timbreOnly) => { onChange({ timbreOnly }); }}
         />
       </FieldLabel>
-      <p className="text-ui-11p5 leading-snug text-muted-foreground">
+      <p className="text-ui-11p5/snug text-muted-foreground">
         Copies the sound of the voice without the clip's words, so no transcript
         is needed. Usually a little less close to the original.
       </p>

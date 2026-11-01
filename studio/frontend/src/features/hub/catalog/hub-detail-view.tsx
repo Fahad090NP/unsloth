@@ -44,10 +44,10 @@ export function HubDetailView({
         data-hub-scroll="true"
         // Mirror the catalog's gutter strategy so the column lines up with the top bar.
         className={cn(
-          "min-h-0 flex-1 overflow-x-hidden overflow-y-auto [overflow-anchor:none] [scrollbar-width:thin]",
+          "min-h-0 flex-1 overflow-x-hidden overflow-y-auto [overflow-anchor:none] scrollbar-thin",
           compact
-            ? "mr-2 [scrollbar-gutter:stable]"
-            : "[scrollbar-gutter:stable_both-edges]",
+            ? "mr-2 scrollbar-gutter-stable"
+            : "scrollbar-gutter-both",
         )}
       >
         <div
@@ -61,7 +61,7 @@ export function HubDetailView({
             <button
               type="button"
               onClick={onBack}
-              className="-ml-1.5 inline-flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-full pl-1.5 pr-2.5 text-ui-12p5 font-medium text-muted-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(5%*var(--contrast-wash-gain,1)),transparent)] hover:text-foreground dark:hover:bg-[rgb(255_255_255_/_calc(0.06*var(--contrast-wash-gain,1)))]"
+              className="-ml-1.5 inline-flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-full pl-1.5 pr-2.5 text-ui-12p5 font-medium text-muted-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(5%*var(--contrast-wash-gain,1)),transparent)] hover:text-foreground dark:hover:bg-[rgb(255_255_255/calc(0.06*var(--contrast-wash-gain,1)))]"
             >
               <HugeiconsIcon
                 icon={ChevronLeftStandardIcon}

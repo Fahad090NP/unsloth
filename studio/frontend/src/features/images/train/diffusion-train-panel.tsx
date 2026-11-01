@@ -262,7 +262,7 @@ function FamilyFacts({ family, baseModel }: { family?: FamilyPreset; baseModel?:
   const hasChips = Boolean(facts.params || facts.qlora_vram_gb || facts.gated);
   if (!hasChips) {
     return family.vram_note ? (
-      <p className="text-ui-11 leading-snug text-muted-foreground">
+      <p className="text-ui-11/snug text-muted-foreground">
         {family.vram_note}
       </p>
     ) : null;
@@ -290,7 +290,7 @@ function FamilyFacts({ family, baseModel }: { family?: FamilyPreset; baseModel?:
         ) : null}
       </div>
       {(facts.gated || facts.note) && (
-        <p className="text-ui-11 leading-snug text-muted-foreground">
+        <p className="text-ui-11/snug text-muted-foreground">
           {facts.gated ? "Needs its license and your HF token." : null}
           {facts.gated && facts.note ? " " : null}
           {facts.note}
@@ -1576,7 +1576,7 @@ export function DiffusionTrainPanel({
               </SelectContent>
             </Select>
             {(familyUntrainable || basePrequantized) && (
-              <p className="text-ui-11 leading-snug text-muted-foreground">
+              <p className="text-ui-11/snug text-muted-foreground">
                 {familyUntrainable
                   ?
                     "This GPU cannot train this model family."
@@ -1634,7 +1634,7 @@ export function DiffusionTrainPanel({
   // row pan the page sideways on a phone.
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden pr-5 sm:pr-8 @[50rem]:flex-row @[50rem]:overflow-hidden">
-      <div className="flex w-full min-w-0 shrink-0 flex-col border-b border-border/60 pl-10 max-sm:pl-5 @[50rem]:w-[min(var(--media-rail-width,calc(408px*var(--ui-space-scale,1))),calc(100%-var(--media-header-min-width,13rem)+--spacing(8)))] @[50rem]:overflow-hidden @[50rem]:border-r @[50rem]:border-b-0">
+      <div className="flex w-full min-w-0 shrink-0 flex-col border-b border-border/60 pl-10 max-sm:pl-5 @[50rem]:w-[min(var(--media-rail-width,calc(408px*var(--ui-space-scale,1))),calc(100%-var(--media-header-min-width,13rem)+(--spacing(8))))] @[50rem]:overflow-hidden @[50rem]:border-r @[50rem]:border-b-0">
         <div
           ref={attachSettingsScroll}
           onScroll={onSettingsScroll}
@@ -1651,7 +1651,7 @@ export function DiffusionTrainPanel({
               />
               Train a LoRA
             </h2>
-            <p className="text-xs leading-snug text-muted-foreground">
+            <p className="text-ui-12/snug text-muted-foreground">
               Teach a model a new style or subject.
             </p>
           </div>
@@ -1917,7 +1917,7 @@ export function DiffusionTrainPanel({
                     </Button>
                   </div>
                 )}
-                <p className="text-ui-11 leading-snug text-muted-foreground">
+                <p className="text-ui-11/snug text-muted-foreground">
                   {isTauri ? "Pick files or a folder." : "Pick files or a folder, or drop them here."}{" "}
                   Images, or clips for the video families. A caption file beside one (cat.png and
                   cat.txt, or cat.mp4 and cat.txt) is read as that item's caption.
@@ -1952,7 +1952,7 @@ export function DiffusionTrainPanel({
                     </>
                   )}
                   {selectedDataset.caption_count === 0 && !gridOpen && (
-                    <p className="text-ui-11 leading-snug text-muted-foreground">
+                    <p className="text-ui-11/snug text-muted-foreground">
                       No captions yet, so the trigger prompt describes every item.
                     </p>
                   )}
@@ -1969,7 +1969,7 @@ export function DiffusionTrainPanel({
           </div>
 
           {fullyCaptioned ? (
-            <p className="text-ui-11 leading-snug text-muted-foreground">
+            <p className="text-ui-11/snug text-muted-foreground">
               Every item in {selectedDataset?.name} has a caption, so no trigger prompt
               is needed.
             </p>
@@ -2002,7 +2002,7 @@ export function DiffusionTrainPanel({
         </div>
         <div
           data-tour="images-train-start"
-          className="relative z-10 flex shrink-0 justify-center pt-0.5 pb-4 pl-8 pr-8"
+          className="relative z-10 flex shrink-0 justify-center pt-0.5 pb-4 px-8"
         >
           <Button
             variant="dark"
@@ -2128,7 +2128,7 @@ export function DiffusionTrainPanel({
                     />
                     Train settings
                   </span>
-                  <p className="text-xs leading-snug text-muted-foreground">
+                  <p className="text-ui-12/snug text-muted-foreground">
                     Hyperparameters for this run.
                   </p>
                 </div>
@@ -2137,7 +2137,7 @@ export function DiffusionTrainPanel({
                 </span>
               </div>
               {trainingSettings}
-              <p className="text-ui-11 leading-snug text-muted-foreground">
+              <p className="text-ui-11/snug text-muted-foreground">
                 Progress and charts take over here once training starts.
               </p>
             </div>

@@ -7,19 +7,19 @@ import type { LayoutDirection, NodeConfig, RecipeNode } from "../../types";
 import { HANDLE_IDS, normalizeRecipeHandleId } from "../../utils/handles";
 import { readNodeHeight, readNodeWidth } from "../../utils/rf-node-dimensions";
 
-type Rect = {
+interface Rect {
   x: number;
   y: number;
   width: number;
   height: number;
-};
+}
 
-type Bounds = {
+interface Bounds {
   minX: number;
   maxX: number;
   minY: number;
   maxY: number;
-};
+}
 
 function toRect(node: RecipeNode): Rect {
   return {

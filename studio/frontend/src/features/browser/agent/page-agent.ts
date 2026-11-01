@@ -22,7 +22,7 @@ export type AgentCommand =
   | { op: "status" };
 
 /** What a ref is, so the panel can decide whether acting on it needs the user's OK. */
-export type ElementInfo = {
+export interface ElementInfo {
   role: string;
   name: string;
   tag: string;
@@ -39,9 +39,9 @@ export type ElementInfo = {
   /** For Enter in a field: the label of the button that will submit its form. */
   submitter?: string;
   submits: boolean;
-};
+}
 
-export type AgentAnswer = {
+export interface AgentAnswer {
   ok: boolean;
   error?: string;
   text?: string;
@@ -64,14 +64,14 @@ export type AgentAnswer = {
   hit?: string;
   sig?: string;
   doc?: string;
-};
+}
 
 /** `evaluate`: native views splice the script in past the CSP as `run`; the proxied frame compiles it. */
-export type PageAgent = {
+export interface PageAgent {
   run: (command: Record<string, unknown>) => Record<string, unknown>;
   evaluate: (id: string, doc: unknown, run: () => unknown) => Record<string, unknown>;
   owns: (doc: unknown) => boolean;
-};
+}
 
 /** Returns the agent it built, so the proxied frame keeps its own reference rather than trusting
  *  KEY, which a page script can define before the agent arrives. */
@@ -149,7 +149,7 @@ export function installPageAgent(): PageAgent {
   };
   const lookup = (ref: string): Element => {
     const el = byRef.get(Number(String(ref).replace(/^r/i, "")))?.deref();
-    if (!el || !el.isConnected) throw new AgentError(`${ref} is no longer on the page; call browser_snapshot for fresh refs.`);
+    if (!el?.isConnected) throw new AgentError(`${ref} is no longer on the page; call browser_snapshot for fresh refs.`);
     return el;
   };
 
@@ -531,7 +531,7 @@ export function installPageAgent(): PageAgent {
         ) as HTMLButtonElement | HTMLInputElement | undefined)
       : undefined;
 
-  type Point = { x: number; y: number };
+  interface Point { x: number; y: number }
   const pointIn = (command: Record<string, unknown>): Point | null =>
     typeof command.x === "number" && typeof command.y === "number" && Number.isFinite(command.x) && Number.isFinite(command.y)
       ? { x: command.x, y: command.y }
@@ -733,7 +733,7 @@ export function installPageAgent(): PageAgent {
     const holder = control.closest("button, label") ?? control;
     const el = holder instanceof HTMLLabelElement && holder.control ? holder.control : holder;
     const field = el as HTMLInputElement;
-    const form = (field.form ?? el.closest("form")) as HTMLFormElement | null;
+    const form = (field.form ?? el.closest("form"));
     // Through shadow roots, as linkOut finds it, so the link is gated before a native click follows it.
     const anchor = lineage(el).find((node): node is HTMLAnchorElement => node instanceof HTMLAnchorElement && node.hasAttribute("href")) ?? null;
     const tag = el.tagName.toLowerCase();
@@ -1014,8 +1014,8 @@ export function installPageAgent(): PageAgent {
     };
     try {
       Promise.resolve(start()).then(
-        (value) => finish(`Returned: ${shown(value)}`),
-        (error) => finish(`Threw ${thrown(error)}`),
+        (value) => { finish(`Returned: ${shown(value)}`); },
+        (error) => { finish(`Threw ${thrown(error)}`); },
       );
     } catch (error) {
       finish(`Threw ${thrown(error)}`);
@@ -1084,12 +1084,12 @@ export function installPageAgent(): PageAgent {
   // it went. The target is read after the event, by the browser or by the proxy shell's deferred
   // setTimeout, so it points here for the action and is put back on a later timer.
   const inOwnTab = <T>(act: () => T): T => {
-    const restore: Array<() => void> = [];
+    const restore: (() => void)[] = [];
     const point = (el: unknown, name: string) => {
       if (!(el instanceof Element) || !el.hasAttribute(name)) return;
       const old = el.getAttribute(name) ?? "";
       el.setAttribute(name, "_self");
-      restore.push(() => el.setAttribute(name, old));
+      restore.push(() => { el.setAttribute(name, old); });
     };
     const onSubmit = (event: Event) => {
       point((event as SubmitEvent).submitter, "formtarget");
@@ -1106,7 +1106,7 @@ export function installPageAgent(): PageAgent {
     } finally {
       window.removeEventListener("submit", onSubmit, true);
       window.removeEventListener("click", onClick, true);
-      if (restore.length) setTimeout(() => restore.forEach((undo) => undo()));
+      if (restore.length) setTimeout(() => { restore.forEach((undo) => { undo(); }); });
     }
   };
 

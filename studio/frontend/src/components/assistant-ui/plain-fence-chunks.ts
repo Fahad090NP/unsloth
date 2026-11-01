@@ -5,12 +5,12 @@ export const PLAIN_FENCE_CHUNK_LINES = 64;
 
 export type PlainFenceChunk = readonly string[];
 
-export type PlainFenceChunks = {
+export interface PlainFenceChunks {
   readonly source: string;
   readonly chunks: readonly PlainFenceChunk[];
   readonly trimmedEnd: number;
   readonly tailStart: number;
-};
+}
 
 const sameNodes = (a: PlainFenceChunk, b: PlainFenceChunk): boolean =>
   a.length === b.length && a.every((node, index) => node === b[index]);
@@ -72,7 +72,7 @@ export function updatePlainFenceChunks(
   const appended =
     previous !== null &&
     previous !== undefined &&
-    source.slice(0, previous.source.length) === previous.source;
+    source.startsWith(previous.source);
   if (appended && trimmedEnd === previous.trimmedEnd) {
     return { ...previous, source };
   }

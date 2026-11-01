@@ -62,13 +62,13 @@ const ROLE_REMAP: Record<string, Record<string, string>> = {
 const EMPTY_PREVIEW_ROWS: Record<string, unknown>[] = [];
 const EMPTY_PREVIEW_COLUMNS: string[] = [];
 
-type DatasetPreviewResult = {
+interface DatasetPreviewResult {
   requestKey: symbol;
   data: CheckFormatResponse | null;
   error: string | null;
-};
+}
 
-type DatasetPreviewRequest = {
+interface DatasetPreviewRequest {
   requestKey: symbol;
   datasetName: string;
   hfToken: string | null;
@@ -77,9 +77,9 @@ type DatasetPreviewRequest = {
   isVlm: boolean;
   preferLocalCache: boolean;
   localPath: string | null;
-};
+}
 
-type DatasetPreviewDialogProps = {
+interface DatasetPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   datasetName: string | null;
@@ -93,7 +93,7 @@ type DatasetPreviewDialogProps = {
   mode?: "preview" | "mapping";
   initialData?: CheckFormatResponse | null;
   isVlm?: boolean;
-};
+}
 
 export function DatasetPreviewDialog({
   open,
@@ -186,16 +186,16 @@ export function DatasetPreviewDialog({
   const { startError, startBlocked, stopRequested, startTrainingRun } =
     useTrainingActions();
 
-  const effectiveIsAudio = !!data?.is_audio;
-  const effectiveIsVlm = isVlm || !!data?.is_image;
+  const effectiveIsAudio = Boolean(data?.is_audio);
+  const effectiveIsVlm = isVlm || Boolean(data?.is_image);
 
   const isRawFormat = isRawTextDatasetFormat(datasetFormat);
   const isDecisionModel = modelType === "decision";
   const hasHeuristicMapping =
-    !data?.requires_manual_mapping && !!data?.suggested_mapping;
+    !data?.requires_manual_mapping && Boolean(data?.suggested_mapping);
   const mappingEnabled =
     !(isRawFormat || isDecisionModel) &&
-    (!!data?.requires_manual_mapping || hasHeuristicMapping);
+    (Boolean(data?.requires_manual_mapping) || hasHeuristicMapping);
   const showMappingFooter = mode === "mapping" && mappingEnabled;
   const mappingOk =
     isRawFormat ||
@@ -211,11 +211,12 @@ export function DatasetPreviewDialog({
     effectiveIsAudio,
   );
   const isHfDataset = datasetSource === "huggingface";
+  const detectedFormat = data?.detected_format;
   const readyForTraining =
     !(isRawFormat || mappingEnabled) &&
-    !data?.requires_manual_mapping &&
-    !!data?.detected_format &&
-    data.detected_format !== "unknown";
+    data?.requires_manual_mapping !== true &&
+    detectedFormat !== undefined &&
+    detectedFormat !== "unknown";
   const readyDetail =
     data?.chat_column && data.detected_format === "chatml"
       ? `Detected ChatML conversation column: ${data.chat_column}`
@@ -449,7 +450,7 @@ export function DatasetPreviewDialog({
             {mappingEnabled && (
               <HeaderRolePicker
                 currentRole={manualMapping[colName]}
-                onRoleChange={(role) => handleRoleChange(colName, role)}
+                onRoleChange={(role) => { handleRoleChange(colName, role); }}
                 availableRoles={availableRoles}
               />
             )}
@@ -500,7 +501,7 @@ export function DatasetPreviewDialog({
           const full =
             typeof value === "string" ? value : JSON.stringify(value);
           return (
-            <p className="text-ui-13 leading-relaxed line-clamp-6" title={full}>
+            <p className="text-ui-13/relaxed line-clamp-6" title={full}>
               {text}
             </p>
           );
@@ -531,7 +532,7 @@ export function DatasetPreviewDialog({
         ),
         cell: () => (
           <p
-            className="text-ui-13 leading-relaxed line-clamp-6 text-muted-foreground italic"
+            className="text-ui-13/relaxed line-clamp-6 text-muted-foreground italic"
             title={datasetSystemPrompt}
           >
             {datasetSystemPrompt}
@@ -704,7 +705,7 @@ export function DatasetPreviewDialog({
                     startBlocked={startBlocked}
                     stopRequested={stopRequested}
                     startError={startError}
-                    onCancel={() => handleOpenChange(false)}
+                    onCancel={() => { handleOpenChange(false); }}
                     onStartTraining={async () => {
                       const ok = await startTrainingRun();
                       if (ok) handleOpenChange(false);

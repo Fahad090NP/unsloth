@@ -240,7 +240,7 @@ export function ItemCard({ item }: { item: LibraryItem }) {
             <span
               className={cn(
                 GLASS_SURFACE,
-                "pointer-events-none absolute bottom-2 left-2 inline-flex h-6 items-center rounded-full px-2 text-ui-12 leading-none opacity-0 transition-opacity group-hover/library-card:opacity-100 group-has-[:focus-visible]/library-card:opacity-100 pointer-coarse:opacity-100",
+                "pointer-events-none absolute bottom-2 left-2 inline-flex h-6 items-center rounded-full px-2 text-ui-12 leading-none opacity-0 transition-opacity group-hover/library-card:opacity-100 group-has-focus-visible/library-card:opacity-100 pointer-coarse:opacity-100",
               )}
             >
               {formatCardTime(item.updatedAt, locale)}
@@ -252,7 +252,7 @@ export function ItemCard({ item }: { item: LibraryItem }) {
           className="grid aspect-square grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr_auto] px-5 pt-5 pb-3.5"
           style={{ minHeight: CARD_MIN_HEIGHT }}
         >
-          <p className="line-clamp-2 min-h-[2.75em] break-all font-medium text-ui-13p5 leading-snug text-foreground">
+          <p className="line-clamp-2 min-h-[2.75em] break-all font-medium text-ui-13p5/snug text-foreground">
             {item.name}
           </p>
           <div className="flex flex-col items-center before:flex-5 after:flex-7">
@@ -261,7 +261,7 @@ export function ItemCard({ item }: { item: LibraryItem }) {
           {/* One line: a date that does not fit wraps onto a hidden second line. */}
           <p
             className={cn(
-              "flex h-[1lh] flex-wrap overflow-hidden pr-6 text-ui-12 tabular-nums text-muted-foreground",
+              "flex h-lh flex-wrap overflow-hidden pr-6 text-ui-12 tabular-nums text-muted-foreground",
               playable && "pl-8",
             )}
           >

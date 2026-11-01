@@ -31,14 +31,14 @@ type PromptInputNodeData = {
   field: PromptField;
   title: string;
   executionLocked?: boolean;
-};
+}
 
 type JudgeScoreNodeData = {
   kind: "llm-judge-score";
   llmId: string;
   scoreIndex: number;
   executionLocked?: boolean;
-};
+}
 
 export type RecipeGraphAuxNodeData = PromptInputNodeData | JudgeScoreNodeData;
 export type RecipeGraphAuxNodeType = Node<RecipeGraphAuxNodeData, "aux">;
@@ -144,10 +144,9 @@ function AuxNodeBase({
             aria-invalid={hasInvalidRefs}
             value={value}
             disabled={executionLocked}
-            onChange={(event) =>
-              updateConfig(data.llmId, {
+            onChange={(event) => { updateConfig(data.llmId, {
                 [data.field]: event.target.value,
-              } as Partial<LlmConfig>)
+              }); }
             }
           />
           <AuxVariableBadges entries={variableEntries} />
@@ -219,14 +218,14 @@ function AuxNodeBase({
           placeholder="Score name"
           value={score.name}
           disabled={executionLocked}
-          onChange={(event) => updateScore({ name: event.target.value })}
+          onChange={(event) => { updateScore({ name: event.target.value }); }}
         />
         <Textarea
           className="corner-squircle nodrag nowheel max-h-32 min-h-[calc(56px*var(--ui-space-scale,1))] w-full resize-none overflow-y-auto text-xs"
           placeholder="Score description"
           value={score.description}
           disabled={executionLocked}
-          onChange={(event) => updateScore({ description: event.target.value })}
+          onChange={(event) => { updateScore({ description: event.target.value }); }}
         />
         <div className="space-y-1">
           {score.options.map((option, optionIndex) => (
@@ -236,8 +235,7 @@ function AuxNodeBase({
                 placeholder="Value"
                 value={option.value}
                 disabled={executionLocked}
-                onChange={(event) =>
-                  updateOption(optionIndex, { value: event.target.value })
+                onChange={(event) => { updateOption(optionIndex, { value: event.target.value }); }
                 }
               />
               <Input
@@ -245,10 +243,9 @@ function AuxNodeBase({
                 placeholder="Description"
                 value={option.description}
                 disabled={executionLocked}
-                onChange={(event) =>
-                  updateOption(optionIndex, {
+                onChange={(event) => { updateOption(optionIndex, {
                     description: event.target.value,
-                  })
+                  }); }
                 }
               />
               <Button
@@ -257,7 +254,7 @@ function AuxNodeBase({
                 variant="ghost"
                 className="nodrag"
                 disabled={executionLocked}
-                onClick={() => removeOption(optionIndex)}
+                onClick={() => { removeOption(optionIndex); }}
               >
                 x
               </Button>

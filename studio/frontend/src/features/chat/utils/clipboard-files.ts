@@ -127,7 +127,7 @@ async function readNativeClipboardImage(): Promise<File | null> {
       const context = canvas.getContext("2d");
       if (!context) return null;
       const pixels = new Uint8ClampedArray(
-        rgba.buffer as ArrayBuffer,
+        rgba.buffer,
         rgba.byteOffset,
         rgba.byteLength,
       );

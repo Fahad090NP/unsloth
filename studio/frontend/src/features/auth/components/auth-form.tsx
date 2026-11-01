@@ -372,7 +372,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
               ? `Sloth emojis/${spookySloth.sloth}`
               : "Sloth emojis/large sloth wave.png"
           }
-          className="mx-auto mb-2 h-20 w-20 object-contain"
+          className="mx-auto mb-2 size-20 object-contain"
           style={spookySloth?.enlarge ? { scale: "1.15" } : undefined}
         />
         <h2 className="text-[calc(1.5rem*var(--ui-font-scale,1))] font-semibold text-foreground">{title}</h2>
@@ -445,9 +445,9 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
                 onClick={() => { setShowPassword((prev) => !prev); }}
               >
                 {showPassword ? (
-                  <HugeiconsIcon icon={ViewOffSlashIcon} className="h-4 w-4" />
+                  <HugeiconsIcon icon={ViewOffSlashIcon} className="size-4" />
                 ) : (
-                  <HugeiconsIcon icon={ViewIcon} className="h-4 w-4" />
+                  <HugeiconsIcon icon={ViewIcon} className="size-4" />
                 )}
               </Button>
             </div>
@@ -481,9 +481,9 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
                     onClick={() => { setShowPassword((prev) => !prev); }}
                   >
                     {showPassword ? (
-                      <HugeiconsIcon icon={ViewOffSlashIcon} className="h-4 w-4" />
+                      <HugeiconsIcon icon={ViewOffSlashIcon} className="size-4" />
                     ) : (
-                      <HugeiconsIcon icon={ViewIcon} className="h-4 w-4" />
+                      <HugeiconsIcon icon={ViewIcon} className="size-4" />
                     )}
                   </Button>
                 </div>
@@ -518,9 +518,9 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
                   onClick={() => { setShowNewPassword((prev) => !prev); }}
                 >
                   {showNewPassword ? (
-                    <HugeiconsIcon icon={ViewOffSlashIcon} className="h-4 w-4" />
+                    <HugeiconsIcon icon={ViewOffSlashIcon} className="size-4" />
                   ) : (
-                    <HugeiconsIcon icon={ViewIcon} className="h-4 w-4" />
+                    <HugeiconsIcon icon={ViewIcon} className="size-4" />
                   )}
                 </Button>
               </div>
@@ -558,7 +558,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
           <p className="text-center text-sm text-amber-600">{helperText}</p>
         )}
         {error && (
-          <p className="text-center text-sm text-destructive [overflow-wrap:anywhere]">
+          <p className="text-center text-sm text-destructive wrap-anywhere">
             {error}
           </p>
         )}
@@ -567,7 +567,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
           variant="primary"
           type="submit"
           size="hero"
-          className="mx-auto flex h-[2.967em] w-fit bg-control-accent px-[1.56em] pt-0 pb-[0.07em] [font-family:var(--font-heading)] text-[0.9375rem] font-semibold tracking-[0.02em] text-control-accent-foreground hover:bg-control-accent/85"
+          className="mx-auto flex h-[2.967em] w-fit bg-control-accent px-[1.56em] pt-0 pb-[0.07em] font-heading text-[0.9375rem] font-semibold tracking-[0.02em] text-control-accent-foreground hover:bg-control-accent/85"
           disabled={
             loading ||
             statusLoading ||

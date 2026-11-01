@@ -296,8 +296,7 @@ function renderNodeBody(
   }
 
   if (config && isInlineConfig(config)) {
-    const onUpdate = (patch: Partial<NodeConfig>) =>
-      updateConfig(config.id, patch);
+    const onUpdate = (patch: Partial<NodeConfig>) => { updateConfig(config.id, patch); };
 
     if (config.kind === "sampler") {
       return <InlineSampler config={config} onUpdate={onUpdate} />;

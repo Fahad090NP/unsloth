@@ -194,7 +194,7 @@ function forceHighlightRepaint(): void {
     return;
   const previous = root.style.opacity;
   root.style.opacity = previous === "0.999999" ? "0.999998" : "0.999999";
-  void root.offsetHeight;
+  root.offsetHeight;
   root.style.opacity = previous;
 }
 

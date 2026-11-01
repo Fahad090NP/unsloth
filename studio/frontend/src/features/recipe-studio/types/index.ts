@@ -81,18 +81,18 @@ export type RecipeNodeData = {
   layoutDirection?: LayoutDirection;
   runtimeState?: "idle" | "running" | "done";
   executionLocked?: boolean;
-};
+}
 
 export type RecipeNode = Node<RecipeNodeData, "builder">;
 
-export type CategoryConditionalParams = {
+export interface CategoryConditionalParams {
   // biome-ignore lint/style/useNamingConvention: api schema
   sampler_type: "category";
   values: string[];
-  weights?: Array<number | null>;
-};
+  weights?: (number | null)[];
+}
 
-export type SamplerConfig = {
+export interface SamplerConfig {
   id: string;
   kind: "sampler";
   advancedOpen?: boolean;
@@ -103,7 +103,7 @@ export type SamplerConfig = {
   // biome-ignore lint/style/useNamingConvention: api schema
   convert_to?: "float" | "int" | "str";
   values?: string[];
-  weights?: Array<number | null>;
+  weights?: (number | null)[];
   low?: string;
   high?: string;
   mean?: string;
@@ -141,27 +141,27 @@ export type SamplerConfig = {
   subcategory_mapping?: Record<string, string[]>;
   // biome-ignore lint/style/useNamingConvention: api schema
   conditional_params?: Record<string, CategoryConditionalParams>;
-};
+}
 
-export type ScoreOption = {
+export interface ScoreOption {
   value: string;
   description: string;
-};
+}
 
-export type Score = {
+export interface Score {
   name: string;
   description: string;
   options: ScoreOption[];
-};
+}
 
 export type McpProviderType = "stdio" | "sse" | "streamable_http";
 
-export type McpEnvVar = {
+export interface McpEnvVar {
   key: string;
   value: string;
-};
+}
 
-export type LlmMcpProviderConfig = {
+export interface LlmMcpProviderConfig {
   id: string;
   name: string;
   // biome-ignore lint/style/useNamingConvention: ui schema
@@ -174,9 +174,9 @@ export type LlmMcpProviderConfig = {
   api_key?: string;
   // biome-ignore lint/style/useNamingConvention: api schema
   api_key_env?: string;
-};
+}
 
-export type LlmToolConfig = {
+export interface LlmToolConfig {
   id: string;
   // biome-ignore lint/style/useNamingConvention: api schema
   tool_alias: string;
@@ -187,9 +187,9 @@ export type LlmToolConfig = {
   max_tool_call_turns?: string;
   // biome-ignore lint/style/useNamingConvention: api schema
   timeout_sec?: string;
-};
+}
 
-export type ToolProfileConfig = {
+export interface ToolProfileConfig {
   id: string;
   kind: "tool_config";
   name: string;
@@ -203,17 +203,17 @@ export type ToolProfileConfig = {
   max_tool_call_turns?: string;
   // biome-ignore lint/style/useNamingConvention: api schema
   timeout_sec?: string;
-};
+}
 
-export type LlmImageContextConfig = {
+export interface LlmImageContextConfig {
   enabled: boolean;
   // biome-ignore lint/style/useNamingConvention: api schema
   column_name: string;
-};
+}
 
 export type LlmTraceType = "none" | "last_message" | "all_messages";
 
-export type LlmConfig = {
+export interface LlmConfig {
   id: string;
   kind: "llm";
   advancedOpen?: boolean;
@@ -240,9 +240,9 @@ export type LlmConfig = {
   with_trace?: LlmTraceType;
   // biome-ignore lint/style/useNamingConvention: api schema
   extract_reasoning_content?: boolean;
-};
+}
 
-export type ModelProviderConfig = {
+export interface ModelProviderConfig {
   id: string;
   kind: "model_provider";
   name: string;
@@ -259,9 +259,9 @@ export type ModelProviderConfig = {
   extra_body?: string;
   // biome-ignore lint/style/useNamingConvention: api schema
   is_local?: boolean;
-};
+}
 
-export type ModelConfig = {
+export interface ModelConfig {
   id: string;
   kind: "model_config";
   name: string;
@@ -281,18 +281,18 @@ export type ModelConfig = {
   inference_extra_body?: string;
   // biome-ignore lint/style/useNamingConvention: api schema
   skip_health_check?: boolean;
-};
+}
 
-export type ExpressionConfig = {
+export interface ExpressionConfig {
   id: string;
   kind: "expression";
   name: string;
   drop?: boolean;
   expr: string;
   dtype: ExpressionDtype;
-};
+}
 
-export type ValidatorConfig = {
+export interface ValidatorConfig {
   id: string;
   kind: "validator";
   advancedOpen?: boolean;
@@ -307,9 +307,9 @@ export type ValidatorConfig = {
   oxc_code_shape: OxcCodeShape;
   // serialized to int in payload
   batch_size: string;
-};
+}
 
-export type MarkdownNoteConfig = {
+export interface MarkdownNoteConfig {
   id: string;
   kind: "markdown_note";
   name: string;
@@ -317,9 +317,9 @@ export type MarkdownNoteConfig = {
   note_color?: string;
   // ui-only, 0-100 as a string
   note_opacity?: string;
-};
+}
 
-export type SeedConfig = {
+export interface SeedConfig {
   id: string;
   kind: "seed";
   advancedOpen?: boolean;
@@ -370,15 +370,15 @@ export type SeedConfig = {
   selection_end?: string;
   selection_index?: string;
   selection_num_partitions?: string;
-};
+}
 
-export type SchemaTransformProcessorConfig = {
+export interface SchemaTransformProcessorConfig {
   id: string;
   // biome-ignore lint/style/useNamingConvention: api schema
   processor_type: "schema_transform";
   name: string;
   template: string;
-};
+}
 
 export type RecipeProcessorConfig = SchemaTransformProcessorConfig;
 

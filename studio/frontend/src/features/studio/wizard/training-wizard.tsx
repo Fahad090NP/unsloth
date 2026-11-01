@@ -178,7 +178,7 @@ function TrainingMethodSelect() {
               <TooltipContent
                 side="right"
                 sideOffset={10}
-                className="max-w-[calc(220px*var(--ui-space-scale,1))] text-ui-11p5 leading-snug"
+                className="max-w-[calc(220px*var(--ui-space-scale,1))] text-ui-11p5/snug"
               >
                 {unsupportedOnMlx
                   ? t("studio.params.notSupportedAppleSilicon")

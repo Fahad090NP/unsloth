@@ -340,7 +340,7 @@ export function LoadedModelsIndicator({
       ref={panelRef}
       className={cn(
         "pointer-events-none",
-        position && "fixed z-[9999] w-fit",
+        position && "fixed z-9999 w-fit",
         !position &&
           (positioned
             ? "fixed bottom-4 right-4 z-50"

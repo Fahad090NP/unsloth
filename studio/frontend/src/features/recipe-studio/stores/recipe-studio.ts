@@ -63,7 +63,7 @@ type SheetView =
   | "note"
   | "processor";
 
-type RecipeStudioState = {
+interface RecipeStudioState {
   nodes: RecipeNode[];
   edges: Edge[];
   auxNodePositions: Record<string, XYPosition>;
@@ -125,7 +125,7 @@ type RecipeStudioState = {
   onEdgesChange: (changes: EdgeChange<Edge>[]) => void;
   onConnect: (connection: Connection) => void;
   isValidConnection: IsValidConnection;
-};
+}
 
 const INITIAL_STATE = {
   nodes: [],
@@ -291,23 +291,20 @@ function seedUploadCleanupUid(config: NodeConfig | undefined): string | null {
 
 export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
   ...INITIAL_STATE,
-  setSheetOpen: (open) => set({ sheetOpen: open }),
-  setSheetView: (view) => set({ sheetView: view }),
-  setProcessors: (processors) =>
-    set((state) => (state.executionLocked ? state : { processors })),
-  setDialogOpen: (open) => set({ dialogOpen: open }),
-  setExecutionLocked: (locked) => set({ executionLocked: locked }),
-  resetRecipe: () => set(INITIAL_STATE),
-  queueUploadCleanup: (uid) =>
-    set((state) =>
+  setSheetOpen: (open) => { set({ sheetOpen: open }); },
+  setSheetView: (view) => { set({ sheetView: view }); },
+  setProcessors: (processors) => { set((state) => (state.executionLocked ? state : { processors })); },
+  setDialogOpen: (open) => { set({ dialogOpen: open }); },
+  setExecutionLocked: (locked) => { set({ executionLocked: locked }); },
+  resetRecipe: () => { set(INITIAL_STATE); },
+  queueUploadCleanup: (uid) => { set((state) =>
       state.pendingUploadCleanups.includes(uid)
         ? state
         : { pendingUploadCleanups: [...state.pendingUploadCleanups, uid] },
-    ),
-  selectConfig: (id) => set({ activeConfigId: id, dialogOpen: false }),
-  openConfig: (id) => set({ activeConfigId: id, dialogOpen: true }),
-  setLayoutDirection: (direction) =>
-    set((state) => {
+    ); },
+  selectConfig: (id) => { set({ activeConfigId: id, dialogOpen: false }); },
+  openConfig: (id) => { set({ activeConfigId: id, dialogOpen: true }); },
+  setLayoutDirection: (direction) => { set((state) => {
       if (state.executionLocked) {
         return state;
       }
@@ -332,9 +329,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
           direction,
         ),
       };
-    }),
-  applyLayout: () =>
-    set((state) => {
+    }); },
+  applyLayout: () => { set((state) => {
       if (state.executionLocked) {
         return state;
       }
@@ -389,9 +385,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
           state.layoutDirection,
         ),
       };
-    }),
-  setLlmAuxVisibility: (id, visible) =>
-    set((state) => {
+    }); },
+  setLlmAuxVisibility: (id, visible) => { set((state) => {
       if (state.llmAuxVisibility[id] === visible) {
         return state;
       }
@@ -401,14 +396,13 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
           [id]: visible,
         },
       };
-    }),
-  addSamplerNode: (type, position, openDialog = true) =>
-    set((state) => {
+    }); },
+  addSamplerNode: (type, position, openDialog = true) => { set((state) => {
       if (state.executionLocked) {
         return state;
       }
       return buildAddedNodeState(state, "sampler", type, position, openDialog);
-    }),
+    }); },
   addSeedNode: (type, position, openDialog = true) => {
     const current = get();
     if (!current.executionLocked) {
@@ -485,8 +479,7 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
       };
     });
   },
-  addLlmNode: (type, position, openDialog = true) =>
-    set((state) => {
+  addLlmNode: (type, position, openDialog = true) => { set((state) => {
       if (state.executionLocked) {
         return state;
       }
@@ -527,9 +520,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
         configs = next.configs;
       }
       return { ...added, nodes, edges, configs };
-    }),
-  addModelProviderNode: (position, openDialog = true) =>
-    set((state) => {
+    }); },
+  addModelProviderNode: (position, openDialog = true) => { set((state) => {
       if (state.executionLocked) {
         return state;
       }
@@ -570,9 +562,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
         configs = next.configs;
       }
       return { ...added, nodes, edges, configs };
-    }),
-  addModelConfigNode: (position, openDialog = true) =>
-    set((state) => {
+    }); },
+  addModelConfigNode: (position, openDialog = true) => { set((state) => {
       if (state.executionLocked) {
         return state;
       }
@@ -635,9 +626,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
         configs = next.configs;
       }
       return { ...added, nodes, edges, configs };
-    }),
-  addToolProfileNode: (position, openDialog = true) =>
-    set((state) => {
+    }); },
+  addToolProfileNode: (position, openDialog = true) => { set((state) => {
       if (state.executionLocked) {
         return state;
       }
@@ -678,9 +668,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
         configs = next.configs;
       }
       return { ...added, nodes, edges, configs };
-    }),
-  addExpressionNode: (position, openDialog = true) =>
-    set((state) => {
+    }); },
+  addExpressionNode: (position, openDialog = true) => { set((state) => {
       if (state.executionLocked) {
         return state;
       }
@@ -691,9 +680,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
         position,
         openDialog,
       );
-    }),
-  addValidatorNode: (type, position, openDialog = true) =>
-    set((state) => {
+    }); },
+  addValidatorNode: (type, position, openDialog = true) => { set((state) => {
       if (state.executionLocked) {
         return state;
       }
@@ -704,9 +692,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
         position,
         openDialog,
       );
-    }),
-  addMarkdownNoteNode: (position, openDialog = true) =>
-    set((state) => {
+    }); },
+  addMarkdownNoteNode: (position, openDialog = true) => { set((state) => {
       if (state.executionLocked) {
         return state;
       }
@@ -717,9 +704,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
         position,
         openDialog,
       );
-    }),
-  loadRecipe: (snapshot) =>
-    set((state) => ({
+    }); },
+  loadRecipe: (snapshot) => { set((state) => ({
       configs: snapshot.configs,
       nodes: applyLayoutDirectionToNodes(
         snapshot.nodes,
@@ -739,9 +725,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
       fitViewTick: state.fitViewTick + 1,
       // These belong to the previous recipe; draining after this save could delete files it uses.
       pendingUploadCleanups: [],
-    })),
-  setAuxNodePosition: (id, position) =>
-    set((state) => {
+    })); },
+  setAuxNodePosition: (id, position) => { set((state) => {
       const current = state.auxNodePositions[id];
       if (current && current.x === position.x && current.y === position.y) {
         return state;
@@ -752,7 +737,7 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
           [id]: position,
         },
       };
-    }),
+    }); },
   updateConfig: (id, patch) => {
     const applyUpdate = (state: RecipeStudioState) => {
       if (state.executionLocked) {

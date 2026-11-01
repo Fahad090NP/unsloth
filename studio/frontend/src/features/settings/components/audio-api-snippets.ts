@@ -110,10 +110,10 @@ export function audioApiModelFits(
 ): boolean {
   if (models === null) {
     const known = audioCppModelFor(id);
-    return !!known && audioCppWorkflowsFor(known).includes(example);
+    return known !== null && audioCppWorkflowsFor(known).includes(example);
   }
   const listed = models.find((model) => model.id === id);
-  return !!listed && canRun(listed, example);
+  return listed !== undefined && canRun(listed, example);
 }
 
 // The row's advertised workflows decide; else the audio.cpp catalog, then family hints for unknown repos.
@@ -184,7 +184,7 @@ const CLONE_TRANSCRIPT = "The words spoken in me.wav.";
 const EDIT_FROM = "The quick brown fox jumps over the lazy dog.";
 const EDIT_TO = "The quick red fox jumps over the lazy dog.";
 
-type Ref = { upload: string };
+interface Ref { upload: string }
 type Json = string | number | boolean | Ref | Json[] | { [key: string]: Json };
 
 function isRef(value: Json): value is Ref {
@@ -246,7 +246,7 @@ function editFamily(model: string): string {
 
 interface RunPlan {
   uploads: { name: string; file: string }[];
-  body: { [key: string]: Json };
+  body: Record<string, Json>;
 }
 
 function runPlan(workflow: AudioRunWorkflow, model: string): RunPlan {
@@ -356,7 +356,7 @@ function powershellUpload(name: string, file: string): string {
   --data-binary "@${file}" | ConvertFrom-Json`;
 }
 
-function bashBody(body: { [key: string]: Json }, refs: string[]): string {
+function bashBody(body: Record<string, Json>, refs: string[]): string {
   if (refs.length === 0) return `'${shSingle(render(body, "json", "  "))}'`;
   const args = refs
     .map((ref) => `--arg ${ref} "$${ref.toUpperCase()}"`)
@@ -364,7 +364,7 @@ function bashBody(body: { [key: string]: Json }, refs: string[]): string {
   return `"$(jq -n ${args} '${shSingle(render(body, "jq", "  "))}')"`;
 }
 
-function powershellBody(body: { [key: string]: Json }): string {
+function powershellBody(body: Record<string, Json>): string {
   return `$body = @"\n${render(body, "powershell")}\n"@
 Set-Content -Path body.json -Value $body -Encoding ascii`;
 }
@@ -539,12 +539,12 @@ function cloneSnippet({
   lang,
   os,
 }: AudioApiSnippetInput): string {
-  const voice: { [key: string]: Json } = {
+  const voice: Record<string, Json> = {
     name: "Me",
     source: { input_id: { upload: "recording" } },
     transcript: CLONE_TRANSCRIPT,
   };
-  const speech: { [key: string]: Json } = {
+  const speech: Record<string, Json> = {
     model,
     input: CLONE_TEXT,
     voice: { upload: "voice" },

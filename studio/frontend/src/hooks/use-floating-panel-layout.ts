@@ -304,7 +304,7 @@ export function useFloatingPanelLayout(
 
   // Position-only changes fire no ResizeObserver, so republish per committed layout.
   useLayoutEffect(() => {
-    void layout;
+    layout;
     const monitor = monitorRef.current;
     if (!(monitor && constraintsElement) || hiddenRef.current) {
       return;

@@ -160,8 +160,7 @@ function FilterMenu({
               {t("library.toolbar.fileType")}
             </DropdownMenuLabel>
             {TYPE_OPTIONS.map((entry) =>
-              option(entry, t(entry.label), filters.types.has(entry.value), () =>
-                onChange({ ...filters, types: toggled(filters.types, entry.value) }),
+              option(entry, t(entry.label), filters.types.has(entry.value), () => { onChange({ ...filters, types: toggled(filters.types, entry.value) }); },
               ),
             )}
             <DropdownMenuSeparator className="mx-3" />
@@ -177,7 +176,7 @@ function FilterMenu({
                 { value: workflow.id, icon: workflow.icon },
                 workflow.label,
                 filters.workflows.has(workflow.id),
-                () => onChange({ ...filters, workflows: toggled(filters.workflows, workflow.id) }),
+                () => { onChange({ ...filters, workflows: toggled(filters.workflows, workflow.id) }); },
               ),
             )}
             <DropdownMenuSeparator className="mx-3" />
@@ -187,14 +186,13 @@ function FilterMenu({
           {t("library.toolbar.source")}
         </DropdownMenuLabel>
         {SOURCE_OPTIONS.map((entry) =>
-          option(entry, t(entry.label), filters.sources.has(entry.value), () =>
-            onChange({ ...filters, sources: toggled(filters.sources, entry.value) }),
+          option(entry, t(entry.label), filters.sources.has(entry.value), () => { onChange({ ...filters, sources: toggled(filters.sources, entry.value) }); },
           ),
         )}
         {filtersActive(filters) && (
           <>
             <DropdownMenuSeparator className="mx-3" />
-            <DropdownMenuItem onSelect={() => onChange(EMPTY_FILTERS)}>
+            <DropdownMenuItem onSelect={() => { onChange(EMPTY_FILTERS); }}>
               <span className="pl-[calc(26px*var(--ui-space-scale,1))] text-muted-foreground">
                 {t("library.toolbar.clearFilters")}
               </span>
@@ -240,11 +238,12 @@ function SortMenu({
   onDirectionChange,
 }: LibrarySortMenuProps) {
   const t = useT();
-  const options = SORT_OPTIONS.filter((option) => showSize || option.value !== "size").map(
-    (option) =>
-      activity && option.value === "modified"
-        ? { ...option, label: "library.list.lastActivity" as TranslationKey }
-        : option,
+  const options: { value: LibrarySortChoice; label: TranslationKey }[] = SORT_OPTIONS.filter(
+    (option) => showSize || option.value !== "size",
+  ).map((option) =>
+    activity && option.value === "modified"
+      ? { ...option, label: "library.list.lastActivity" }
+      : option,
   );
   const current = options.find((option) => option.value === value);
   return (
@@ -266,7 +265,7 @@ function SortMenu({
             key={option}
             label={t(label)}
             checked={option === value}
-            onSelect={() => onChange(option)}
+            onSelect={() => { onChange(option); }}
           />
         ))}
         {value === "modified" && onDirectionChange && (
@@ -275,12 +274,12 @@ function SortMenu({
             <SortRadio
               label={t("library.toolbar.sortAscending")}
               checked={!desc}
-              onSelect={() => onDirectionChange(false)}
+              onSelect={() => { onDirectionChange(false); }}
             />
             <SortRadio
               label={t("library.toolbar.sortDescending")}
               checked={desc}
-              onSelect={() => onDirectionChange(true)}
+              onSelect={() => { onDirectionChange(true); }}
             />
           </>
         )}
@@ -322,13 +321,13 @@ function NewMenu({ onSelect }: { onSelect: (action: NewAction) => void }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="library-menu w-44">
         {NEW_OPTIONS.map(({ value, label, icon }) => (
-          <DropdownMenuItem key={value} onSelect={() => onSelect(value)}>
+          <DropdownMenuItem key={value} onSelect={() => { onSelect(value); }}>
             <HugeiconsIcon icon={icon} strokeWidth={1.75} className={ICON} />
             {t(label)}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator className="mx-3" />
-        <DropdownMenuItem onSelect={() => onSelect("upload")}>
+        <DropdownMenuItem onSelect={() => { onSelect("upload"); }}>
           <HugeiconsIcon icon={Upload01Icon} strokeWidth={1.75} className={ICON} />
           {t("library.empty.uploadFiles")}
         </DropdownMenuItem>
@@ -383,7 +382,7 @@ export function LibraryToolbar({
               aria-label={t(label)}
               data-active={view === value}
               aria-pressed={view === value}
-              onClick={() => onViewChange(value)}
+              onClick={() => { onViewChange(value); }}
               className={ROUND_BUTTON}
             >
               <HugeiconsIcon icon={icon} strokeWidth={1.75} className="size-5" />
@@ -399,7 +398,7 @@ export function LibraryToolbar({
           <input
             type="search"
             value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
+            onChange={(event) => { onSearchChange(event.target.value); }}
             placeholder={searchPlaceholder}
             className="ml-2.5 min-w-0 flex-1 bg-transparent text-ui-14 outline-none placeholder:text-muted-foreground dark:placeholder:text-foreground/55 [&::-webkit-search-cancel-button]:hidden"
           />

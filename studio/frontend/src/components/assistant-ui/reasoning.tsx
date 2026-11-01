@@ -314,7 +314,7 @@ function ReasoningText({
       data-slot="reasoning-text"
       data-streaming={streaming ? "" : undefined}
       className={cn(
-        "aui-reasoning-text relative z-0 pt-4 pb-0 text-sm text-trace-foreground leading-relaxed",
+        "aui-reasoning-text relative z-0 pt-4 pb-0 text-sm/relaxed text-trace-foreground",
         "[&_p]:my-0 [&_p+p]:mt-4 [&_ul]:my-4 [&_ol]:my-4 [&_pre]:my-4",
         !virtualized &&
           cn(
@@ -568,16 +568,16 @@ function ReasoningTail({
         }}
         className={cn(
           // The child rule stays on too: it is inert outside a flex box and toggling it restyles every row.
-          cappable && "[&>*]:shrink-0",
+          cappable && "*:shrink-0",
           cappable && flexBox && "flex flex-col",
           // A mask paints only inside its box: bleed into the side padding so list markers survive.
           capped &&
-            "-mx-[calc(1.25rem*var(--ui-space-scale,1))] min-w-0 max-h-[min(18rem,40vh)] overflow-hidden px-[calc(1.25rem*var(--ui-space-scale,1))] supports-[overflow:clip]:overflow-x-visible supports-[overflow:clip]:overflow-y-clip",
+            "mx-[calc(-1.25rem*var(--ui-space-scale,1))] min-w-0 max-h-[min(18rem,40vh)] overflow-hidden px-[calc(1.25rem*var(--ui-space-scale,1))] supports-[overflow:clip]:overflow-x-visible supports-[overflow:clip]:overflow-y-clip",
           capped && (streaming ? "justify-end" : "justify-start"),
           clipped &&
             (streaming
-              ? "[mask-image:linear-gradient(to_bottom,transparent,black_3rem)]"
-              : "[mask-image:linear-gradient(to_top,transparent,black_3rem)]"),
+              ? "mask-[linear-gradient(to_bottom,transparent,black_3rem)]"
+              : "mask-[linear-gradient(to_top,transparent,black_3rem)]"),
         )}
       >
         {children}

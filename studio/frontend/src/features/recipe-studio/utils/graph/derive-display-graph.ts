@@ -20,7 +20,7 @@ import {
 import { readNodeHeight, readNodeWidth } from "../rf-node-dimensions";
 import { isSemanticRelation } from "./relations";
 
-type DisplayGraphInput = {
+interface DisplayGraphInput {
   nodes: RecipeNode[];
   edges: Edge[];
   configs: Record<string, NodeConfig>;
@@ -33,12 +33,12 @@ type DisplayGraphInput = {
     activeEdgeIds: Set<string>;
     executionLocked: boolean;
   };
-};
+}
 
-export type DisplayGraph = {
-  nodes: Array<Node<RecipeNode["data"] | RecipeGraphAuxNodeData>>;
+export interface DisplayGraph {
+  nodes: Node<RecipeNode["data"] | RecipeGraphAuxNodeData>[];
   edges: Edge[];
-};
+}
 
 function isAuxEdge(edge: Edge): boolean {
   return edge.source.startsWith("aux-") || edge.target.startsWith("aux-");
@@ -138,17 +138,17 @@ function normalizeEdge(
   };
 }
 
-type AuxNodeItem = {
+interface AuxNodeItem {
   key: string;
   data: RecipeGraphAuxNodeData;
-};
+}
 
-type Rect = {
+interface Rect {
   x: number;
   y: number;
   width: number;
   height: number;
-};
+}
 
 function toRect(
   position: XYPosition,
@@ -336,7 +336,7 @@ function pickAuxSourceHandle(
   return dy >= 0 ? HANDLE_IDS.llmInputOutBottom : HANDLE_IDS.llmInputOutTop;
 }
 
-type AppendAuxNodeAndEdgeInput = {
+interface AppendAuxNodeAndEdgeInput {
   auxNodes: Node<RecipeGraphAuxNodeData>[];
   auxEdges: Edge[];
   entry: {
@@ -350,7 +350,7 @@ type AppendAuxNodeAndEdgeInput = {
   parentWidth: number;
   parentHeight: number;
   auxTargetHandle: string;
-};
+}
 
 function appendAuxNodeAndEdge({
   auxNodes,

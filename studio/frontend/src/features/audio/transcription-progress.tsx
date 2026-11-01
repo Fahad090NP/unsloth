@@ -50,7 +50,7 @@ export function TranscriptionProgress({
             {[10, 16, 20, 14, 8].map((height, index) => (
               <span
                 key={index}
-                className="w-[3px] rounded-full bg-current"
+                className="w-0.75 rounded-full bg-current"
                 style={{ height, animationDelay: `${index * -230}ms` }}
               />
             ))}
@@ -81,7 +81,7 @@ export function TranscriptionProgress({
         )}
       </div>
       {running && progress?.text && (
-        <p className="line-clamp-2 text-ui-13 leading-relaxed text-muted-foreground">
+        <p className="line-clamp-2 text-ui-13/relaxed text-muted-foreground">
           {progress.text.split(/\s+/).slice(-35).join(" ")}
         </p>
       )}

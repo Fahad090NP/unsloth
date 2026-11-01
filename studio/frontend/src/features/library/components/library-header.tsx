@@ -132,7 +132,7 @@ function TabStrip({
       onLostPointerCapture={onPointerEnd}
       onClickCapture={onClickCapture}
       // index.css's unlayered `* { scrollbar-width: thin }` outranks any utility, hence `!`.
-      className="-mx-2 -mb-3 -mt-1 overflow-x-auto px-2 pb-3 pt-1 [scrollbar-width:none]! [&::-webkit-scrollbar]:hidden!"
+      className="-mx-2 -mb-3 -mt-1 overflow-x-auto px-2 pb-3 pt-1 scrollbar-none! [&::-webkit-scrollbar]:hidden!"
       style={{ marginRight: reserve || undefined, maskImage: mask, WebkitMaskImage: mask }}
     >
       <nav ref={listRef} className="flex w-max gap-1" aria-label={t("library.tabs.ariaLabel")}>
@@ -234,7 +234,7 @@ export function LibraryHeader({
     >
       <div
         ref={controlsRef}
-        className={cn("pointer-events-auto", stacked && "max-w-full [&>*]:flex-wrap [&>*]:gap-y-2")}
+        className={cn("pointer-events-auto", stacked && "max-w-full *:flex-wrap *:gap-y-2")}
       >
         {controls}
       </div>

@@ -309,7 +309,7 @@ function GgufVariantSizeLabel({
           <HugeiconsIcon
             icon={HelpCircleIcon}
             aria-hidden={true}
-            className="size-3 shrink-0 -translate-y-[0.08em] text-muted-foreground/80"
+            className="size-3 shrink-0 translate-y-[-0.08em] text-muted-foreground/80"
             strokeWidth={1.8}
           />
         </span>
@@ -1257,9 +1257,9 @@ export function GgufDownloadCard({
             side="bottom"
             sideOffset={8}
             avoidCollisions={false}
-            className="hub-menu-instant menu-soft-surface w-[var(--radix-popover-trigger-width)] min-w-[min(calc(300px*var(--ui-space-scale,1)),calc(100vw-32px))] gap-0 overflow-hidden p-0 py-2 ring-0"
+            className="hub-menu-instant menu-soft-surface w-(--radix-popover-trigger-width) min-w-[min(calc(300px*var(--ui-space-scale,1)),calc(100vw-32px))] gap-0 overflow-hidden p-0 py-2 ring-0"
           >
-            <div className="max-h-[calc(344px*var(--ui-space-scale,1))] overflow-y-auto [scrollbar-width:thin]">
+            <div className="max-h-[calc(344px*var(--ui-space-scale,1))] overflow-y-auto scrollbar-thin">
               {variantMenuItems.map((item) => {
                 const liveState = liveVariantStates.get(item.key);
                 const liveActive =
