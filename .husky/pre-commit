@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+cd studio/frontend || exit 1
+npx lint-staged --relative
