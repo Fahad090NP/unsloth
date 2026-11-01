@@ -88,8 +88,8 @@ const EVAL_PATTERN = /\beval\s*\(|\bnew\s+Function\b|(?<![\w$.])Function\s*\(/;
 /** `Function("return this")`, in whichever quotes the minifier picked (it prints backticks). */
 const EVAL_ALLOWED = /(?<![\w$.])Function\((["'`])return this\1\)/g;
 const EVAL_ALLOWED_COUNT: Record<string, number> = {
-  // es-toolkit's and decimal.js-light's global fallbacks.
-  recharts: 2,
+  // es-toolkit's or decimal.js-light's global fallback; recharts 3.x has one.
+  recharts: 1,
 };
 
 const ENTRY = "\0preview-runtime-entry";
