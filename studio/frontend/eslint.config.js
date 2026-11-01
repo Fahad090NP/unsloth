@@ -5,12 +5,46 @@
 import "./scripts/eslint-typescript6.cjs";
 
 import js from "@eslint/js";
+import betterTailwindcss from "eslint-plugin-better-tailwindcss";
 import gitignore from "eslint-config-flat-gitignore";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+
+// Local rules that the Tailwind IntelliSense surfaces but the plugin does not:
+// a custom-property fallback written as `0px` is canonically unitless `0`.
+const localRules = {
+  rules: {
+    "no-px-zero-fallback": {
+      meta: {
+        type: "problem",
+        docs: {
+          description:
+            "Use the canonical unitless 0 fallback inside a CSS variable",
+        },
+        messages: {
+          unitless:
+            "Use a unitless 0 fallback here: `var(--name, 0)`, not `var(--name, 0px)`.",
+        },
+        schema: [],
+      },
+      create(context) {
+        return {
+          Literal(node) {
+            if (
+              typeof node.value === "string" &&
+              /var\(--[\w-]+,\s*0px\s*\)/.test(node.value)
+            ) {
+              context.report({ node, messageId: "unitless" });
+            }
+          },
+        };
+      },
+    },
+  },
+};
 
 // The repository's .gitignore is the single source of truth for generated
 // files; no folder names are duplicated here.
@@ -79,7 +113,10 @@ export default defineConfig([
         "error",
         { allowConstantLoopConditions: false },
       ],
-      "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      // These two stylistic fixers remove assertions/interfaces that carry
+      // type information; keep them off so `--fix` cannot break the build.
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/consistent-type-definitions": "off",
       "@typescript-eslint/no-unsafe-enum-comparison": "error",
       "@typescript-eslint/prefer-readonly": "error",
       "@typescript-eslint/restrict-template-expressions": [
@@ -179,6 +216,27 @@ export default defineConfig([
     files: ["**/*.cjs"],
     languageOptions: {
       sourceType: "commonjs",
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: {
+      "better-tailwindcss": betterTailwindcss,
+      local: localRules,
+    },
+    settings: {
+      "better-tailwindcss": {
+        entryPoint: "src/index.css",
+      },
+    },
+    rules: {
+      "better-tailwindcss/enforce-canonical-classes": "error",
+      "better-tailwindcss/no-concatenated-classes": "error",
+      "better-tailwindcss/no-conflicting-classes": "error",
+      "better-tailwindcss/no-deprecated-classes": "error",
+      "better-tailwindcss/no-duplicate-classes": "error",
+      "better-tailwindcss/no-unnecessary-whitespace": "error",
+      "local/no-px-zero-fallback": "error",
     },
   },
 ]);

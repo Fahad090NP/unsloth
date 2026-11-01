@@ -2,3 +2,4 @@
 cd studio/frontend || exit 1
 npx lint-staged --relative || exit 1
 npm run typecheck
+npm run lint:external
