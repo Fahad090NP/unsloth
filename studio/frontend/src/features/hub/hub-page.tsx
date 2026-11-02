@@ -579,20 +579,6 @@ export function ModelsPage() {
     },
     [],
   );
-  const handlePopoverCapabilitiesChange = useCallback(
-    (next: HubCapabilityFilter[]) => {
-      setFirstPickArmed(false);
-      setCapabilityFilters(next);
-    },
-    [],
-  );
-  const handlePopoverSearchFiltersChange = useCallback(
-    (next: ModelSearchFilters) => {
-      setFirstPickArmed(false);
-      setSearchFilters(next);
-    },
-    [],
-  );
   const handlePopoverUploadersChange = useCallback((next: HubUploader[]) => {
     setFirstPickArmed(false);
     setUploaderPick(next);
@@ -668,6 +654,20 @@ export function ModelsPage() {
   const [capabilityFilters, setCapabilityFilters] = useState<
     HubCapabilityFilter[]
   >([]);
+  const handlePopoverCapabilitiesChange = useCallback(
+    (next: HubCapabilityFilter[]) => {
+      setFirstPickArmed(false);
+      setCapabilityFilters(next);
+    },
+    [],
+  );
+  const handlePopoverSearchFiltersChange = useCallback(
+    (next: ModelSearchFilters) => {
+      setFirstPickArmed(false);
+      setSearchFilters(next);
+    },
+    [],
+  );
   // Pipeline tasks from an audio page's Search Hub link; they apply while the Audio filter is on.
   const [linkedAudioTask, setLinkedAudioTask] = useState<
     PipelineType[] | null
@@ -1148,7 +1148,6 @@ export function ModelsPage() {
       visibleResults,
       effectiveCachedRows,
       effectiveLocalRows,
-      modelDiscoveryInventorySignature,
     ],
   );
 
@@ -1283,16 +1282,12 @@ export function ModelsPage() {
             rowFitsDevice(row.result),
         ),
     [
-      budgetFraction,
       rowFitsDevice,
       hubFeed.trending.results,
       hiddenEmbeddingModelIds,
       effectiveCachedRows,
       effectiveLocalRows,
-      modelDiscoveryInventorySignature,
       fitOnDeviceOnly,
-      gpu,
-      inferenceGpu,
     ],
   );
   const feedRows = useMemo(() => {

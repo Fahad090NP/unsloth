@@ -190,6 +190,16 @@ const CUSTOM_BASE = "__custom__";
 const UPLOAD_DATASET = "__upload__";
 // The backend rejects dense base precisions for a bnb-4bit repo.
 const DENSE_PRECISIONS = new Set(["bf16", "int8", "fp8", "mxfp8"]);
+// The upload guard is a ref read and written across awaits; funnel it through these so the
+// check-and-set stays synchronous and the reset cannot race a stale read.
+function beginUploadGuard(guard: { current: boolean }): boolean {
+  if (guard.current) return false;
+  guard.current = true;
+  return true;
+}
+function endUploadGuard(guard: { current: boolean }): void {
+  guard.current = false;
+}
 // Mirrors the backend repo_is_prequantized heuristic.
 function repoIsPrequantized(baseModel: string): boolean {
   const name = baseModel.toLowerCase();
@@ -542,12 +552,16 @@ export function DiffusionTrainPanel({
   // On first activation, load the dataset list and preselect a trainable base.
   useEffect(() => {
     if (!active) return;
-    (refreshInfo().then((i) => {
-      setDataset((cur) => {
-        if (cur !== UPLOAD_DATASET && i?.datasets.some((d) => d.name === cur)) return cur;
-        return i && i.datasets.length > 0 ? i.datasets[0].name : UPLOAD_DATASET;
-      });
-    })).catch(() => { /* noop */ });
+    // One microtask later: the loader flips its loading state as it starts.
+    void Promise.resolve()
+      .then(refreshInfo)
+      .then((i) => {
+        setDataset((cur) => {
+          if (cur !== UPLOAD_DATASET && i?.datasets.some((d) => d.name === cur)) return cur;
+          return i && i.datasets.length > 0 ? i.datasets[0].name : UPLOAD_DATASET;
+        });
+      })
+      .catch(() => { /* noop */ });
   }, [active, refreshInfo]);
 
   useEffect(() => {
@@ -604,7 +618,7 @@ export function DiffusionTrainPanel({
       setFamilyName(loadedFamily);
       seededFromLoaded.current = true;
     }
-  }, [loadedFamily, families]);
+  }, [loadedFamily, families, setFamilyName]);
 
   useEffect(() => {
     if (!family) return;
@@ -641,12 +655,11 @@ export function DiffusionTrainPanel({
           : "auto",
       );
     }
-  }, [family, loadedBaseRepo, reportedFamily]);
+  }, [family, loadedBaseRepo, reportedFamily, baseChoice, setBaseChoice]);
 
-  // Reset to bf16 on a DiT family, or an fp16 left from SDXL is rejected.
-  useEffect(() => {
-    if (isDiT) setPrecision("bf16");
-  }, [isDiT]);
+  // DiT families ignore the mixed-precision setting and always train in bf16; an fp16 left
+  // from SDXL must not reach them.
+  const effectiveMixedPrecision = isDiT ? "bf16" : precision;
 
   // Clamp to the current family: baseChoice can briefly hold another family's repo.
   const effectiveBase =
@@ -657,21 +670,23 @@ export function DiffusionTrainPanel({
   const resolvedBase = (effectiveBase === CUSTOM_BASE ? customBase : effectiveBase).trim();
   const basePrequantized = isDiT && repoIsPrequantized(resolvedBase);
 
-  // A prequantized base cannot use dense precisions; flip to "auto" so the backend does not reject it.
-  useEffect(() => {
-    if (basePrequantized && DENSE_PRECISIONS.has(basePrecision)) {
-      precisionDirty.current = false;
-      setBasePrecision("auto");
-    }
-  }, [basePrequantized, basePrecision]);
+  // A prequantized base cannot use dense precisions; clamp so the backend does not reject it.
+  const effectiveBasePrecision =
+    basePrequantized && DENSE_PRECISIONS.has(basePrecision)
+      ? "auto"
+      : basePrecision;
 
-  const poll = useCallback(async () => {
-    try {
-      setStatus(await getDiffusionTrainingStatus());
-    } catch {
-      /* best-effort; a failed poll should not surface an error while the tab is open */
-    }
-  }, []);
+  const poll = useCallback(
+    (): Promise<void> =>
+      getDiffusionTrainingStatus()
+        .then((next) => {
+          setStatus(next);
+        })
+        .catch(() => {
+          /* best-effort; a failed poll should not surface an error while the tab is open */
+        }),
+    [],
+  );
 
   useEffect(() => {
     if (!active) return;
@@ -735,9 +750,12 @@ export function DiffusionTrainPanel({
   // Other unlisted names include Studio's internal dataset storage and must stay blocked.
   const takenNameUnlisted =
     takenName !== null && (info?.continuation_dataset_names ?? []).includes(takenName);
-  const takenNameMessage = takenNameUnlisted
-    ? `A folder named "${takenName}" already exists but holds no images or clips yet, so it is not in the list. Add to it, or choose another name.`
-    : `A set named "${takenName}" already exists. Pick it in the list above to add to it, or choose another name.`;
+  const takenNameMessage =
+    takenName === null
+      ? ""
+      : takenNameUnlisted
+        ? `A folder named "${takenName}" already exists but holds no images or clips yet, so it is not in the list. Add to it, or choose another name.`
+        : `A set named "${takenName}" already exists. Pick it in the list above to add to it, or choose another name.`;
   useEffect(() => {
     if (!uploadMode || continuingUploadName || uploadNameEdited.current) return;
     setUploadName((current) =>
@@ -758,7 +776,9 @@ export function DiffusionTrainPanel({
   const lossHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = status?.metric_history;
     if (!h) return [];
-    return h.steps.map((step, i) => ({ step, value: h.loss[i] })).filter((p) => p.value != null);
+    return h.steps
+      .map((step, i) => ({ step, value: h.loss.at(i) }))
+      .filter((p): p is TrainingSeriesPoint => p.value != null);
   }, [status?.metric_history]);
   const gradNormHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = status?.metric_history;
@@ -802,7 +822,9 @@ export function DiffusionTrainPanel({
   const viewLossHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = viewRun?.metric_history;
     if (!h) return [];
-    return h.steps.map((step, i) => ({ step, value: h.loss[i] })).filter((p) => p.value != null);
+    return h.steps
+      .map((step, i) => ({ step, value: h.loss.at(i) }))
+      .filter((p): p is TrainingSeriesPoint => p.value != null);
   }, [viewRun?.metric_history]);
   const viewGradNormHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = viewRun?.metric_history;
@@ -843,11 +865,10 @@ export function DiffusionTrainPanel({
         );
         return;
       }
-      if (uploadInFlight.current) {
+      if (!beginUploadGuard(uploadInFlight)) {
         toast.error("An upload is already running. Wait for it to finish, then try again.");
         return;
       }
-      uploadInFlight.current = true;
       setUploading(true);
       try {
         const misKeyed = await metadataKeyedOnSubfolders(files);
@@ -960,7 +981,7 @@ export function DiffusionTrainPanel({
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Upload failed");
       } finally {
-        uploadInFlight.current = false;
+        endUploadGuard(uploadInFlight);
         setUploading(false);
       }
     },
@@ -993,12 +1014,11 @@ export function DiffusionTrainPanel({
         toast.error(takenNameMessage);
         return;
       }
-      if (uploadInFlight.current) {
+      if (!beginUploadGuard(uploadInFlight)) {
         toast.error("An upload is already running. Wait for it to finish, then drop again.");
         return;
       }
       let dropped: File[];
-      uploadInFlight.current = true;
       setUploading(true);
       try {
         dropped = await filesFromDataTransfer(event.dataTransfer);
@@ -1010,7 +1030,7 @@ export function DiffusionTrainPanel({
         return;
       } finally {
         // uploadTo re-takes it synchronously, so no await sits in the gap.
-        uploadInFlight.current = false;
+        endUploadGuard(uploadInFlight);
         setUploading(false);
       }
       if (dropped.length === 0) {
@@ -1117,8 +1137,8 @@ export function DiffusionTrainPanel({
         cfg_dropout: supportsCfgDropout ? cfgDropout : undefined,
         lora_dropout: loraDropout,
         flow_shift: supportsFlowShift && flowShiftMode === "custom" ? flowShift : undefined,
-        mixed_precision: precision,
-        base_precision: isDiT ? basePrecision : undefined,
+        mixed_precision: effectiveMixedPrecision,
+        base_precision: isDiT ? effectiveBasePrecision : undefined,
         compile_transformer: supportsCompile ? compileTransformer : undefined,
         hf_token: hfApiToken(getHfToken()) || undefined,
       });
@@ -1164,9 +1184,9 @@ export function DiffusionTrainPanel({
     lrScheduler,
     lrWarmupSteps,
     rank,
-    precision,
+    effectiveMixedPrecision,
     isDiT,
-    basePrecision,
+    effectiveBasePrecision,
     supportsCompile,
     supportsCheckpoints,
     effectiveBatchSize,
@@ -1553,7 +1573,7 @@ export function DiffusionTrainPanel({
               Base precision
             </FieldLabel>
             <Select
-              value={basePrecision}
+              value={effectiveBasePrecision}
               onValueChange={(v) => {
                 precisionDirty.current = true;
                 setBasePrecision(v as typeof basePrecision);
@@ -2008,7 +2028,7 @@ export function DiffusionTrainPanel({
             variant="dark"
             type="button"
             className="relative z-10 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
-            onClick={onStart}
+            onClick={() => { (onStart()).catch(() => { /* noop */ }); }}
             disabled={starting || uploading || running || familyUntrainable}
           >
             {starting
@@ -2084,7 +2104,7 @@ export function DiffusionTrainPanel({
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => { exportAdapter(viewRun.catalog_path!); }}
+                    onClick={() => { if (viewRun.catalog_path) exportAdapter(viewRun.catalog_path); }}
                   >
                     Export
                   </Button>
@@ -2235,7 +2255,7 @@ export function DiffusionTrainPanel({
                         variant="dark"
                         type="button"
                         className="flex-1"
-                        onClick={() => { (onResume(status.job_id!)).catch(() => { /* noop */ }); }}
+                        onClick={() => { if (status.job_id) (onResume(status.job_id)).catch(() => { /* noop */ }); }}
                         disabled={resumingJobId === status.job_id}
                       >
                         {resumingJobId === status.job_id
@@ -2286,7 +2306,7 @@ export function DiffusionTrainPanel({
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => { exportAdapter(status.catalog_path!); }}
+                      onClick={() => { if (status.catalog_path) exportAdapter(status.catalog_path); }}
                     >
                       Export
                     </Button>
@@ -2298,7 +2318,7 @@ export function DiffusionTrainPanel({
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => { (onResume(status.job_id!)).catch(() => { /* noop */ }); }}
+                      onClick={() => { if (status.job_id) (onResume(status.job_id)).catch(() => { /* noop */ }); }}
                       disabled={
                         !liveRunSummary?.can_resume ||
                         running ||
@@ -2323,7 +2343,7 @@ export function DiffusionTrainPanel({
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => { if (status) setDismissedJobId(status.job_id); }}
+                    onClick={() => { setDismissedJobId(status.job_id); }}
                   >
                     Train another
                   </Button>

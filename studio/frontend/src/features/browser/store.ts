@@ -413,7 +413,7 @@ const patchTab = (tabs: BrowserTab[], tabId: string, update: (tab: BrowserTab) =
  *  web page shows at 100%. A zoom the reader chose carries over, and Back/Forward (`traversal`)
  *  skip the new tab rule, so a page keeps the zoom its new tab entry carried. */
 function zoomFor(tab: BrowserTab, entry: BrowserEntry, traversal = false): number {
-  const from: BrowserEntry | undefined = tab.history[tab.index];
+  const from: BrowserEntry | undefined = tab.history.at(tab.index);
   if (!from) return tab.zoom;
   const preferred = defaultZoom();
   const at = (zoom: number) => Math.abs(tab.zoom - zoom) < 0.001;
@@ -529,7 +529,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       } else {
         Reflect.deleteProperty(chats, state.chat);
       }
-      const saved: ChatBrowser | undefined = chats[chat];
+      const saved = (chats as Record<string, ChatBrowser | undefined>)[chat];
       Reflect.deleteProperty(chats, chat);
       const own = state.tabs.filter((tab) => tab.chat === chat);
       const activeTabId =
@@ -553,7 +553,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       set((state) => {
         const tabs = state.tabs.map((tab) => (tab.chat === from ? { ...tab, chat: to } : tab));
         const chats = { ...state.chats };
-        const saved: ChatBrowser | undefined = chats[from];
+        const saved = (chats as Record<string, ChatBrowser | undefined>)[from];
         Reflect.deleteProperty(chats, from);
         if (saved && !chats[to]) chats[to] = saved;
         return { tabs, chats, chat: state.chat === from ? to : state.chat };
@@ -795,8 +795,8 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         const strip = chatTabs(state);
         const from = strip.findIndex((tab) => tab.id === tabId);
         const to = Math.max(0, Math.min(index, strip.length - 1));
-        const moved: BrowserTab | undefined = strip[from];
-        const target: BrowserTab | undefined = strip[to];
+        const moved: BrowserTab | undefined = strip.at(from);
+        const target: BrowserTab | undefined = strip.at(to);
         if (!moved || !target || from === to) return state;
         const tabs = state.tabs.filter((tab) => tab !== moved);
         const at = tabs.indexOf(target);
@@ -823,7 +823,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         current === tabId ? (left[Math.min(index, left.length - 1)]?.id ?? null) : current;
       if (closing.chat !== chat) {
         const { [closing.chat]: savedState, ...chats } = get().chats;
-        const saved: ChatBrowser | undefined = savedState;
+        const saved = savedState as ChatBrowser | undefined;
         if (saved && left.length > 0) chats[closing.chat] = { ...saved, activeTabId: next(saved.activeTabId) };
         set({ tabs: remaining, chats, annotateTabId, renamingTabId, fileViews });
         return;

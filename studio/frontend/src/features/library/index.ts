@@ -34,3 +34,5 @@ export {
   revealLibraryLocation,
   uploadLibraryFiles,
 } from "./api";
+export { attachLibraryChatFiles } from "./chat-handoff-store";
+export { useChatFavoritesStore } from "./chats/favorites-store";

@@ -26,8 +26,10 @@ export function useTranscribeCapabilities(
   const [loading, setLoading] = useState(false);
   const [generation, setGeneration] = useState(0);
   const [trackedKey, setTrackedKey] = useState(key);
-  if (trackedKey !== key) {
+  const [trackedGeneration, setTrackedGeneration] = useState(generation);
+  if (trackedKey !== key || trackedGeneration !== generation) {
     setTrackedKey(key);
+    setTrackedGeneration(generation);
     setCaps(key ? (cache.get(key) ?? null) : null);
     setLoading(false);
   }
@@ -35,7 +37,6 @@ export function useTranscribeCapabilities(
   useEffect(() => {
     if (!(key && model)) return;
     const cached = cache.get(key);
-    setCaps(cached ?? null);
     if (cached && generation === 0) return;
     const controller = new AbortController();
     setLoading(true);

@@ -75,6 +75,8 @@ export function useStemSources(
       return { clipId, url };
     });
     const tracker: { cancelled: boolean } = { cancelled: false };
+    // Read through a call so repeated guards after awaits stay meaningful.
+    const isCancelled = () => tracker.cancelled;
     const cache = new BlobUrlCache(Number.POSITIVE_INFINITY);
     const peaksById: Record<string, readonly number[]> = {};
     const failedIds: string[] = [];
@@ -84,7 +86,7 @@ export function useStemSources(
       if (peaks) peaksById[clipId] = peaks;
     }
     const publish = () => {
-      if (tracker.cancelled) return;
+      if (isCancelled()) return;
       setState({
         key: stateKey,
         srcById: cache.toRecord(),
@@ -97,11 +99,11 @@ export function useStemSources(
     const loadSrc = async ({ clipId, url }: StemSourceInput) => {
       try {
         const blob = await fetchAudioBlob(url);
-        if (tracker.cancelled) return;
+        if (isCancelled()) return;
         cache.set(clipId, URL.createObjectURL(blob), blob.size);
         blobs.set(clipId, blob);
       } catch {
-        if (tracker.cancelled) return;
+        if (isCancelled()) return;
         failedIds.push(clipId);
       }
       publish();
@@ -113,7 +115,7 @@ export function useStemSources(
       );
       for (const { clipId } of group) {
         await loads.get(clipId);
-        if (tracker.cancelled) return;
+        if (isCancelled()) return;
         const blob = blobs.get(clipId);
         blobs.delete(clipId);
         const currentPeaks = (peaksById as Record<string, readonly number[] | undefined>)[clipId];
@@ -121,7 +123,7 @@ export function useStemSources(
         try {
           const peaks = await decodePeaks(blob);
           rememberPeaks(clipId, peaks);
-          if (tracker.cancelled) return;
+          if (isCancelled()) return;
           const targetPeaks = peaksById;
           targetPeaks[clipId] = peaks;
           publish();

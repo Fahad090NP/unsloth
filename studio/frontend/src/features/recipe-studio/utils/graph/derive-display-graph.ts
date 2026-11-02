@@ -44,6 +44,15 @@ function isAuxEdge(edge: Edge): boolean {
   return edge.source.startsWith("aux-") || edge.target.startsWith("aux-");
 }
 
+// A Record lookup is only defined for keys that exist, so read it through a
+// helper whose return type says so.
+function readNodeConfig(
+  configs: Record<string, NodeConfig>,
+  id: string,
+): NodeConfig | undefined {
+  return configs[id];
+}
+
 function normalizeEdge(
   edge: Edge,
   configs: Record<string, NodeConfig>,
@@ -82,11 +91,13 @@ function normalizeEdge(
       }
     : edge;
 
-  const source: (typeof configs)[string] | undefined = configs[displayEdge.source];
-  const target: (typeof configs)[string] | undefined = configs[displayEdge.target];
+  const source = readNodeConfig(configs, displayEdge.source);
+  const target = readNodeConfig(configs, displayEdge.target);
   const semantic =
     displayEdge.type === "semantic" ||
-    (Boolean(source && target) && isSemanticRelation(source, target));
+    (source !== undefined &&
+      target !== undefined &&
+      isSemanticRelation(source, target));
   const sourceHandleNormalized = normalizeRecipeHandleId(displayEdge.sourceHandle);
   const targetHandleNormalized = normalizeRecipeHandleId(displayEdge.targetHandle);
   const semanticSourceDefault =
@@ -455,8 +466,8 @@ export function deriveDisplayGraph({
   );
 
   for (const node of displayNodes) {
-    const config: (typeof configs)[string] | undefined = configs[node.id];
-    if (!(config && config.kind === "llm")) {
+    const config = readNodeConfig(configs, node.id);
+    if (config?.kind !== "llm") {
       continue;
     }
     if (!llmAuxVisibility[config.id]) {

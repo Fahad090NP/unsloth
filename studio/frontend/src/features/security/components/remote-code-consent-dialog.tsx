@@ -47,7 +47,7 @@ function matchTone(severity: RemoteCodeSeverity): {
         row: "bg-amber-500/10 border-l-2 border-amber-500/60",
         span: "bg-amber-500/25 text-foreground",
       };
-    default:
+    case "LOW":
       return {
         row: "bg-muted border-l-2 border-border",
         span: "bg-foreground/15 text-foreground",

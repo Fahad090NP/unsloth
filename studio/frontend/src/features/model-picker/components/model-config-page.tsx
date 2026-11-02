@@ -1344,7 +1344,7 @@ function useStoredPerModelConfig(
   configId: string,
   ggufVariant: string | null | undefined,
 ) {
-  const [version, setVersion] = useState(0);
+  const [, setVersion] = useState(0);
   useEffect(() => {
     const bump = () => { setVersion((v) => v + 1); };
     window.addEventListener(PER_MODEL_CONFIG_UPDATED_EVENT, bump);
@@ -2800,9 +2800,10 @@ export function ModelConfigPage({
     if (contextFetchKey == null) {
       return;
     }
-    let cancelled: boolean = false;
+    let cancelled = false;
+    const isCancelled = () => cancelled;
     const settleWithoutMetadata = () => {
-      if (!cancelled) {
+      if (!isCancelled()) {
         setFetchedStagedDims({
           key: contextFetchKey,
           contextLength: null,
@@ -2814,7 +2815,7 @@ export function ModelConfigPage({
     };
     ((async () => {
       const preparedToken = await prepareHfTokenForUse(hfToken || null);
-      if (cancelled) {
+      if (isCancelled()) {
         return;
       }
       if (!preparedToken.proceed) {
@@ -2827,7 +2828,7 @@ export function ModelConfigPage({
         hf_token: preparedToken.token,
         nativePathToken,
       });
-      if (!cancelled) {
+      if (!isCancelled()) {
         setFetchedStagedDims({ key: contextFetchKey, ...dims });
       }
     })().catch(() => {

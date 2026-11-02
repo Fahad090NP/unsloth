@@ -107,3 +107,28 @@ export { taskForMediaPick, audioPickIsRoutable, curatedAudioInventoryTask, speec
 export { InferenceEnginesSection } from "./components/inference-engines";
 export { isChatGgufTask, reconcileGgufPinsAfterDelete } from "./components/model-selector/reconcile-gguf-pins";
 export { useEngines } from "./hooks/use-engines";
+export { loadManagedLlamaFlags } from "./api/llama-flags";
+export { backfillModelOverrides } from "./api/migrate-model-overrides";
+export { fetchLoadExtraArgs, foldOverrideKey } from "./api/model-overrides";
+export { classifyHost } from "./components/model-selector/host-artifact-policy";
+export { isMlxId } from "./components/model-selector/recommended-fit";
+export { sanitizeStoredExtraArgs } from "./model-config/llama-extra-args";
+export { cachedRepoConfigId, splitModelOverrideKey } from "./model-config/model-identity";
+export {
+  CONTEXT_LENGTH_MIN,
+  KV_CACHE_DTYPES,
+  MAX_SEQ_LENGTH_MAX,
+  N_BATCH_MAX,
+  N_BATCH_MIN,
+  N_PARALLEL_MAX,
+  N_PARALLEL_MIN,
+  canonicalizeLoadMode,
+  isReasoningBudgetMessageValid,
+  mlxKvQuantLabel,
+  normalizeCacheRam,
+  normalizeCtxCheckpoints,
+  normalizeMlxKvQuant,
+  normalizeMlxOffload,
+} from "./model-config/per-model-config";
+export type { MlxKvQuant, MlxOffload } from "./model-config/per-model-config";
+export { forgetPerModelConfigsForOverrideKeys } from "./model-config/saved-run-settings";

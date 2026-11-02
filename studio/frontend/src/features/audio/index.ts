@@ -21,3 +21,5 @@ export { audioCppSizeLabel, isAudioCppFolderId, AUDIO_CPP_REPO } from "./audio-c
 export { useAudioVoicesStore } from "./stores/audio-voices-store";
 export type { AudioGalleryCursor } from "./api";
 export { audioGalleryCursor, deleteAudioClip, listAudioGallery, setAudioClipFlags, getAudioDownloadPlan } from "./api";
+export { TTS_MAX_TOKENS } from "./audio-workspace-constants";
+export { useAudioWorkspaceStore } from "./stores/audio-workspace-store";

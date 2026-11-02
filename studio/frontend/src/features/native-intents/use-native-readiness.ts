@@ -29,7 +29,7 @@ export function useNativePathLeasesSupported(): boolean {
             // Health says the backend holds a key, not ours: an adopted survivor has its own.
             const { invoke } = await import("@tauri-apps/api/core");
             const usable = await invoke<boolean>("native_path_leases_usable");
-            if (Boolean(disposed)) return;
+            if (disposed) return;
             if (usable) setSupported(true);
             else check(5000);
           })

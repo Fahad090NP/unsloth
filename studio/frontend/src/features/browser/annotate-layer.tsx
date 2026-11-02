@@ -179,6 +179,12 @@ function quoteOf(ranges: Range[]): string {
     : text;
 }
 
+function sameBox(a: Box | null, b: Box | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height;
+}
+
 function boxOf(ranges: Range[], origin: DOMRect): Box | null {
   let left = Number.POSITIVE_INFINITY;
   let top = Number.POSITIVE_INFINITY;
@@ -219,7 +225,7 @@ function cssZoomOf(element: Element | null): number {
 
 /** Effective CSS zoom at the content. */
 function zoomAt(ranges: Range[]): number {
-  const range: Range | undefined = ranges[0];
+  const range: Range | undefined = ranges.at(0);
   if (!range) return 1;
   const node = range.startContainer;
   // A selected node (an image) can carry its own zoom; its range starts at the parent.
@@ -274,25 +280,28 @@ function offsetIn(index: TextIndex, node: Node, offset: number): number {
   const start = index.at.get(node);
   if (start !== undefined) return start + offset;
   // A point beside a text node, as around a span's own text.
-  const next: Node | undefined = node.childNodes[offset];
+  const next = node.childNodes.item(offset);
   const after = next ? index.at.get(next) : undefined;
   if (after !== undefined) return after;
-  const prior: Node | undefined = node.childNodes[offset - 1];
-  const before = prior ? index.at.get(prior) : undefined;
-  if (before !== undefined) return before + (prior.textContent?.length ?? 0);
+  const prior = node.childNodes.item(offset - 1);
+  if (prior) {
+    const before = index.at.get(prior);
+    if (before !== undefined) return before + (prior.textContent?.length ?? 0);
+  }
   // Elsewhere between nodes: count the text nodes that start before it.
   const point = document.createRange();
   point.setStart(node, offset);
   const last = lastWhere(index.nodes, (text) => point.comparePoint(text, 0) < 0);
-  const text: Text | undefined = index.nodes[last];
-  return text ? (index.starts[last] ?? 0) + text.length : 0;
+  const text = index.nodes.at(last);
+  return text ? (index.starts.at(last) ?? 0) + text.length : 0;
 }
 
 /** The text node and offset `offset` characters in; a start between nodes takes the next. */
 function pointIn(index: TextIndex, offset: number, start: boolean): [Node, number] | null {
   const found = lastWhere(index.starts, (at) => (start ? at <= offset : at < offset));
-  const node: Text | undefined = index.nodes[Math.max(found, 0)];
-  const local = offset - (index.starts[Math.max(found, 0)] ?? 0);
+  const position = Math.max(found, 0);
+  const node = index.nodes.at(position);
+  const local = offset - (index.starts.at(position) ?? 0);
   return node && local >= 0 && local <= node.length ? [node, local] : null;
 }
 
@@ -417,7 +426,12 @@ export function AnnotateLayer({
   const layerRef = useRef<HTMLDivElement | null>(null);
   const cursorRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const lastHoverBox = useRef<Box | null>(null);
+  const [origin, setOrigin] = useState<DOMRect>(() => new DOMRect());
+  const attachLayer = useCallback((node: HTMLDivElement | null) => {
+    layerRef.current = node;
+    setOrigin(node?.getBoundingClientRect() ?? new DOMRect());
+  }, []);
+  const [lastHoverBox, setLastHoverBox] = useState<Box | null>(null);
   const [area, setArea] = useState<Box | null>(null);
   const nextId = useRef(1);
   const [hover, setHover] = useState<Range[] | null>(null);
@@ -487,7 +501,11 @@ export function AnnotateLayer({
         150,
       );
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => { setFrame((value) => value + 1); });
+      frame = requestAnimationFrame(() => {
+        const layer = layerRef.current;
+        if (layer) setOrigin(layer.getBoundingClientRect());
+        setFrame((value) => value + 1);
+      });
     };
     // Reduced motion gives zoom a 0.01ms transition, so content settles when it ends.
     const zoomed = (event: TransitionEvent) => {
@@ -514,7 +532,11 @@ export function AnnotateLayer({
 
   // A zoom resizes the content after this render measured it, and fires no scroll or resize.
   useEffect(() => {
-    const frame = requestAnimationFrame(() => { setFrame((value) => value + 1); });
+    const frame = requestAnimationFrame(() => {
+      const layer = layerRef.current;
+      if (layer) setOrigin(layer.getBoundingClientRect());
+      setFrame((value) => value + 1);
+    });
     return () => { cancelAnimationFrame(frame); };
   }, [zoom]);
 
@@ -672,10 +694,9 @@ export function AnnotateLayer({
     if (pending) inputRef.current?.focus();
   }, [pending]);
 
-  const origin = layerRef.current?.getBoundingClientRect() ?? new DOMRect();
   const hoverBox = hover ? boxOf(hover, origin) : null;
-  if (hoverBox) lastHoverBox.current = hoverBox;
-  const shownHover = hoverBox ?? lastHoverBox.current;
+  if (hoverBox && !sameBox(hoverBox, lastHoverBox)) setLastHoverBox(hoverBox);
+  const shownHover = hoverBox ?? lastHoverBox;
   const indexes = new Map<Element, TextIndex>();
   const pendingBox = pending ? markBoxOf(liveRanges(pending, page, indexes), pending.frame, origin) : null;
   const count = items.length;
@@ -685,7 +706,7 @@ export function AnnotateLayer({
 
   return (
     <div
-      ref={layerRef}
+      ref={attachLayer}
       className="group/annotate pointer-events-none absolute inset-0 z-10 overflow-hidden"
     >
       {shownHover ? (
@@ -1050,6 +1071,11 @@ export function WebAnnotateLayer({
   const t = useT();
   const layerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [origin, setOrigin] = useState<DOMRect>(() => new DOMRect());
+  const attachLayer = useCallback((node: HTMLDivElement | null) => {
+    layerRef.current = node;
+    setOrigin(node?.getBoundingClientRect() ?? new DOMRect());
+  }, []);
   // The tab this layer annotates while mounted; a code fetch finishing after it left sends nothing.
   const liveTab = useRef<string | null>(null);
   const [rects, setRects] = useState<ReadonlyMap<number, AnnotateRect | null>>(new Map());
@@ -1217,7 +1243,10 @@ export function WebAnnotateLayer({
   useEffect(() => {
     const layer = layerRef.current;
     if (!layer) return;
-    const observer = new ResizeObserver(() => { setLayout((value) => value + 1); });
+    const observer = new ResizeObserver(() => {
+      setOrigin(layer.getBoundingClientRect());
+      setLayout((value) => value + 1);
+    });
     observer.observe(layer);
     return () => { observer.disconnect(); };
   }, []);
@@ -1243,7 +1272,6 @@ export function WebAnnotateLayer({
     command({ command: "annotateNumbers", numbers });
   }, [command, tabId, items, pending]);
 
-  const origin = layerRef.current?.getBoundingClientRect() ?? new DOMRect();
   // Native views report CSS pixels; scale by their zoom.
   const bounds = native ? nativeViewBounds(tabId) : null;
   const frame = bounds ? { left: bounds.x, top: bounds.y } : (frameRect(tabId) ?? origin);
@@ -1262,7 +1290,7 @@ export function WebAnnotateLayer({
   const shown = count + (pending?.saved === false && draft.trim() !== "" ? 1 : 0);
 
   return (
-    <div ref={layerRef} className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+    <div ref={attachLayer} className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
       {native && pending ? (
         // The page is a snapshot while commenting; a press on it saves, as on a live page.
         <div

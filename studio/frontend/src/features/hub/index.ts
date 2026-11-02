@@ -190,3 +190,16 @@ export { isExternalJob, updateExternalActivity } from "./download-manager/extern
 export type { HubFailure, HubPhase } from "./lib/network";
 export { fetchCachedGgufInventory, fetchCachedModelsInventory } from "./inventory/api";
 export { normalizeForSearch } from "./lib/search-text";
+export {
+  DownloadManagerPanel,
+  dismissStartToast,
+  dismissStartToasts,
+  dismissStartToastsForModelSelection,
+} from "./download-manager";
+export { selectActiveJob } from "./download-manager/download-manager-controller";
+export { pollSignal } from "./lib/abort-signals";
+export type { PollSignal } from "./lib/abort-signals";
+export { isPrecisionFolderName } from "./lib/dataset-size";
+export { modelDisplayName, modelIdsMatch, isNativeFileLabel } from "./lib/model-identity";
+export { subscribeResidentStatusRefresh } from "./lib/resident-status-refresh";
+export { hydrateHfTokenFromBackend } from "./stores/hf-token-store";

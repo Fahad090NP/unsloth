@@ -85,7 +85,7 @@ function baselineValue<K extends keyof AdvancedSettingsBaseline>(
   fallback: AdvancedSettingsState[K],
 ): AdvancedSettingsState[K] {
   const value = baseline?.[key];
-  return value === undefined ? fallback : value;
+  return value ?? fallback;
 }
 
 function countNonDefaultScalarSettings(

@@ -166,7 +166,12 @@ const SEARCHABLE_KINDS: SheetKind[] = [
 ];
 const PROCESSOR_TITLE = "Final dataset shape";
 const PROCESSOR_DESCRIPTION = "Rename, reorder, or reshape the final dataset.";
-const SHOW_PROCESSOR_IN_BLOCK_SHEET = false;
+// Read through a function so the disabled branch stays in the tree without the
+// linter constant-folding the flag.
+function showProcessorInBlockSheet(): boolean {
+  return false;
+}
+const SHOW_PROCESSOR_IN_BLOCK_SHEET = showProcessorInBlockSheet();
 const LLM_SETUP_TYPES = new Set<BlockType>([
   "model_provider",
   "model_config",

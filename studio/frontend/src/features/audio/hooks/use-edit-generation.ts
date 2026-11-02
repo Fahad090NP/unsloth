@@ -98,7 +98,11 @@ export function useEditGeneration({
     sttRepo: string | null;
   }) {
   const busyRef = sharedBusyRef;
-  const generateAbort = sharedGenerateAbort;
+  const generateAbortRef = sharedGenerateAbort;
+  const clearBusy = useCallback(() => {
+    setBusy(null);
+    busyRef.current = null;
+  }, [busyRef, setBusy]);
   const source = useAudioEditStore((state) => state.source);
   const transcript = useAudioEditStore((state) => state.transcript);
   const transcriptFor = useAudioEditStore((state) => state.transcriptFor);
@@ -289,8 +293,7 @@ export function useEditGeneration({
     updateGenerationPhase("preparing");
     const finishEarly = () => {
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
     };
     const releaseInFlight = pendingTranscribeRelease.current;
     if (releaseInFlight && !(await releaseInFlight)) {
@@ -320,7 +323,7 @@ export function useEditGeneration({
       sourceName: state.source.name,
     });
     const controller = new AbortController();
-    generateAbort.current = controller;
+    generateAbortRef.current = controller;
     setPhaseLabel(editPhaseLabel(adapter, run));
     updateGenerationPhase("generating");
     try {
@@ -357,11 +360,10 @@ export function useEditGeneration({
         await refreshStatus();
       }
     } finally {
-      generateAbort.current = null;
+      generateAbortRef.current = null;
       setPhaseLabel(null);
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       if (activeRef.current && modeRef.current === "speak")
         replayQueuedTtsPick();
     }
@@ -379,7 +381,7 @@ export function useEditGeneration({
     mode,
     advancedRequest,
     toolRequest,
-    generateAbort,
+    generateAbortRef,
     refreshGallery,
     selectClip,
     setFallbackClip,
@@ -388,6 +390,7 @@ export function useEditGeneration({
     activeRef,
     modeRef,
     replayQueuedTtsPick,
+    clearBusy,
   ]);
 
   const sourceKey = source ? `${source.kind}:${source.id}` : null;

@@ -151,7 +151,7 @@ export function followNpuDownload(
             setReconnecting(id, unreachable);
             advance(running?.percent);
             stalledReconnects =
-              Boolean(flags.streamed) || (wasUnreachable && !unreachable)
+              flags.streamed || (wasUnreachable && !unreachable)
                 ? 0
                 : stalledReconnects + 1;
             wasUnreachable = unreachable;

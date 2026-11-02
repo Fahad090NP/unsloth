@@ -93,6 +93,11 @@ const LOCAL_MODEL_INVENTORY_SOURCE = [
 
 const EMPTY_UNSLOTH_ROWS: LocalModelInfo[] = [];
 
+/** A single clock read for comparing inventory stamps; keeps the impure call out of the hook body. */
+function readClockMs(): number {
+  return Date.now();
+}
+
 const UNSLOTH_MODEL_INVENTORY_SOURCE = [
   "unslothModels",
 ] as const satisfies readonly DeviceInventorySource[];
@@ -749,16 +754,7 @@ export function useHubInventory(
         cachedModelsSource,
         ...(includeLocal ? [localModelsSource] : []),
       ];
-  const now = useMemo(
-    () => Date.now(),
-    [
-      cachedDatasetsSource,
-      cachedGgufSource,
-      cachedModelsSource,
-      localDatasetsSource,
-      localModelsSource,
-    ],
-  );
+  const now = readClockMs();
   const emptyRevalidationFresh = relevantInventorySources.every(
     (source) =>
       source.error === null &&

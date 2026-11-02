@@ -116,7 +116,11 @@ export function useMusicGeneration({
     musicLoaded: boolean;
   }) {
   const busyRef = sharedBusyRef;
-  const generateAbort = sharedGenerateAbort;
+  const generateAbortRef = sharedGenerateAbort;
+  const clearBusy = useCallback(() => {
+    setBusy(null);
+    busyRef.current = null;
+  }, [busyRef, setBusy]);
   const pickedMode = useAudioMusicStore((state) => state.mode);
   const song = useAudioMusicStore((state) => state.song);
   const sfx = useAudioMusicStore((state) => state.sfx);
@@ -137,6 +141,12 @@ export function useMusicGeneration({
     phase: "idle",
   });
   const sourceHandle = useRef<AudioSourceInputHandle | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!edit.source) return;
+    const timer = window.setInterval(() => { setNowMs(Date.now()); }, 15_000);
+    return () => { window.clearInterval(timer); };
+  }, [edit.source]);
 
   const editActions = useMemo(
     () => capabilities?.modes.find((mode) => mode.id === "edit")?.actions ?? [],
@@ -155,7 +165,7 @@ export function useMusicGeneration({
 
   const sourceExpired =
     sourceStatus.phase === "expired" ||
-    selectionExpired(edit.source, Date.now());
+    selectionExpired(edit.source, nowMs);
   const editProblem =
     rule?.id === "edit"
       ? sourceStatus.phase === "uploading" || sourceStatus.phase === "recording"
@@ -169,25 +179,25 @@ export function useMusicGeneration({
   const pageProblem = rule
     ? musicBlocker({ rule, description, lyrics, song, sfx, edit, editProblem })
     : null;
-  const blocker: GenerateBlocker | null = !rule
-    ? null
-    : pageProblem
-      ? {
-          reason: pageProblem,
-          ...(rule.id === "edit" && !edit.source
-            ? {
-                actions: [
-                  {
-                    label: "Add a clip",
-                    onClick: () => sourceHandle.current?.browse(),
-                  },
-                ],
-              }
-            : {}),
-        }
-      : toolBlocker
-        ? { reason: toolBlocker }
-        : null;
+  const blocker: GenerateBlocker | null = useMemo(() => {
+    if (!rule) return null;
+    if (pageProblem) {
+      return {
+        reason: pageProblem,
+        ...(rule.id === "edit" && !edit.source
+          ? {
+              actions: [
+                {
+                  label: "Add a clip",
+                  onClick: () => sourceHandle.current?.browse(),
+                },
+              ],
+            }
+          : {}),
+      };
+    }
+    return toolBlocker ? { reason: toolBlocker } : null;
+  }, [rule, pageProblem, toolBlocker, edit.source]);
 
   const handleGenerate = useCallback(async () => {
     if (!rule || blocker) return;
@@ -198,8 +208,7 @@ export function useMusicGeneration({
     const releaseInFlight = pendingTranscribeRelease.current;
     if (releaseInFlight && !(await releaseInFlight)) {
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       setMode("transcribe");
       return;
     }
@@ -209,8 +218,7 @@ export function useMusicGeneration({
     );
     if (missingOptions.length > 0) {
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       setAdvancedOpen(true);
       toast.error(
         `Set ${missingOptions.map((spec) => audioOptionLabel(spec.name)).join(", ")} in Advanced before generating.`,
@@ -243,7 +251,7 @@ export function useMusicGeneration({
               : "Making the music…",
     );
     const controller = new AbortController();
-    generateAbort.current = controller;
+    generateAbortRef.current = controller;
     updateGenerationPhase("generating");
     try {
       await runMusicTakes({
@@ -278,10 +286,9 @@ export function useMusicGeneration({
       }
     } finally {
       setRunStatus(null);
-      generateAbort.current = null;
+      generateAbortRef.current = null;
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       if (activeRef.current && modeRef.current === "speak")
         replayQueuedTtsPick();
     }
@@ -305,7 +312,7 @@ export function useMusicGeneration({
     notice,
     modelName,
     variations,
-    generateAbort,
+    generateAbortRef,
     refreshGallery,
     selectClip,
     setFallbackClip,
@@ -314,6 +321,7 @@ export function useMusicGeneration({
     activeRef,
     modeRef,
     replayQueuedTtsPick,
+    clearBusy,
   ]);
 
   return {

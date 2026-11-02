@@ -397,7 +397,7 @@ export function RecipeStudioPage({
   const executionLocked = runtimeVisualState.executionLocked;
   const canvasInteractive = interactive && !executionLocked;
   const runBusy = previewLoading || fullLoading || executionLocked;
-  const latestCompletedExecution = useMemo(() => {
+  const latestCompletedCandidate = useMemo(() => {
     if (activeExecution) return null;
     const latestCompleted = executions.find(
       (execution) =>
@@ -407,9 +407,29 @@ export function RecipeStudioPage({
     if (!latestCompleted || typeof latestCompleted.finishedAt !== "number") {
       return null;
     }
-    const elapsedMs = Date.now() - latestCompleted.finishedAt;
-    return elapsedMs < COMPLETE_ISLAND_VISIBLE_MS ? latestCompleted : null;
+    return latestCompleted;
   }, [activeExecution, executions]);
+  const [expiredCompletedId, setExpiredCompletedId] = useState<string | null>(
+    null,
+  );
+  // The island is time-limited, so expire it from a timer rather than reading
+  // the clock during render.
+  useEffect(() => {
+    if (!latestCompletedCandidate) return;
+    const { id, finishedAt } = latestCompletedCandidate;
+    if (typeof finishedAt !== "number") return;
+    const remaining = COMPLETE_ISLAND_VISIBLE_MS - (Date.now() - finishedAt);
+    if (remaining <= 0) {
+      queueMicrotask(() => { setExpiredCompletedId(id); });
+      return;
+    }
+    const timer = setTimeout(() => { setExpiredCompletedId(id); }, remaining);
+    return () => { clearTimeout(timer); };
+  }, [latestCompletedCandidate]);
+  const latestCompletedExecution =
+    latestCompletedCandidate?.id === expiredCompletedId
+      ? null
+      : latestCompletedCandidate;
   const recentCompletedExecution =
     latestCompletedExecution?.id !== dismissedCompletedExecutionId
       ? latestCompletedExecution

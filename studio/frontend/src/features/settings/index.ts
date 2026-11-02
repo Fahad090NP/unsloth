@@ -164,3 +164,47 @@ export { loadKeylessApiAccess, updateKeylessApiAccess } from "./api/keyless-api-
 export { loadRemoteAccess, startRemoteAccess, stopRemoteAccess, updateRemoteAccessAutoStart } from "./api/remote-access";
 export type { RemoteAccessStatus } from "./api/remote-access-state";
 export { remoteAccessAutoStartReadOnly, remoteAccessBlockMessage, remoteAccessErrorMessage, remoteAccessPollDelay, remoteAccessSelfStopPoll, remoteAccessStopDisconnectsOrigin } from "./api/remote-access-state";
+export { unloadEmbeddingModel } from "./api/embedding-model";
+export { loadLlamaBackendStatus } from "./api/llama-backend";
+export { remoteApiOrigin } from "./api/remote-access-state";
+export { isSettingsRouteAbsent } from "./api/settings-route-absent";
+export { ExampleCodeBox, ExampleToggle, useExampleOs } from "./components/api-example-parts";
+export type { ExampleOs } from "./components/api-example-parts";
+export { ApiExampleTabNav } from "./components/api-example-tabs";
+export type { ApiExampleKind } from "./components/api-example-tabs";
+export { AudioApiExamples } from "./components/audio-api-examples";
+export { ComposerSettings } from "./components/composer-settings";
+export { DecisionApiSection } from "./components/decision-api-section";
+export { MediaApiExamples } from "./components/media-api-examples";
+export { SttDownloadPrompt } from "./components/stt-download-prompt";
+export { useApiTunnelPref } from "./components/usage-examples";
+export { useLowDiskNotice } from "./hooks/use-low-disk-notice";
+export { usePublishedFrame } from "./hooks/use-published-frame";
+export { COLOR_THEMES, HALLOWEEN_THEME_IDS } from "./lib/color-themes";
+export {
+  SHORTCUT_SLOTS,
+  formatBindingValue,
+  formatBindingValueLabel,
+  parseBinding,
+} from "./lib/keyboard-shortcuts";
+export { LLAMA_BACKEND_LABELS } from "./lib/llama-backend-labels";
+export {
+  failureLogPath,
+  loadFailureLogFamily,
+  viewLogsAction,
+} from "./lib/view-logs-action";
+export { UI_FONT_SIZE_RANGE } from "./stores/appearance-custom-store";
+export { useFreshApiKeyStore } from "./stores/fresh-api-key-store";
+export { INTERFACE_SCALE_RANGE, webInterfaceScaleFactor } from "./stores/interface-scale-store";
+export { resolveBinding, shortcutOwningBinding } from "./stores/keyboard-shortcuts-store";
+export { useCornerCardFrameStore } from "./stores/monitor-frame-store";
+export { useSettingsPanelPrefsStore } from "./stores/settings-panel-prefs-store";
+export {
+  AUDIO_CPP_STT_MODELS,
+  MTMD_STT_MODELS,
+  isCuratedSttModel,
+  resolveDictationLanguage,
+  resolveModelDictationLanguage,
+  sttListedQuantDownloaded,
+} from "./stores/voice-settings-store";
+export type { DictationEngine, SttDevice } from "./stores/voice-settings-store";

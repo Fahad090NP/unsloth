@@ -94,6 +94,9 @@ const num = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined;
 const strings = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").slice(0, 100) : [];
+/** A string field of an untyped page report, cut to its storage limit; anything else reads as empty. */
+const textOf = (value: unknown, max: number): string =>
+  typeof value === "string" ? value.slice(0, max) : "";
 
 /** The `browser_action` of a tool_output event, checked: it reaches here off the chat stream. */
 export function parseBrowserAction(value: unknown): BrowserAction | null {
@@ -193,12 +196,13 @@ onBrowserAgentRunEnd((chat) => {
 });
 
 function record(session: Session, op: string, url: string): void {
-  const { trail, at } = session;
-  if (op === "back" && trail[at - 1] === url) session.at -= 1;
-  else if (op === "forward" && trail[at + 1] === url) session.at += 1;
+  const state = session;
+  const { trail, at } = state;
+  if (op === "back" && trail[at - 1] === url) state.at -= 1;
+  else if (op === "forward" && trail[at + 1] === url) state.at += 1;
   else if (op !== "reload" || trail[at] !== url) {
-    session.trail = [...trail.slice(0, at + 1), url];
-    session.at = session.trail.length - 1;
+    state.trail = [...trail.slice(0, at + 1), url];
+    state.at = state.trail.length - 1;
   }
 }
 
@@ -237,6 +241,8 @@ export function runBrowserAction(action: BrowserAction, actionContext: ActionCon
     if (context.signal?.aborted) abort();
     // Out of time is not "the user declined" or "the tab closed", which an abort reads as below.
     let expired = false;
+    // Read through a call so the check after the action stays honest.
+    const isExpired = () => expired;
     const expire = () => {
       expired = true;
       abort();
@@ -255,7 +261,7 @@ export function runBrowserAction(action: BrowserAction, actionContext: ActionCon
       setActiveAction(chat, null);
       patchAgentChat(chat, { working: false, step: null });
     }
-    if (expired && !result.ok) result = { ok: false, error: EXPIRED };
+    if (isExpired() && !result.ok) result = { ok: false, error: EXPIRED };
     if (agentChat(chat).stoppedRun === context.runKey) result = { ok: false, error: STOPPED };
     await postResult(action, result);
   });
@@ -385,14 +391,14 @@ function checkedAnswer(value: unknown): AgentAnswer | null {
     title: typeof raw.title === "string" ? raw.title.slice(0, 300) : undefined,
     info: info
       ? {
-          role: String(info.role ?? "").slice(0, 40),
-          name: String(info.name ?? "").slice(0, 200),
-          tag: String(info.tag ?? "").slice(0, 40),
-          type: String(info.type ?? "").slice(0, 40),
-          href: String(info.href ?? "").slice(0, 8192),
-          autocomplete: String(info.autocomplete ?? "").slice(0, 200),
-          formMethod: String(info.formMethod ?? "").slice(0, 10),
-          formAction: String(info.formAction ?? "").slice(0, 8192),
+          role: textOf(info.role, 40),
+          name: textOf(info.name, 200),
+          tag: textOf(info.tag, 40),
+          type: textOf(info.type, 40),
+          href: textOf(info.href, 8192),
+          autocomplete: textOf(info.autocomplete, 200),
+          formMethod: textOf(info.formMethod, 10),
+          formAction: textOf(info.formAction, 8192),
           formHasPassword: info.formHasPassword === true,
           formPasswordFilled: info.formPasswordFilled === true,
           submits: info.submits === true,
@@ -459,7 +465,7 @@ async function pageCall(tab: BrowserTab, request: Record<string, unknown>): Prom
     nextBase = nextBase > LAST_BASE ? 1 : nextBase + REF_SPAN;
     return { ...command, base, span: REF_SPAN };
   };
-  while (true) {
+  for (;;) {
     let reply: { installed: boolean; result: unknown } | null = null;
     if (native) {
       if (hasNativeView(tab.id)) {
@@ -593,7 +599,10 @@ async function observe(tab: BrowserTab, context: Run, note?: string, op: Record<
   if (fresh.loading || tabUrl(fresh) !== tabUrl(tab)) {
     return { ok: false, error: "the page changed while it was being read; take a snapshot again." };
   }
-  if (op.op === "snapshot" || op.op === "find") context.session.pageLinks = new Set(context.fullAccess === true ? [] : linkedPages(answer.links ?? []));
+  if (op.op === "snapshot" || op.op === "find") {
+    const session = context.session;
+    session.pageLinks = new Set(context.fullAccess === true ? [] : linkedPages(answer.links ?? []));
+  }
   return {
     ok: true,
     url: tabUrl(fresh),
@@ -617,8 +626,9 @@ function moveRun(context: Run, tabId: string): void {
   const previous = agentChat(context.session.chat).tabId;
   if (previous && previous !== tabId) releaseBackground(previous);
   patchAgentChat(context.session.chat, { tabId });
-  context.session.trail = [];
-  context.session.at = -1;
+  const session = context.session;
+  session.trail = [];
+  session.at = -1;
 }
 
 async function open(url: string, context: Run): Promise<BrowserTab | null> {
@@ -795,13 +805,13 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
     const store = useBrowserStore.getState();
     const nativeMove = native && action.op !== "reload" && Boolean(tab.nativeHistory?.[action.op]);
     const step = action.op === "back" ? -1 : action.op === "forward" ? 1 : 0;
-    const entry = tab.history[tab.index + step];
+    const entry = tab.history.at(tab.index + step);
     const destination =
       action.op === "reload"
         ? before
         : nativeMove
           ? (session.trail[session.at] === before && session.trail[session.at + step]) || ""
-          : entry.kind === "web"
+          : entry?.kind === "web"
             ? entry.url
             : "";
     // A router's pushState / hash history lives in the page and comes first, as the toolbar's Back does.
@@ -1069,9 +1079,10 @@ async function onScreen(
 ): Promise<{ x: number; y: number } | string> {
   const point = await pagePoint(tab, session, x, y);
   if (point) return point;
+  const label = ref ?? "the target";
   const found = await pageCall(tab, { op: "locate", ref: ref ?? "", scroll });
-  if (!found.ok) return found.error ?? `${ref} could not be found.`;
-  if (found.x === undefined || found.y === undefined) return `${ref} is not on screen; scroll to it first.`;
+  if (!found.ok) return found.error ?? `${label} could not be found.`;
+  if (found.x === undefined || found.y === undefined) return `${label} is not on screen; scroll to it first.`;
   return { x: found.x, y: found.y };
 }
 
@@ -1310,12 +1321,13 @@ async function observeLoaded(tab: BrowserTab, context: Run, since: number, note?
       note: `${note ? `${note} ` : ""}This address is a file (${tab.documentType}), shown to the user; the browser tools can't read it. web_search with this url can.`,
     };
   }
+  let readNote = note;
   if (entry.kind === "web" && !tab.pageError && !tab.nativeError && (await untilFilled(tab, since, context.signal))) {
-    note = [note, "The page still had requests open when read; snapshot again if something is missing."].filter(Boolean).join(" ");
+    readNote = [note, "The page still had requests open when read; snapshot again if something is missing."].filter(Boolean).join(" ");
   }
   // Read at the address its router (same site, shell-checked) moved to while it filled in.
   const fresh = findTab(tab.id);
-  return await observe(fresh && !fresh.loading && currentEntry(fresh) === entry ? fresh : tab, context, note);
+  return await observe(fresh && !fresh.loading && currentEntry(fresh) === entry ? fresh : tab, context, readNote);
 }
 
 async function screenshot(tab: BrowserTab, context: Run): Promise<Result> {
@@ -1323,7 +1335,7 @@ async function screenshot(tab: BrowserTab, context: Run): Promise<Result> {
   // A page at work off screen is captured on its own; one on screen as the panel shows it.
   const hidden = !chatOnScreen(context) && hasNativeView(tab.id);
   const pages = document.querySelectorAll<HTMLElement>("[data-browser-page]");
-  const element = pages[pages.length - 1];
+  const element = pages.item(pages.length - 1);
   if (!hidden && !element) return { ok: false, error: "the browser panel is not on screen." };
   // What the user typed into card, code and password fields stays out of the picture, as out of the text.
   const masked = await pageCall(tab, { op: "mask", on: true }).catch(() => null);
@@ -1341,12 +1353,16 @@ async function screenshot(tab: BrowserTab, context: Run): Promise<Result> {
   if (!now || now.loading || tabUrl(now) !== tabUrl(tab)) {
     return { ok: false, error: "the page changed while the screenshot was taken; take a snapshot first." };
   }
-  blob = await toPointScale(tab, context.session, blob, masked);
+  const scaled = await toPointScale(tab, context.session, blob, masked);
   const image = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => { resolve(String(reader.result)); };
-    reader.onerror = () => { reject(reader.error); };
-    reader.readAsDataURL(blob);
+    reader.onload = () => {
+      const { result } = reader;
+      if (typeof result === "string") resolve(result);
+      else reject(new Error("the screenshot could not be read."));
+    };
+    reader.onerror = () => { reject(reader.error ?? new Error("the screenshot could not be read.")); };
+    reader.readAsDataURL(scaled);
   });
   return { ok: true, url: tabUrl(tab), title: tab.title, image };
 }

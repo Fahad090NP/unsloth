@@ -728,7 +728,7 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
     })); },
   setAuxNodePosition: (id, position) => { set((state) => {
       const current = id in state.auxNodePositions ? state.auxNodePositions[id] : undefined;
-      if (current !== undefined && current.x === position.x && current.y === position.y) {
+      if (current?.x === position.x && current.y === position.y) {
         return state;
       }
       return {

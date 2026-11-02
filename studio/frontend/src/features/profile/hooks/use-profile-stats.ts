@@ -38,8 +38,10 @@ export function useProfileStats(): ProfileStatsState {
   }, []);
 
   useEffect(() => {
-    load().catch((cause: unknown) => {
-      console.error("Profile stats load failed:", cause);
+    queueMicrotask(() => {
+      load().catch((cause: unknown) => {
+        console.error("Profile stats load failed:", cause);
+      });
     });
     return () => abortRef.current?.abort();
   }, [load]);

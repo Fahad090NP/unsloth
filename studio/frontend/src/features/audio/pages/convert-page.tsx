@@ -351,11 +351,16 @@ function useSourceSide(clip: AudioGalleryClip | null): {
   const kind = clip?.source_clip_id ? "clip" : "input";
   const [side, setSide] = useState<{ src?: string; unavailable?: string }>({});
   const missing = !savedUrl && !sourceId;
+  const sideKey = `${missing}|${savedUrl ?? ""}|${sourceId ?? ""}|${kind}`;
+  const [trackedSideKey, setTrackedSideKey] = useState(sideKey);
+  if (trackedSideKey !== sideKey) {
+    setTrackedSideKey(sideKey);
+    setSide({});
+  }
   useEffect(() => {
     if (missing) return;
     let url: string | null = null;
     let cancelled = false;
-    setSide({});
     // The saved copy is the prepared (mono, resampled, capped) input: prefer the live recording.
     const original = sourceId
       ? sourceFileUrl({ kind, id: sourceId, name: "", durationS: null })

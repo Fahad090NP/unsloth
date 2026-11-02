@@ -123,15 +123,15 @@ export function parsePreparationProgress(
   fallback: string,
 ): PreparationProgress {
   const resolved = resolvePreparationMessage(message, fallback);
+  const counted = COUNTED_PREPARATION_RE.exec(resolved);
   const groups =
-    COUNTED_PREPARATION_RE.exec(resolved)?.groups ??
-    TALLIED_PREPARATION_RE.exec(resolved)?.groups;
+    counted?.groups ?? TALLIED_PREPARATION_RE.exec(resolved)?.groups;
   if (!groups) return indeterminatePreparation(resolved);
 
   const current = Number(groups.current.replaceAll(",", ""));
   const total = Number(groups.total.replaceAll(",", ""));
-  // Use the tqdm percent so it matches the log line.
-  const percentText: string | undefined = groups.percent;
+  // Use the tqdm percent so it matches the log line. Only the counted form has one.
+  const percentText = "percent" in groups ? groups.percent : undefined;
   const percent =
     percentText === undefined
       ? Math.floor((current / total) * 100)

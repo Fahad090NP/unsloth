@@ -30,3 +30,4 @@ export type { NativeIntent } from "./types";
 export { useNativeModelDrop } from "./use-native-drop";
 export type { NativeModelDropState } from "./use-native-drop";
 export { useNativePathLeasesSupported } from "./use-native-readiness";
+export { NativeIntentDrain } from "./native-intent-drain";

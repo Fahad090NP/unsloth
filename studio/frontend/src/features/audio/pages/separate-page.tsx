@@ -398,7 +398,7 @@ export function SeparateOutput({
     lastResult !== null &&
     selected !== null &&
     (lastResult.groupId === null || selected.groupId === lastResult.groupId);
-  const focusedGroup = fresh ? (selected?.groupId ?? null) : null;
+  const focusedGroup = fresh ? selected.groupId : null;
   const announcement = lastResult
     ? `Separated into ${lastResult.stems} stem${lastResult.stems === 1 ? "" : "s"}.`
     : "";

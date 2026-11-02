@@ -145,8 +145,9 @@ export function sendFrameCommand(tabId: string, command: FrameCommand): boolean 
 /** Recent user activation in the focused frame; without the API, focus opens a tab but never the system browser. */
 function userActive(frame: HTMLIFrameElement, message: FrameMessage): boolean {
   if (document.activeElement !== frame) return false;
-  const active: boolean | undefined = navigator.userActivation.isActive;
-  return active ?? message.type !== "external";
+  // Older runtimes and test environments may not expose the activation API.
+  const activation: UserActivation | undefined = navigator.userActivation;
+  return activation?.isActive ?? message.type !== "external";
 }
 
 /** A page written into the sandbox shell (opaque origin, so it can't reach Studio's storage or API). */

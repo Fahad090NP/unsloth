@@ -110,7 +110,7 @@ function useHfDownloadProgress(
       const generation = ++issued;
       try {
         const prog = await fetcher(repoId);
-        if (Boolean(status.cancelled) || generation <= applied) return;
+        if (status.cancelled || generation <= applied) return;
         applied = generation;
         const next = downloadStateFromProgress(prog, latest);
         latest = next;

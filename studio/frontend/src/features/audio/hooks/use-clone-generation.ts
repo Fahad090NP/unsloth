@@ -2,8 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { toast } from "@/lib/toast";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";import {
   AudioApiError,
   type AudioRunResponse,
   fetchAudioBlob,
@@ -122,6 +121,11 @@ export async function showRunResult({
 }
 
 /** Mirrors useSpeechGeneration's flow so Stop, phases and errors behave the same. */
+/** Read through a call, so a guard after an await is not treated as narrowed before it. */
+function readRef<T>(ref: { readonly current: T }): T {
+  return ref.current;
+}
+
 export function useCloneGeneration({
   status,
   busy,
@@ -171,7 +175,11 @@ export function useCloneGeneration({
     onClonePage: boolean;
   }) {
   const busyRef = sharedBusyRef;
-  const generateAbort = sharedGenerateAbort;
+  const generateAbortRef = sharedGenerateAbort;
+  const clearBusy = useCallback(() => {
+    setBusy(null);
+    busyRef.current = null;
+  }, [busyRef, setBusy]);
   const reference = useAudioCloneStore((state) => state.reference);
   const referenceText = useAudioCloneStore((state) => state.referenceText);
   const text = useAudioCloneStore((state) => state.text);
@@ -205,13 +213,12 @@ export function useCloneGeneration({
       try {
         await referenceTranscriber.transcribe(source);
       } finally {
-        if (busyRef.current === "transcribing") {
-          busyRef.current = null;
-          setBusy(null);
+        if (readRef(busyRef) === "transcribing") {
+          clearBusy();
         }
       }
     },
-    [busyRef, setBusy, referenceTranscriber.transcribe],
+    [busyRef, setBusy, referenceTranscriber, clearBusy],
   );
   const transcriber = {
     ...referenceTranscriber,
@@ -380,8 +387,7 @@ export function useCloneGeneration({
     updateGenerationPhase("preparing");
     const finishEarly = () => {
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
     };
     const releaseInFlight = pendingTranscribeRelease.current;
     if (releaseInFlight && !(await releaseInFlight)) {
@@ -403,7 +409,7 @@ export function useCloneGeneration({
     }
     const patch = toolRequest.patch;
     const controller = new AbortController();
-    generateAbort.current = controller;
+    generateAbortRef.current = controller;
     updateGenerationPhase("generating");
     try {
       const response = await runAudio(
@@ -464,10 +470,9 @@ export function useCloneGeneration({
       // Also after Stop: the run may already have restarted audio.cpp under another task.
       await refreshStatus();
     } finally {
-      generateAbort.current = null;
+      generateAbortRef.current = null;
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       if (activeRef.current && modeRef.current === "speak")
         replayQueuedTtsPick();
     }
@@ -482,7 +487,7 @@ export function useCloneGeneration({
     audioOptionValues,
     setAdvancedOpen,
     toolRequest,
-    generateAbort,
+    generateAbortRef,
     transcriptField,
     languageShown,
     refreshGallery,
@@ -493,6 +498,7 @@ export function useCloneGeneration({
     activeRef,
     modeRef,
     replayQueuedTtsPick,
+    clearBusy,
   ]);
 
   const referenceKey = reference ? `${reference.kind}:${reference.id}` : null;

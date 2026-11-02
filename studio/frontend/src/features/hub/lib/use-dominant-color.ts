@@ -70,15 +70,14 @@ function extractColor(url: string): Promise<string | null> {
 }
 
 export function useDominantColor(url: string | null): string | null {
-  const [color, setColor] = useState<string | null>(() =>
-    url ? (colorCache.get(url) ?? null) : null,
+  const [computed, setComputed] = useState<{
+    url: string;
+    color: string | null;
+  } | null>(() =>
+    url ? { url, color: colorCache.get(url) ?? null } : null,
   );
   useEffect(() => {
-    if (!url) {
-      return;
-    }
-    if (colorCache.has(url)) {
-      setColor(colorCache.get(url) ?? null);
+    if (!url || colorCache.has(url)) {
       return;
     }
     let alive = true;
@@ -91,7 +90,7 @@ export function useDominantColor(url: string | null): string | null {
       .then((next) => {
         colorCache.set(url, next);
         inflight.delete(url);
-        if (alive) setColor(next);
+        if (alive) setComputed({ url, color: next });
       })
       .catch(() => {
         inflight.delete(url);
@@ -100,5 +99,7 @@ export function useDominantColor(url: string | null): string | null {
       alive = false;
     };
   }, [url]);
-  return url ? color : null;
+  if (!url) return null;
+  if (colorCache.has(url)) return colorCache.get(url) ?? null;
+  return computed?.url === url ? computed.color : null;
 }

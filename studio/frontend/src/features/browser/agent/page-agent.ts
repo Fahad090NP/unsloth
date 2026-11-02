@@ -328,7 +328,7 @@ export function installPageAgent(): PageAgent {
       else if (role !== "button" && role !== "file-input" && field.value) parts.push(`value=${quoted(clean(field.value, 60))}`);
     } else if (tag === "select") {
       const select = el as HTMLSelectElement;
-      const chosen: HTMLOptionElement | undefined = select.selectedOptions[0];
+      const chosen = select.selectedOptions.item(0);
       if (chosen) parts.push(`selected=${quoted(clean(chosen.text, 40))}`);
       const options = Array.from(select.options).map((option) => clean(option.text, 30));
       if (options.length) {
@@ -366,10 +366,12 @@ export function installPageAgent(): PageAgent {
     const links: string[] = [];
     let used = 0;
     let cut = false;
+    // Read through a call so guards after nested flushes stay meaningful.
+    const isCut = () => cut;
     let buffer = "";
     let bufferShown = false;
     const push = (line: string) => {
-      if (cut) return;
+      if (isCut()) return;
       if (used + line.length + 1 > budget) {
         cut = true;
         return;
@@ -384,7 +386,7 @@ export function installPageAgent(): PageAgent {
       bufferShown = false;
     };
     const walk = (el: Element) => {
-      if (cut) return;
+      if (isCut()) return;
       const tag = el.tagName.toLowerCase();
       if (SKIP.has(tag)) return;
       const style = getComputedStyle(el);
@@ -434,7 +436,7 @@ export function installPageAgent(): PageAgent {
       const unreadable = Number.parseFloat(style.fontSize) < 2;
       const children = el.shadowRoot ? [...Array.from(el.shadowRoot.childNodes), ...Array.from(el.childNodes)] : Array.from(el.childNodes);
       for (const node of children) {
-        if (cut) return;
+        if (isCut()) return;
         if (node.nodeType === Node.TEXT_NODE) {
           const value = node.nodeValue ?? "";
           if (unreadable) buffer += " ";
@@ -481,7 +483,7 @@ export function installPageAgent(): PageAgent {
     // The snapshot's rules too, so hidden text can't reach the model through a search instead.
     const visible = (el: Element) => {
       if (el.closest("[aria-hidden=true], [hidden]") || !sized(el.getBoundingClientRect())) return false;
-      const withVisibility = el as Element & { checkVisibility?: (options?: object) => boolean };
+      const withVisibility: { checkVisibility?: (options?: object) => boolean } = el;
       if (withVisibility.checkVisibility) {
         return withVisibility.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
       }
@@ -992,10 +994,10 @@ export function installPageAgent(): PageAgent {
   const shown = (value: unknown): string => {
     if (value === undefined) return "undefined (use return to give back a value)";
     try {
-      const json: string | undefined = JSON.stringify(value, (_key, item) =>
+      const json = JSON.stringify(value, (_key, item) =>
         item instanceof Element ? `<${item.tagName.toLowerCase()}>` : typeof item === "bigint" ? String(item) : (item as unknown),
-      );
-      if (json != null) return json;
+      ) as string | undefined;
+      if (json !== undefined) return json;
     } catch {
       /* no-op */
     }
@@ -1123,14 +1125,14 @@ export function installPageAgent(): PageAgent {
 
   const press = (name: string, on?: Element): Record<string, unknown> => {
     const active = on ?? (document.activeElement && document.activeElement !== document.body ? document.activeElement : null);
-    const target = active ?? document.body ?? document.documentElement;
+    const body = document.body as HTMLElement | null;
+    const target = active ?? body ?? document.documentElement;
     // WebKit acts on a synthetic keypress (implicit submit, a button's click), and so may the page's
     // own key handler: acting again would send the form or click the button twice.
-    let acted: boolean = false;
-    let submitted: boolean = false;
+    const observed = { acted: false, submitted: false };
     const mark = (event: Event) => {
-      acted = true;
-      if (event.type === "submit") submitted = true;
+      observed.acted = true;
+      if (event.type === "submit") observed.submitted = true;
     };
     window.addEventListener("submit", mark, true);
     window.addEventListener("click", mark, true);
@@ -1141,7 +1143,7 @@ export function installPageAgent(): PageAgent {
       window.removeEventListener("submit", mark, true);
       window.removeEventListener("click", mark, true);
     }
-    if (!proceed || acted) return submitted ? { ok: true, note: "Submitted the form." } : { ok: true };
+    if (!proceed || observed.acted) return observed.submitted ? { ok: true, note: "Submitted the form." } : { ok: true };
     const tag = target.tagName.toLowerCase();
     if (name === "Enter") {
       const field = target as HTMLInputElement;

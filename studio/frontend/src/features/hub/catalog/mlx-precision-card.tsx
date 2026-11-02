@@ -20,7 +20,7 @@ export function MlxPrecisionCard({
   runPending?: boolean;
 }) {
   const hfToken = useHfTokenStore((s) => s.token);
-  const requestKey = `${repoId}:${hfToken ?? ""}`;
+  const requestKey = `${repoId}:${hfToken}`;
   const [listingState, setListingState] = useState<{
     key: string;
     listing: GgufVariantsResponse | null;

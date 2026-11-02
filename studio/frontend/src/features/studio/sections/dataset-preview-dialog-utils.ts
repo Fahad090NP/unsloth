@@ -39,7 +39,16 @@ export function formatCell(value: unknown): string {
   if (typeof value === "function") {
     return value.name;
   }
-  return String(value);
+  if (typeof value === "symbol") {
+    return value.toString();
+  }
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  if (value === undefined) {
+    return "undefined";
+  }
+  return "";
 }
 
 function isPreviewImagePayload(value: unknown): value is PreviewImagePayload {

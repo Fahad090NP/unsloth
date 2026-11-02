@@ -89,6 +89,12 @@ function normalizeCompletedProgress(input: {
   return { progress, columnProgress };
 }
 
+// Read through a call so TypeScript does not keep the loop-condition narrowing
+// after the stream callback marks the run done.
+function isRunDone(state: { done: boolean }): boolean {
+  return state.done;
+}
+
 export async function trackRecipeExecution({
   label,
   kind,
@@ -210,7 +216,7 @@ export async function trackRecipeExecution({
   });
 
   try {
-    while (!runState.done) {
+    while (!isRunDone(runState)) {
       const status = await getRecipeJobStatus(jobId);
       if (isTerminalStatus(lastStatus)) {
         break;
@@ -220,7 +226,7 @@ export async function trackRecipeExecution({
       latestExecution = applyExecutionStatusSnapshot(latestExecution, status);
       onUpsert(latestExecution);
 
-      if (isTerminalStatus(mappedStatus) || runState.done) {
+      if (isTerminalStatus(mappedStatus) || isRunDone(runState)) {
         break;
       }
       if (Date.now() - lastDatasetPollAt >= 2500) {

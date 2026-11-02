@@ -357,7 +357,7 @@ export function buildTextIndex(
         }
       } else if (child.nodeType === ELEMENT_NODE) {
         visit(child as FindElementLike, preserved);
-        if (Boolean(full)) return;
+        if (full) return;
       }
     }
     if (block) {
@@ -373,7 +373,7 @@ export function buildTextIndex(
   ceiling = MAX_INDEX_CHARS;
   full = false;
   for (const extra of extraRoots) {
-    if (Boolean(full)) break;
+    if (full) break;
     pendingSeparator = true;
     dropped = null;
     const firstSegment = segments.length;

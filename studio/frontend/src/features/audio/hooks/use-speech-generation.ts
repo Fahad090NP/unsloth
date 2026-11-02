@@ -108,7 +108,11 @@ export function useSpeechGeneration({
   Pick<AudioGallery, "refreshGallery" | "selectClip" | "setFallbackClip" | "setSelectedId"> &
   Pick<AudioModelSlot, "pendingTranscribeRelease" | "replayQueuedTtsPick">) {
   const busyRef = sharedBusyRef;
-  const generateAbort = sharedGenerateAbort;
+  const generateAbortRef = sharedGenerateAbort;
+  const clearBusy = useCallback(() => {
+    setBusy(null);
+    busyRef.current = null;
+  }, [busyRef, setBusy]);
   const [drafts, setDrafts] = useState<Record<TtsDraftField, Record<TtsWorkflow, string>>>(
     () => ({
       prompt: {
@@ -338,16 +342,14 @@ export function useSpeechGeneration({
     const releaseInFlight = pendingTranscribeRelease.current;
     if (releaseInFlight && !(await releaseInFlight)) {
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       setMode("transcribe");
       return;
     }
     const instructions = audioInstructions.trim();
     if (!connection && musicNeedsDescription && !instructions) {
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       toast.error(
         "Add a music description. This model needs one beside the lyrics.",
       );
@@ -355,8 +357,7 @@ export function useSpeechGeneration({
     }
     if (!connection && toolRequest.error) {
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       toast.error(toolRequest.error);
       return;
     }
@@ -365,8 +366,7 @@ export function useSpeechGeneration({
       : missingRequiredAudioOptions(advancedOptionSpecs, audioOptionValues);
     if (missingOptions.length > 0) {
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       setAdvancedOpen(true);
       toast.error(
         `Set ${missingOptions.map((spec) => audioOptionLabel(spec.name)).join(", ")} in Advanced before generating.`,
@@ -386,7 +386,7 @@ export function useSpeechGeneration({
     saveLastPrompt(ttsDraftKey("prompt", workflow), prompt);
     if (savedVoice || connection) {
       const voiceController = new AbortController();
-      generateAbort.current = voiceController;
+      generateAbortRef.current = voiceController;
       updateGenerationPhase("generating");
       try {
         const response = connection
@@ -437,17 +437,16 @@ export function useSpeechGeneration({
           await refreshStatus();
         }
       } finally {
-        generateAbort.current = null;
+        generateAbortRef.current = null;
         updateGenerationPhase(null);
-        busyRef.current = null;
-        setBusy(null);
+        clearBusy();
         if (activeRef.current && modeRef.current === "speak")
           replayQueuedTtsPick();
       }
       return;
     }
     const controller = new AbortController();
-    generateAbort.current = controller;
+    generateAbortRef.current = controller;
     updateGenerationPhase("generating");
     try {
       const generated = await generateAudio(text, {
@@ -518,10 +517,9 @@ export function useSpeechGeneration({
         await refreshStatus();
       }
     } finally {
-      generateAbort.current = null;
+      generateAbortRef.current = null;
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       if (activeRef.current && modeRef.current === "speak")
         replayQueuedTtsPick();
     }
@@ -552,10 +550,20 @@ export function useSpeechGeneration({
     replayQueuedTtsPick,
     selectClip,
     connection,
+    activeRef,
+    busyRef,
+    generateAbortRef,
+    modeRef,
+    pendingTranscribeRelease,
+    setBusy,
+    setFallbackClip,
+    setMode,
+    setSelectedId,
+    clearBusy,
   ]);
 
   // Only unmount aborts: RootLayout keeps this page mounted so leaving the tab does not cancel synthesis.
-  useEffect(() => () => generateAbort.current?.abort(), []);
+  useEffect(() => () => generateAbortRef.current?.abort(), [generateAbortRef]);
 
   return {
     prompt,

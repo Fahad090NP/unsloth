@@ -629,11 +629,9 @@ export function extractExtraNetworks(prompt: string): {
 } {
   const loras: LoraTag[] = [];
   const other: string[] = [];
-  let found: boolean = false;
   const stripped = prompt.replace(
     EXTRA_NETWORK,
     (tag, kind: string, body: string) => {
-      found = true;
       const lower = kind.toLowerCase();
       const parsed = lower === "hypernet" ? null : loraTag(body);
       if (parsed) loras.push(parsed);
@@ -641,7 +639,8 @@ export function extractExtraNetworks(prompt: string): {
       return "";
     },
   );
-  if (!found) return { prompt, loras, other };
+  // A replacement only completes when the pattern matched, so an unchanged prompt means none did.
+  if (stripped === prompt) return { prompt, loras, other };
   const tidy = stripped
     .split("\n")
     .map((line) =>

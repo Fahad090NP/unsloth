@@ -577,6 +577,36 @@ const galleryCache: {
 
 const PAGE_SIZE = 50;
 
+// Cache reads and writes live outside async bodies: a check-then-write that spans an await is stale.
+function commitGalleryHasMore(hasMore: boolean): void {
+  galleryCache.hasMore = hasMore;
+}
+
+function commitGalleryPage(images: GalleryImage[], hasMore: boolean): void {
+  galleryCache.images = images;
+  galleryCache.hasMore = hasMore;
+}
+
+/** Resets a ref from outside the async function that read it. */
+function assignRef<T>(ref: { current: T }, value: T): void {
+  ref.current = value;
+}
+
+/** A check-and-set in-flight guard whose flag never lives directly in an async body. */
+function createInFlightGuard(): { enter: () => boolean; leave: () => void } {
+  let busy = false;
+  return {
+    enter: () => {
+      if (busy) return false;
+      busy = true;
+      return true;
+    },
+    leave: () => {
+      busy = false;
+    },
+  };
+}
+
 const RESYNC_MAX_ATTEMPTS = 3;
 
 type ImageExportFormat = "png" | "jpeg" | "webp";
@@ -1038,10 +1068,10 @@ function MaskCanvas({
   const dims = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const drawing = useRef(false);
   const last = useRef<{ x: number; y: number } | null>(null);
-  const [ready, setReady] = useState(false);
+  const [readyFor, setReadyFor] = useState<{ image: string; resetKey: number } | null>(null);
+  const ready = readyFor?.image === image && readyFor.resetKey === resetKey;
 
   useEffect(() => {
-    setReady(false);
     const img = new Image();
     img.onload = () => {
       const w = img.naturalWidth;
@@ -1061,7 +1091,7 @@ function MaskCanvas({
       mctx.fillStyle = "#000";
       mctx.fillRect(0, 0, w, h);
       dctx.clearRect(0, 0, w, h);
-      setReady(true);
+      setReadyFor({ image, resetKey });
       onMaskChange(null);
     };
     img.src = image;
@@ -1317,10 +1347,16 @@ function RecipePopover({
   active: boolean;
 }) {
   // PopoverContent portals to body, so the inert page wrapper cannot contain it.
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (!active) setOpen(false);
-  }, [active]);
+  // The open flag belongs to the `active` state it was set in: leaving the tab closes it, and
+  // coming back does not reopen it.
+  const [openState, setOpenState] = useState<{ active: boolean; open: boolean }>({
+    active,
+    open: false,
+  });
+  const open = openState.active === active ? openState.open : false;
+  const setOpen = (next: boolean) => {
+    setOpenState({ active, open: next });
+  };
   const viaConnection = image.model_kind === "connection";
   return (
     <Popover open={active && open} onOpenChange={(o) => { setOpen(active && o); }}>
@@ -1816,25 +1852,26 @@ export function ImagesPage({
   // The recipe the last pick applied, so a load that reveals the family can replace a fallback.
   const pickDefaults = useRef<{ steps: number; guidance: number } | null>(null);
   // Put back everything a pick optimistically applied. Setters are stable, so this never re-renders on its own.
-  const revertPick = useCallback((r: PickRevert) => {
-    setQuant(r.prev);
-    setPendingModelDefaults(null);
-    pickDefaults.current = null;
-    // Equality alone cannot tell "nobody touched this" from "the user chose the same number": a
-    // preset selected after the pick owns these fields.
-    if (!pickRecipeSuperseded.current?.()) {
-      setSteps((cur) => (cur === r.appliedSteps ? r.steps : cur));
-      setGuidance((cur) => (cur === r.appliedGuidance ? r.guidance : cur));
-    }
-    pickRecipeSuperseded.current = null;
-    r.releaseRecipeClaim?.();
-    r.releaseRecipeClaim = undefined;
-  }, []);
   // Recipe a pick claims until status confirms it; without it Default reads as modified.
   const [pendingModelDefaults, setPendingModelDefaults] = useState<{
     steps: number;
     guidance: number;
   } | null>(null);
+  const revertPick = useCallback((r: PickRevert) => {
+    const revert = { ...r };
+    setQuant(revert.prev);
+    setPendingModelDefaults(null);
+    pickDefaults.current = null;
+    // Equality alone cannot tell "nobody touched this" from "the user chose the same number": a
+    // preset selected after the pick owns these fields.
+    if (!pickRecipeSuperseded.current?.()) {
+      setSteps((cur) => (cur === revert.appliedSteps ? revert.steps : cur));
+      setGuidance((cur) => (cur === revert.appliedGuidance ? revert.guidance : cur));
+    }
+    pickRecipeSuperseded.current = null;
+    revert.releaseRecipeClaim?.();
+    revert.releaseRecipeClaim = undefined;
+  }, []);
   const [seed, setSeed] = useState("");
   const [maskBlur, setMaskBlur] = useState(MASK_BLUR_DEFAULT);
   const [inpaintOnlyMasked, setInpaintOnlyMasked] = useState(false);
@@ -1946,19 +1983,26 @@ export function ImagesPage({
   const [engineChoice, setEngineChoice] = useState<EngineChoice>("auto");
   // The loaded build the Engine select was last seeded from; cleared by a failed load to force a reseed.
   const [engineSeed, setEngineSeed] = useState("");
-  const [transformerQuant, setTransformerQuant] = useState<
+  const [transformerQuantChoice, setTransformerQuant] = useState<
     "none" | "auto" | "int8" | "fp8" | "nvfp4" | "mxfp8"
   >("auto");
-  const [textEncoderQuant, setTextEncoderQuant] = useState<
+  const [textEncoderQuantChoice, setTextEncoderQuant] = useState<
     "auto" | NonNullable<DiffusionLoadRequest["text_encoder_quant"]>
   >("auto");
+  // A held NVFP4 falls back to "auto" once the backend says it is off, so it is applied on read.
+  const transformerQuant = nvfp4SelectionFallback(
+    transformerQuantChoice,
+    nvfp4DiffusionKnown,
+    nvfp4Diffusion,
+  );
+  const textEncoderQuant = nvfp4SelectionFallback(
+    textEncoderQuantChoice,
+    nvfp4DiffusionKnown,
+    nvfp4Diffusion,
+  );
   const [attentionBackend, setAttentionBackend] = useState<"auto" | "native" | "cudnn" | "flash3" | "sage">(
     "auto",
   );
-  useEffect(() => {
-    setTransformerQuant((v) => nvfp4SelectionFallback(v, nvfp4DiffusionKnown, nvfp4Diffusion));
-    setTextEncoderQuant((v) => nvfp4SelectionFallback(v, nvfp4DiffusionKnown, nvfp4Diffusion));
-  }, [nvfp4Diffusion, nvfp4DiffusionKnown, transformerQuant, textEncoderQuant]);
   const [memoryMode, setMemoryMode] = useState<"auto" | "fast" | "balanced" | "low_vram">("auto");
   const [initialComponents] = useState<ImageComponentFiles>(() =>
     rememberedModel ? seedImageComponents(rememberedModel) : {},
@@ -2040,8 +2084,11 @@ export function ImagesPage({
   );
   useEffect(() => {
     if (!status?.loaded) return;
-    reconcileInitialComponents(status);
-    reconcileResidentComponents(status);
+    // Deferred one microtask: the reconcilers decide whether to set state from the loaded status.
+    void Promise.resolve().then(() => {
+      reconcileInitialComponents(status);
+      reconcileResidentComponents(status);
+    });
   }, [status, reconcileInitialComponents, reconcileResidentComponents]);
   const { familyOverride, setFamilyOverride, familySelect, opaqueKind, selectorModelId } = useFamilyOverride(status, status?.supported_families);
   // A connection is not bound by the resident model's size grid or presets.
@@ -2049,10 +2096,10 @@ export function ImagesPage({
   const sizeLimits = useMemo(() => sizeLimitsFrom(conditioning), [conditioning]);
   const unifiedEdit = Boolean(conditioning?.unified_edit);
   // Localized modes and the transparent-background prompt are Qwen-Image-2.1's; FLUX.3 shares the Edit form without them.
-  const localizedEdit = Boolean(conditioning?.localized_edit_modes?.length);
+  const localizedEdit = Boolean(conditioning?.localized_edit_modes.length);
   // A mode picked on a model that has it would be refused by one that does not.
   const localizedMode =
-    pickedLocalizedMode && conditioning?.localized_edit_modes?.includes(pickedLocalizedMode) ? pickedLocalizedMode : null;
+    pickedLocalizedMode && conditioning?.localized_edit_modes.includes(pickedLocalizedMode) ? pickedLocalizedMode : null;
   // Edit-only model whose Edit takes more images after the source (Qwen-Image-Edit-Plus).
   const multiImageEdit = !unifiedEdit && Boolean(conditioning?.multi_image_edit);
   const referenceResolutions = conditioning?.reference_resolutions ?? [];
@@ -2158,7 +2205,7 @@ export function ImagesPage({
     const size = resolutionFor(status?.base_repo ?? status?.repo_id ?? "", {
       modelKind: status?.model_kind,
       transformerQuant: status?.transformer_quant,
-      transformerQuantSource: status?.resolved?.transformer_quant?.source,
+      transformerQuantSource: status?.resolved?.transformer_quant.source,
     });
     return {
       negativePrompt: "",
@@ -2177,7 +2224,7 @@ export function ImagesPage({
     status?.repo_id,
     status?.model_kind,
     status?.transformer_quant,
-    status?.resolved?.transformer_quant?.source,
+    status?.resolved?.transformer_quant.source,
   ]);
   const applyImagePresetParams = useCallback((params: ImageGenerationPresetParams) => {
     setNegativePrompt(params.negativePrompt);
@@ -2228,7 +2275,7 @@ export function ImagesPage({
         revert.appliedGuidance = recommended.guidance;
       }
     },
-    [claimImageRecipe, familyOverride, imageFormClaimId, modelSelectionAction],
+    [claimImageRecipe, familyOverride, imageFormClaimId, modelSelectionAction, setPendingModelDefaults],
   );
 
   const dismissLoadToast = useCallback(() => {
@@ -2279,46 +2326,49 @@ export function ImagesPage({
 
   // Refresh the LoRA picker when the loaded family changes, since a LoRA is family-specific.
   // Not on first load or unload (a restore can precede the load), so track it in a ref.
-  const loraCapable = Boolean(!external && status?.loaded && status?.supports_lora);
+  const loraCapable = Boolean(!external && status?.loaded && status.supports_lora);
   const loraOffNote = external ? null : loraUnavailableNote(status);
   const prevLoraFamilyRef = useRef<string | null | undefined>(undefined);
   const bakedLorasOnLoad = useRef(false);
   useEffect(() => {
-    setLoraCatalogFamily(undefined);
-    if (!loraCapable) {
-      // Keep the selection: it may have just been restored.
-      setAvailableLoras([]);
-      return;
-    }
-    const fam = status?.family ?? null;
-    const prev = prevLoraFamilyRef.current;
-    if (prev !== null && prev !== undefined && prev !== fam) {
-      setLoras([]);
-    }
-    prevLoraFamilyRef.current = fam;
-    const deploy = pendingDeploy.current;
-    if (deploy) {
-      pendingDeploy.current = null;
-      if (!deploy.family || deploy.family === fam) {
-        setLoras([{ id: deploy.loraId, weight: 1 }]);
-      } else {
-        toast.error(
-          `The trained adapter is for ${deploy.family}, but the loaded model is ` +
-            `${fam ?? "a different family"}, so it was not applied.`,
-        );
-      }
-    }
     let cancelled = false;
-    listDiffusionLoras(status?.family ?? undefined)
-      .then((list) => {
-        if (cancelled) return;
-        setAvailableLoras(list);
-        setLoraCatalogFamily(fam);
-      })
-      .catch(() => {
-        // Clear only the options: selections are valid without being in the catalog.
-        if (!cancelled) setAvailableLoras([]);
-      });
+    // Deferred one microtask: the catalog reset and reseed must not cascade a render from the effect body.
+    void Promise.resolve().then(() => {
+      setLoraCatalogFamily(undefined);
+      if (!loraCapable) {
+        // Keep the selection: it may have just been restored.
+        setAvailableLoras([]);
+        return;
+      }
+      const fam = status?.family ?? null;
+      const prev = prevLoraFamilyRef.current;
+      if (prev !== null && prev !== undefined && prev !== fam) {
+        setLoras([]);
+      }
+      prevLoraFamilyRef.current = fam;
+      const deploy = pendingDeploy.current;
+      if (deploy) {
+        pendingDeploy.current = null;
+        if (!deploy.family || deploy.family === fam) {
+          setLoras([{ id: deploy.loraId, weight: 1 }]);
+        } else {
+          toast.error(
+            `The trained adapter is for ${deploy.family}, but the loaded model is ` +
+              `${fam ?? "a different family"}, so it was not applied.`,
+          );
+        }
+      }
+      listDiffusionLoras(status?.family ?? undefined)
+        .then((list) => {
+          if (cancelled) return;
+          setAvailableLoras(list);
+          setLoraCatalogFamily(fam);
+        })
+        .catch(() => {
+          // Clear only the options: selections are valid without being in the catalog.
+          if (!cancelled) setAvailableLoras([]);
+        });
+    });
     return () => {
       cancelled = true;
     };
@@ -2326,13 +2376,13 @@ export function ImagesPage({
 
   // torchao int8/fp8 builds take adapters only at load time, so drop the selection rather than 400.
   const residentBuildKey = `${status?.repo_id ?? ""}|${String(
-    status?.resolved?.transformer_quant?.value ?? "",
+    status?.resolved?.transformer_quant.value ?? "",
   )}`;
   const checkedBuildForBake = useRef<string | null>(null);
   useEffect(() => {
     if (!loraCapable || checkedBuildForBake.current === residentBuildKey) return;
     checkedBuildForBake.current = residentBuildKey;
-    const engaged = status?.resolved?.transformer_quant?.value;
+    const engaged = status?.resolved?.transformer_quant.value;
     if (engaged !== "int8" && engaged !== "fp8") return;
     if (bakedLorasOnLoad.current || loras.length === 0) return;
     setLoras([]);
@@ -2343,7 +2393,7 @@ export function ImagesPage({
   }, [loraCapable, residentBuildKey, status?.resolved, loras]);
 
   // Refresh the ControlNet options when the loaded family changes, and clear a stale selection.
-  const controlnetSupported = Boolean(status?.loaded && status?.supports_controlnet);
+  const controlnetSupported = Boolean(status?.loaded && status.supports_controlnet);
   const controlnetCapable = !external && controlnetSupported;
   // What Create sends as a ControlNet run (strength 0 runs plain text-to-image): its SDXL pipeline has no CFG rescale.
   const controlnetEngaged =
@@ -2352,7 +2402,7 @@ export function ImagesPage({
   // A model that reads no guidance here runs at its default, which the request and recipe then carry.
   const guidanceFixed = !external && status?.loaded === true && status.supports_guidance === false;
   const effectiveGuidance = guidanceFixed
-    ? (status?.generation_defaults?.guidance ?? DEFAULT_GEN.guidance)
+    ? (status.generation_defaults?.guidance ?? DEFAULT_GEN.guidance)
     : guidance;
   // The guidance a negative prompt needs: 0 with no model loaded or on an older backend, the old rule.
   const negativeMinGuidance =
@@ -2425,9 +2475,12 @@ export function ImagesPage({
   // upsampler included.
   const enhanceTrackKey =
     enhanceFamilyKey || (external || status?.loaded ? ENHANCE_UNSUPPORTED_FAMILY : "");
-  useEffect(() => {
-    if (enhanceTrackKey) setEnhanceOverrideState((prev) => overrideAfterFamilyChange(prev, enhanceTrackKey));
-  }, [enhanceTrackKey]);
+  // A family change consumes the override; adjusting during render keeps it in step without an effect.
+  const [enhanceOverrideTrack, setEnhanceOverrideTrack] = useState(enhanceTrackKey);
+  if (enhanceTrackKey !== enhanceOverrideTrack) {
+    setEnhanceOverrideTrack(enhanceTrackKey);
+    setEnhanceOverrideState((prev) => overrideAfterFamilyChange(prev, enhanceTrackKey));
+  }
   const enhanceOverride =
     enhanceOverrideState &&
     (enhanceOverrideState.family === "" || enhanceOverrideState.family === enhanceFamilyKey)
@@ -2454,9 +2507,11 @@ export function ImagesPage({
   );
   useEffect(() => {
     if (!controlnetSupported) {
-      setAvailableControlNets([]);
-      setControlnetId("");
-      setControlImage(null);
+      void Promise.resolve().then(() => {
+        setAvailableControlNets([]);
+        setControlnetId("");
+        setControlImage(null);
+      });
       return;
     }
     let cancelled = false;
@@ -2476,20 +2531,19 @@ export function ImagesPage({
 
   const controlTypeOptions = useMemo(() => {
     const cn = availableControlNets.find((c) => c.id === controlnetId);
-    const types = cn?.control_types?.length ? cn.control_types : ["passthrough", "canny"];
+    const types = cn?.control_types.length ? cn.control_types : ["passthrough", "canny"];
     return types;
   }, [availableControlNets, controlnetId]);
 
-  useEffect(() => {
-    if (!controlTypeOptions.includes(controlType)) {
-      setControlType(
-        controlTypeOptions.includes("passthrough") ? "passthrough" : controlTypeOptions[0],
-      );
-    }
-  }, [controlTypeOptions, controlType]);
+  // A stale pick is replaced during render rather than by an effect.
+  if (!controlTypeOptions.includes(controlType)) {
+    setControlType(
+      controlTypeOptions.includes("passthrough") ? "passthrough" : controlTypeOptions[0],
+    );
+  }
 
   const selected = useMemo(
-    () => images.find((i) => i.id === selectedId) ?? images[0] ?? null,
+    () => images.find((i) => i.id === selectedId) ?? images.at(0) ?? null,
     [images, selectedId],
   );
   const selectedSrc = selected ? srcById[selected.id] : undefined;
@@ -2509,7 +2563,7 @@ export function ImagesPage({
   useEffect(() => {
     viewerIdRef.current = viewerId;
   }, [viewerId]);
-  const openViewer = () => selected && selectedSrc && setViewerId(selected.id);
+  const openViewer = () => { if (selected && selectedSrc) setViewerId(selected.id); };
   const navigateToChat = useNavigate();
   const revealLabel = useRevealLabel();
 
@@ -2628,7 +2682,7 @@ export function ImagesPage({
         galleryCache.images = next;
         return next;
       });
-      galleryCache.hasMore = page.has_more;
+      commitGalleryHasMore(page.has_more);
       setHasMore(page.has_more);
       if (typeof IntersectionObserver === "undefined") {
         page.images.forEach((image) => { ensureThumb(image).catch(() => undefined); });
@@ -2636,7 +2690,7 @@ export function ImagesPage({
     } catch {
       // transient; the user can scroll again to retry
     } finally {
-      loadingMore.current = false;
+      assignRef(loadingMore, false);
     }
   }, [ensureThumb]);
 
@@ -2747,8 +2801,7 @@ export function ImagesPage({
         if (stillFresh && !stillFresh()) return;
         if (resyncSeq.current !== ticket) return;
         if (pageEpoch.current !== paged) continue;
-        galleryCache.images = collected;
-        galleryCache.hasMore = more;
+        commitGalleryPage(collected, more);
         setImages(collected);
         setHasMore(more);
         if (typeof IntersectionObserver === "undefined") {
@@ -2866,7 +2919,9 @@ export function ImagesPage({
   );
   const stripReorder = useStripReorder((id, afterId) => { handleMove(id, afterId).catch(() => undefined); });
   const imagesRef = useRef(images);
-  imagesRef.current = images;
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
   useGalleryImageDropSource(
     useCallback(async (id: string) => {
       const image = imagesRef.current.find((item) => item.id === id);
@@ -2934,7 +2989,7 @@ export function ImagesPage({
     setUpscaleModel(image.upscale_model ?? null);
     setWidth(restored.width);
     setHeight(restored.height);
-    setBatchSize(image.batch_size ?? 1);
+    setBatchSize(image.batch_size);
     setShiftValue(shiftFromRecipe(image));
     const m = matchAspect(restored.width, restored.height);
     setAspect(m.key);
@@ -3045,7 +3100,9 @@ export function ImagesPage({
   const importSeq = useRef(0);
   // The status as of now, for an import resuming after its LoRA lookup.
   const statusRef = useRef(status);
-  statusRef.current = status;
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
   const applyImportedRecipe = useCallback(
     async (recipe: ImportedRecipe): Promise<boolean> => {
       const seq = ++importSeq.current;
@@ -3072,7 +3129,7 @@ export function ImagesPage({
         ? recipe.textual_inversions.filter((x): x is string => typeof x === "string")
         : [];
       let tiMatch: { installed: string[]; missing: string[] } | null = null;
-      if (tiNames.length > 0 && embeddingsEnabled && status?.family) {
+      if (tiNames.length > 0 && embeddingsEnabled && status.family) {
         const triggers = await listDiffusionEmbeddings(status.family).then(
           (r) => r.embeddings.map((e) => e.trigger),
           () => null,
@@ -3082,9 +3139,12 @@ export function ImagesPage({
         if (triggers && loadedModelKey(statusRef.current) === modelBefore)
           tiMatch = splitInstalledEmbeddings(tiNames, triggers);
       }
+      const importedLoras = Array.isArray(recipe.loras)
+        ? recipe.loras.filter((x): x is string => typeof x === "string")
+        : [];
       const merged =
         tagged.loras.length > 0
-          ? { ...recipe, loras: [...(Array.isArray(recipe.loras) ? recipe.loras : []), ...tagged.loras] }
+          ? { ...recipe, loras: [...importedLoras, ...tagged.loras] }
           : recipe;
       const settings = recipeSettings(merged, { width, height, steps, guidance });
       const localized = settings.localized_edit;
@@ -3122,8 +3182,16 @@ export function ImagesPage({
             (recipe[key] ?? null) !== (status[key] ?? null),
         );
         if (differs.length > 0) {
+          const label = (key: (typeof differs)[number], fallback: string): string => {
+            const value = recipe[key];
+            return typeof value === "string" ||
+              typeof value === "number" ||
+              typeof value === "boolean"
+              ? String(value)
+              : fallback;
+          };
           toast(
-            `Made with ${differs.map((key) => (key === "gguf_filename" ? String(recipe[key] ?? "the dense model") : `${key.replace(/_/g, " ")} ${String(recipe[key] ?? "off")}`)).join(", ")}`,
+            `Made with ${differs.map((key) => (key === "gguf_filename" ? label(key, "the dense model") : `${key.replace(/_/g, " ")} ${label(key, "off")}`)).join(", ")}`,
             { description: "Reload the model with that build to reproduce this image exactly." },
           );
         }
@@ -3263,7 +3331,8 @@ export function ImagesPage({
   const onImportDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
     if (event.dataTransfer.types.includes("Files")) {
       event.preventDefault();
-      event.dataTransfer.dropEffect = "copy";
+      const transfer = event.dataTransfer;
+      transfer.dropEffect = "copy";
     }
   }, []);
   const onImportDrop = useCallback(
@@ -3362,11 +3431,11 @@ export function ImagesPage({
           const initialSelection =
             galleryCache.images.find(
               (image) => image.id === galleryCache.selectedId,
-            ) ?? galleryCache.images[0];
+            ) ?? galleryCache.images.at(0);
           if (initialSelection) await ensureSrc(initialSelection);
         })(),
       ]);
-      if (cancelled || initialReadySent.current) return;
+      if (cancelled) return;
       initialReadySent.current = true;
       onInitialReady?.();
     })().catch(() => undefined);
@@ -3400,8 +3469,10 @@ export function ImagesPage({
 
   useEffect(() => {
     if (active) return;
-    setSelectorOpen(false);
-    setAspectOpen(false);
+    void Promise.resolve().then(() => {
+      setSelectorOpen(false);
+      setAspectOpen(false);
+    });
   }, [active]);
 
   const offerLoadAnywayFor = useCallback(
@@ -3430,6 +3501,7 @@ export function ImagesPage({
     if (files) componentFieldsOwner.current = componentFieldsOwnerAfterLoad(componentFieldsShown.current, files, componentFieldsOwner.current, target.kind);
   }, []);
 
+  const pollLoadProgressRef = useRef<() => Promise<void>>(() => Promise.resolve());
   const pollLoadProgress = useCallback(async () => {
     const seq = cancelSeq.current;
     try {
@@ -3534,8 +3606,11 @@ export function ImagesPage({
       // Transient poll failure: keep trying.
     }
     if (seq !== cancelSeq.current) return;
-    pollTimer.current = setTimeout(() => { pollLoadProgress().catch(() => undefined); }, 1000);
-  }, [dismissLoadToast, refreshStatus, cancelLoadFromToast, offerLoadAnywayFor, rememberFinishedLoad]);
+    pollTimer.current = setTimeout(() => { pollLoadProgressRef.current().catch(() => undefined); }, 1000);
+  }, [dismissLoadToast, refreshStatus, cancelLoadFromToast, offerLoadAnywayFor, rememberFinishedLoad, revertPick, setStatusIfNewest]);
+  useEffect(() => {
+    pollLoadProgressRef.current = pollLoadProgress;
+  }, [pollLoadProgress]);
 
   // The unload failed, so restore the poll and toast. refreshStatus cannot: a first load is not resident.
   const restoreLoadTracking = useCallback(() => {
@@ -3551,10 +3626,9 @@ export function ImagesPage({
     if (genPollTimer.current) clearInterval(genPollTimer.current);
     if (genVisibilityListener.current)
       document.removeEventListener("visibilitychange", genVisibilityListener.current);
-    let pollInFlight = false;
+    const pollGuard = createInFlightGuard();
     const pollGenerateOnce = async () => {
-      if (pollInFlight) return;
-      pollInFlight = true;
+      if (!pollGuard.enter()) return;
       try {
         const p = await getGenerateProgress();
         if (p.active) runTarget.current = p.target ?? undefined;
@@ -3579,7 +3653,7 @@ export function ImagesPage({
       } catch {
         // transient; keep polling
       } finally {
-        pollInFlight = false;
+        pollGuard.leave();
       }
     };
     genVisibilityListener.current = () => {
@@ -3676,7 +3750,7 @@ export function ImagesPage({
     const size = resolutionFor(status?.base_repo ?? repoId, {
       modelKind: status?.model_kind,
       transformerQuant: status?.transformer_quant,
-      transformerQuantSource: status?.resolved?.transformer_quant?.source,
+      transformerQuantSource: status?.resolved?.transformer_quant.source,
     });
     setWidth(size.width);
     setHeight(size.height);
@@ -3696,7 +3770,7 @@ export function ImagesPage({
     status?.gguf_filename,
     status?.component_files,
     status?.transformer_quant,
-    status?.resolved?.transformer_quant?.source,
+    status?.resolved?.transformer_quant.source,
   ]);
 
   const loadedEngineKey =
@@ -3733,32 +3807,35 @@ export function ImagesPage({
   useEffect(() => {
     const record = status?.loaded ? status.resolved : null;
     if (!record) return;
-    const family = resolvedFamilyOverrideSelection(record.family_override);
-    if (family) setFamilyOverride(family);
-    const quant = resolvedSelectValue(record.transformer_quant, (v) =>
-      // The engaged value spells "no quant" as "off"; the option is "none".
-      (["auto", "none", "int8", "fp8", "nvfp4", "mxfp8"] as const).find(
-        (o) => o === v || (o === "none" && v === "off"),
-      ) ?? null,
-    );
-    if (quant) setTransformerQuant(quant);
-    const encoder = resolvedSelectValue(record.text_encoder_quant, (v) =>
-      // "off" maps to Dense, NOT Default, or a pinned Dense would silently take the family scheme.
-      (["auto", "none", "fp8", "fp8_dynamic", "int8", "nvfp4"] as const).find(
-        (o) => o === v || (o === "none" && v === "off"),
-      ) ?? null,
-    );
-    if (encoder) setTextEncoderQuant(encoder);
-    const memory = resolvedSelectValue(record.memory_mode, (v) =>
-      (["auto", "fast", "balanced", "low_vram"] as const).find((o) => o === v) ?? null,
-    );
-    if (memory) setMemoryMode(memory);
-    const attention = resolvedSelectValue(record.attention_backend, (v) =>
-      (["auto", "native", "cudnn", "flash3", "sage"] as const).find(
-        (o) => o === v || `_native_${o}` === v,
-      ) ?? null,
-    );
-    if (attention) setAttentionBackend(attention);
+    // Deferred one microtask: reseeding the selects must not cascade a render from the effect body.
+    void Promise.resolve().then(() => {
+      const family = resolvedFamilyOverrideSelection(record.family_override);
+      if (family) setFamilyOverride(family);
+      const quant = resolvedSelectValue(record.transformer_quant, (v) =>
+        // The engaged value spells "no quant" as "off"; the option is "none".
+        (["auto", "none", "int8", "fp8", "nvfp4", "mxfp8"] as const).find(
+          (o) => o === v || (o === "none" && v === "off"),
+        ) ?? null,
+      );
+      if (quant) setTransformerQuant(quant);
+      const encoder = resolvedSelectValue(record.text_encoder_quant, (v) =>
+        // "off" maps to Dense, NOT Default, or a pinned Dense would silently take the family scheme.
+        (["auto", "none", "fp8", "fp8_dynamic", "int8", "nvfp4"] as const).find(
+          (o) => o === v || (o === "none" && v === "off"),
+        ) ?? null,
+      );
+      if (encoder) setTextEncoderQuant(encoder);
+      const memory = resolvedSelectValue(record.memory_mode, (v) =>
+        (["auto", "fast", "balanced", "low_vram"] as const).find((o) => o === v) ?? null,
+      );
+      if (memory) setMemoryMode(memory);
+      const attention = resolvedSelectValue(record.attention_backend, (v) =>
+        (["auto", "native", "cudnn", "flash3", "sage"] as const).find(
+          (o) => o === v || `_native_${o}` === v,
+        ) ?? null,
+      );
+      if (attention) setAttentionBackend(attention);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- resolvedKey stands for the record
   }, [resolvedKey]);
 
@@ -3818,11 +3895,12 @@ export function ImagesPage({
   const handleLoad = useCallback(
     async (
       repoId: string,
-      opts: ImageLoadOptions,
+      requestedOpts: ImageLoadOptions,
       // A staged download plans its files at pick time, so the load must use those values.
       pinned?: LoadAdvanced,
       pickToastId?: string,
     ): Promise<boolean> => {
+      let opts = requestedOpts;
       setExternalModelId(null);
       // Cancel any prior poll loop so two cannot run at once.
       if (pollTimer.current) clearTimeout(pollTimer.current);
@@ -3920,7 +3998,7 @@ export function ImagesPage({
       } catch (err) {
         pendingEvicted.current = [];
         clearPendingImageLoad();
-        lastLoad.current = prevLastLoad;
+        assignRef(lastLoad, prevLastLoad);
         setCanReapply(prevLastLoad !== null);
         lastLoadRevert.current = null;
         // A refused load keeps the resident model and its provenance, so the seed would not move: reseed the
@@ -3954,7 +4032,7 @@ export function ImagesPage({
       pollLoadProgress().catch(() => undefined);
       return settle(true);
     },
-    [pollLoadProgress, refreshStatus, dismissLoadToast, currentLoadAdvanced, cancelLoadFromToast, pickToast, engineFor, offerLoadAnywayFor, dismissLoadAnyway],
+    [pollLoadProgress, refreshStatus, dismissLoadToast, currentLoadAdvanced, cancelLoadFromToast, pickToast, engineFor, offerLoadAnywayFor, dismissLoadAnyway, restoreLoadTracking],
   );
 
   const handleInitChange = useCallback((dataUrl: string | null) => {
@@ -4021,7 +4099,8 @@ export function ImagesPage({
     const dataUrl = useImageEditHandoffStore.getState().take();
     if (!dataUrl) return;
     editRequest.current += 1;
-    applyEditSource(dataUrl);
+    // Deferred one microtask: applying the source sets form state.
+    void Promise.resolve().then(() => { applyEditSource(dataUrl); });
   }, [pendingLibraryEdit, capabilitiesKnown, applyEditSource]);
   const editImageItem = (image: GalleryImage) => (
     <EditImageMenuItem onClick={() => { editGalleryImage(image).catch(() => undefined); }} />
@@ -4041,7 +4120,7 @@ export function ImagesPage({
       toggleFavorite,
       editImage: (image) => { editGalleryImage(image).catch(() => undefined); },
     });
-  });
+  }, [stripTileActions, stripReorder, handleTogglePin, handleArchive, handleDelete, handleQuickDownload, toggleFavorite, editGalleryImage]);
   const { openCrop: openInpaintCrop, cropDialog: inpaintCropDialog } = useImageCrop(
     initImage,
     handleInitChange,
@@ -4060,7 +4139,9 @@ export function ImagesPage({
   useEffect(() => {
     retryLoadRef.current = handleLoad;
   }, [handleLoad]);
-  handleLoadRef.current = handleLoad;
+  useEffect(() => {
+    handleLoadRef.current = handleLoad;
+  }, [handleLoad]);
   // Both diffusion pages stay mounted and a load evicts the GPU holder, so defer until visible.
   const stagedLoadDeferred = useRef(false);
   // `owned` is read BEFORE the call, so a newer pick's label is left alone.
@@ -4145,7 +4226,7 @@ export function ImagesPage({
   }
 
   function startQueuedDownload() {
-    const next = downloadOnlyPlans.current[0];
+    const next = downloadOnlyPlans.current.at(0);
     if (!next) return false;
     stagedPlan.current = "download";
     stage(next);
@@ -4277,14 +4358,14 @@ export function ImagesPage({
       let advanced = downloadSnapshot ?? withPicked(currentLoadAdvanced(repoId, familyOverrideRequired));
       // Only the backend knows if a retired FLUX.3 copy is complete: plan it so an incomplete one stages its base.
       const retiredSnapshot = isRetiredCopySnapshot({ repoId, displayRepoId: opts.displayRepoId });
-      if (retiredSnapshot) source = "hub";
+      const pickSource: ModelSelectorChangeMeta["source"] = retiredSnapshot ? "hub" : source;
       // The retry's override rides the same snapshot, so its plan and its load both carry it.
       if (oversizedRetry) advanced = { ...advanced, allow_oversized_load: true };
       // Resolve the engine into the snapshot, so the plan and the load it fires cannot read different selects.
       if (!advanced.engine && sendsEngine(opts.kind, opts.filename)) {
         advanced = { ...advanced, engine: engineFor(repoId, opts, advanced) ?? "auto" };
       }
-      if (source !== "hub" && !downloadOnly) return await handleLoadRef.current(repoId, opts, advanced);
+      if (pickSource !== "hub" && !downloadOnly) return await handleLoadRef.current(repoId, opts, advanced);
       const pickToastId = downloadOnly ? undefined : pickToast.show(opts.displayRepoId ?? repoId);
       // Read before the await: a pick made meanwhile replaces quantRevert. Download-only owns no slot.
       const ownRevert = downloadSnapshot || downloadOnly ? null : quantRevert.current;
@@ -4324,7 +4405,7 @@ export function ImagesPage({
             pickToast.dismiss(pickToastId);
             if (downloadOnly) return true;
             pendingStagedLoad.current = null;
-            return handleLoadRef.current(repoId, opts, advanced);
+            return await handleLoadRef.current(repoId, opts, advanced);
           }
           if (downloadOnly) {
             // Same files queued twice would download twice and the second start could come back "busy".
@@ -4363,7 +4444,7 @@ export function ImagesPage({
         pickToast.dismiss(pickToastId);
         const overrideSent = advanced.allow_oversized_load === true || readAllowOversizedLoad();
         if (!downloadOnly && shouldOfferLoadAnyway({ code: incompatibleCode, overrideSent })) {
-          const retrySource = source;
+          const retrySource = pickSource;
           offerLoadAnyway(incompatible, retryWhileCurrent(() => pick === pickSeq.current, () => {
             oversizedLoadOnce.current = true;
             try {
@@ -4383,7 +4464,7 @@ export function ImagesPage({
       }
       return await handleLoadRef.current(repoId, opts, advanced, pickToastId);
     },
-    [stage, currentLoadAdvanced, pickComponentFiles, requestDownloadPlan, modelSelectionAction, pickGuard, revertPick, pickToast, engineFor, offerLoadAnyway, dismissLoadAnyway],
+    [stage, currentLoadAdvanced, pickComponentFiles, requestDownloadPlan, modelSelectionAction, pickGuard, revertPick, pickToast, engineFor, offerLoadAnyway, dismissLoadAnyway, queuedDownloadKeys],
   );
   const loadOrStageRef = useRef(loadOrStage);
   useEffect(() => {
@@ -4419,7 +4500,7 @@ export function ImagesPage({
           plan.checkpoint_bytes ?? meta.expectedBytes ?? 0,
       };
     },
-    [currentLoadAdvanced, requestDownloadPlan, pickGuard, stage, modelSelectionAction, textEncoderFiles, vaeFile],
+    [currentLoadAdvanced, requestDownloadPlan, modelSelectionAction, textEncoderFiles, vaeFile],
   );
 
   const beginPick = useCallback(() => {
@@ -4476,7 +4557,7 @@ export function ImagesPage({
           loadOrStage(repoId, { kind: "gguf", filename }, source, token, false, downloadSnapshot),
       });
     },
-    [applyImageModelDefaults, currentLoadAdvanced, loadOrStage, modelSelectionAction, pickGuard, quant, revertPick],
+    [applyImageModelDefaults, currentLoadAdvanced, loadOrStage, modelSelectionAction, pickGuard, quant, revertPick, familyOverride, guidance, steps],
   );
 
   // Both pages stay mounted, so a hidden page must not load after the user switched.
@@ -4498,10 +4579,10 @@ export function ImagesPage({
       return;
     }
     // `routeSearch` is rebuilt every render, so depend on the two fields.
-    const routed = { quant: routeSearch?.quant, ggufQuant: routeSearch?.ggufQuant };
+    const routed = { quant: routeSearch.quant, ggufQuant: routeSearch.ggufQuant };
     const routedFilename = routedGgufFilename(routed);
     const routedLabel = routedGgufLabel(routed);
-    const key = `${wanted}|${routeSearch?.quant ?? ""}|${routeSearch?.ggufQuant ?? ""}`;
+    const key = `${wanted}|${routeSearch.quant ?? ""}|${routeSearch.ggufQuant ?? ""}`;
     if (handledRouteModel.current === key) return;
     handledRouteModel.current = key;
     // A Download only arrival owns nothing and must leave a staging load its claim.
@@ -4509,7 +4590,7 @@ export function ImagesPage({
     const token = downloadOnlyPick ? undefined : pickGuard.claim();
     if (!downloadOnlyPick) {
       setFamilyOverride("auto");
-      setExternalModelId(null);
+      void Promise.resolve().then(() => { setExternalModelId(null); });
     }
     navigateSelf({ to: "/images", search: {}, replace: true }).catch(() => undefined);
     if (routedLabel) {
@@ -4560,6 +4641,9 @@ export function ImagesPage({
     pickGuard,
     quant,
     revertPick,
+    guidance,
+    setFamilyOverride,
+    steps,
   ]);
 
   // A counter, not effect cleanup, retires a lookup: clearing the query must not cancel its own.
@@ -4849,18 +4933,18 @@ export function ImagesPage({
         }
       }).catch(() => undefined);
     },
-    [applyImageModelDefaults, busy, handleLoad, pickGuard, pickToast, quant, revertPick, setPageMode],
+    [applyImageModelDefaults, busy, handleLoad, pickGuard, pickToast, quant, revertPick, setPageMode, guidance, setPrompt, steps],
   );
   const deployFromVideo = useImageWorkflowStore((s) => s.pendingDeploy);
   useEffect(() => {
     if (!active || !deployFromVideo) return;
     const request = useImageWorkflowStore.getState().takeDeploy();
-    if (request) handleDeployAdapter(request);
+    // Deferred one microtask: deploying the adapter sets the form state.
+    if (request) void Promise.resolve().then(() => { handleDeployAdapter(request); });
   }, [active, deployFromVideo, handleDeployAdapter]);
   const trainingCompletions = useImageWorkflowStore((s) => s.trainingCompletions);
-  useEffect(() => {
-    if (trainingCompletions > 0) setLoraRefreshKey((k) => k + 1);
-  }, [trainingCompletions]);
+  // The key only exists to re-run the LoRA catalog effect, so it just tracks the completion count.
+  if (trainingCompletions !== loraRefreshKey) setLoraRefreshKey(trainingCompletions);
 
   const handleUnload = useCallback(async (): Promise<boolean> => {
     pendingRecalledGeneration.current = null;
@@ -4890,7 +4974,7 @@ export function ImagesPage({
       // Not an unconditional clear: a restore may have set "loading" deliberately.
       setBusy((prev) => (prev === "unloading" ? null : prev));
     }
-  }, [refreshStatus, dropResidentState]);
+  }, [refreshStatus, dropResidentState, setStatusIfNewest]);
 
   // The unload cancels the load; it leaves only cache, so reloading resumes.
   const handleCancelLoad = useCallback(async () => {
@@ -4916,7 +5000,7 @@ export function ImagesPage({
         status.base_repo,
         status.model_kind,
         status.transformer_quant,
-        status.resolved?.transformer_quant?.source ?? "",
+        status.resolved?.transformer_quant.source ?? "",
         (status.conditioning?.reference_resolutions ?? []).join(","),
       ].join("|")
     : null;
@@ -4927,7 +5011,7 @@ export function ImagesPage({
       const tier = resolutionFor(status.base_repo ?? status.repo_id ?? "", {
         modelKind: status.model_kind,
         transformerQuant: status.transformer_quant,
-        transformerQuantSource: status.resolved?.transformer_quant?.source,
+        transformerQuantSource: status.resolved?.transformer_quant.source,
       }).width;
       setReferenceResolution(
         seedReferenceResolution(status.conditioning?.reference_resolutions ?? [], tier),
@@ -5306,9 +5390,9 @@ export function ImagesPage({
     setBusy("generating");
     setGenDone(0);
     setGenStep(null);
-    cancelRequested.current = false;
+    assignRef(cancelRequested, false);
     setStopping(false);
-    cancelAcked.current = false;
+    assignRef(cancelAcked, false);
     cancelInFlight.current = null;
     cancelAbort.current?.abort();
     cancelAbort.current = null;
@@ -5316,10 +5400,9 @@ export function ImagesPage({
     runTarget.current = external ? "connection" : undefined;
     // Poll the backend's per-step progress across the whole run. A named poll body also serves the
     // visibilitychange listener, so a throttled tab catches up when visible.
-    let pollInFlight = false;
+    const pollGuard = createInFlightGuard();
     const pollGenerateOnce = async () => {
-      if (pollInFlight) return;
-      pollInFlight = true;
+      if (!pollGuard.enter()) return;
       try {
         const p = await getGenerateProgress();
         setGenStep((prev) => {
@@ -5330,16 +5413,17 @@ export function ImagesPage({
       } catch {
         // transient; keep polling
       } finally {
-        pollInFlight = false;
+        pollGuard.leave();
       }
     };
     if (genVisibilityListener.current)
       document.removeEventListener("visibilitychange", genVisibilityListener.current);
-    genVisibilityListener.current = () => {
+    const generateListener = () => {
       if (document.visibilityState === "visible") pollGenerateOnce().catch(() => undefined);
     };
-    document.addEventListener("visibilitychange", genVisibilityListener.current);
-    genPollTimer.current = setInterval(() => { pollGenerateOnce().catch(() => undefined); }, 300);
+    assignRef(genVisibilityListener, generateListener);
+    document.addEventListener("visibilitychange", generateListener);
+    assignRef(genPollTimer, setInterval(() => { pollGenerateOnce().catch(() => undefined); }, 300));
     // Captured BEFORE the first POST: settleLostGeneration needs a record outside it as proof.
     const knownIds = new Set(galleryCache.images.map((image) => image.id));
     try {
@@ -5493,7 +5577,7 @@ export function ImagesPage({
         document.removeEventListener("visibilitychange", genVisibilityListener.current);
         genVisibilityListener.current = null;
       }
-      cancelRequested.current = false;
+      assignRef(cancelRequested, false);
       // Await on EVERY exit: a run can change status (compile, cancelled native run), so Generate could 409.
       if (isMounted.current) await refreshStatus();
       setBusy(null);
@@ -5654,11 +5738,13 @@ export function ImagesPage({
   ]);
   useEffect(() => {
     if (!shouldRunQueuedOversizedRetry({ queued: oversizedRetryQueued, busy })) return;
-    setOversizedRetryQueued(false);
-    oversizedOnce.current = true;
-    handleGenerateWithRecall().finally(() => {
-      oversizedOnce.current = false;
-    }).catch(() => undefined);
+    void Promise.resolve().then(() => {
+      setOversizedRetryQueued(false);
+      oversizedOnce.current = true;
+      handleGenerateWithRecall().finally(() => {
+        oversizedOnce.current = false;
+      }).catch(() => undefined);
+    });
   }, [oversizedRetryQueued, busy, handleGenerateWithRecall]);
 
   const canVary =
@@ -5679,8 +5765,10 @@ export function ImagesPage({
   }, [busy, restoreSettings, sdCaps, selected, varyBlocked]);
   useEffect(() => {
     if (!varyQueued || busy !== null) return;
-    setVaryQueued(false);
-    handleGenerate().catch(() => undefined);
+    void Promise.resolve().then(() => {
+      setVaryQueued(false);
+      handleGenerate().catch(() => undefined);
+    });
   }, [varyQueued, busy, handleGenerate]);
 
   useEffect(() => {
@@ -5724,7 +5812,7 @@ export function ImagesPage({
     const wf = status.workflows ?? [];
     setSupported(
       WORKFLOW_TABS.filter((t) =>
-        wf.includes(t.requires === null ? "txt2img" : t.requires),
+        wf.includes(t.requires ?? "txt2img"),
       ).map((t) => t.id),
     );
   }, [external, status?.loaded, status?.workflows, setSupported]);
@@ -6062,7 +6150,7 @@ export function ImagesPage({
                 activeGgufVariant={quant}
                 onValueChange={handleModelSelect}
                 resolveDownloadFootprint={resolveDownloadFootprint}
-                onEject={status?.loaded ? handleUnload : undefined}
+                onEject={status?.loaded ? () => { (handleUnload()).catch(() => undefined); } : undefined}
                 variant="ghost"
                 className="ml-1.5 max-w-full overflow-hidden pl-2.5! pr-1.5! h-(--studio-chat-control-height,34px)!"
                 task={IMAGE_GEN_TASKS}
@@ -6500,7 +6588,7 @@ export function ImagesPage({
                     <ImageDropzone value={initImage} onChange={handleInitChange} cropSubject="Image 1" />
                   </Field>
                 )}
-                {conditioning?.localized_edit_modes?.length ? (
+                {conditioning?.localized_edit_modes.length ? (
                   <Field
                     label="Localize"
                     hint="Point the edit at a region. It guides a generative edit: the model redraws the whole image and is asked to change the marked area, so pixels outside it are not guaranteed to stay identical."
@@ -7078,7 +7166,7 @@ export function ImagesPage({
               <Button
                 className="relative z-10 text-ui-13 hover:bg-muted dark:hover:bg-muted"
                 variant="outline"
-                onClick={handleCancelGenerate}
+                onClick={() => { (handleCancelGenerate()).catch(() => undefined); }}
               >
                 <Spinner className="mr-2 size-4" />
                 {stopButtonLabel({ stopping, done: genDone, count })}
@@ -7087,7 +7175,7 @@ export function ImagesPage({
               <>
                 <Button variant="primary"
                   className="relative z-10 h-11 px-8 text-ui-14 bg-control-accent text-control-accent-foreground hover:bg-control-accent/85 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
-                  onClick={handleGenerateWithRecall}
+                  onClick={() => { (handleGenerateWithRecall()).catch(() => undefined); }}
                   disabled={busy !== null || !imagePresets.hydrated || (!status?.loaded && !rememberedModel && !external)}
                 >
                   Generate
@@ -7153,14 +7241,14 @@ export function ImagesPage({
             data-testid="images-import-settings-input"
             onChange={(event) => {
               const file = event.target.files?.[0];
-              event.target.value = "";
+              event.currentTarget.value = "";
               if (file) importSettingsFromFile(file).catch(() => undefined);
             }}
           />
           {viewerImage && viewerSrc && (
             <MediaViewer
               open={true}
-              onOpenChange={(open) => !open && setViewerId(null)}
+              onOpenChange={(open) => { if (!open) setViewerId(null); }}
               title={viewerImage.prompt || t("library.viewer.untitledImage")}
               meta={`Generated · ${viewerImage.width} × ${viewerImage.height}`}
               media={true}

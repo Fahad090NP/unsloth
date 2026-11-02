@@ -117,3 +117,9 @@ export function useShownHtmlView(key: string): FileViewMode | null {
     return state.fileViews[tab.id].mode;
   });
 }
+
+export { endBrowserAgentRun } from "./agent/agent-store";
+export { BrowserAgentMenuItem, BrowserAgentPill } from "./agent/lazy-composer-toggle";
+export { browserAgentToolsForTurn } from "./agent/tools";
+export { canShowFile } from "./file-kind";
+export { shownBrowserChat, useBrowserPanelAvailable } from "./panel-availability";

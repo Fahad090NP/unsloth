@@ -25,10 +25,9 @@ const RETIRED_FULL_COPIES: Record<string, string> = {
 
 function omitKeys<T extends object>(value: T, keys: readonly string[]): T {
   const copy = { ...value } as Record<string, unknown>;
-  for (const key of keys) {
-    delete copy[key];
-  }
-  return copy as T;
+  return Object.fromEntries(
+    Object.entries(copy).filter(([key]) => !keys.includes(key)),
+  ) as T;
 }
 
 // ``.../models--unsloth--flux-3-image-klein/snapshots/<sha>`` -> the repo id it is a snapshot of ("" otherwise).

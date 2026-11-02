@@ -446,12 +446,20 @@ export function TranscribeFooter({
   const [trackedWorking, setTrackedWorking] = useState(working);
   if (trackedWorking !== working) {
     setTrackedWorking(working);
-    setStartedAt(working ? Date.now() : null);
+    setStartedAt(null);
   }
   useEffect(() => {
     if (!working) return;
+    const started = Date.now();
+    const frame = requestAnimationFrame(() => {
+      setNow(started);
+      setStartedAt(started);
+    });
     const timer = window.setInterval(() => { setNow(Date.now()); }, 1000);
-    return () => { window.clearInterval(timer); };
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearInterval(timer);
+    };
   }, [working]);
   const elapsed =
     startedAt === null ? 0 : Math.max(0, Math.floor((now - startedAt) / 1000));

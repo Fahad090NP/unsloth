@@ -59,6 +59,11 @@ function sourceBusy(status: AudioSourceStatus): boolean {
   return status.phase === "uploading" || status.phase === "recording";
 }
 
+/** Read through a call, so action builders are not seen as reading refs while rendering. */
+function readRef<T>(ref: { readonly current: T }): T {
+  return ref.current;
+}
+
 export function useConvertGeneration({
   status,
   busyRef: sharedBusyRef,
@@ -100,7 +105,11 @@ export function useConvertGeneration({
     sttRepo: string | null;
   }) {
   const busyRef = sharedBusyRef;
-  const generateAbort = sharedGenerateAbort;
+  const generateAbortRef = sharedGenerateAbort;
+  const clearBusy = useCallback(() => {
+    setBusy(null);
+    busyRef.current = null;
+  }, [busyRef, setBusy]);
   const source = useAudioConvertStore((state) => state.source);
   const target = useAudioConvertStore((state) => state.target);
   const builtinVoice = useAudioConvertStore((state) => state.builtinVoice);
@@ -189,24 +198,12 @@ export function useConvertGeneration({
         .setToolValue(toolValueKey(model, "convert", panelId), value); },
     [model],
   );
-  const toolRequest = useMemo(
-    () =>
-      collectToolRequest(
-        toolPanels,
-        toolValues,
-        { text: "", referenceText: sourceText, hasReference: source !== null },
-        { ...toolContext, convertMode: mode },
-        audioOptionSpecs,
-      ),
-    [
-      toolPanels,
-      toolValues,
-      sourceText,
-      source,
-      toolContext,
-      mode,
-      audioOptionSpecs,
-    ],
+  const toolRequest = collectToolRequest(
+    toolPanels,
+    toolValues,
+    { text: "", referenceText: sourceText, hasReference: source !== null },
+    { ...toolContext, convertMode: mode },
+    audioOptionSpecs,
   );
   const style = effectiveConvertStyle(
     caps,
@@ -292,12 +289,12 @@ export function useConvertGeneration({
       label: "Add it again",
       onClick: () => {
         clear();
-        handle.current?.browse();
+        readRef(handle)?.browse();
       },
     },
   ];
   const focusAction = (label: string, handle: typeof sourceHandle) => [
-    { label, onClick: () => handle.current?.focus() },
+    { label, onClick: () => readRef(handle)?.focus() },
   ];
   const blockerActions = (
     kind: ConvertBlockerKind,
@@ -329,6 +326,9 @@ export function useConvertGeneration({
               document.getElementById(CONVERT_SOURCE_TEXT_FIELD_ID)?.focus(),
           },
         ];
+      case "mode":
+      case "panel":
+        return undefined;
       default:
         return undefined;
     }
@@ -349,8 +349,7 @@ export function useConvertGeneration({
     updateGenerationPhase("preparing");
     const finishEarly = () => {
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
     };
     const releaseInFlight = pendingTranscribeRelease.current;
     if (releaseInFlight && !(await releaseInFlight)) {
@@ -374,7 +373,7 @@ export function useConvertGeneration({
     const sourceSelection = state.source;
     const targetSelection = builtinTarget ? null : state.target;
     const controller = new AbortController();
-    generateAbort.current = controller;
+    generateAbortRef.current = controller;
     setRunningNotice(switchNotice?.during ?? null);
     updateGenerationPhase(switchNotice ? "switching" : "generating");
     const autoPitch = pitchSupport.show && pitchSupport.auto && state.pitchAuto;
@@ -469,11 +468,10 @@ export function useConvertGeneration({
         await refreshStatus();
       }
     } finally {
-      generateAbort.current = null;
+      generateAbortRef.current = null;
       setRunningNotice(null);
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       if (activeRef.current && modeRef.current === "speak")
         replayQueuedTtsPick();
     }
@@ -490,7 +488,7 @@ export function useConvertGeneration({
     setAdvancedOpen,
     toolRequest,
     builtinTarget,
-    generateAbort,
+    generateAbortRef,
     switchNotice,
     pitchSupport,
     style,
@@ -503,6 +501,7 @@ export function useConvertGeneration({
     activeRef,
     modeRef,
     replayQueuedTtsPick,
+    clearBusy,
   ]);
 
   const selectionKey = `${source?.kind ?? ""}:${source?.id ?? ""}\u0000${target?.kind ?? ""}:${target?.id ?? ""}`;

@@ -91,7 +91,7 @@ export function DeepLinkHandler({
           receivedLiveIntent = true;
         }
       });
-      if (Boolean(disposed)) {
+      if (disposed) {
         cleanup();
         return;
       }

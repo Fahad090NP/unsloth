@@ -57,15 +57,16 @@ export function EngineInstall({
   const isOwner = useIsAccountOwner();
   const useAfterInstall = useRef(false);
   // Off once an install starts, until it fails or stops: the next poll may not show it running yet.
-  const [autoConfirm, setAutoConfirm] = useState(true);
+  const [autoConfirmDismissed, setAutoConfirmDismissed] = useState(false);
+  const jobReset =
+    engine.job.state === "error" ||
+    engine.job.state === "cancelled" ||
+    engine.job.state === "waiting";
+  // A failed or cancelled job re-arms the automatic load prompt for the next attempt.
+  const autoConfirm = !autoConfirmDismissed || jobReset;
   useEffect(() => {
-    if (
-      engine.job.state === "error" ||
-      engine.job.state === "cancelled" ||
-      engine.job.state === "waiting"
-    ) {
+    if (jobReset) {
       useAfterInstall.current = false;
-      setAutoConfirm(true);
     }
     if (
       useAfterInstall.current &&
@@ -75,7 +76,7 @@ export function EngineInstall({
       useAfterInstall.current = false;
       onUse?.();
     }
-  }, [engine.installed, engine.job.state, onUse]);
+  }, [engine.installed, engine.job.state, jobReset, onUse]);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -93,7 +94,7 @@ export function EngineInstall({
     try {
       if (operation === "install") {
         useAfterInstall.current = Boolean(onUse);
-        setAutoConfirm(false);
+        setAutoConfirmDismissed(true);
       }
       if (operation === "cancel") {
         useAfterInstall.current = false;
@@ -102,7 +103,7 @@ export function EngineInstall({
       setConfirm(false);
     } catch (err) {
       useAfterInstall.current = false;
-      setAutoConfirm(true);
+      setAutoConfirmDismissed(false);
       setError(err instanceof Error ? err.message : "Engine operation failed");
     } finally {
       setBusy(false);

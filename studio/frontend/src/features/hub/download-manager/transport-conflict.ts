@@ -108,9 +108,11 @@ export type DownloadStartOutcome = "started" | "conflict" | "busy" | "error";
 
 // A start can no-op without throwing, so derive the outcome from this exact key's job state.
 function isJobActiveFor(req: DownloadRequest): boolean {
-  const job: ManagedDownload | undefined =
-    getState().jobs[jobKeyOf(req.kind, req.repoId, req.variant)];
-  if (!job || !ACTIVE_STATES.has(job.state)) return false;
+  const jobs = getState().jobs;
+  const key = jobKeyOf(req.kind, req.repoId, req.variant);
+  if (!Object.hasOwn(jobs, key)) return false;
+  const job = jobs[key];
+  if (!ACTIVE_STATES.has(job.state)) return false;
   return !scopedFileSetDiffers(job, req);
 }
 

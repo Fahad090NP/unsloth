@@ -2471,6 +2471,7 @@ const EMPTY_SOLE_QUANT_ENTRIES: ReadonlyMap<
   string,
   SoleQuantEntry<SoleDownloadedQuant>
 > = new Map();
+const EMPTY_COMPANION_BYTES: ReadonlyMap<string, number> = new Map();
 // A worker pool, not fixed batches, so one slow repo holds up only itself.
 const SOLE_QUANT_WORKERS = 6;
 
@@ -2947,12 +2948,41 @@ function GgufVariantExpander({
     }
     return Array.from(byKey.values());
   }, [displayVariants, recommendedQuantForVariant]);
-  const [companionBytesByKey, setCompanionBytesByKey] = useState<
-    Map<string, number>
-  >(() => new Map());
+  const [companionBytesState, setCompanionBytesState] = useState<{
+    key: string;
+    byKey: Map<string, number>;
+  }>(() => ({ key: "", byKey: new Map() }));
+  // Tagged with the inputs it was resolved for, so a new repo never shows the previous footprints.
+  const companionBytesKey = useMemo(
+    () =>
+      JSON.stringify([
+        repoId,
+        sourceOverride,
+        isLocalPath,
+        checkpointIsLocal,
+        variantsAreGguf,
+        footprintVariants.map((variant) => [
+          variant.dependency_key,
+          variant.quant,
+          variant.filename,
+          variant.downloaded,
+        ]),
+      ]),
+    [
+      checkpointIsLocal,
+      footprintVariants,
+      isLocalPath,
+      repoId,
+      sourceOverride,
+      variantsAreGguf,
+    ],
+  );
+  const companionBytesByKey =
+    companionBytesState.key === companionBytesKey
+      ? companionBytesState.byKey
+      : EMPTY_COMPANION_BYTES;
   useEffect(() => {
     let cancelled = false;
-    setCompanionBytesByKey(new Map());
     // A local path is resolved too: only the CHECKPOINT is on disk, and its remote base is the
     // larger half, so suppressing the request understated a local row by many gigabytes.
     if (!resolveDownloadFootprint || !variantsAreGguf) {
@@ -2983,10 +3013,12 @@ function GgufVariantExpander({
           const companion = footprint.requiredBytes - checkpoint;
           if (Number.isFinite(companion) && companion > 0) {
             // A fresh Map per resolution, since groups resolve independently and React compares by identity.
-            setCompanionBytesByKey((previous) => {
-              const next = new Map(previous);
+            setCompanionBytesState((previous) => {
+              const next = new Map(
+                previous.key === companionBytesKey ? previous.byKey : undefined,
+              );
               next.set(dependencyKey, companion);
-              return next;
+              return { key: companionBytesKey, byKey: next };
             });
           }
         })
@@ -2999,6 +3031,7 @@ function GgufVariantExpander({
     };
   }, [
     checkpointIsLocal,
+    companionBytesKey,
     footprintVariants,
     isLocalPath,
     repoId,
@@ -4701,7 +4734,6 @@ export function HubModelPicker({
       .filter((r) => !deviceFiltered || fits(r));
     return [...unslothRows, ...communityRows];
   }, [
-    rowFilter,
     budgetFraction,
     diffusionLoad,
     recommendedSearch.results,
@@ -4713,7 +4745,6 @@ export function HubModelPicker({
     isTaskRuntimeSupported,
     gpu,
     inferenceGpu,
-    isChatSupported,
     task,
     catalog,
     catalogFit,
@@ -8394,7 +8425,7 @@ export function HubModelPicker({
                   </>
                 ) : null}
 
-                {showNpuBrowse && npuCatalog ? (
+                {showNpuBrowse ? (
                   <>
                     <ListLabel
                       collapsed={npuBrowseFolded}

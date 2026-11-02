@@ -15,3 +15,4 @@ export type {
   RunExportParams,
 } from "./stores/export-runtime-store";
 export { useExportRuntimeLifecycle } from "./hooks/use-export-runtime-lifecycle";
+export { LlmCompressorConsentDialog } from "./components/llm-compressor-consent-dialog";

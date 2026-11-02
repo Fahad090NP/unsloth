@@ -27,3 +27,25 @@ export {
 } from "./components/link-staged-folders";
 export { ProjectFolderPicker } from "./components/project-folder-picker";
 export { RagDocumentTrigger } from "./components/rag-document-trigger";
+export {
+  announceProjectSourcesUpdated,
+  createLinkedFolder,
+  extractDocumentText,
+  isRagClientError,
+  listProjectDocuments,
+  listThreadDocuments,
+  noteProjectWork,
+  projectHasSources,
+  projectWorkCount,
+  watchProjectFolderJob,
+} from "./api/rag-api";
+export {
+  ProjectSourceDropzone,
+  consumeProjectSourcesPending,
+  hasProjectSourcesPending,
+  isProjectLandingMounted,
+  markProjectSourcesPending,
+  noteProjectLandingMounted,
+  uploadStagedSources,
+} from "./components/project-source-dropzone";
+export type { StagedSource } from "./components/project-source-dropzone";

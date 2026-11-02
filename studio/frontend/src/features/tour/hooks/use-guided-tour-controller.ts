@@ -68,7 +68,7 @@ export function useGuidedTourController({
     if (!autoKey || !autoWhen) return;
     if (steps.length === 0) return;
     if (localStorage.getItem(autoKey)) return;
-    queueMicrotask(() => setOpen(true));
+    queueMicrotask(() => { setOpen(true); });
   }, [autoKey, autoWhen, enabled, hasRuntime, steps.length]);
 
   useEffect(() => {

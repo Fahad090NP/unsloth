@@ -164,3 +164,4 @@ export {
   TRAINING_PARAM_MODE_STORAGE_KEY,
   TRAINING_UI_PREFERENCE_KEYS,
 } from "./lib/training-ui-preferences";
+export type { TrainingStartRequest } from "./types/api";

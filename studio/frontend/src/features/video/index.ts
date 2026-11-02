@@ -9,3 +9,5 @@ export {
   setGalleryVideoFlags,
 } from "./api";
 export { videoThumbnailQueue } from "./thumbnail-request-queue";
+export { getVideoStatus, unloadVideoModel, getVideoDownloadPlan } from "./api";
+export type { VideoStatus } from "./api";

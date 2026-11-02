@@ -531,7 +531,7 @@ function useTabDrag(listRef: RefObject<HTMLDivElement | null>, tabCount: number)
     const current = drag.current;
     const list = listRef.current;
     if (!current) return;
-    const element: HTMLElement | undefined = current.elements[current.slot];
+    const element: HTMLElement | undefined = current.elements.at(current.slot);
     if (!list || !element) return;
     const width = current.widths[current.slot] ?? 0;
     const natural = current.lefts[current.slot] ?? 0;
@@ -1132,7 +1132,7 @@ function ZoomControl({ tab }: { tab: BrowserTab | undefined }) {
           type="button"
           aria-label={t("browser.menu.zoomOut")}
           disabled={!zoomable || zoom <= (ZOOM_STEPS[0] ?? 0)}
-          onClick={() => setZoom(stepZoom(zoom, -1))}
+          onClick={() => { setZoom(stepZoom(zoom, -1)); }}
           className={step}
         >
           <HugeiconsIcon
@@ -1148,7 +1148,7 @@ function ZoomControl({ tab }: { tab: BrowserTab | undefined }) {
           type="button"
           aria-label={t("browser.menu.zoomIn")}
           disabled={!zoomable || zoom >= (ZOOM_STEPS[ZOOM_STEPS.length - 1] ?? 5)}
-          onClick={() => setZoom(stepZoom(zoom, 1))}
+          onClick={() => { setZoom(stepZoom(zoom, 1)); }}
           className={step}
         >
           <HugeiconsIcon
@@ -1162,7 +1162,7 @@ function ZoomControl({ tab }: { tab: BrowserTab | undefined }) {
         type="button"
         aria-label={t("browser.menu.zoomReset")}
         disabled={!zoomable || zoom === resetZoom}
-        onClick={() => setZoom(resetZoom)}
+        onClick={() => { setZoom(resetZoom); }}
         className={cn(step, "rounded-full")}
       >
         <HugeiconsIcon icon={UndoIcon} strokeWidth={1.75} className="size-3.5" />
@@ -1521,7 +1521,9 @@ function BrowserFileToolbar({
   const requestEdits = useBrowserStore((state) => state.requestEdits);
   const canAnnotate = useBrowserStore((state) => state.sendAnnotations !== null);
   const annotating = useBrowserStore((state) => state.annotateTabId === tab.id);
-  const storedView: FileViewState | undefined = useBrowserStore((state) => state.fileViews[tab.id]);
+  const storedView: FileViewState | undefined = useBrowserStore(
+    (state) => (state.fileViews as Record<string, FileViewState | undefined>)[tab.id],
+  );
   const view = storedView ?? DEFAULT_FILE_VIEW;
   const [copied, setCopied] = useState(false);
   const { goBack, goForward } = useBrowserStore.getState();
@@ -1770,7 +1772,9 @@ function FloatingFileToolbar({
   const requestEdits = useBrowserStore((state) => state.requestEdits);
   const canAnnotate = useBrowserStore((state) => state.sendAnnotations !== null);
   const annotating = useBrowserStore((state) => state.annotateTabId === tab.id);
-  const storedView: FileViewState | undefined = useBrowserStore((state) => state.fileViews[tab.id]);
+  const storedView: FileViewState | undefined = useBrowserStore(
+    (state) => (state.fileViews as Record<string, FileViewState | undefined>)[tab.id],
+  );
   const view = storedView ?? DEFAULT_FILE_VIEW;
   const [copied, setCopied] = useState(false);
   const download = tabDownload(tab);
@@ -2037,7 +2041,7 @@ function CopySplit({
     options.push({ label: t("browser.video.copyFrame"), icon: Copy01Icon, run: copyFrame });
   }
   if (isTauri) options.push({ label: t("browser.file.copyPath"), icon: Link01Icon, run: copyPath });
-  const first: (typeof options)[number] | undefined = options[0];
+  const first: (typeof options)[number] | undefined = options.at(0);
   const rest = options.slice(1);
   if (!first) return null;
   return (
@@ -2354,7 +2358,8 @@ export const BrowserPanel = memo(function BrowserPanel({ active = true }: { acti
   }
   const { live, pendingDrafts } = retainedTabs(mounted, tabs, activeTabId);
   const cancelEviction = () => {
-    const previous: BrowserTab | undefined = tabs.find((tab) => tab.id === selection.previous) ?? pendingDrafts[0];
+    const previous: BrowserTab | undefined =
+      tabs.find((tab) => tab.id === selection.previous) ?? pendingDrafts.at(0);
     if (previous) {
       setMounted(selection.mounted);
       useBrowserStore.getState().activateTab(previous.id);

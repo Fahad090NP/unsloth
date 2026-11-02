@@ -71,7 +71,11 @@ export function useSeparateGeneration({
   > &
   Pick<AudioModelSlot, "pendingTranscribeRelease" | "replayQueuedTtsPick">) {
   const busyRef = sharedBusyRef;
-  const generateAbort = sharedGenerateAbort;
+  const generateAbortRef = sharedGenerateAbort;
+  const clearBusy = useCallback(() => {
+    setBusy(null);
+    busyRef.current = null;
+  }, [busyRef, setBusy]);
   const source = useAudioSeparateStore((state) => state.source);
   const lastOverlapByModel = useAudioSeparateStore(
     (state) => state.lastOverlapByModel,
@@ -206,14 +210,13 @@ export function useSeparateGeneration({
     const releaseInFlight = pendingTranscribeRelease.current;
     if (releaseInFlight && !(await releaseInFlight)) {
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       setMode("transcribe");
       return;
     }
     const runModel = model;
     const controller = new AbortController();
-    generateAbort.current = controller;
+    generateAbortRef.current = controller;
     setReloading(willReload);
     setPendingRun({ title: state.source.name, model: runModel });
     updateGenerationPhase("generating");
@@ -265,12 +268,11 @@ export function useSeparateGeneration({
         await refreshStatus();
       }
     } finally {
-      generateAbort.current = null;
+      generateAbortRef.current = null;
       setReloading(false);
       setPendingRun(null);
       updateGenerationPhase(null);
-      busyRef.current = null;
-      setBusy(null);
+      clearBusy();
       if (activeRef.current && modeRef.current === "speak")
         replayQueuedTtsPick();
     }
@@ -282,7 +284,7 @@ export function useSeparateGeneration({
     pendingTranscribeRelease,
     setMode,
     model,
-    generateAbort,
+    generateAbortRef,
     willReload,
     toolRequest,
     overlapPanel,
@@ -295,6 +297,7 @@ export function useSeparateGeneration({
     activeRef,
     modeRef,
     replayQueuedTtsPick,
+    clearBusy,
   ]);
 
   const sourceKey = source ? `${source.kind}:${source.id}` : null;

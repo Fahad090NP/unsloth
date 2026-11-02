@@ -248,7 +248,7 @@ function WeekChart({
       cursor={mode === "weekly" ? undefined : false}
       content={({ active, payload }) => {
         const entries = payload as
-          | Array<{ payload?: unknown }>
+          | { payload?: unknown }[]
           | undefined;
         const point = entries?.at(0)?.payload as WeekChartPoint | undefined;
         if (!(active && point)) {

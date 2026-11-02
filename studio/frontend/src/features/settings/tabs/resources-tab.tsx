@@ -505,7 +505,7 @@ export function ResourcesTab() {
     systemInfo.status === "unavailable"
       ? t("settings.resources.gpu.unreadable")
       : t("common.loading");
-  const backendLabel = (systemInfo.device_backend ?? "cpu").toUpperCase();
+  const backendLabel = systemInfo.device_backend.toUpperCase();
   const modelsFolderPath = hfCache
     ? hfCache.cacheHome
     : hfCacheLoaded

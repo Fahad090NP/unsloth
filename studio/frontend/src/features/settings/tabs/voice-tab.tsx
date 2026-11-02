@@ -182,7 +182,7 @@ function SttModelPicker({
           const variant: (typeof listing.variants)[number] | undefined =
             listing.variants.find(
               (row) => row.quant === listing.default_variant,
-            ) ?? listing.variants[0];
+            ) ?? listing.variants.at(0);
           if (cancelled || !variant) return;
           const size = audioCppSizeLabel(
             variant.download_size_bytes ?? variant.size_bytes,
@@ -391,13 +391,18 @@ function SttModelPicker({
   );
 }
 
+// Older WebViews omit these APIs although the DOM types declare them present.
+function maybeMissing<T>(value: T): T | undefined {
+  return value;
+}
+
 function useAudioInputDevices() {
   const t = useT();
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [hasLabels, setHasLabels] = useState(false);
 
   const refresh = useCallback(async () => {
-    const mediaDevices: MediaDevices | undefined = navigator.mediaDevices;
+    const mediaDevices = maybeMissing(navigator.mediaDevices);
     if (!mediaDevices?.enumerateDevices) return;
     try {
       const all = await mediaDevices.enumerateDevices();
@@ -410,7 +415,7 @@ function useAudioInputDevices() {
   }, []);
 
   useEffect(() => {
-    const media: MediaDevices | undefined = navigator.mediaDevices;
+    const media = maybeMissing(navigator.mediaDevices);
     if (!media?.addEventListener) {
       return;
     }
@@ -441,7 +446,7 @@ function useAudioInputDevices() {
   // Labels are hidden until mic permission; a short stream unlocks them.
   const requestAccess = useCallback(async () => {
     // Insecure contexts (plain http on a LAN address) have no mediaDevices.
-    const mediaDevices: MediaDevices | undefined = navigator.mediaDevices;
+    const mediaDevices = maybeMissing(navigator.mediaDevices);
     if (!mediaDevices?.getUserMedia) {
       toast.error(t("settings.voice.dictation.micAccessUnsupported"));
       return;
@@ -476,7 +481,7 @@ function useSystemVoices() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const synth: SpeechSynthesis | undefined = window.speechSynthesis;
+    const synth = maybeMissing(window.speechSynthesis);
     if (!synth) return;
     const load = () => { setVoices(synth.getVoices()); };
     load();

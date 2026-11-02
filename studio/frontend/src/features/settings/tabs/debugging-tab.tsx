@@ -386,11 +386,10 @@ export function DebuggingTab() {
   useEffect(() => {
     const controller = new AbortController();
     let timer: number | undefined;
-    let stopped: boolean = false;
 
     // Self-scheduling so a slow link builds no backlog.
     const tick = async () => {
-      if (stopped) return;
+      if (controller.signal.aborted) return;
       if (
         typeof document === "undefined" ||
         document.visibilityState !== "hidden"
@@ -398,14 +397,13 @@ export function DebuggingTab() {
         await rescanSourcesIfStale(controller.signal);
         await poll(controller.signal);
       }
-      if (stopped) return;
+      if (controller.signal.aborted) return;
       const delay = pollDelayMs(mode);
       if (delay !== null) timer = window.setTimeout(() => { tick().catch(() => undefined); }, delay);
     };
 
     (tick()).catch(() => { /* noop */ });
     return () => {
-      stopped = true;
       controller.abort();
       if (timer !== undefined) window.clearTimeout(timer);
     };

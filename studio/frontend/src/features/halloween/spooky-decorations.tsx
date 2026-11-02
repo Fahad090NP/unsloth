@@ -30,6 +30,16 @@ const BATS_MS = 9000;
 
 const between = (min: number, max: number) => min + Math.random() * (max - min);
 
+// Seeded LCG. Kept at module scope so each web layout gets its own generator
+// instead of mutating a variable captured from the render.
+function seededRandom(initialSeed: number): () => number {
+  let seed = initialSeed;
+  return () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 2 ** 32;
+  };
+}
+
 const px = (n: number) => `calc(${n}px*var(--ui-space-scale,1))`;
 
 function Web({ web }: { web: SpiderWeb }) {
@@ -104,17 +114,13 @@ export function SpookyDecorations() {
     for (const character of href) {
       seed = (seed * 31 + character.charCodeAt(0)) >>> 0;
     }
-    const rand = () => {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      return seed / 2 ** 32;
-    };
-    return rollSpiderWebs(rand);
+    return rollSpiderWebs(seededRandom(seed));
   }, [href]);
   const nextId = useRef(0);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: each page rolls its own visitors.
   useEffect(() => {
-    queueMicrotask(() => setVisitors([]));
+    queueMicrotask(() => { setVisitors([]); });
     if (!on) {
       return;
     }

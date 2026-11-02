@@ -406,8 +406,7 @@ export function useRagDocuments(
       } else {
         // Left set, the composer reads the list as unknown and holds every send.
         refreshInFlight.current = false;
-         
-        setLoading(false);
+        queueMicrotask(() => { setLoading(false); });
       }
     } else if (prev === null && scope && !uploadInFlightRef.current) {
       (scope.type === "project"

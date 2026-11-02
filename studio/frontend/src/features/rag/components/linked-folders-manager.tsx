@@ -47,6 +47,15 @@ function percent(progress?: number | null): number | null {
   return Math.max(0, Math.min(100, progress <= 1 ? progress * 100 : progress));
 }
 
+// A Record lookup is only defined for keys that exist, so read it through a
+// helper whose return type says so.
+function jobFor(
+  jobs: Record<string, FolderSyncJob>,
+  folderId: string,
+): FolderSyncJob | undefined {
+  return jobs[folderId];
+}
+
 function jobSummary(job: FolderSyncJob): string {
   if (job.status === "failed") return job.error ?? "Sync failed";
   if (job.status === "completed") {
@@ -147,7 +156,7 @@ export function LinkedFoldersManager({
   } | null>(null);
 
   function runningJob(folderId: string): FolderSyncJob | undefined {
-    const job: FolderSyncJob | undefined = manager.jobs[folderId];
+    const job = jobFor(manager.jobs, folderId);
     return job?.status === "pending" || job?.status === "running"
       ? job
       : undefined;
@@ -257,11 +266,11 @@ export function LinkedFoldersManager({
             </div>
           ) : (
             manager.folders.map((folder) => {
-              const job: FolderSyncJob | undefined = manager.jobs[folder.id];
+              const job = jobFor(manager.jobs, folder.id);
               const running = runningJob(folder.id) !== undefined;
               const failed =
                 folder.status === "error" || job?.status === "failed";
-              const detail = running
+              const detail = running && job
                 ? jobSummary(job)
                 : failed
                   ? (job?.status === "failed" ? job.error : folder.error) ||
@@ -410,7 +419,7 @@ export function LinkedFoldersManager({
       ) : (
         <ul className="flex flex-col gap-1.5">
           {manager.folders.map((folder) => {
-            const job: FolderSyncJob | undefined = manager.jobs[folder.id];
+            const job = jobFor(manager.jobs, folder.id);
             const running =
               job?.status === "pending" || job?.status === "running";
             const progress = percent(job?.progress);

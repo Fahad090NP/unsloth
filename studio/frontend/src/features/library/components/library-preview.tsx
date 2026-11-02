@@ -489,7 +489,6 @@ function PreviewBody({
         </Zoomed>
       );
     case "none":
-    default:
       return noPreview(t("library.preview.noPreview"));
   }
 }

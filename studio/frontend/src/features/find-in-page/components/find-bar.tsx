@@ -55,7 +55,7 @@ function useSettledQuery(query: string): [string, () => void] {
   const [settled, setSettled] = useState(query);
   useEffect(() => {
     if (query.length === 0) {
-      queueMicrotask(() => setSettled(""));
+      queueMicrotask(() => { setSettled(""); });
       return;
     }
     const timer = setTimeout(() => { setSettled(query); }, FIND_QUERY_SETTLE_MS);
@@ -116,7 +116,7 @@ export default function FindBar({
 
   useEffect(() => {
     if (!queryPending) {
-      queueMicrotask(() => setCompletedQuery(settledQuery));
+      queueMicrotask(() => { setCompletedQuery(settledQuery); });
     }
   }, [queryPending, settledQuery]);
   const inputRef = useRef<HTMLInputElement>(null);

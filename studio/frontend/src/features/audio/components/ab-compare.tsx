@@ -120,7 +120,7 @@ export function ABCompare({
   // A new pair resets the player; the Original's object URL arriving late does not.
   const originalKey = original.fileUrl ?? original.src;
   const editedKey = edited.fileUrl ?? edited.src;
-  const pairKey = `${originalKey}\u0000${editedKey}`;
+  const pairKey = `${originalKey ?? ""}\u0000${editedKey ?? ""}`;
   const [trackedPairKey, setTrackedPairKey] = useState(pairKey);
   if (trackedPairKey !== pairKey) {
     setTrackedPairKey(pairKey);

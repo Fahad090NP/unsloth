@@ -357,7 +357,7 @@ export function useDatasetUploads() {
 
         const revisionBeforeRead = scaleFactorRevision;
         const currentScaleFactor = await currentWindow.scaleFactor();
-        if (Boolean(disposed)) {
+        if (disposed) {
           return;
         }
         if (scaleFactorRevision === revisionBeforeRead) {
@@ -399,7 +399,7 @@ export function useDatasetUploads() {
             handleNativeDrop(event.payload.paths);
           }
         });
-        if (Boolean(disposed)) {
+        if (disposed) {
           stopDragDrop();
         } else {
           unlistenDragDrop = stopDragDrop;

@@ -275,7 +275,7 @@ export function ScheduledTaskRunNotifier() {
           if (shouldSaveSeen(stored, claim.record, claim.mine.length)) saveSeen(owner, claim.record);
           return claim.mine;
         });
-        if (Boolean(state.disposed)) return;
+        if (state.disposed) return;
         if (mine === null) {
           state.recheckAfterPoll = true;
           return;

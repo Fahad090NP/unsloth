@@ -86,8 +86,10 @@ export const NumericValueInput = forwardRef<
     lastBlurCommittedRef.current = null;
   });
 
-  const isEdit = (final: number) =>
-    final !== value || displayValue != null || derived;
+  const isEdit = useCallback(
+    (final: number) => final !== value || displayValue != null || derived,
+    [value, displayValue, derived],
+  );
 
   const commitDraft = useCallback(
     (raw: string): number | null => {
@@ -106,7 +108,7 @@ export const NumericValueInput = forwardRef<
       }
       return final;
     },
-    [derived, displayValue, isEdit, max, min, onChange, step, value],
+    [isEdit, max, min, onChange, step, value],
   );
 
   useImperativeHandle(

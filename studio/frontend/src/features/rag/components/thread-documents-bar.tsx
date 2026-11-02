@@ -1007,7 +1007,7 @@ export function ThreadDocumentsBar({
     if (!hadThreadId) {
       useChatRuntimeStore.getState().adoptPendingProjectAttachmentTarget(threadId);
     }
-    queueMicrotask(() => setMaterializedId(null));
+    queueMicrotask(() => { setMaterializedId(null); });
     initGenerationRef.current += 1;
     initPromiseRef.current = null;
   }, [threadId]);

@@ -59,7 +59,7 @@ export function useOffloadState(enabled: boolean, intervalMs = 2000): OffloadSta
         const res = await authFetch("/api/train/offload");
         if (!res.ok || cancelled) return;
         const json = (await res.json()) as OffloadState;
-        if (!Boolean(cancelled)) setData(json);
+        if (!cancelled) setData(json);
       } catch {
         // Retry on the next poll.
       }

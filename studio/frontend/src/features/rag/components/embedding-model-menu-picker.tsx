@@ -56,7 +56,9 @@ export function EmbeddingModelMenuChip({ onOpen }: { onOpen: () => void }) {
   const settings = useEmbeddingModelStore((s) => s.settings);
 
   useEffect(() => {
-    void useEmbeddingModelStore.getState().load();
+    useEmbeddingModelStore.getState().load().catch((cause: unknown) => {
+      console.error("Embedding model load failed:", cause);
+    });
   }, []);
 
   if (!settings) return null;
@@ -109,7 +111,9 @@ export function EmbeddingModelMenuList({ onBack }: { onBack: () => void }) {
 
   // Fresh residency, so Eject reflects a model indexing just loaded.
   useEffect(() => {
-    void useEmbeddingModelStore.getState().load();
+    useEmbeddingModelStore.getState().load().catch((cause: unknown) => {
+      console.error("Embedding model load failed:", cause);
+    });
   }, []);
 
   if (!settings) return null;
@@ -150,7 +154,11 @@ export function EmbeddingModelMenuList({ onBack }: { onBack: () => void }) {
           },
         });
       } else if (result.status === "saved") {
-        void toastEmbeddingModelSaved(t("settings.general.rag.switched", { model: name }));
+        toastEmbeddingModelSaved(t("settings.general.rag.switched", { model: name })).catch(
+          (cause: unknown) => {
+            console.error("Embedding model saved toast failed:", cause);
+          }
+        );
       }
       if (mountedRef.current) onBack();
     } finally {
@@ -244,7 +252,9 @@ export function EmbeddingModelMenuList({ onBack }: { onBack: () => void }) {
                 onSelect={(event) => {
                   // Stay open while it switches; the list goes back once it lands.
                   event.preventDefault();
-                  void pick(model);
+                  pick(model).catch((cause: unknown) => {
+                    console.error("Embedding model switch failed:", cause);
+                  });
                 }}
                 className={cn("items-start gap-2 py-2", model === current && "font-medium")}
               >
@@ -324,7 +334,11 @@ export function EmbeddingModelMenuList({ onBack }: { onBack: () => void }) {
             onSelect={(event) => {
               // Stay open; the row goes away once the model is out.
               event.preventDefault();
-              void eject((event.currentTarget as HTMLElement).closest('[role="menu"]'));
+              eject((event.currentTarget as HTMLElement).closest('[role="menu"]')).catch(
+                (cause: unknown) => {
+                  console.error("Embedding model eject failed:", cause);
+                }
+              );
             }}
           >
             {ejecting ? (

@@ -53,7 +53,8 @@ function setGain(voice: StemVoice, value: number, context: AudioContext) {
 }
 
 function seekElement(element: HTMLAudioElement, seconds: number): void {
-  element.currentTime = seconds;
+  const media = element;
+  media.currentTime = seconds;
 }
 
 /** Media elements through gain nodes, not decoded buffers, so memory stays near the blob size. */
@@ -225,7 +226,7 @@ export function useStemTransport({
 
   const pause = useCallback(() => {
     if (!playingRef.current) return;
-    const lead: StemVoice | undefined = voicesRef.current[0];
+    const lead: StemVoice | undefined = voicesRef.current.at(0);
     const current = lead?.element.currentTime;
     stopAll();
     if (current !== undefined && Number.isFinite(current))
@@ -256,7 +257,7 @@ export function useStemTransport({
     if (!playing) return;
     const timer = window.setInterval(() => {
       const voices = voicesRef.current;
-      const firstVoice: StemVoice | undefined = voices[0];
+      const firstVoice: StemVoice | undefined = voices.at(0);
       const lead = firstVoice?.element;
       if (!lead || lead.paused || lead.seeking) return;
       const now = lead.currentTime;

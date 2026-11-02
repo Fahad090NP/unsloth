@@ -116,7 +116,9 @@ export function AudioOptionFields({
           );
         }
         const numeric = spec.type === "int" || spec.type === "float";
-        const rawValue: AudioOptionValue | undefined = values[spec.name];
+        const rawValue = (values as Record<string, AudioOptionValue | undefined>)[
+          spec.name
+        ];
         return (
           <div key={spec.name} className="grid gap-1.5">
             <FieldLabel className="text-ui-13 font-medium text-foreground" htmlFor={id}>

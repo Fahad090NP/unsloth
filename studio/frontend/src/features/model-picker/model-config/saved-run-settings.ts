@@ -126,16 +126,17 @@ function decode(entries: unknown): SavedRunSettings[] {
     return [];
   }
   const out: SavedRunSettings[] = [];
-  for (const entry of entries as StoredEntry[]) {
-    const record: StoredEntry | null | undefined = entry;
+  for (const value of entries as unknown[]) {
+    if (!value || typeof value !== "object") continue;
+    const entry = value as { name?: unknown; savedAt?: number; config: unknown };
     const name =
-      record && typeof record.name === "string"
-        ? normalizeSavedRunSettingsName(record.name)
+      typeof entry.name === "string"
+        ? normalizeSavedRunSettingsName(entry.name)
         : "";
     // Future-schema records stay stored but are not offered.
     const config = name ? fromStoredPerModelConfig(entry.config) : null;
     if (config) {
-      out.push({ name, savedAt: (entry.savedAt) || 0, config });
+      out.push({ name, savedAt: entry.savedAt || 0, config });
     }
   }
   return out.sort((a, b) => a.name.localeCompare(b.name));
@@ -418,13 +419,19 @@ export function getRunSettingsLoadedOnce(
   modelId: string,
   ggufVariant: string | null | undefined,
 ): { name: string | null; sent: PerModelConfig } | null {
-  const entry: { name: unknown; sent: unknown } | undefined =
-    readJson<LoadedOnceMap>(LOADED_ONCE_RUN_SETTINGS_STORAGE_KEY)[
-      selectionKey(modelId, ggufVariant)
-    ];
-  const sent = entry ? fromStoredPerModelConfig(entry.sent) : null;
+  const map = readJson<LoadedOnceMap>(LOADED_ONCE_RUN_SETTINGS_STORAGE_KEY);
+  const key = selectionKey(modelId, ggufVariant);
+  const entry: { name: unknown; sent: unknown } | undefined = Object.hasOwn(
+    map,
+    key,
+  )
+    ? map[key]
+    : undefined;
+  if (!entry) {
+    return null;
+  }
+  const sent = fromStoredPerModelConfig(entry.sent);
   if (
-    !entry ||
     !sent ||
     (entry.name !== null && typeof entry.name !== "string")
   ) {

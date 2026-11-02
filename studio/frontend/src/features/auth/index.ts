@@ -40,3 +40,6 @@ export {
   useIsAccountOwner,
   useLoginMode,
 } from "./account-session";
+export { isTauriLoginRequired } from "./tauri-auto-auth";
+export { setLoginMode } from "./login-client";
+export { useFullAccessAllowed } from "./account-session";

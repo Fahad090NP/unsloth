@@ -525,7 +525,7 @@ async function confirmSelectedModelRemoteCode(
       });
     },
   });
-  if (!Boolean(approvalApplied) || attempt.abortIfInputsChanged()) {
+  if (!approvalApplied || attempt.abortIfInputsChanged()) {
     return false;
   }
   return approved || attempt.cancel();

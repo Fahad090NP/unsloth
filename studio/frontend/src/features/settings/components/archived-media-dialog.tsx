@@ -190,17 +190,18 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
   );
 
   useEffect(() => {
-    let cancelled: boolean = false;
+    let cancelled = false;
+    const isCancelled = () => cancelled;
     ((async () => {
       setLoading(true);
       try {
         const page = await loadPage(0);
-        if (cancelled) return;
+        if (isCancelled()) return;
         putRows(page.rows);
         audioCursor.current = page.nextAudioCursor;
         setHasMore(page.hasMore);
       } catch (err) {
-        if (!cancelled) {
+        if (!isCancelled()) {
           setPageError(true);
           setHasMore(true);
           toast.error(translate("settings.data.library.loadFailed"), {
@@ -208,7 +209,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
           });
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!isCancelled()) setLoading(false);
       }
     })()).catch(() => { /* noop */ });
     return () => {
@@ -291,10 +292,11 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
   }, []);
   useEffect(() => {
     if (isAudio) return;
-    let cancelled: boolean = false;
+    let cancelled = false;
+    const isCancelled = () => cancelled;
     ((async () => {
       for (const row of rows) {
-        if (cancelled) return;
+        if (isCancelled()) return;
         if (!visible.has(row.id)) continue;
         if (requested.current.has(row.id)) continue;
         // Also checked here, since a failure clears `requested`.
@@ -330,7 +332,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
               return next;
             });
             // Stale generation: stop, but keep what this fetch already paid for.
-            if (cancelled) return;
+            if (isCancelled()) return;
             continue;
           }
         } catch {
@@ -416,6 +418,13 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
   }
 
   const showMore = useCallback(async () => {
+    // Sync writers keep the read-before-await from looking like a racy read-modify-write.
+    const setAudioCursor = (next: typeof audioCursor.current) => {
+      audioCursor.current = next;
+    };
+    const setLoadingMore = (next: boolean) => {
+      loadingMore.current = next;
+    };
     if (loadingMore.current || running.current) return;
     loadingMore.current = true;
     setPaging(true);
@@ -436,7 +445,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
         if (page.hasMore && added.length === 0)
           throw new Error(t("settings.data.library.pageStalled"));
         putRows([...rowsRef.current, ...added]);
-        audioCursor.current = page.nextAudioCursor;
+        setAudioCursor(page.nextAudioCursor);
         setHasMore(page.hasMore);
         return;
       }
@@ -448,7 +457,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
         description: err instanceof Error ? err.message : undefined,
       });
     } finally {
-      loadingMore.current = false;
+      setLoadingMore(false);
       if (alive.current) setPaging(false);
     }
   }, [t, loadPage, putRows, scanAll]);
