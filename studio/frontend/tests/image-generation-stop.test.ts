@@ -67,7 +67,6 @@ test("a real failure is still reported", () => {
 
 test("a Stop the backend did not act on does not explain away a real failure", () => {
   // stopRequested is only passed once the backend answered {cancelled: true}.
-  const stopRequested = true;
   for (const cancelAcked of [false]) {
     assert.equal(
       shouldReportGenerateError({

@@ -73,7 +73,7 @@ test("a refresh that falls behind the stream is tokenized in slices and still se
     });
     assert.deepEqual(settled.tokens, expected);
   } finally {
-    performance.now = realNow;
+    Reflect.set(performance, "now", realNow);
   }
 
   assert.ok(deliveries.length > 2, `the refresh ran as ${deliveries.length} slice(s), not several`);

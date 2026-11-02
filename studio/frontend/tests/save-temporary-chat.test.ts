@@ -6,6 +6,7 @@
 import assert from "node:assert/strict";
 import { stripTypeScriptTypes } from "node:module";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 import { readSrc } from "./helpers/kit.ts";
 import { orderParentsFirst } from "../src/features/chat/utils/message-order.ts";
@@ -17,10 +18,10 @@ const page = readSrc("features/chat/chat-page.tsx");
 
 interface Item { parentId: string | null; message: { id: string } }
 // parentsFirst delegates to dependency-free orderParentsFirst so the isolated scope can use it directly.
-const parentsFirst = new Function(
-  "orderParentsFirst",
-  `${stripTypeScriptTypes(provider.slice(provider.indexOf("function parentsFirst("), provider.indexOf("/** Save a temporary chat to history")))}\nreturn parentsFirst;`,
-)(orderParentsFirst) as (items: Item[]) => Item[];
+const parentsFirst = runInNewContext(
+  `${stripTypeScriptTypes(provider.slice(provider.indexOf("function parentsFirst("), provider.indexOf("/** Save a temporary chat to history")))}\nparentsFirst;`,
+  { orderParentsFirst },
+) as (items: Item[]) => Item[];
 
 const item = (id: string, parentId: string | null = null): Item => ({ parentId, message: { id } });
 const ids = (items: Item[]) => items.map((i) => i.message.id);

@@ -334,7 +334,7 @@ test("a rejected token is refreshed once and the export retried", async () => {
     invoke: async () => {
       await Promise.resolve();
       attempts += 1;
-      if (attempts === 1) throw "Download failed with status 401.";
+      if (attempts === 1) throw new Error("Download failed with status 401.");
       return SAVED_PATH;
     },
   });
@@ -353,7 +353,7 @@ test("a 401 that cannot be refreshed is reported, not retried", async () => {
     invoke: async () => {
       await Promise.resolve();
       attempts += 1;
-      throw "Download failed with status 401.";
+      throw new Error("Download failed with status 401.");
     },
     refreshFails: true,
   });
@@ -370,7 +370,7 @@ test("a failure that is not a 401 never reaches for the refresh token", async ()
     isTauri: true,
     invoke: async () => {
       await Promise.resolve();
-      throw "Download failed with status 500.";
+      throw new Error("Download failed with status 500.");
     },
   });
 
@@ -444,7 +444,7 @@ test("the desktop stream failure carries the HTTP status back out of Rust", asyn
     isTauri: true,
     invoke: async () => {
       await Promise.resolve();
-      throw "Download failed with status 404.";
+      throw new Error("Download failed with status 404.");
     },
   });
 

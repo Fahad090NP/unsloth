@@ -22,7 +22,7 @@ interface Posted { result: { ok: boolean; url?: string; error?: string } }
 async function navigate(id: string, url: string) {
   const posted: Posted[] = [];
   globals.__authFetch = (_url: string, init: { body: string }) => {
-    posted.push(JSON.parse(init.body));
+    posted.push(JSON.parse(init.body) as Posted);
     return new Response(null, { status: 200 });
   };
   globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
@@ -80,7 +80,7 @@ test("the agent opens a local address only once the user has typed it in the add
   assert.notEqual(useBrowserStore.getState().activeTabId, userTab);
   useBrowserStore.getState().closeTab(userTab);
   assert.equal((await navigate("closed-local", "http://localhost:7860/")).ok, false);
-  globals.__granted = undefined;
+  Reflect.set(globals, "__granted", undefined);
 });
 
 test("a run keeps its own granted tab when another tab of the chat has the same local origin", async () => {
@@ -98,5 +98,5 @@ test("a run keeps its own granted tab when another tab of the chat has the same 
   assert.equal(entry.kind === "web" ? entry.url : undefined, "http://localhost:7870/b");
   store.closeTab(first);
   store.closeTab(second);
-  globals.__granted = undefined;
+  Reflect.set(globals, "__granted", undefined);
 });

@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 
@@ -65,10 +66,10 @@ function pendingRun(hasReservation = true) {
       cancels += 1;
     },
   };
-  const compile = new Function(
-    ...Object.keys(deps),
+  const compile = compileFunction(
     `${js}; return createPersistedRunAdapter;`,
-  ) as (...args: unknown[]) => (
+    Object.keys(deps),
+  ) as unknown as (...args: unknown[]) => (
     runner: unknown,
   ) => {
     run: (options: {

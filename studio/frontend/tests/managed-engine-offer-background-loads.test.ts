@@ -5,6 +5,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import { readSrc } from "./helpers/kit.ts";
 import { DEFAULT_ENGINE_LAUNCH_FIELDS } from "../src/features/chat/lib/engine-launch-fields.ts";
 
@@ -23,14 +24,13 @@ const decisionEnd = adapter.indexOf("return true;\n  }", decisionStart);
 assert.ok(
   guardStart >= 0 && decisionStart > guardStart && decisionEnd > decisionStart,
 );
-const autoLoadDecision = new Function(
-  "validation",
-  "state",
+const autoLoadDecision = compileFunction(
   `let { blockedByTrustRemoteCode, hadNonTrustFailure, validateFailures } = state;
    const out = (ok) => ({ ok, blockedByTrustRemoteCode, hadNonTrustFailure, validateFailures });
    ${adapter.slice(decisionStart, decisionEnd).replaceAll("return false;", "return out(false);")}
    return out(true);`,
-) as (
+  ["validation", "state"],
+) as unknown as (
   validation: Record<string, unknown>,
   state: Record<string, unknown>,
 ) => { ok: boolean; hadNonTrustFailure: boolean; validateFailures: number };

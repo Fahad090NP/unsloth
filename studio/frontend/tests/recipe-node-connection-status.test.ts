@@ -36,7 +36,7 @@ function scanEdges(
   if (config.kind === "llm" && !isDisconnected) {
     const hasDataEdge = nodeEdges.some((e) => {
       const otherId = e.source === nodeId ? e.target : e.source;
-      const otherConfig = configs[otherId];
+      const otherConfig = configs[otherId] as Config | undefined;
       return otherConfig && !INFRA_NODE_KINDS.has(otherConfig.kind);
     });
     missingDataInput = !hasDataEdge;

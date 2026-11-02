@@ -212,7 +212,7 @@ test("Mac sibling resolution returns an exact managed-download file", () => {
     "Q4_K_M",
   );
   assert.equal(remote?.filename, "model-q4.gguf");
-  assert.equal(remote && expectedGgufDownloadBytes(remote), 3_500);
+  assert.equal(expectedGgufDownloadBytes(remote), 3_500);
 });
 
 test("only the generation's persisted gallery id is selected", () => {

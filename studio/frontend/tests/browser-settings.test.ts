@@ -149,15 +149,18 @@ test("a download begun beside a temporary chat stays unlisted when it is saved a
     await Promise.resolve();
     return {
       name: suggestedName,
-      createWritable: async () => ({
-        write: async (data: Blob) => {
-          await Promise.resolve();
-          return void written.push(data);
-        },
-        close: async () => {
-          await Promise.resolve();
-        },
-      }),
+      createWritable: async () => {
+        await Promise.resolve();
+        return {
+          write: async (data: Blob) => {
+            await Promise.resolve();
+            return void written.push(data);
+          },
+          close: async () => {
+            await Promise.resolve();
+          },
+        };
+      },
     };
   };
   Object.defineProperty(globalThis, "navigator", { value: { userActivation: { isActive: false } }, configurable: true });
@@ -225,15 +228,18 @@ test("Save link as from a temporary chat stays unlisted when its fetch lands aft
     await Promise.resolve();
     return {
       name: suggestedName,
-      createWritable: async () => ({
-        write: async (data: Blob) => {
-          await Promise.resolve();
-          return void written.push(data);
-        },
-        close: async () => {
-          await Promise.resolve();
-        },
-      }),
+      createWritable: async () => {
+        await Promise.resolve();
+        return {
+          write: async (data: Blob) => {
+            await Promise.resolve();
+            return void written.push(data);
+          },
+          close: async () => {
+            await Promise.resolve();
+          },
+        };
+      },
     };
   };
   g.__authFetch = () =>
@@ -770,7 +776,7 @@ test("a file a page sent without a click waits for Save, then asks for its page 
   answerDownload(queue[0], false, false);
   toastAction(g.__toasts, 1)();
   await new Promise((resolve) => setTimeout(resolve, 0));
-  const lastToast = g.__toasts?.at(-1);
+  const lastToast = g.__toasts.at(-1);
   assert.ok(lastToast);
   assert.equal(lastToast.message, "browser.downloadPrompt.blocked");
   assert.equal(useApprovalStore.getState().queue.length, 0);
@@ -782,7 +788,7 @@ test("a file a page sent without a click waits for Save, then asks for its page 
   toastAction(g.__toasts, -1)();
   await new Promise((resolve) => setTimeout(resolve, 0));
   const program = useApprovalStore.getState().queue[0];
-  assert.deepEqual([program?.name, program?.dangerous], ["update.exe", true]);
+  assert.deepEqual([program.name, program.dangerous], ["update.exe", true]);
   answerDownload(program, false, false);
 });
 
@@ -794,7 +800,7 @@ test("a download link's file is fetched through the panel, named by the server, 
   let served: Record<string, string> = {};
   g.__authFetch = async (_path: string, init: { body: string }) => {
     await Promise.resolve();
-    fetched.push(JSON.parse(init.body).url);
+    fetched.push((JSON.parse(init.body) as { url: string }).url);
     return new Response("a,b", { headers: { "X-Unsloth-Browser-Kind": "raw", "Content-Type": "text/plain", ...served } });
   };
   const asked = async () => {
@@ -863,9 +869,9 @@ test("a program sent with no extension asks under the name it saves as, whatever
   const save = async (name: string, contentType: string) => {
     const saving = saveBrowserDownload({ blob: new Blob(["MZ"], { type: contentType }), name, contentType, url: `https://a.example/${name}` });
     const asked = await nextAsked();
-    if (asked) answerDownload(asked, false, false);
+    answerDownload(asked, false, false);
     await saving;
-    return asked && [asked.name, asked.dangerous];
+    return [asked.name, asked.dangerous];
   };
   const prefs = useBrowserPrefsStore.getState();
   const g = globalThis as { showSaveFilePicker?: unknown; __authFetch?: unknown };
@@ -893,7 +899,7 @@ test("a program sent with no extension asks under the name it saves as, whatever
       }); };
     const linked = saveLinkAs("https://a.example/download");
     const asked = await nextAsked();
-    assert.deepEqual(asked && [asked.name, asked.dangerous], ["setup.exe", true]);
+    assert.deepEqual([asked.name, asked.dangerous], ["setup.exe", true]);
     answerDownload(asked, false, false);
     await linked;
   } finally {
@@ -928,7 +934,7 @@ test("an ordinary file sent without an extension gets its type's on the web, wha
     const saving = saveBrowserDownload({ blob: new Blob(["x"]), name, contentType, url: `https://a.example/${name}` });
     for (let i = 0; i < 50 && useApprovalStore.getState().queue.length === 0; i++) await new Promise((resolve) => setTimeout(resolve, 10));
     const [asked] = useApprovalStore.getState().queue;
-    assert.deepEqual([asked?.name, asked?.dangerous], [saved, false]);
+    assert.deepEqual([asked.name, asked.dangerous], [saved, false]);
     answerDownload(asked, false, false);
     await saving;
   }
@@ -941,16 +947,16 @@ test("browser saves keep the approved name without MIME inference, including age
   const prefs = useBrowserPrefsStore.getState();
   const previous = { ...prefs };
   const oldDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
-  const oldTimer = window.setTimeout;
-  const create = URL.createObjectURL;
-  const revoke = URL.revokeObjectURL;
+  const oldTimer = window.setTimeout.bind(window);
+  const create = URL.createObjectURL.bind(URL);
+  const revoke = URL.revokeObjectURL.bind(URL);
   let transport: Blob | undefined;
   const saved: { name: string; blob: Blob }[] = [];
   Object.assign(globalThis, {
     document: {
       body: { appendChild() { /* empty */ } },
       createElement: () => {
-        const anchor = { href: "", download: "", click: () => saved.push({ name: anchor.download, blob: transport! }), remove() { /* empty */ } };
+        const anchor = { href: "", download: "", click: () => saved.push({ name: anchor.download, blob: transport as Blob }), remove() { /* empty */ } };
         return anchor;
       },
     },
@@ -990,7 +996,7 @@ test("browser saves keep the approved name without MIME inference, including age
         const saving = saveBrowserDownload({ blob, name, contentType, url: "https://a.example/download", temporary: false, agentRule: mode === "agent" ? "allow" : null });
         const asked = useApprovalStore.getState().queue[0];
         assert.equal(Boolean(asked), dangerous, `${mode}: ${name} (${contentType})`);
-        if (asked) {
+        {
           assert.deepEqual([asked.name, asked.dangerous], [expected, true]);
           assert.equal(saved.length, count);
           answerDownload(asked, true, false);
@@ -1052,8 +1058,8 @@ test("Save link as asks again when the file it named by the address turns out to
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
     const asked = useApprovalStore.getState().queue[0];
-    assert.equal(asked?.name, "setup.exe");
-    assert.equal(asked?.dangerous, true);
+    assert.equal(asked.name, "setup.exe");
+    assert.equal(asked.dangerous, true);
     answerDownload(asked, false, false);
     await saving;
     assert.equal(useApprovalStore.getState().queue.length, 0);

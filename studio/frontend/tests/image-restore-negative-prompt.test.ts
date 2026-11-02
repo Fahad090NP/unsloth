@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 import { enhanceRestoreFor } from "../src/features/images/lib/prompt-enhance.ts";
@@ -72,9 +73,9 @@ function restoreSettingsWith(negativeCapable: boolean) {
             state[key as string] = args.length > 1 ? args : args[0];
           },
   });
-  const compile = new Function("scope", `with (scope) { ${outputText} }`) as (
-    scope: unknown,
-  ) => RestoreSettings;
+  const compile = compileFunction(`with (scope) { ${outputText} }`, [
+    "scope",
+  ]) as unknown as (scope: unknown) => RestoreSettings;
   const restore = compile(scope);
   return { restore, state };
 }

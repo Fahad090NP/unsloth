@@ -3,9 +3,19 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 import { classifyUnslothSupport } from "../src/features/hub/lib/unsloth-support.ts";
+import type { HfModelResult } from "../src/features/hub/hooks/use-hub-model-search.ts";
 import { ggufRepoParams } from "../src/lib/model-size.ts";
+
+type MapModel = (
+  excludeGguf: boolean,
+  keepUnsupportedTags: boolean,
+  idSuffix: string,
+  deviceType: string | null,
+  hideEmptyUploads?: boolean,
+) => (raw: unknown) => HfModelResult | null;
 
 // Execute the production mapper without loading React, the Hub client or the network hooks.
 const source = readFileSync(
@@ -15,18 +25,21 @@ const source = readFileSync(
 const start = source.indexOf("function makeMapModel(");
 assert.notEqual(start, -1);
 const end = source.indexOf("\n}\n", start) + 2;
-const makeMapModel = new Function(
-  "classifyUnslothSupport", "EMBEDDING_TAGS", "isGgufLike", "estimateSizeFromDtypes", "detectBaseModel", "ggufRepoParams",
-  ts.transpileModule(source.slice(start, end), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText +
-    "; return makeMapModel;",
-)(
+const context = {
+  exports: {} as { makeMapModel: MapModel },
   classifyUnslothSupport,
-  new Set(["feature-extraction", "sentence-transformers", "sentence-similarity", "text-embeddings-inference", "embeddings"]),
-  (id: string) => id.endsWith("-GGUF"),
-  () => undefined,
-  () => null,
+  EMBEDDING_TAGS: new Set(["feature-extraction", "sentence-transformers", "sentence-similarity", "text-embeddings-inference", "embeddings"]),
+  isGgufLike: (id: string) => id.endsWith("-GGUF"),
+  estimateSizeFromDtypes: (): number | undefined => undefined,
+  detectBaseModel: (): string | null => null,
   ggufRepoParams,
+};
+runInNewContext(
+  ts.transpileModule(source.slice(start, end), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText +
+    "; exports.makeMapModel = makeMapModel;",
+  context,
 );
+const makeMapModel = context.exports.makeMapModel;
 
 const GPT2 = ["pytorch", "tf", "jax", "tflite", "onnx", "safetensors"];
 const MINILM = ["pytorch", "tf", "rust", "onnx", "safetensors", "openvino"];

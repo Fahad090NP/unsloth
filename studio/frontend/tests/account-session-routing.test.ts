@@ -14,7 +14,7 @@ for (const [desktop, loginMode, change, expected] of [
   [false, "single", true, "/change-password"],
   [false, "multi", true, "/change-password"],
 ] as const) {
-  test(`${desktop ? "desktop" : "browser"} ${loginMode} session with change=${change} routes to ${expected}`, (t) => {
+  test(`${desktop ? "desktop" : "browser"} ${loginMode} session with change=${String(change)} routes to ${expected}`, (t) => {
     const previousWindow = globalThis.window;
     const previousStorage = globalThis.localStorage;
     const storage = {
@@ -59,7 +59,7 @@ for (const [desktop, loginMode, token, change, expected] of [
   [true, "single", true, true, true],
   [true, "single", false, false, false],
 ] as const) {
-  test(`${desktop ? "desktop" : "browser"} ${loginMode} session with token=${token} change=${change} is settled=${expected}`, (t) => {
+  test(`${desktop ? "desktop" : "browser"} ${loginMode} session with token=${String(token)} change=${String(change)} is settled=${String(expected)}`, (t) => {
     const previousWindow = globalThis.window;
     const previousStorage = globalThis.localStorage;
     const storage = {

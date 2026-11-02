@@ -98,7 +98,7 @@ for (const [name, eventType, event] of boundaries) {
       assert.equal(useStagedDownloadQueues.getState().resets, resets + 1);
     } finally {
       controller.__resetDownloadManagerForTests();
-      await useDownloadManagerStore.persist.clearStorage();
+      useDownloadManagerStore.persist.clearStorage();
     }
   });
 }

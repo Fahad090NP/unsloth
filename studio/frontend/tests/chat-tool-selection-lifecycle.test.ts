@@ -65,7 +65,7 @@ async function boot(t: TestContext, hydrate = true): Promise<RuntimeModule> {
 for (const scope of ["defaults", "chat", "pending chat"] as const) {
   for (const search of [false, true]) {
     for (const code of [false, true]) {
-      test(`${scope} remembers Search=${search} and Code=${code} across unload and reload`, async (t) => {
+      test(`${scope} remembers Search=${String(search)} and Code=${String(code)} across unload and reload`, async (t) => {
         const runtime = await boot(t);
         const store = runtime.useChatRuntimeStore;
         const original = { toolsEnabled: !search, codeToolsEnabled: !code };

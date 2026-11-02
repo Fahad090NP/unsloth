@@ -149,7 +149,7 @@ test("blockers come in rail order and explain themselves", () => {
     const blocker = convertBlocker({ ...ready, ...patch });
     assert.equal(blocker?.kind, kind, JSON.stringify(patch));
     if (typeof reason === "string") assert.equal(blocker.reason, reason);
-    else assert.match(blocker.reason ?? "", reason);
+    else assert.match(blocker.reason, reason);
   }
 });
 

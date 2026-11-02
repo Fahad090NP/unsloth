@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
 
 import ts from "@typescript/typescript6";
@@ -34,11 +35,12 @@ const source = readFileSync(adapterPath, "utf8");
 const start = source.indexOf("function normalizeTarget(");
 assert.ok(start >= 0, "normalizeTarget is no longer defined in chat-adapter.ts");
 const declaration = source.slice(start, source.indexOf("\n}", start) + 2);
-const normalizeTarget = new Function(
+const normalizeTarget = runInNewContext(
   `${ts.transpileModule(declaration, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },
-  }).outputText}; return normalizeTarget;`,
-)() as (value: string) => string;
+  }).outputText}; normalizeTarget;`,
+  {},
+) as (value: string) => string;
 
 const sameKey = (a: string, b: string) => normalizeTarget(a) === normalizeTarget(b);
 
@@ -79,12 +81,17 @@ test("startup remembers an inactive quant through the logical chat inventory tar
     const asyncPrefix = name === "resolveAutoLoadCandidate" ? "async " : "";
     return asyncPrefix + source.slice(begin, source.indexOf("\n}", begin) + 2);
   }).join("\n");
-  const compile = new Function(
-    "listGgufVariants", "isGgufLocalRow", "isAutoLoadableGgufVariant",
-    ts.transpileModule(declarations, {
-      compilerOptions: { target: ts.ScriptTarget.ES2020 },
-    }).outputText + "; return { buildAutoLoadSources, resolveAutoLoadCandidate };",
-  );
+  const compile = (
+    listGgufVariants: unknown,
+    isGgufLocalRow: unknown,
+    isAutoLoadableGgufVariant: unknown,
+  ): AutoLoadHelpers =>
+    runInNewContext(
+      ts.transpileModule(declarations, {
+        compilerOptions: { target: ts.ScriptTarget.ES2020 },
+      }).outputText + "; ({ buildAutoLoadSources, resolveAutoLoadCandidate });",
+      { listGgufVariants, isGgufLocalRow, isAutoLoadableGgufVariant },
+    ) as AutoLoadHelpers;
   const repoId = "Org/Model";
   const cachePath = "/cache/default/models--Org--Model";
   const scopes: (string | undefined)[] = [];
@@ -98,7 +105,7 @@ test("startup remembers an inactive quant through the logical chat inventory tar
     },
     () => true,
     () => true,
-  ) as AutoLoadHelpers;
+  );
   const rows = [{ repo_id: repoId, load_id: repoId, cache_path: cachePath, size_bytes: 300 }];
   const [logical] = helpers.buildAutoLoadSources(rows, [], [], 8192);
   const candidate = await helpers.resolveAutoLoadCandidate(logical, "Q8_0", () => false);

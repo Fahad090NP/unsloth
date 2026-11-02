@@ -90,7 +90,10 @@ test("ordinary URLs and invalid inputs retain native behavior", () => {
   );
   assert.throws(() => new PageURL("not a URL"), TypeError);
   assert.throws(() => new PageURL("/relative"), TypeError);
-  assert.equal(PageURL.createObjectURL, URL.createObjectURL);
+  assert.ok(
+    Reflect.get(PageURL, "createObjectURL") ===
+      Reflect.get(URL, "createObjectURL"),
+  );
   class DocsURL extends PageURL {}
   assert.ok(new DocsURL("null") instanceof DocsURL);
 });

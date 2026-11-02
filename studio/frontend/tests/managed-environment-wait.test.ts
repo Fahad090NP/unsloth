@@ -5,6 +5,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 
 import {
   MANAGED_ENVIRONMENT_BUSY,
@@ -146,7 +147,7 @@ ${checkBody
     return checkInstallAndStart;
   `;
   const keys = Object.keys(scope);
-  const build = new Function(...keys, source) as (
+  const build = compileFunction(source, keys) as unknown as (
     ...args: unknown[]
   ) => () => Promise<void>;
   const check = build(...keys.map((key) => scope[key]));

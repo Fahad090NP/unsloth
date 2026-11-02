@@ -63,7 +63,7 @@ function harness() {
               reject,
             };
             init?.signal?.addEventListener("abort", () => {
-              const reason: unknown = init?.signal?.reason;
+              const reason: unknown = init.signal?.reason;
               reject(reason instanceof Error ? reason : new Error("The request was aborted"));
             }, { once: true });
             pending.push(entry);

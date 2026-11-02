@@ -10,4 +10,6 @@ export const usePlatformStore = {
   },
 };
 
-export async function fetchDeviceType(_options?: { force?: boolean }): Promise<void> { /* empty */ }
+export async function fetchDeviceType(_options?: { force?: boolean }): Promise<void> {
+  void _options;
+}

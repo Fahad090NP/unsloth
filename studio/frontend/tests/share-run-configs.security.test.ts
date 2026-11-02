@@ -300,7 +300,9 @@ test("invalid, smuggled, malformed or path-like input never produces a partial c
   }
   const merged = mergeSharedRunConfig(
     DEFAULT_PER_MODEL_CONFIG,
-    JSON.parse('{"__proto__":{"polluted":true},"command":"x","nParallel":2}'),
+    JSON.parse(
+      '{"__proto__":{"polluted":true},"command":"x","nParallel":2}',
+    ) as Parameters<typeof mergeSharedRunConfig>[1],
   );
   assert.equal(Object.getPrototypeOf(merged), Object.prototype);
   assert.equal(Object.hasOwn(merged, "command"), false);

@@ -18,7 +18,7 @@ function activeConfig(patch: Record<string, unknown> = {}) {
     loadedReasoningBudgetMessageRequested: "",
     ...patch,
   };
-  const { useActiveModelConfig } = loadWithStubs<{
+  const { useActiveModelConfig: readActiveModelConfig } = loadWithStubs<{
     useActiveModelConfig: () => ActiveModelConfigState;
   }>(
     new URL(
@@ -43,7 +43,7 @@ function activeConfig(patch: Record<string, unknown> = {}) {
       },
     },
   );
-  const config = (useActiveModelConfig().config ?? assert.fail("expected a non-null value"));
+  const config = (readActiveModelConfig().config ?? assert.fail("expected a non-null value"));
   const { currentRuntimePerModelConfig } = loadWithStubs<{
     currentRuntimePerModelConfig: () => NonNullable<
       ActiveModelConfigState["config"]

@@ -66,4 +66,6 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+const container = document.getElementById("root");
+if (!container) throw new Error("fixture root element is missing");
+createRoot(container).render(<App />);

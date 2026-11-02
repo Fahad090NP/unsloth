@@ -19,7 +19,7 @@ test("cited pages collapse into ranges", () => {
 
 test("each document's pages are deduplicated and sorted", () => {
   const cite = (documentId: string | null, filename: string, page: number | null): Citation => ({
-    id: `${documentId}-${page}`,
+    id: `${documentId ?? "none"}-${page ?? "none"}`,
     filename,
     page,
     text: "",

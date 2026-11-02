@@ -53,7 +53,9 @@ test("edits are written through, actions are not", () => {
     durationS: 4,
     expiresAt: "2026-10-04T00:00:00Z",
   });
-  const saved = JSON.parse(store.get(KEY) ?? "{}");
+  const saved = JSON.parse(store.get(KEY) ?? "{}") as {
+    state: { text: string; reference: { id: string }; [key: string]: unknown };
+  };
   assert.equal(saved.state.text, "New line.");
   assert.equal(saved.state.reference.id, "abc");
   assert.deepEqual(Object.keys(saved.state).sort(), [

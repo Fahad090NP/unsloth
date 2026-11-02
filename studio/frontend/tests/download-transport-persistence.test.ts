@@ -253,7 +253,7 @@ test("growing a plan freezes the old cached prefix before changing totals", () =
   setExpectedBytesForJob("model", "org/growing-plan", "Q4_K_M", 200);
   const job = getState().jobs[key];
   assert.equal(job.presentation?.cachedPlanPrefixBytes, 100);
-  assert.equal(job && presentedProgress(job).downloadedBytes, 5);
+  assert.equal(presentedProgress(job).downloadedBytes, 5);
 });
 
 test("the first known plan total stabilizes an adopted companion", () => {
@@ -283,7 +283,7 @@ test("the first known plan total stabilizes an adopted companion", () => {
   setExpectedBytesForJob("model", "org/adopted-plan", "Q4_K_M", 120);
   const job = getState().jobs[key];
   assert.equal(job.presentation?.cachedPlanPrefixBytes, 100);
-  assert.equal(job && presentedProgress(job).downloadedBytes, 5);
+  assert.equal(presentedProgress(job).downloadedBytes, 5);
 });
 
 test("a running job is the activity the desktop quit path asks about", () => {

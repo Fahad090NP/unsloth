@@ -194,7 +194,7 @@ test("the real preference store persists all controls and restores them on reloa
     followUpBehavior: "steer",
   };
   assert.deepEqual(
-    normalizeComposerPreferences(JSON.parse(saved).state),
+    normalizeComposerPreferences((JSON.parse(saved) as { state: unknown }).state),
     expected,
   );
   prefs.setState(normalizeComposerPreferences(null));

@@ -15,6 +15,9 @@ register("./helpers/settings-api-resolver.mjs", import.meta.url);
 registerBundlerResolver();
 installLocalStorageFake();
 
+const fetchTarget = (input: RequestInfo | URL) =>
+  typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+
 const originalFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = originalFetch;
@@ -108,7 +111,7 @@ test("reconnect resumes from the applied cursor without duplicate chunks", async
   let follows = 0;
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     await Promise.resolve();
-    const url = String(input);
+    const url = fetchTarget(input);
     if (url.includes("/events")) {
       eventUrls.push(url);
       follows += 1;
@@ -160,7 +163,7 @@ test("reconnect resumes from the applied cursor without duplicate chunks", async
 test("durable replay normalizes reasoning summary control frames", async () => {
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     await Promise.resolve();
-    if (String(input).includes("/events")) {
+    if (fetchTarget(input).includes("/events")) {
       return sse([
         frame(1, "chunk", { type: "reasoning_summary", duration_ms: 3200 }),
         frame(2, "run.completed", { status: "completed" }, run("completed", 2)),
@@ -185,7 +188,7 @@ test("durable replay re-tags persisted tool control frames for the shared consum
   const toolStart = { type: "tool_start", name: "web_search", input: { q: "x" } };
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     await Promise.resolve();
-    if (String(input).includes("/events")) {
+    if (fetchTarget(input).includes("/events")) {
       return sse([
         frame(1, "chunk", { type: "tool_status", content: "Searching…" }),
         frame(2, "chunk", toolStart),
@@ -287,7 +290,7 @@ test("an ambiguous create retries the same run instead of starting generation tw
   const bodies: string[] = [];
   globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
     await Promise.resolve();
-    bodies.push(String(init?.body));
+    bodies.push(typeof init?.body === "string" ? init.body : "");
     if (bodies.length === 1) throw new TypeError("network reset");
     return new Response(JSON.stringify(run("queued", 1)), {
       status: 202,
@@ -297,7 +300,9 @@ test("an ambiguous create retries the same run instead of starting generation tw
   const created = await createChatGenerationRun(createInput());
   assert.equal(created.id, "run-1");
   assert.equal(bodies.length, 2);
-  assert.equal(JSON.parse(bodies[0]).runId, JSON.parse(bodies[1]).runId);
+  const firstBody = JSON.parse(bodies[0]) as { runId: string };
+  const secondBody = JSON.parse(bodies[1]) as { runId: string };
+  assert.equal(firstBody.runId, secondBody.runId);
 });
 
 test("Stop cancels the server run while an event reconnect is delayed", async () => {
@@ -306,7 +311,7 @@ test("Stop cancels the server run while an event reconnect is delayed", async ()
   let cancelCalls = 0;
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     await Promise.resolve();
-    const url = String(input);
+    const url = fetchTarget(input);
     if (url.endsWith("/cancel")) {
       cancelCalls += 1;
       return new Response(JSON.stringify(run("cancelled", 0)), { status: 200 });
@@ -326,7 +331,8 @@ test("Stop cancels the server run while an event reconnect is delayed", async ()
       assert.equal(update.run.status, "running");
     }
   })();
-  while (eventCalls === 0)
+  const eventCallsSeen = () => eventCalls;
+  while (eventCallsSeen() === 0)
     await new Promise((resolve) => setTimeout(resolve, 0));
   await cancelChatGenerationRun("run-1");
   controller.abort();
@@ -339,7 +345,7 @@ test("completed, cancelled, and backend-restarted snapshots are terminal", async
   for (const status of ["completed", "cancelled", "failed"] as const) {
     const terminal = run(status, 0);
     globalThis.fetch = (async (input: RequestInfo | URL) =>
-      { await Promise.resolve(); return String(input).includes("/events")
+      { await Promise.resolve(); return fetchTarget(input).includes("/events")
         ? sse([])
         : new Response(JSON.stringify(terminal), {
             status: 200,
@@ -363,7 +369,7 @@ test("Stop during create cancels the run after its delayed reply", async () => {
   });
   let cancelled = 0;
   globalThis.fetch = (async (input: RequestInfo | URL) => {
-    if (String(input).endsWith("/cancel")) {
+    if (fetchTarget(input).endsWith("/cancel")) {
       cancelled += 1;
       return new Response(JSON.stringify(run("cancelled", 1)), { status: 200 });
     }
@@ -377,7 +383,8 @@ test("Stop during create cancels the run after its delayed reply", async () => {
   controller.abort({ detach: false });
   assert.equal(await creating, null);
   releaseCreate();
-  while (cancelled === 0)
+  const cancelledSeen = () => cancelled;
+  while (cancelledSeen() === 0)
     await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(cancelled, 1);
 });

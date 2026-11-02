@@ -6,6 +6,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 
 import ts from "@typescript/typescript6";
 
@@ -256,7 +257,7 @@ function makeStream(mintPartIds = false): {
   const js = ts.transpileModule(`const mintPartIds = ${String(mintPartIds)};` + body, {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   }).outputText;
-  const build = new Function(
+  const build = compileFunction(js, [
     "splitTopLevelJsonObjects",
     "createBoundaryScan",
     "streamedToolCallArguments",
@@ -264,8 +265,7 @@ function makeStream(mintPartIds = false): {
     "mintStreamedToolCallId",
     "bindStreamedToolCallCard",
     "resolveToolCallPartId",
-    js,
-  ) as (...args: unknown[]) => {
+  ]) as unknown as (...args: unknown[]) => {
     feed: (batch: DeltaCall[], finished?: boolean) => boolean;
     parts: LoopPart[];
     resolveToolPartId: (backendId: string) => string;
@@ -1276,7 +1276,7 @@ test("a provider-hosted tool event does not end the provider turn", () => {
   const js = ts.transpileModule(`${guarded}\n}`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   }).outputText;
-  const applyGuard = new Function("chunk", "endProviderTurn", js) as (
+  const applyGuard = compileFunction(js, ["chunk", "endProviderTurn"]) as unknown as (
     chunk: unknown,
     endProviderTurn: () => void,
   ) => void;

@@ -108,5 +108,5 @@ test("at least one real delete path is wired to a wrapper", () => {
     ts.forEachChild(node, visit);
   };
   visit(sf);
-  assert.ok(used.length >= 2, `expected the delete paths to use the wrappers, saw ${used}`);
+  assert.ok(used.length >= 2, `expected the delete paths to use the wrappers, saw ${used.join(", ")}`);
 });

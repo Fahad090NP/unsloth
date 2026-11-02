@@ -222,7 +222,7 @@ test("the pill is offered exactly when the placement sends something", () => {
           supportsStudioTools: true,
         }),
         sendsSomething,
-        `hosted=${hostedCodeExecutionForThisTurn} sandbox=${providerHostsCodeExecution}`,
+        `hosted=${String(hostedCodeExecutionForThisTurn)} sandbox=${String(providerHostsCodeExecution)}`,
       );
     }
   }

@@ -34,12 +34,10 @@ test("a group of variations is one row where its first clip was", () => {
   );
   const group = entries[1];
   assert.equal(group.kind, "group");
-  if (group.kind === "group") {
-    assert.deepEqual(
-      group.clips.map((item) => item.id),
-      ["v1", "v2", "v3"],
-    );
-  }
+  assert.deepEqual(
+    group.clips.map((item) => item.id),
+    ["v1", "v2", "v3"],
+  );
 });
 
 test("a group of one, or clips without a group, render as before", () => {

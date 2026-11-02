@@ -29,10 +29,10 @@ test("reload target carries the remembered config", () => {
 test("reload target keeps a GGUF quant for cached repos", () => {
   const target = resolveReloadTarget(
     { id: "unsloth/qwen3-GGUF", kind: "gguf", ggufVariant: "Q4_K_M" },
-    (id, variant) => ({ config: { key: `${id}:${variant}` } }),
+    (id, variant) => ({ config: { key: `${id}:${variant ?? "none"}` } }),
   );
   assert.equal(target?.ggufVariant, "Q4_K_M");
-  assert.deepEqual(target?.config, { key: "unsloth/qwen3-GGUF:Q4_K_M" });
+  assert.deepEqual(target.config, { key: "unsloth/qwen3-GGUF:Q4_K_M" });
 });
 
 test("reload target accepts a direct .gguf file without a quant", () => {

@@ -5,6 +5,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { compileFunction } from "node:vm";
 
 import ts from "@typescript/typescript6";
 
@@ -52,11 +53,16 @@ export function loadWithStubs<T>(
     }
     throw new Error(`no stub for import "${specifier}" in ${path}`);
   };
-  new Function("require", "module", "exports", outputText)(
-    requireStub,
-    loaded,
-    loaded.exports,
-  );
+  const factory = compileFunction(outputText, [
+    "require",
+    "module",
+    "exports",
+  ]) as unknown as (
+    require: (specifier: string) => unknown,
+    module: { exports: T },
+    exports: T,
+  ) => void;
+  factory(requireStub, loaded, loaded.exports);
   return loaded.exports;
 }
 

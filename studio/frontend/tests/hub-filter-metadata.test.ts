@@ -21,7 +21,7 @@ function searchHarness(request: typeof fetch) {
     const cell = cells[i] as { deps: unknown[]; value: unknown } | undefined;
     if (
       cell?.deps.length !== deps.length ||
-      deps.some((dep, j) => !Object.is(dep, cell?.deps[j]))
+      deps.some((dep, j) => !Object.is(dep, cell.deps[j]))
     ) {
       cells[i] = { deps, value: create() };
     }

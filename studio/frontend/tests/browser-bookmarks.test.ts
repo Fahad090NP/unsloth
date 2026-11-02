@@ -33,7 +33,7 @@ test("a page is bookmarked once, and the next one goes where the last was moved"
   const first = store.addBookmark("https://example.com/", "Again");
   assert.equal(first?.title, "Example");
   assert.equal(useBrowserBookmarksStore.getState().bookmarks.length, 1);
-  store.updateBookmark(first.id ?? "", { title: "  Renamed  ", folder: "other" });
+  store.updateBookmark(first.id, { title: "  Renamed  ", folder: "other" });
   const second = store.addBookmark("https://example.org/", "Org");
   assert.equal(second?.folder, "other");
   assert.equal(useBrowserBookmarksStore.getState().bookmarks[0]?.title, "Renamed");

@@ -34,7 +34,11 @@ const bodies: string[] = [];
 
 globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
   await Promise.resolve();
-  if (init?.body) bodies.push(String(init.body));
+  if (init?.body) {
+    bodies.push(
+      typeof init.body === "string" ? init.body : await new Response(init.body).text(),
+    );
+  }
   return new Response(JSON.stringify(nextBody), {
     status: 200,
     headers: { "Content-Type": "application/json" },

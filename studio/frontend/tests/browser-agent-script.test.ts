@@ -20,7 +20,7 @@ const policy = { allowedDomains: [], blockedDomains: [] };
 test("a script approved after Run scripts was set to Never does not run", async () => {
   const posted: { result: { ok: boolean; error?: string } }[] = [];
   globals.__authFetch = (_url: string, init: { body: string }) => {
-    posted.push(JSON.parse(init.body));
+    posted.push(JSON.parse(init.body) as { result: { ok: boolean; error?: string } });
     return new Response(null, { status: 200 });
   };
   const sent: string[] = [];

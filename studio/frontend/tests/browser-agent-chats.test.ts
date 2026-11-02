@@ -22,7 +22,7 @@ const policy = { allowedDomains: [], blockedDomains: [] };
 interface Posted { action_id: string; result: { ok: boolean; url?: string; error?: string } }
 const posted: Posted[] = [];
 globals.__authFetch = (_url: string, init: { body: string }) => {
-  posted.push(JSON.parse(init.body));
+  posted.push(JSON.parse(init.body) as Posted);
   return new Response(null, { status: 200 });
 };
 const answer = (op: Record<string, unknown>) =>

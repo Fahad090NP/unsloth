@@ -15,7 +15,7 @@ interface PreviewElement {
   props: { onFrameReady: (frame: unknown) => unknown };
 }
 interface RenderedTree {
-  props: { children: Array<{ props: { children: PreviewElement } }> };
+  props: { children: { props: { children: PreviewElement } }[] };
 }
 type TextFileComponent = (props: {
   blob: Record<string, unknown>;

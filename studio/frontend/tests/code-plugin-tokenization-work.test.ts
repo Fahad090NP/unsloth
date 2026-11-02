@@ -121,11 +121,13 @@ test("tokenization does not degrade when the tokenizer overruns the wall clock",
   try {
     let elapsed = 0;
     Date.now = () => realNow() + (elapsed += 60_000);
-    result = plugin.highlight({
+    const highlighted = plugin.highlight({
       code: SOURCE,
       language: LANGUAGE,
       themes: THEMES,
-    })!;
+    });
+    assert.ok(highlighted);
+    result = highlighted;
   } finally {
     Date.now = realNow;
   }

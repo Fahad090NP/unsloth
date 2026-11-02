@@ -6,6 +6,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 import { readSrcAsync, registerBundlerResolver } from "./helpers/kit.ts";
 
@@ -78,14 +79,16 @@ test("the greyed Train row points at the Install type row, not at Danger zone", 
   const hint = /const trainDisabledHint: string \| undefined = ([\s\S]*?\n\s*: undefined);/.exec(source);
   assert.ok(hint, "could not find trainDisabledHint");
   const forNoTorch = (canRepair: boolean, chatOnlyHint: string | null = null) =>
-    new Function(
-      "chatOnlyMeasured",
-      "chatOnlyReason",
-      "chatOnlyDetail",
-      "chatOnlyHint",
-      "canRepair",
+    runInNewContext(
       `return ${hint[1]};`,
-    )(true, "no_torch", null, chatOnlyHint, canRepair) as string;
+      {
+        chatOnlyMeasured: true,
+        chatOnlyReason: "no_torch",
+        chatOnlyDetail: null,
+        chatOnlyHint,
+        canRepair,
+      },
+    ) as string;
   assert.match(forNoTorch(true), /Use Upgrade to full install in Settings/);
   assert.doesNotMatch(forNoTorch(true), /Repair installation/);
   assert.match(forNoTorch(false), /--no-torch/);

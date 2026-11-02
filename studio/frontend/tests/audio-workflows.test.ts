@@ -89,7 +89,10 @@ test("the music audio types match the backend's list", () => {
   assert.ok(block, "MUSIC_AUDIO_TYPES literal not found in audio_workflows.py");
   const names = new Set(
     [...block[1].matchAll(/"([^"]+)"|([A-Z_]+_AUDIO_TYPE)/g)].map(
-      (m) => m[1] ?? (m[2] === "AUDIO_CPP_MUSIC_AUDIO_TYPE" ? "audiocpp_music" : m[2]),
+      (m) => {
+        const quotedName: string | undefined = m[1];
+        return quotedName ?? (m[2] === "AUDIO_CPP_MUSIC_AUDIO_TYPE" ? "audiocpp_music" : m[2]);
+      },
     ),
   );
   assert.deepEqual(names, new Set(MUSIC_AUDIO_TYPES));

@@ -19,8 +19,12 @@ const tag =
     variant: _v,
     size: _s,
     ...rest
-  }: Record<string, unknown>) =>
-    React.createElement(name, rest, children as React.ReactNode);
+  }: Record<string, unknown>) => {
+    void _a;
+    void _v;
+    void _s;
+    return React.createElement(name, rest, children as React.ReactNode);
+  };
 const none = () => null;
 
 const runState = {

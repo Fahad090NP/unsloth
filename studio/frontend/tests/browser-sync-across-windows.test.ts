@@ -34,11 +34,12 @@ const { useDownloadSitesStore } = await import("../src/features/browser/download
 const { useBrowserAgentStore, patchAgentChat } = await import("../src/features/browser/agent/agent-store.ts");
 
 function stored(key: string): Record<string, unknown> {
-  return JSON.parse(data.get(key) ?? "{}").state ?? {};
+  const parsed = JSON.parse(data.get(key) ?? "{}") as { state?: Record<string, unknown> };
+  return parsed.state ?? {};
 }
 
 function otherWindowWrites(key: string, change: (state: Record<string, unknown>) => Record<string, unknown>) {
-  const saved = JSON.parse(data.get(key) ?? "{}");
+  const saved = JSON.parse(data.get(key) ?? "{}") as { state?: Record<string, unknown> };
   data.set(key, JSON.stringify({ ...saved, state: change(saved.state ?? {}) }));
   for (const listener of listeners.get("storage") ?? []) listener({ key });
 }

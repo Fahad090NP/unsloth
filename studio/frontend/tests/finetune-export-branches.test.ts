@@ -113,7 +113,7 @@ async function fineTuneMessages(
     : [];
   try {
     const { lines } = await build("openai");
-    return [...lines].map((line) => JSON.parse(line).messages);
+    return [...lines].map((line) => (JSON.parse(line) as { messages: unknown[] }).messages);
   } finally {
     for (const unregister of unregisters) unregister();
   }

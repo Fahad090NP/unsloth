@@ -659,10 +659,10 @@ test("chat preferences survive account switches without being shared", async () 
   const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   Object.defineProperty(globalThis, "window", { configurable: true, value: b.browser });
   const load = async (name: string) => {
-    const { useChatPreferencesStore } = await import(
+    const mod = await import(
       `../src/features/chat/stores/chat-preferences-store.ts?account-test=${name}`
-    );
-    return useChatPreferencesStore;
+    ) as typeof import("../src/features/chat/stores/chat-preferences-store.ts");
+    return mod.useChatPreferencesStore;
   };
   const choices = (store: Awaited<ReturnType<typeof load>>) => {
     const state = store.getState();
@@ -755,7 +755,7 @@ test("a full storage never blocks an account switch or leaks preferences", async
     [BROWSER_ACCOUNT_KEY]: "account:alice-id:alice",
     unsloth_chat_preferences: alicePrefs,
   });
-  const setItem = b.browser.localStorage.setItem;
+  const setItem = b.browser.localStorage.setItem.bind(b.browser.localStorage);
   b.browser.localStorage.setItem = (key: string, value: string) => {
     if (key.startsWith("unsloth.account-chat-preferences.v1:"))
       throw new DOMException("full", "QuotaExceededError");

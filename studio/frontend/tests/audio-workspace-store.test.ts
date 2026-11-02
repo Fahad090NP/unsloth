@@ -46,7 +46,10 @@ test("only the last model per workflow is persisted", () => {
   state.rememberModel("speak", "kokoro");
   state.setNavExpanded(true);
   state.commitWorkflow("transcribe");
-  const saved = JSON.parse(store.get(AUDIO_WORKSPACE_STORAGE_KEY) ?? "{}");
+  const saved = JSON.parse(store.get(AUDIO_WORKSPACE_STORAGE_KEY) ?? "{}") as {
+    version: number;
+    state: unknown;
+  };
   assert.equal(AUDIO_WORKSPACE_STORAGE_KEY, "unsloth_audio_workspace");
   assert.equal(saved.version, 1);
   assert.deepEqual(saved.state, {

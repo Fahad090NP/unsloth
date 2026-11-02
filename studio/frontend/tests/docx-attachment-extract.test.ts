@@ -60,7 +60,7 @@ function everyRewrite(document = "word/document.xml"): Record<string, Uint8Array
         `<w:p><w:r><w:t>legacy</w:t><w:cr/><w:sym w:font="Wingdings" w:char="F0FC"/></w:r></w:p>` +
         `<w:p><w:r><w:t>end</w:t><w:endnoteReference w:id="2"/></w:r></w:p></w:body></w:document>`,
     ),
-    [`${document.replace(/[^/]*$/, "")}_rels/${document.split("/").pop()}.rels`]: rels([
+    [`${document.replace(/[^/]*$/, "")}_rels/${document.split("/").pop() ?? "doc"}.rels`]: rels([
       ["footnotes", "footnotes.xml"],
       ["endnotes", "endnotes.xml"],
       ["numbering", "numbering.xml"],
@@ -97,10 +97,11 @@ async function withDocxGlobals<T>(run: () => Promise<T>): Promise<T> {
   const extract = mammoth.extractRawText;
   mammoth.extractRawText = ((input: { arrayBuffer?: ArrayBuffer }) =>
     extract(input.arrayBuffer ? ({ buffer: Buffer.from(input.arrayBuffer) }) : (input as never))) as never;
+  const restoreExtract = () => { mammoth.extractRawText = extract; };
   try {
     return await run();
   } finally {
-    mammoth.extractRawText = extract;
+    restoreExtract();
     Object.assign(globals, original);
   }
 }
@@ -110,7 +111,7 @@ async function assertSameAsChained(name: string, bytes: Uint8Array): Promise<str
   const outcome = (promise: Promise<string>) =>
     promise.then(
       (text) => ({ text }),
-      (error: Error) => ({ error: `${error.constructor.name}: ${error.message}` }),
+      (error: unknown) => ({ error: error instanceof Error ? `${error.constructor.name}: ${error.message}` : String(error) }),
     );
   const [direct, chain] = [await outcome(extractDocxAttachmentText(file)), await outcome(chained(name, bytes))];
   assert.deepEqual(direct, chain, name);

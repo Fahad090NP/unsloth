@@ -22,13 +22,14 @@ const info = { role: "button", name: "Move", tag: "div", href: "", formMethod: "
 test("a drag whose press navigates the tab is not released on the new page", async () => {
   const posted: { result: { ok: boolean; error?: string } }[] = [];
   globals.__authFetch = (_url: string, init: { body: string }) => {
-    posted.push(JSON.parse(init.body));
+    posted.push(JSON.parse(init.body) as { result: { ok: boolean; error?: string } });
     return new Response(null, { status: 200 });
   };
   const sent: string[] = [];
   let doc = "r1";
   globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
-    sent.push(`${op.op}${op.phase ? `:${op.phase}` : ""}`);
+    const phase = typeof op.phase === "string" ? `:${op.phase}` : "";
+    sent.push(`${String(op.op)}${phase}`);
     if (op.op === "status") return { installed: true, result: { ok: true, quietMs: 1000, doc } };
     if (op.op === "describe") return { installed: true, result: { ok: true, info, hit: "r5", sig: "s", doc } };
     if (op.op === "pointer" && op.phase === "down") {
@@ -51,7 +52,7 @@ test("a drag whose press navigates the tab is not released on the new page", asy
 test("a drag between fractional points reaches its end and is released", async () => {
   const posted: { result: { ok: boolean; error?: string } }[] = [];
   globals.__authFetch = (_url: string, init: { body: string }) => {
-    posted.push(JSON.parse(init.body));
+    posted.push(JSON.parse(init.body) as { result: { ok: boolean; error?: string } });
     return new Response(null, { status: 200 });
   };
   const sent: Record<string, unknown>[] = [];
@@ -76,12 +77,13 @@ test("a drag between fractional points reaches its end and is released", async (
 async function drag(id: string, runKey: string, onOp: (op: Record<string, unknown>, sent: string[]) => void) {
   const posted: { result: { ok: boolean; error?: string } }[] = [];
   globals.__authFetch = (_url: string, init: { body: string }) => {
-    posted.push(JSON.parse(init.body));
+    posted.push(JSON.parse(init.body) as { result: { ok: boolean; error?: string } });
     return new Response(null, { status: 200 });
   };
   const sent: string[] = [];
   globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
-    sent.push(`${op.op}${op.phase ? `:${op.phase}` : ""}`);
+    const phase = typeof op.phase === "string" ? `:${op.phase}` : "";
+    sent.push(`${String(op.op)}${phase}`);
     onOp(op, sent);
     if (op.op === "status") return { installed: true, result: { ok: true, quietMs: 1000, doc: "r1" } };
     if (op.op === "describe") return { installed: true, result: { ok: true, info, hit: "r5", sig: "s", doc: "r1" } };

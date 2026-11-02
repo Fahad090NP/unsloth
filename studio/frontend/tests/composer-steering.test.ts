@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 import {
@@ -150,14 +151,15 @@ function world() {
     discardQueuedChatRunSettingsForThread: noop,
     targetHasIndexingDocuments: () => indexing(),
     appendQueuedPrompt: (_run: Run, item: Item) => {
-      appended.push(item.prompt);
-      item.dispatched = true;
+      const queued = item;
+      appended.push(queued.prompt);
+      queued.dispatched = true;
     },
   };
-  const engine = new Function(
-    ...Object.keys(deps),
+  const engine = runInNewContext(
     `${js}\nreturn {startPromptQueue, steerPromptQueueItem, dispatchQueuedPrompt, isPromptQueueRunReadyToDispatch, handlePromptQueueRunState, handlePromptQueueRunFailed, resumePromptQueueRun};`,
-  )(...Object.values(deps)) as {
+    deps,
+  ) as {
     handlePromptQueueRunFailed: (
       threadId?: string,
       localOnly?: boolean,
@@ -497,9 +499,7 @@ async function targetForSelection(
     getAuthSessionEpoch: () => 0,
     hasPreStreamRunReservation: () => false,
   };
-  const create = new Function(...Object.keys(deps), targetFactoryJs)(
-    ...Object.values(deps),
-  ) as () => Promise<Target>;
+  const create = runInNewContext(targetFactoryJs, deps) as () => Promise<Target>;
   return {
     target: Object.assign(makeTarget("chat", false), await create()),
     settings,
@@ -532,9 +532,7 @@ function hydratedFactory(
     startPromptQueue: w.startPromptQueue,
     toast: { error: (message: string) => assert.fail(message) },
   };
-  return new Function(...Object.keys(deps), factoryJs)(
-    ...Object.values(deps),
-  ) as (
+  return runInNewContext(factoryJs, deps) as (
     prompts: string[],
     wait: boolean,
     onStarted?: () => void,
@@ -596,7 +594,7 @@ test("an aborted hydrated queue leaves the composer audio upload active", async 
 for (const firstBehavior of ["queue", "steer"] as const) {
   for (const latestBehavior of ["queue", "steer"] as const) {
     for (const latestWait of [true, false]) {
-      test(`pending follow-up intent: ${firstBehavior} to ${latestBehavior}, wait=${latestWait}`, async () => {
+      test(`pending follow-up intent: ${firstBehavior} to ${latestBehavior}, wait=${String(latestWait)}`, async () => {
         const w = world();
         const target = makeTarget("chat");
         const resolves: ((target: Target) => void)[] = [];
@@ -687,7 +685,9 @@ test("three follow-ups are accepted and reorderable during loading, then dispatc
   );
   assert.ok(run.items.every((i) => !i.dispatched));
   assert.equal(run.index, -1);
-  run.items = reorderPromptQueueItems(run.items, 2, 0)!;
+  const reordered = reorderPromptQueueItems(run.items, 2, 0);
+  assert.ok(reordered);
+  run.items = reordered;
   assert.deepEqual(
     run.items.map((i) => i.prompt),
     ["fourth", "second", "third"],
@@ -722,7 +722,7 @@ test("model preparation keeps a follow-up draft until the final switch boundary"
   const w = world();
   const target = makeTarget("chat");
   const lease = chatModelLifecycleGate.tryAcquire("preparing");
-  assert.notEqual(lease, null);
+  assert.ok(lease);
   try {
     const accept = hydratedFactory(w, target);
     let cleared = false;
@@ -738,7 +738,7 @@ test("model preparation keeps a follow-up draft until the final switch boundary"
     assert.equal(w.runs.size, 0);
     localPromptQueueModelBoundary.advance();
     localPromptQueueModelBoundary.advance();
-    chatModelLifecycleGate.markLoading(lease!);
+    chatModelLifecycleGate.markLoading(lease);
     await new Promise<void>((resolve) => setImmediate(resolve));
     accept(["keep this draft"], true, () => {
       cleared = true;
@@ -750,7 +750,7 @@ test("model preparation keeps a follow-up draft until the final switch boundary"
       ["keep this draft"],
     );
   } finally {
-    chatModelLifecycleGate.release(lease!);
+    chatModelLifecycleGate.release(lease);
   }
 });
 
@@ -905,13 +905,14 @@ test("steering during loading leaves the queued prompt pending until loading fin
 for (const phase of ["legacy", "preparing", "loading", "unloading"] as const) {
   for (const local of [true, false]) {
     for (const boundaryChanges of [0, 1, 2]) {
-      test(`hydration: ${phase}, local=${local}, boundaries=${boundaryChanges}`, async () => {
+      test(`hydration: ${phase}, local=${String(local)}, boundaries=${boundaryChanges}`, async () => {
         const w = world();
         const target = makeTarget("chat");
         target.usesLocalModel = local;
         const lease = chatModelLifecycleGate.tryAcquire(
           phase === "legacy" ? undefined : phase,
-        )!;
+        );
+        assert.ok(lease);
         let resolve!: (target: Target) => void;
         try {
           const accept = hydratedFactory(
@@ -1056,7 +1057,7 @@ test("deferred model settings take only the resolved model capability", () => {
 
 for (const behavior of ["queue", "steer"] as const) {
   for (const failed of [false, true]) {
-    test(`external-to-local switch waits for the incoming model: ${behavior}, failed=${failed}`, async () => {
+    test(`external-to-local switch waits for the incoming model: ${behavior}, failed=${String(failed)}`, async () => {
       const w = world();
       w.setModelLoading(true);
       const { target, settings } = await targetForSelection(
@@ -1089,7 +1090,8 @@ for (const behavior of ["queue", "steer"] as const) {
 }
 
 test("an external-to-local preparation keeps the follow-up in the composer", async () => {
-  const lease = chatModelLifecycleGate.tryAcquire("preparing")!;
+  const lease = chatModelLifecycleGate.tryAcquire("preparing");
+  assert.ok(lease);
   try {
     const w = world();
     const { target } = await targetForSelection(

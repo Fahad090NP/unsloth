@@ -21,7 +21,7 @@ const buy = { role: "button", name: "Buy now", tag: "button", href: "", formMeth
 test("Stop pressed while an approved point click is rechecked keeps the click from going out", async () => {
   const posted: { result: { ok: boolean; error?: string } }[] = [];
   globals.__authFetch = (_url: string, init: { body: string }) => {
-    posted.push(JSON.parse(init.body));
+    posted.push(JSON.parse(init.body) as { result: { ok: boolean; error?: string } });
     return new Response(null, { status: 200 });
   };
   const sent: string[] = [];

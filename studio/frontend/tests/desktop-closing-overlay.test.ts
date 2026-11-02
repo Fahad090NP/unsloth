@@ -60,8 +60,8 @@ test("an unsubscribed listener stops hearing about quits", () => {
   assert.deepEqual(seen, []);
 });
 
-test("the backend hook routes both quit events into the store", async () => {
-  const hook = await readSrc("hooks/use-tauri-backend.ts");
+test("the backend hook routes both quit events into the store", () => {
+  const hook = readSrc("hooks/use-tauri-backend.ts");
 
   assert.match(
     hook,
@@ -84,8 +84,8 @@ test("the backend hook routes both quit events into the store", async () => {
   );
 });
 
-test("the overlay covers the app instead of replacing it", async () => {
-  const provider = await readSrc("app/provider.tsx");
+test("the overlay covers the app instead of replacing it", () => {
+  const provider = readSrc("app/provider.tsx");
 
   assert.match(provider, /\{shell\}\s*\{closing && <ClosingScreen \/>\}/);
   assert.doesNotMatch(
@@ -94,7 +94,7 @@ test("the overlay covers the app instead of replacing it", async () => {
     "the overlay is back to replacing the app it should be covering",
   );
 
-  const screen = await readSrc("components/tauri/startup-screen.tsx");
+  const screen = readSrc("components/tauri/startup-screen.tsx");
   const closingScreen = screen.slice(
     screen.indexOf("export function ClosingScreen()"),
   );
@@ -105,8 +105,8 @@ test("the overlay covers the app instead of replacing it", async () => {
   );
 });
 
-test("the overlay survives a modal's body pointer-events lockout", async () => {
-  const screen = await readSrc("components/tauri/startup-screen.tsx");
+test("the overlay survives a modal's body pointer-events lockout", () => {
+  const screen = readSrc("components/tauri/startup-screen.tsx");
   const closingScreen = screen.slice(
     screen.indexOf("export function ClosingScreen()"),
   );
@@ -119,8 +119,8 @@ test("the overlay survives a modal's body pointer-events lockout", async () => {
   );
 });
 
-test("the close button leaves the overlay to Rust", async () => {
-  const titlebar = await readSrc("components/tauri/window-titlebar.tsx");
+test("the close button leaves the overlay to Rust", () => {
+  const titlebar = readSrc("components/tauri/window-titlebar.tsx");
 
   assert.doesNotMatch(
     titlebar,
@@ -130,9 +130,9 @@ test("the close button leaves the overlay to Rust", async () => {
   assert.match(titlebar, /onClick=\{\(\) => runWindowAction\(\(appWindow\) =>\s*appWindow\.close\(\)\)\}/);
 });
 
-test("the overlay is presentation only, with no way out of a wedged reap", async () => {
-  const signal = await readSrc("components/tauri/closing-signal.ts");
-  const screen = await readSrc("components/tauri/startup-screen.tsx");
+test("the overlay is presentation only, with no way out of a wedged reap", () => {
+  const signal = readSrc("components/tauri/closing-signal.ts");
+  const screen = readSrc("components/tauri/startup-screen.tsx");
   const body = closingContent(screen);
 
   assert.doesNotMatch(
@@ -165,8 +165,8 @@ test("a quit with no window on screen leaves it hidden", () => {
   );
 });
 
-test("the overlay names the wait it is covering", async () => {
-  const screen = await readSrc("components/tauri/startup-screen.tsx");
+test("the overlay names the wait it is covering", () => {
+  const screen = readSrc("components/tauri/startup-screen.tsx");
   const body = closingContent(screen);
 
   assert.match(body, /t\("desktopStartup\.closing"\)/);

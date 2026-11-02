@@ -55,9 +55,9 @@ async function freshStore(codeOn: boolean, checkpoint = LOCAL) {
   settingsHttp.settings = { codeToolsEnabled: codeOn };
   settingsHttp.puts.splice(0);
   threadRows.reset();
-  const mod: StoreModule = await import(
+  const mod = await import(
     `${STORE_URL}?scenario=fullaccess${scenario}`
-  );
+  ) as StoreModule;
   const store = mod.useChatRuntimeStore;
   store.setState({
     params: { ...store.getState().params, checkpoint },

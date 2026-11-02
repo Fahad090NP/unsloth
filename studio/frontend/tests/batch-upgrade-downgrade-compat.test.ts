@@ -43,7 +43,7 @@ function config(overrides: Record<string, unknown> = {}) {
 }
 
 function readMap(): Record<string, Record<string, unknown>> {
-  return JSON.parse(store.get(KEY) ?? "{}");
+  return JSON.parse(store.get(KEY) ?? "{}") as Record<string, Record<string, unknown>>;
 }
 
 function writeMap(map: Record<string, unknown>): void {

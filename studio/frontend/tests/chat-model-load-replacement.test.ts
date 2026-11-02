@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
 
 const RUNTIME = fileURLToPath(new URL("../src/features/chat/hooks/use-chat-model-runtime.ts", import.meta.url));
@@ -264,14 +265,16 @@ test("a downloaded replacement pick falls through to selectModel", () => {
 test("declining B before A unloads X lets C inherit X's newly edited settings", () => {
   const decline = section(runtime, "if (!stopDecision.proceed) {", "// Re-check the tracked picker for a load");
   const chooseC = section(runtime, "if (pendingReplacementRollback?.config) {", "// The cancelled run's own rollback target");
-  const declineB = new Function("state", `let pendingReplacementRollback = state.pending;
+  const declineB = (state: { pending: { checkpoint: string; config: string; residentUnloaded: boolean } | null; epoch: number; released?: boolean; restored?: boolean }) =>
+    runInNewContext(`let pendingReplacementRollback = state.pending;
     let modelLoadCancelEpoch = 0;
     const modelSelectionIntentEpoch = state.epoch, loadIntentId = 2, stopDecision = { proceed: false };
     const releasePreflightLifecycleLease = () => { state.released = true; };
     const restorePreviousConfig = () => { state.restored = true; };
-    try { ${decline} } finally { state.pending = pendingReplacementRollback; }`) as (state: { pending: { checkpoint: string; config: string; residentUnloaded: boolean } | null; epoch: number; released?: boolean; restored?: boolean }) => void;
-  const selectC = new Function("state", `let pendingReplacementRollback = state.pending;
-    let previousConfigForReplacement = state.fresh; ${chooseC} return previousConfigForReplacement;`) as (state: { pending: { config: string } | null; fresh: string }) => string;
+    try { ${decline} } finally { state.pending = pendingReplacementRollback; }`, { state });
+  const selectC = (state: { pending: { config: string } | null; fresh: string }) =>
+    runInNewContext(`let pendingReplacementRollback = state.pending;
+    let previousConfigForReplacement = state.fresh; ${chooseC} return previousConfigForReplacement;`, { state }) as string;
   const beforeUnload = { pending: { checkpoint: "X", config: "X-old", residentUnloaded: false }, epoch: 2, released: false, restored: false };
   declineB(beforeUnload);
   assert.equal(beforeUnload.released, true);

@@ -108,7 +108,7 @@ test("the question clamp does not split an astral Unicode character", () => {
   readDeepResearchToolEvent(handoff, end());
   assert.equal(handoff.question, `${prefix}\u{1f600}`);
   assert.equal(
-    Array.from(handoff.question ?? "").length,
+    Array.from(handoff.question).length,
     DEEP_RESEARCH_QUESTION_MAX_CHARS,
   );
 });

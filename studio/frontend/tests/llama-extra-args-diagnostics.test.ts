@@ -817,10 +817,11 @@ test("a pass-through batch below the floor is refused", () => {
   assert.ok(at("-b 1", 2).some((d) => d.level === "error"));
   assert.ok(at("--batch-size 0", 2).some((d) => d.level === "error"));
   assert.ok(at("--batch-size 4", 8).some((d) => d.level === "error"));
-  assert.match(
-    at("--batch-size 4", 8).filter((d) => d.level === "error")[0].message,
-    /8 parallel slot/,
+  const firstError = at("--batch-size 4", 8).find(
+    (d) => d.level === "error",
   );
+  assert.ok(firstError);
+  assert.match(firstError.message, /8 parallel slot/);
   const errors = (input: string, batchFloor: number) =>
     at(input, batchFloor).filter((d) => d.level === "error");
   assert.deepEqual(errors("--batch-size 8", 8), []);

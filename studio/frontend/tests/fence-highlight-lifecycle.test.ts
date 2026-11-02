@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 
 import { createFenceHighlightQueue } from "../src/components/assistant-ui/fence-highlight-queue.ts";
@@ -72,13 +73,13 @@ function harness() {
     printing: false,
     queueMicrotask: (callback: () => void) => { microtasks.push(callback); },
   };
-  const api = new Function(...Object.keys(context), compiled + `
+  const api = runInNewContext(compiled + `
     return {
       queue: queueFenceWork,
       resizedAt: () => highlightResizedAt,
       setPrinting: value => { printing = value; },
     };
-  `)(...Object.values(context)) as {
+  `, context) as {
     queue: (work: () => void) => () => void;
     resizedAt: () => number;
     setPrinting: (value: boolean) => void;

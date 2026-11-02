@@ -86,7 +86,9 @@ test("what this version writes back carries no etaSeconds, so an older Unsloth r
   assert.ok(flushPersistedState, "the store should register a pagehide flush");
   flushPersistedState();
 
-  const written = JSON.parse((store.get(PERSIST_KEY) ?? assert.fail("expected a non-null value")));
+  const written = JSON.parse((store.get(PERSIST_KEY) ?? assert.fail("expected a non-null value"))) as {
+    state: { jobs: Record<string, { downloadedBytes: number; expectedBytes: number; state: string }> };
+  };
   const job = written.state.jobs[keyOf("org/legacy")];
   assert.ok(job, "the job should be persisted");
   assert.ok(

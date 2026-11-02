@@ -22,7 +22,7 @@ const highlighted = (plugin: ReturnType<typeof createCodePlugin>, code: string):
     if (now) resolve(now);
   });
 
-const SEEDED = "const a = 1;\nexport function f() {\n  return `x${a}`;\n}";
+const SEEDED = "const a = 1;\nexport function f() {\n  return `x\${a}`;\n}";
 
 test("the exact path never answers with the throttled approximation of a fence that extends another", async () => {
   const plugin = createCodePlugin({ themes: THEMES });

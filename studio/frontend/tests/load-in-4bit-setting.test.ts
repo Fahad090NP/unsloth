@@ -5,6 +5,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 
 import { readSrc, registerStoreStubResolver } from "./helpers/kit.ts";
 
@@ -118,7 +119,7 @@ test("only a default-engine resident hydrates the switch, and an unload resets 1
     applier.indexOf("return {", start),
     applier.indexOf("\n}\n", start),
   );
-  const hydrate = new Function("status", body) as (
+  const hydrate = compileFunction(body, ["status"]) as unknown as (
     status: Record<string, unknown>,
   ) => Record<string, unknown>;
   assert.equal(hydrate({ load_in_4bit: false }).loadIn4bit, false);

@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 
 import ts from "@typescript/typescript6";
 
@@ -31,7 +32,7 @@ const serializeJs = ts.transpileModule(
   { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
 ).outputText;
 
-const { toOpenAIMessages } = (new Function(serializeJs) as () => {
+const { toOpenAIMessages } = (compileFunction(serializeJs) as unknown as () => {
   toOpenAIMessages: (
     message: unknown,
   ) => { role: string; content: unknown }[];

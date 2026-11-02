@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 import { MessageRepository } from "@assistant-ui/core/internal";
 import type { ThreadMessage } from "@assistant-ui/react";
@@ -82,10 +83,10 @@ const hydration = ["cloneContent", "cloneAttachments", "toThreadMessage"].map((n
   assert.ok(declaration, `${name} was not found`);
   return declaration.getText(provider);
 }).join("\n");
-const hydrateUser = new Function(ts.transpileModule(
+const hydrateUser = runInNewContext(ts.transpileModule(
   `${hydration}\nreturn toThreadMessage;`,
   { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } },
-).outputText)() as (record: MessageRecord) => ThreadMessage;
+).outputText, {}) as (record: MessageRecord) => ThreadMessage;
 
 function harness(persist?: () => Promise<void>) {
   const saved: Record<string, unknown>[] = [];
@@ -569,19 +570,17 @@ const deletionEffectCode = ts.transpileModule(deletionEffect.getText(provider), 
 function attachmentDeletionHarness(exported: Exported, hash: () => Promise<string>) {
   let listener!: (event: { messageId: string; attachmentId: string }) => Promise<void>;
   let imports = 0;
-  new Function("useEffect", "aui", "onChatAttachmentDeleted",
-    "chatContentPartAttachmentSignature", "chatContentPartAttachmentIdFromSignature",
-    ...Object.keys(savedUsage), deletionEffectCode)(
-    (effect: () => unknown) => effect(),
-    { thread: () => ({
+  runInNewContext(deletionEffectCode, {
+    useEffect: (effect: () => unknown) => effect(),
+    aui: { thread: () => ({
       export: () => exported,
       import: (next: Exported) => { Object.assign(exported, next); imports += 1; },
     }) },
-    (callback: typeof listener) => { listener = callback; return () => { /* empty */ }; },
-    (part: { type: string }) => part.type === "image" ? "image-signature" : null,
-    hash,
-    ...Object.values(savedUsage),
-  );
+    onChatAttachmentDeleted: (callback: typeof listener) => { listener = callback; return () => { /* empty */ }; },
+    chatContentPartAttachmentSignature: (part: { type: string }) => part.type === "image" ? "image-signature" : null,
+    chatContentPartAttachmentIdFromSignature: hash,
+    ...savedUsage,
+  });
   return {
     remove: (attachmentId: string) => listener({ messageId: "u0", attachmentId }),
     imports: () => imports,

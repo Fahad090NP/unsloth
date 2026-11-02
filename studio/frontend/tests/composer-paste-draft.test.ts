@@ -81,7 +81,7 @@ test("a newer shared draft wins over an old per-chat one", () => {
 test("a paste too big to adopt rolls back the text, so the next try still carries both", () => {
   store.set("chat-draft:t1", "unsent");
   store.set("chat-draft-pastes:t1", '["pasted"]');
-  const setItem = window.localStorage.setItem;
+  const setItem = window.localStorage.setItem.bind(window.localStorage);
   window.localStorage.setItem = (key: string, value: string) => {
     if (key === composerPasteDraftKey()) throw new Error("QuotaExceededError");
     setItem(key, value);

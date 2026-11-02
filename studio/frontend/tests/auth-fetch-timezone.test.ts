@@ -47,6 +47,6 @@ test("authFetch sends the browser timezone", async () => {
       String(new Date().getTimezoneOffset()),
     );
   } finally {
-    globalThis.fetch = originalFetch;
+    Reflect.set(globalThis, "fetch", originalFetch);
   }
 });

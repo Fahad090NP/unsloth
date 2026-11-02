@@ -62,7 +62,7 @@ function stubBackend({ start = "accepted" }: { start?: StartAnswer } = {}) {
     release = () => { resolve(json({ downloads: [] })); };
   });
   globalThis.fetch = (async (input: RequestInfo | URL) => {
-    const url = String(input);
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (url.startsWith("/api/studio/download-transport-capabilities")) {
       return json(capabilities);
     }

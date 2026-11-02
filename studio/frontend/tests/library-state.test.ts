@@ -300,7 +300,10 @@ test("undoing a failed edit keeps what a later edit to the same item saved", asy
 test("an edit still pending at sign-out does not hold back the next account's Library", async () => {
   await Promise.resolve();
   const store = loadStore({
-    getLibrary: async () => ({ items: [item("upload:b")], folders: [] }),
+    getLibrary: async () => {
+      await Promise.resolve();
+      return { items: [item("upload:b")], folders: [] };
+    },
     updateLibraryItem: () => new Promise(() => { /* noop */ }),
   });
   void store.getState().patchItem("upload:a", { name: "never answered" }).catch(() => undefined);
@@ -366,11 +369,17 @@ test("a sandbox file is deleted as the file it was listed as", async () => {
   const deleted: unknown[] = [];
   let fingerprint = "7:1.5";
   const store = loadStore({
-    getLibrary: async () => ({
-      items: [{ ...item("sandbox:t:a.png"), fingerprint }],
-      folders: [],
-    }),
-    deleteLibraryItem: async (...args: unknown[]) => void deleted.push(args),
+    getLibrary: async () => {
+      await Promise.resolve();
+      return {
+        items: [{ ...item("sandbox:t:a.png"), fingerprint }],
+        folders: [],
+      };
+    },
+    deleteLibraryItem: async (...args: unknown[]) => {
+      await Promise.resolve();
+      deleted.push(args);
+    },
   });
   await store.getState().refresh();
   const shown = store.getState().items[0] as Item & { fingerprint: string };
@@ -383,10 +392,13 @@ test("a sandbox file is deleted as the file it was listed as", async () => {
 test("deleting a fine-tune also drops its model picker pin", async () => {
   const path = "/exports/run/checkpoint-1";
   const store = loadStore({
-    getLibrary: async () => ({
-      items: [{ ...item(`model:exported:${path}`), model: { path, origin: "exported", exportType: "merged" } }],
-      folders: [],
-    }),
+    getLibrary: async () => {
+      await Promise.resolve();
+      return {
+        items: [{ ...item(`model:exported:${path}`), model: { path, origin: "exported", exportType: "merged" } }],
+        folders: [],
+      };
+    },
   });
   await store.getState().refresh();
   unpinned.length = 0;
@@ -399,8 +411,13 @@ test("deleting a chat attachment tells an open chat to drop it", async () => {
   const emitted: unknown[] = [];
   const store = loadStore(
     {
-      getLibrary: async () => ({ items: [item("attachment:m%3A1:content-part-x")], folders: [] }),
-      deleteLibraryItem: async () => {},
+      getLibrary: async () => {
+        await Promise.resolve();
+        return { items: [item("attachment:m%3A1:content-part-x")], folders: [] };
+      },
+      deleteLibraryItem: async () => {
+        await Promise.resolve();
+      },
     },
     emitted,
   );
@@ -417,10 +434,13 @@ test("a chat attachment is not deleted when an open chat could not drop it after
   let chunkLoads = false;
   const store = loadStore(
     {
-      getLibrary: async () => ({
-        items: [item("attachment:m%3A1:content-part-sha256-ab")],
-        folders: [],
-      }),
+      getLibrary: async () => {
+        await Promise.resolve();
+        return {
+          items: [item("attachment:m%3A1:content-part-sha256-ab")],
+          folders: [],
+        };
+      },
       deleteLibraryItem: async (id: string) => {
         await Promise.resolve();
         deleted.push(id);
@@ -472,7 +492,10 @@ function loadDownloads(
     "@/lib/image-fit": {},
     "@/stores/image-edit-handoff": {},
     "@/lib/native-files": {
-      downloadFile: async (f: File | Blob) => saved.push(f),
+      downloadFile: async (f: File | Blob) => {
+        await Promise.resolve();
+        saved.push(f);
+      },
       isDownloadCancelled: () => false,
     },
     "@/lib/toast": { toast },
@@ -497,7 +520,10 @@ test("an attachment deleted as another account signs in is not dropped from its 
   const session = { epoch: 1 };
   const store = loadStore(
     {
-      getLibrary: async () => ({ items: [item("attachment:m:a")], folders: [] }),
+      getLibrary: async () => {
+        await Promise.resolve();
+        return { items: [item("attachment:m:a")], folders: [] };
+      },
       deleteLibraryItem: async () => {
         await Promise.resolve();
         session.epoch += 1;

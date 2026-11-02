@@ -106,7 +106,7 @@ test("a refresh is as cheap as the automatic title, with its own prompt", async 
     automatic?.messages[0]?.content,
     "Write 1 concise chat title summarizing the conversation topic, not the user's exact wording. Use the assistant reply as context when provided. Rules: 2-6 words, no quotes, no punctuation, ASCII only, do not echo input. Output title only.",
   );
-  assert.match(String(refresh?.messages[0]?.content), /latest messages/);
+  assert.match(JSON.stringify(refresh?.messages[0]?.content) ?? "", /latest messages/);
   assert.deepEqual(
     { ...refresh, messages: undefined },
     { ...automatic, messages: undefined },
@@ -251,7 +251,7 @@ test("without a model reasoning and tool output never pick the title", () => {
       ] as unknown as MessageRecord["content"]),
     ]);
   assert.equal(title, "Day trip to Kyoto in autumn");
-  assert.doesNotMatch(title ?? "", /database|migration/i);
+  assert.doesNotMatch(title, /database|migration/i);
 });
 
 test("the Library's Regenerate title is off while any of the chat's panes is generating", () => {

@@ -59,7 +59,9 @@ test("switching mode keeps every other mode's draft", () => {
   assert.equal(state.song.variations, 3);
   assert.equal(state.sfx.prompt, "rain");
   assert.equal(state.edit.prompt, "brighter");
-  const saved = JSON.parse(store.get("unsloth_audio_music_v1") ?? "{}");
+  const saved = JSON.parse(store.get("unsloth_audio_music_v1") ?? "{}") as {
+    state: { edit: { prompt: string }; mode: string; [key: string]: unknown };
+  };
   assert.equal(saved.state.edit.prompt, "brighter");
   assert.equal(saved.state.mode, "song");
 });
@@ -109,6 +111,8 @@ test("an empty change prompt starts from the clip's own description", () => {
   });
   assert.equal(useAudioMusicStore.getState().edit.prompt, "brighter");
   useAudioMusicStore.getState().setLoadedEditActions(["inpaint"]);
-  const saved = JSON.parse(store.get("unsloth_audio_music_v1") ?? "{}");
+  const saved = JSON.parse(store.get("unsloth_audio_music_v1") ?? "{}") as {
+    state: { [key: string]: unknown };
+  };
   assert.equal("loadedEditActions" in saved.state, false);
 });

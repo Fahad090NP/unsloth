@@ -35,7 +35,7 @@ const runtimeUrl = new URL("../src/features/chat/stores/chat-runtime-store.ts", 
 // Drain the previous store copy's 400 ms debounced write, or it lands in the next test's stubs.
 let previousRuntime: RuntimeModule | null = null;
 function rememberRuntime(runtime: RuntimeModule): void {
-  rememberRuntime(runtime);
+  previousRuntime = runtime;
 }
 
 async function boot(scenario: string, paired: boolean | null = true): Promise<RuntimeModule> {
@@ -59,7 +59,7 @@ async function boot(scenario: string, paired: boolean | null = true): Promise<Ru
   if (paired) store.getState().applyThreadScopedSettings(THREAD, { reasoningEffort: "medium" });
   else if (paired === false) runtime.beginThreadScopedPairing(THREAD);
   settingsHttp.puts.splice(0);
-  previousRuntime = runtime;
+  rememberRuntime(runtime);
   return runtime;
 }
 

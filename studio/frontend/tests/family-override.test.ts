@@ -40,7 +40,7 @@ test("a family admits only a task-less row of a matching (or dual) manifest", ()
     ["text-to-image", "diffusers_pipeline", "diffusers_pipeline", false],
     ["text-to-video", "diffusers_dual_pipeline", "diffusers_modular_pipeline", false],
   ] as const) {
-    assert.equal(taskOpaqueArtifactSupportsFamilyOverride(task, artifact, required), want, `${task} ${artifact} ${required}`);
+    assert.equal(taskOpaqueArtifactSupportsFamilyOverride(task, artifact, required), want, `${task ?? "none"} ${artifact ?? "none"} ${required}`);
   }
 });
 
@@ -67,7 +67,10 @@ test("family options follow the backend registry, deduplicated, and every backen
     };
     return [
       ...source.matchAll(/^\s+name = (?:"([^"]+)"|([A-Z][A-Z0-9_]*),$)/gm),
-    ].map(([, literal, key]) => literal ?? constant(key));
+    ].map(([, literal, key]) => {
+      const label: string | undefined = literal;
+      return label ?? constant(key);
+    });
   });
   assert.ok(names.includes("flux.1") && names.includes("ltx-2"));
   assert.ok(names.includes("cosmos3-nano") && names.includes("cosmos3-edge"));

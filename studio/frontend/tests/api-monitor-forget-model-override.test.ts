@@ -171,7 +171,8 @@ test("a refused remove leaves this browser's copy and the list alone", async () 
 });
 
 test("a rejection that is not an Error still reports", async () => {
-  const state = trace(() => Promise.reject("offline"));
+  const reason: unknown = "offline";
+  const state = trace(() => Promise.reject(reason));
 
   await forgetModelOverride(PATH_KEY, state.deps);
 
@@ -376,7 +377,7 @@ test("a record a newer build wrote is left behind and reported", () => {
   );
 
   assert.ok(
-    JSON.parse(store.get(PER_MODEL_CONFIG_STORAGE_KEY) ?? "{}")[key],
+    (JSON.parse(store.get(PER_MODEL_CONFIG_STORAGE_KEY) ?? "{}") as Record<string, unknown>)[key],
     "the newer record must survive an older build's forget",
   );
 });

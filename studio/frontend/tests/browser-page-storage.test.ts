@@ -26,6 +26,7 @@ const clock = { now: Date.UTC(2026, 9, 15) };
 const pageDate = { now: () => clock.now, parse: Date.parse };
 class StorageEvent {
   static readonly stub = true;
+  readonly stubInstance = true;
   constructor(type: string, init: Record<string, unknown>) {
     Object.assign(this, init, { type });
   }
@@ -33,7 +34,7 @@ class StorageEvent {
 const stopPages: (() => void)[] = [];
 // Messages between pages and the panel, held in order when a test needs them in flight.
 let deferred: (() => void)[] | null = null;
-const deliver = (run: () => void) => (deferred ? deferred.push(run) : run());
+const deliver = (run: () => void) => { if (deferred) deferred.push(run); else run(); };
 
 function flush() {
   while (deferred?.length) {

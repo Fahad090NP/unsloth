@@ -122,11 +122,12 @@ test("warnings and stop requests stay visible while preparing", () => {
     message: warning,
   });
   assert.equal(firstStep.detail, warning);
+  const progress = diffusionTrainingProgress({
+    ...running,
+    message: "Preparing (cache latents 12/60)...",
+  });
   assert.match(
-    diffusionTrainingProgress({
-      ...running,
-      message: "Preparing (cache latents 12/60)...",
-    }).detail!,
+    progress.detail ?? "",
     /Preparing images and captions/,
   );
 });

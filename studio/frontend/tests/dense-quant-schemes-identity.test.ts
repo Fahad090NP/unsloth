@@ -13,7 +13,7 @@ const hooks = loadWithStubs<typeof GpuHooks>(
   {
     react: {
       useState: (initial: unknown) => [
-        typeof initial === "function" ? initial() : initial,
+        typeof initial === "function" ? (initial as () => unknown)() : initial,
         () => { /* empty */ },
       ],
       useEffect: () => { /* empty */ },

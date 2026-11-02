@@ -11,20 +11,21 @@ Object.assign(window.location, { href: "http://localhost/" });
 const vite = await createServer({ server: { middlewareMode: true } });
 after(() => vite.close());
 test("Responses survives provider requests and cache while legacy cache defaults", async () => {
-  const api = await vite.ssrLoadModule("/src/features/chat/api/providers-api.ts");
-  const providers = await vite.ssrLoadModule("/src/features/chat/external-providers.ts");
+  const api = await vite.ssrLoadModule("/src/features/chat/api/providers-api.ts") as typeof import("../src/features/chat/api/providers-api.ts");
+  const providers = await vite.ssrLoadModule("/src/features/chat/external-providers.ts") as typeof import("../src/features/chat/external-providers.ts");
   const bodies: Record<string, unknown>[] = [];
   const previous = globalThis.fetch;
   globalThis.fetch = (async (_url, init) => {
     await Promise.resolve();
-    bodies.push(JSON.parse(String(init?.body))); return Response.json({});
+    const text = typeof init?.body === "string" ? init.body : "";
+    bodies.push(JSON.parse(text) as Record<string, unknown>); return Response.json({});
   });
   try {
     await api.createProviderConfig({ providerType: "custom", displayName: "Gateway", apiType: "responses" });
     await api.updateProviderConfig("gateway", { apiType: "responses" });
     await api.testProviderConnection({ providerType: "custom", apiKey: "", apiType: "responses" });
   } finally {
-    globalThis.fetch = previous;
+    Reflect.set(globalThis, "fetch", previous);
   }
   assert.equal(bodies.length, 3);
   assert.ok(bodies.every((body) => body.api_type === "responses"));

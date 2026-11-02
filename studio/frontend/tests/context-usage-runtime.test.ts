@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import type { ThreadMessage } from "@assistant-ui/react";
 import ts from "@typescript/typescript6";
 
@@ -52,9 +53,7 @@ function runtimeFunction(name: string, dependencies: Record<string, unknown>, so
   const { outputText } = ts.transpileModule(declaration.getText(sourceFile).replace(/^export /, ""), {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
   });
-  return new Function(...Object.keys(dependencies), `${outputText}\nreturn ${name};`)(
-    ...Object.values(dependencies),
-  ) as (props: { enabled: boolean }) => null;
+  return runInNewContext(`${outputText}\nreturn ${name};`, dependencies) as (props: { enabled: boolean }) => null;
 }
 
 function usage(totalTokens: number, reasoningKey?: string): savedUsage.BranchContextUsage {
@@ -172,7 +171,7 @@ function harness(name = "ThreadContextUsageRecount") {
     },
     useEffect: (effect: () => unknown, dependencies: readonly unknown[]) => {
       const index = hookIndex++;
-      const previous = previousDeps[index];
+      const previous: readonly unknown[] | undefined = previousDeps[index];
       previousDeps[index] = dependencies;
       if (!previous || dependencies.some((value, i) => !Object.is(value, previous[i]))) {
         pendingEffects.push(effect);
@@ -261,7 +260,7 @@ for (const unavailable of [null, "image", "audio", "video", "unloaded", "compact
     h.state.queuedSettingsEpoch += 1;
     h.render();
     assert.equal(h.state.contextUsage.estimated, true);
-    assert.ok((h.state.contextUsage.totalTokens ?? 0) > 600);
+    assert.ok(h.state.contextUsage.totalTokens > 600);
     assert.equal(h.world.recounts.length, unavailable === null ? 1 : 0);
     h.state.reasoningKey = enabled;
     h.state.queuedSettingsEpoch += 1;

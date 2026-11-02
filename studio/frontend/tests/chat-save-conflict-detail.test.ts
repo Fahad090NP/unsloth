@@ -100,7 +100,7 @@ test("a 409 becomes the typed error, carrying the server's wording", async () =>
   const error = await module
     .saveChatMessage(message)
     .then(() => null)
-    .catch((e) => e);
+    .catch((e: unknown) => e);
 
   assert.ok(
     error instanceof module.ChatMessageProtectedError,

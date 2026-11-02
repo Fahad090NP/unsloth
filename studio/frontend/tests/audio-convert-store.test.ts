@@ -55,7 +55,10 @@ test("every draft field is written through, and no action is", () => {
   state.setPitch(-5);
   state.setSourceText("Hello.");
   state.setCompareSide("converted");
-  const saved = JSON.parse(store.get(AUDIO_CONVERT_STORAGE_KEY) ?? "{}");
+  const saved = JSON.parse(store.get(AUDIO_CONVERT_STORAGE_KEY) ?? "{}") as {
+    version: number;
+    state: unknown;
+  };
   assert.equal(saved.version, 1);
   assert.deepEqual(saved.state, {
     source: {

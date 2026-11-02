@@ -46,9 +46,10 @@ test("navigating before the sync lands consumes the auto-open", () => {
   const calls = [...dialog.matchAll(/setPage\("(?:list|form)"\)/g)];
   assert.equal(calls.length, 6);
   for (const call of calls) {
+    const callIndex: number | undefined = call.index;
     const before = dialog.slice(
-      Math.max(0, (call.index ?? 0) - 200),
-      call.index,
+      Math.max(0, (callIndex ?? 0) - 200),
+      callIndex,
     );
     assert.match(before, /autoOpenedAddFormRef\.current = true;/);
   }

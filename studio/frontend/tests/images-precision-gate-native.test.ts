@@ -3,7 +3,6 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import ts from "@typescript/typescript6";
 
 import { isDenseQuantKind, isNativeEngineStatus } from "../src/lib/resolved-precision.ts";
 import { readSrc } from "./helpers/kit.ts";
@@ -57,13 +56,6 @@ test("the Precision control is offered for a diffusers GGUF and withheld from na
 test("the Images page gates Precision on the engine, not on model_kind alone", () => {
   // The component's own source, so the helper above cannot drift away from it.
   const source = readSrc("features/images/images-page.tsx");
-  const tree = ts.createSourceFile(
-    "images-page.tsx",
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TSX,
-  );
   // Pinned on the native-engine exclusion, not the kind test beside it.
   const gate = source.includes("&& !isNativeEngineStatus(status)");
   assert.ok(

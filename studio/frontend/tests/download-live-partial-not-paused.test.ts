@@ -143,7 +143,7 @@ test("the repo card finds a running scoped job the snapshot key does not", () =>
   assert.equal(selectActiveJob(state, "model", REPO, null), null);
   const found = findActiveScopedJobForRepo(jsonJobs(scoped), "model", REPO);
   assert.equal(found?.variant, "@hub-required-assets");
-  assert.equal(isRepoDownloadProgress({ variant: found.variant ?? null }), true);
+  assert.equal(isRepoDownloadProgress({ variant: found.variant }), true);
 });
 
 test("a GGUF quant job is not a repo-level download, and stopped scoped jobs are ignored", () => {

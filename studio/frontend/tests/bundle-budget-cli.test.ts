@@ -66,7 +66,7 @@ function runIn(root: string, scriptDir = root) {
     [...TS_FLAGS, join(scriptDir, "scripts", "check-bundle-budget.ts")],
     { encoding: "utf8" },
   );
-  return { code: r.status, out: r.stdout ?? "", err: r.stderr ?? "" };
+  return { code: r.status, out: r.stdout, err: r.stderr };
 }
 
 test("a passing run prints the measurement it passed on", () => {

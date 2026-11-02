@@ -295,7 +295,7 @@ test("an AltGr character is a keystroke boundary", () => {
       metaKey: false,
       ctrlKey: true,
       altKey: true,
-      getModifierState: (k: "AltGraph") => k === "AltGraph",
+      getModifierState: () => true,
     }),
     true,
   );

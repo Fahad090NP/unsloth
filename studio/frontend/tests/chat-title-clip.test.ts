@@ -405,21 +405,21 @@ test("a title on a saved connection is routed to it, and streamed", async () => 
     ["unsloth/gemma-4-E2B-it-GGUF", true, false],
   );
   assert.deepEqual(
-    local?.messages?.map((m) => m.role),
+    local?.messages.map((m) => m.role),
     ["system", "user"],
   );
-  assert.equal(local?.messages?.[1]?.content, "User: hi");
+  assert.equal(local?.messages[1].content, "User: hi");
   assert.deepEqual(
     [
-      local?.enable_tools,
-      local?.enable_thinking,
-      local?.reasoning_effort,
-      local?.max_tokens,
+      local.enable_tools,
+      local.enable_thinking,
+      local.reasoning_effort,
+      local.max_tokens,
     ],
     [false, false, "none", 24],
   );
   assert.match(
-    String(local?.messages?.[0]?.content),
+    JSON.stringify(local?.messages[0].content) ?? "",
     /2-6 words, no quotes, no punctuation, ASCII only, do not echo input/,
   );
 });

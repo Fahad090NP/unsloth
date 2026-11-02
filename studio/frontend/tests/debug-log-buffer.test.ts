@@ -172,14 +172,17 @@ test("the source rescan cannot freeze the poll loop behind it", async () => {
     polls += 1;
   };
   await new Promise<void>((resolve) => {
+    const fail = (error: unknown) => {
+      assert.fail(error instanceof Error ? error.message : "tick failed");
+    };
     const tick = async () => {
       ticks += 1;
       await rescan();
       await poll();
-      if (ticks < 2) setTimeout(tick, 1);
+      if (ticks < 2) setTimeout(() => { tick().catch(fail); }, 1);
       else resolve();
     };
-    void tick();
+    tick().catch(fail);
   });
   assert.equal(polls, 2);
 });

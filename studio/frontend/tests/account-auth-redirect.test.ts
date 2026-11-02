@@ -14,7 +14,9 @@ for (const mode of ["single", "multi"]) {
     const location = { pathname: "/chat", href: "" };
     globalThis.window = { location } as unknown as Window & typeof globalThis;
     globalThis.fetch = async (path) =>
-      { await Promise.resolve(); return String(path).endsWith("/status")
+      { await Promise.resolve();
+        const target = typeof path === "string" ? path : path instanceof URL ? path.href : path.url;
+        return target.endsWith("/status")
         ? Response.json({ login_mode: mode, requires_password_change: false })
         : Response.json(
             { detail: "Password change required" },

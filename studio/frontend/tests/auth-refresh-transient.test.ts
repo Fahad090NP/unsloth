@@ -56,7 +56,8 @@ function fixture(t: TestContext, refreshes: Refresh[]) {
     return 0;
   }) as unknown as typeof setTimeout;
   globalThis.fetch = async (input, init) => {
-    const path = String(input);
+    const target = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    const path = target;
     if (path.endsWith("/status")) {
       return Response.json({
         login_mode: "single",
@@ -66,7 +67,9 @@ function fixture(t: TestContext, refreshes: Refresh[]) {
     }
     if (path.endsWith("/logout")) return new Response(null, { status: 200 });
     if (path.endsWith("/refresh")) {
-      refreshBodies.push(String(init?.body));
+      refreshBodies.push(
+        typeof init?.body === "string" ? init.body : init?.body ? await new Response(init.body).text() : "",
+      );
       const next = refreshes.shift();
       if (!next) {
         unexpected++;
@@ -226,6 +229,7 @@ test("a logout during the retry wait ends the refresh", async (t) => {
     loggedOut = f.api.logout();
   };
   assert.equal(await f.api.refreshSessionOutcome(), "rejected");
+  assert.ok(loggedOut);
   await loggedOut;
   assert.equal(f.refreshBodies.length, 1, "the refresh outlived the logout");
   assert.deepEqual(f.tokens, { access: null, refresh: null });

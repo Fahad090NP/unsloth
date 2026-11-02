@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 
@@ -27,9 +28,9 @@ function visit(node: ts.Node): void {
   ) {
     selectors.set(
       node.name.text,
-      new Function(
+      (compileFunction(
         `return (${node.initializer.arguments[0].getText(source)});`,
-      )(),
+      ) as unknown as () => (state: Record<string, unknown>) => unknown)(),
     );
   }
   ts.forEachChild(node, visit);

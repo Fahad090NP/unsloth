@@ -59,7 +59,10 @@ test("② follows ① until the user types in it, and Reset puts it back", () =>
   );
   state().setDelivery({ pitchSteps: 4 });
   assert.deepEqual(state().delivery, { speed: 1.5, pitchSteps: 4 });
-  const { state: saved, version } = JSON.parse(store.get(KEY) ?? "{}");
+  const { state: saved, version } = JSON.parse(store.get(KEY) ?? "{}") as {
+    version: number;
+    state: { edited: string; editedTouched: boolean };
+  };
   assert.deepEqual(
     [version, saved.edited, saved.editedTouched],
     [1, "It was a rainy day.", true],

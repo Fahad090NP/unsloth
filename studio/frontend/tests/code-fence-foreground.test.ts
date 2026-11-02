@@ -101,7 +101,7 @@ test("font styles and token backgrounds retain their spans", () => {
   const line = [
     token("a"),
     token("b"),
-    token("italic", undefined, undefined, { fontStyle: 1 }),
+    token("italic", undefined, undefined, { fontStyle: 1 } as unknown as Partial<Token>),
     token("bold", undefined, undefined, {
       htmlStyle: {
         color: "#383A42",

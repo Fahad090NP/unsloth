@@ -4,19 +4,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { stripTypeScriptTypes } from "node:module";
-import { resolveHubSection } from "../src/features/model-picker/components/model-selector/hub-section.ts";
+import { compileFunction } from "node:vm";
+import { resolveHubSection, type HubSection } from "../src/features/model-picker/components/model-selector/hub-section.ts";
 import { readSrc } from "./helpers/kit.ts";
+
+type DefaultSection = (
+  loadLastHubSection: () => HubSection | null,
+  hasDownloadedModels: () => boolean,
+) => (hasAdditionalOnDeviceModels?: boolean) => HubSection;
 
 const selector = readSrc("features/model-picker/components/model-selector.tsx");
 const defaultSectionSource = selector.slice(
   selector.indexOf("function defaultHubSection("),
   selector.indexOf("const HUB_SECTION_TABS"),
 );
-const defaultSection = new Function(
-  "loadLastHubSection",
-  "hasDownloadedModels",
+const defaultSection = compileFunction(
   stripTypeScriptTypes(defaultSectionSource) + "\nreturn defaultHubSection;",
-);
+  ["loadLastHubSection", "hasDownloadedModels"],
+) as unknown as DefaultSection;
 
 const savedDevice = {
   section: "downloaded" as const,

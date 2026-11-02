@@ -69,7 +69,7 @@ test("a site the user named, already reached, or linked from the page opens with
 test("an address the model made up for a new site asks first", () => {
   const gate = gateNavigation("https://collector.example/?q=secret", navigation({ userText: "summarize my notes" }));
   assert.equal(gate.kind, "ask");
-  assert.ok(gate.kind === "ask" && gate.ask === "open" && gate.host === "collector.example");
+  assert.ok(gate.ask === "open" && gate.host === "collector.example");
   // Naming a shared host's brand doesn't approve its users' subdomains, nor a host hidden inside a longer one.
   assert.equal(gateNavigation("https://collector.github.io/x", navigation({ userText: "search GitHub for gguf" })).kind, "ask");
   assert.equal(gateNavigation("https://e.com/x", navigation({ userText: "open example.com" })).kind, "ask");

@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 import { readSrc, readText } from "./helpers/kit.ts";
 import { readAudioWorkspaceSource } from "./helpers/audio-workspace.ts";
@@ -69,9 +70,7 @@ function callback(name: string, scope: Record<string, unknown>) {
       compilerOptions: { target: ts.ScriptTarget.ES2022 },
     },
   );
-  return new Function(...Object.keys(scope), outputText)(
-    ...Object.values(scope),
-  );
+  return runInNewContext(outputText, scope) as unknown;
 }
 
 test("a run applies a confirmation once and only to the transcript it covered", async () => {
@@ -92,7 +91,7 @@ test("a run applies a confirmation once and only to the transcript it covered", 
       },
       setBusy: () => { /* empty */ },
       AbortController,
-    });
+    }) as (...args: unknown[]) => Promise<unknown>;
     await run(
       { kind: "input", id: "i1", name: "Interview.wav", durationS: 3 },
       { language: "", timestamps: false, speakers: false },
@@ -190,9 +189,7 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
     const { outputText } = ts.transpileModule(`return (${expression});`, {
       compilerOptions: { target: ts.ScriptTarget.ES2022 },
     });
-    return new Function(...Object.keys(scope), outputText)(
-      ...Object.values(scope),
-    );
+    return runInNewContext(outputText, scope) as unknown;
   };
   for (const handler of handlers) {
     for (const scenario of ["decline", "accept", "saved", "exported", "unmounted"]) {
@@ -226,9 +223,9 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
         isTauri: false,
         window,
         AUTH_SESSION_ENDING_EVENT: eventName,
-      })();
+      }) as (() => void) | undefined;
       if (scenario === "unmounted") cleanup?.();
-      await execute(handler, {
+      await (execute(handler, {
         window,
         Event,
         AUTH_SESSION_ENDING_EVENT: eventName,
@@ -243,7 +240,7 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
         navigate: () => {
           events.push("navigate");
         },
-      })();
+      }) as () => Promise<void>)();
       assert.deepEqual(
         events,
         scenario === "decline"
@@ -281,11 +278,11 @@ test("remounting audio restores the unsaved transcript and its origin", () => {
     { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
   );
   const scope = {
-    useState: (initial: unknown) => [typeof initial === "function" ? initial() : initial, () => { /* empty */ }],
+    useState: (initial: unknown) => [typeof initial === "function" ? (initial as () => unknown)() : initial, () => { /* empty */ }],
     transcriptDraftKey: () => "test-draft",
     readTranscriptDraft: () => draft,
   };
-  const restored = new Function(...Object.keys(scope), outputText)(...Object.values(scope));
+  const restored = runInNewContext(outputText, scope) as unknown;
   assert.deepEqual(restored, draft);
 });
 

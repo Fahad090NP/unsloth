@@ -17,9 +17,8 @@ const { useBrowserStore } = await import("../src/features/browser/store.ts");
 const realNavigate = useBrowserStore.getState().navigate;
 useBrowserStore.setState({
   navigate: (...args: Parameters<typeof realNavigate>) => {
-    const result = realNavigate(...args);
+    realNavigate(...args);
     setTimeout(() => { useBrowserStore.getState().updateTab(args[0], { loading: false }); }, 0);
-    return result;
   },
 });
 

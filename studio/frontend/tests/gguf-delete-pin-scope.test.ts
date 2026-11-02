@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 import { pinKey, pinnedQuantEntries } from "../src/features/model-picker/components/model-selector/pinned-models.ts";
 import { ggufVariantsMatchForPicker, modelIdsMatchForPicker } from "../src/features/model-picker/components/model-selector/row-identity.ts";
@@ -17,10 +18,10 @@ function compile<T>(expression: string, context: Record<string, unknown>): T {
   const js = ts.transpileModule(`const callback = ${expression};`, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },
   }).outputText;
-  const build = new Function(
-    ...Object.keys(context),
+  const build = compileFunction(
     js + "; return callback;",
-  ) as (...args: unknown[]) => T;
+    Object.keys(context),
+  ) as unknown as (...args: unknown[]) => T;
   return build(...Object.values(context));
 }
 

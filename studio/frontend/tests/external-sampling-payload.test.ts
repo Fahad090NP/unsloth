@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 import ts from "@typescript/typescript6";
 
@@ -71,18 +72,18 @@ assert.ok(
   `only ${gatedSpreads.length} gated spreads`,
 );
 
-const buildSamplingFields = new Function(
-  "externalCapabilities",
-  "params",
-  "externalProvider",
-  "minPSamplingPayload",
-  `return Object.assign({}, ${gatedSpreads.join(", ")});`,
-) as (
+const buildSamplingFields = (
   capabilities: unknown,
   params: typeof PARAMS,
   externalProvider: { providerType: string },
   payload: typeof minPSamplingPayload,
-) => Record<string, number>;
+): Record<string, number> =>
+  runInNewContext(`Object.assign({}, ${gatedSpreads.join(", ")});`, {
+    externalCapabilities: capabilities,
+    params,
+    externalProvider,
+    minPSamplingPayload: payload,
+  }) as Record<string, number>;
 
 function bodyFor(
   providerType: string,
@@ -209,7 +210,7 @@ test("the external body opts into the stream usage chunk", () => {
       property.name.getText() === "stream_options",
   );
   assert.ok(optIn && ts.isPropertyAssignment(optIn), "stream_options missing");
-  assert.deepEqual(new Function(`return (${optIn.initializer.getText()});`)(), {
+  assert.deepEqual(runInNewContext(`(${optIn.initializer.getText()});`, {}), {
     include_usage: true,
   });
 });
@@ -222,18 +223,27 @@ const {
   supportsProviderPromptCaching,
 } = await import("../src/features/chat/external-providers.ts");
 
-const buildCacheFields = new Function(
-  "externalProvider",
-  "resolvedThreadId",
-  "supportsProviderPromptCaching",
-  "supportsProviderPromptCacheTtl",
-  "isPromptCacheTtl",
-  `return Object.assign({}, ${externalBodyLiteral()
-    .properties.filter(ts.isSpreadAssignment)
-    .map((property) => property.expression.getText())
-    .filter((text) => /PromptCach|^\(resolvedThreadId/.test(text))
-    .join(", ")});`,
-);
+const buildCacheFields = (
+  externalProvider: Record<string, unknown>,
+  resolvedThreadId: string | undefined,
+  supportsProviderPromptCaching: unknown,
+  supportsProviderPromptCacheTtl: unknown,
+  isPromptCacheTtl: unknown,
+): Record<string, unknown> =>
+  runInNewContext(
+    `Object.assign({}, ${externalBodyLiteral()
+      .properties.filter(ts.isSpreadAssignment)
+      .map((property) => property.expression.getText())
+      .filter((text) => /PromptCach|^\(resolvedThreadId/.test(text))
+      .join(", ")});`,
+    {
+      externalProvider,
+      resolvedThreadId,
+      supportsProviderPromptCaching,
+      supportsProviderPromptCacheTtl,
+      isPromptCacheTtl,
+    },
+  ) as Record<string, unknown>;
 
 function cacheFieldsFor(provider: Record<string, unknown>, threadId?: string) {
   return buildCacheFields(

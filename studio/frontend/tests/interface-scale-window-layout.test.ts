@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { stripTypeScriptTypes } from "node:module";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 import { calculateWindowSizeBounds } from "../src/app/window-layout.ts";
 import { observeDevicePixelRatio } from "../src/app/window-layout-lifecycle.ts";
@@ -18,11 +19,16 @@ const provider = readSrc("app/provider.tsx");
 const ratioFunction = (/function logicalPerCssPx\([\s\S]*?\n\}/.exec(provider))?.[0];
 assert.ok(ratioFunction);
 const windowStub = { devicePixelRatio: 2 };
-const logicalPerCssPx = new Function(
-  "window",
-  "getAppliedInterfaceZoom",
-  `${stripTypeScriptTypes(ratioFunction)}\nreturn logicalPerCssPx;`,
-)(windowStub, getAppliedInterfaceZoom) as (monitorScale: number) => number;
+const providerScope = {
+  exports: {} as { logicalPerCssPx: (monitorScale: number) => number },
+  window: windowStub,
+  getAppliedInterfaceZoom,
+};
+runInNewContext(
+  `${stripTypeScriptTypes(ratioFunction)}\nexports.logicalPerCssPx = logicalPerCssPx;`,
+  providerScope,
+);
+const logicalPerCssPx = providerScope.exports.logicalPerCssPx;
 
 Object.defineProperty(globalThis, "document", {
   configurable: true,
@@ -58,7 +64,7 @@ test("applied zoom refreshes live constraints with unchanged DPR and stops on un
   const effect = provider.slice(start, end + "\n  }, []);".length);
   const minimums: { width: number; height: number }[] = [];
   const mode = { current: "app" };
-  let dispose = () => {};
+  let dispose: () => void = () => undefined;
   const scope = {
     isTauri: true,
     useEffect: (setup: () => () => void) => {
@@ -73,12 +79,11 @@ test("applied zoom refreshes live constraints with unchanged DPR and stops on un
     appliedWindowModeRef: mode,
     windowLayoutGenerationRef: { current: 1 },
     reapplyWindowSizeConstraints: async (isCurrent: () => boolean) => {
+      await Promise.resolve();
       if (isCurrent()) minimums.push(bounds());
     },
   };
-  new Function(...Object.keys(scope), stripTypeScriptTypes(effect))(
-    ...Object.values(scope),
-  );
+  runInNewContext(stripTypeScriptTypes(effect), scope);
   try {
     setAppliedInterfaceZoom(2);
     setAppliedInterfaceZoom(1);

@@ -176,10 +176,10 @@ test("a v5 record is out of a pre-v5 build's reach in the first place", () => {
       cacheRam: _cacheRam,
       ...known
     } = map[key];
-    _loadMode;
-    _specDraftCacheDtype;
-    _ctxCheckpoints;
-    _cacheRam;
+    void _loadMode;
+    void _specDraftCacheDtype;
+    void _ctxCheckpoints;
+    void _cacheRam;
     map[key] = known;
     rewrote = true;
   }

@@ -30,7 +30,11 @@ class FakeElement {
   previousElementSibling: FakeElement | null = null;
   constructor(classes: string[], children: FakeElement[] = []) {
     this.classList = { contains: (name) => (classChecks++, classes.includes(name)) };
-    children.forEach((child, i) => { child.previousElementSibling = children[i - 1] ?? null; });
+    const items = children;
+    for (let i = 0; i < items.length; i += 1) {
+      const current = items[i];
+      current.previousElementSibling = items[i - 1] ?? null;
+    }
     this.lastElementChild = children.at(-1) ?? null;
   }
 }

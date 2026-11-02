@@ -21,28 +21,28 @@ test("bounded strip matches the unbounded pattern on fixed cases", () => {
     " ",
     "no placeholder here",
     "trailing brace }",
-    "\${}",
-    "\${a}",
-    "hello \${name}",
-    "hello \${name}   ",
-    "hello \${name}\n\n",
-    "hello\n\n\${name}\n",
-    "hello \${name} world",
-    "hello \${name} world}",
-    "a}\${b}",
-    "\${x\${y}",
-    "prefix \${a}\${b}",
-    "prefix \${a} \${b}",
-    "\${a\nb}",
-    "unterminated \${a",
-    "closed but empty \${ }",
+    `\${}`,
+    `\${a}`,
+    `hello \${name}`,
+    `hello \${name}   `,
+    `hello \${name}\n\n`,
+    `hello\n\n\${name}\n`,
+    `hello \${name} world`,
+    `hello \${name} world}`,
+    `a}\${b}`,
+    `\${x\${y}`,
+    `prefix \${a}\${b}`,
+    `prefix \${a} \${b}`,
+    `\${a\nb}`,
+    `unterminated \${a`,
+    `closed but empty \${ }`,
     "dollar $ alone }",
     "brace {a}",
     "$}{",
-    "text \${x} ",
+    `text \${x} `,
     "```ts\nconst a = { b: 1 };\n```",
     "json {\"a\": {\"b\": 1}}",
-    "json {\"a\": {\"b\": 1}} \${c}",
+    `json {"a": {"b": 1}} \${c}`,
   ];
   for (const input of cases) {
     assert.equal(
@@ -66,20 +66,20 @@ function mulberry32(seed: number): () => number {
 }
 
 function* randomInputs(count: number, seed = 20260816): Generator<string> {
-  const alphabet = ["$", "{", "}", " ", "\n", "\t", "a", "b", "x", "\${", "a}"];
+  const alphabet = ["$", "{", "}", " ", "\n", "\t", "a", "b", "x", `\${`, "a}"];
   const tails = [
     "",
-    "\${x}",
-    " \${x}",
-    "\${}",
-    "\n\${a b}\n",
-    "\${a",
-    "}\${x}",
-    "a}\${b}",
-    "\${x\${y}",
+    `\${x}`,
+    ` \${x}`,
+    `\${}`,
+    `\n\${a b}\n`,
+    `\${a`,
+    `}\${x}`,
+    `a}\${b}`,
+    `\${x\${y}`,
     " ",
     "}",
-    "\${x} ",
+    `\${x} `,
   ];
   const next = mulberry32(seed);
   for (let i = 0; i < count; i += 1) {
@@ -123,7 +123,7 @@ test("bounded strip matches the unbounded pattern behind a long reply", () => {
     "$".repeat(5_000),
   ];
   for (const prefix of prefixes) {
-    for (const suffix of ["", " \${x}", "\n\${x.y}\n", " \${}", " \${a"]) {
+    for (const suffix of ["", ` \${x}`, `\n\${x.y}\n`, ` \${}`, ` \${a`]) {
       const input = prefix + suffix;
       assert.equal(
         stripTrailingTemplatePlaceholder(input),
@@ -190,7 +190,7 @@ test("an out-of-window opener strips the nested placeholder, not the outer one",
 
   assert.equal(
     bounded,
-    input.slice(0, input.length - "\${nested}".length),
+    input.slice(0, input.length - `\${nested}`.length),
     "the inner placeholder, and only it, should be removed",
   );
   assert.equal(input.length - unbounded.length, 4208);

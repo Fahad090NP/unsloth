@@ -42,7 +42,7 @@ export function configureChatSearchHistoryStub(options: {
 }): void {
   batchRequests = [];
   threads = options.threads ?? [];
-  messagesByThread = options.messagesByThread ?? new Map();
+  messagesByThread = options.messagesByThread ?? new Map<string, unknown[]>();
   batchFails = options.batchFails ?? false;
   messageReadsFail = options.messageReadsFail ?? false;
   messageReadFailures = options.messageReadFailures ?? new Set();

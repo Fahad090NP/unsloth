@@ -184,7 +184,7 @@ function tab(
         return { ...setup, setup_code: "regenerated-secret" };
       },
       setAccountActive: (accountId: string, active: boolean) => {
-        calls.push(`active:${accountId}:${active}`);
+        calls.push(`active:${accountId}:${String(active)}`);
         accounts[1].is_active = active;
       },
       deleteAccount: (accountId: string) => {
@@ -192,7 +192,7 @@ function tab(
         accounts.splice(1);
       },
       setOwnerLoginAlias: (alias: string | null) => {
-        calls.push(`alias:${alias}`);
+        calls.push(`alias:${alias ?? "none"}`);
         const stored = alias?.trim().toLowerCase() || null;
         accounts[0].login_alias = stored;
         return stored;
@@ -610,9 +610,10 @@ test("the owner sets a sign-in name and an empty one falls back to unsloth", asy
     (input?.props.onChange as (event: unknown) => void)({ target: { value } });
     tree = ui.render();
   };
+  const setTree = (next: typeof tree) => { tree = next; };
   const submit = async () => {
     await click(tree, "Save name");
-    tree = ui.render();
+    setTree(ui.render());
   };
   type("Riley");
   await submit();

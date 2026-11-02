@@ -138,7 +138,7 @@ test("each edit panel applies only to its family, and only when the model can ed
   ];
   for (const [c, workflow, ids] of rows) {
     const got = applying(c, workflow).map((panel) => panel.id);
-    assert.deepEqual(got, ids, `${c.audioFamily} on ${workflow}`);
+    assert.deepEqual(got, ids, `${c.audioFamily ?? "none"} on ${workflow}`);
   }
 });
 

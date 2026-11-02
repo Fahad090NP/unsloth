@@ -52,7 +52,7 @@ const SAMPLING = { temperature: 1, top_p: 0.95, top_k: -1, min_p: 0.01 };
 test("curl and JavaScript put every sampling field at the top level of the body", () => {
   const curl = buildApiExample({ baseUrl: "http://h/v1", model: "m", sampling: SAMPLING, language: "curl", os: "unix" });
   assert.match(curl, /^curl http:\/\/h\/v1\/chat\/completions \\/);
-  const body = JSON.parse(curl.slice(curl.indexOf("-d '") + 4, curl.lastIndexOf("'")));
+  const body: unknown = JSON.parse(curl.slice(curl.indexOf("-d '") + 4, curl.lastIndexOf("'")));
   assert.deepEqual(body, { model: "m", messages: [{ role: "user", content: "Hello!" }], ...SAMPLING });
 
   const js = buildApiExample({ baseUrl: "http://h/v1", model: "m", sampling: SAMPLING, language: "javascript", os: "unix" });

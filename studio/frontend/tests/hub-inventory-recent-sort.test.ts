@@ -300,7 +300,7 @@ test("a new download clears historical observation and records completion time",
     previouslyObserved: completedState.observedKeys.gguf,
   });
   const suppressed = completedState.commitReconciliations(
-    hint ? [hint] : [],
+    [hint],
     completedPending,
     [{ kind: "gguf", reconciliation: missingRowReconciliation }],
   );

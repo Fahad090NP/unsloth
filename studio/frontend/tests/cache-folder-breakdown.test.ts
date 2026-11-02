@@ -62,7 +62,7 @@ test("only verified model-copy rows expose Clear and retain individual locations
             state[index],
             (next: unknown) => {
               state[index] =
-                typeof next === "function" ? next(state[index]) : next;
+                typeof next === "function" ? (next as (value: unknown) => unknown)(state[index]) : next;
             },
           ];
         },
@@ -102,7 +102,8 @@ test("only verified model-copy rows expose Clear and retain individual locations
   };
   const trigger = elements(render()).find(
     (element) => element.type === "Button",
-  )!;
+  );
+  assert.ok(trigger);
   (trigger.props.onClick as () => void)();
   render();
   await Promise.resolve();
@@ -154,7 +155,7 @@ test("HF folders are requested only on expansion and stale walks cannot replace 
             state[index],
             (next: unknown) => {
               state[index] =
-                typeof next === "function" ? next(state[index]) : next;
+                typeof next === "function" ? (next as (value: unknown) => unknown)(state[index]) : next;
             },
           ];
         },

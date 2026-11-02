@@ -16,7 +16,7 @@ function setup(page: string | null = "https://site.test/models") {
   const replies: [string, PageResponse | null][] = [];
   const requests = pageRequests(
     (page, _request, signal) =>
-      new Promise((resolve, reject) => calls.push({ page, signal, finish: (ok) => { ok ? resolve(answer) : reject(new Error("failed")); } })),
+      new Promise((resolve, reject) => calls.push({ page, signal, finish: (ok) => { if (ok) resolve(answer); else reject(new Error("failed")); } })),
     (id, reply) => replies.push([id, reply]),
     () => page,
   );

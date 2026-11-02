@@ -26,6 +26,7 @@ function loadDocument(label: string, { guarded }: { guarded: boolean }) {
   const invoked: string[] = [];
   class Node {
     static readonly stub = true;
+    readonly stubInstance = true;
   }
   const window: Record<string, unknown> = {
     URL,
@@ -44,7 +45,7 @@ function loadDocument(label: string, { guarded }: { guarded: boolean }) {
   };
   window.window = window;
   const natives = { alert: window.alert, confirm: window.confirm, Notification: window.Notification };
-  const run = (script: string) => runInNewContext(script, window);
+  const run = (script: string): unknown => runInNewContext(script, window);
   if (guarded) run(guard);
   PLUGINS.forEach(run);
   if (guarded && label.startsWith("unsloth-browser-")) run(restore);

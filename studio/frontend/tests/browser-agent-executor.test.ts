@@ -20,7 +20,7 @@ interface Posted { result: { ok: boolean; url?: string; text?: string; error?: s
 async function navigate(id: string, url: string, onStatus: (tabId: string, call: number) => number) {
   const posted: Posted[] = [];
   globals.__authFetch = (_url: string, init: { body: string }) => {
-    posted.push(JSON.parse(init.body));
+    posted.push(JSON.parse(init.body) as Posted);
     return new Response(null, { status: 200 });
   };
   let calls = 0;

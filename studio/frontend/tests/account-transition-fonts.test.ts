@@ -48,9 +48,9 @@ function browserWith(values: Record<string, string>) {
     indexedDB: {
       deleteDatabase: () => {
         const request = {} as IDBOpenDBRequest;
-        queueMicrotask(() =>
-          request.onsuccess?.call(request, {} as IDBVersionChangeEvent),
-        );
+        queueMicrotask(() => {
+          request.onsuccess?.call(request, {} as IDBVersionChangeEvent);
+        });
         return request;
       },
     },
@@ -74,7 +74,9 @@ test("an account switch drops the previous account's uploaded font bytes", async
     false,
     "Alice's uploaded font bytes are still readable by Bob's session",
   );
-  const parsed = JSON.parse(persisted);
+  const parsed = JSON.parse(persisted) as {
+    state: { customization: { importedFonts: unknown[]; uiFont: string | null; contrast: number } };
+  };
   assert.deepEqual(parsed.state.customization.importedFonts, []);
   assert.equal(parsed.state.customization.uiFont, null);
   assert.equal(parsed.state.customization.contrast, 40);

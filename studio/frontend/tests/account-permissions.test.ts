@@ -154,7 +154,7 @@ function permissionUi(
 
 for (const loginMode of ["single", "multi"]) {
   for (const owner of [true, false]) {
-    test(`${loginMode} permission menu allows full access only for the owner (${owner})`, () => {
+    test(`${loginMode} permission menu allows full access only for the owner (${String(owner)})`, () => {
       const ui = permissionUi(owner, "full", loginMode);
       const menu = ui.component.PermissionModeMenuItems({
         onRequestFullAccess() { /* empty */ },

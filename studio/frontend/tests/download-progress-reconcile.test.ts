@@ -221,7 +221,7 @@ test("a reading with no total keeps the card's own total, not zero", () => {
       emptyReading({ downloaded_bytes: 2 * GB, expected_bytes: 0 }),
       { resetMonotonic },
     );
-    assert.equal(resolved.expected, EXPECTED, `resetMonotonic=${resetMonotonic}`);
+    assert.equal(resolved.expected, EXPECTED, `resetMonotonic=${String(resetMonotonic)}`);
   }
 });
 

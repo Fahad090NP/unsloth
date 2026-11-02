@@ -297,7 +297,7 @@ test("nested template literals match whole-document tokenization", async () => {
       ...cutsAround(TEMPLATE, "`nested"),
       ...cutsAround(TEMPLATE, "})}"),
       ...cutsAround(TEMPLATE, "tail`"),
-      ...cutsAround(TEMPLATE, "\\${an}"),
+      ...cutsAround(TEMPLATE, "\\\${an}"),
     ],
   });
 });

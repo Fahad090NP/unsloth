@@ -17,7 +17,7 @@ const source = readSrc("features/hub/download-manager/poll-loop.ts");
 
 test("status ticks outnumber progress polls, so the race is the normal case", () => {
   assert.ok(
-    PROGRESS_POLL_INTERVAL_MS > POLL_INTERVAL_MS,
+    [PROGRESS_POLL_INTERVAL_MS].every((ms) => ms > POLL_INTERVAL_MS),
     "the race only exists because progress is polled less often than status",
   );
 });

@@ -208,6 +208,7 @@ test("resetting the memo re-probes", async () => {
 test("a pre-split backend keeps the 'all of it is on the GPU' reading", async () => {
   // Defaulting the missing field to 0 would drop a real VRAM charge.
   const { drafter_runtime_gpu_bytes, ...preSplit } = FULL;
+  assert.equal(drafter_runtime_gpu_bytes, FULL.drafter_runtime_bytes);
   answer(() => json(preSplit));
   const estimate = await fetchMemoryEstimate(REQUEST);
   assert.equal(estimate.drafterRuntimeGpuBytes, FULL.drafter_runtime_bytes);
@@ -223,6 +224,7 @@ test("an explicit zero GPU share is a real answer, not an absent field", async (
 test("a missing kv_estimable degrades to the floor path, not a confident total", async () => {
   // An older backend without kv_estimable must yield an unknown reading.
   const { kv_estimable, ...older } = FULL;
+  assert.equal(kv_estimable, true);
   answer(() => json(older));
   const estimate = await fetchMemoryEstimate(REQUEST);
   assert.equal(estimate.kvEstimable, false);
@@ -245,6 +247,7 @@ test("a missing kv_estimable degrades to the floor path, not a confident total",
 
 test("a missing kv_on_gpu keeps the pre-flag assumption", async () => {
   const { kv_on_gpu, ...older } = FULL;
+  assert.equal(kv_on_gpu, true);
   answer(() => json(older));
   assert.equal((await fetchMemoryEstimate(REQUEST)).kvOnGpu, true);
 });

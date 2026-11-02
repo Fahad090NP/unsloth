@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 import {
   pinKey,
@@ -24,19 +25,21 @@ const source = readFileSync(
 const declaration = source
   .slice(source.indexOf("async function hasRunnableNonGgufCopy"))
   .replace("export ", "");
-const compile = new Function(
-  "listCachedGguf",
-  "fetchCachedGgufInventory",
-  "fetchCachedModelsInventory",
-  "listGgufVariants",
-  "pinnedQuantEntries",
-  "usePinnedModelsStore",
-  "modelIdsMatchForPicker",
-  "ggufVariantsMatchForPicker",
+const compile = compileFunction(
   ts.transpileModule(declaration, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },
   }).outputText + "; return reconcileGgufPinsAfterDelete;",
-) as (
+  [
+    "listCachedGguf",
+    "fetchCachedGgufInventory",
+    "fetchCachedModelsInventory",
+    "listGgufVariants",
+    "pinnedQuantEntries",
+    "usePinnedModelsStore",
+    "modelIdsMatchForPicker",
+    "ggufVariantsMatchForPicker",
+  ],
+) as unknown as (
   listCachedGguf: unknown,
   fetchCachedGgufInventory: unknown,
   fetchCachedModelsInventory: unknown,

@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 import { readSrc } from "./helpers/kit.ts";
 
@@ -13,12 +14,13 @@ const helperSource = form.slice(
   form.indexOf("export function nextDefaultTokenNumber("),
   form.indexOf("\nexport function CreateKeyForm("),
 );
-const nextDefaultTokenNumber = new Function(
+const nextDefaultTokenNumber = runInNewContext(
   `${helperSource
     .replace("export function", "function")
     .replace(/\(\s*names: readonly string\[\],\s*pattern: RegExp,?\s*\): number/, "(names, pattern)")}
   return nextDefaultTokenNumber;`,
-)() as (names: readonly string[], pattern: RegExp) => number;
+  {},
+) as (names: readonly string[], pattern: RegExp) => number;
 
 const NEW_TOKEN = /^New Token (\d+)$/;
 

@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
 
 import ts from "@typescript/typescript6";
@@ -17,11 +18,12 @@ assert.ok(start >= 0, "resolveAutoLoadCandidate is no longer defined in chat-ada
 const declaration = source.slice(start, source.indexOf("\n}", start) + 2);
 
 interface Candidate { kind: string; ggufVariant: string | null }
-const resolve = new Function(
+const resolve = runInNewContext(
   `${ts.transpileModule(declaration, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },
-  }).outputText}; return resolveAutoLoadCandidate;`,
-)() as (
+  }).outputText}; resolveAutoLoadCandidate;`,
+  {},
+) as (
   source: object,
   remembered: string | null,
   isSkipped: (candidate: Candidate) => boolean,

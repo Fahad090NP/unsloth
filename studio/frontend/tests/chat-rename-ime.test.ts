@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 import {
@@ -60,7 +61,7 @@ function handler(
       module: ts.ModuleKind.Preserve,
     },
   }).outputText;
-  return new Function(...Object.keys(deps), code)(...Object.values(deps)) as (
+  return runInNewContext(code, deps) as (
     event: object,
   ) => void;
 }
@@ -114,7 +115,7 @@ for (const [name, file, inline] of [
     [false, 229],
     [true, 229],
   ] as const) {
-    test(`${name}: IME Enter (${isComposing}, ${keyCode}) keeps editing until a separate Enter`, () => {
+    test(`${name}: IME Enter (${String(isComposing)}, ${keyCode}) keeps editing until a separate Enter`, () => {
       const f = fixture(file, inline);
       f.compose(true);
       if (!isComposing) f.compose(false);
@@ -124,7 +125,8 @@ for (const [name, file, inline] of [
       if (isComposing) f.compose(false);
       f.key("Enter");
       assert.equal(f.effects.filter((effect) => effect === "save").length, 1);
-      if (inline) assert.equal(f.skipRenameBlurRef.current, true);
+      const inlineEnabled: boolean = inline;
+      if (inlineEnabled) assert.equal(f.skipRenameBlurRef.current, true);
     });
   }
 }

@@ -50,7 +50,8 @@ async function askedBy(action: Promise<void>, reply: (id: number) => void) {
     finished = true;
   });
   let asked = pending();
-  while (!finished && !asked) {
+  const isFinished = () => finished;
+  while (!isFinished() && !asked) {
     await new Promise((resolve) => setTimeout(resolve, 10));
     asked = pending();
   }

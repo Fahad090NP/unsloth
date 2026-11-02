@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 import {
   apiCompactionRequestFields,
@@ -341,11 +342,12 @@ test("provider compaction replay stays on the tool-loop subturn that produced it
   const start = adapter.indexOf("function providerCompactionAssistant(");
   assert.ok(start >= 0);
   const declaration = adapter.slice(start, adapter.indexOf("\n}", start) + 2);
-  const providerCompactionAssistant = new Function(
+  const providerCompactionAssistant = runInNewContext(
     `${ts.transpileModule(declaration, {
       compilerOptions: { target: ts.ScriptTarget.ES2022 },
-    }).outputText}; return providerCompactionAssistant;`,
-  )() as (
+    }).outputText}; providerCompactionAssistant;`,
+    {},
+  ) as (
     messages: Record<string, unknown>[],
     afterToolCalls: number,
   ) => Record<string, unknown> | undefined;

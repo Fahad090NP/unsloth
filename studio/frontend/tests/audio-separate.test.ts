@@ -191,7 +191,7 @@ test("the estimate follows the model, the length and the overlap", () => {
     assert.equal(
       estimateSeparateSeconds(family, seconds, overlap),
       want,
-      `${family} ${seconds} ${overlap}`,
+      `${family} ${seconds ?? "auto"} ${String(overlap)}`,
     );
   }
   assert.match(separateCpuWarning("bs_roformer", "cpu") ?? "", /very slow/);

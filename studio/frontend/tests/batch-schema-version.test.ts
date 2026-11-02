@@ -37,8 +37,11 @@ function config(nBatch: number | null, nUbatch: number | null = null) {
 }
 
 function storedVersion(): number {
-  const map = JSON.parse(store.get("unsloth_model_configs") ?? "{}");
-  const [entry] = Object.values(map) as { version: number }[];
+  const map = JSON.parse(store.get("unsloth_model_configs") ?? "{}") as Record<
+    string,
+    { version: number }
+  >;
+  const [entry] = Object.values(map);
   return entry.version;
 }
 

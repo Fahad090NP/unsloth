@@ -7,6 +7,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
 
 const source = readFileSync(
@@ -97,22 +98,17 @@ interface CascadeState {
 }
 
 function predicate(condition: string): (state: CascadeState) => boolean {
-  const compiled = new Function(
-    "MAX_AUTO_LOAD_ATTEMPTS",
-    VALIDATE_CAP_NAME,
-    "autoLoadCancelled",
-    "loadAttempts",
-    COUNTER_NAME,
-    `return Boolean(${condition});`,
-  ) as (...args: unknown[]) => boolean;
   return (state) =>
-    compiled(
-      MAX_AUTO_LOAD_ATTEMPTS,
-      MAX_AUTO_VALIDATE_FAILURES,
-      state.autoLoadCancelled,
-      state.loadAttempts,
-      state.validateFailures,
-    );
+    runInNewContext(
+      `Boolean(${condition});`,
+      {
+        MAX_AUTO_LOAD_ATTEMPTS,
+        [VALIDATE_CAP_NAME]: MAX_AUTO_VALIDATE_FAILURES,
+        autoLoadCancelled: state.autoLoadCancelled,
+        loadAttempts: state.loadAttempts,
+        [COUNTER_NAME]: state.validateFailures,
+      },
+    ) as boolean;
 }
 
 const sourceLoopStart = source.indexOf("for (const source of sources) {");
@@ -153,18 +149,20 @@ function sweepSource(
   budget: ValidateBudget,
 ): SweepStatus {
   let next = 0;
+  const b = budget;
+  const s = state;
   while (keepTryingCandidates(state) && next < quants.length) {
     const outcome = quants[next];
     next += 1;
-    if (budget.validates >= budget.abortAt) {
+    if (b.validates >= b.abortAt) {
       return "aborted";
     }
-    budget.validates += 1;
+    b.validates += 1;
     if (outcome === "refuse" || outcome === "reject") {
-      state.validateFailures += 1;
+      s.validateFailures += 1;
       continue;
     }
-    state.loadAttempts += 1;
+    s.loadAttempts += 1;
     if (outcome === "loads") {
       return "loaded";
     }

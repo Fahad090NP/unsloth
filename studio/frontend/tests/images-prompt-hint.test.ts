@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 
@@ -51,7 +52,7 @@ function evaluate(expression: string, scope: Record<string, unknown>): unknown {
   const { outputText } = ts.transpileModule(`return (${expression});`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   });
-  const evaluate = new Function(...Object.keys(scope), outputText) as (
+  const evaluate = compileFunction(outputText, Object.keys(scope)) as unknown as (
     ...args: unknown[]
   ) => unknown;
   return evaluate(...Object.values(scope));

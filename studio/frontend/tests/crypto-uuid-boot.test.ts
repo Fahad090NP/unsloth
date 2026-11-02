@@ -59,8 +59,9 @@ const STREAM = [
 let cursor = 0;
 const generate = boot({
   getRandomValues: (array: Uint8Array) => {
-    for (let i = 0; i < array.length; i += 1) {
-      array[i] = STREAM[cursor % STREAM.length];
+    const bytes = array;
+    for (let i = 0; i < bytes.length; i += 1) {
+      bytes[i] = STREAM[cursor % STREAM.length];
       cursor += 1;
     }
     return array;

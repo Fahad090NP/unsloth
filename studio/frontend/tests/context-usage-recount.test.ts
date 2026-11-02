@@ -213,7 +213,7 @@ test("an old reasoning count is discarded and the queued setting is counted", as
 });
 
 for (const invalidate of [false, true]) {
-  test(`a sampling change during a count reuses the result (invalidate=${invalidate})`, async () => {
+  test(`a sampling change during a count reuses the result (invalidate=${String(invalidate)})`, async () => {
     const h = harness();
     const gate = deferred();
     h.world.gate = gate.promise;
@@ -340,7 +340,7 @@ test("an emptied mounted branch never falls back to deleted stored messages", as
 });
 
 for (const loadedIsGguf of [true, false]) {
-  test(`tool-enabled counts use the server's result (GGUF=${loadedIsGguf})`, async () => {
+  test(`tool-enabled counts use the server's result (GGUF=${String(loadedIsGguf)})`, async () => {
     const h = harness();
     h.state.loadedIsGguf = loadedIsGguf;
     h.world.branch = [message("tip", "user", "text")];
@@ -354,7 +354,7 @@ for (const loadedIsGguf of [true, false]) {
     assert.equal(h.state.contextUsage?.totalTokens, 42);
   });
 
-  test(`a refused tool-enabled count preserves the estimate (GGUF=${loadedIsGguf})`, async () => {
+  test(`a refused tool-enabled count preserves the estimate (GGUF=${String(loadedIsGguf)})`, async () => {
     const h = harness();
     h.state.loadedIsGguf = loadedIsGguf;
     h.world.branch = [message("tip", "user", "text")];

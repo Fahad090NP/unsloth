@@ -5,6 +5,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 import { readSrcAsync } from "./helpers/kit.ts";
 
@@ -34,12 +35,17 @@ const condition = `isChatOnly() &&${guard[1]}`
 assert.ok(!condition.includes("location."), "the guard reads a location this test cannot set");
 assert.ok(!condition.includes("isChatOnly()"), "the guard reads a verdict this test cannot set");
 
-const redirectsToChat = new Function(
-  "pathname",
-  "chatOnly",
-  "unmeasured",
-  `${declarations}\nreturn Boolean(${condition});`,
-) as (pathname: string, chatOnly: boolean, unmeasured: boolean) => boolean;
+const guardSource = `${declarations}\nBoolean(${condition});`;
+const redirectsToChat = (
+  pathname: string,
+  chatOnly: boolean,
+  unmeasured: boolean,
+): boolean =>
+  runInNewContext(guardSource, {
+    pathname,
+    chatOnly,
+    unmeasured,
+  }) as boolean;
 
 const measuredChatOnly = (pathname: string) => redirectsToChat(pathname, true, false);
 

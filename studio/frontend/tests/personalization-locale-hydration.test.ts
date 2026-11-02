@@ -56,7 +56,8 @@ function createReact() {
   const isDirty = () => dirty;
 
   const slot = (): Slot => {
-    const existing: Slot | undefined = slots[cursor];
+    const existing: Slot | undefined =
+      cursor < slots.length ? slots[cursor] : undefined;
     if (existing) {
       cursor += 1;
       return existing;

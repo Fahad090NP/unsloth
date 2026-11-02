@@ -107,6 +107,8 @@ test("the held marker is written out with the job", () => {
   assert.ok(flushPersistedState);
   flushPersistedState();
 
-  const persisted = JSON.parse(store.get(PERSIST_KEY) ?? "null");
+  const persisted = JSON.parse(store.get(PERSIST_KEY) ?? "null") as {
+    state: { jobs: Record<string, { measuredTransfer: boolean }> };
+  };
   assert.equal(persisted.state.jobs[key].measuredTransfer, false);
 });

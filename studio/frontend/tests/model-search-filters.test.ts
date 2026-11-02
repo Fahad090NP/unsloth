@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 import {
   filterModelListing,
@@ -322,28 +323,30 @@ function channelIterator(listings: Record<string, unknown[]>) {
   assert.ok(limit > 0);
   const listModels = ({ search }: { search: { owner?: string } }) =>
     listing(listings[search.owner ?? "all"] ?? []);
-  const compile = new Function(
-    "listModels",
-    "getHfEndpoint",
-    "ALL_FIELDS",
-    "makeSortFetch",
-    "UNSLOTH_CHANNEL_PREFETCH",
-    "UNSLOTH_FILTER_REJECT_LIMIT",
-    "hubListingSort",
+  const compile = compileFunction(
     `${
       ts.transpileModule(source.slice(start, end), {
         compilerOptions: { target: ts.ScriptTarget.ES2022 },
       }).outputText
     }; return channelUnslothFirstIterator;`,
-  ) as (
-    listModels: (input: { search: { owner?: string } }) => AsyncGenerator<unknown>,
+    [
+      "listModels",
+      "getHfEndpoint",
+      "ALL_FIELDS",
+      "makeSortFetch",
+      "UNSLOTH_CHANNEL_PREFETCH",
+      "UNSLOTH_FILTER_REJECT_LIMIT",
+      "hubListingSort",
+    ],
+  ) as unknown as (
+    listModels: (input: { search: { owner?: string } }) => AsyncGenerator,
     getHfEndpoint: () => string,
     allFields: unknown[],
     makeSortFetch: () => undefined,
     prefetch: number,
     rejectLimit: number,
     hubListingSort: (sortBy: string) => string,
-  ) => (search: unknown, options: unknown) => AsyncGenerator<unknown>;
+  ) => (search: unknown, options: unknown) => AsyncGenerator;
   const fn = compile(
     listModels,
     () => "",

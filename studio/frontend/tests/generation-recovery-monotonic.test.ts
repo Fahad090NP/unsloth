@@ -36,8 +36,11 @@ const reasoningLength = (content: unknown): number => {
   }
   let total = 0;
   for (const part of content) {
-    const candidate = part as { type?: unknown; text?: unknown };
-    if (candidate && typeof candidate === "object" && candidate.type === "reasoning") {
+    const candidate = part as
+      | { type?: unknown; text?: unknown }
+      | null
+      | undefined;
+    if (candidate && candidate.type === "reasoning") {
       total += typeof candidate.text === "string" ? candidate.text.length : 0;
     }
   }

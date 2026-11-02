@@ -171,9 +171,10 @@ test("with build sourcemaps on, the rewrite returns its own map", () => {
     handler: (this: unknown, code: string, id: string) => { code: string; map: string };
   };
   const result = hook.handler.call({}, "@media (min-width:40rem){.a{order:1}}", "/app/src/index.css");
-  const map: { sources: string[]; mappings: string } = JSON.parse(
-    result.map as string,
-  );
+  const map = JSON.parse(result.map as string) as {
+    sources: string[];
+    mappings: string;
+  };
   assert.ok(result.code.startsWith("@media screen{"));
   assert.ok(map.sources.includes("index.css"));
   assert.notEqual(map.mappings, "");

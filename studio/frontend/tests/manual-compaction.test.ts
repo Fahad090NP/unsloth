@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 import { getThreadState, LocalThreadRuntimeCore } from "@assistant-ui/core/internal";
 import {
@@ -291,7 +292,7 @@ function menuCallback(name: string, deps: Record<string, unknown>, argument: num
   const code = ts.transpileModule(`return (${expression.getText(source)});`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
   }).outputText;
-  const build = new Function(...Object.keys(deps), code) as (
+  const build = compileFunction(code, Object.keys(deps)) as unknown as (
     ...args: unknown[]
   ) => unknown;
   return build(...Object.values(deps));
@@ -538,10 +539,10 @@ test("the compact menu item binds its action, icon and busy state", () => {
     return attribute.initializer.expression.getText(source);
   }
   assert.equal(expression(item.openingElement, "onSelect"), "compact");
-  const disabled = new Function("menu", "busy", `return (${expression(item.openingElement, "disabled")});`) as (
-    menu: unknown,
-    busy: boolean,
-  ) => unknown;
+  const disabled = compileFunction(
+    `return (${expression(item.openingElement, "disabled")});`,
+    ["menu", "busy"],
+  ) as unknown as (menu: unknown, busy: boolean) => unknown;
   assert.equal(disabled({ item: { type: "single" } }, false), false);
   assert.equal(disabled({ item: { type: "single" } }, true), true);
   assert.equal(disabled({ item: { type: "compare" } }, false), true);

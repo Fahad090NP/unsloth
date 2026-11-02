@@ -39,11 +39,9 @@ function buttonClasses(button: string): Set<string> {
   return new Set(classes.split(WHITESPACE));
 }
 
-test("run settings uses one aligned toggle in both states", async () => {
-  const [page, panel] = await Promise.all([
-    atDefaultUiScale(readSrc("features/chat/chat-page.tsx")),
-    atDefaultUiScale(readSrc("features/chat/chat-settings-sheet.tsx")),
-  ]);
+test("run settings uses one aligned toggle in both states", () => {
+  const page = atDefaultUiScale(readSrc("features/chat/chat-page.tsx"));
+  const panel = atDefaultUiScale(readSrc("features/chat/chat-settings-sheet.tsx"));
 
   const toggles = [
     buttonAtMarker(page, 'aria-label="Open run settings"'),
@@ -64,11 +62,9 @@ test("run settings uses one aligned toggle in both states", async () => {
   assert.ok(headerClasses.has("pr-[18px]"));
 });
 
-test("settings chrome hover shapes: round dialog close, rounded-square cog", async () => {
-  const [dialog, sidebar] = await Promise.all([
-    atDefaultUiScale(readSrc("features/settings/settings-dialog.tsx")),
-    atDefaultUiScale(readSrc("components/app-sidebar.tsx")),
-  ]);
+test("settings chrome hover shapes: round dialog close, rounded-square cog", () => {
+  const dialog = atDefaultUiScale(readSrc("features/settings/settings-dialog.tsx"));
+  const sidebar = atDefaultUiScale(readSrc("components/app-sidebar.tsx"));
 
   const dialogMain = dialog.slice(dialog.indexOf("<main"));
   const dialogClose = buttonClasses(

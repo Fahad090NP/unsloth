@@ -5,6 +5,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 
 import { readSrcAsync, registerBundlerResolver } from "./helpers/kit.ts";
 
@@ -72,29 +73,24 @@ interface Inventory {
   physical_devices?: { name?: string }[];
 }
 
+interface MismatchDerivation {
+  gpuMismatch: { reason?: string } | null;
+  physicalDevices: { name?: string }[];
+  gpuMismatchMessage: string | null;
+  gpuPermissionHint: string | null;
+}
+
 function mismatchFor(gpuInventory: Inventory | null) {
-  const run = new Function(
-    "gpuInventory",
-    "t",
-    "unknownLabel",
+  const run = compileFunction(
     `${derivation}
      return { gpuMismatch, physicalDevices, gpuMismatchMessage, gpuPermissionHint };`,
-  ) as (
+    ["gpuInventory", "t", "unknownLabel"],
+  ) as unknown as (
     gpuInventory: Inventory | null,
     t: (key: string) => string,
     unknownLabel: string,
-  ) => {
-    gpuMismatch: { reason?: string } | null;
-    physicalDevices: { name?: string }[];
-    gpuMismatchMessage: string | null;
-    gpuPermissionHint: string | null;
-  };
-  return run(gpuInventory, t, UNKNOWN) as {
-    gpuMismatch: { reason?: string } | null;
-    physicalDevices: { name?: string }[];
-    gpuMismatchMessage: string | null;
-    gpuPermissionHint: string | null;
-  };
+  ) => MismatchDerivation;
+  return run(gpuInventory, t, UNKNOWN);
 }
 
 // #14067: an account outside the render group. Repair installation cannot add it to one.
@@ -263,18 +259,17 @@ test("the sidebar's Train hint stops doing the same", () => {
     chatOnlyDetail: string | null,
     chatOnlyHint: string | null = null,
   ) =>
-    (new Function(
-      "chatOnlyMeasured",
-      "chatOnlyReason",
-      "chatOnlyDetail",
-      "chatOnlyHint",
-      `${hint.replace(": string | undefined", "")}\nreturn trainDisabledHint;`,
-    ) as (
-      chatOnlyMeasured: boolean,
-      chatOnlyReason: string,
-      chatOnlyDetail: string | null,
-      chatOnlyHint: string | null,
-    ) => string | undefined)(true, chatOnlyReason, chatOnlyDetail, chatOnlyHint);
+    (
+      compileFunction(
+        `${hint.replace(": string | undefined", "")}\nreturn trainDisabledHint;`,
+        ["chatOnlyMeasured", "chatOnlyReason", "chatOnlyDetail", "chatOnlyHint"],
+      ) as unknown as (
+        chatOnlyMeasured: boolean,
+        chatOnlyReason: string,
+        chatOnlyDetail: string | null,
+        chatOnlyHint: string | null,
+      ) => string | undefined
+    )(true, chatOnlyReason, chatOnlyDetail, chatOnlyHint);
 
   // #14067: a closed AMD node replaces the reinstall advice.
   const closed = forReason("torch_cuda_unavailable", "2.11.0+rocm7.0", HINT);
@@ -408,20 +403,19 @@ test("only a host the inventory can still reclassify keeps polling", () => {
     selfHealSettled = true,
     capabilitiesUnknown = false,
   ) =>
-    (new Function(
-      "chatOnly",
-      "chatOnlyReason",
-      "selfHealSettled",
-      "capabilitiesUnknown",
-      `${reasons}
+    (
+      compileFunction(
+        `${reasons}
        ${guard}
        return true;`,
-    ) as (
-      chatOnly: boolean,
-      chatOnlyReason: string | null,
-      selfHealSettled: boolean,
-      capabilitiesUnknown: boolean,
-    ) => boolean)(chatOnly, chatOnlyReason, selfHealSettled, capabilitiesUnknown) === true;
+        ["chatOnly", "chatOnlyReason", "selfHealSettled", "capabilitiesUnknown"],
+      ) as unknown as (
+        chatOnly: boolean,
+        chatOnlyReason: string | null,
+        selfHealSettled: boolean,
+        capabilitiesUnknown: boolean,
+      ) => boolean | undefined
+    )(chatOnly, chatOnlyReason, selfHealSettled, capabilitiesUnknown);
 
   assert.ok(polls(true, "torch_cpu_build"));
   assert.ok(polls(true, "torch_cuda_unavailable"));

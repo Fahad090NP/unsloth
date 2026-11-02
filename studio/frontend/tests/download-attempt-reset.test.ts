@@ -140,30 +140,30 @@ test("a reset spent on the killed run's partial still lets the bar follow the re
   const pinned = replayRetry(polls, false);
   assert.ok(
     pinned.slice(1).every((f) => f >= 0.39),
-    `without the hold the bar stays at the old run's mark: ${pinned}`,
+    `without the hold the bar stays at the old run's mark: ${pinned.join(", ")}`,
   );
 
   const followed = replayRetry(polls, true);
-  assert.ok(followed[2] < 0.01, `the restart should show: ${followed}`);
-  assert.ok(followed[4] > followed[3] && followed[4] < 0.1, `${followed}`);
+  assert.ok(followed[2] < 0.01, `the restart should show: ${followed.join(", ")}`);
+  assert.ok(followed[4] > followed[3] && followed[4] < 0.1, `${followed.join(", ")}`);
 });
 
 test("a re-measured completed baseline does not end the hold before the purge", () => {
   const polls = [
-    reading(1 * GB, 4 * GB),
-    reading(1 * GB, 4 * GB),
+    reading(Number(GB), 4 * GB),
+    reading(Number(GB), 4 * GB),
     reading(6 * MB, 4 * GB),
     reading(200 * MB, 4 * GB),
   ];
   const followed = replayRetry(polls, true);
-  assert.ok(followed[2] < 0.01, `the restart should show: ${followed}`);
-  assert.ok(followed[3] > followed[2] && followed[3] < 0.1, `${followed}`);
+  assert.ok(followed[2] < 0.01, `the restart should show: ${followed.join(", ")}`);
+  assert.ok(followed[3] > followed[2] && followed[3] < 0.1, `${followed.join(", ")}`);
 });
 
 test("the floor hold ends when the bytes left grow or at its deadline", () => {
   const hold = { attempt: 2, remainingBytes: 3 * GB, until: 10_000 };
   assert.equal(floorHoldEnded(hold, 5 * GB, 2 * GB, 0), false);
-  assert.equal(floorHoldEnded(hold, 4 * GB, 1 * GB, 0), false);
+  assert.equal(floorHoldEnded(hold, 4 * GB, Number(GB), 0), false);
   assert.equal(floorHoldEnded(hold, 5 * GB, 6 * MB, 0), true);
   assert.equal(floorHoldEnded(hold, 5 * GB, 2 * GB, 10_000), true);
 });

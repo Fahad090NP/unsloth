@@ -44,7 +44,8 @@ async function askedBy(action: Promise<void>, target: string) {
     finished = true;
   });
   let asked = pending();
-  while (!finished && !asked) {
+  const isFinished = () => finished;
+  while (!isFinished() && !asked) {
     await new Promise((resolve) => setTimeout(resolve, 10));
     asked = pending();
   }
@@ -129,7 +130,7 @@ test("a clicked search-result redirect link opens its target without a question"
     assert.equal(await askedBy(click, "clicked.example"), null);
     assert.equal(opened().includes("https://clicked.example/page"), true, "the clicked result did not open");
   } finally {
-    globals.__frameAgent = original;
+    Reflect.set(globals, "__frameAgent", original);
     links = [];
   }
 });

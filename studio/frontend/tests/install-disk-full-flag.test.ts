@@ -8,6 +8,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 
 import { readSrcAsync } from "./helpers/kit.ts";
 
@@ -87,7 +88,7 @@ ${installBody
     return { startInstall, onInstallFailed: (e) => {${listenerBody}} };
   `;
   const keys = Object.keys(scope);
-  const build = new Function(...keys, source) as (...args: unknown[]) => {
+  const build = compileFunction(source, keys) as unknown as (...args: unknown[]) => {
     startInstall: () => Promise<void>;
     onInstallFailed: (e: {
       payload: { message: string; diskFull: boolean };
@@ -143,7 +144,7 @@ ${installBody
     return startInstall;
   `;
   const keys = Object.keys(scope);
-  const buildStartInstall = new Function(...keys, source) as (
+  const buildStartInstall = compileFunction(source, keys) as unknown as (
     ...args: unknown[]
   ) => (options: unknown) => Promise<void>;
   const startInstall = buildStartInstall(...keys.map((key) => scope[key]));

@@ -16,13 +16,13 @@ function functionBody(source: string, name: string): string {
   return source.slice(start, next === -1 ? undefined : next);
 }
 
-test("context-menu item hover matches the standard dropdown rectangle", async () => {
+test("context-menu item hover matches the standard dropdown rectangle", () => {
   const contextItem = functionBody(
-    await readText("../src/components/ui/context-menu.tsx"),
+    readText("../src/components/ui/context-menu.tsx"),
     "ContextMenuItem",
   );
   const dropdownItem = functionBody(
-    await readText("../src/components/ui/dropdown-menu.tsx"),
+    readText("../src/components/ui/dropdown-menu.tsx"),
     "DropdownMenuItem",
   );
 

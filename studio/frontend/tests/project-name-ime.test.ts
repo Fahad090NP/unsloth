@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 import {
   imeOwnsInputKeydown,
@@ -76,7 +77,7 @@ function compositionHandlers(file: string, deps: Record<string, unknown>) {
       module: ts.ModuleKind.None,
     },
   }).outputText;
-  return (new Function(...Object.keys(deps), code) as (
+  return (compileFunction(code, Object.keys(deps)) as unknown as (
     ...args: unknown[]
   ) => {
     onFocus: () => void;
@@ -130,7 +131,7 @@ function keyHandler(
       module: ts.ModuleKind.None,
     },
   }).outputText;
-  return (new Function(...Object.keys(deps), code) as (
+  return (compileFunction(code, Object.keys(deps)) as unknown as (
     ...args: unknown[]
   ) => (event: object) => void)(...Object.values(deps));
 }

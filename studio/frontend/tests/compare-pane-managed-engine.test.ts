@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import { readSrc } from "./helpers/kit.ts";
 import {
   DEFAULT_ENGINE_LAUNCH_FIELDS,
@@ -13,13 +14,21 @@ const composer = readSrc("features/chat/shared-composer.tsx");
 const start = composer.indexOf("const paneEngine = ");
 const end = composer.indexOf("let loadTrustRemoteCode", start);
 assert.ok(start >= 0 && end > start);
-const paneFieldsBody = new Function(
-  "targetIsGguf",
-  "ownConfig",
-  "reconcilePersistedGpuIds",
-  "engineLaunchFieldsFromParams",
-  `${composer.slice(start, end)} return paneEngineFields;`,
-);
+const paneFieldsBody = (
+  targetIsGguf: boolean,
+  ownConfig: Record<string, unknown>,
+  reconcilePersistedGpuIds: (ids: number[] | null) => number[] | null,
+  engineLaunchFieldsFromParams: unknown,
+): Record<string, unknown> =>
+  runInNewContext(
+    `${composer.slice(start, end)} paneEngineFields;`,
+    {
+      targetIsGguf,
+      ownConfig,
+      reconcilePersistedGpuIds,
+      engineLaunchFieldsFromParams,
+    },
+  ) as Record<string, unknown>;
 const paneFields = (
   targetIsGguf: boolean,
   ownConfig: Record<string, unknown>,

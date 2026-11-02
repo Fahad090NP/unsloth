@@ -250,7 +250,7 @@ test("saving model memory drops the auto-switch cache", async () => {
   assert.equal(calls.length, 0, "auto-switch does cache");
 
   await updateModelMemorySettings({ keepResident: true });
-  calls.length = 0;
+  calls.splice(0);
   await autoSwitch.loadOpenAIAutoSwitchSettings();
   assert.equal(calls.length, 1, "the write must have invalidated it");
 });

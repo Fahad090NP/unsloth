@@ -326,7 +326,7 @@ test("strips what Python strips, so a name the endpoint refuses is not read as a
   // str.strip() removes these but trim() does not, so the backend stores a plain cat.png.
   for (const ch of ["\u001c", "\u001d", "\u001e", "\u001f", "\u0085"]) {
     const sel = selectDatasetFiles([picked(`cat.png${ch}`)]);
-    assert.equal(sel.imageCount, 1, `U+${ch.codePointAt(0)?.toString(16)} must be stripped`);
+    assert.equal(sel.imageCount, 1, `U+${ch.codePointAt(0)?.toString(16) ?? "?"} must be stripped`);
     assert.equal(sel.skipped, 0);
   }
 

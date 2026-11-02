@@ -384,7 +384,7 @@ test("HF credential API rejects a successful non-JSON response", async () => {
     );
     await assert.rejects(loadSavedHfToken(), /returned an invalid response/);
   } finally {
-    globalThis.fetch = originalFetch;
+    Reflect.set(globalThis, "fetch", originalFetch);
     Reflect.deleteProperty(globalThis, "window");
     Reflect.deleteProperty(globalThis, "localStorage");
   }
@@ -414,7 +414,8 @@ test("HF store hydrates from the API without recreating plaintext storage", asyn
   const requests: string[] = [];
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     await Promise.resolve();
-    requests.push(String(input));
+    const target = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    requests.push(target);
     return new Response(
       JSON.stringify({ token: "hf_server", has_token: true }),
       { status: 200, headers: { "Content-Type": "application/json" } },
@@ -430,7 +431,7 @@ test("HF store hydrates from the API without recreating plaintext storage", asyn
     assert.deepEqual(requests, ["/api/settings/hugging-face-token"]);
     assert.equal(store.has("unsloth_hf_token"), false);
   } finally {
-    globalThis.fetch = originalFetch;
+    Reflect.set(globalThis, "fetch", originalFetch);
     Reflect.deleteProperty(globalThis, "window");
     Reflect.deleteProperty(globalThis, "localStorage");
   }
@@ -493,7 +494,7 @@ test("HF hydration does not overwrite an in-flight user edit", async () => {
     assert.equal(hfStore.getHfToken(), "hf_user_edit");
     assert.equal(hfStore.useHfTokenStore.getState().isPersisting, false);
   } finally {
-    globalThis.fetch = originalFetch;
+    Reflect.set(globalThis, "fetch", originalFetch);
     Reflect.deleteProperty(globalThis, "window");
     Reflect.deleteProperty(globalThis, "localStorage");
   }
@@ -532,7 +533,7 @@ test("cross-tab refresh replays after an active HF hydration", async () => {
     assert.equal(reads, 2);
     assert.equal(hfStore.getHfToken(), "hf_new_tab");
   } finally {
-    globalThis.fetch = originalFetch;
+    Reflect.set(globalThis, "fetch", originalFetch);
     Reflect.deleteProperty(globalThis, "window");
     Reflect.deleteProperty(globalThis, "localStorage");
   }
@@ -576,7 +577,7 @@ test("a delayed HF write response reconciles a newer cross-tab commit", async ()
     assert.equal(hfStore.getHfToken(), "hf_new_tab");
     assert.equal(hfStore.useHfTokenStore.getState().isPersisting, false);
   } finally {
-    globalThis.fetch = originalFetch;
+    Reflect.set(globalThis, "fetch", originalFetch);
     Reflect.deleteProperty(globalThis, "window");
     Reflect.deleteProperty(globalThis, "localStorage");
   }
@@ -608,7 +609,7 @@ test("pending HF edits can be drained before navigation", async () => {
     await drain;
     assert.equal(drained, true);
   } finally {
-    globalThis.fetch = originalFetch;
+    Reflect.set(globalThis, "fetch", originalFetch);
     Reflect.deleteProperty(globalThis, "window");
     Reflect.deleteProperty(globalThis, "localStorage");
   }
@@ -651,7 +652,7 @@ test("a superseded successful HF write advances the rollback baseline", async ()
     assert.equal(hfStore.getHfToken(), "hf_first");
     assert.match(hfStore.useHfTokenStore.getState().persistenceError ?? "", /failed/);
   } finally {
-    globalThis.fetch = originalFetch;
+    Reflect.set(globalThis, "fetch", originalFetch);
     Reflect.deleteProperty(globalThis, "window");
     Reflect.deleteProperty(globalThis, "localStorage");
   }

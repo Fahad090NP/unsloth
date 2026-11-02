@@ -189,7 +189,7 @@ test("read-aloud sends the speech text, not the markdown source (#12547)", async
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
   assert.equal(
-    (JSON.parse(posted[0]) as { messages: Array<{ content: unknown }> }).messages[0]
+    (JSON.parse(posted[0]) as { messages: { content: unknown }[] }).messages[0]
       .content,
     "spoken(**Done.**)",
   );

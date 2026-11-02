@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 import {
@@ -57,7 +58,7 @@ function createCallback(
   code: string,
   deps: Record<string, unknown>,
 ): () => void {
-  return new Function(...Object.keys(deps), code)(...Object.values(deps));
+  return runInNewContext(code, deps) as () => void;
 }
 
 test("the shipped main composer key handler protects IME and mention selection", () => {

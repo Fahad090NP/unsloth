@@ -144,7 +144,7 @@ test("stringifyToolResult cleans nested tool object fields before JSON display",
   });
   const parsed = JSON.parse(rendered) as {
     stdout: string;
-    nested: Array<{ line?: string }>;
+    nested: { line?: string }[];
   };
   assert.equal(parsed.stdout, "file.txt");
   assert.equal(parsed.nested[0]?.line, "error");

@@ -224,11 +224,12 @@ test("a chunk every debounce window cannot postpone a refresh forever", async (t
   const step = store.FORK_COUNT_REFRESH_DEBOUNCE_MS - 1;
   const ticks = Math.ceil(store.FORK_COUNT_REFRESH_MAX_WAIT_MS / step) + 1;
   let firedAfter: number | null = null;
+  const requestCount = () => requests.length;
   for (let i = 0; i < ticks; i++) {
     fireHistoryUpdated();
     mock.timers.tick(step);
     await flush();
-    if (requests.length > 1) {
+    if (requestCount() > 1) {
       firedAfter = (i + 1) * step;
       break;
     }
@@ -240,7 +241,7 @@ test("a chunk every debounce window cannot postpone a refresh forever", async (t
   );
   assert.ok(
     ((firedAfter ?? assert.fail("expected a non-null value"))) <= store.FORK_COUNT_REFRESH_MAX_WAIT_MS + step,
-    `the refresh waited ${firedAfter}ms, past the ${store.FORK_COUNT_REFRESH_MAX_WAIT_MS}ms bound`,
+    `the refresh waited ${firedAfter ?? "never"}ms, past the ${store.FORK_COUNT_REFRESH_MAX_WAIT_MS}ms bound`,
   );
   unsubscribe();
 });

@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 
 import { isExternalModelId } from "../src/features/chat/external-providers.ts";
@@ -70,12 +71,10 @@ const onRun = findNode(
 );
 assert.ok(onRun.initializer && ts.isJsxExpression(onRun.initializer));
 assert.ok(onRun.initializer.expression);
-const runConfiguredModel = new Function(
-  "visibleConfigTarget",
-  "onSelect",
-  "config",
+const runConfiguredModel = compileFunction(
   `return (${onRun.initializer.expression.getText()})(config, false);`,
-) as (
+  ["visibleConfigTarget", "onSelect", "config"],
+) as unknown as (
   target: ModelPickTarget,
   onSelect: (id: string, meta: ModelSelectorChangeMeta) => void,
   config: typeof DEFAULT_PER_MODEL_CONFIG,
@@ -112,16 +111,18 @@ interface RememberedModel {
   kind: "gguf" | "model";
   ggufVariant: string | null;
 }
-const finishLoad = new Function(
-  "selection",
-  "loadResponse",
-  "isGguf",
-  "isLora",
-  "recordLastLocalModelLoad",
-  "isLocalModelPath",
-  "isExternalModelId",
+const finishLoad = compileFunction(
   `${declarations.join("\n")}\n${recordGuard.getText()}\nreturn loadPath;`,
-) as (
+  [
+    "selection",
+    "loadResponse",
+    "isGguf",
+    "isLora",
+    "recordLastLocalModelLoad",
+    "isLocalModelPath",
+    "isExternalModelId",
+  ],
+) as unknown as (
   selection: Selection,
   response: { is_gguf: boolean; is_lora: boolean },
   isGguf: boolean,

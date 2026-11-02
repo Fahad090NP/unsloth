@@ -120,7 +120,7 @@ test("model ids and text are escaped for each language", () => {
     bash.indexOf("-d '") + 4,
     bash.indexOf("' \\\n  -o"),
   );
-  assert.equal(JSON.parse(quoted.replace(/'\\''/g, "'")).model, model);
+  assert.equal((JSON.parse(quoted.replace(/'\\''/g, "'")) as { model: string }).model, model);
   const ps = S.buildAudioApiSnippet("speak", {
     ...input,
     lang: "curl",

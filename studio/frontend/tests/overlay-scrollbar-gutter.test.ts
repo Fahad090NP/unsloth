@@ -41,7 +41,8 @@ function fakeDocument({
   bodyPointerEventsNone?: boolean;
 }) {
   const vars = new Map<string, string>();
-  const bodyChildren: Node[] = [];
+  // Sparse by construction: elementFromPoint has to cope with a body that holds no probe.
+  const bodyChildren: (Node | undefined)[] = [];
   const knobs = { contentReachable };
   const documentElement = {
     style: {

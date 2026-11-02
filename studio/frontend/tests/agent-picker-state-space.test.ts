@@ -43,7 +43,7 @@ function settle(
     agent = next;
   }
   throw new Error(
-    `did not settle: detected=${JSON.stringify(detected)} start=${start} isGguf=${isGguf}`,
+    `did not settle: detected=${JSON.stringify(detected)} start=${start} isGguf=${String(isGguf)}`,
   );
 }
 
@@ -76,7 +76,7 @@ test("the settled agent always runs on the active model", () => {
         const { agent } = settle(detected, start, isGguf, VISIBLE_AGENTS);
         assert.ok(
           agentRunsOnActiveModel(agent, isGguf),
-          `settled on ${agent} with isGguf=${isGguf}, detected=${JSON.stringify(detected)}`,
+          `settled on ${agent} with isGguf=${String(isGguf)}, detected=${JSON.stringify(detected)}`,
         );
       }
     }
@@ -142,11 +142,11 @@ test("the pre-PR rule and the current rule differ only where Claude was unrunnab
         if (a !== b) {
           assert.ok(
             !agentRunsOnActiveModel(b, isGguf),
-            `changed a runnable answer: ${b} -> ${a} (isGguf=${isGguf})`,
+            `changed a runnable answer: ${b} -> ${a} (isGguf=${String(isGguf)})`,
           );
           assert.ok(agentRunsOnActiveModel(a, isGguf));
           deltas.push(
-            `${JSON.stringify(detected)}/${start}/${isGguf}: ${b} -> ${a}`,
+            `${JSON.stringify(detected)}/${start}/${String(isGguf)}: ${b} -> ${a}`,
           );
         }
       }
@@ -247,7 +247,7 @@ test("an external selection makes GGUF-ness unknown, not stale-true", () => {
 test("unknown GGUF-ness leaves both the pick and the stored preference alone", () => {
   const state = ggufState("external::openai::gpt-5", { variant: "Q4_K_M" });
   assert.equal(state, null);
-  assert.equal(state === null, true);
+  assert.equal(Object.is(state, null), true);
 });
 
 test("a route that never mounts the chat runtime still learns the model kind", () => {

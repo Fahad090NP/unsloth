@@ -42,7 +42,8 @@ test("a print tokenizes what the worker still owes, synchronously and within a b
   const probes = [...hook.matchAll(/highlight\("", /g)];
   assert.ok(probes.length >= 2);
   for (const probe of probes) {
-    assert.ok(hook.startsWith("() => {})", (probe.index ?? 0) + probe[0].length));
+    const probeIndex: number | undefined = probe.index;
+    assert.ok(hook.startsWith("() => {})", (probeIndex ?? 0) + probe[0].length));
   }
 });
 

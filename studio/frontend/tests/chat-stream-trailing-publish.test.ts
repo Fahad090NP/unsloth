@@ -79,10 +79,13 @@ function channel<T>() {
   const flush = () => {
     if (!waiter) return;
     const resolve = waiter;
-    const reject = rejecter!;
+    assert.ok(rejecter);
+    const reject = rejecter;
     if (queue.length > 0) {
+      const value = queue.shift();
+      assert.ok(value !== undefined);
       waiter = rejecter = null;
-      resolve({ value: queue.shift()!, done: false });
+      resolve({ value, done: false });
     } else if (failure !== null) {
       waiter = rejecter = null;
       reject(failure);
@@ -134,8 +137,9 @@ function consume(source: AsyncIterable<string>, clock: Clock) {
   const gate = createStreamPublishGate();
   const published: { text: string; frame: number }[] = [];
   let frameNo = 0;
-  const realFrame = clock.frame;
-  clock.frame = () => {
+  const c = clock;
+  const realFrame = c.frame.bind(c);
+  c.frame = () => {
     frameNo += 1;
     realFrame();
   };

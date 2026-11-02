@@ -50,7 +50,7 @@ test("restart disclosure waits for acceptance and completion dismisses its one k
   });
 
   globalThis.fetch = (async (input: RequestInfo | URL) => {
-    const url = String(input);
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (url.startsWith("/api/hub/active-downloads")) {
       return json({ downloads: [] });
     }
@@ -143,7 +143,7 @@ test("a stale model selection does not spend an Xet notice reservation", async (
   });
 
   globalThis.fetch = (async (input: RequestInfo | URL) => {
-    const url = String(input);
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (url.startsWith("/api/hub/active-downloads")) {
       return json({ downloads: [] });
     }
@@ -215,7 +215,7 @@ test("a later entry of a staged plan starts without reserving another Xet notice
 
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     await Promise.resolve();
-    const url = String(input);
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (url.startsWith("/api/hub/active-downloads")) {
       return json({ downloads: [] });
     }

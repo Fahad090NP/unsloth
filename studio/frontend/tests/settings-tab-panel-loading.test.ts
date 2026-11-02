@@ -108,7 +108,6 @@ test("a panel that fails to load cannot take the app down with it", async () => 
       const catches = node.members.some(
         (member) =>
           (ts.isMethodDeclaration(member) || ts.isPropertyDeclaration(member)) &&
-          member.name !== undefined &&
           ts.isIdentifier(member.name) &&
           (member.name.text === "getDerivedStateFromError" ||
             member.name.text === "componentDidCatch"),

@@ -9,6 +9,11 @@ export interface RecordedToast {
 
 export const recordedToasts: RecordedToast[] = [];
 
+function stringifyOrEmpty(value: unknown): string {
+  const serialized: string | undefined = JSON.stringify(value);
+  return serialized ?? "";
+}
+
 function record(kind: RecordedToast["kind"]) {
   return (message?: unknown, options?: { description?: unknown }) => {
     recordedToasts.push({
@@ -18,7 +23,7 @@ function record(kind: RecordedToast["kind"]) {
           ? message
           : message === null || message === undefined
             ? ""
-            : (JSON.stringify(message) ?? ""),
+            : stringifyOrEmpty(message),
       description:
         typeof options?.description === "string"
           ? options.description

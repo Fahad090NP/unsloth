@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import ts from "@typescript/typescript6";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
 interface AutoAuth {
@@ -113,8 +114,8 @@ function fixture(
       invoke: async (command: string, args?: unknown) => {
         await Promise.resolve();
         invokes.push([command, args]);
-        if (command === "desktop_mark_signed_out") return void (shell.signedOut = true);
-        if (command === "desktop_clear_signed_out") return void (shell.signedOut = false);
+        if (command === "desktop_mark_signed_out") return void Reflect.set(shell, "signedOut", true);
+        if (command === "desktop_clear_signed_out") return void Reflect.set(shell, "signedOut", false);
         assert.equal(command, "desktop_auth");
         invokeCalls++;
         if (shell.signedOut) return { signed_out: true };
@@ -254,7 +255,7 @@ test("returning to one account restores desktop auto-login and guard shortcuts",
 });
 
 for (const passwordChange of [false, true]) {
-  test(`a desktop account switch keeps the managed session it just created, password change ${passwordChange}`, async (t) => {
+  test(`a desktop account switch keeps the managed session it just created, password change ${String(passwordChange)}`, async (t) => {
     const f = fixture(t);
     f.setResponse(multi);
     f.session.storeAuthTokens("alice-access", "alice-refresh");
@@ -319,7 +320,7 @@ test("a managed session stays signed in without another desktop exchange", async
 
 for (const tauri of [true, false]) {
   for (const requiresChange of [true, false]) {
-    test(`${tauri ? "desktop" : "browser"} multi-account guards use session password flag ${requiresChange}`, async (t) => {
+    test(`${tauri ? "desktop" : "browser"} multi-account guards use session password flag ${String(requiresChange)}`, async (t) => {
       const f = fixture(t, tauri);
       if (tauri) {
         f.setResponse(multi);
@@ -434,7 +435,7 @@ function sidebarSignOut(scope: Record<string, unknown>): () => Promise<void> {
   const { outputText } = ts.transpileModule(`return (${handler});`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   });
-  return new Function(...Object.keys(scope), outputText)(...Object.values(scope));
+  return runInNewContext(outputText, scope) as () => Promise<void>;
 }
 
 interface SignOutCase { tauri: boolean; owner: boolean; status?: unknown; offline?: boolean; markerFails?: boolean }

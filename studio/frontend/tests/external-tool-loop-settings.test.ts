@@ -81,7 +81,6 @@ function rendered(gates: Gates): string[] {
   };
   let outer: ts.Node = toolsSection();
   while (
-    outer.parent &&
     (ts.isParenthesizedExpression(outer.parent) ||
       ts.isConditionalExpression(outer.parent))
   ) {

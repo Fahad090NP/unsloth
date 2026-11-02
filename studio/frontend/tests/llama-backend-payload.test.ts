@@ -172,7 +172,7 @@ test("an environment pin is never left with Apply as the only live control", () 
   assert.equal(status.envBackend, "cpu");
   assert.equal(llamaBackendSelectionNeedsApply(status, status.backendRequest), true);
   const backend: string | null = status.envBackend;
-  const envLocked = backend !== null;
+  const envLocked = typeof backend === "string";
   const dirty = llamaBackendSelectionNeedsApply(status, status.backendRequest);
   assert.equal(!status.supported || envLocked, true, "Select is disabled");
   assert.equal(!dirty || !status.supported || envLocked, true, "Apply is disabled too");

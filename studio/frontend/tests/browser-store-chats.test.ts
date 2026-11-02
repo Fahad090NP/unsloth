@@ -74,7 +74,7 @@ test("a tab opened for a chat off screen waits there; the chat on screen is unto
   assert.equal(useBrowserStore.getState().tabs.find((tab) => tab.id === agentTab)?.chat, away);
 
   // The user's own tab in front of that chat when they come back is the agent's.
-  store.revealIn(away, agentTab ?? "");
+  store.revealIn(away, agentTab);
   store.showChat(away);
   assert.equal(useBrowserStore.getState().open, true);
   assert.equal(useBrowserStore.getState().activeTabId, agentTab);
@@ -100,7 +100,7 @@ test("a new chat's tabs follow it to its id on the first save, and moving a tab 
   assert.deepEqual(urls(), ["https://draft.example/", "https://draft2.example/"]);
   // Other chats' tabs sit between in the full list; the strip order is what moves.
   const [first, second] = chatTabs(useBrowserStore.getState());
-  store.moveTab(second.id ?? "", 0);
+  store.moveTab(second.id, 0);
   assert.deepEqual(
     chatTabs(useBrowserStore.getState()).map((tab) => tab.id),
     [second.id, first.id],

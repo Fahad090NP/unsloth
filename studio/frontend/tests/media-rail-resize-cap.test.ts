@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 
@@ -23,10 +24,10 @@ function visit(node: ts.Node): void {
 }
 visit(source);
 assert.ok(effectSource, "the rail cap must update from actual layout measurements");
-const runEffect = new Function(
-  "anchorRef", "placement", "rail", "kind", "getComputedStyle", "document", "ResizeObserver", "setCap",
+const runEffect = compileFunction(
   `return (${effectSource})();`,
-) as (...args: unknown[]) => () => void;
+  ["anchorRef", "placement", "rail", "kind", "getComputedStyle", "document", "ResizeObserver", "setCap"],
+) as unknown as (...args: unknown[]) => () => void;
 
 function measure({
   kind = "images", scale = 1, inset = "", fallbackInset = "", placement = "page",

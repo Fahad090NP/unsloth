@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction, runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 import { explicitFamily } from "../src/features/model-picker/components/model-selector/family-override.ts";
 import {
@@ -86,7 +87,7 @@ test("recalling a quantized model carries the selected adapters into its load", 
       },
       ...overrides,
     };
-    const compile = new Function(...Object.keys(scope), outputText) as (
+    const compile = compileFunction(outputText, Object.keys(scope)) as unknown as (
       ...args: unknown[]
     ) => {
       handleGenerateWithRecall: () => Promise<unknown>;
@@ -323,8 +324,7 @@ test("a new model pick cancels recalled generation and retires the staged load",
       scope.loadAnyway.dismissed += 1;
     },
   };
-  const run = new Function(...Object.keys(scope), outputText) as (...args: unknown[]) => unknown;
-  run(...Object.values(scope));
+  runInNewContext(outputText, scope);
   assert.equal(scope.pickToast.dismissed, 1);
   assert.equal(scope.loadAnyway.dismissed, 1);
   assert.equal(scope.pendingRecalledGeneration.current, null);

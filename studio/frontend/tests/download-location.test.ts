@@ -19,7 +19,9 @@ after(() => {
 const bodies: Record<string, unknown>[] = [];
 globalThis.fetch = (async (_input: string, init?: RequestInit) => {
   await Promise.resolve();
-  bodies.push(JSON.parse(String(init?.body)));
+  const raw = init?.body;
+  const text = typeof raw === "string" ? raw : raw ? await new Response(raw).text() : "";
+  bodies.push(JSON.parse(text) as Record<string, unknown>);
   return new Response(JSON.stringify({ job_key: "k", state: "running" }), {
     status: 202,
     headers: { "Content-Type": "application/json" },

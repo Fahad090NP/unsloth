@@ -125,8 +125,7 @@ test("no write resets the blocked list wholesale", () => {
   const visit = (node: ts.Node): void => {
     if (
       ts.isCallExpression(node) &&
-      node.expression.getText() === "setBlocked" &&
-      node.arguments[0]
+      node.expression.getText() === "setBlocked"
     ) {
       args.push(node.arguments[0]);
     }
@@ -152,13 +151,13 @@ function readSetterCalls(
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node) && node.expression.getText() === setter) {
       let handler: string | null = null;
-      for (let at: ts.Node = node; at.parent; at = at.parent) {
+      for (let at: ts.Node | undefined = node; at; at = at.parent) {
         if (ts.isJsxAttribute(at.parent)) {
           handler = at.parent.name.getText();
           break;
         }
       }
-      calls.push({ argument: node.arguments[0].getText() ?? "", handler });
+      calls.push({ argument: node.arguments[0].getText(), handler });
     }
     node.forEachChild(visit);
   };
@@ -190,7 +189,7 @@ test("no effect resets the grant, which would leave a stale render", () => {
     if (
       ts.isCallExpression(node) &&
       node.expression.getText() === "useEffect" &&
-      GRANT_SETTER.test(node.arguments[0].getText() ?? "")
+      GRANT_SETTER.test(node.arguments[0].getText())
     ) {
       resetInEffect = true;
     }
@@ -348,15 +347,15 @@ test("the banner deep-links to the network access setting", () => {
       node.expression.getText().endsWith(".openDialog")
     ) {
       let handler: string | null = null;
-      for (let at: ts.Node = node; at.parent; at = at.parent) {
+      for (let at: ts.Node | undefined = node; at; at = at.parent) {
         if (ts.isJsxAttribute(at.parent)) {
           handler = at.parent.name.getText();
           break;
         }
       }
       deepLinks.push({
-        tab: node.arguments[0].getText() ?? "",
-        options: node.arguments[1].getText() ?? "",
+        tab: node.arguments[0].getText(),
+        options: node.arguments[1].getText(),
         handler,
       });
     }
@@ -393,7 +392,7 @@ function readHandlerCalling(needle: string): string {
   let text: string | undefined;
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node) && node.expression.getText() === needle) {
-      for (let at: ts.Node = node; at.parent; at = at.parent) {
+      for (let at: ts.Node | undefined = node; at; at = at.parent) {
         if (ts.isJsxAttribute(at.parent)) {
           text = at.parent.getText();
           break;

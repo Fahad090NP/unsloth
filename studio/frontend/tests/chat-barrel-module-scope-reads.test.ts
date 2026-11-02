@@ -172,7 +172,7 @@ function declaredIn(scope: ts.Node): Set<string> {
     if (scope.name) out.add(scope.name.text);
   }
   const parameters = (scope as ts.SignatureDeclarationBase).parameters;
-  if (parameters) for (const p of parameters) collectBindingNames(p.name, out);
+  for (const p of parameters) collectBindingNames(p.name, out);
   if ((ts.isFunctionExpression(scope) || ts.isFunctionDeclaration(scope)) && scope.name) {
     out.add(scope.name.text);
   }
@@ -182,7 +182,8 @@ function declaredIn(scope: ts.Node): Set<string> {
 
 /** Per occurrence, not per file: per-file suppression silenced genuine top-level reads. */
 function isShadowed(identifier: ts.Identifier): boolean {
-  for (let node: ts.Node | undefined = identifier.parent; node; node = node.parent) {
+  const start: ts.Node | undefined = identifier.parent;
+  for (let node = start; node; node = node.parent) {
     if (!isScope(node)) continue;
     if (ts.isSourceFile(node)) return false;
     if (declaredIn(node).has(identifier.text)) return true;
@@ -196,17 +197,17 @@ function isShadowed(identifier: ts.Identifier): boolean {
  */
 function inRuntimeHeritage(node: ts.Node): boolean {
   let current: ts.Node = node;
-  let parent = current.parent;
+  let parent: ts.Node | undefined = current.parent;
   while (parent && !ts.isExpressionWithTypeArguments(parent)) {
     if (!ts.isExpression(parent)) return false;
     current = parent;
     parent = parent.parent;
   }
   if (parent.expression !== current) return false;
-  const clause = parent.parent;
+  const clause: ts.Node | undefined = parent.parent;
   if (!clause || !ts.isHeritageClause(clause)) return false;
   if (clause.token !== ts.SyntaxKind.ExtendsKeyword) return false;
-  const declaration = clause.parent;
+  const declaration: ts.Node | undefined = clause.parent;
   if (!declaration) return false;
   if (!ts.isClassDeclaration(declaration) && !ts.isClassExpression(declaration)) return false;
   // `declare class` emits no JavaScript, so its base is never evaluated.
@@ -214,7 +215,8 @@ function inRuntimeHeritage(node: ts.Node): boolean {
 }
 
 function isAmbient(node: ts.Node): boolean {
-  for (let current: ts.Node | undefined = node; current; current = current.parent) {
+  const start = node as ts.Node | undefined;
+  for (let current = start; current; current = current.parent) {
     if (ts.isSourceFile(current)) return current.isDeclarationFile;
     const modifiers = ts.canHaveModifiers(current) ? ts.getModifiers(current) : undefined;
     if (modifiers?.some((m) => m.kind === ts.SyntaxKind.DeclareKeyword)) return true;
@@ -224,7 +226,8 @@ function isAmbient(node: ts.Node): boolean {
 
 function insideTypeSyntax(node: ts.Node): boolean {
   if (inRuntimeHeritage(node)) return false;
-  for (let current: ts.Node | undefined = node.parent; current; current = current.parent) {
+  const start: ts.Node | undefined = node.parent;
+  for (let current = start; current; current = current.parent) {
     if (
       ts.isTypeNode(current) ||
       ts.isTypeAliasDeclaration(current) ||
@@ -239,7 +242,7 @@ function insideTypeSyntax(node: ts.Node): boolean {
 
 function isImmediatelyInvoked(node: ts.Node): boolean {
   let current: ts.Node = node;
-  let parent = current.parent;
+  let parent: ts.Node | undefined = current.parent;
   while (parent && ts.isParenthesizedExpression(parent)) {
     current = parent;
     parent = parent.parent;
@@ -285,7 +288,7 @@ function isCallableNode(node: ts.Node): node is ts.FunctionLikeDeclaration {
 
 function invocationOf(node: ts.Node): ts.CallExpression | ts.NewExpression | undefined {
   let current: ts.Node = node;
-  let parent = current.parent;
+  let parent: ts.Node | undefined = current.parent;
   while (parent && ts.isParenthesizedExpression(parent)) {
     current = parent;
     parent = parent.parent;
@@ -327,7 +330,7 @@ function defersEvaluation(node: ts.Node): boolean {
 }
 
 function isNamespaceMemberRead(node: ts.Identifier): boolean {
-  const parent = node.parent;
+  const parent: ts.Node | undefined = node.parent;
   if (!parent) return false;
   if (ts.isPropertyAccessExpression(parent) && parent.expression === node) return true;
   if (ts.isElementAccessExpression(parent) && parent.expression === node) return true;
@@ -335,7 +338,7 @@ function isNamespaceMemberRead(node: ts.Identifier): boolean {
 }
 
 function isNonReference(node: ts.Identifier): boolean {
-  const parent = node.parent;
+  const parent: ts.Node | undefined = node.parent;
   if (!parent) return false;
   if (ts.isPropertyAccessExpression(parent) && parent.name === node) return true;
   if (ts.isPropertyAssignment(parent) && parent.name === node) return true;
@@ -393,7 +396,8 @@ function collectTargets(statements: readonly ts.Statement[], inherited?: Targets
 }
 
 function declaringScopeOf(node: ts.Node): ts.Node | undefined {
-  for (let current: ts.Node | undefined = node.parent; current; current = current.parent) {
+  const start: ts.Node | undefined = node.parent;
+  for (let current = start; current; current = current.parent) {
     if (isScope(current)) return current;
   }
   return undefined;
@@ -402,7 +406,8 @@ function declaringScopeOf(node: ts.Node): ts.Node | undefined {
 function resolvesToTarget(identifier: ts.Identifier, target: ts.Node): boolean {
   const home = declaringScopeOf(target);
   if (!home) return false;
-  for (let node: ts.Node | undefined = identifier.parent; node; node = node.parent) {
+  const start: ts.Node | undefined = identifier.parent;
+  for (let node = start; node; node = node.parent) {
     if (!isScope(node)) continue;
     if (node === home) return true;
     if (declaredIn(node).has(identifier.text)) return false;
@@ -518,11 +523,11 @@ function eagerReads(
     defaultsOnly = false,
   ): void => {
     const fn = target as ts.FunctionLikeDeclaration;
-    (fn.parameters ?? []).forEach((parameter, index) => {
+    (fn.parameters).forEach((parameter, index) => {
       if (!parameter.initializer) return;
       // A default only runs when the argument is missing or undefined; rest parameters are skipped.
       if (args && !parameter.dotDotDotToken) {
-        const supplied = args[index];
+        const supplied: ts.Expression | undefined = args[index];
         const omitted =
           supplied === undefined ||
           (ts.isIdentifier(supplied) && supplied.text === "undefined") ||
@@ -622,7 +627,7 @@ function eagerReads(
       if (cls && resolvesToTarget(node.expression.expression, cls)) {
         const wanted = node.expression.name.text;
         for (const member of cls.members) {
-          if (!ts.isMethodDeclaration(member) || !member.name) continue;
+          if (!ts.isMethodDeclaration(member)) continue;
           if (!ts.isIdentifier(member.name) || member.name.text !== wanted) continue;
           if (!hasModifier(member, ts.SyntaxKind.StaticKeyword)) continue;
           if (entered.has(member)) continue;
@@ -715,7 +720,7 @@ function eagerReads(
         for (const clause of cls.heritageClauses ?? []) {
           if (clause.token !== ts.SyntaxKind.ExtendsKeyword) continue;
           const base = clause.types[0].expression;
-          if (base && ts.isIdentifier(base)) anchor = base;
+          if (ts.isIdentifier(base)) anchor = base;
         }
         current = anchor ? targets.classes.get(anchor.text) : undefined;
       }
@@ -1060,7 +1065,7 @@ function proneExportSets(
         isBareSpecifier(statement.moduleSpecifier.text);
       if (runtimeEdge && !leavesApp) edges += 1;
       if (!ts.isExportDeclaration(statement) || !runtimeEdge) continue;
-      const specifier = statement.moduleSpecifier;
+      const specifier: ts.Node | undefined = statement.moduleSpecifier;
       if (!specifier || !ts.isStringLiteral(specifier)) continue;
       const clause = statement.exportClause;
       if (clause && !ts.isNamedExports(clause)) continue;

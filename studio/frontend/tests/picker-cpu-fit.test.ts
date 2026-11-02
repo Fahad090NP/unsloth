@@ -3,8 +3,15 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
-import { checkVramFit } from "../src/lib/vram.ts";
+import { checkVramFit, type VramFitStatus } from "../src/lib/vram.ts";
+
+type CheckpointFit = (
+  estGb: number,
+  gpu: { available: boolean; backend: string; budgetKnown: boolean; memoryTotalGb: number },
+  chat: boolean,
+) => VramFitStatus | null;
 
 const PICKERS = readFileSync(
   new URL("../src/features/model-picker/components/model-selector/pickers.tsx", import.meta.url),
@@ -13,11 +20,13 @@ const PICKERS = readFileSync(
 const start = PICKERS.indexOf("function checkpointFit(");
 assert.notEqual(start, -1);
 const end = PICKERS.indexOf("\n}\n", start) + 2;
-const checkpointFit = new Function(
-  "checkVramFit",
+const context = { exports: {} as { checkpointFit: CheckpointFit }, checkVramFit };
+runInNewContext(
   ts.transpileModule(PICKERS.slice(start, end), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText +
-    "; return checkpointFit;",
-)(checkVramFit);
+    "; exports.checkpointFit = checkpointFit;",
+  context,
+);
+const checkpointFit = context.exports.checkpointFit;
 
 // What /api/system reports on a GGUF-only Mac (no torch, so no MLX device).
 const CPU = { available: false, backend: "cpu", budgetKnown: true, memoryTotalGb: 0 };

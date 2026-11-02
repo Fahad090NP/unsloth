@@ -36,7 +36,7 @@ function storedPair(rows: [ModelType, number][]): ThreadRecord[] {
       createdAt: updatedAt,
       updatedAt,
     }))
-    .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 test("a generalized pair never reaches the adapter-toggle path", () => {

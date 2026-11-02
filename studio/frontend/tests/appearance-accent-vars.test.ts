@@ -72,7 +72,7 @@ function luminance(hex: string): number {
 
 function ratio(a: string, b: string): number {
   const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return ((high ?? 0) + 0.05) / ((low ?? 0) + 0.05);
+  return ((high) + 0.05) / ((low) + 0.05);
 }
 
 function mix(foreground: string, background: string, opacity: number): string {

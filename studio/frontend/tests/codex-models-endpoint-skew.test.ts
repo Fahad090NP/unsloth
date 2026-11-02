@@ -102,7 +102,7 @@ test("a body without a source field is not mistaken for a plan catalog", async (
   );
   try {
     const listed = await fetchCodexSubscriptionModels("provider-1");
-    assert.notEqual(listed?.source, "subscription");
+    assert.notEqual(listed.source, "subscription");
     const { selected } = resolveCodexPickerModels(CURATED, SAVED, listed);
     assert.deepEqual(selected, SAVED);
   } finally {

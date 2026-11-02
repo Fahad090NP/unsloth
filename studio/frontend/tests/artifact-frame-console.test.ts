@@ -147,7 +147,7 @@ test("only throws and rejections count as errors", () => {
       type: "unsloth:artifact-console",
       level: "error",
       text: "console.error is not a throw",
-    })!,
+    }) ?? assert.fail("expected a non-null value"),
   );
   assert.deepEqual(
     canvasErrors(state).map((entry) => entry.text),
@@ -333,7 +333,7 @@ test("the stack drops the repeated message line and Studio's own frames", () => 
       "    at unslothRenderArtifact (http://127.0.0.1:8888/api/inference/artifact-preview-frame?v=87a2oc:129:20)",
       "    at http://127.0.0.1:8888/api/inference/artifact-preview-frame?v=87a2oc:140:11",
     ].join("\n"),
-  })!;
+  }) ?? assert.fail("expected a non-null value");
   assert.equal(canvasStack(entry), "    at <anonymous>:2:48");
 });
 
@@ -342,7 +342,7 @@ test("a stack with nothing but the message, or no stack at all, renders as nothi
     type: "unsloth:artifact-error",
     message: "boom",
     stack: "Error: boom",
-  })!;
+  }) ?? assert.fail("expected a non-null value");
   assert.equal(canvasStack(bare), "");
   assert.equal(canvasStack((parseCanvasReport(thrown("boom")) ?? assert.fail("expected a non-null value"))), "");
 });
@@ -361,7 +361,7 @@ test("Firefox and WebKit stacks keep the canvas's frames and drop the shell's", 
       `EventListener.handleEvent*@${url}:138:16`,
       "",
     ].join("\n"),
-  })!;
+  }) ?? assert.fail("expected a non-null value");
   assert.equal(
     canvasStack(firefox),
     [
@@ -379,7 +379,7 @@ test("Firefox and WebKit stacks keep the canvas's frames and drop the shell's", 
       `unslothRenderArtifact@${url}:130:25`,
       `@${url}:143:17`,
     ].join("\n"),
-  })!;
+  }) ?? assert.fail("expected a non-null value");
   assert.equal(canvasStack(webkit), `global code@${url}:1:25`);
 });
 

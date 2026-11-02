@@ -110,8 +110,10 @@ const SUPPORT_INSTRUCTIONS =
   "<project_instructions>\nCite the refund policy.\n</project_instructions>\n\n" +
   "You answer for the Billing team. End with Ticket closed.";
 
-function parseJson<T>(text: string): T {
-  return JSON.parse(text) as T;
+function parseJson<T>(text: string, guard?: (value: unknown) => value is T): T {
+  const parsed: unknown = JSON.parse(text);
+  if (guard && !guard(parsed)) throw new Error("unexpected JSON shape");
+  return parsed as T;
 }
 
 function turns(threadId: string) {

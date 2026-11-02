@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 
 import ts from "@typescript/typescript6";
 
@@ -168,12 +169,11 @@ test("the search index keeps a widget's shown text, not its seed", () => {
   const js = ts.transpileModule(`${binaryKey}\n${body}`, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },
   }).outputText;
-  const build = new Function(
+  const build = compileFunction(`${js}; return searchableText;`, [
     "splitMcpImages",
     "isMcpUiToolResult",
     "stripBase64Runs",
-    `${js}; return searchableText;`,
-  ) as (
+  ]) as unknown as (
     splitMcpImages: unknown,
     isMcpUiToolResult: unknown,
     stripBase64Runs: unknown,

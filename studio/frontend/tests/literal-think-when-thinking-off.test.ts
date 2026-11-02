@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 
 import { readSrc, registerBundlerResolver } from "./helpers/kit.ts";
 
@@ -160,14 +161,17 @@ test("a local effort dial set to none parses like thinking off", () => {
   const adapter = readSrc("features/chat/api/chat-adapter.ts");
   const at = adapter.indexOf("const localReasoningFields");
   assert.ok(at !== -1, "the adapter's local reasoning fields moved");
-  const fields = new Function(
-    "supportsReasoning",
-    "reasoningStyle",
-    "reasoningEnabled",
-    "localReasoningEffort",
+  const fields = compileFunction(
     `return ${adapter.slice(adapter.indexOf("=", at) + 1, adapter.indexOf(";", at)).trim()};`,
-  );
-  const parses = (...args: unknown[]) => requestParsesThinkTags(fields(...args));
+    ["supportsReasoning", "reasoningStyle", "reasoningEnabled", "localReasoningEffort"],
+  ) as unknown as (
+    supportsReasoning: boolean,
+    reasoningStyle: string,
+    reasoningEnabled: boolean,
+    localReasoningEffort: string,
+  ) => Parameters<typeof requestParsesThinkTags>[0];
+  const parses = (...args: [boolean, string, boolean, string]) =>
+    requestParsesThinkTags(fields(...args));
   assert.equal(parses(true, "reasoning_effort", true, "none"), false);
   assert.equal(parses(true, "reasoning_effort", true, "high"), true);
   assert.equal(parses(true, "reasoning_effort", false, "none"), true);

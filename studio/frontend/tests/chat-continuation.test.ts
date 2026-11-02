@@ -1428,7 +1428,7 @@ test("a renewal touches this tab's leases and nobody else's", async () => {
   await theirs.claim("m2", { now: start, holder: PANE });
   await mine.renew("m1", PANE, { now: start + AUTO_CONTINUE_LEASE_RENEW_MS });
 
-  const leases = JSON.parse(store.get(AUTO_CONTINUE_LEASE_KEY) ?? "{}");
+  const leases = JSON.parse(store.get(AUTO_CONTINUE_LEASE_KEY) ?? "{}") as Record<string, { expires: number }>;
   assert.equal(
     leases.m1.expires,
     start + AUTO_CONTINUE_LEASE_RENEW_MS + AUTO_CONTINUE_LEASE_TTL_MS,
@@ -1446,7 +1446,7 @@ test("lapsed leases are pruned rather than accumulating", async () => {
   await createAutoContinueTab({ storage, locks }).claim("m2", {
     now: start + AUTO_CONTINUE_LEASE_TTL_MS + 1,
   });
-  const leases = JSON.parse(store.get(AUTO_CONTINUE_LEASE_KEY) ?? "{}");
+  const leases = JSON.parse(store.get(AUTO_CONTINUE_LEASE_KEY) ?? "{}") as Record<string, unknown>;
   assert.deepEqual(Object.keys(leases), ["m2"]);
 });
 
@@ -1965,8 +1965,9 @@ test("the run that ends is the one the hold was taken for, not the round before 
     1,
     "the predecessor ending settled the successor's hold mid-preflight",
   );
+  const setClock = (next: number) => { clock = next; };
   for (let tick = 1; tick <= 4; tick += 1) {
-    clock = start + tick * AUTO_CONTINUE_LEASE_RENEW_MS;
+    setClock(start + tick * AUTO_CONTINUE_LEASE_RENEW_MS);
     keeper.tick();
   }
   await Promise.all(pending);
@@ -2225,7 +2226,7 @@ test("only what the runtime actually hands back is treated as the run", () => {
     assert.equal(
       issuedRunFrom(notARun),
       undefined,
-      `${JSON.stringify(notARun) ?? "undefined"} is not a run`,
+      `${JSON.stringify(notARun)} is not a run`,
     );
   }
 
@@ -2238,7 +2239,7 @@ test("only what the runtime actually hands back is treated as the run", () => {
   const parked: { settle?: (ok: boolean) => void } = {};
   const thenable = {
     then: (onOk: () => void, onErr: () => void) => {
-      parked.settle = (ok: boolean) => { ok ? onOk() : onErr(); };
+      parked.settle = (ok: boolean) => { if (ok) onOk(); else onErr(); };
     },
   };
   const custom = issuedRunFrom(thenable);

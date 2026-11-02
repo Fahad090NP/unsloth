@@ -10,7 +10,8 @@ import { ChatSettingsRequestError } from "../src/features/chat/utils/settings-re
 function failureMessage(value: unknown): string {
   if (value instanceof Error) return value.message;
   if (typeof value === "string") return value;
-  return JSON.stringify(value) ?? "unknown failure";
+  const serialized = JSON.stringify(value);
+  return typeof serialized === "string" ? serialized : "unknown failure";
 }
 
 function unsupported(status = 400, loc = ["patch", "pinnedChatIds"]) {

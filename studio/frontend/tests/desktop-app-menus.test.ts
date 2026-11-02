@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { stripTypeScriptTypes } from "node:module";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 import { readSrc, readText, registerBundlerResolver } from "./helpers/kit.ts";
 
@@ -163,10 +164,11 @@ test("Open Folder still lands on Sources after a visit during the link", () => {
   const dropzone = readSrc("features/rag/components/project-source-dropzone.tsx");
   const openFolder = readSrc("features/chat/utils/open-folder-as-project.ts");
   const landing = readSrc("features/chat/chat-page.tsx");
-  const m = new Function(
+  const m = runInNewContext(
     `${stripTypeScriptTypes(dropzone.slice(dropzone.indexOf("const projectsWithPendingSources"), dropzone.indexOf("/** Upload staged files"))).replace(/^export /gm, "")}
-    return { markProjectSourcesPending, hasProjectSourcesPending, consumeProjectSourcesPending, noteProjectLandingMounted, isProjectLandingMounted };`,
-  )() as {
+    ({ markProjectSourcesPending, hasProjectSourcesPending, consumeProjectSourcesPending, noteProjectLandingMounted, isProjectLandingMounted });`,
+    {},
+  ) as {
     markProjectSourcesPending: (id: string) => void;
     hasProjectSourcesPending: (id: string) => boolean;
     consumeProjectSourcesPending: (id: string) => () => void;

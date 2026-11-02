@@ -52,7 +52,7 @@ function harness(exported: ExportedMessageRepository, failure?: Error) {
         ensureStoredChatThread: () => { reads++; },
         syncStoredChatMessages: (_id: string, records: MessageRecord[]) => {
           if (failure) throw failure;
-          persisted = JSON.parse(JSON.stringify(records));
+          persisted = JSON.parse(JSON.stringify(records)) as MessageRecord[];
           return persisted;
         },
       },

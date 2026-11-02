@@ -147,8 +147,5 @@ test("the row is a three-item Select and the idle row closes the section", () =>
   }
   const lastTag = lastTags[0] ?? null;
   assert.equal(lastTag.tagName.getText(), "MediaIdleUnloadSetting");
-  assert.match(
-    lastTag ? (attr(lastTag, "residencyKey") ?? "") : "",
-    /keepResident/,
-  );
+  assert.match(attr(lastTag, "residencyKey") ?? "", /keepResident/);
 });

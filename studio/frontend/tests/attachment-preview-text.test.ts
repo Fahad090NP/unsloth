@@ -769,7 +769,7 @@ test("readAttachmentText lets a normal docx through to the extractor", async () 
   const small = fakeDocumentFile("notes.docx", bytes.length, bytes, reads);
   const error = await readAttachmentText(small, small.name, undefined).then(
     () => null,
-    (thrown: Error) => thrown,
+    (thrown: unknown) => thrown instanceof Error ? thrown : new Error(String(thrown)),
   );
   assert.deepEqual(reads, ["notes.docx"]);
   if (error) {
@@ -880,7 +880,7 @@ test("readAttachmentText lets a docx with a large embedded image through", async
   const file = fakeDocumentFile("photo.docx", bytes.length, bytes, reads);
   const error = await readAttachmentText(file, file.name, undefined).then(
     () => null,
-    (thrown: Error) => thrown,
+    (thrown: unknown) => thrown instanceof Error ? thrown : new Error(String(thrown)),
   );
   assert.deepEqual(reads, ["photo.docx"]);
   if (error) {
@@ -988,7 +988,7 @@ test("readAttachmentText ignores a relationship inside non-element markup", asyn
       undefined,
     ).then(
       () => null,
-      (thrown: Error) => thrown,
+      (thrown: unknown) => thrown instanceof Error ? thrown : new Error(String(thrown)),
     );
     assert.deepEqual(reads, ["notes.docx"]);
     if (error) {
@@ -1028,7 +1028,7 @@ test("readAttachmentText lets a docx with a large unreferenced xml part through"
   const file = fakeDocumentFile("custom.docx", bytes.length, bytes, reads);
   const error = await readAttachmentText(file, file.name, undefined).then(
     () => null,
-    (thrown: Error) => thrown,
+    (thrown: unknown) => thrown instanceof Error ? thrown : new Error(String(thrown)),
   );
   assert.deepEqual(reads, ["custom.docx"]);
   if (error) {
@@ -1094,11 +1094,12 @@ function inflatedSizes(archive: Uint8Array): Map<string, number> {
   const unzip = new Unzip();
   unzip.register(UnzipInflate);
   unzip.onfile = (file) => {
+    const entry = file;
     let size = 0;
-    file.ondata = (error, chunk) => {
+    entry.ondata = (error, chunk) => {
       if (!error) {
         size += chunk.length;
-        sizes.set(file.name, size);
+        sizes.set(entry.name, size);
       }
     };
     file.start();
@@ -1413,7 +1414,8 @@ test("linearizeDocxMath writes equations as the backend does and leaves other pa
       const filled = omml.replace(/\{([^{}]*)\}/g, (_, text: string) => `<m:r><m:t>${text}</m:t></m:r>`);
       const xml = strFromU8(unzipSync(linearizeDocxMath(archive(`<w:p><m:oMath>${filled}</m:oMath></w:p>`)))["word/document.xml"]);
       const doc = new XmlDomParser().parseFromString(xml, "application/xml");
-      assert.equal(doc.getElementsByTagNameNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "t")[0]?.textContent, expected);
+      const node: Element | undefined = doc.getElementsByTagNameNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "t")[0];
+      assert.equal(node?.textContent, expected);
     }
   } finally {
     Object.assign(globals, original);

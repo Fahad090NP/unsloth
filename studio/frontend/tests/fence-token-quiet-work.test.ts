@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 
 import { readSrc } from "./helpers/kit.ts";
@@ -34,15 +35,15 @@ function harness(initial: Partial<Props> = {}) {
     calls.push(code);
     if (!options.grammar) { late.push(callback); return null; }
     const result = { source: code, language };
-    cache.set(`${language}:${code}`, result);
+    cache.set(`${language ?? "none"}:${code}`, result);
     return result;
   };
   const context = {
     useState(initialValue: unknown) {
       const index = cursor++;
-      if (!(index in slots)) slots[index] = typeof initialValue === "function" ? initialValue() : initialValue;
+      if (!(index in slots)) slots[index] = typeof initialValue === "function" ? (initialValue as () => unknown)() : initialValue;
       return [slots[index], (value: unknown) => {
-        const next = typeof value === "function" ? value(slots[index]) : value;
+        const next = typeof value === "function" ? (value as (previous: unknown) => unknown)(slots[index]) : value;
         if (!Object.is(next, slots[index])) { slots[index] = next; dirty = true; }
       }];
     },
@@ -76,10 +77,10 @@ function harness(initial: Partial<Props> = {}) {
     code: {
       highlight: runHighlight,
       highlightExact: runHighlight,
-      cached: ({ code, language }: { code: string; language: string | null }) => cache.get(`${language}:${code}`) ?? null,
+      cached: ({ code, language }: { code: string; language: string | null }) => cache.get(`${language ?? "none"}:${code}`) ?? null,
       cover: () => ({ result: null }),
       seed: ({ code, language }: { code: string; language: string | null }, result: Result) => {
-        cache.set(`${language}:${code}`, result);
+        cache.set(`${language ?? "none"}:${code}`, result);
       },
     },
     requestFullHighlight: (_body: unknown, _language: unknown, callback: (result: Result | null) => void, _speculative: unknown, patient: boolean) => {
@@ -93,9 +94,10 @@ function harness(initial: Partial<Props> = {}) {
       return () => { printing.delete(callback); };
     },
   };
-  const hook = new Function(...Object.keys(context), compiled + "\nreturn useFenceTokens;")(...Object.values(context)) as
+  const hook = runInNewContext(compiled + "\nreturn useFenceTokens;", context) as
     (source: string, language: string | null, enabled: boolean, streaming: boolean) => Result | null;
   let result: Result | null = null;
+  const isDirty = () => dirty;
   const render = (change: Partial<Props> = {}) => {
     assert.ok(mounted);
     props = { ...props, ...change };
@@ -106,13 +108,13 @@ function harness(initial: Partial<Props> = {}) {
       cursor = 0;
       pending = [];
       result = hook(props.source, props.language, props.enabled, props.streaming);
-      if (dirty) continue;
+      if (isDirty()) continue;
       for (const entry of pending) {
         effects.get(entry.index)?.cleanup?.();
         const cleanup = entry.effect();
-        effects.set(entry.index, { deps: entry.deps, cleanup: cleanup || undefined });
+        effects.set(entry.index, { deps: entry.deps, cleanup: cleanup ?? undefined });
       }
-    } while (dirty);
+    } while (isDirty());
     return result;
   };
   const flushOne = () => {

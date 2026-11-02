@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import type { CustomReasoningConfig } from "../src/features/chat/custom-reasoning.ts";
 
 import { installLocalStorageFake, readSrc, registerBundlerResolver } from "./helpers/kit.ts";
@@ -34,16 +35,17 @@ function externalReasoningFields(
   assert.ok(enabledAt > 0 && fieldsAt > enabledAt, "the adapter's external reasoning fields moved");
   const enabled = adapter.slice(adapter.indexOf("=", enabledAt) + 1, adapter.indexOf(";", enabledAt));
   const fields = adapter.slice(adapter.indexOf("=", fieldsAt) + 1, adapter.indexOf(";", fieldsAt)).trim();
-  const build = new Function(
-    "externalReasoningCaps",
-    "reasoningEnabled",
-    "selectedExternalEffort",
-    "fallbackExternalEffort",
-    "externalProvider",
-    "customReasoningRequestFields",
+  return runInNewContext(
     `const externalReasoningEnabled = ${enabled};\nreturn ${fields};`,
-  );
-  return build(caps, reasoningEnabled, effort, "high", externalProvider, customReasoningRequestFields);
+    {
+      externalReasoningCaps: caps,
+      reasoningEnabled,
+      selectedExternalEffort: effort,
+      fallbackExternalEffort: "high",
+      externalProvider,
+      customReasoningRequestFields,
+    },
+  ) as unknown;
 }
 
 test("an always-on catalog model sends thinking on even when the chat stored it off", () => {

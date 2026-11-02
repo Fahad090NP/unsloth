@@ -19,6 +19,7 @@ Object.assign(globalThis.window, {
     if (type === "pagehide") flushPersistedState = listener;
   },
 });
+void flushPersistedState;
 
 function legacyJob(repoId: string, downloadedBytes: number) {
   return {

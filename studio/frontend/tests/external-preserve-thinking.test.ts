@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 import { registerBundlerResolver } from "./helpers/kit.ts";
 
@@ -25,12 +26,25 @@ function visit(node: ts.Node): void {
 visit(tree);
 assert.ok(replayExpression && payloadExpression);
 // Evaluates the real send-path expressions rather than a copied policy.
-const evaluateWithModel = new Function("providerSupportsPreserveThinking", "externalProvider", "runtime", "isExternalRequest",
-  "providerModelReplaysReasoning", "externalSelection",
-  `return { replay: ${replayExpression}, fields: ${payloadExpression} };`) as
-  (supports: typeof providerSupportsPreserveThinking, provider: {providerType: string}, runtime: {preserveThinking: boolean}, external: boolean,
-    replays: typeof providerModelReplaysReasoning, selection: {modelId: string}) =>
-    {replay: boolean; fields: {preserve_thinking?: boolean}};
+const evaluateWithModel = (
+  supports: typeof providerSupportsPreserveThinking,
+  provider: { providerType: string },
+  runtime: { preserveThinking: boolean },
+  external: boolean,
+  replays: typeof providerModelReplaysReasoning,
+  selection: { modelId: string },
+) =>
+  runInNewContext(
+    `return { replay: ${replayExpression}, fields: ${payloadExpression} };`,
+    {
+      providerSupportsPreserveThinking: supports,
+      externalProvider: provider,
+      runtime,
+      isExternalRequest: external,
+      providerModelReplaysReasoning: replays,
+      externalSelection: selection,
+    },
+  ) as { replay: boolean; fields: { preserve_thinking?: boolean } };
 const evaluate = (
   supports: typeof providerSupportsPreserveThinking,
   provider: {providerType: string},

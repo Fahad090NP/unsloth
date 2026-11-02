@@ -264,7 +264,7 @@ test("text and lines head away from whatever they are drawn on", () => {
     CSS.indexOf("/* Body text, muted text and lines on palette surfaces"),
     CSS.indexOf("/* Code font size"),
   );
-  const rules = [...scopes.matchAll(/\{([^}]*)\}/g)].map((m) => m[1] ?? "");
+  const rules = [...scopes.matchAll(/\{([^}]*)\}/g)].map((m) => m[1]);
   assert.equal(rules.length, 6);
   for (const rule of rules) {
     const target = /--muted-foreground: color-mix\(\s*in oklab,\s*var\(--panel-surface-fg-muted\),\s*(var\(--contrast-panel-target, var\(--contrast-target\)\)|var\(--contrast-target\)) var/.exec(rule)?.[1];
@@ -445,26 +445,27 @@ test("muted text on a palette surface heads away from that surface", () => {
   const panel = /html\[data-contrast-adjust\] :is\(\.bg-card, \.bg-popover, \.bg-sidebar[^)]*\) \{([^}]*)\}/.exec(CSS);
   assert.ok(panel, "palette surfaces do not re-derive muted text");
   assert.match(
-    panel[1] ?? "",
+    panel[1],
     /--muted-foreground: color-mix\(\s*in oklab,\s*var\(--panel-surface-fg-muted\),\s*var\(--contrast-panel-target, var\(--contrast-target\)\) var\(--contrast-text-mix\)/,
   );
   const pane = /html\[data-contrast-adjust\] :is\(\.bg-card, \.bg-popover, \.bg-sidebar[^)]*\) \.bg-background:not\([^{]*\) \{([^}]*)\}/.exec(CSS);
   assert.ok(pane, "page panes inside palette surfaces keep the panel target");
-  assert.match(pane[1] ?? "", /var\(--contrast-target\) var\(--contrast-text-mix\)/);
-  assert.doesNotMatch(pane[1] ?? "", /--contrast-panel-target/);
+  assert.match(pane[1], /var\(--contrast-target\) var\(--contrast-text-mix\)/);
+  assert.doesNotMatch(pane[1], /--contrast-panel-target/);
 });
 
 test("every near-opaque card spelling takes the panel muted text", () => {
   const scoped = /html\[data-contrast-adjust\] :is\(([^)]*)\),\s*html\[data-contrast-adjust\]\.dark :is\(([^)]*)\) \{([^}]*)\}/.exec(CSS);
   assert.ok(scoped, "opacity and dark card spellings are not scoped");
-  assert.match(scoped[3] ?? "", /var\(--contrast-panel-target, var\(--contrast-target\)\)/);
-  const light = (scoped[1] ?? "").replaceAll("\\", "");
-  const dark = (scoped[2] ?? "").replaceAll("\\", "");
+  assert.match(scoped[3], /var\(--contrast-panel-target, var\(--contrast-target\)\)/);
+  const light = scoped[1].replaceAll("\\", "");
+  const dark = scoped[2].replaceAll("\\", "");
   for (const file of SOURCES.filter((f) => f.endsWith(".tsx"))) {
     for (const [spelling, isDark, alpha] of readSrc(file).matchAll(
       /(?<![\w:-])(dark:)?bg-card(?:\/(\d+))?(?![\w/-])/g,
     )) {
-      if (alpha === undefined ? !isDark : Number(alpha) < 50) continue;
+      const alphaValue: string | undefined = alpha;
+      if (alphaValue === undefined ? !isDark : Number(alphaValue) < 50) continue;
       assert.ok(
         (isDark ? dark : light).includes(`.${spelling}`),
         `${file} paints ${spelling} outside the panel scope`,
@@ -501,11 +502,11 @@ test("surfaces the stylesheet paints take the panel muted text too", () => {
     HUB_CSS,
     /html\.dark \.hub-page \.hub-result-row \{\s*background-color: color-mix\(in srgb, var\(--foreground\) [^;]*, var\(--background\)\);/,
   );
-  assert.doesNotMatch(always[1] ?? "", /hub-result-row/);
+  assert.doesNotMatch(always[1], /hub-result-row/);
   const dark = [".settings-surface", ".chat-composer-surface", ".unsloth-composer-surface", ".unsloth-plus-menu", ".dialog-soft-surface"];
   const reset = /html\[data-contrast-adjust\]\.dark :is\(([^)]*)\) \.bg-background:not\(\[class\*="dark:bg-"\]:not\(\[class\*="dark:bg-background"\]\)\) \{([^}]*)\}/.exec(CSS);
   assert.ok(reset, "dark card surfaces keep their page panes on the panel target");
-  assert.match(reset[2] ?? "", /var\(--contrast-target\) var\(--contrast-text-mix\)/);
+  assert.match(reset[2], /var\(--contrast-target\) var\(--contrast-text-mix\)/);
   const cards = /html\[data-contrast-adjust\]\.dark :is\(\.dark\\:bg-card([^)]*)\) \{/.exec(CSS);
   for (const surface of dark) {
     assert.ok(reset[1].includes(surface), `${surface} page panes are not reset`);
@@ -530,5 +531,5 @@ test("the dark Hub's popover repaint is scoped only where it wins", () => {
   assert.match(HUB_CSS, /@layer base \{[\s\S]*html\.dark \.hub-page \[class\*="bg-card"\],\s*html\.dark \.hub-page \[class\*="bg-background"\] \{\s*background-color: var\(--popover\);/);
   const rule = /html\[data-contrast-adjust\]\.dark \.hub-page :is\(\[class\*="bg-background"\], \[class\*="bg-card"\]\):not\(\[class\^="bg-"\], \[class\*=" bg-"\], \[class\*="dark:bg-"\], :hover\) \{([^}]*)\}/.exec(CSS);
   assert.ok(rule, "the repainted Hub popovers are not scoped");
-  assert.match(rule[1] ?? "", /var\(--contrast-panel-target, var\(--contrast-target\)\) var\(--contrast-text-mix\)/);
+  assert.match(rule[1], /var\(--contrast-panel-target, var\(--contrast-target\)\) var\(--contrast-text-mix\)/);
 });

@@ -160,7 +160,7 @@ test.beforeEach(() => {
   native.setNativePathHandler(null);
   sent = null;
   auth.setAuthFetchHandler((_url, init) => {
-    sent = init?.body ? JSON.parse(String(init.body as string)) : null;
+    sent = init?.body ? JSON.parse(init.body as string) : null;
     return new Response("{}", {
       status: 200,
       headers: { "Content-Type": "application/json" },

@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 import { readSrc } from "./helpers/kit.ts";
 import { engineLaunchFieldsFrom } from "../src/features/chat/lib/engine-launch-fields.ts";
 
@@ -10,27 +11,37 @@ const applier = readSrc("features/chat/lib/apply-inference-status-to-store.ts");
 const start = applier.indexOf("    residentCheckpoint: checkpointId,");
 const end = applier.indexOf("  });", start);
 assert.ok(start >= 0 && end > start);
-const hydrateBody = new Function(
-  "checkpointId",
-  "status",
-  "engineLaunchFieldsFrom",
+const hydrateBody = compileFunction(
   `return { ${applier.slice(start, end)} };`,
-);
+  ["checkpointId", "status", "engineLaunchFieldsFrom"],
+) as unknown as (
+  checkpointId: string,
+  status: Record<string, unknown>,
+  launchFields: typeof engineLaunchFieldsFrom,
+) => Record<string, unknown>;
 const hydrate = (checkpointId: string, status: Record<string, unknown>) =>
-  hydrateBody(checkpointId, status, engineLaunchFieldsFrom) as Record<string, unknown>;
+  hydrateBody(checkpointId, status, engineLaunchFieldsFrom);
 
 const runtime = readSrc("features/chat/hooks/use-chat-model-runtime.ts");
 const rollbackStart = runtime.indexOf("engine: stateBeforeUnload.loadedEngine,");
 const rollbackEnd = runtime.indexOf("is_lora: previousIsLora,", rollbackStart);
 assert.ok(rollbackStart >= 0 && rollbackEnd > rollbackStart);
-const rollback = new Function(
-  "stateBeforeUnload",
-  "rollbackNativePathLease",
-  "hfToken",
-  "rollbackMaxSeqLength",
-  "rollbackConfig",
+const rollback = compileFunction(
   `return { ${runtime.slice(rollbackStart, rollbackEnd)} };`,
-) as (state: Record<string, unknown>, ...rest: unknown[]) => Record<string, unknown>;
+  [
+    "stateBeforeUnload",
+    "rollbackNativePathLease",
+    "hfToken",
+    "rollbackMaxSeqLength",
+    "rollbackConfig",
+  ],
+) as unknown as (
+  state: Record<string, unknown>,
+  rollbackNativePathLease: unknown,
+  hfToken: string | null,
+  rollbackMaxSeqLength: number,
+  rollbackConfig?: { loadIn4bit?: boolean },
+) => Record<string, unknown>;
 
 test("a failed switch restores the managed resident's precision and parallel mode", () => {
   const resident = hydrate("org/model", {
