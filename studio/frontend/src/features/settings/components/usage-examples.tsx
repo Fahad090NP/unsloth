@@ -28,16 +28,13 @@ import { useT } from "@/i18n";
 import type { TranslationKey } from "@/i18n";
 import { isTauri } from "@/lib/api-base";
 import { copyToClipboard } from "@/lib/copy-to-clipboard";
-import { AiSpeechIcon, MessageCircleIcon } from "@/lib/hugeicons-derived";
+import { MessageCircleIcon } from "@/lib/hugeicons-derived";
 import { Tick02Icon } from "@/lib/tick-icon";
 import { cn } from "@/lib/utils";
 import {
   ArrowUpRight01Icon,
   BotIcon,
-  Image01Icon,
   InformationCircleIcon,
-  McpServerIcon,
-  TaskDone01Icon,
 } from "@hugeicons/core-free-icons";
 import { Copy01Icon } from "@/lib/copy-icon";
 import { HugeiconsIcon } from "@hugeicons/react";

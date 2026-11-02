@@ -160,11 +160,11 @@ export function availableAxes(ctx: CompareContext): AxisDef[] {
       c.seed = v < 0 ? "random" : v;
     }),
   );
-  axes.push(numberAxis("steps", "Steps", "int", 1, STEPS_MAX, "10, 20, 30 or 10-30 (+10)", (c, v) => (c.steps = v)));
+  axes.push(numberAxis("steps", "Steps", "int", 1, STEPS_MAX, "10, 20, 30 or 10-30 (+10)", (c, v) => { const cfg = c; cfg.steps = v; }));
   if (!ctx.guidanceFixed) {
     const min = ctx.negativeMinGuidance;
     axes.push(
-      numberAxis("guidance", "CFG", "float", 0, GUIDANCE_MAX, "3, 5, 7 or 3-7 [3]", (c, v) => (c.guidance = v), {
+      numberAxis("guidance", "CFG", "float", 0, GUIDANCE_MAX, "3, 5, 7 or 3-7 [3]", (c, v) => { const cfg = c; cfg.guidance = v; }, {
         // Crossing the threshold adds or drops the unconditional pass (a batch-size change), so those cells group.
         cost: 1,
         shapeKey: (v) => (min === null || Number(v) > min ? "cfg" : "nocfg"),
@@ -177,7 +177,7 @@ export function availableAxes(ctx: CompareContext): AxisDef[] {
         "sampler",
         "Sampler",
         ctx.samplers.map((s) => ({ value: s.id, label: s.label })),
-        (c, v) => (c.sampler = v),
+        (c, v) => { const cfg = c; cfg.sampler = v; },
       ),
     );
     const schedules = [...new Set(ctx.samplers.flatMap((s) => s.schedule_types))];
@@ -187,22 +187,22 @@ export function availableAxes(ctx: CompareContext): AxisDef[] {
           "schedule",
           "Schedule type",
           schedules.map((t) => ({ value: t, label: SCHEDULE_LABELS[t] ?? t })),
-          (c, v) => (c.schedule = v),
+          (c, v) => { const cfg = c; cfg.schedule = v; },
         ),
       );
     }
   }
   if (ctx.shift?.node === "sd3") {
-    axes.push(numberAxis("shift", "Shift", "float", 0, SHIFT_MAX, "1, 3, 6", (c, v) => (c.shift = v), {}, true));
+    axes.push(numberAxis("shift", "Shift", "float", 0, SHIFT_MAX, "1, 3, 6", (c, v) => { const cfg = c; cfg.shift = v; }, {}, true));
   } else if (ctx.shift?.node === "flux") {
-    axes.push(numberAxis("base_shift", "Base shift", "float", 0, SHIFT_MAX, "0.25, 0.5, 1", (c, v) => (c.baseShift = v)));
-    axes.push(numberAxis("max_shift", "Max shift", "float", 0, SHIFT_MAX, "0.75, 1.15, 1.5", (c, v) => (c.maxShift = v)));
+    axes.push(numberAxis("base_shift", "Base shift", "float", 0, SHIFT_MAX, "0.25, 0.5, 1", (c, v) => { const cfg = c; cfg.baseShift = v; }));
+    axes.push(numberAxis("max_shift", "Max shift", "float", 0, SHIFT_MAX, "0.75, 1.15, 1.5", (c, v) => { const cfg = c; cfg.maxShift = v; }));
   }
   if (ctx.loraCapable) {
     ctx.loras.forEach((lora, index) => {
       const name = ctx.loras.length > 1 ? `LoRA weight: ${lora.label}` : "LoRA weight";
       axes.push(
-        numberAxis(`lora:${index}`, name, "float", 0, LORA_WEIGHT_MAX, "0, 0.5, 1", (c, v) => (c.loraWeights[index] = v), {
+        numberAxis(`lora:${index}`, name, "float", 0, LORA_WEIGHT_MAX, "0, 0.5, 1", (c, v) => { const cfg = c; cfg.loraWeights[index] = v; }, {
           // Weight 0 drops the adapter from the request. Every weighted cell runs before any of those, outermost
           // of all axes: Speed Auto compiles on an adapter-free run, and a compiled load refuses LoRA after that.
           cost: 4,
@@ -216,18 +216,18 @@ export function availableAxes(ctx: CompareContext): AxisDef[] {
   const sd = ctx.sdControls;
   if (sd?.clip_skip) {
     const { min, max } = sd.clip_skip;
-    axes.push(numberAxis("clip_skip", "Clip skip", "int", min, max, "1, 2", (c, v) => (c.extra.clip_skip = v)));
+    axes.push(numberAxis("clip_skip", "Clip skip", "int", min, max, "1, 2", (c, v) => { const cfg = c; cfg.extra.clip_skip = v; }));
   }
   if (sd?.cfg_rescale && !ctx.controlnetEngaged) {
     const { min, max } = sd.cfg_rescale;
-    axes.push(numberAxis("cfg_rescale", "CFG rescale", "float", min, max, "0, 0.35, 0.7", (c, v) => (c.extra.cfg_rescale = v)));
+    axes.push(numberAxis("cfg_rescale", "CFG rescale", "float", min, max, "0, 0.35, 0.7", (c, v) => { const cfg = c; cfg.extra.cfg_rescale = v; }));
   }
   if (sd?.variation_seed) {
     axes.push(
-      numberAxis("variation_seed", "Var. seed", "int", 0, 2 ** 32 - 1, "1, 2, 3", (c, v) => (c.extra.variation_seed = v)),
+      numberAxis("variation_seed", "Var. seed", "int", 0, 2 ** 32 - 1, "1, 2, 3", (c, v) => { const cfg = c; cfg.extra.variation_seed = v; }),
     );
     axes.push(
-      numberAxis("variation_strength", "Var. strength", "float", 0, 1, "0, 0.1, 0.3", (c, v) => (c.extra.variation_strength = v)),
+      numberAxis("variation_strength", "Var. strength", "float", 0, 1, "0, 0.1, 0.3", (c, v) => { const cfg = c; cfg.extra.variation_strength = v; }),
     );
   }
   axes.push({
@@ -323,8 +323,9 @@ export function planCompare(
       resolved.push({ def: nothing, text: "", values: [""], labels: [""] });
       continue;
     }
-    if (def.id !== "prompt_sr" && seen.has(def.id)) {
-      return { ok: false, error: `${seen.get(def.id)} and ${AXIS_NAMES[a]} are both ${def.label}` };
+    const previous = seen.get(def.id);
+    if (def.id !== "prompt_sr" && previous !== undefined) {
+      return { ok: false, error: `${previous} and ${AXIS_NAMES[a]} are both ${def.label}` };
     }
     seen.set(def.id, AXIS_NAMES[a]);
     const parsed = parseAxisValues(input.text, def.type, { keepEmpty: def.id === "prompt_sr" });

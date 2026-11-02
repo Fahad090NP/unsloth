@@ -6,26 +6,23 @@ import { isAccountOwner } from "@/features/auth";
 import {
   cancelPreStreamRunReservations,
   confirmStopRunningChatsIfNeeded,
+  fetchSttStatus,
   listGgufVariants,
   listLoras,
   loadModel,
   offloadCountsFrom,
   offloadWarning,
   requestLocalPromptQueueStop,
+  sttEngineStatusFor,
   syncKeepModelsLoaded,
   unloadModel,
   useChatRuntimeStore,
 } from "@/features/chat";
-import {
-  fetchSttStatus,
-  sttEngineStatusFor,
-} from "@/features/chat/adapters/studio-model-dictation-adapter";
-import { useStagedDownload } from "@/features/hub/download-manager";
-import { getHfToken, hfApiToken } from "@/features/hub/stores/hf-token-store";
+import { getHfToken, hfApiToken, useStagedDownload } from "@/features/hub";
 import type {
   ModelOption,
   ModelSelectorChangeMeta,
-} from "@/features/model-picker/components/model-selector/types";
+} from "@/features/model-picker";
 import { confirmRemoteCodeIfNeeded } from "@/features/security";
 import { updateMultiModelMode } from "../../settings/api/multi-model";
 import {

@@ -17,6 +17,7 @@ import {
   useNotificationFrequency,
 } from "@/hooks/use-notification-frequency";
 import { useLocale, useT } from "@/i18n";
+import type { TranslationKey } from "@/i18n";
 import {
   type UpdateComponent,
   type UpdateComponentFlags,
@@ -53,7 +54,7 @@ function backendLabel(backend: string | null | undefined, t: Translate): string 
   if (!backend) {
     return "";
   }
-  const key = LLAMA_BACKEND_LABELS[backend];
+  const key: TranslationKey | undefined = LLAMA_BACKEND_LABELS[backend];
   return key ? t(key) : backend;
 }
 
@@ -66,13 +67,14 @@ function useSmoothedProgress(
   const displayRef = useRef(0);
   const progressRef = useRef<number | null>(progress);
   const doneRef = useRef(done);
-  progressRef.current = progress;
-  doneRef.current = done;
+  useEffect(() => {
+    progressRef.current = progress;
+    doneRef.current = done;
+  }, [progress, done]);
 
   useEffect(() => {
     if (!active) {
       displayRef.current = 0;
-      setDisplay(0);
       return;
     }
     let raf = 0;
@@ -111,7 +113,7 @@ function useSmoothedProgress(
     return () => { cancelAnimationFrame(raf); };
   }, [active]);
 
-  return display;
+  return active ? display : 0;
 }
 
 interface LlamaUpdateBannerProps {
@@ -205,7 +207,9 @@ export function LlamaUpdateBanner({
   const { status, visible, applying, apply, dismiss, undoDismiss, snooze } =
     useLlamaUpdateCheck({
       enabled,
-      onReloadRequired: resyncInferenceStatusAfterServerModelChange,
+      onReloadRequired: () => {
+        resyncInferenceStatusAfterServerModelChange().catch(() => undefined);
+      },
     });
   // whisper.cpp rides along with llama.cpp and audio.cpp; it opens the card only to retry its own failed phase.
   const whisperRetry =
@@ -309,9 +313,10 @@ export function LlamaUpdateBanner({
   );
   // keep the preference while a chained apply removes completed components from status.
   const [heldPref, setHeldPref] = useState<boolean | null>(null);
-  useEffect(() => {
-    setHeldPref((prev) => heldUpdateBannerPref(prev, inFlight, livePref));
-  }, [inFlight, livePref]);
+  const nextHeldPref = heldUpdateBannerPref(heldPref, inFlight, livePref);
+  if (nextHeldPref !== heldPref) {
+    setHeldPref(nextHeldPref);
+  }
   const showBannerPref = heldPref ?? livePref;
   const show =
     showBannerPref &&
@@ -390,7 +395,7 @@ export function LlamaUpdateBanner({
   // a different offer starts collapsed.
   const detailsKey = [
     ...rows.map(
-      (row) => `${row.component}\0${row.installedTag}\0${row.latestTag}`,
+      (row) => `${row.component}\0${row.installedTag ?? ""}\0${row.latestTag ?? ""}`,
     ),
     backendChange ?? "",
   ].join("\n");
@@ -454,11 +459,9 @@ export function LlamaUpdateBanner({
     jobSucceeded,
   );
   // a returning card or a hidden banner retires the notice.
-  useEffect(() => {
-    if (show || !enabled) {
-      setSkipped(null);
-    }
-  }, [show, enabled]);
+  if ((show || !enabled) && skipped) {
+    setSkipped(null);
+  }
 
   if (!show) {
     return skipped && enabled ? (
@@ -612,7 +615,9 @@ export function LlamaUpdateBanner({
               variant="primary"
               // align the pill edge with the card padding.
               className="-mr-1 h-auto whitespace-nowrap rounded-full px-3 py-2 text-ui-13"
-              onClick={handleUpdate}
+              onClick={() => {
+                handleUpdate().catch(() => undefined);
+              }}
               data-testid="llama-update-button"
             >
               {t("runtimeUpdate.update")}

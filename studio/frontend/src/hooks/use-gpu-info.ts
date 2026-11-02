@@ -116,7 +116,7 @@ function appleUnifiedLoadBudgetGb(
   if (device.shared_memory !== true || workingSetGb === null) return null;
   let freeGb =
     finiteNonNegative(device.vram_free_gb) ??
-    finiteNonNegative(data.memory?.available_gb);
+    finiteNonNegative(data.memory.available_gb);
   if (afterUnload) {
     // The AGX in-use figure holds the resident model's Metal buffers, which the loader frees first;
     // other apps' memory stays counted. Unknown usage leaves only the working-set ceiling.
@@ -168,6 +168,7 @@ function toGpuInfo(
   source: "gpu" | "inference_gpu" = "gpu",
 ): GpuInfo {
   // CPU/RAM exist on GPU-less hosts too, and unified-memory math needs a RAM budget.
+  const availableGb = data?.memory.available_gb;
   const base = {
     backend: data?.device_backend ?? "",
     denseQuantSupported: data?.dense_quant_supported === true,
@@ -180,14 +181,15 @@ function toGpuInfo(
     extraOffloadFitTiers: normalizeReportedOffloadFitTiers(
       data?.diffusers_offload_tiers,
     ),
-    cpuCore: data?.cpu?.physical_count ?? 0,
-    cpuThread: data?.cpu?.logical_count ?? 0,
-    systemRamAvailableGb: data?.memory?.available_gb ?? 0,
-    systemRamAvailableHostGb: data?.memory?.available_gb ?? 0,
+    cpuCore: data?.cpu.physical_count ?? 0,
+    cpuThread: data?.cpu.logical_count ?? 0,
+    systemRamAvailableGb: availableGb ?? 0,
+    systemRamAvailableHostGb: availableGb ?? 0,
     systemRamAvailableKnown:
-      Number.isFinite(data?.memory?.available_gb) &&
-      (data?.memory?.available_gb!) >= 0,
-    systemRamTotalGb: data?.memory?.total_gb ?? 0,
+      typeof availableGb === "number" &&
+      Number.isFinite(availableGb) &&
+      availableGb >= 0,
+    systemRamTotalGb: data?.memory.total_gb ?? 0,
   };
   const gpuData =
     source === "inference_gpu" ? (data?.inference_gpu ?? data?.gpu) : data?.gpu;
@@ -239,18 +241,18 @@ function toGpuDevices(
   const inference = data?.inference_gpu;
   if (!forDiffusion && inference?.backend === "vulkan") {
     // Confirmed Vulkan: never fall through to torch IDs, which the backend rejects for Vulkan builds.
-    if (!(inference.devices ?? []).length) return [];
+    if (!(inference.devices).length) return [];
     const picksAccepted = inference.gguf_gpu_ids_supported !== false;
-    return (inference.devices ?? [])
+    return (inference.devices)
       .filter((d) => typeof d.index === "number")
       .map((d) => ({
-        index: d.index!,
+        index: d.index ?? 0,
         indexKind: d.index_kind === "vulkan" ? ("vulkan" as const) : null,
-        name: d.name ?? `GPU ${d.index}`,
+        name: d.name ?? `GPU ${d.index ?? 0}`,
         memoryTotalGb: d.memory_total_gb ?? 0,
         memoryFreeGb: d.vram_free_gb ?? 0,
         memoryFreeKnown:
-          Number.isFinite(d.vram_free_gb) && (d.vram_free_gb!) >= 0,
+          Number.isFinite(d.vram_free_gb) && (d.vram_free_gb ?? 0) >= 0,
         sharedMemory: d.shared_memory === true,
         sharedMemoryHostBackedGb: d.shared_memory_host_backed_gb,
         unifiedMemory: d.unified_memory === true,
@@ -260,25 +262,25 @@ function toGpuDevices(
       }));
   }
   // Unpinnable configs must hide every pick surface; absent gguf_gpu_ids_supported means pinnable.
-  const pinnableBackend = data?.gpu?.gguf_gpu_ids_supported !== false;
+  const pinnableBackend = data?.gpu.gguf_gpu_ids_supported !== false;
   // ROCm reuses torch.cuda.* and physical IDs; only the label differs.
   const diffusionBackend =
     data?.device_backend === "cuda" || data?.device_backend === "rocm";
-  return (data?.gpu?.devices ?? [])
+  return (data?.gpu.devices ?? [])
     .filter((d) => typeof d.index === "number")
     .map((d) => ({
-      index: d.index!,
+      index: d.index ?? 0,
       indexKind:
         d.index_kind === "physical" ||
         d.index_kind === "vulkan" ||
         d.index_kind === "cuda_device"
           ? d.index_kind
           : null,
-      name: d.name ?? `GPU ${d.index}`,
+      name: d.name ?? `GPU ${d.index ?? 0}`,
       memoryTotalGb: d.memory_total_gb ?? 0,
       memoryFreeGb: d.vram_free_gb ?? 0,
       memoryFreeKnown:
-        Number.isFinite(d.vram_free_gb) && (d.vram_free_gb!) >= 0,
+        Number.isFinite(d.vram_free_gb) && (d.vram_free_gb ?? 0) >= 0,
       sharedMemory: d.shared_memory === true,
       sharedMemoryHostBackedGb: d.shared_memory_host_backed_gb,
       unifiedMemory: d.unified_memory === true,
@@ -352,7 +354,7 @@ function useGpuInfoSource(source: "gpu" | "inference_gpu"): GpuInfo {
         if (!d) return;
         // A cache hit publishes no snapshot, so sync here.
         sync(d);
-      });
+      }).catch(() => undefined);
     };
     const unsubscribe = subscribeSystemInfo(sync, {
       retryUnavailableVulkan: source === "inference_gpu",
@@ -409,7 +411,7 @@ export function useGpuDevices(forDiffusion = false): SystemGpuDevice[] {
     const unsubscribe = subscribeSystemInfo(sync, {
       retryUnavailableVulkan: true,
     });
-    fetchSystemInfo().then(sync);
+    fetchSystemInfo().then(sync).catch(() => undefined);
     return () => {
       cancelled = true;
       unsubscribe();

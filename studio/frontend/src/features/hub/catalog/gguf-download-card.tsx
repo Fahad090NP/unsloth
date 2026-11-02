@@ -78,7 +78,6 @@ import {
 } from "../hooks/use-media-companion-bytes";
 import { useOnlineStatus } from "../hooks/use-online-status";
 import { type GgufVariantDetail, deleteCachedModel } from "../inventory";
-import { formatBytes } from "../lib/format";
 import {
   ggufFilenamesMatch,
   ggufSelectionOverrideMatchesIntent,

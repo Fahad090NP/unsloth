@@ -306,7 +306,6 @@ export function ResourcesTab() {
   const consumeScrollTarget = useSettingsDialogStore(
     (s) => s.consumeScrollTarget,
   );
-  const openDialog = useSettingsDialogStore((s) => s.openDialog);
   const [hfCache, setHfCache] = useState<HuggingFaceCacheSettings | null>(null);
   const [hfCacheLoaded, setHfCacheLoaded] = useState(false);
   const [cacheBrowserOpen, setCacheBrowserOpen] = useState(false);
@@ -372,12 +371,12 @@ export function ResourcesTab() {
   }, [consumeScrollTarget, scrollTarget]);
 
   const metrics = useMemo(() => {
-    const devices = displayedGpu?.devices ?? [];
-    const ramTotal = systemInfo.memory?.total_gb ?? 0;
-    const ramAvailable = systemInfo.memory?.available_gb ?? 0;
+    const devices = displayedGpu.devices;
+    const ramTotal = systemInfo.memory.total_gb;
+    const ramAvailable = systemInfo.memory.available_gb;
     const ramUsed = Math.max(0, ramTotal - ramAvailable);
-    const diskTotal = systemInfo.disk?.total_gb ?? 0;
-    const diskFree = systemInfo.disk?.free_gb ?? 0;
+    const diskTotal = systemInfo.disk.total_gb;
+    const diskFree = systemInfo.disk.free_gb;
     const diskUsed = Math.max(0, diskTotal - diskFree);
     const diskPercent = diskTotal > 0 ? (diskUsed / diskTotal) * 100 : 0;
     const modelsDisk = systemInfo.models_disk ?? null;
@@ -494,7 +493,7 @@ export function ResourcesTab() {
       : t("settings.resources.environment.unknown");
   const cpuFrequencyLabel = formatFrequency(systemInfo.cpu.frequency_mhz);
   const hasGpu =
-    (displayedGpu?.available ?? false) && metrics.devices.length > 0;
+    displayedGpu.available && metrics.devices.length > 0;
   // The placeholder reads as CPU-only, so say checking or empty until the host is read.
   const hostUnread = systemInfo.status !== "ready";
   const gpuUnknown = hostUnread && !hasGpu;
@@ -507,7 +506,7 @@ export function ResourcesTab() {
       ? t("settings.resources.gpu.unreadable")
       : t("common.loading");
   const backendLabel = (
-    displayedGpu?.backend ??
+    displayedGpu.backend ??
     systemInfo.device_backend ??
     "cpu"
   ).toUpperCase();
@@ -617,7 +616,7 @@ export function ResourcesTab() {
   // inventory, hiding the training problem.
   const gpuInventory = hostUnread
     ? null
-    : ((systemInfo.gpu ?? null) as GpuPhysicalInventory | null);
+    : (systemInfo.gpu as GpuPhysicalInventory | null);
   const gpuMismatch = gpuInventory?.mismatch ?? null;
   const physicalDevices = gpuMismatch
     ? (gpuInventory?.physical_devices ?? [])
@@ -677,7 +676,7 @@ export function ResourcesTab() {
                   ? cpuCoresLabel
                   : t("settings.resources.liveMonitor.currentLoad")
             }
-            percent={hostUnread ? null : (systemInfo.cpu?.usage_percent ?? 0)}
+            percent={hostUnread ? null : systemInfo.cpu.usage_percent}
           />
           <MetricTile
             label={t("settings.resources.liveMonitor.ram")}
@@ -691,7 +690,7 @@ export function ResourcesTab() {
                     value: formatGiB(systemInfo.memory.available_gb),
                   })
             }
-            percent={hostUnread ? null : (systemInfo.memory?.percent_used ?? 0)}
+            percent={hostUnread ? null : systemInfo.memory.percent_used}
           />
           <MetricTile
             label={t("settings.resources.liveMonitor.disk")}
@@ -815,9 +814,10 @@ export function ResourcesTab() {
               variant="ghost"
               size="sm"
               className="h-7 shrink-0 px-2 text-xs"
-              onClick={() =>
-                { dismissDriverWarning(driverWarning.driver_version!); }
-              }
+              onClick={() => {
+                if (driverWarning?.driver_version)
+                  dismissDriverWarning(driverWarning.driver_version);
+              }}
             >
               {t("settings.resources.gpu.dismissNotice")}
             </Button>

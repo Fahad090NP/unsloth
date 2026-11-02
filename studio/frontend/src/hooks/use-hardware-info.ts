@@ -20,6 +20,34 @@ interface ApiGpu {
     shared_memory_host_backed_gb?: number | null;
 }
 
+interface ApiHardware {
+    gpu?: ApiGpu & {
+        gpu_name?: string | null;
+        vram_total_gb?: number | null;
+        vram_free_gb?: number | null;
+    };
+    gpus?: ApiGpu[];
+    versions?: {
+        torch?: string | null;
+        cuda?: string | null;
+        rocm?: string | null;
+        xpu?: string | null;
+        transformers?: string | null;
+        unsloth?: string | null;
+        mlx?: string | null;
+    };
+    llama_cpp?: string | null;
+    audio_cpp?: string | null;
+    export_supported?: boolean | null;
+    export_unsupported_reason?: string | null;
+    export_unsupported_message?: string | null;
+    torchao_export_supported?: boolean;
+    video_supported?: boolean | null;
+    video_unsupported_reason?: string | null;
+    video_unsupported_message?: string | null;
+    video_cpu_experimental?: boolean;
+}
+
 export interface HardwareInfo {
     gpuName: string | null;
     vramTotalGb: number | null;
@@ -109,37 +137,38 @@ async function fetchOnce(): Promise<HardwareInfo> {
         try {
             const res = await authFetch("/api/system/hardware?include_details=true");
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const body = (await res.json()) as ApiHardware | null;
+            const data: ApiHardware = body ?? {};
             const info: HardwareInfo = {
-                gpuName: data?.gpu?.gpu_name ?? null,
-                vramTotalGb: data?.gpu?.vram_total_gb ?? null,
-                vramFreeGb: data?.gpu?.vram_free_gb ?? null,
-                gpus: Array.isArray(data?.gpus)
+                gpuName: data.gpu?.gpu_name ?? null,
+                vramTotalGb: data.gpu?.vram_total_gb ?? null,
+                vramFreeGb: data.gpu?.vram_free_gb ?? null,
+                gpus: Array.isArray(data.gpus)
                     ? data.gpus.map((g: ApiGpu) => ({
-                        name: g?.name ?? null,
-                        vramTotalGb: g?.vram_total_gb ?? null,
-                        sharedMemory: g?.shared_memory === true,
-                        unifiedMemory: g?.unified_memory === true,
-                        sharedMemoryHostBackedGb: g?.shared_memory_host_backed_gb ?? null,
+                        name: g.name ?? null,
+                        vramTotalGb: g.vram_total_gb ?? null,
+                        sharedMemory: g.shared_memory === true,
+                        unifiedMemory: g.unified_memory === true,
+                        sharedMemoryHostBackedGb: g.shared_memory_host_backed_gb ?? null,
                     }))
                     : [],
-                torch: data?.versions?.torch ?? null,
-                cuda: data?.versions?.cuda ?? null,
-                rocm: data?.versions?.rocm ?? null,
-                xpu: data?.versions?.xpu ?? null,
-                transformers: data?.versions?.transformers ?? null,
-                unsloth: data?.versions?.unsloth ?? null,
-                mlx: data?.versions?.mlx ?? null,
-                llamaCpp: data?.llama_cpp ?? null,
-                audioCpp: data?.audio_cpp ?? null,
-                exportSupported: data?.export_supported ?? null,
-                exportUnsupportedReason: data?.export_unsupported_reason ?? null,
-                exportUnsupportedMessage: data?.export_unsupported_message ?? null,
-                torchaoExportSupported: data?.torchao_export_supported ?? true,
-                videoSupported: data?.video_supported ?? null,
-                videoUnsupportedReason: data?.video_unsupported_reason ?? null,
-                videoUnsupportedMessage: data?.video_unsupported_message ?? null,
-                videoCpuExperimental: data?.video_cpu_experimental === true,
+                torch: data.versions?.torch ?? null,
+                cuda: data.versions?.cuda ?? null,
+                rocm: data.versions?.rocm ?? null,
+                xpu: data.versions?.xpu ?? null,
+                transformers: data.versions?.transformers ?? null,
+                unsloth: data.versions?.unsloth ?? null,
+                mlx: data.versions?.mlx ?? null,
+                llamaCpp: data.llama_cpp ?? null,
+                audioCpp: data.audio_cpp ?? null,
+                exportSupported: data.export_supported ?? null,
+                exportUnsupportedReason: data.export_unsupported_reason ?? null,
+                exportUnsupportedMessage: data.export_unsupported_message ?? null,
+                torchaoExportSupported: data.torchao_export_supported ?? true,
+                videoSupported: data.video_supported ?? null,
+                videoUnsupportedReason: data.video_unsupported_reason ?? null,
+                videoUnsupportedMessage: data.video_unsupported_message ?? null,
+                videoCpuExperimental: data.video_cpu_experimental === true,
                 loaded: true,
             };
             if (generation === cacheGeneration) {
@@ -148,7 +177,8 @@ async function fetchOnce(): Promise<HardwareInfo> {
                 return info;
             }
             // Superseded, so it must not become the cache, but it is still a real 200 for its callers.
-            return cached ?? info;
+            const settled: HardwareInfo | null = cached;
+            return settled ?? info;
         } catch {
             // Reset so later calls retry (e.g. backend wasn't ready).
             if (generation === cacheGeneration) fetchPromise = null;
@@ -175,7 +205,7 @@ export function useHardwareInfo(): HardwareInfo {
             fetchOnce().then((hw) => {
                 listener(hw);
                 if (!cancelled && !hw.loaded) retry = setTimeout(load, RETRY_MS);
-            });
+            }).catch(() => undefined);
         };
         // The listener joins after render, so a probe that resolved in between never reached it.
         if (cached) listener(cached);

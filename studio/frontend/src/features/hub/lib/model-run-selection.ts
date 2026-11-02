@@ -112,7 +112,7 @@ function createHandoffMeta(
     meta.ggufFilename = selection.ggufFilename;
   }
   if (
-    selection.expectedBytes != null &&
+    selection.expectedBytes !== undefined &&
     Number.isFinite(selection.expectedBytes) &&
     selection.expectedBytes > 0
   ) {
@@ -146,7 +146,7 @@ function createPrecisionFolderHandoff(
     meta.ggufFilename = selection.ggufFilename;
   }
   if (
-    selection.expectedBytes != null &&
+    selection.expectedBytes !== undefined &&
     Number.isFinite(selection.expectedBytes) &&
     selection.expectedBytes > 0
   ) {

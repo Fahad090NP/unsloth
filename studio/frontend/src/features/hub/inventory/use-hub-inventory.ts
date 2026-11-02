@@ -124,14 +124,9 @@ function compareCachedRows(
 }
 
 function localDatasetSourceLabel(source?: string | null): string {
-  switch (source) {
-    case "recipe":
-      return "Recipe dataset";
-    case "upload":
-      return "Uploaded dataset";
-    default:
-      return "Local dataset";
-  }
+  if (source === "recipe") return "Recipe dataset";
+  if (source === "upload") return "Uploaded dataset";
+  return "Local dataset";
 }
 
 function isReadyForDisplay(source: {
@@ -584,10 +579,7 @@ export function useHubInventory(
           title: ds.label || ds.id,
           source: "custom" as const,
           sourceLabel: localDatasetSourceLabel(ds.source),
-          datasetSource:
-            ds.source === "recipe" || ds.source === "upload"
-              ? ds.source
-              : undefined,
+          datasetSource: ds.source,
           path: ds.path,
           isGguf: false,
           loadId: ds.id,
@@ -686,12 +678,12 @@ export function useHubInventory(
     (!includeLocal || isReadyForDisplay(localDatasetsSource));
   const inventoryFailed = isDatasetMode
     ? Boolean(
-        cachedDatasetsSource.error ||
+        cachedDatasetsSource.error ??
           (includeLocal && localDatasetsSource.error),
       )
     : Boolean(
-        cachedGgufSource.error ||
-          cachedModelsSource.error ||
+        cachedGgufSource.error ??
+          cachedModelsSource.error ??
           (includeLocal && localModelsSource.error),
       );
   const hasUnreadyInventoryFailure = isDatasetMode

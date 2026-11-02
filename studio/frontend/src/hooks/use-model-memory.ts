@@ -18,17 +18,17 @@ import {
 import {
   normalizeGgufVariantIdentity,
   normalizeModelIdentity,
-} from "@/features/hub/lib/model-identity";
+} from "@/features/hub";
 import {
   PER_MODEL_CONFIG_STORAGE_KEY,
   PER_MODEL_CONFIG_UPDATED_EVENT,
   type PerModelConfig,
   listPerModelConfigs,
-} from "@/features/model-picker/model-config/per-model-config";
+} from "@/features/model-picker";
 import {
   loadVramBudgetSettings,
   subscribeVramBudgetSettings,
-} from "@/features/settings/api/vram-budget";
+} from "@/features/settings";
 import {
   type ModelMemorySegments,
   computeModelMemory,
@@ -130,7 +130,7 @@ const MISS: Estimate = {
 /** Per-model configs announce themselves; the standing mode and speculative type live in
  * localStorage, so the runtime store stands in as their notification. */
 function subscribeToConfigChanges(onChange: () => void): () => void {
-  if (typeof window === "undefined") return () => {};
+  if (typeof window === "undefined") return () => undefined;
   const onConfigWrite = () => {
     configsDirty = true;
     onChange();
@@ -140,7 +140,7 @@ function subscribeToConfigChanges(onChange: () => void): () => void {
   const onStorage = (event: Event) => {
     const key = (event as StorageEvent).key;
     // A null key means the whole store was cleared.
-    if (key == null || watchedStorageKeys().includes(key)) onConfigWrite();
+    if (key === null || key === undefined || watchedStorageKeys().includes(key)) onConfigWrite();
   };
   window.addEventListener("storage", onStorage);
   const unsubscribeStore = useChatRuntimeStore.subscribe(onChange);
@@ -159,7 +159,7 @@ const watchedStorageKeys = () => [
   CHAT_SPECULATIVE_TYPE_KEY,
 ];
 
-const subscribeNothing = () => () => {};
+const subscribeNothing = () => () => undefined;
 
 /** Constant, so it can never force a re-render. */
 const readZeroEpoch = () => 0;
@@ -204,7 +204,7 @@ function configFor(source: ModelMemorySource): PerModelConfig | undefined {
 }
 
 function pinnedContext(config: PerModelConfig | undefined): number | undefined {
-  return config?.customContextLength || config?.maxSeqLength || undefined;
+  return config?.customContextLength ?? config?.maxSeqLength ?? undefined;
 }
 
 /** False when a pin or CPU offload means the visible-GPU total is not the ceiling. A negative
@@ -214,7 +214,7 @@ function budgetIsMeaningful(config: PerModelConfig | undefined): boolean {
   if (mode === "manual") return false;
   // A session pin lives in the runtime store, not a saved config.
   const sessionPin = useChatRuntimeStore.getState().selectedGpuIds;
-  if (sessionPin != null && sessionPin.length > 0) return false;
+  if (sessionPin !== null && sessionPin !== undefined && sessionPin.length > 0) return false;
   if (!config) return true;
   // Pass-through args follow Unsloth's flags, so an -ngl or device pin there wins.
   if (extraArgsOwnPlacement(config.llamaExtraArgs)) return false;
@@ -223,9 +223,9 @@ function budgetIsMeaningful(config: PerModelConfig | undefined): boolean {
   // These add resident files nothing here priced (LoRA, control vector, drafter).
   if (extraArgsAddResidentFiles(config.llamaExtraArgs)) return false;
   return (
-    config.selectedGpuIds == null &&
-    (config.gpuLayers == null || config.gpuLayers < 0) &&
-    (config.nCpuMoe == null || config.nCpuMoe === 0)
+    (config.selectedGpuIds === null || config.selectedGpuIds === undefined) &&
+    ((config.gpuLayers === null || config.gpuLayers === undefined) || config.gpuLayers < 0) &&
+    ((config.nCpuMoe === null || config.nCpuMoe === undefined) || config.nCpuMoe === 0)
   );
 }
 
@@ -267,7 +267,7 @@ async function fetchEstimate(
         kvBytes: r.kv_bytes,
         // weights_bytes is the whole file; its lookup tables never reach the GPU.
         weightsBytes:
-          r.weights_bytes == null
+          (r.weights_bytes === null || r.weights_bytes === undefined)
             ? null
             : Math.max(0, r.weights_bytes - (r.lookup_table_bytes ?? 0)),
         specBytes: r.spec_bytes,
@@ -312,7 +312,7 @@ export function useModelMemory(
 
   // Gate before subscribing: the store ticks per streamed token, and an unconditional subscription
   // woke every row. Both branches are module constants.
-  const watching = enabled && source != null;
+  const watching = enabled && source !== null && source !== undefined;
   const epoch = useSyncExternalStore(
     watching ? subscribeToConfigChanges : subscribeNothing,
     watching ? readConfigEpoch : readZeroEpoch,
@@ -344,7 +344,7 @@ export function useModelMemory(
     const config = configFor({ repoId, quant: quantLabel });
     const nCtx = pinnedContext(config);
     const cacheKey = estimateCacheKey({
-      repoId: loadId || repoId,
+      repoId: loadId ?? repoId,
       quant: quantLabel,
       sizeBytes,
       nCtx,
@@ -361,7 +361,7 @@ export function useModelMemory(
     });
     return {
       // Saved configs are keyed by repo id, the request by the row's load target.
-      source: { repoId: loadId || repoId, quant: quantLabel },
+      source: { repoId: loadId ?? repoId, quant: quantLabel },
       config,
       nCtx,
       cacheKey,
@@ -396,11 +396,11 @@ export function useModelMemory(
   useEffect(() => {
     if (!plan) return;
     let alive = true;
-    void fetchEstimate(plan.cacheKey, plan.source, plan.nCtx, plan.config).then(
+    fetchEstimate(plan.cacheKey, plan.source, plan.nCtx, plan.config).then(
       (estimate) => {
         if (alive) setEntry({ key: plan.cacheKey, estimate });
       },
-    );
+    ).catch(() => undefined);
     return () => {
       alive = false;
     };
@@ -424,10 +424,10 @@ export function useModelMemory(
     return computeModelMemory({
       // The projector is resident alongside the weights.
       weightsBytes:
-        weights == null ? weights : weights + (estimate?.projectorBytes ?? 0),
+        (weights === null || weights === undefined) ? weights : weights + (estimate?.projectorBytes ?? 0),
       // Checkpoints live in host heap: the GPU figure is kv_bytes - kv_checkpoint_bytes.
       kvBytes:
-        estimate?.kvBytes == null
+        (estimate?.kvBytes === null || estimate?.kvBytes === undefined)
           ? estimate?.kvBytes
           : Math.max(0, estimate.kvBytes - (estimate.kvCheckpointBytes ?? 0)),
       specBytes: estimate?.specBytes,
@@ -443,9 +443,9 @@ export function useModelMemory(
       // Unpinned default loads auto-fit the context, so use the route's answer; an inherited positive
       // LLAMA_ARG_CTX_SIZE is kept, not fitted.
       contextIsAutoFitted:
-        estimate?.contextIsPinned == null
-          ? plan.nCtx == null
+        (estimate?.contextIsPinned === null || estimate?.contextIsPinned === undefined)
+          ? typeof plan.nCtx === "undefined"
           : !estimate.contextIsPinned,
     });
-  }, [plan, entry, source?.sizeBytes, source?.lookupTableBytes, budgetGb, budgetFraction]);
+  }, [plan, entry, source, source?.sizeBytes, source?.lookupTableBytes, budgetGb, budgetFraction]);
 }

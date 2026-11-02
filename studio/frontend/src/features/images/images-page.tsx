@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { generationFailureLogsAction } from "@/features/settings/lib/view-logs-action";
+import {
+  generationFailureLogsAction,
+  modelMemorySettingsAction,
+  useSettingsDialogStore,
+} from "@/features/settings";
 import { isRetiredCopySnapshot, readImageModel, retiredSnapshotAsLoaded, rememberImageModel, matchesRememberedModel, componentFilesMatch, componentFieldsOwnerAfterLoad, componentFilesForModel, forgetStaleImageComponents, forgetStaleResidentComponents, recalledComponentFiles, reconcileRememberedComponents, rememberLoadedImageComponents, recoveredComponentFields, seedImageComponents, rememberPendingImageLoad, clearPendingImageLoad, finishedLoadTarget, type ImageComponentFiles, type ImageModelKey, type RememberedImageModel } from "./image-model-recall";
 import { componentFileFields, splitComponentFileList } from "./component-files";
 import type { CompareContext } from "./compare/compare-axes";
@@ -38,7 +42,7 @@ import {
   UndoIcon,
 } from "@hugeicons/core-free-icons";
 import { FolderAddIcon } from "@/lib/folder-icons";
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { History as HistoryIcon, Shuffle } from "lucide-react";
 import { MessageCircleIcon, TestTubeOutlineIcon } from "@/lib/hugeicons-derived";
 import { MediaViewer } from "@/components/media-viewer";
@@ -74,7 +78,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
@@ -89,24 +92,23 @@ import { InfoHint } from "@/components/ui/info-hint";
 import { useDiffusionGpuChoices } from "@/hooks/use-gpu-info";
 import { usePersistedChoice } from "@/hooks/use-persisted-choice";
 import { useScrollFades } from "@/hooks/use-scroll-fades";
-import { ModelSelector } from "@/features/model-picker/components/model-selector";
-import {
-  explicitFamily,
-  resolvedFamilyOverrideSelection,
-  useFamilyOverride,
-} from "@/features/model-picker/components/model-selector/family-override";
-import { IMAGE_GEN_TASKS } from "@/features/model-picker/components/model-selector/pickers";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
-import {
-  type HostClass,
-  hostOffersDensePrecision,
-} from "@/features/model-picker/components/model-selector/host-artifact-policy";
 import {
   IMAGE_CATALOG,
+  IMAGE_GEN_TASKS,
+  ModelSelector,
+  PillTabs,
   catalogToModelOptions,
   curatedArtifactTakesDenseQuant,
+  explicitFamily,
+  hostOffersDensePrecision,
   loadSpecFor,
-} from "@/features/model-picker/components/model-selector/model-catalog";
+  resolvedFamilyOverrideSelection,
+  useFamilyOverride,
+  type ExternalModelOption,
+  type HostClass,
+  type ModelOption,
+  type ModelSelectorChangeMeta,
+} from "@/features/model-picker";
 import {
   useDenseQuantSchemes,
   useHostClass,
@@ -114,11 +116,6 @@ import {
   useNvfp4DiffusionKnown,
 } from "@/hooks/use-host-class";
 import { nvfp4SelectionFallback, withNvfp4Option } from "@/lib/nvfp4-options";
-import type {
-  ExternalModelOption,
-  ModelOption,
-  ModelSelectorChangeMeta,
-} from "@/features/model-picker/components/model-selector/types";
 import { AdvancedDisclosure } from "@/components/advanced-disclosure";
 import { GalleryItemMenu, GalleryPinBadge } from "@/components/gallery-item-menu";
 import { MediaRailResizeHandle } from "@/components/media-rail-resize-handle";
@@ -132,9 +129,9 @@ import {
   chatAboutMedia,
   revealInFolder,
   useLibraryFavorites,
+  useLibrarySettingsStore,
   useRevealLabel,
 } from "@/features/library";
-import { useSettingsDialogStore } from "@/features/settings/stores/settings-dialog-store";
 import {
   type NewRecordProbeBaseline,
   applyPin,
@@ -169,22 +166,20 @@ import {
   type WorkflowId,
 } from "./workflows";
 import {
+  ModelLoadDescription,
   ParamSlider,
   buildExternalModelId,
   isDecisionConnection,
   parseExternalModelId,
   useExternalProvidersStore,
 } from "@/features/chat";
-import { ModelLoadDescription } from "@/features/chat/components/model-load-status";
 import { cancelConnectionImageGeneration } from "./connection-cancel";
 import {
   type ImageGenerationPresetParams,
   MediaGenerationPresetControl,
   useMediaGenerationPresets,
 } from "@/features/generation-presets";
-import { getHfToken, hfApiToken } from "@/features/hub/stores/hf-token-store";
-import { formatBytes, formatEta } from "@/features/hub/lib/format";
-import { OnDeviceFoldersDialog } from "@/features/hub/catalog/on-device-folders-dialog";
+import { formatBytes, formatEta, getHfToken, hfApiToken, OnDeviceFoldersDialog } from "@/features/hub";
 import { generatePhaseLabel, sameGenerateProgress } from "@/lib/media-generate-phase";
 import { NegativePromptField, PROMPT_BOX_CLASS } from "@/components/negative-prompt-field";
 import {
@@ -230,7 +225,6 @@ import { readAllowOversizedLoad, retryWhileCurrent, shouldOfferLoadAnyway } from
 import { evictedSlotsFrom, evictedToastOptions, resyncEvicted, type EvictedSlot } from "@/lib/evicted-toast";
 import { failureMessage, isMultiModelRefusal, MULTI_MODEL_REFUSAL_TITLE, refusalHeadersOf } from "@/lib/multi-model-refusal";
 import { isLoadInFlightPhase, watchSavingPhase } from "@/lib/swap-save-phase";
-import { modelMemorySettingsAction } from "@/features/settings/lib/model-memory-action";
 import { MAX_UPLOAD_IMAGE_SIDE, blobToDataUrl, fitImageDataUrl } from "@/lib/image-fit";
 import { loadGalleryUntil } from "@/lib/gallery-deep-link";
 import { subscribeModelEjected } from "@/lib/model-lifecycle-events";
@@ -289,7 +283,6 @@ import {
 } from "./lib/detailer";
 
 import {
-  type ControlNetSpecInput,
   type DiffusionControlNetInfo,
   type DiffusionGenerateProgress,
   type DiffusionGenerateRequest,
@@ -360,7 +353,6 @@ import {
   withJpegExif,
   withWebpExif,
 } from "./lib/image-metadata";
-import { useLibrarySettingsStore } from "@/features/library/settings-store";
 import {
   ALLOW_OVERSIZED_HINT,
   ALLOW_OVERSIZED_LABEL,
@@ -461,7 +453,7 @@ import {
   varyBlockedReason,
 } from "./lib/sd-controls";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useStagedDownload, type StagedDownloadEntry } from "@/features/hub/download-manager";
+import { useStagedDownload, type StagedDownloadEntry } from "@/features/hub";
 import { DiffusionTrainPanel } from "./train/diffusion-train-panel";
 import {
   TrainBaseSelector,
@@ -809,7 +801,7 @@ function loadToastArgs(
   onCancel?: () => void,
 ) {
   return {
-    ...(id != null ? { id } : {}),
+    ...(id !== undefined ? { id } : {}),
     description: loadToastDescription(p),
     duration: Infinity,
     closeButton: true,
@@ -1097,7 +1089,7 @@ function MaskCanvas({
         // An empty Replace leaves the mask black: nothing is selected, so Generate's empty-mask check still holds.
         if (live && url !== null) onMaskChange(applyMask.empty ? null : url);
       })
-      .catch(() => {});
+      .catch(() => undefined);
     return () => {
       live = false;
     };
@@ -1400,23 +1392,23 @@ function RecipePopover({
           ) : null}
           {image.controlnet ? <RecipeRow label="ControlNet" value={image.controlnet} wrap /> : null}
           <RecipeRow label="Workflow" value={recipeWorkflowLabel(image.workflow)} />
-          {image.strength != null &&
+          {image.strength !== null && image.strength !== undefined &&
           (image.workflow === "img2img" ||
             image.workflow === "edit" ||
             image.workflow === "inpaint" ||
             image.workflow === "upscale") ? (
             <RecipeRow label="Strength" value={String(image.strength)} />
           ) : null}
-          {image.upscale != null && image.workflow === "upscale" ? (
+          {image.upscale !== null && image.upscale !== undefined && image.workflow === "upscale" ? (
             <RecipeRow label="Upscale" value={`${image.upscale}×`} />
           ) : null}
           {image.upscale_model && image.workflow === "upscale" ? (
             <RecipeRow label="Upscaler" value={HIRES_UPSCALER_LABELS[image.upscale_model] ?? image.upscale_model.replace(/^local:/, "")} />
           ) : null}
-          {image.hires_scale != null ? (
+          {image.hires_scale !== null && image.hires_scale !== undefined ? (
             <RecipeRow label="Hires fix" value={hiresSummary(hiresFromRecipe(image))} wrap />
           ) : null}
-          {image.reference_image_count != null &&
+          {image.reference_image_count !== null && image.reference_image_count !== undefined &&
           (image.workflow === "reference" || image.workflow === "edit") ? (
             <RecipeRow label="References" value={String(image.reference_image_count)} />
           ) : null}
@@ -1617,7 +1609,11 @@ class StripTileActionsBox {
     this.actions = actions;
   }
   get(): StripTileActions {
-    return this.actions!;
+    const { actions } = this;
+    if (actions === null) {
+      throw new Error("StripTileActionsBox.get() before set()");
+    }
+    return actions;
   }
 }
 
@@ -2236,12 +2232,12 @@ export function ImagesPage({
   );
 
   const dismissLoadToast = useCallback(() => {
-    if (loadToastId.current != null) toast.dismiss(loadToastId.current);
+    if (loadToastId.current !== null) toast.dismiss(loadToastId.current);
     loadToastId.current = null;
   }, []);
   const pickToast = useDiffusionPickToast();
 
-  const cancelLoadRef = useRef<() => void>(() => {});
+  const cancelLoadRef = useRef<() => void>(() => undefined);
   const cancelLoadFromToast = useCallback(() => { cancelLoadRef.current(); }, []);
   // In-flight requests compare against this and discard their result after a cancel.
   const cancelSeq = useRef(0);
@@ -2296,7 +2292,7 @@ export function ImagesPage({
     }
     const fam = status?.family ?? null;
     const prev = prevLoraFamilyRef.current;
-    if (prev != null && prev !== fam) {
+    if (prev !== null && prev !== undefined && prev !== fam) {
       setLoras([]);
     }
     prevLoraFamilyRef.current = fam;
@@ -2523,7 +2519,7 @@ export function ImagesPage({
     setSrcErrors((prev) => {
       if (!prev[image.id]) return prev;
       const next = { ...prev };
-      delete next[image.id];
+      Reflect.deleteProperty(next, image.id);
       return next;
     });
     try {
@@ -2543,7 +2539,7 @@ export function ImagesPage({
       );
       setSrcById((prev) => {
         const next = { ...prev, [image.id]: url };
-        for (const id of evicted) delete next[id];
+        for (const id of evicted) Reflect.deleteProperty(next, id);
         return next;
       });
     } catch {
@@ -2575,7 +2571,7 @@ export function ImagesPage({
       );
       setThumbById((prev) => {
         const next = { ...prev, [image.id]: url };
-        for (const id of evicted) delete next[id];
+        for (const id of evicted) Reflect.deleteProperty(next, id);
         return next;
       });
     } catch {
@@ -2605,7 +2601,7 @@ export function ImagesPage({
       setImages(page.images);
       setHasMore(page.has_more);
       if (typeof IntersectionObserver === "undefined") {
-        page.images.forEach((image) => void ensureThumb(image));
+        page.images.forEach((image) => { ensureThumb(image).catch(() => undefined); });
       }
     } catch {
       // Best-effort: a failed gallery load should not block the page.
@@ -2635,7 +2631,7 @@ export function ImagesPage({
       galleryCache.hasMore = page.has_more;
       setHasMore(page.has_more);
       if (typeof IntersectionObserver === "undefined") {
-        page.images.forEach((image) => void ensureThumb(image));
+        page.images.forEach((image) => { ensureThumb(image).catch(() => undefined); });
       }
     } catch {
       // transient; the user can scroll again to retry
@@ -2660,7 +2656,7 @@ export function ImagesPage({
           galleryCache.srcById.touch(id);
           galleryCache.thumbById.touch(id);
           const image = images.find((i) => i.id === id);
-          if (image) void ensureThumb(image);
+          if (image) ensureThumb(image).catch(() => undefined);
         }
       },
       // rootMargin applies to the ROOT box only, so the root must be the scrolling strip.
@@ -2673,9 +2669,9 @@ export function ImagesPage({
   // The preview is what the user looks at, so the selected image is fetched whether or not its tile is on screen.
   useEffect(() => {
     if (!selected) return;
-    void (async () => {
+    (async () => {
       await ensureSrc(selected);
-    })();
+    })().catch(() => undefined);
   }, [selected, ensureSrc]);
 
   // Drop an image from the strip. `discardBlob` is for a real delete: the bytes are gone, so
@@ -2688,17 +2684,17 @@ export function ImagesPage({
       setSrcErrors((prev) => {
         if (!prev[id]) return prev;
         const next = { ...prev };
-        delete next[id];
+        Reflect.deleteProperty(next, id);
         return next;
       });
       setSrcById((prev) => {
         const next = { ...prev };
-        delete next[id];
+        Reflect.deleteProperty(next, id);
         return next;
       });
       setThumbById((prev) => {
         const next = { ...prev };
-        delete next[id];
+        Reflect.deleteProperty(next, id);
         return next;
       });
     }
@@ -2756,7 +2752,7 @@ export function ImagesPage({
         setImages(collected);
         setHasMore(more);
         if (typeof IntersectionObserver === "undefined") {
-          collected.forEach((image) => void ensureThumb(image));
+          collected.forEach((image) => { ensureThumb(image).catch(() => undefined); });
         }
         return;
       }
@@ -2771,10 +2767,10 @@ export function ImagesPage({
         // Bumped FIRST so in-flight reads are discarded.
         stripEpoch.current += 1;
         const epoch = stripEpoch.current;
-        void resyncWindow(
+        resyncWindow(
           galleryCache.images.length,
           () => stripEpoch.current === epoch,
-        ).catch(() => void loadGallery());
+        ).catch(() => loadGallery().catch(() => undefined));
       }),
     [loadGallery, resyncWindow],
   );
@@ -2858,7 +2854,7 @@ export function ImagesPage({
         try {
           await resyncWindow(galleryCache.images.length, () => stripEpoch.current === epoch);
         } catch {
-          void loadGallery();
+          loadGallery().catch(() => undefined);
         }
       }
     },
@@ -2868,7 +2864,7 @@ export function ImagesPage({
     (image: GalleryImage) => downloadImage(image, "png", srcById[image.id]),
     [srcById],
   );
-  const stripReorder = useStripReorder((id, afterId) => void handleMove(id, afterId));
+  const stripReorder = useStripReorder((id, afterId) => { handleMove(id, afterId).catch(() => undefined); });
   const imagesRef = useRef(images);
   imagesRef.current = images;
   useGalleryImageDropSource(
@@ -3263,7 +3259,7 @@ export function ImagesPage({
     },
     [importSettingsFromFile],
   );
-  const previewDropRef = useNativeDropTarget({ onDrop: (paths) => void importNativePath(paths[0]) });
+  const previewDropRef = useNativeDropTarget({ onDrop: (paths) => { importNativePath(paths[0]).catch(() => undefined); } });
   const onImportDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
     if (event.dataTransfer.types.includes("Files")) {
       event.preventDefault();
@@ -3277,7 +3273,7 @@ export function ImagesPage({
       event.preventDefault();
       const file = Array.from(event.dataTransfer.files).find((f) => f.type.startsWith("image/"));
       if (file) {
-        void importSettingsFromFile(file);
+        importSettingsFromFile(file).catch(() => undefined);
       } else {
         toast.error("Drop a PNG, JPEG or WebP image to load its settings");
       }
@@ -3341,7 +3337,7 @@ export function ImagesPage({
     }
     if (!active || !leftForTrain.current) return;
     leftForTrain.current = false;
-    void refreshStatus();
+    refreshStatus().catch(() => undefined);
   }, [active, pageMode, refreshStatus]);
 
   useEffect(() => {
@@ -3354,11 +3350,11 @@ export function ImagesPage({
   useEffect(() => {
     if (!active) return;
     if (initialReadySent.current) {
-      void refreshStatus();
+      refreshStatus().catch(() => undefined);
       return;
     }
     let cancelled = false;
-    void (async () => {
+    (async () => {
       await Promise.all([
         refreshStatus(),
         (async () => {
@@ -3373,7 +3369,7 @@ export function ImagesPage({
       if (cancelled || initialReadySent.current) return;
       initialReadySent.current = true;
       onInitialReady?.();
-    })();
+    })().catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -3390,14 +3386,14 @@ export function ImagesPage({
         const pending = pendingStart.current;
         if (pending) {
           setBusy((prev) => (prev === "loading" ? "unloading" : prev));
-          void pending
-            .catch(() => {})
-            .finally(() => { setBusy((prev) => (prev === "unloading" ? null : prev)); });
+          pending
+            .catch(() => undefined)
+            .finally(() => { setBusy((prev) => (prev === "unloading" ? null : prev)); }).catch(() => undefined);
         } else {
           setBusy((prev) => (prev === "loading" ? null : prev));
         }
         setQuant(null);
-        void refreshStatus();
+        refreshStatus().catch(() => undefined);
       }),
     [refreshStatus, dropResidentState],
   );
@@ -3498,14 +3494,14 @@ export function ImagesPage({
         }
         if (lastLoadRevert.current) {
           lastLoad.current = lastLoadRevert.current.prev;
-          setCanReapply(lastLoadRevert.current.prev != null);
+          setCanReapply(lastLoadRevert.current.prev !== null);
           lastLoadRevert.current = null;
         }
         // And for the Engine select: a worker that failed before publishing leaves the resident provenance, so the
         // seed would not move and the next Reapply would replay the failed pick.
         setEngineSeed("");
         // A failed load may have freed a previously-loaded model, so resync to the real backend state.
-        void refreshStatus();
+        refreshStatus().catch(() => undefined);
         return;
       }
       if (p.phase === null) {
@@ -3522,15 +3518,15 @@ export function ImagesPage({
         }
         if (lastLoadRevert.current) {
           lastLoad.current = lastLoadRevert.current.prev;
-          setCanReapply(lastLoadRevert.current.prev != null);
+          setCanReapply(lastLoadRevert.current.prev !== null);
           lastLoadRevert.current = null;
         }
-        void refreshStatus();
+        refreshStatus().catch(() => undefined);
         return;
       }
       // Include bytes_total: the estimate lands as a 0->real jump while the rest holds.
       const sig = `${p.phase}:${p.bytes_downloaded}:${p.bytes_total}`;
-      if (loadToastId.current != null && sig !== lastLoadSig.current) {
+      if (loadToastId.current !== null && sig !== lastLoadSig.current) {
         lastLoadSig.current = sig;
         toast(null, loadToastArgs(p, loadToastId.current, cancelLoadFromToast));
       }
@@ -3538,7 +3534,7 @@ export function ImagesPage({
       // Transient poll failure: keep trying.
     }
     if (seq !== cancelSeq.current) return;
-    pollTimer.current = setTimeout(() => void pollLoadProgress(), 1000);
+    pollTimer.current = setTimeout(() => { pollLoadProgress().catch(() => undefined); }, 1000);
   }, [dismissLoadToast, refreshStatus, cancelLoadFromToast, offerLoadAnywayFor, rememberFinishedLoad]);
 
   // The unload failed, so restore the poll and toast. refreshStatus cannot: a first load is not resident.
@@ -3547,7 +3543,7 @@ export function ImagesPage({
     setBusy("loading");
     lastLoadSig.current = null;
     loadToastId.current = toast(null, loadToastArgs(IDLE_PROGRESS, undefined, cancelLoadFromToast));
-    void pollLoadProgress();
+    pollLoadProgress().catch(() => undefined);
   }, [pollLoadProgress, cancelLoadFromToast]);
 
   // generate-progress carries no terminal record, so refresh the gallery on completion.
@@ -3572,8 +3568,8 @@ export function ImagesPage({
           if (!isMounted.current) return;
           setBusy(null);
           setGenStep(null);
-          void loadGallery();
-          void refreshStatus();
+          loadGallery().catch(() => undefined);
+          refreshStatus().catch(() => undefined);
           return;
         }
         setGenStep((prev) => {
@@ -3587,14 +3583,14 @@ export function ImagesPage({
       }
     };
     genVisibilityListener.current = () => {
-      if (document.visibilityState === "visible") void pollGenerateOnce();
+      if (document.visibilityState === "visible") pollGenerateOnce().catch(() => undefined);
     };
     document.addEventListener("visibilitychange", genVisibilityListener.current);
-    genPollTimer.current = setInterval(() => void pollGenerateOnce(), 300);
+    genPollTimer.current = setInterval(() => { pollGenerateOnce().catch(() => undefined); }, 300);
   }, [loadGallery, refreshStatus]);
 
   useEffect(() => {
-    void (async () => {
+    (async () => {
       await refreshStatus();
       // A load runs on the backend as a daemon thread that survives navigation, so resume tracking one still in flight.
       let inFlight = false;
@@ -3606,7 +3602,7 @@ export function ImagesPage({
           dismissLoadToast();
           lastLoadSig.current = null;
           loadToastId.current = toast(null, loadToastArgs(p, undefined, cancelLoadFromToast));
-          void pollLoadProgress();
+          pollLoadProgress().catch(() => undefined);
         } else if (p.phase === "ready") {
           const ticket = ++statusTicket.current;
           const loaded = ownDiffusionStatus(await getDiffusionStatus());
@@ -3634,7 +3630,7 @@ export function ImagesPage({
       } catch {
         // Resume is best-effort; a failed probe just leaves the idle view.
       }
-    })();
+    })().catch(() => undefined);
     return () => {
       if (pollTimer.current) clearTimeout(pollTimer.current);
       if (genPollTimer.current) clearInterval(genPollTimer.current);
@@ -3836,7 +3832,7 @@ export function ImagesPage({
       // An older pick's Load anyway prompt would retry a model this load supersedes.
       dismissLoadAnyway();
       // Published now and settled in the finally below, so a cancel waits for the WHOLE path.
-      let settleLoad: () => void = () => {};
+      let settleLoad: () => void = () => undefined;
       const inFlight = new Promise<void>((resolve) => {
         settleLoad = resolve;
       });
@@ -3885,12 +3881,12 @@ export function ImagesPage({
       const retryPick = pickSeq.current;
       const retryOversized = retryWhileCurrent(
         () => retryPick === pickSeq.current && startLoad === loadSeq.current,
-        () => void retryLoadRef.current?.(repoId, opts, { ...picked, allow_oversized_load: true }),
+        () => { retryLoadRef.current?.(repoId, opts, { ...picked, allow_oversized_load: true }).catch(() => undefined); },
       );
       lastLoadAttempt.current = { overrideSent, retry: retryOversized };
       // The POST may first save the chat model's context; show that on this load's toast meanwhile.
       const savePoll = watchSavingPhase(getDiffusionLoadProgress, () => {
-        if (startSeq === cancelSeq.current && startLoad === loadSeq.current && loadToastId.current != null) {
+        if (startSeq === cancelSeq.current && startLoad === loadSeq.current && loadToastId.current !== null) {
           toast(null, loadToastArgs(SAVING_PROGRESS, loadToastId.current, cancelLoadFromToast));
         }
       });
@@ -3925,7 +3921,7 @@ export function ImagesPage({
         pendingEvicted.current = [];
         clearPendingImageLoad();
         lastLoad.current = prevLastLoad;
-        setCanReapply(prevLastLoad != null);
+        setCanReapply(prevLastLoad !== null);
         lastLoadRevert.current = null;
         // A refused load keeps the resident model and its provenance, so the seed would not move: reseed the
         // Engine select from the resident build rather than replay the refused pick on the next Reapply.
@@ -3933,7 +3929,7 @@ export function ImagesPage({
         dismissLoadToast();
         if (!offerLoadAnywayFor(err)) reportLoadFailure(err, "Failed to start load");
         setBusy(null);
-        void refreshStatus();
+        refreshStatus().catch(() => undefined);
         return settle(false);
       } finally {
         savePoll.stop();
@@ -3952,10 +3948,10 @@ export function ImagesPage({
             return settle(false);
           }
         }
-        void refreshStatus();
+        refreshStatus().catch(() => undefined);
         return settle(false);
       }
-      void pollLoadProgress();
+      pollLoadProgress().catch(() => undefined);
       return settle(true);
     },
     [pollLoadProgress, refreshStatus, dismissLoadToast, currentLoadAdvanced, cancelLoadFromToast, pickToast, engineFor, offerLoadAnywayFor, dismissLoadAnyway],
@@ -4028,7 +4024,7 @@ export function ImagesPage({
     applyEditSource(dataUrl);
   }, [pendingLibraryEdit, capabilitiesKnown, applyEditSource]);
   const editImageItem = (image: GalleryImage) => (
-    <EditImageMenuItem onClick={() => void editGalleryImage(image)} />
+    <EditImageMenuItem onClick={() => { editGalleryImage(image).catch(() => undefined); }} />
   );
   // Refreshed after every commit, read only from tile event handlers, so new page closures never re-render a tile.
   const [stripTileActions] = useState(() => new StripTileActionsBox());
@@ -4037,13 +4033,13 @@ export function ImagesPage({
       tileProps: stripReorder.tileProps,
       select: setSelectedId,
       setMenuId: setTileMenuId,
-      togglePin: (id, pinned) => void handleTogglePin(id, pinned),
-      archive: (id) => void handleArchive(id),
-      remove: (id) => void handleDelete(id),
-      download: (image) => void handleQuickDownload(image),
+      togglePin: (id, pinned) => { handleTogglePin(id, pinned).catch(() => undefined); },
+      archive: (id) => { handleArchive(id).catch(() => undefined); },
+      remove: (id) => { handleDelete(id).catch(() => undefined); },
+      download: (image) => { handleQuickDownload(image).catch(() => undefined); },
       addToProject: addGalleryImageToProject,
       toggleFavorite,
-      editImage: (image) => void editGalleryImage(image),
+      editImage: (image) => { editGalleryImage(image).catch(() => undefined); },
     });
   });
   const { openCrop: openInpaintCrop, cropDialog: inpaintCropDialog } = useImageCrop(
@@ -4076,14 +4072,14 @@ export function ImagesPage({
         return;
       }
       const owned = stagedQuantRevert.current;
-      void handleLoadRef.current(pending.repoId, pending.opts, pending.advanced, pending.toastId).then((started) => {
+      handleLoadRef.current(pending.repoId, pending.opts, pending.advanced, pending.toastId).then((started) => {
         if (started) return;
         if (quantRevert.current && quantRevert.current === owned) {
           revertPick(quantRevert.current);
           quantRevert.current = null;
         }
         if (stagedQuantRevert.current === owned) stagedQuantRevert.current = null;
-      });
+      }).catch(() => undefined);
     },
     [pickGuard, revertPick, pickToast],
   );
@@ -4371,7 +4367,7 @@ export function ImagesPage({
           offerLoadAnyway(incompatible, retryWhileCurrent(() => pick === pickSeq.current, () => {
             oversizedLoadOnce.current = true;
             try {
-              void loadOrStageRef.current(repoId, opts, retrySource, undefined, familyOverrideRequired, undefined, true);
+              loadOrStageRef.current(repoId, opts, retrySource, undefined, familyOverrideRequired, undefined, true).catch(() => undefined);
             } finally {
               oversizedLoadOnce.current = false;
             }
@@ -4515,11 +4511,11 @@ export function ImagesPage({
       setFamilyOverride("auto");
       setExternalModelId(null);
     }
-    void navigateSelf({ to: "/images", search: {}, replace: true });
+    navigateSelf({ to: "/images", search: {}, replace: true }).catch(() => undefined);
     if (routedLabel) {
-      void Promise.resolve().then(() =>
+      Promise.resolve().then(() =>
         loadGgufRepoPick(wanted, routedLabel, "hub", null, "auto"),
-      );
+      ).catch(() => undefined);
       return;
     }
     const pick = diffusionRoutePick(
@@ -4528,7 +4524,7 @@ export function ImagesPage({
       loadSpecFor(wanted, IMAGE_CATALOG),
     );
     if (pick.opts.kind === "gguf" && !pick.opts.filename) {
-      void Promise.resolve().then(() => loadGgufRepoPick(pick.repoId, null, "hub", null, "auto"));
+      Promise.resolve().then(() => loadGgufRepoPick(pick.repoId, null, "hub", null, "auto")).catch(() => undefined);
       return;
     }
     const revert: PickRevert | null = downloadOnlyPick
@@ -4544,12 +4540,12 @@ export function ImagesPage({
         pick.opts.kind === "gguf" ? (pick.opts.filename ?? null) : null,
       );
     }
-    void loadOrStage(pick.repoId, pick.opts, "hub", token).then((started) => {
+    loadOrStage(pick.repoId, pick.opts, "hub", token).then((started) => {
       if (!started && revert && token !== undefined && pickGuard.holds(token) && quantRevert.current === revert) {
         revertPick(revert);
         quantRevert.current = null;
       }
-    });
+    }).catch(() => undefined);
   }, [
     active,
     applyImageModelDefaults,
@@ -4575,8 +4571,8 @@ export function ImagesPage({
   useEffect(() => {
     if (!routedItem) return;
     const lookup = ++routedLookup.current;
-    void navigateSelf({ to: "/images", search: {}, replace: true });
-    void loadGalleryUntil({
+    navigateSelf({ to: "/images", search: {}, replace: true }).catch(() => undefined);
+    loadGalleryUntil({
       has: () => galleryCache.images.some((entry) => entry.id === routedItem),
       count: () => galleryCache.images.length,
       hasMore: () => galleryCache.hasMore,
@@ -4593,7 +4589,7 @@ export function ImagesPage({
           description: translate("library.toast.notFoundDescription"),
         });
       }
-    });
+    }).catch(() => undefined);
   }, [routedItem, navigateSelf, loadGallery, loadMore]);
 
   // Reload the current model with the current advanced options.
@@ -4604,15 +4600,15 @@ export function ImagesPage({
     const opts = { kind: l.kind, filename: l.filename, displayRepoId: l.displayRepoId, baseRepo: l.baseRepo };
     // An engine change reads the other engine's companion files: plan and stage them first.
     if (reapplyChangesEngine(engineChoice, status)) {
-      void loadOrStage(l.repoId, opts, reloadSource(l.repoId), undefined, true, undefined, true);
+      loadOrStage(l.repoId, opts, reloadSource(l.repoId), undefined, true, undefined, true).catch(() => undefined);
       return;
     }
     const files = pickComponentFiles({ repoId: l.repoId, kind: l.kind, filename: l.filename });
-    void handleLoad(l.repoId, opts, {
+    handleLoad(l.repoId, opts, {
       ...currentLoadAdvanced(l.repoId),
       text_encoder_file: files.textEncoderFiles?.length ? files.textEncoderFiles : undefined,
       vae_file: files.vaeFile || undefined,
-    });
+    }).catch(() => undefined);
   }, [currentLoadAdvanced, engineChoice, handleLoad, loadOrStage, pickComponentFiles, status]);
 
   // The LoRA note's action: the same GGUF pick, on the native engine. A resident model the page did not load
@@ -4624,7 +4620,7 @@ export function ImagesPage({
     // Now, not on the next render: the plan and the staged snapshot read the select through this ref.
     engineSelection.current = { ...engineSelection.current, choice: "sd_cpp" };
     // Through the plan, which stages the native companions (VAE / text encoders) the diffusers load never fetched.
-    void loadOrStage(
+    loadOrStage(
       l.repoId,
       { kind: l.kind, filename: l.filename, displayRepoId: l.displayRepoId, baseRepo: l.baseRepo },
       reloadSource(l.repoId),
@@ -4632,7 +4628,7 @@ export function ImagesPage({
       true,
       undefined,
       true,
-    );
+    ).catch(() => undefined);
   }, [loadOrStage, status]);
 
   // Every pick supersedes the previous one; direct-local branches bypass loadOrStage.
@@ -4683,7 +4679,7 @@ export function ImagesPage({
           setQuant(null);
           applyImageModelDefaults(id, nextFamilyOverride);
         }
-        void loadOrStage(
+        loadOrStage(
           pipelineTarget.repoId,
           { kind: spec.kind, filename: spec.filename, displayRepoId },
           pipelineTarget.source,
@@ -4693,7 +4689,7 @@ export function ImagesPage({
               revertPick(revert);
               quantRevert.current = null;
             }
-          });
+          }).catch(() => undefined);
         return;
       }
       if (meta.ggufVariant && meta.ggufFilename) {
@@ -4705,7 +4701,7 @@ export function ImagesPage({
           setQuant(meta.ggufVariant);
           applyImageModelDefaults(id, nextFamilyOverride, false, meta.ggufFilename);
         }
-        void loadOrStage(
+        loadOrStage(
           id,
           { kind: "gguf", filename: meta.ggufFilename },
           meta.source,
@@ -4715,7 +4711,7 @@ export function ImagesPage({
             revertPick(revert);
             quantRevert.current = null;
           }
-        });
+        }).catch(() => undefined);
         return;
       }
       if (meta.isGguf) {
@@ -4724,13 +4720,13 @@ export function ImagesPage({
         const filename = slash >= 0 ? norm.slice(slash + 1) : norm;
         const dir = slash >= 0 ? norm.slice(0, slash) : ".";
         if (!filename.toLowerCase().endsWith(".gguf")) {
-          void loadGgufRepoPick(
+          loadGgufRepoPick(
             id,
             meta.ggufVariant ?? null,
             meta.source,
             meta.source === "local" ? id : null,
             nextFamilyOverride,
-          );
+          ).catch(() => undefined);
           return;
         }
         const revert: PickRevert | null = downloadOnlyPick
@@ -4741,12 +4737,12 @@ export function ImagesPage({
           setQuant(filename);
           applyImageModelDefaults(id, nextFamilyOverride, false, filename);
         }
-        void loadOrStage(dir, { kind: "gguf", filename }, meta.source, token).then((started) => {
+        loadOrStage(dir, { kind: "gguf", filename }, meta.source, token).then((started) => {
           if (!started && revert && stillOwnsPick()) {
             revertPick(revert);
             quantRevert.current = null;
           }
-        });
+        }).catch(() => undefined);
         return;
       }
       // The pipeline route rejects a bare file, and only after evicting the resident model.
@@ -4763,23 +4759,23 @@ export function ImagesPage({
           setQuant(filename);
           applyImageModelDefaults(id, nextFamilyOverride);
         }
-        void loadOrStage(dir, { kind: "single_file", filename }, meta.source, token).then((started) => {
+        loadOrStage(dir, { kind: "single_file", filename }, meta.source, token).then((started) => {
           if (!started && revert && stillOwnsPick()) {
             revertPick(revert);
             quantRevert.current = null;
           }
-        });
+        }).catch(() => undefined);
         return;
       }
       // The backend rejects a pipeline load of a single-file GGUF repo.
       if (spec?.kind === "gguf" || meta.ggufVariant) {
-        void loadGgufRepoPick(
+        loadGgufRepoPick(
           id,
           spec?.filename ?? meta.ggufVariant ?? null,
           meta.source,
           meta.source === "local" ? id : null,
           nextFamilyOverride,
-        );
+        ).catch(() => undefined);
         return;
       }
       if (!pipelineTarget.onDevice && !id.toLowerCase().startsWith("unsloth/")) {
@@ -4796,12 +4792,12 @@ export function ImagesPage({
         setQuant(null);
         applyImageModelDefaults(id, nextFamilyOverride);
       }
-      void loadOrStage(pipelineTarget.repoId, { kind: "pipeline", displayRepoId }, pipelineTarget.source, token, familyOverrideRequired).then((started) => {
+      loadOrStage(pipelineTarget.repoId, { kind: "pipeline", displayRepoId }, pipelineTarget.source, token, familyOverrideRequired).then((started) => {
         if (!started && revert && stillOwnsPick()) {
           revertPick(revert);
           quantRevert.current = null;
         }
-      });
+      }).catch(() => undefined);
     },
     [
       abandonPick,
@@ -4843,7 +4839,7 @@ export function ImagesPage({
       quantRevert.current = revert;
       setQuant(null);
       applyImageModelDefaults(args.baseRepo, "auto", true);
-      void handleLoad(args.baseRepo, { kind: "pipeline" }).then((started) => {
+      handleLoad(args.baseRepo, { kind: "pipeline" }).then((started) => {
         if (!started) {
           pendingDeploy.current = null;
           if (quantRevert.current === revert) {
@@ -4851,7 +4847,7 @@ export function ImagesPage({
             quantRevert.current = null;
           }
         }
-      });
+      }).catch(() => undefined);
     },
     [applyImageModelDefaults, busy, handleLoad, pickGuard, pickToast, quant, revertPick, setPageMode],
   );
@@ -4888,7 +4884,7 @@ export function ImagesPage({
       return !loadTrackingRestored.current;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to unload model");
-      void refreshStatus();
+      refreshStatus().catch(() => undefined);
       return false;
     } finally {
       // Not an unconditional clear: a restore may have set "loading" deliberately.
@@ -4911,7 +4907,7 @@ export function ImagesPage({
   }, [busy, handleUnload, restoreLoadTracking]);
 
   useEffect(() => {
-    cancelLoadRef.current = () => void handleCancelLoad();
+    cancelLoadRef.current = () => { handleCancelLoad().catch(() => undefined); };
   }, [handleCancelLoad]);
 
   const buildKey = status?.loaded
@@ -4962,7 +4958,7 @@ export function ImagesPage({
       .then((img) => {
         if (live) setSourceRead({ src: initImage, width: img.naturalWidth, height: img.naturalHeight });
       })
-      .catch(() => {});
+      .catch(() => undefined);
     return () => {
       live = false;
     };
@@ -5035,7 +5031,7 @@ export function ImagesPage({
   ) : null;
 
   const referenceDetailControl =
-    referenceResolutions.length > 0 && referenceResolution != null ? (
+    referenceResolutions.length > 0 && referenceResolution !== null ? (
       <Field
         label="Reference detail"
         hint="The resolution every input image is resized to (by area) before the model reads it. Separate from the output size: higher keeps more detail from the inputs and costs more memory and time for every image. High (2048) with many images needs a large GPU."
@@ -5227,7 +5223,8 @@ export function ImagesPage({
           status?.supports_inpaint_only_masked === true,
         );
       } else if (isExtend) {
-        const built = await buildOutpaint(initImage!, extendSides, extendPct);
+        if (initImage === null) return;
+        const built = await buildOutpaint(initImage, extendSides, extendPct);
         condInit = built.image;
         condMask = built.mask;
         condStrength = 1;
@@ -5237,9 +5234,10 @@ export function ImagesPage({
         condUpscale = upscaleFactor;
         condStrength = upscaleStrength;
       } else if (isReference || unifiedEditRun || multiEditRun) {
+        if (initImage === null) return;
         condFields = conditionedRequestFields({
           workflow: isReference ? "reference" : "edit",
-          initImage: initImage!,
+          initImage,
           extras: referenceImages,
           referenceResolution,
           conditioning,
@@ -5338,10 +5336,10 @@ export function ImagesPage({
     if (genVisibilityListener.current)
       document.removeEventListener("visibilitychange", genVisibilityListener.current);
     genVisibilityListener.current = () => {
-      if (document.visibilityState === "visible") void pollGenerateOnce();
+      if (document.visibilityState === "visible") pollGenerateOnce().catch(() => undefined);
     };
     document.addEventListener("visibilitychange", genVisibilityListener.current);
-    genPollTimer.current = setInterval(() => void pollGenerateOnce(), 300);
+    genPollTimer.current = setInterval(() => { pollGenerateOnce().catch(() => undefined); }, 300);
     // Captured BEFORE the first POST: settleLostGeneration needs a record outside it as proof.
     const knownIds = new Set(galleryCache.images.map((image) => image.id));
     try {
@@ -5449,7 +5447,7 @@ export function ImagesPage({
           const notice = enhancementNotice(res.images[0]?.prompt_enhancement);
           if (notice) toast.info(notice.title, { id: "prompt-enhancement-notice", description: notice.description });
         }
-        res.images.forEach((image) => void ensureSrc(image));
+        res.images.forEach((image) => { ensureSrc(image).catch(() => undefined); });
         const detailFailed = detailerErrors(res.images);
         if (detailFailed.length > 0) {
           toast.warning("The Detailer did not run on this image", {
@@ -5519,7 +5517,7 @@ export function ImagesPage({
       const { cancelled } = runTarget.current
         ? await cancelConnectionImageGeneration(abort.signal)
         : await cancelDiffusionGeneration(abort.signal);
-      cancelAcked.current = Boolean(cancelled);
+      cancelAcked.current = cancelled;
       if (!cancelled) setStopping(false);
     } catch {
       if (!abort.signal.aborted) {
@@ -5658,9 +5656,9 @@ export function ImagesPage({
     if (!shouldRunQueuedOversizedRetry({ queued: oversizedRetryQueued, busy })) return;
     setOversizedRetryQueued(false);
     oversizedOnce.current = true;
-    void handleGenerateWithRecall().finally(() => {
+    handleGenerateWithRecall().finally(() => {
       oversizedOnce.current = false;
-    });
+    }).catch(() => undefined);
   }, [oversizedRetryQueued, busy, handleGenerateWithRecall]);
 
   const canVary =
@@ -5682,7 +5680,7 @@ export function ImagesPage({
   useEffect(() => {
     if (!varyQueued || busy !== null) return;
     setVaryQueued(false);
-    void handleGenerate();
+    handleGenerate().catch(() => undefined);
   }, [varyQueued, busy, handleGenerate]);
 
   useEffect(() => {
@@ -5709,9 +5707,9 @@ export function ImagesPage({
     }
     if (!matchesRememberedModel(pending.model, status)) return;
     oversizedOnce.current = pending.allowOversized === true;
-    void handleGenerate().finally(() => {
+    handleGenerate().finally(() => {
       oversizedOnce.current = false;
-    });
+    }).catch(() => undefined);
   }, [active, busy, handleGenerate, status, workflow]);
 
   useEffect(() => {
@@ -6085,7 +6083,7 @@ export function ImagesPage({
                     size="sm"
                     aria-label="Cancel load"
                     className="h-[calc(34px*var(--ui-space-scale,1))]! shrink-0 rounded-full text-xs"
-                    onClick={() => void handleCancelLoad()}
+                    onClick={() => { handleCancelLoad().catch(() => undefined); }}
                   >
                     Cancel load
                   </Button>
@@ -6676,7 +6674,7 @@ export function ImagesPage({
                   const text = e.clipboardData.getData("text/plain");
                   if (isGenerationParametersPaste(text)) {
                     e.preventDefault();
-                    void importSettingsFromText(text);
+                    importSettingsFromText(text).catch(() => undefined);
                   }
                 }}
               />
@@ -7156,7 +7154,7 @@ export function ImagesPage({
             onChange={(event) => {
               const file = event.target.files?.[0];
               event.target.value = "";
-              if (file) void importSettingsFromFile(file);
+              if (file) importSettingsFromFile(file).catch(() => undefined);
             }}
           />
           {viewerImage && viewerSrc && (
@@ -7171,16 +7169,17 @@ export function ImagesPage({
                 primary: {
                   label: t("library.menu.chatAboutThis"),
                   icon: MessageCircleIcon,
-                  onClick: () =>
-                    void chatAboutMedia(
+                  onClick: () => {
+                    chatAboutMedia(
                       navigateToChat,
                       // WebKit shows the object URL but cannot refetch it.
                       () => fetchGalleryResponse(viewerImage.url),
                       viewerImage.prompt,
                       "image",
-                    ),
+                    ).catch(() => undefined);
+                  },
                 },
-                onDownload: () => void handleQuickDownload(viewerImage),
+                onDownload: () => { handleQuickDownload(viewerImage).catch(() => undefined); },
                 reveal: revealLabel
                   ? { label: revealLabel, onClick: () => { revealInFolder(`image:${viewerImage.id}`); } }
                   : undefined,
@@ -7189,7 +7188,7 @@ export function ImagesPage({
                 onAddToProject: (projectId) => addGalleryImageToProject(viewerImage.id, projectId),
                 onDelete: () => {
                   setViewerId(null);
-                  void handleDelete(viewerImage.id);
+                  handleDelete(viewerImage.id).catch(() => undefined);
                 },
               }}
             >
@@ -7250,17 +7249,17 @@ export function ImagesPage({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
-                        onClick={() => void downloadImage(selected, "png", selectedSrc)}
+                        onClick={() => { downloadImage(selected, "png", selectedSrc).catch(() => undefined); }}
                       >
                         PNG (lossless)
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => void downloadImage(selected, "jpeg", selectedSrc)}
+                        onClick={() => { downloadImage(selected, "jpeg", selectedSrc).catch(() => undefined); }}
                       >
                         JPEG (smaller)
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => void downloadImage(selected, "webp", selectedSrc)}
+                        onClick={() => { downloadImage(selected, "webp", selectedSrc).catch(() => undefined); }}
                       >
                         WebP
                       </DropdownMenuItem>
@@ -7281,12 +7280,12 @@ export function ImagesPage({
                     archived={Boolean(selected.archived)}
                     favorite={isFavorite(`image:${selected.id}`)}
                     onToggleFavorite={() => { toggleFavorite(`image:${selected.id}`); }}
-                    onTogglePin={() =>
-                      void handleTogglePin(selected.id, !selected.pinned)
-                    }
-                    onToggleArchive={() => void handleArchive(selected.id)}
-                    onDelete={() => void handleDelete(selected.id)}
-                    onDownload={() => void handleQuickDownload(selected)}
+                    onTogglePin={() => {
+                      handleTogglePin(selected.id, !selected.pinned).catch(() => undefined);
+                    }}
+                    onToggleArchive={() => { handleArchive(selected.id).catch(() => undefined); }}
+                    onDelete={() => { handleDelete(selected.id).catch(() => undefined); }}
+                    onDownload={() => { handleQuickDownload(selected).catch(() => undefined); }}
                     onAddToProject={(projectId) => addGalleryImageToProject(selected.id, projectId)}
                     leadingItems={editImageItem(selected)}
                   />
@@ -7311,7 +7310,7 @@ export function ImagesPage({
                         size="sm"
                         className="gap-1.5"
                         title="Full-resolution download failed. Retry downloading."
-                        onClick={() => void ensureSrc(selected)}
+                        onClick={() => { ensureSrc(selected).catch(() => undefined); }}
                       >
                         <HugeiconsIcon icon={Refresh01Icon} className="size-4" />
                         Retry download
@@ -7353,9 +7352,9 @@ export function ImagesPage({
                   <ModelLoadDescription
                     className="min-h-0"
                     title={
-                      compareRun && genDone != null
+                      compareRun && genDone !== null
                         ? compareRun.title(genDone)
-                        : genDone != null && count > 1
+                        : genDone !== null && count > 1
                           ? `Run ${genDone + 1}/${count}`
                           : null
                     }
@@ -7375,7 +7374,7 @@ export function ImagesPage({
               className="hover-scrollbar flex shrink-0 gap-2 overflow-x-auto border-t border-[color-mix(in_oklab,var(--foreground)_calc(10%*var(--contrast-edge-gain,1)),transparent)] px-10 max-sm:px-5 py-3"
               onScroll={(e) => {
                 const el = e.currentTarget;
-                if (el.scrollWidth - el.scrollLeft - el.clientWidth < 400) void loadMore();
+                if (el.scrollWidth - el.scrollLeft - el.clientWidth < 400) loadMore().catch(() => undefined);
               }}
             >
               {busy === "generating" && (

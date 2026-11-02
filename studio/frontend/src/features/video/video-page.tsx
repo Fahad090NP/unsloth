@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { generationFailureLogsAction } from "@/features/settings/lib/view-logs-action";
+import {
+  generationFailureLogsAction,
+  modelMemorySettingsAction,
+  useSettingsDialogStore,
+} from "@/features/settings";
 import {
   type DragEvent,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -41,7 +45,18 @@ import { type StripDropCue, useStripReorder } from "@/hooks/use-strip-reorder";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { MediaApiButton } from "@/components/media-api-button";
 import { LibraryPageLink, SiblingMediaPageLink } from "@/components/media-page-link";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
+import {
+  type HostClass,
+  type ModelOption,
+  type ModelSelectorChangeMeta,
+  ModelSelector,
+  PillTabs,
+  explicitFamily,
+  hostOffersDensePrecision,
+  resolvedFamilyOverrideSelection,
+  useFamilyOverride,
+} from "@/features/model-picker";
+import { VIDEO_GEN_TASKS } from "@/features/model-picker/components/model-selector/pickers";
 import { useImageWorkflowStore } from "@/features/images/stores/image-workflow-store";
 // Images' trainer already covers the video families.
 import { DiffusionTrainPanel } from "@/features/images/train/diffusion-train-panel";
@@ -58,7 +73,6 @@ import {
 } from "@/features/library";
 import { GuidedTour, useGuidedTourController } from "@/features/tour";
 import { buildVideoTourSteps } from "./tour";
-import { useSettingsDialogStore } from "@/features/settings/stores/settings-dialog-store";
 import {
   applyPin,
   fetchNextPage,
@@ -121,7 +135,6 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { DeferredTextarea } from "@/components/deferred-textarea";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -146,17 +159,7 @@ import {
 } from "./video-size";
 import { usePersistedChoice } from "@/hooks/use-persisted-choice";
 import { useScrollFades } from "@/hooks/use-scroll-fades";
-import { ModelSelector } from "@/features/model-picker/components/model-selector";
-import {
-  explicitFamily,
-  resolvedFamilyOverrideSelection,
-  useFamilyOverride,
-} from "@/features/model-picker/components/model-selector/family-override";
-import { VIDEO_GEN_TASKS } from "@/features/model-picker/components/model-selector/pickers";
-import {
-  type HostClass,
-  hostOffersDensePrecision,
-} from "@/features/model-picker/components/model-selector/host-artifact-policy";
+import { ModelLoadDescription, ParamSlider } from "@/features/chat";
 import {
   VIDEO_CATALOG,
   catalogToModelOptions,
@@ -169,12 +172,6 @@ import {
   useNvfp4DiffusionKnown,
 } from "@/hooks/use-host-class";
 import { nvfp4SelectionFallback, withNvfp4Option } from "@/lib/nvfp4-options";
-import type {
-  ModelOption,
-  ModelSelectorChangeMeta,
-} from "@/features/model-picker/components/model-selector/types";
-import { ParamSlider } from "@/features/chat";
-import { ModelLoadDescription } from "@/features/chat/components/model-load-status";
 import {
   MediaGenerationPresetControl,
   type VideoGenerationPresetParams,
@@ -182,11 +179,9 @@ import {
   shouldApplyModelDefaults,
   useMediaGenerationPresets,
 } from "@/features/generation-presets";
-import { getHfToken, hfApiToken } from "@/features/hub/stores/hf-token-store";
-import { formatBytes, formatEta } from "@/features/hub/lib/format";
+import { formatBytes, formatEta, getHfToken, hfApiToken, useStagedDownload } from "@/features/hub";
 import { generatePhaseLabel, sameGenerateProgress } from "@/lib/media-generate-phase";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useStagedDownload } from "@/features/hub/download-manager";
 import { MediaHeaderActions } from "@/components/media-header-actions";
 import { isTauri } from "@/lib/api-base";
 import { cn } from "@/lib/utils";
@@ -221,7 +216,6 @@ import { readAllowOversizedLoad, retryWhileCurrent, shouldOfferLoadAnyway } from
 import { evictedSlotsFrom, evictedToastOptions, resyncEvicted, type EvictedSlot } from "@/lib/evicted-toast";
 import { failureMessage, isMultiModelRefusal, MULTI_MODEL_REFUSAL_TITLE, refusalHeadersOf } from "@/lib/multi-model-refusal";
 import { watchSavingPhase } from "@/lib/swap-save-phase";
-import { modelMemorySettingsAction } from "@/features/settings/lib/model-memory-action";
 import { loadGalleryUntil } from "@/lib/gallery-deep-link";
 import { subscribeModelEjected } from "@/lib/model-lifecycle-events";
 import { BlobUrlCache } from "@/lib/blob-url-cache";
@@ -530,7 +524,7 @@ function loadToastArgs(
   onCancel?: () => void,
 ) {
   return {
-    ...(id != null ? { id } : {}),
+    ...(id !== undefined ? { id } : {}),
     description: loadToastDescription(p),
     duration: Infinity,
     closeButton: true,
@@ -811,7 +805,8 @@ class VideoStripTileActionsBox {
     this.actions = actions;
   }
   get(): VideoStripTileActions {
-    return this.actions!;
+    if (!this.actions) throw new Error("VideoStripTile actions not registered");
+    return this.actions;
   }
 }
 
@@ -933,9 +928,12 @@ function RecipePopover({
 }) {
   // PopoverContent portals to body, so the inert page wrapper cannot contain it.
   const [open, setOpen] = useState(false);
-  useEffect(() => {
+  // Adjust during render instead of an effect so a hidden card does not reopen later.
+  const [wasActive, setWasActive] = useState(active);
+  if (wasActive !== active) {
+    setWasActive(active);
     if (!active) setOpen(false);
-  }, [active]);
+  }
   return (
     <Popover open={active && open} onOpenChange={(o) => { setOpen(active && o); }}>
       <PopoverTrigger asChild>
@@ -992,11 +990,12 @@ function RecipePopover({
           <RecipeRow label="Duration" value={`${video.duration_s.toFixed(2)}s`} />
           <RecipeRow label="Steps" value={String(video.steps)} />
           <RecipeRow label="Guidance" value={String(video.guidance)} />
-          {video.flow_shift != null ? (
+          {video.flow_shift !== undefined && video.flow_shift !== null ? (
             <RecipeRow
               label="Shift"
               value={
-                video.audio_flow_shift != null
+                video.audio_flow_shift !== undefined &&
+                video.audio_flow_shift !== null
                   ? `${video.flow_shift} video / ${video.audio_flow_shift} audio`
                   : String(video.flow_shift)
               }
@@ -1204,25 +1203,30 @@ function VideoGenerator({
   const familySeeded = useRef(false);
   // A preset chosen during the download is newer, so the pick's defaults and rollback must not land.
   const pickRecipeSuperseded = useRef<(() => boolean) | null>(null);
-  const revertPick = useCallback((r: PickRevert) => {
-    setQuant(r.prev);
-    setPendingModelDefaults(null);
-    // Equality cannot tell untouched from the same number chosen again.
-    if (!pickRecipeSuperseded.current?.()) {
-      setSteps((cur) => (cur === r.appliedSteps ? r.steps : cur));
-      setGuidance((cur) => (cur === r.appliedGuidance ? r.guidance : cur));
-    }
-    if (r.modelSeeded != null) modelSeeded.current = r.modelSeeded;
-    if (r.familySeeded != null) familySeeded.current = r.familySeeded;
-    pickRecipeSuperseded.current = null;
-    r.releaseRecipeClaim?.();
-    r.releaseRecipeClaim = undefined;
-  }, []);
   // Without this the Default preset reads as "modified" for the whole download.
   const [pendingModelDefaults, setPendingModelDefaults] = useState<{
     steps: number;
     guidance: number;
   } | null>(null);
+  const revertPick = useCallback((r: PickRevert) => {
+    const revert = r;
+    setQuant(revert.prev);
+    setPendingModelDefaults(null);
+    // Equality cannot tell untouched from the same number chosen again.
+    if (!pickRecipeSuperseded.current?.()) {
+      setSteps((cur) => (cur === revert.appliedSteps ? revert.steps : cur));
+      setGuidance((cur) => (cur === revert.appliedGuidance ? revert.guidance : cur));
+    }
+    if (revert.modelSeeded !== null && revert.modelSeeded !== undefined) {
+      modelSeeded.current = revert.modelSeeded;
+    }
+    if (revert.familySeeded !== null && revert.familySeeded !== undefined) {
+      familySeeded.current = revert.familySeeded;
+    }
+    pickRecipeSuperseded.current = null;
+    revert.releaseRecipeClaim?.();
+    revert.releaseRecipeClaim = undefined;
+  }, []);
   const [seed, setSeed] = useState("");
   // True while a staged keyframe sizes the canvas ("Match source"); else resolutionIntent does.
   const [matchSource, setMatchSource] = useState(false);
@@ -1372,13 +1376,13 @@ function VideoGenerator({
   const [pickGuard] = useState(createPickGuard);
 
   const dismissLoadToast = useCallback(() => {
-    if (loadToastId.current != null) toast.dismiss(loadToastId.current);
+    if (loadToastId.current !== null && loadToastId.current !== undefined) toast.dismiss(loadToastId.current);
     loadToastId.current = null;
   }, []);
   const pickToast = useDiffusionPickToast();
 
   // A ref keeps onClick stable; the toast is built before handleCancelLoad exists.
-  const cancelLoadRef = useRef<() => void>(() => {});
+  const cancelLoadRef = useRef<() => void>(() => undefined);
   const cancelLoadFromToast = useCallback(() => { cancelLoadRef.current(); }, []);
   // Requests awaiting a response compare against this and discard their result.
   const cancelSeq = useRef(0);
@@ -1464,7 +1468,7 @@ function VideoGenerator({
     inline.currentTime = playback.time;
     inline.muted = playback.muted;
     inline.volume = playback.volume;
-    if (playback.playing && activeRef.current) void playWithMutedFallback(inline);
+    if (playback.playing && activeRef.current) playWithMutedFallback(inline).catch(() => undefined);
     else inline.pause();
   }, [viewer, shownId, selectedSrc]);
 
@@ -1566,7 +1570,7 @@ function VideoGenerator({
     [keyframeAspect, status?.defaults],
   );
 
-  const sourceSized = matchSource && canvasKeyframe != null && matchedResolution != null;
+  const sourceSized = matchSource && typeof canvasKeyframe === "string" && matchedResolution !== null;
   const shownSize = sourceSized ? matchedResolution : videoSize;
   const livePreviewBox = { maxWidth: shownSize[0], maxHeight: shownSize[1] };
 
@@ -1593,7 +1597,7 @@ function VideoGenerator({
     const resolution = resolutionPresets[0] ?? [768, 512];
     const recommended =
       pendingModelDefaults ??
-      (defaultSteps != null && defaultGuidance != null
+      (typeof defaultSteps === "number" && typeof defaultGuidance === "number"
         ? { steps: defaultSteps, guidance: defaultGuidance }
         : defaultsFor(presetRepoId));
     const defaultDuration = familyDefaultFrames
@@ -1697,7 +1701,7 @@ function VideoGenerator({
   // Select "match source" only after the staged keyframe passes the aspect-ratio check.
   const hadKeyframeRef = useRef(false);
   useEffect(() => {
-    const has = canvasKeyframe != null;
+    const has = typeof canvasKeyframe === "string";
     if (has === hadKeyframeRef.current) return;
     if (has && !matchedResolution) return;
     hadKeyframeRef.current = has;
@@ -1753,7 +1757,7 @@ function VideoGenerator({
   useEffect(() => {
     const modelChanged = loadedModelKey !== prevLoadedModelRef.current;
     prevLoadedModelRef.current = loadedModelKey;
-    if (modelChanged && loadedModelKey && defaultSteps != null && defaultGuidance != null) {
+    if (modelChanged && loadedModelKey && typeof defaultSteps === "number" && typeof defaultGuidance === "number") {
       setPendingModelDefaults(null);
       // A stored recipe outranks model defaults on the first seed.
       const applyDefaults = shouldApplyModelDefaults(
@@ -1842,9 +1846,10 @@ function VideoGenerator({
     const evicted = galleryCache.thumbnailById.prune(protectedThumbnailIds());
     if (evicted.length === 0 || !isMounted.current) return;
     setThumbnailById((prev) => {
-      const next = { ...prev };
-      for (const id of evicted) delete next[id];
-      return next;
+      const evictedSet = new Set(evicted);
+      return Object.fromEntries(
+        Object.entries(prev).filter(([key]) => !evictedSet.has(key)),
+      );
     });
   }, [protectedThumbnailIds]);
 
@@ -1879,8 +1884,10 @@ function VideoGenerator({
         if (isMounted.current) {
           setThumbnailById((prev) => {
             const next = { ...prev, [video.id]: fetched.url };
-            for (const id of evicted) delete next[id];
-            return next;
+            const evictedSet = new Set(evicted);
+            return Object.fromEntries(
+              Object.entries(next).filter(([key]) => !evictedSet.has(key)),
+            );
           });
         }
         return true;
@@ -1904,9 +1911,9 @@ function VideoGenerator({
     galleryCache.thumbnailFailed.add(id);
     if (!isMounted.current) return;
     setThumbnailById((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
+      return Object.fromEntries(
+        Object.entries(prev).filter(([key]) => key !== id),
+      );
     });
     setThumbnailFailedIds(new Set(galleryCache.thumbnailFailed));
   }, []);
@@ -1918,7 +1925,7 @@ function VideoGenerator({
       if (galleryCache.refreshed.has(video.id)) return;
       galleryCache.refreshed.add(video.id);
       galleryCache.srcById.delete(video.id);
-      void ensureSrc(video);
+      ensureSrc(video).catch(() => undefined);
     },
     [ensureSrc],
   );
@@ -1951,7 +1958,7 @@ function VideoGenerator({
           visibleThumbnailIds.current.add(id);
           galleryCache.thumbnailById.touch(id);
           const clip = videos.find((v) => v.id === id);
-          if (clip) void ensureThumbnail(clip);
+          if (clip) ensureThumbnail(clip).catch(() => undefined);
         }
         if (left) pruneThumbnails();
       },
@@ -1965,8 +1972,8 @@ function VideoGenerator({
   // The preview player is what the user watches, so the selected clip is fetched whether or not its card is on screen.
   useEffect(() => {
     if (!selected) return;
-    void ensureThumbnail(selected);
-    void ensureSrc(selected);
+    ensureThumbnail(selected).catch(() => undefined);
+    ensureSrc(selected).catch(() => undefined);
   }, [selected, ensureSrc, ensureThumbnail]);
 
   // Bumped by every LOCAL change to the strip. A resync started before one holds a snapshot the
@@ -1999,7 +2006,7 @@ function VideoGenerator({
       setHasMore(page.has_more);
       // Without IntersectionObserver (jsdom / old webview) keep the eager poster fetch.
       if (typeof IntersectionObserver === "undefined") {
-        page.videos.forEach((video) => void ensureThumbnail(video));
+        page.videos.forEach((video) => { ensureThumbnail(video).catch(() => undefined); });
       }
     } catch {
       // Best-effort: a failed gallery load should not block the page.
@@ -2029,7 +2036,7 @@ function VideoGenerator({
       galleryCache.hasMore = page.has_more;
       setHasMore(page.has_more);
       if (typeof IntersectionObserver === "undefined") {
-        page.videos.forEach((video) => void ensureThumbnail(video));
+        page.videos.forEach((video) => { ensureThumbnail(video).catch(() => undefined); });
       }
     } catch {
       // transient; the user can scroll again to retry
@@ -2090,14 +2097,14 @@ function VideoGenerator({
       galleryCache.refreshed.delete(id);
       galleryCache.deleted.add(id);
       setSrcById((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
+        return Object.fromEntries(
+          Object.entries(prev).filter(([key]) => key !== id),
+        );
       });
       setThumbnailById((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
+        return Object.fromEntries(
+          Object.entries(prev).filter(([key]) => key !== id),
+        );
       });
       setThumbnailFailedIds(new Set(galleryCache.thumbnailFailed));
     }
@@ -2158,7 +2165,7 @@ function VideoGenerator({
         setVideos(collected);
         setHasMore(more);
         if (typeof IntersectionObserver === "undefined") {
-          collected.forEach((video) => void ensureThumbnail(video));
+          collected.forEach((video) => { ensureThumbnail(video).catch(() => undefined); });
         }
         return;
       }
@@ -2174,10 +2181,10 @@ function VideoGenerator({
         stripEpoch.current += 1;
         // A generation or new page landing meanwhile would be overwritten by an older snapshot.
         const epoch = stripEpoch.current;
-        void resyncWindow(
+        resyncWindow(
           galleryCache.videos.length,
           () => stripEpoch.current === epoch,
-        ).catch(() => void loadGallery());
+        ).catch(() => { loadGallery().catch(() => undefined); });
       }),
     [loadGallery, resyncWindow],
   );
@@ -2268,13 +2275,13 @@ function VideoGenerator({
         try {
           await resyncWindow(galleryCache.videos.length, () => stripEpoch.current === epoch);
         } catch {
-          void loadGallery();
+          loadGallery().catch(() => undefined);
         }
       }
     },
     [resyncWindow, loadGallery],
   );
-  const stripReorder = useStripReorder((id, afterId) => void handleMove(id, afterId));
+  const stripReorder = useStripReorder((id, afterId) => { handleMove(id, afterId).catch(() => undefined); });
 
   const handleArchive = useCallback(
     async (id: string) => {
@@ -2315,10 +2322,10 @@ function VideoGenerator({
       tileProps: stripReorder.tileProps,
       select: setSelectedId,
       posterError: handlePosterError,
-      togglePin: (id, pinned) => void handleTogglePin(id, pinned),
-      archive: (id) => void handleArchive(id),
-      remove: (id) => void handleDelete(id),
-      download: (video) => void handleQuickDownload(video),
+      togglePin: (id, pinned) => { handleTogglePin(id, pinned).catch(() => undefined); },
+      archive: (id) => { handleArchive(id).catch(() => undefined); },
+      remove: (id) => { handleDelete(id).catch(() => undefined); },
+      download: (video) => { handleQuickDownload(video).catch(() => undefined); },
       addToProject: addGalleryVideoToProject,
       toggleFavorite,
     });
@@ -2364,8 +2371,8 @@ function VideoGenerator({
       if (restoredNegative) setNegativeOpen(true);
       setSteps(video.steps);
       setGuidance(video.guidance);
-      if (video.flow_shift != null) setFlowShift(video.flow_shift);
-      if (video.audio_flow_shift != null) setAudioFlowShift(video.audio_flow_shift);
+      if (typeof video.flow_shift === "number") setFlowShift(video.flow_shift);
+      if (typeof video.audio_flow_shift === "number") setAudioFlowShift(video.audio_flow_shift);
       setSeed(String(video.seed));
       const size = fitVideoSize(video.width, video.height, sizeLimits);
       setResolutionIntent(size);
@@ -2426,7 +2433,7 @@ function VideoGenerator({
     }
     if (!active || !leftForTrain.current) return;
     leftForTrain.current = false;
-    void refreshStatus();
+    refreshStatus().catch(() => undefined);
   }, [active, pageMode, refreshStatus]);
 
   // Track mount so a long generate stops issuing GPU work when the page is truly unmounted.
@@ -2441,11 +2448,11 @@ function VideoGenerator({
   useEffect(() => {
     if (!active) return;
     if (initialReadySent.current) {
-      void refreshStatus();
+      refreshStatus().catch(() => undefined);
       return;
     }
     let cancelled = false;
-    void (async () => {
+    (async () => {
       await Promise.all([
         refreshStatus(),
         (async () => {
@@ -2455,7 +2462,7 @@ function VideoGenerator({
               (video) => video.id === galleryCache.selectedId,
             ) ?? galleryCache.videos[0];
           if (initialSelection) {
-            void ensureThumbnail(initialSelection);
+            ensureThumbnail(initialSelection).catch(() => undefined);
             await ensureSrc(initialSelection);
           }
         })(),
@@ -2463,7 +2470,7 @@ function VideoGenerator({
       if (cancelled || initialReadySent.current) return;
       initialReadySent.current = true;
       onInitialReady?.();
-    })();
+    })().catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -2488,14 +2495,15 @@ function VideoGenerator({
         const pending = pendingStart.current;
         if (pending) {
           setBusy((prev) => (prev === "loading" ? "unloading" : prev));
-          void pending
-            .catch(() => {})
-            .finally(() => { setBusy((prev) => (prev === "unloading" ? null : prev)); });
+          pending
+            .catch(() => undefined)
+            .finally(() => { setBusy((prev) => (prev === "unloading" ? null : prev)); })
+            .catch(() => undefined);
         } else {
           setBusy((prev) => (prev === "loading" ? null : prev));
         }
         setQuant(null);
-        void refreshStatus();
+        refreshStatus().catch(() => undefined);
       }),
     [refreshStatus, dropResidentState],
   );
@@ -2557,7 +2565,7 @@ function VideoGenerator({
           setCanReapply(lastLoadRevert.current.canReapply);
           lastLoadRevert.current = null;
         }
-        void refreshStatus();
+        refreshStatus().catch(() => undefined);
         return;
       }
       if (p.phase === null) {
@@ -2575,11 +2583,11 @@ function VideoGenerator({
           setCanReapply(lastLoadRevert.current.canReapply);
           lastLoadRevert.current = null;
         }
-        void refreshStatus();
+        refreshStatus().catch(() => undefined);
         return;
       }
       const sig = `${p.phase}:${p.downloaded_bytes}:${p.expected_bytes ?? 0}`;
-      if (loadToastId.current != null && sig !== lastLoadSig.current) {
+      if (loadToastId.current !== null && loadToastId.current !== undefined && sig !== lastLoadSig.current) {
         lastLoadSig.current = sig;
         toast(null, loadToastArgs(p, loadToastId.current, cancelLoadFromToast));
       }
@@ -2587,7 +2595,7 @@ function VideoGenerator({
       // Transient poll failure: keep trying.
     }
     if (seq !== cancelSeq.current) return;
-    pollTimer.current = setTimeout(() => void pollLoadProgress(), 1000);
+    pollTimer.current = setTimeout(() => { pollLoadProgress().catch(() => undefined); }, 1000);
   }, [dismissLoadToast, refreshStatus, cancelLoadFromToast, offerLoadAnywayFor]);
 
   // The unload failed so the load still runs; restore its poll and toast. refreshStatus cannot,
@@ -2597,7 +2605,7 @@ function VideoGenerator({
     setBusy("loading");
     lastLoadSig.current = null;
     loadToastId.current = toast(null, loadToastArgs(IDLE_PROGRESS, undefined, cancelLoadFromToast));
-    void pollLoadProgress();
+    pollLoadProgress().catch(() => undefined);
   }, [pollLoadProgress, cancelLoadFromToast]);
 
   const stopGenPoll = useCallback(() => {
@@ -2633,8 +2641,8 @@ function VideoGenerator({
                 sortGalleryItems([clip, ...prev.filter((v) => v.id !== clip.id)]),
               );
               setSelectedId(clip.id);
-              void ensureThumbnail(clip);
-              void ensureSrc(clip);
+              ensureThumbnail(clip).catch(() => undefined);
+              ensureSrc(clip).catch(() => undefined);
             }
           } else if (p.phase === "failed") {
             const msg = p.error || "Video generation failed";
@@ -2656,14 +2664,14 @@ function VideoGenerator({
       }
     };
     genVisibilityListener.current = () => {
-      if (document.visibilityState === "visible") void pollGenerateOnce();
+      if (document.visibilityState === "visible") pollGenerateOnce().catch(() => undefined);
     };
     document.addEventListener("visibilitychange", genVisibilityListener.current);
-    genPollTimer.current = setInterval(() => void pollGenerateOnce(), 300);
+    genPollTimer.current = setInterval(() => { pollGenerateOnce().catch(() => undefined); }, 300);
   }, [ensureSrc, ensureThumbnail, stopGenPoll]);
 
   useEffect(() => {
-    void (async () => {
+    (async () => {
       await refreshStatus();
       // Loads run on a backend daemon thread that survives navigation, so resume tracking.
       try {
@@ -2673,7 +2681,7 @@ function VideoGenerator({
           dismissLoadToast();
           lastLoadSig.current = null;
           loadToastId.current = toast(null, loadToastArgs(p, undefined, cancelLoadFromToast));
-          void pollLoadProgress();
+          pollLoadProgress().catch(() => undefined);
         }
       } catch {
         // Resume is best-effort; a failed probe just leaves the idle view.
@@ -2694,8 +2702,8 @@ function VideoGenerator({
             setVideos((prev) =>
               prev.some((v) => v.id === clip.id) ? prev : sortGalleryItems([clip, ...prev]),
             );
-            void ensureThumbnail(clip);
-            void ensureSrc(clip);
+            ensureThumbnail(clip).catch(() => undefined);
+            ensureSrc(clip).catch(() => undefined);
           }
         } else if (g.phase === "failed") {
           // Kept until the next job, so a reload still shows the failure.
@@ -2802,7 +2810,7 @@ function VideoGenerator({
       // An older pick's Load anyway prompt would retry a model this load supersedes.
       dismissLoadAnyway();
       // Published now and settled in the finally below, so a cancel waits for the WHOLE path.
-      let settleLoad: () => void = () => {};
+      let settleLoad: () => void = () => undefined;
       const inFlight = new Promise<void>((resolve) => {
         settleLoad = resolve;
       });
@@ -2829,12 +2837,12 @@ function VideoGenerator({
       const retryPick = pickSeq.current;
       const retryOversized = retryWhileCurrent(
         () => retryPick === pickSeq.current && startLoad === loadSeq.current,
-        () => void retryLoadRef.current?.(repoId, opts, { ...advanced, allow_oversized_load: true }),
+        () => { retryLoadRef.current?.(repoId, opts, { ...advanced, allow_oversized_load: true }).catch(() => undefined); },
       );
       lastLoadAttempt.current = { overrideSent, retry: retryOversized };
       // The POST may first save the chat model's context; show that on this load's toast meanwhile.
       const savePoll = watchSavingPhase(getVideoLoadProgress, () => {
-        if (startSeq === cancelSeq.current && startLoad === loadSeq.current && loadToastId.current != null) {
+        if (startSeq === cancelSeq.current && startLoad === loadSeq.current && loadToastId.current !== null && loadToastId.current !== undefined) {
           toast(null, loadToastArgs(SAVING_PROGRESS, loadToastId.current, cancelLoadFromToast));
         }
       });
@@ -2867,7 +2875,7 @@ function VideoGenerator({
         dismissLoadToast();
         if (!offerLoadAnywayFor(err)) reportLoadFailure(err, "Failed to start load");
         setBusy(null);
-        void refreshStatus();
+        refreshStatus().catch(() => undefined);
         return settle(false);
       } finally {
         savePoll.stop();
@@ -2886,10 +2894,10 @@ function VideoGenerator({
             return settle(false);
           }
         }
-        void refreshStatus();
+        refreshStatus().catch(() => undefined);
         return settle(false);
       }
-      void pollLoadProgress();
+      pollLoadProgress().catch(() => undefined);
       return settle(true);
     },
     [
@@ -2931,14 +2939,14 @@ function VideoGenerator({
         return;
       }
       const owned = stagedQuantRevert.current;
-      void handleLoadRef.current(pending.repoId, pending.opts, pending.advanced, pending.toastId).then((started) => {
+      handleLoadRef.current(pending.repoId, pending.opts, pending.advanced, pending.toastId).then((started) => {
         if (started) return;
         if (quantRevert.current && quantRevert.current === owned) {
           revertPick(quantRevert.current);
           quantRevert.current = null;
         }
         if (stagedQuantRevert.current === owned) stagedQuantRevert.current = null;
-      });
+      }).catch(() => undefined);
     },
     [pickGuard, revertPick, pickToast],
   );
@@ -3057,7 +3065,7 @@ function VideoGenerator({
           offerLoadAnyway(incompatible, retryWhileCurrent(() => pick === pickSeq.current, () => {
             oversizedLoadOnce.current = true;
             try {
-              void loadOrStageRef.current(repoId, opts, source, undefined, familyOverrideRequired);
+              loadOrStageRef.current(repoId, opts, source, undefined, familyOverrideRequired).catch(() => undefined);
             } finally {
               oversizedLoadOnce.current = false;
             }
@@ -3165,13 +3173,13 @@ function VideoGenerator({
     setFamilyOverride("auto");
     // Owns the page like a direct pick, so an earlier staged download cannot land on top.
     const token = pickGuard.claim();
-    void navigateSelf({ to: "/video", search: {}, replace: true });
+    navigateSelf({ to: "/video", search: {}, replace: true }).catch(() => undefined);
     // A label means a GGUF repo and is not loadable as a filename.
     if (routedLabel) {
       // Deferred: the load it fires owns the state a direct pick sets.
-      void Promise.resolve().then(() =>
+      Promise.resolve().then(() =>
         loadGgufRepoPick(wanted, routedLabel, "hub", null, "auto"),
-      );
+      ).catch(() => undefined);
       return;
     }
     // The chat picker only forwards GGUF filenames, so a curated single-file artifact needs the catalog.
@@ -3182,7 +3190,7 @@ function VideoGenerator({
     );
     // The catalog lists the repo, not its files.
     if (pick.opts.kind === "gguf" && !pick.opts.filename) {
-      void Promise.resolve().then(() => loadGgufRepoPick(pick.repoId, null, "hub", null, "auto"));
+      Promise.resolve().then(() => loadGgufRepoPick(pick.repoId, null, "hub", null, "auto")).catch(() => undefined);
       return;
     }
     // Routed intent owns the label and recipe, and rolls both back if the load never lands.
@@ -3203,12 +3211,12 @@ function VideoGenerator({
       });
       return;
     }
-    void loadOrStage(pick.repoId, pick.opts, "hub", token).then((started) => {
+    loadOrStage(pick.repoId, pick.opts, "hub", token).then((started) => {
       if (!started && pickGuard.holds(token) && quantRevert.current === revert) {
         revertPick(revert);
         quantRevert.current = null;
       }
-    });
+    }).catch(() => undefined);
   }, [
     active,
     applyVideoModelDefaults,
@@ -3234,8 +3242,8 @@ function VideoGenerator({
   useEffect(() => {
     if (!routedItem) return;
     const lookup = ++routedLookup.current;
-    void navigateSelf({ to: "/video", search: {}, replace: true });
-    void loadGalleryUntil({
+    navigateSelf({ to: "/video", search: {}, replace: true }).catch(() => undefined);
+    loadGalleryUntil({
       has: () => galleryCache.videos.some((entry) => entry.id === routedItem),
       count: () => galleryCache.videos.length,
       hasMore: () => galleryCache.hasMore,
@@ -3252,7 +3260,7 @@ function VideoGenerator({
           description: translate("library.toast.notFoundDescription"),
         });
       }
-    });
+    }).catch(() => undefined);
   }, [routedItem, navigateSelf, loadGallery, loadMore]);
 
 
@@ -3265,7 +3273,7 @@ function VideoGenerator({
       setPendingH3Load(null);
       if (!pending || !pickGuard.holds(pending.token)) return;
       const revert = quantRevert.current;
-      void loadOrStage(
+      loadOrStage(
         pending.repoId,
         { ...pending.opts, h3Task: task },
         pending.source,
@@ -3277,7 +3285,7 @@ function VideoGenerator({
           revertPick(revert);
           quantRevert.current = null;
         }
-      });
+      }).catch(() => undefined);
     },
     [loadOrStage, pendingH3Load, pickGuard, revertPick],
   );
@@ -3293,12 +3301,12 @@ function VideoGenerator({
     // Status wins when another client replaced the model; the ref covers this page's own load.
     const l = lastLoad.current;
     if (l) {
-      void handleLoad(l.repoId, {
+      handleLoad(l.repoId, {
         kind: l.kind,
         filename: l.filename,
         h3Task: l.h3Task,
         displayRepoId: l.displayRepoId,
-      });
+      }).catch(() => undefined);
     }
   }, [handleLoad]);
 
@@ -3341,7 +3349,7 @@ function VideoGenerator({
           });
           return;
         }
-        void loadOrStage(
+        loadOrStage(
           pipelineTarget.repoId,
           { kind: spec.kind, filename: spec.filename, displayRepoId },
           pipelineTarget.source,
@@ -3351,7 +3359,7 @@ function VideoGenerator({
               revertPick(revert);
               quantRevert.current = null;
             }
-          });
+          }).catch(() => undefined);
         return;
       }
       // Optimistic, reverted if the load fails to START; the poll owns the after-start revert.
@@ -3361,7 +3369,7 @@ function VideoGenerator({
         setQuant(meta.ggufVariant);
         // The variant (distilled vs dev) lives in the filename.
         applyVideoModelDefaults(`${id}/${meta.ggufFilename}`, nextFamilyOverride);
-        void loadOrStage(
+        loadOrStage(
           id,
           { kind: "gguf", filename: meta.ggufFilename },
           meta.source,
@@ -3372,7 +3380,7 @@ function VideoGenerator({
             revertPick(revert);
             quantRevert.current = null;
           }
-        });
+        }).catch(() => undefined);
         return;
       }
       // A local .gguf has no variant/filename; split the path into (parent dir, basename).
@@ -3382,20 +3390,20 @@ function VideoGenerator({
         const filename = slash >= 0 ? norm.slice(slash + 1) : norm;
         const dir = slash >= 0 ? norm.slice(0, slash) : ".";
         if (!filename.toLowerCase().endsWith(".gguf")) {
-          void loadGgufRepoPick(
+          loadGgufRepoPick(
             id,
             meta.ggufVariant ?? null,
             meta.source,
             meta.source === "local" ? id : null,
             nextFamilyOverride,
-          );
+          ).catch(() => undefined);
           return;
         }
         const revert: PickRevert = quantRevert.current ?? { prev: quant, steps, guidance };
         quantRevert.current = revert;
         setQuant(filename);
         applyVideoModelDefaults(id, nextFamilyOverride);
-        void handleLoad(dir, { kind: "gguf", filename }, currentLoadAdvanced("gguf", false)).then((started) => {
+        handleLoad(dir, { kind: "gguf", filename }, currentLoadAdvanced("gguf", false)).then((started) => {
           if (!started) {
             revertPick(revert);
             quantRevert.current = null;
@@ -3413,23 +3421,23 @@ function VideoGenerator({
         quantRevert.current = revert;
         setQuant(filename);
         applyVideoModelDefaults(id, nextFamilyOverride);
-        void handleLoad(dir, { kind: "single_file", filename }, currentLoadAdvanced("single_file", false)).then((started) => {
+        handleLoad(dir, { kind: "single_file", filename }, currentLoadAdvanced("single_file", false)).then((started) => {
           if (!started) {
             revertPick(revert);
             quantRevert.current = null;
           }
-        });
+        }).catch(() => undefined);
         return;
       }
       // The backend rejects a pipeline load of a single-file GGUF repo.
       if (spec?.kind === "gguf" || meta.ggufVariant) {
-        void loadGgufRepoPick(
+        loadGgufRepoPick(
           id,
           spec?.filename ?? meta.ggufVariant ?? null,
           meta.source,
           meta.source === "local" ? id : null,
           nextFamilyOverride,
-        );
+        ).catch(() => undefined);
         return;
       }
       // The backend gates loads to unsloth/* repos, the family bases, or on-device paths.
@@ -3454,12 +3462,12 @@ function VideoGenerator({
         });
         return;
       }
-      void loadOrStage(pipelineTarget.repoId, { kind: "pipeline", displayRepoId }, pipelineTarget.source, token, familyOverrideRequired).then((started) => {
+      loadOrStage(pipelineTarget.repoId, { kind: "pipeline", displayRepoId }, pipelineTarget.source, token, familyOverrideRequired).then((started) => {
         if (!started && pickGuard.holds(token)) {
           revertPick(revert);
           quantRevert.current = null;
         }
-      });
+      }).catch(() => undefined);
     },
     [
       abandonPick,
@@ -3499,7 +3507,7 @@ function VideoGenerator({
       return !loadTrackingRestored.current;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to unload model");
-      void refreshStatus();
+      refreshStatus().catch(() => undefined);
       return false;
     } finally {
       // A restore during the wait set "loading" deliberately; keep its Cancel controls.
@@ -3522,7 +3530,7 @@ function VideoGenerator({
   }, [busy, handleUnload, restoreLoadTracking]);
 
   useEffect(() => {
-    cancelLoadRef.current = () => void handleCancelLoad();
+    cancelLoadRef.current = () => { handleCancelLoad().catch(() => undefined); };
   }, [handleCancelLoad]);
 
   const handleCancelGenerate = useCallback(async () => {
@@ -3665,11 +3673,11 @@ function VideoGenerator({
         reference_image_size: canPickReferenceSize ? referenceImageSize : undefined,
         // Send only overrides of the released schedule.
         flow_shift:
-          defaultFlowShift != null && flowShift != null && flowShift !== defaultFlowShift
+          typeof defaultFlowShift === "number" && typeof flowShift === "number" && flowShift !== defaultFlowShift
             ? flowShift
             : undefined,
         audio_flow_shift:
-          canPickAudioFlowShift && audioFlowShift != null && audioFlowShift !== defaultAudioFlowShift
+          canPickAudioFlowShift && typeof audioFlowShift === "number" && audioFlowShift !== defaultAudioFlowShift
             ? audioFlowShift
             : undefined,
         live_preview: livePreview,
@@ -3681,7 +3689,7 @@ function VideoGenerator({
       setBusy(null);
       setGenStep(null);
       // The refusal can be "No video model is loaded"; re-read status.
-      void resyncAfterGenerateRefusal();
+      resyncAfterGenerateRefusal().catch(() => undefined);
       return;
     }
     startGenPoll();
@@ -3871,7 +3879,7 @@ function VideoGenerator({
               disabled={clearingGallery}
               onClick={(event) => {
                 event.preventDefault();
-                void handleClearAll();
+                handleClearAll().catch(() => undefined);
               }}
             >
               {clearingGallery ? "Clearing…" : "Clear all"}
@@ -3982,7 +3990,7 @@ function VideoGenerator({
                     size="sm"
                     aria-label="Cancel load"
                     className="h-[calc(34px*var(--ui-space-scale,1))]! rounded-full text-xs"
-                    onClick={() => void handleCancelLoad()}
+                    onClick={() => { handleCancelLoad().catch(() => undefined); }}
                   >
                     Cancel load
                   </Button>
@@ -4039,7 +4047,7 @@ function VideoGenerator({
             onTrainingComplete={() => { useImageWorkflowStore.getState().noteTrainingComplete(); }}
             onDeploy={(args) => {
               useImageWorkflowStore.getState().requestDeploy(args);
-              void navigateToImages({ to: "/images" });
+              navigateToImages({ to: "/images" }).catch(() => undefined);
             }}
             familyName={trainFamilyName}
             onFamilyNameChange={setTrainFamilyName}
@@ -4585,7 +4593,7 @@ function VideoGenerator({
               onChange={setGuidance}
             />
           )}
-          {defaultFlowShift != null && (
+          {typeof defaultFlowShift === "number" && (
             <SliderField
               label="Motion shift"
               hint="Sigma shift of the video schedule. Higher spends more of the schedule at high noise, which reads as more motion and less fine detail. MiniMax-H3 ships 12."
@@ -4596,7 +4604,7 @@ function VideoGenerator({
               onChange={setFlowShift}
             />
           )}
-          {canPickAudioFlowShift && defaultAudioFlowShift != null && (
+          {canPickAudioFlowShift && typeof defaultAudioFlowShift === "number" && (
             <SliderField
               label="Audio shift"
               hint="Sigma shift of the audio schedule, which MiniMax-H3 runs alongside the video one. Ships at 3."
@@ -4684,14 +4692,14 @@ function VideoGenerator({
                   label: t("library.menu.chatAboutThis"),
                   icon: MessageCircleIcon,
                   onClick: () =>
-                    void chatAboutMedia(
+                    chatAboutMedia(
                       navigateToChat,
                       () => fetchWithFreshLink(viewerSrc, () => fetchGalleryVideoSignedUrl(viewerVideo.id)),
                       viewerVideo.prompt,
                       "video",
-                    ),
+                    ).catch(() => undefined),
                 },
-                onDownload: () => void handleQuickDownload(viewerVideo),
+                onDownload: () => { handleQuickDownload(viewerVideo).catch(() => undefined); },
                 reveal: revealLabel
                   ? { label: revealLabel, onClick: () => { revealInFolder(`video:${viewerVideo.id}`); } }
                   : undefined,
@@ -4702,7 +4710,7 @@ function VideoGenerator({
                   viewerVideoRef.current?.pause();
                   handback.current = null;
                   setViewer(null);
-                  void handleDelete(viewerVideo.id);
+                  handleDelete(viewerVideo.id).catch(() => undefined);
                 },
               }}
             >
@@ -4717,7 +4725,7 @@ function VideoGenerator({
                   if (viewer.from.time) video.currentTime = viewer.from.time;
                   video.volume = viewer.from.volume;
                   viewerPositioned.current = true;
-                  if (viewer.from.playing) void playWithMutedFallback(video);
+                  if (viewer.from.playing) playWithMutedFallback(video).catch(() => undefined);
                 }}
                 onTimeUpdate={(event) => { recordViewer(event.currentTarget); }}
                 onVolumeChange={(event) => { recordViewer(event.currentTarget); }}
@@ -4800,17 +4808,17 @@ function VideoGenerator({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
-                        onClick={() => void handleDownload(selectedSrc, selected, "mp4")}
+                        onClick={() => { handleDownload(selectedSrc, selected, "mp4").catch(() => undefined); }}
                       >
                         MP4 (original{selected.has_audio ? ", keeps audio" : ""})
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => void handleDownload(selectedSrc, selected, "webm")}
+                        onClick={() => { handleDownload(selectedSrc, selected, "webm").catch(() => undefined); }}
                       >
                         WebM (web embeds)
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => void handleDownload(selectedSrc, selected, "gif")}
+                        onClick={() => { handleDownload(selectedSrc, selected, "gif").catch(() => undefined); }}
                       >
                         GIF (preview, no audio)
                       </DropdownMenuItem>
@@ -4823,12 +4831,12 @@ function VideoGenerator({
                     archived={Boolean(selected.archived)}
                     favorite={isFavorite(`video:${selected.id}`)}
                     onToggleFavorite={() => { toggleFavorite(`video:${selected.id}`); }}
-                    onTogglePin={() =>
-                      void handleTogglePin(selected.id, !selected.pinned)
-                    }
-                    onToggleArchive={() => void handleArchive(selected.id)}
-                    onDelete={() => void handleDelete(selected.id)}
-                    onDownload={() => void handleQuickDownload(selected)}
+                    onTogglePin={() => {
+                      handleTogglePin(selected.id, !selected.pinned).catch(() => undefined);
+                    }}
+                    onToggleArchive={() => { handleArchive(selected.id).catch(() => undefined); }}
+                    onDelete={() => { handleDelete(selected.id).catch(() => undefined); }}
+                    onDownload={() => { handleQuickDownload(selected).catch(() => undefined); }}
                     onAddToProject={(projectId) => addGalleryVideoToProject(selected.id, projectId)}
                   />
                 </div>
@@ -4882,7 +4890,7 @@ function VideoGenerator({
               className="hover-scrollbar flex shrink-0 items-stretch gap-2 overflow-x-auto border-t border-[color-mix(in_oklab,var(--foreground)_calc(10%*var(--contrast-edge-gain,1)),transparent)] p-3"
               onScroll={(e) => {
                 const el = e.currentTarget;
-                if (el.scrollWidth - el.scrollLeft - el.clientWidth < 400) void loadMore();
+                if (el.scrollWidth - el.scrollLeft - el.clientWidth < 400) loadMore().catch(() => undefined);
               }}
             >
               {/* In-progress generation: a placeholder tile at the front so past clips stay browsable while
