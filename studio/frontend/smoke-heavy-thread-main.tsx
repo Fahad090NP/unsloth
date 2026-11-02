@@ -42,7 +42,7 @@ const stubbedApiCalls: string[] = [];
 const realFetch = window.fetch.bind(window);
 window.fetch = (input, init) => {
   const url =
-    typeof input === "string" ? input : ((input as Request).url ?? String(input));
+    typeof input === "string" ? input : input instanceof Request ? input.url : String(input);
   for (const [pattern, body] of STUBBED_API) {
     if (pattern.test(url)) {
       stubbedApiCalls.push(url);
@@ -436,8 +436,10 @@ function buildBlock(index: number): Block {
 
 function partChars(part: Part): number {
   const anyPart = part as Record<string, unknown>;
-  if (anyPart.type === "text") return String(anyPart.text ?? "").length;
-  if (anyPart.type === "image") return String(anyPart.image ?? "").length;
+  const text = anyPart.text as string | null | undefined;
+  const image = anyPart.image as string | null | undefined;
+  if (anyPart.type === "text") return String(text ?? "").length;
+  if (anyPart.type === "image") return String(image ?? "").length;
   if (anyPart.type === "tool-call") {
     return (
       JSON.stringify(anyPart.args ?? {}).length +
@@ -615,7 +617,7 @@ function HeavyThreadApi({
           highlightedTokens: document.querySelectorAll("pre code span").length,
           /* Characters, not tokens: deferred shells hold the same text node. */
           codeChars: Array.from(document.querySelectorAll("pre code")).reduce(
-            (total, node) => total + (node.textContent?.length ?? 0),
+            (total, node) => total + node.textContent.length,
             0,
           ),
           fenceBlocks: document.querySelectorAll('[data-streamdown="code-block"]').length,
@@ -675,7 +677,7 @@ function HeavyThreadApi({
         const last = api.lastAssistantMessage();
         if (!last) return null;
         const buttons = Array.from(last.querySelectorAll("button"));
-        return buttons.find((button) => (button.textContent ?? "").trim() === label) ?? null;
+        return buttons.find((button) => button.textContent.trim() === label) ?? null;
       },
     };
     (window as unknown as { __heavyThread: typeof api }).__heavyThread = api;

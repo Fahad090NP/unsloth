@@ -2,34 +2,34 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 (function () {
-  var storageKey = "unsloth.reload-snapshot.v1";
-  var maxSnapshotLength = 3 * 1024 * 1024;
-  var maxInlineStylesLength = 2 * 1024 * 1024;
-  var maxSnapshotAgeMs = 10 * 1000;
-  var retainedStyleWaitMs = 500;
-  var maxMaterializedMediaPixels = 1500 * 1000;
-  var appearanceStorageKey = "unsloth_appearance_customization";
-  var maxImportedFonts = 3;
-  var maxImportedFontLength = 2200000;
-  var maxImportedFontsLength = 4400000;
-  var importedFontWaitMs = 250;
-  var fontDataUrlPattern =
+  const storageKey = "unsloth.reload-snapshot.v1";
+  const maxSnapshotLength = 3 * 1024 * 1024;
+  const maxInlineStylesLength = 2 * 1024 * 1024;
+  const maxSnapshotAgeMs = 10 * 1000;
+  const retainedStyleWaitMs = 500;
+  const maxMaterializedMediaPixels = 1500 * 1000;
+  const appearanceStorageKey = "unsloth_appearance_customization";
+  const maxImportedFonts = 3;
+  const maxImportedFontLength = 2200000;
+  const maxImportedFontsLength = 4400000;
+  const importedFontWaitMs = 250;
+  const fontDataUrlPattern =
     /^data:(?:font\/(?:woff2?|ttf|otf|sfnt)|application\/(?:octet-stream|x-font-\w+|font-\w+));base64,[A-Za-z0-9+/=]+$/;
-  var overlay = null;
-  var retainedSnapshot = null;
-  var removalTimer = null;
-  var viewportObserver = null;
-  var accountStorageKey = "unsloth.browser-account.v1";
+  let overlay = null;
+  let retainedSnapshot = null;
+  let removalTimer = null;
+  let viewportObserver = null;
+  const accountStorageKey = "unsloth.browser-account.v1";
   function readAccountMarker() {
     try {
       return localStorage.getItem(accountStorageKey);
-    } catch (error) {
+    } catch {
       return null;
     }
   }
-  var initialAccountMarker = readAccountMarker();
+  const initialAccountMarker = readAccountMarker();
   // Appearance gate attributes from theme-boot.js and appearance-custom-store.ts.
-  var appearanceAttributes = [
+  const appearanceAttributes = [
     "data-chat-font",
     "data-code-font-size",
     "data-contrast-adjust",
@@ -38,7 +38,7 @@
     "data-ui-font-size",
   ];
   // Keep in sync with applyCustomizationToDocument; other inline vars are transient.
-  var appearanceVariables = [
+  const appearanceVariables = [
     "--background",
     "--chart-1",
     "--contrast-control-mix",
@@ -75,15 +75,15 @@
   function clearStoredSnapshot() {
     try {
       sessionStorage.removeItem(storageKey);
-    } catch (error) {}
+    } catch { /* ignore */ }
   }
 
   function readStoredSnapshot() {
     try {
-      var value = sessionStorage.getItem(storageKey);
+      const value = sessionStorage.getItem(storageKey);
       sessionStorage.removeItem(storageKey);
       return value ? JSON.parse(value) : null;
-    } catch (error) {
+    } catch {
       clearStoredSnapshot();
       return null;
     }
@@ -91,15 +91,15 @@
 
   function navigationType() {
     try {
-      var entries = performance.getEntriesByType("navigation");
+      const entries = performance.getEntriesByType("navigation");
       return entries.length ? entries[0].type : null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
 
   function readStyleSheets() {
-    var hrefs = [];
+    const hrefs = [];
     document
       .querySelectorAll('link[rel="stylesheet"]')
       .forEach(function (link) {
@@ -109,12 +109,12 @@
   }
 
   function readInlineStyleSheets() {
-    var styles = [];
-    var total = 0;
+    const styles = [];
+    let total = 0;
     document
       .querySelectorAll("style[data-vite-dev-id]")
       .forEach(function (style) {
-        var text = style.textContent;
+        const text = style.textContent;
         if (
           typeof text !== "string" ||
           !text ||
@@ -130,10 +130,10 @@
 
   // `:root` tokens do not reach a shadow tree, so freeze the computed set onto the copy's root.
   function readTokens() {
-    var style = getComputedStyle(document.documentElement);
-    var tokens = {};
-    for (var index = 0; index < style.length; index += 1) {
-      var name = style[index];
+    const style = getComputedStyle(document.documentElement);
+    const tokens = {};
+    for (let index = 0; index < style.length; index += 1) {
+      const name = style[index];
       if (name.slice(0, 2) === "--") {
         tokens[name] = style.getPropertyValue(name);
       }
@@ -142,22 +142,22 @@
   }
 
   function readAppearance() {
-    var root = document.documentElement;
-    var variables = {};
+    const root = document.documentElement;
+    const variables = {};
     appearanceVariables.forEach(function (name) {
-      var value = root.style.getPropertyValue(name);
+      const value = root.style.getPropertyValue(name);
       if (value) variables[name] = value;
     });
-    var attributes = {};
+    const attributes = {};
     appearanceAttributes.forEach(function (name) {
-      var value = root.getAttribute(name);
+      const value = root.getAttribute(name);
       if (value !== null) attributes[name] = value;
     });
     return { variables: variables, attributes: attributes };
   }
 
   function applyAppearanceAttributes(element, appearance) {
-    var attributes = (appearance && appearance.attributes) || {};
+    const attributes = (appearance && appearance.attributes) || {};
     appearanceAttributes.forEach(function (name) {
       if (typeof attributes[name] === "string") {
         element.setAttribute(name, attributes[name]);
@@ -167,8 +167,8 @@
 
   function applyAppearance(appearance) {
     if (!appearance) return;
-    var root = document.documentElement;
-    var variables = appearance.variables || {};
+    const root = document.documentElement;
+    const variables = appearance.variables || {};
     appearanceVariables.forEach(function (name) {
       if (typeof variables[name] === "string") {
         root.style.setProperty(name, variables[name]);
@@ -178,7 +178,7 @@
   }
 
   function registerImportedFonts() {
-    var loads = [];
+    const loads = [];
     if (
       typeof FontFace !== "function" ||
       !document.fonts ||
@@ -187,35 +187,38 @@
       return loads;
     }
     try {
-      var raw = localStorage.getItem(appearanceStorageKey);
+      const raw = localStorage.getItem(appearanceStorageKey);
       if (!raw || raw.length > maxImportedFontsLength + 100000) return loads;
-      var persisted = JSON.parse(raw);
-      var customization =
+      const persisted = JSON.parse(raw);
+      const customization =
         persisted && persisted.state && persisted.state.customization;
       if (!customization || !Array.isArray(customization.importedFonts)) {
         return loads;
       }
-      var selected = {};
+      const selected = {};
       ["uiFont", "headingFont", "chatFont", "codeFont"].forEach(
         function (key) {
-          var name = customization[key];
+          const name = customization[key];
           if (typeof name === "string") selected[name] = true;
         },
       );
-      var total = 0;
-      var seen = {};
+      let total = 0;
+      const seen = {};
       customization.importedFonts
         .slice(0, maxImportedFonts)
         .forEach(function (font) {
-          var name = font && font.name;
-          var dataUrl = font && font.dataUrl;
+          const name = font && font.name;
+          const dataUrl = font && font.dataUrl;
           if (
             typeof name !== "string" ||
             !selected[name] ||
             seen[name] ||
             !name ||
             name.length > 100 ||
-            /[;{}()<>"'\\/,\x60\x00-\x1f\x7f]/.test(name) ||
+            /[;{}()<>"'\\/,\x60\x7f]/.test(name) ||
+            name.split("").some(function (character) {
+              return character.charCodeAt(0) < 0x20;
+            }) ||
             typeof dataUrl !== "string" ||
             dataUrl.length > maxImportedFontLength ||
             total + dataUrl.length > maxImportedFontsLength ||
@@ -226,12 +229,12 @@
           total += dataUrl.length;
           seen[name] = true;
           try {
-            var face = new FontFace(name, "url(" + dataUrl + ")");
+            const face = new FontFace(name, "url(" + dataUrl + ")");
             document.fonts.add(face);
             loads.push(face.load());
-          } catch (error) {}
+          } catch { /* ignore */ }
         });
-    } catch (error) {}
+    } catch { /* ignore */ }
     return loads;
   }
 
@@ -241,18 +244,18 @@
         "[data-reload-scroll-top], [data-reload-scroll-left]",
       )
       .forEach(function (element) {
-        var top = Number(element.getAttribute("data-reload-scroll-top"));
-        var left = Number(element.getAttribute("data-reload-scroll-left"));
+        const top = Number(element.getAttribute("data-reload-scroll-top"));
+        const left = Number(element.getAttribute("data-reload-scroll-left"));
         if (isFinite(top)) element.scrollTop = top;
         if (isFinite(left)) element.scrollLeft = left;
       });
   }
 
   function restoreSnapshot() {
-    var snapshot = readStoredSnapshot();
-    var linkedStyles =
+    const snapshot = readStoredSnapshot();
+    const linkedStyles =
       snapshot && Array.isArray(snapshot.styles) ? snapshot.styles : [];
-    var inlineStyles =
+    const inlineStyles =
       snapshot && Array.isArray(snapshot.inlineStyles)
         ? snapshot.inlineStyles
         : [];
@@ -270,7 +273,7 @@
       return;
     }
 
-    var fontLoads = registerImportedFonts();
+    const fontLoads = registerImportedFonts();
     applyAppearance(snapshot.appearance);
     retainedSnapshot = snapshot;
     overlay = document.createElement("div");
@@ -286,18 +289,18 @@
     overlay.inert = true;
     overlay.setAttribute("inert", "");
     // Closed shadow tree keeps the duplicate shell out of document queries like `#root textarea`.
-    var shell = overlay.attachShadow({ mode: "closed" });
-    var pendingLinkedStyles = 0;
-    var linkedStylesRestored = false;
-    var shellBody;
-    var restoreAfterLinkedStyles = function () {
+    const shell = overlay.attachShadow({ mode: "closed" });
+    let pendingLinkedStyles = 0;
+    let linkedStylesRestored = false;
+    let shellBody = null;
+    const restoreAfterLinkedStyles = function () {
       if (linkedStylesRestored) return;
       linkedStylesRestored = true;
       if (overlay && shellBody) restoreScrollState(shellBody);
     };
     linkedStyles.forEach(function (href) {
       if (typeof href !== "string" || !href) return;
-      var link = document.createElement("link");
+      const link = document.createElement("link");
       link.rel = "stylesheet";
       link.href = href;
       pendingLinkedStyles += 1;
@@ -311,12 +314,12 @@
     });
     inlineStyles.forEach(function (text) {
       if (typeof text !== "string" || !text) return;
-      var style = document.createElement("style");
+      const style = document.createElement("style");
       style.textContent = text;
       shell.appendChild(style);
     });
     // Selectors do not cross the shadow boundary and many rules anchor on `html`, so root in one.
-    var shellRoot = document.createElement("html");
+    const shellRoot = document.createElement("html");
     if (fontLoads.length) shellRoot.style.visibility = "hidden";
     shellRoot.className =
       "reload-snapshot-shell " +
@@ -332,14 +335,14 @@
     );
     viewportObserver = new MutationObserver(function (records) {
       records.forEach(function (record) {
-        var name = record.attributeName;
+        const name = record.attributeName;
         if (name.indexOf("data-mq-") === 0) {
           shellRoot.toggleAttribute(name, document.documentElement.hasAttribute(name));
         }
       });
     });
     viewportObserver.observe(document.documentElement, { attributes: true });
-    var tokens = snapshot.tokens || {};
+    const tokens = snapshot.tokens || {};
     Object.keys(tokens).forEach(function (name) {
       if (name.slice(0, 2) === "--" && typeof tokens[name] === "string") {
         shellRoot.style.setProperty(name, tokens[name]);
@@ -353,7 +356,7 @@
     // Arm the fail-open timeout first so a throw below cannot strand the overlay.
     removalTimer = setTimeout(removeOverlay, 5000);
     if (fontLoads.length) {
-      var revealShell = function () {
+      const revealShell = function () {
         shellRoot.style.visibility = "visible";
       };
       Promise.race([
@@ -379,7 +382,7 @@
   // cloneNode copies attributes, not React-driven properties. Detect secrets independently of
   // type: revealed password/token fields can become type=text.
   function isSensitiveField(field) {
-    var autocomplete =
+    const autocomplete =
       typeof field.autocomplete === "string"
         ? field.autocomplete.toLowerCase()
         : "";
@@ -393,10 +396,10 @@
     );
   }
 
-  var sensitiveAttributes = ["title", "aria-label", "alt", "placeholder"];
+  const sensitiveAttributes = ["title", "aria-label", "alt", "placeholder"];
 
   function mirrorFieldState(original, cloned) {
-    var tag = original.tagName;
+    const tag = original.tagName;
     if (isSensitiveField(original)) {
       // Secrets can also sit in value attributes, tooltips and accessible names; clear those too.
       cloned.removeAttribute("value");
@@ -437,7 +440,7 @@
   }
 
   function nearestScrollContainer(element) {
-    var ancestor = element.parentElement;
+    let ancestor = element.parentElement;
     while (ancestor && ancestor !== document.body) {
       if (isScrollContainer(ancestor, getComputedStyle(ancestor))) {
         return ancestor;
@@ -448,11 +451,11 @@
   }
 
   function isOutsideScrollViewport(bounds, scrollContainer) {
-    var containerBounds = scrollContainer.getBoundingClientRect();
-    var top = Math.max(0, containerBounds.top);
-    var right = Math.min(innerWidth, containerBounds.right);
-    var bottom = Math.min(innerHeight, containerBounds.bottom);
-    var left = Math.max(0, containerBounds.left);
+    const containerBounds = scrollContainer.getBoundingClientRect();
+    const top = Math.max(0, containerBounds.top);
+    const right = Math.min(innerWidth, containerBounds.right);
+    const bottom = Math.min(innerHeight, containerBounds.bottom);
+    const left = Math.max(0, containerBounds.left);
     return (
       bounds.bottom <= top ||
       bounds.right <= left ||
@@ -462,9 +465,9 @@
   }
 
   function hasVisibleLayoutParent(element, scrollContainer) {
-    var parent = element.parentElement;
+    let parent = element.parentElement;
     while (parent && parent !== scrollContainer) {
-      var style = getComputedStyle(parent);
+      const style = getComputedStyle(parent);
       if (style.display !== "contents") {
         return !isOutsideScrollViewport(
           parent.getBoundingClientRect(),
@@ -477,14 +480,14 @@
   }
 
   function replaceWithScrollSpacer(cloned, bounds, scrollContainer) {
-    var vertical = scrollContainer.scrollHeight > scrollContainer.clientHeight;
-    var axis = vertical ? "vertical" : "horizontal";
-    var start = vertical ? bounds.top : bounds.left;
-    var end = vertical ? bounds.bottom : bounds.right;
-    var crossSize = vertical
+    const vertical = scrollContainer.scrollHeight > scrollContainer.clientHeight;
+    const axis = vertical ? "vertical" : "horizontal";
+    let start = vertical ? bounds.top : bounds.left;
+    let end = vertical ? bounds.bottom : bounds.right;
+    let crossSize = vertical
       ? bounds.right - bounds.left
       : bounds.bottom - bounds.top;
-    var next = cloned.nextElementSibling;
+    const next = cloned.nextElementSibling;
     if (
       next &&
       next.getAttribute("data-reload-spacer-axis") === axis
@@ -503,7 +506,7 @@
       );
       next.remove();
     }
-    var size = Math.max(0, end - start);
+    const size = Math.max(0, end - start);
     crossSize = Math.max(0, crossSize);
     cloned.replaceChildren();
     Array.from(cloned.attributes).forEach(function (attribute) {
@@ -561,31 +564,31 @@
     }
     if (!sourceWidth || !sourceHeight) return null;
     try {
-      var pixelRatio = window.devicePixelRatio || 1;
-      var scale = Math.min(
+      const pixelRatio = window.devicePixelRatio || 1;
+      const scale = Math.min(
         1,
         ((bounds.right - bounds.left) * pixelRatio) / sourceWidth,
         ((bounds.bottom - bounds.top) * pixelRatio) / sourceHeight,
       );
-      var width = Math.max(1, Math.round(sourceWidth * scale));
-      var height = Math.max(1, Math.round(sourceHeight * scale));
+      let width = Math.max(1, Math.round(sourceWidth * scale));
+      let height = Math.max(1, Math.round(sourceHeight * scale));
       if (width * height > maxMaterializedMediaPixels) {
-        var pixelScale = Math.sqrt(
+        const pixelScale = Math.sqrt(
           maxMaterializedMediaPixels / (width * height),
         );
         width = Math.max(1, Math.round(width * pixelScale));
         height = Math.max(1, Math.round(height * pixelScale));
       }
-      var canvas = document.createElement("canvas");
+      const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
-      var context = canvas.getContext("2d");
+      const context = canvas.getContext("2d");
       if (!context) throw new Error("Canvas 2D context unavailable");
       context.drawImage(original, 0, 0, width, height);
-      var dataUrl = canvas.toDataURL("image/webp", 0.82);
+      const dataUrl = canvas.toDataURL("image/webp", 0.82);
       if (!dataUrl || dataUrl === "data:,") throw new Error("Empty media frame");
       return dataUrl;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -597,18 +600,18 @@
   }
 
   function materializeEphemeralMedia(original, cloned, bounds) {
-    var tag = original.tagName;
-    var source = original.currentSrc || original.getAttribute("src") || "";
+    const tag = original.tagName;
+    const source = original.currentSrc || original.getAttribute("src") || "";
     if (source.slice(0, 5) !== "blob:" && !hasSensitiveUrl(source)) return;
 
     if (tag !== "IMG" && tag !== "VIDEO") {
       cloned.removeAttribute("src");
       return;
     }
-    var sourceWidth = tag === "IMG" ? original.naturalWidth : original.videoWidth;
-    var sourceHeight =
+    const sourceWidth = tag === "IMG" ? original.naturalWidth : original.videoWidth;
+    const sourceHeight =
       tag === "IMG" ? original.naturalHeight : original.videoHeight;
-    var dataUrl = capturePixels(original, sourceWidth, sourceHeight, bounds);
+    const dataUrl = capturePixels(original, sourceWidth, sourceHeight, bounds);
     if (!dataUrl) {
       cloned.removeAttribute("src");
     } else if (tag === "IMG") {
@@ -622,14 +625,14 @@
 
   function materializeCanvas(original, cloned, bounds) {
     if (original.tagName !== "CANVAS") return;
-    var dataUrl = capturePixels(
+    const dataUrl = capturePixels(
       original,
       original.width,
       original.height,
       bounds,
     );
     if (!dataUrl) return;
-    var inlineStyle = cloned.getAttribute("style") || "";
+    let inlineStyle = cloned.getAttribute("style") || "";
     if (inlineStyle && inlineStyle.slice(-1) !== ";") inlineStyle += ";";
     cloned.setAttribute(
       "style",
@@ -642,16 +645,16 @@
 
   // Pixels scale with devicePixelRatio and can pass the cap alone; drop media, keep the layout.
   function dropMaterializedMedia(clone) {
-    var dropped = 0;
+    let dropped = 0;
     clone.querySelectorAll("[src], [poster], [style]").forEach(function (el) {
       ["src", "poster"].forEach(function (name) {
-        var value = el.getAttribute(name);
+        const value = el.getAttribute(name);
         if (value && value.slice(0, 5) === "data:") {
           el.removeAttribute(name);
           dropped += 1;
         }
       });
-      var style = el.getAttribute("style");
+      const style = el.getAttribute("style");
       if (style && style.indexOf("url(data:") !== -1) {
         el.setAttribute(
           "style",
@@ -677,21 +680,21 @@
         retainedSnapshot.createdAt = Date.now();
         retainedSnapshot.path = location.pathname + location.search;
         sessionStorage.setItem(storageKey, JSON.stringify(retainedSnapshot));
-      } catch (error) {
+      } catch {
         clearStoredSnapshot();
       }
       return;
     }
-    var root = document.getElementById("root");
+    const root = document.getElementById("root");
     if (!root || !root.firstElementChild) return;
     try {
       // Clone body, not #root: portaled dialogs and menus are part of the visible frame.
-      var clone = document.body.cloneNode(true);
-      var originalElements = Array.from(document.body.querySelectorAll("*"));
-      var clonedElements = Array.from(clone.querySelectorAll("*"));
-      for (var index = originalElements.length - 1; index >= 0; index -= 1) {
-        var original = originalElements[index];
-        var cloned = clonedElements[index];
+      const clone = document.body.cloneNode(true);
+      const originalElements = Array.from(document.body.querySelectorAll("*"));
+      const clonedElements = Array.from(clone.querySelectorAll("*"));
+      for (let index = originalElements.length - 1; index >= 0; index -= 1) {
+        const original = originalElements[index];
+        const cloned = clonedElements[index];
         if (original.closest("svg")) continue;
         // ChartStyle has no layout box, so exempt it from rectangle pruning.
         if (
@@ -700,17 +703,17 @@
         ) {
           continue;
         }
-        var style = getComputedStyle(original);
+        const style = getComputedStyle(original);
         // `display: contents` wrappers and closed selects paint despite empty rectangles.
-        var paintsThroughSelect =
+        const paintsThroughSelect =
           (original.tagName === "OPTION" ||
             original.tagName === "OPTGROUP") &&
           original.closest("select");
-        var laidOut = !paintsThroughSelect && style.display !== "contents";
-        var bounds = laidOut ? original.getBoundingClientRect() : null;
+        const laidOut = !paintsThroughSelect && style.display !== "contents";
+        const bounds = laidOut ? original.getBoundingClientRect() : null;
         // Coalesce offscreen subtrees into spacers so the scroll geometry and visible slice stay put.
-        var scrollContainer = nearestScrollContainer(original);
-        var outsideViewport =
+        const scrollContainer = nearestScrollContainer(original);
+        const outsideViewport =
           laidOut &&
           (scrollContainer
             ? isOutsideScrollViewport(bounds, scrollContainer)
@@ -769,7 +772,7 @@
           "action",
           "formaction",
         ].forEach(function (name) {
-          var value = element.getAttribute(name);
+          const value = element.getAttribute(name);
           if (
             value &&
             (value.indexOf("blob:") !== -1 ||
@@ -791,7 +794,7 @@
         element.removeAttribute("data-reload-spacer-end");
         element.removeAttribute("data-reload-spacer-cross");
       });
-      var html = clone.innerHTML;
+      let html = clone.innerHTML;
       if (html && html.length > maxSnapshotLength && dropMaterializedMedia(clone)) {
         html = clone.innerHTML;
       }
@@ -812,7 +815,7 @@
           rootClass: document.documentElement.className,
         }),
       );
-    } catch (error) {
+    } catch {
       clearStoredSnapshot();
     }
   }
@@ -856,7 +859,7 @@
   // Fail open: the copy is a nicety, the real document is not.
   try {
     restoreSnapshot();
-  } catch (error) {
+  } catch {
     removeOverlay();
   }
 })();

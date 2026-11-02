@@ -149,7 +149,8 @@ function Harness(): ReactElement {
         setReport(null);
       },
       state(): { activities: number; status: string | undefined } {
-        const session = useResearchRunStore.getState().sessions[RUN_ID];
+        const sessions = useResearchRunStore.getState().sessions;
+        const session: (typeof sessions)[string] | undefined = sessions[RUN_ID];
         return {
           activities: session?.activities.length ?? 0,
           status: session?.run.status,

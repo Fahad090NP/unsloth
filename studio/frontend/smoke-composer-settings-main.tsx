@@ -13,11 +13,11 @@ import {
 import { ComposerSettings } from "@/features/settings/components/composer-settings";
 import { ComposerDraftPreview } from "@/components/assistant-ui/composer-draft-preview";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useChatPreferencesStore } from "@/features/chat/stores/chat-preferences-store";
 import {
-  composerSubmitIntent,
   composerFollowUpBehavior,
-} from "@/features/chat/utils/composer-preferences";
+  composerSubmitIntent,
+  useChatPreferencesStore,
+} from "@/features/chat";
 import "./src/index.css";
 
 function Draft() {
@@ -71,6 +71,7 @@ function Draft() {
 function App() {
   const runtime = useLocalRuntime({
     async *run() {
+      await Promise.resolve();
       yield { content: [{ type: "text", text: "Fixture" }] };
     },
   });
@@ -85,4 +86,6 @@ function App() {
     </AssistantRuntimeProvider>
   );
 }
-createRoot(document.getElementById("root")!).render(<App />);
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Missing #root element");
+createRoot(rootElement).render(<App />);

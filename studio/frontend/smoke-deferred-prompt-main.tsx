@@ -38,6 +38,7 @@ function Owner() {
   if (inKey) window.ownerRendersInKey += 1;
   const until = performance.now() + SLOW_MS;
   while (performance.now() < until) {
+    /* busy wait: hold the render long enough to observe the deferred value */
   }
   return (
     <div className="flex max-w-xl flex-col gap-3 p-6">

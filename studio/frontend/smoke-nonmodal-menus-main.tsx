@@ -19,7 +19,7 @@ import { createRoot } from "react-dom/client";
 import "./src/index.css";
 
 // Installed before React so every document listener is counted.
-const listenerCounts: Record<string, number> = {};
+const listenerCounts: Record<string, number | undefined> = {};
 const realAdd = document.addEventListener.bind(document);
 const realRemove = document.removeEventListener.bind(document);
 document.addEventListener = ((type: string, fn: never, opts: never) => {

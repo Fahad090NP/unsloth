@@ -135,7 +135,7 @@ const ARMS: Record<string, (props: ArmProps) => JSX.Element> = {
 };
 
 function App() {
-  const Arm = ARMS[arm];
+  const Arm: ((props: ArmProps) => JSX.Element) | undefined = ARMS[arm];
   if (!Arm) {
     throw new Error(`unknown arm: ${arm}`);
   }

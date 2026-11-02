@@ -212,4 +212,6 @@ window.__shortcutsSmoke = {
   },
 };
 
-createRoot(document.getElementById("root")!).render(<Harness />);
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Missing #root element");
+createRoot(rootElement).render(<Harness />);

@@ -35,7 +35,9 @@ window.fetch = (input, init) => {
   const url =
     typeof input === "string"
       ? input
-      : ((input as Request).url ?? String(input));
+      : input instanceof Request
+        ? input.url
+        : String(input);
   if (url.includes("/api/")) {
     return Promise.resolve(
       new Response("{}", {
@@ -52,7 +54,7 @@ window.fetch = (input, init) => {
 const HERE = ".aui-thread-root.aui-thread-root.aui-thread-root";
 const BLOCK = '[data-streamdown="code-block"]';
 
-const CSS_VARIANTS: Record<string, string> = {
+const CSS_VARIANTS: Record<string, string | undefined> = {
   tree: "",
   // Positive control: streamdown defaults must flicker or the fixture reproduces nothing.
   streamdown: `${HERE} ${BLOCK} {
@@ -375,7 +377,7 @@ function FlickerApi(): null {
         };
       },
       computedFor(index: number): Record<string, string> {
-        const block = codeBlocks()[index];
+        const block: HTMLElement | undefined = codeBlocks()[index];
         if (!block) return {};
         const style = getComputedStyle(block);
         return {

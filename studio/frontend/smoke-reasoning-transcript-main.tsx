@@ -172,7 +172,7 @@ function Api() {
           worst: sorted.at(-1) ?? 0,
           mounted:
             document.querySelector('[data-slot="reasoning-text"]')?.textContent
-              ?.length ?? 0,
+              .length ?? 0,
           fragments: document.querySelectorAll("[data-reasoning-fragment]")
             .length,
         };
@@ -203,6 +203,8 @@ const router = createRouter({
   routeTree: route,
   history: createMemoryHistory({ initialEntries: ["/"] }),
 });
-createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Missing #root element");
+createRoot(rootElement).render(
   <RouterProvider router={router as never} />,
 );

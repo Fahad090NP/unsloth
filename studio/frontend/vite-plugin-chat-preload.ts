@@ -24,7 +24,8 @@ function staticClosure(
   const seen = new Set<string>();
   const stack = [...roots];
   while (stack.length > 0) {
-    const name = stack.pop()!;
+    const name = stack.pop();
+    if (name === undefined) continue;
     if (seen.has(name)) {
       continue;
     }
@@ -78,7 +79,7 @@ export function chatPagePreload(): Plugin {
       base = config.base;
     },
     generateBundle(_options, bundle) {
-      const html = bundle["index.html"];
+      const html: (typeof bundle)[string] | undefined = bundle["index.html"];
       if (html?.type !== "asset") {
         return;
       }

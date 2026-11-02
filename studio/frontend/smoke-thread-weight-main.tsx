@@ -31,7 +31,8 @@ import "./src/index.css";
 // assistant message inside the timed region.
 const realFetch = window.fetch.bind(window);
 window.fetch = (input, init) => {
-  const url = typeof input === "string" ? input : (input as Request).url ?? String(input);
+  const url =
+    typeof input === "string" ? input : input instanceof Request ? input.url : String(input);
   if (url.includes("/api/")) {
     return Promise.resolve(
       new Response("{}", {
@@ -275,7 +276,7 @@ function ThreadWeightApi({
           .getState()
           .messages.map((message) => ({
             id: message.id,
-            isHovering: Boolean(message.isHovering),
+            isHovering: message.isHovering,
           }));
       },
       /** Cheap poll target; counts() is too heavy to poll at 500 messages. */
@@ -358,7 +359,7 @@ function ThreadWeightApi({
         const buttons = Array.from(last.querySelectorAll("button"));
         return (
           buttons.find(
-            (button) => (button.textContent ?? "").trim() === label,
+            (button) => button.textContent.trim() === label,
           ) ?? null
         );
       },
@@ -373,20 +374,39 @@ function ThreadWeightApi({
 const REMOTE = new URLSearchParams(window.location.search).get("remote") === "1";
 
 const MEMORY_THREAD_LIST: unstable_RemoteThreadListAdapter = {
-  list: async () => ({ threads: [] }),
-  rename: async () => {},
-  archive: async () => {},
-  unarchive: async () => {},
-  delete: async () => {},
-  initialize: async (threadId) => ({ remoteId: threadId, externalId: undefined }),
-  generateTitle: async () =>
-    new ReadableStream({ start: (controller) => { controller.close(); } }) as never,
-  fetch: async (threadId) => ({
-    status: "regular",
-    remoteId: threadId,
-    externalId: undefined,
-    title: undefined,
-  }),
+  list: async () => {
+    await Promise.resolve();
+    return { threads: [] };
+  },
+  rename: async () => {
+    await Promise.resolve();
+  },
+  archive: async () => {
+    await Promise.resolve();
+  },
+  unarchive: async () => {
+    await Promise.resolve();
+  },
+  delete: async () => {
+    await Promise.resolve();
+  },
+  initialize: async (threadId) => {
+    await Promise.resolve();
+    return { remoteId: threadId, externalId: undefined };
+  },
+  generateTitle: async () => {
+    await Promise.resolve();
+    return new ReadableStream({ start: (controller) => { controller.close(); } }) as never;
+  },
+  fetch: async (threadId) => {
+    await Promise.resolve();
+    return {
+      status: "regular",
+      remoteId: threadId,
+      externalId: undefined,
+      title: undefined,
+    };
+  },
 };
 
 const ATTACHMENTS = new SimpleImageAttachmentAdapter();

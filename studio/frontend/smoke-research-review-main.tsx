@@ -41,6 +41,7 @@ useResearchRunStore.getState().openPanel(run.id);
 
 const adapter = {
   async run() {
+    await Promise.resolve();
     throw new Error("No model calls expected");
   },
 };
@@ -69,9 +70,9 @@ function Harness() {
     <AssistantRuntimeProvider runtime={runtime}>
       <div style={{ display: "flex", height: "100vh", gap: 24 }}>
         <ThreadPrimitive.Root>
-          <ThreadPrimitive.Messages
-            components={{ Message }}
-          />
+          <ThreadPrimitive.Messages>
+            {() => <Message />}
+          </ThreadPrimitive.Messages>
         </ThreadPrimitive.Root>
         <div style={{ width: 420 }}>
           {openRunId && (
@@ -110,4 +111,6 @@ Object.assign(window, {
       }); },
   },
 });
-createRoot(document.getElementById("root")!).render(<Harness />);
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Missing #root element");
+createRoot(rootElement).render(<Harness />);

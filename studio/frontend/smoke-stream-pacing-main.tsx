@@ -145,7 +145,7 @@ function Harness(): ReactElement {
     // Read the DOM: a store update that never paints does not answer "stopped growing".
     const paintedChars = (): number => {
       const node = document.querySelector("[data-status]");
-      return node ? (node.textContent ?? "").length : 0;
+      return node ? node.textContent.length : 0;
     };
 
     let lastGrowthAt = 0;
@@ -206,7 +206,7 @@ function Harness(): ReactElement {
     let observer: PerformanceObserver | null = null;
     state.longTaskSupported =
       typeof PerformanceObserver !== "undefined" &&
-      (PerformanceObserver.supportedEntryTypes ?? []).includes("longtask");
+      PerformanceObserver.supportedEntryTypes.includes("longtask");
     if (state.longTaskSupported) {
       observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
@@ -251,13 +251,17 @@ function Harness(): ReactElement {
         style={{ width: 900, margin: "0 auto", padding: 16 }}
       >
         <ThreadPrimitive.Viewport>
-          <ThreadPrimitive.Messages
-            components={{ AssistantMessage, UserMessage: NoUserMessage }}
-          />
+          <ThreadPrimitive.Messages>
+            {({ message }) =>
+              message.role === "user" ? <NoUserMessage /> : <AssistantMessage />
+            }
+          </ThreadPrimitive.Messages>
         </ThreadPrimitive.Viewport>
       </ThreadPrimitive.Root>
     </AssistantRuntimeProvider>
   );
 }
 
-createRoot(document.getElementById("root")!).render(<Harness />);
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Missing #root element");
+createRoot(rootElement).render(<Harness />);

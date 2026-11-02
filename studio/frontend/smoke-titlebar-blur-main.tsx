@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { GuidedTour } from "@/features/tour/components/guided-tour";
+import { GuidedTour } from "@/features/tour";
 import "./src/index.css";
 
 const art =
@@ -103,12 +103,14 @@ function Scene() {
         />
         <MediaViewer
           open={kind === "media"}
-          onOpenChange={(o) => !o && setKind("")}
+          onOpenChange={(o) => {
+            if (!o) setKind("");
+          }}
           title="Illustrated mountain lake"
           meta="Test fixture · 960 × 540"
           noun="image"
           media
-          actions={{ onDownload: () => {} }}
+          actions={{ onDownload: () => { /* no-op */ } }}
         >
           <img
             src={art}
@@ -119,7 +121,9 @@ function Scene() {
         </MediaViewer>
         <Dialog
           open={kind === "dialog" || kind === "scoped"}
-          onOpenChange={(o) => !o && setKind("")}
+          onOpenChange={(o) => {
+            if (!o) setKind("");
+          }}
         >
           <DialogContent
             container={kind === "scoped" ? container : undefined}
@@ -149,7 +153,12 @@ function Scene() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
           </AlertDialogContent>
         </AlertDialog>
-        <Sheet open={kind === "sheet"} onOpenChange={(o) => !o && setKind("")}>
+        <Sheet
+          open={kind === "sheet"}
+          onOpenChange={(o) => {
+            if (!o) setKind("");
+          }}
+        >
           <SheetContent>
             <SheetTitle>Example sheet</SheetTitle>
             <SheetDescription>
@@ -159,7 +168,9 @@ function Scene() {
         </Sheet>
         <GuidedTour
           open={kind === "tour"}
-          onOpenChange={(o) => !o && setKind("")}
+          onOpenChange={(o) => {
+            if (!o) setKind("");
+          }}
           steps={[
             {
               id: "preview",
@@ -168,8 +179,8 @@ function Scene() {
               body: "The viewport tour backdrop must also cover the titlebar.",
             },
           ]}
-          onSkip={() => {}}
-          onComplete={() => {}}
+          onSkip={() => { /* no-op */ }}
+          onComplete={() => { /* no-op */ }}
         />
       </div>
     </TooltipProvider>
@@ -183,4 +194,6 @@ document.documentElement.style.setProperty(
   "--studio-window-chrome-top",
   "40px",
 );
-createRoot(document.getElementById("root")!).render(<Scene />);
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Missing #root element");
+createRoot(rootElement).render(<Scene />);

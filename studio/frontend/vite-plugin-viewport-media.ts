@@ -35,8 +35,8 @@ function gateComplex(selector: Selector, root: string): string {
   while (nodes[0]?.type === "comment" || (nodes[0]?.type === "combinator" && !nodes[0].value.trim())) {
     nodes.shift();
   }
-  const first = nodes[0];
-  const last = nodes[nodes.length - 1];
+  const first: SelectorNode | undefined = nodes[0];
+  const last: SelectorNode | undefined = nodes[nodes.length - 1];
   if (!first || !last) throw new Error(`empty selector in "${String(selector)}"`);
   first.spaces.before = "";
   last.spaces.after = "";
@@ -92,8 +92,10 @@ function gatesEverything(block: AtRule): boolean {
 }
 
 function gateRule(rule: Rule, root: string): void {
-  rule.selector = gateSelector(rule.raws.selector?.raw ?? rule.selector, root);
-  delete rule.raws.selector;
+  const raws = rule.raws;
+  const selector = gateSelector(raws.selector?.raw ?? rule.selector, root);
+  Object.assign(rule, { selector });
+  delete raws.selector;
 }
 
 function printCopy(block: AtRule): AtRule {

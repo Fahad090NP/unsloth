@@ -105,8 +105,12 @@ async function loadRolldown(root: string): Promise<typeof rolldown> {
   return ((await import(pathToFileURL(entry).href)) as { rolldown: typeof rolldown }).rolldown;
 }
 
-function readJson<T>(file: string): T {
-  return JSON.parse(readFileSync(file, "utf8")) as T;
+function readJson<T>(file: string, validate?: (value: unknown) => value is T): T {
+  const value: unknown = JSON.parse(readFileSync(file, "utf8"));
+  if (validate && !validate(value)) {
+    throw new Error(`invalid JSON shape in ${file}`);
+  }
+  return value as T;
 }
 
 function packageVersion(root: string, name: string): string {
@@ -236,7 +240,7 @@ async function bundleOne(
       minify: true,
       comments: { legal: false },
     });
-    const chunk = output[0];
+    const chunk: (typeof output)[number] | undefined = output[0];
     if (output.length !== 1 || chunk?.type !== "chunk") {
       throw new Error(`preview runtime ${spec.name}: expected one chunk`);
     }
@@ -350,8 +354,9 @@ export function previewRuntime(): Plugin {
           );
           if (!file) {
             // Not the SPA fallback: a stale hash has to fail loudly, not load index.html.
-            res.statusCode = 404;
-            res.end();
+            const response = res;
+            response.statusCode = 404;
+            response.end();
             return;
           }
           res.setHeader("Content-Type", "text/javascript; charset=utf-8");

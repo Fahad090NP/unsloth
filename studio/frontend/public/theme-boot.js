@@ -4,21 +4,21 @@
 // Apply the stored theme before first paint. External classic script since CSP is script-src 'self'.
 try {
   // Guarded reads so blocked localStorage still falls back to the OS preference.
-  var theme = "system";
-  var palette = null;
+  let theme = "system";
+  let palette = null;
   try {
     theme = localStorage.getItem("theme") || "system";
     palette = localStorage.getItem("palette");
-  } catch (e) {}
-  var dark =
+  } catch { /* ignore */ }
+  const dark =
     theme === "dark" ||
     (theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
-  var root = document.documentElement;
+  const root = document.documentElement;
   root.classList.toggle("dark", dark);
   root.classList.toggle("light", !dark);
   root.style.colorScheme = dark ? "dark" : "light";
   // Keep in sync with COLOR_THEME_IDS ("standard" sets no attribute).
-  var palettes = [
+  const palettes = [
     "classic", "minimal", "blueberry", "butterfly-pea", "cherry",
     "cinnamon", "cotton-candy", "dragon-fruit", "earl-grey", "espresso",
     "honey", "licorice", "macaron", "matcha", "mint", "neon-cyberpunk",
@@ -29,13 +29,13 @@ try {
   if (palettes.indexOf(palette) !== -1) {
     root.setAttribute("data-palette", palette);
   }
-} catch (e) {}
+} catch { /* ignore */ }
 
 // One screen pixel in CSS px, for slider tracks (index.css); re-run when the zoom changes.
 try {
   (function px() {
-    var r = devicePixelRatio || 1;
+    const r = devicePixelRatio || 1;
     document.documentElement.style.setProperty("--device-px", 1 / r + "px");
     matchMedia("(resolution:" + r + "dppx)").addEventListener("change", px, { once: true });
   })();
-} catch (e) {}
+} catch { /* ignore */ }

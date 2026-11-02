@@ -16,7 +16,7 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const withTests = process.argv.slice(2).includes("--tests");
 const tscPath = join(root, "node_modules", "typescript", "bin", "tsc");
 // biome-ignore lint/suspicious/noControlCharactersInRegex: matches ANSI escapes
-const ansi = /\x1b\[[0-?]*[ -/]*[@-~]/g;
+const ansi = new RegExp(`${String.fromCharCode(27)}\\[[0-?]*[ -/]*[@-~]`, "g");
 
 const tscSteps = [["-b", "--pretty", "false"]];
 // The `check` subcommand with long flags. `bun --check` is Bun's global flag: it ignores

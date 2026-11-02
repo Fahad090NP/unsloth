@@ -30,7 +30,7 @@ function smokeModuleDelay(): Plugin {
 
 export default defineConfig({
   // concurrent browser checks use separate dependency optimizer caches.
-  cacheDir: process.env.VITE_TEST_CACHE_DIR || "node_modules/.vite",
+  cacheDir: process.env.VITE_TEST_CACHE_DIR ?? "node_modules/.vite",
   // Reasoning's highlighter loads only the grammar it needs in its module worker.
   worker: { format: "es" },
   plugins: [react(), tailwindcss(), childSelectorOrder(), viewportMediaGate(), smokeModuleDelay(), previewRuntime(), chatPagePreload()],

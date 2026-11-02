@@ -247,7 +247,7 @@ const harnessAui = new Proxy(
   {},
   {
     get(_target, prop) {
-      if (prop === "subscribe" || prop === "on") return () => () => {};
+      if (prop === "subscribe" || prop === "on") return () => () => { /* no-op */ };
       if (typeof prop === "symbol") return HARNESS_STATE;
       return () => ({ getState: () => undefined });
     },

@@ -24,7 +24,7 @@ import {
 import { Component, type ReactNode, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./src/index.css";
-import { AUTH_TOKEN_KEY } from "@/features/auth/session";
+import { AUTH_TOKEN_KEY } from "@/features/auth";
 
 // Accounts tab is owner-only, read from token claims, so use an unsigned owner token.
 if (!localStorage.getItem(AUTH_TOKEN_KEY)) {
@@ -56,7 +56,7 @@ declare global {
 
 const seenErrors: string[] = [];
 window.addEventListener("error", (e) => {
-  seenErrors.push(String(e.message));
+  seenErrors.push(e.message);
 });
 window.addEventListener("unhandledrejection", (e) => {
   seenErrors.push(String(e.reason));
@@ -148,7 +148,9 @@ function render(): void {
 
 const localeInitialization = initializeLocale();
 if (typeof localeInitialization !== "string") {
-  void localeInitialization.then(render);
+  localeInitialization.then(render).catch((error) => {
+    throw error;
+  });
 } else {
   render();
 }

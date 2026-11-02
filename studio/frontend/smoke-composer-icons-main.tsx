@@ -8,7 +8,9 @@ import { ArrowUpIcon, SquareIcon } from "lucide-react";
 import { createRoot } from "react-dom/client";
 import "./src/index.css";
 
-createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Missing #root element");
+createRoot(rootElement).render(
   <TooltipProvider>
     <div className="aui-root" style={{ padding: 32.25 }}>
       <div className="aui-composer-action-wrapper flex items-center gap-2.5">

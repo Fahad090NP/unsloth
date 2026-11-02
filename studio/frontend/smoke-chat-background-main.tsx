@@ -49,7 +49,15 @@ function App() {
           <button onClick={() => { setActive((v) => !v); }}>Toggle route</button>
           <button onClick={() => { setSidebar(v => !v); }}>Toggle sidebar</button>
           <button onClick={() => { setOtherPage(v => !v); }}>Toggle page</button>
-          <button onClick={() => void resetChatBackground()}>Reset all</button>
+          <button
+            onClick={() => {
+              resetChatBackground().catch((error) => {
+                throw error;
+              });
+            }}
+          >
+            Reset all
+          </button>
         </div>
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="settings-page">
@@ -124,7 +132,9 @@ function App() {
     </TooltipProvider>
   );
 }
-const root = createRoot(document.getElementById("root")!);
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Missing #root element");
+const root = createRoot(rootElement);
 if (import.meta.hot) import.meta.hot.dispose(() => { root.unmount(); });
 root.render(
   <StrictMode>

@@ -32,7 +32,9 @@ window.fetch = (input, init) => {
   const url =
     typeof input === "string"
       ? input
-      : ((input as Request).url ?? String(input));
+      : input instanceof Request
+        ? input.url
+        : String(input);
   if (url.includes("/api/")) {
     return Promise.resolve(
       new Response("{}", {
@@ -99,6 +101,7 @@ function reply(text: string): ThreadMessageLike[] {
 
 const adapter: ChatModelAdapter = {
   async *run() {
+    await Promise.resolve();
     yield { content: [{ type: "text", text: "" }] };
   },
 };
