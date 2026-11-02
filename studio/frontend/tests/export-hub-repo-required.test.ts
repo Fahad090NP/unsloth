@@ -13,14 +13,13 @@ import { loadWithStubs } from "./helpers/module-stubs.ts";
 
 const tag =
   (name: string) =>
-  ({
-    children,
-    asChild: _a,
-    variant: _v,
-    size: _s,
-    ...rest
-  }: Record<string, unknown>) => {
-    return React.createElement(name, rest, children as React.ReactNode);
+  (props: Record<string, unknown>) => {
+    const rest = { ...props };
+    delete rest.asChild;
+    delete rest.variant;
+    delete rest.size;
+    delete rest.children;
+    return React.createElement(name, rest, props.children as React.ReactNode);
   };
 const none = () => null;
 

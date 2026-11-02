@@ -11,22 +11,33 @@ installLocalStorageFake();
 Object.assign(window.location, { href: "http://localhost/" });
 const vite = await createServer({ server: { middlewareMode: true } });
 after(() => vite.close());
-const caps = await vite.ssrLoadModule(
+const caps = (await vite.ssrLoadModule(
   "/src/features/chat/provider-capabilities.ts",
-);
-const providers = await vite.ssrLoadModule(
+)) as typeof import("../src/features/chat/provider-capabilities.ts");
+const providers = (await vite.ssrLoadModule(
   "/src/features/chat/external-providers.ts",
-);
-const api = await vite.ssrLoadModule("/src/features/chat/api/providers-api.ts");
-const sync = await vite.ssrLoadModule(
+)) as typeof import("../src/features/chat/external-providers.ts");
+const api = (await vite.ssrLoadModule(
+  "/src/features/chat/api/providers-api.ts",
+)) as typeof import("../src/features/chat/api/providers-api.ts");
+const sync = (await vite.ssrLoadModule(
   "/src/features/chat/sync-external-providers.ts",
-);
-const routing = await vite.ssrLoadModule(
+)) as typeof import("../src/features/chat/sync-external-providers.ts");
+const routing = (await vite.ssrLoadModule(
   "/src/features/chat/utils/chat-title.ts",
-);
-const reasoning = await vite.ssrLoadModule(
+)) as typeof import("../src/features/chat/utils/chat-title.ts");
+const reasoning = (await vite.ssrLoadModule(
   "/src/features/chat/custom-reasoning.ts",
-);
+)) as typeof import("../src/features/chat/custom-reasoning.ts");
+
+/** Swap the global fetch without touching it across an await in the test body. */
+function installFetch(fake: typeof fetch): () => void {
+  const previous = globalThis.fetch;
+  globalThis.fetch = fake;
+  return () => {
+    globalThis.fetch = previous;
+  };
+}
 
 const styles = [
   "reasoning_effort",
@@ -87,10 +98,11 @@ for (const style of styles) {
       );
 
     const bodies: Record<string, unknown>[] = [];
-    const original = globalThis.fetch;
-    globalThis.fetch = (async (_url, init) => {
+    const restoreFetch = installFetch(async (_url, init) => {
       await Promise.resolve();
-      bodies.push(JSON.parse(String(init?.body)));
+      const body = init?.body;
+      if (typeof body !== "string") throw new Error("expected a string body");
+      bodies.push(JSON.parse(body) as Record<string, unknown>);
       return Response.json({ reasoning_config: config });
     });
     try {
@@ -104,7 +116,7 @@ for (const style of styles) {
       await api.updateProviderConfig("custom-a", { reasoningConfig: null });
       await api.updateProviderConfig("custom-a", { displayName: "Renamed" });
     } finally {
-      globalThis.fetch = original;
+      restoreFetch();
     }
     assert.deepEqual(
       bodies.slice(0, 2).map((body) => body.reasoning_config),
@@ -113,7 +125,7 @@ for (const style of styles) {
     assert.equal(bodies[2].reasoning_config, null);
     assert.equal("reasoning_config" in bodies[3], false);
     providers.saveExternalProviders([
-      { ...connection, reasoningConfig: config },
+      { ...connection, reasoningConfig: config } as ExternalProviderConfig,
     ]);
     const loaded = providers.loadExternalProviders()[0];
     assert.deepEqual(loaded.reasoningConfig, config);
@@ -141,7 +153,7 @@ test("legacy, disabled and malformed Custom contracts fail closed even for known
     { enabled: true, style: "thinking", extra: 1 },
     [],
     "thinking",
-  ]) {
+  ] as unknown[]) {
     const resolved = caps.getExternalReasoningCapabilities(
       "custom",
       "openrouter/auto",
@@ -157,7 +169,7 @@ test("legacy, disabled and malformed Custom contracts fail closed even for known
       {},
     );
     providers.saveExternalProviders([
-      { ...connection, reasoningConfig: config },
+      { ...connection, reasoningConfig: config } as ExternalProviderConfig,
     ]);
     const loaded = providers.loadExternalProviders()[0];
     const fields = await routing.buildExternalRoutingFields({
@@ -178,7 +190,7 @@ test("legacy, disabled and malformed Custom contracts fail closed even for known
         ...connection,
         ...overrides,
         reasoningConfig: { enabled: true, style: "thinking" },
-      },
+      } as Parameters<typeof providers.saveExternalProviders>[0][number],
     ]);
     assert.equal(
       providers.loadExternalProviders()[0].reasoningConfig,
@@ -217,10 +229,9 @@ test("switching same-model connections never leaks the contract and server sync 
     );
   }
   assert.equal(sync.mergeLocalProviderOptions(a, b).reasoningConfig, undefined);
-  const original = globalThis.fetch;
-  globalThis.fetch = (async (url) => {
+  const restoreFetch = installFetch(async (url) => {
     await Promise.resolve();
-    const path = String(url);
+    const path = url instanceof Request ? url.url : String(url);
     if (path.includes("/registry")) return Response.json([]);
     if (path.endsWith("/api/providers/"))
       return Response.json([
@@ -256,6 +267,6 @@ test("switching same-model connections never leaks the contract and server sync 
     assert.equal(synced[0].reasoningConfig, undefined);
     assert.deepEqual(synced[1].reasoningConfig, c.reasoningConfig);
   } finally {
-    globalThis.fetch = original;
+    restoreFetch();
   }
 });

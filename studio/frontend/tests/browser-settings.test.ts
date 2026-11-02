@@ -956,7 +956,10 @@ test("browser saves keep the approved name without MIME inference, including age
     document: {
       body: { appendChild() { /* empty */ } },
       createElement: () => {
-        const anchor = { href: "", download: "", click: () => saved.push({ name: anchor.download, blob: transport! }), remove() { /* empty */ } };
+        const anchor = { href: "", download: "", click: () => {
+          if (!transport) throw new Error("clicked before a blob was created");
+          saved.push({ name: anchor.download, blob: transport });
+        }, remove() { /* empty */ } };
         return anchor;
       },
     },

@@ -240,7 +240,7 @@ test("the follower throws on its own deadline instead of returning silently", as
         replayFrom: 0,
         stallTimeoutMs: 40,
       })) {
-        // drain
+        void _update; // drain
       }
     },
     (error: unknown) =>
@@ -260,7 +260,7 @@ test("a caller Stop still ends the follow cleanly", async () => {
     signal: controller.signal,
     stallTimeoutMs: 60_000,
   })) {
-    // drain
+    void _update; // drain
   }
 });
 
@@ -714,7 +714,7 @@ test("a repeated keep-alive stamp does NOT hold the follower open", async () => 
           initialRun: run as never,
           stallTimeoutMs: 200,
         })) {
-          // The run never progresses; only the deadline can end this.
+          void _u; // The run never progresses; only the deadline can end this.
         }
       } catch (error) {
         stalled = error instanceof api.ChatGenerationStalledError;
@@ -780,7 +780,7 @@ test("a frozen stamp does not rearm across SSE reconnects", async () => {
           initialRun: { id: "r", status: "running", lastEventSeq: 0, updatedAt: 7 } as never,
           stallTimeoutMs: 2_500,
         })) {
-          // Never terminal; only the deadline can end this.
+          void _u; // Never terminal; only the deadline can end this.
         }
       } catch (error) {
         stalled = error instanceof api.ChatGenerationStalledError;

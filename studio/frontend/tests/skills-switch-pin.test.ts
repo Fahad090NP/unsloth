@@ -60,7 +60,7 @@ function harness(initial: Skill[]) {
           if (init?.method === "PUT") {
             const name = decodeURIComponent(url.split("/")[3]);
             server = server.map((s) =>
-              s.name === name ? { ...s, enabled: body.enabled! } : s,
+              s.name === name ? { ...s, enabled: body.enabled ?? s.enabled } : s,
             );
             return respond(server.find((s) => s.name === name));
           }

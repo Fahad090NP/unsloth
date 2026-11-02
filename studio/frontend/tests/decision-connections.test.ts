@@ -11,19 +11,34 @@ Object.assign(window.location, { href: "http://localhost/" });
 const vite = await createServer({ server: { middlewareMode: true } });
 after(() => vite.close());
 
-test("System One connections stay decision-only after a reload", async () => {
-  const api = await vite.ssrLoadModule("/src/features/chat/api/providers-api.ts");
-  const providers = await vite.ssrLoadModule("/src/features/chat/external-providers.ts");
-  const bodies: Record<string, unknown>[] = [];
+/** Swap the global fetch without touching it across an await in the test body. */
+function installFetch(fake: typeof fetch): () => void {
   const previous = globalThis.fetch;
-  globalThis.fetch = (async (_url, init) => {
+  globalThis.fetch = fake;
+  return () => {
+    globalThis.fetch = previous;
+  };
+}
+
+test("System One connections stay decision-only after a reload", async () => {
+  const api = (await vite.ssrLoadModule(
+    "/src/features/chat/api/providers-api.ts",
+  )) as typeof import("../src/features/chat/api/providers-api.ts");
+  const providers = (await vite.ssrLoadModule(
+    "/src/features/chat/external-providers.ts",
+  )) as typeof import("../src/features/chat/external-providers.ts");
+  const bodies: Record<string, unknown>[] = [];
+  const restoreFetch = installFetch(async (_url, init) => {
     await Promise.resolve();
-    bodies.push(JSON.parse(String(init?.body))); return Response.json({});
+    const body = init?.body;
+    if (typeof body !== "string") throw new Error("expected a string body");
+    bodies.push(JSON.parse(body) as Record<string, unknown>);
+    return Response.json({});
   });
   try {
     await api.createProviderConfig({ providerType: "custom", displayName: "Decider", apiType: "systemone" });
   } finally {
-    globalThis.fetch = previous;
+    restoreFetch();
   }
   assert.equal(bodies[0].api_type, "systemone");
 
@@ -34,7 +49,7 @@ test("System One connections stay decision-only after a reload", async () => {
   for (const providerType of ["typesafe", "liquid"]) {
     assert.ok(providers.isDecisionConnection({ providerType }), providerType);
   }
-  for (const apiType of ["chat_completions", "responses", undefined]) {
+  for (const apiType of ["chat_completions", "responses", undefined] as const) {
     const chat = { providerType: "custom", ...providers.connectionApiFields(apiType) };
     assert.equal(providers.isDecisionConnection(chat), false, String(apiType));
   }

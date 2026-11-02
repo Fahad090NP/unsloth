@@ -180,10 +180,22 @@ function declaredIn(scope: ts.Node): Set<string> {
   return out;
 }
 
+/** TypeScript declares `parent` as always present; the source file root has none. */
+function parentOf(node: ts.Node): ts.Node | undefined {
+  return (node as { parent?: ts.Node }).parent;
+}
+
+/** Export declarations expose no specifier at runtime for `export { x }`. */
+function moduleSpecifierOf(
+  node: ts.ImportDeclaration | ts.ExportDeclaration,
+): ts.Expression | undefined {
+  return node.moduleSpecifier;
+}
+
 /** Per occurrence, not per file: per-file suppression silenced genuine top-level reads. */
 function isShadowed(identifier: ts.Identifier): boolean {
-  const start: ts.Node | undefined = identifier.parent;
-  for (let node = start; node; node = node.parent) {
+  const start = parentOf(identifier);
+  for (let node = start; node; node = parentOf(node)) {
     if (!isScope(node)) continue;
     if (ts.isSourceFile(node)) return false;
     if (declaredIn(node).has(identifier.text)) return true;
@@ -197,17 +209,18 @@ function isShadowed(identifier: ts.Identifier): boolean {
  */
 function inRuntimeHeritage(node: ts.Node): boolean {
   let current: ts.Node = node;
-  let parent: ts.Node | undefined = current.parent;
+  let parent = parentOf(current);
   while (parent && !ts.isExpressionWithTypeArguments(parent)) {
     if (!ts.isExpression(parent)) return false;
     current = parent;
-    parent = parent.parent;
+    parent = parentOf(parent);
   }
+  if (!parent) return false;
   if (parent.expression !== current) return false;
-  const clause: ts.Node | undefined = parent.parent;
+  const clause = parentOf(parent);
   if (!clause || !ts.isHeritageClause(clause)) return false;
   if (clause.token !== ts.SyntaxKind.ExtendsKeyword) return false;
-  const declaration: ts.Node | undefined = clause.parent;
+  const declaration = parentOf(clause);
   if (!declaration) return false;
   if (!ts.isClassDeclaration(declaration) && !ts.isClassExpression(declaration)) return false;
   // `declare class` emits no JavaScript, so its base is never evaluated.
@@ -226,8 +239,8 @@ function isAmbient(node: ts.Node): boolean {
 
 function insideTypeSyntax(node: ts.Node): boolean {
   if (inRuntimeHeritage(node)) return false;
-  const start: ts.Node | undefined = node.parent;
-  for (let current = start; current; current = current.parent) {
+  const start = parentOf(node);
+  for (let current = start; current; current = parentOf(current)) {
     if (
       ts.isTypeNode(current) ||
       ts.isTypeAliasDeclaration(current) ||
@@ -242,10 +255,10 @@ function insideTypeSyntax(node: ts.Node): boolean {
 
 function isImmediatelyInvoked(node: ts.Node): boolean {
   let current: ts.Node = node;
-  let parent: ts.Node | undefined = current.parent;
+  let parent = parentOf(current);
   while (parent && ts.isParenthesizedExpression(parent)) {
     current = parent;
-    parent = parent.parent;
+    parent = parentOf(parent);
   }
   if (!parent) return false;
   if (
@@ -288,10 +301,10 @@ function isCallableNode(node: ts.Node): node is ts.FunctionLikeDeclaration {
 
 function invocationOf(node: ts.Node): ts.CallExpression | ts.NewExpression | undefined {
   let current: ts.Node = node;
-  let parent: ts.Node | undefined = current.parent;
+  let parent = parentOf(current);
   while (parent && ts.isParenthesizedExpression(parent)) {
     current = parent;
-    parent = parent.parent;
+    parent = parentOf(parent);
   }
   if (!parent) return undefined;
   if ((ts.isCallExpression(parent) || ts.isNewExpression(parent)) && parent.expression === current) {
@@ -330,7 +343,7 @@ function defersEvaluation(node: ts.Node): boolean {
 }
 
 function isNamespaceMemberRead(node: ts.Identifier): boolean {
-  const parent: ts.Node | undefined = node.parent;
+  const parent = parentOf(node);
   if (!parent) return false;
   if (ts.isPropertyAccessExpression(parent) && parent.expression === node) return true;
   if (ts.isElementAccessExpression(parent) && parent.expression === node) return true;
@@ -338,7 +351,7 @@ function isNamespaceMemberRead(node: ts.Identifier): boolean {
 }
 
 function isNonReference(node: ts.Identifier): boolean {
-  const parent: ts.Node | undefined = node.parent;
+  const parent = parentOf(node);
   if (!parent) return false;
   if (ts.isPropertyAccessExpression(parent) && parent.name === node) return true;
   if (ts.isPropertyAssignment(parent) && parent.name === node) return true;
@@ -396,8 +409,8 @@ function collectTargets(statements: readonly ts.Statement[], inherited?: Targets
 }
 
 function declaringScopeOf(node: ts.Node): ts.Node | undefined {
-  const start: ts.Node | undefined = node.parent;
-  for (let current = start; current; current = current.parent) {
+  const start = parentOf(node);
+  for (let current = start; current; current = parentOf(current)) {
     if (isScope(current)) return current;
   }
   return undefined;
@@ -406,8 +419,8 @@ function declaringScopeOf(node: ts.Node): ts.Node | undefined {
 function resolvesToTarget(identifier: ts.Identifier, target: ts.Node): boolean {
   const home = declaringScopeOf(target);
   if (!home) return false;
-  const start: ts.Node | undefined = identifier.parent;
-  for (let node = start; node; node = node.parent) {
+  const start = parentOf(identifier);
+  for (let node = start; node; node = parentOf(node)) {
     if (!isScope(node)) continue;
     if (node === home) return true;
     if (declaredIn(node).has(identifier.text)) return false;
@@ -527,7 +540,7 @@ function eagerReads(
       if (!parameter.initializer) return;
       // A default only runs when the argument is missing or undefined; rest parameters are skipped.
       if (args && !parameter.dotDotDotToken) {
-        const supplied: ts.Expression | undefined = args[index];
+        const supplied = args.at(index);
         const omitted =
           supplied === undefined ||
           (ts.isIdentifier(supplied) && supplied.text === "undefined") ||
@@ -1065,8 +1078,8 @@ function proneExportSets(
         isBareSpecifier(statement.moduleSpecifier.text);
       if (runtimeEdge && !leavesApp) edges += 1;
       if (!ts.isExportDeclaration(statement) || !runtimeEdge) continue;
-      const specifier: ts.Node | undefined = statement.moduleSpecifier;
-      if (!specifier || !ts.isStringLiteral(specifier)) continue;
+      const specifier = moduleSpecifierOf(statement);
+      if (specifier === undefined || !ts.isStringLiteral(specifier)) continue;
       const clause = statement.exportClause;
       if (clause && !ts.isNamedExports(clause)) continue;
       list.push({ target: resolve(specifier.text, file), clause });

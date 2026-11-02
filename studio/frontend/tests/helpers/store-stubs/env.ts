@@ -10,6 +10,6 @@ export const usePlatformStore = {
   },
 };
 
-export async function fetchDeviceType(_options?: { force?: boolean }): Promise<void> {
+export async function fetchDeviceType(): Promise<void> {
   await Promise.resolve();
 }

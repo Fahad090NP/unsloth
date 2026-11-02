@@ -20,11 +20,28 @@ const harness = sibling.slice(
   sibling.indexOf("type Listener ="),
   sibling.indexOf("function storedSnapshot("),
 );
-const createEnvironment = new Function(
-  "vm",
-  "script",
-  stripTypeScriptTypes(harness) + "\nreturn createEnvironment;",
-)(
+interface Environment {
+  storage: Map<string, string>;
+  readonly shell: { html: string } | null;
+  dispatch(name: string, event?: Record<string, unknown>): void;
+  loadStyleSheets(): void;
+}
+
+interface EnvironmentOptions {
+  navigationType: "navigate" | "reload";
+  storage?: Map<string, string>;
+  rootHtml?: string;
+  styleSheets?: string[];
+  localStorage?: Map<string, string>;
+  supportsPageSwap?: boolean;
+}
+
+type CreateEnvironment = (options: EnvironmentOptions) => Environment;
+
+const createEnvironmentFactory = vm.runInThisContext(
+  `(function (vm, script) {\n${stripTypeScriptTypes(harness)}\nreturn createEnvironment;\n})`,
+) as (vmModule: typeof vm, scriptSource: string) => CreateEnvironment;
+const createEnvironment = createEnvironmentFactory(
   vm,
   readFileSync(
     new URL("../public/reload-snapshot.js", import.meta.url),
@@ -63,8 +80,8 @@ for (const supportsPageSwap of [true, false]) {
       rootHtml: "<main>Alice confidential acquisition discussion</main>",
       styleSheets: ["/assets/index-abc123.css"],
     });
-    let listener: (event: Partial<StorageEvent>) => void;
-    let incoming: ReturnType<typeof createEnvironment>;
+    let listener: ((event: Partial<StorageEvent>) => void) | undefined;
+    let incoming: Environment | undefined;
     const peer = {
       localStorage,
       sessionStorage: storage(outgoing.storage),
@@ -95,7 +112,9 @@ for (const supportsPageSwap of [true, false]) {
       indexedDB: {
         deleteDatabase() {
           const request = {} as IDBOpenDBRequest;
-          queueMicrotask(() => request.onsuccess?.call(request, {} as Event));
+          queueMicrotask(() => {
+            request.onsuccess?.call(request, {} as Event);
+          });
           return request;
         },
       },
@@ -107,7 +126,8 @@ for (const supportsPageSwap of [true, false]) {
       () => shared.set("unsloth_auth_token", "bob-token"),
       login,
     );
-    listener!({
+    if (!listener) throw new Error("the account listener was not installed");
+    listener({
       key: BROWSER_ACCOUNT_KEY,
       oldValue: "account:a1:alice",
       newValue: shared.get(BROWSER_ACCOUNT_KEY),

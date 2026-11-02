@@ -31,7 +31,6 @@ export function updateStoredChatThread(
     settingsSeq?: number;
     settingsWriter?: string;
   },
-  _options?: { signal?: AbortSignal },
 ): void {
   if (threadRows.failNext) {
     threadRows.failNext = false;
