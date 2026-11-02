@@ -35,8 +35,8 @@ function gateComplex(selector: Selector, root: string): string {
   while (nodes[0]?.type === "comment" || (nodes[0]?.type === "combinator" && !nodes[0].value.trim())) {
     nodes.shift();
   }
-  const first: SelectorNode | undefined = nodes[0];
-  const last: SelectorNode | undefined = nodes[nodes.length - 1];
+  const first: SelectorNode | undefined = nodes.at(0);
+  const last: SelectorNode | undefined = nodes.at(-1);
   if (!first || !last) throw new Error(`empty selector in "${String(selector)}"`);
   first.spaces.before = "";
   last.spaces.after = "";

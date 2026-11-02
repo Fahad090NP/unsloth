@@ -3,7 +3,7 @@
 
 import { DeferredTextarea } from "@/components/deferred-textarea";
 // DeferredTextarea under a deliberately slow, impure owner (the Images page in WebKitGTK). No backend.
-/* eslint-disable react-hooks/purity, react-hooks/immutability, react-refresh/only-export-components */
+/* eslint-disable react-hooks/purity, react-hooks/immutability */
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./src/index.css";

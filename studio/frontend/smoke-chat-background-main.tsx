@@ -51,7 +51,7 @@ function App() {
           <button onClick={() => { setOtherPage(v => !v); }}>Toggle page</button>
           <button
             onClick={() => {
-              resetChatBackground().catch((error) => {
+              resetChatBackground().catch((error: unknown) => {
                 throw error;
               });
             }}

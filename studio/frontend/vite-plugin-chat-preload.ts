@@ -79,7 +79,12 @@ export function chatPagePreload(): Plugin {
       base = config.base;
     },
     generateBundle(_options, bundle) {
-      const html: (typeof bundle)[string] | undefined = bundle["index.html"];
+      const html: (typeof bundle)[string] | undefined = Object.hasOwn(
+        bundle,
+        "index.html",
+      )
+        ? bundle["index.html"]
+        : undefined;
       if (html?.type !== "asset") {
         return;
       }

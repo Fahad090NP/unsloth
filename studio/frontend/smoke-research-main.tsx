@@ -150,7 +150,12 @@ function Harness(): ReactElement {
       },
       state(): { activities: number; status: string | undefined } {
         const sessions = useResearchRunStore.getState().sessions;
-        const session: (typeof sessions)[string] | undefined = sessions[RUN_ID];
+        const session: (typeof sessions)[string] | undefined = Object.hasOwn(
+          sessions,
+          RUN_ID,
+        )
+          ? sessions[RUN_ID]
+          : undefined;
         return {
           activities: session?.activities.length ?? 0,
           status: session?.run.status,

@@ -377,7 +377,7 @@ function FlickerApi(): null {
         };
       },
       computedFor(index: number): Record<string, string> {
-        const block: HTMLElement | undefined = codeBlocks()[index];
+        const block: HTMLElement | undefined = codeBlocks().at(index);
         if (!block) return {};
         const style = getComputedStyle(block);
         return {

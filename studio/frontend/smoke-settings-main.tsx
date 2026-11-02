@@ -148,7 +148,7 @@ function render(): void {
 
 const localeInitialization = initializeLocale();
 if (typeof localeInitialization !== "string") {
-  localeInitialization.then(render).catch((error) => {
+  localeInitialization.then(render).catch((error: unknown) => {
     throw error;
   });
 } else {

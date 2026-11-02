@@ -438,8 +438,8 @@ function partChars(part: Part): number {
   const anyPart = part as Record<string, unknown>;
   const text = anyPart.text as string | null | undefined;
   const image = anyPart.image as string | null | undefined;
-  if (anyPart.type === "text") return String(text ?? "").length;
-  if (anyPart.type === "image") return String(image ?? "").length;
+  if (anyPart.type === "text") return (text ?? "").length;
+  if (anyPart.type === "image") return (image ?? "").length;
   if (anyPart.type === "tool-call") {
     return (
       JSON.stringify(anyPart.args ?? {}).length +

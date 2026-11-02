@@ -25,7 +25,7 @@ import "./src/index.css";
 setApiBase(Number(location.port));
 const localeInitialization = initializeLocale();
 if (typeof localeInitialization !== "string") {
-  localeInitialization.catch((error) => {
+  localeInitialization.catch((error: unknown) => {
     throw error;
   });
 }

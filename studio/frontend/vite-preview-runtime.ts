@@ -240,7 +240,7 @@ async function bundleOne(
       minify: true,
       comments: { legal: false },
     });
-    const chunk: (typeof output)[number] | undefined = output[0];
+    const chunk: (typeof output)[number] | undefined = output.at(0);
     if (output.length !== 1 || chunk?.type !== "chunk") {
       throw new Error(`preview runtime ${spec.name}: expected one chunk`);
     }

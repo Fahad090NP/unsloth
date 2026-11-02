@@ -245,19 +245,6 @@ export default defineConfig([
     },
   },
   {
-    // Test harnesses, build tooling and boot scripts report diagnostics to the
-    // terminal by design.
-    files: [
-      "tests/**/*.{ts,tsx}",
-      "scripts/**/*.{ts,tsx,js,mjs,cjs}",
-      "public/**/*.{js,mjs}",
-      "smoke-*.tsx",
-    ],
-    rules: {
-      "no-console": "off",
-    },
-  },
-  {
     files: ["**/*.{js,jsx,mjs,cjs}"],
     extends: [js.configs.recommended],
     languageOptions: {
@@ -274,6 +261,19 @@ export default defineConfig([
       "no-implicit-coercion": "error",
       "no-var": "error",
       "prefer-const": "error",
+    },
+  },
+  {
+    // Test harnesses, build tooling and boot scripts report diagnostics to the
+    // terminal by design. Keep this after the JavaScript block so it wins.
+    files: [
+      "tests/**/*.{ts,tsx}",
+      "scripts/**/*.{ts,tsx,js,mjs,cjs}",
+      "public/**/*.{js,mjs}",
+      "smoke-*.tsx",
+    ],
+    rules: {
+      "no-console": "off",
     },
   },
   {
