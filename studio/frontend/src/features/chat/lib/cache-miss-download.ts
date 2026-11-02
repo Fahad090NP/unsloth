@@ -41,7 +41,7 @@ export function watchCacheMissDownload(
     return { started: false, watch, percent: null };
   }
   const previous = watch.bytes;
-  if (previous != null && bytes > previous) {
+  if (previous !== null && previous !== undefined && bytes > previous) {
     const expected = reading.expected_bytes ?? 0;
     return {
       started: true,

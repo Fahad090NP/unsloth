@@ -49,7 +49,7 @@ export function writeDocxSymbolParts(
     const xml = strFromU8(bytes);
     if (!xml.includes("sym")) continue;
     const doc = new DOMParser().parseFromString(xml, "application/xml");
-    const w = doc.documentElement?.namespaceURI ?? "";
+    const w = doc.documentElement.namespaceURI ?? "";
     if (!WORDPROCESSINGML_NAMESPACES.has(w) || doc.getElementsByTagName("parsererror").length) continue;
     const symbols = Array.from(doc.getElementsByTagNameNS(w, "sym"));
     for (const symbol of symbols) {

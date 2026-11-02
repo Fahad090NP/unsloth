@@ -27,10 +27,14 @@ export function llamaServerLoadFields(
     reasoning_budget_message: llamaServer
       ? (settings.reasoningBudgetMessage ?? "")
       : "",
-    ...(target.isGguf && settings.nBatch != null
+    ...(target.isGguf &&
+    settings.nBatch !== null &&
+    settings.nBatch !== undefined
       ? { n_batch: settings.nBatch }
       : {}),
-    ...(target.isGguf && settings.nUbatch != null
+    ...(target.isGguf &&
+    settings.nUbatch !== null &&
+    settings.nUbatch !== undefined
       ? { n_ubatch: settings.nUbatch }
       : {}),
     ...(llamaServer ? serverTuningLoadPayload(settings) : {}),

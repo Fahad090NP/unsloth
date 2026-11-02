@@ -66,14 +66,16 @@ export function buildResearchInferenceRequest(input: {
           ...(typeof input.external.supportsReasoningOff === "boolean"
             ? { supportsReasoningOff: input.external.supportsReasoningOff }
             : {}),
-          ...(input.external.maxOutputTokens != null &&
+          ...(input.external.maxOutputTokens !== null &&
+          input.external.maxOutputTokens !== undefined &&
           Number.isFinite(input.external.maxOutputTokens) &&
           input.external.maxOutputTokens > 0
             ? {
                 maxOutputTokens: Math.floor(input.external.maxOutputTokens),
                 maxOutputTokensFromSavedCap: input.external.maxOutputTokensFromSavedCap,
                 // The ceiling includes the override, so it cannot say whether the model stops there.
-                ...(input.external.maxOutputTokensPublished != null &&
+                ...(input.external.maxOutputTokensPublished !== null &&
+                input.external.maxOutputTokensPublished !== undefined &&
                 Number.isFinite(input.external.maxOutputTokensPublished) &&
                 input.external.maxOutputTokensPublished > 0
                   ? {

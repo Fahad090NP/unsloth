@@ -139,7 +139,7 @@ export const useChatNavigationStore = create<ChatNavigationState>(
         const unreadRowIds = { ...state.unreadRowIds };
         for (const id of threadIds) {
           unreadThreadIds.delete(id);
-          delete unreadRowIds[id];
+          Reflect.deleteProperty(unreadRowIds, id);
         }
         return { unreadThreadIds, unreadRowIds };
       }); },

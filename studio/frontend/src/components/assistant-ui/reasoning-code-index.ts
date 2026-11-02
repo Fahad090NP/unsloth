@@ -144,8 +144,9 @@ export class ReasoningCodeIndex {
     this.context.source = this.committedSource + pendingSource;
     if (cursor > end)
       this.context.source = this.context.source.replace(/\n$/, "");
-    if (result.length && !result.at(-1)!.last)
-      result[result.length - 1] = { ...result.at(-1)!, last: true };
+    const lastResult = result.at(-1);
+    if (result.length && lastResult && !lastResult.last)
+      result[result.length - 1] = { ...lastResult, last: true };
     this.result = result;
     return result;
   }

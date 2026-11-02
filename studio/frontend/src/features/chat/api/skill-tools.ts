@@ -29,7 +29,7 @@ export function skillToolNames(
   // do not mask code or quotes because frontend Markdown guesses can hide backend-literal mentions.
   const mentioned = userTexts.some((text) =>
     Array.from(text.matchAll(SKILL_MENTION_PATTERN)).some((match) =>
-      usable.has(match[2] ?? ""),
+      usable.has(match[2]),
     ),
   );
   return mentioned ? ["read_skill"] : [];

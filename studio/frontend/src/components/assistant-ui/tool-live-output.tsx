@@ -3,8 +3,11 @@
 
 "use client";
 
-import { useChatRuntimeStore } from "@/features/chat/stores/chat-runtime-store";
-import { useToolOutputFor, useToolPaneScope } from "@/features/chat";
+import {
+  useChatRuntimeStore,
+  useToolOutputFor,
+  useToolPaneScope,
+} from "@/features/chat";
 import { stripAnsi, tailToolOutput } from "@/lib/strip-ansi";
 import { useEffect, useMemo, useRef } from "react";
 

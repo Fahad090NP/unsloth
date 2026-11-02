@@ -7,7 +7,7 @@ import { resolveQwenThinkingParams } from "./qwen-sampling-table";
 
 export function applyQwenThinkingParams(thinkingOn: boolean): void {
   const store = useChatRuntimeStore.getState();
-  const checkpoint = store.params.checkpoint?.toLowerCase() ?? "";
+  const checkpoint = store.params.checkpoint.toLowerCase();
   const params = resolveQwenThinkingParams(checkpoint, thinkingOn);
   if (params === null || store.activePresetSource !== "builtin-default") {
     return;

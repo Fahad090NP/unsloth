@@ -55,10 +55,12 @@ export function rejectedSettingKeys(detail: unknown): string[] {
   if (!Array.isArray(detail)) return [];
   const keys = new Set<string>();
   for (const entry of detail) {
-    if (entry == null || typeof entry !== "object") continue;
+    if (entry === null || entry === undefined || typeof entry !== "object") {
+      continue;
+    }
     const loc = (entry as { loc?: unknown }).loc;
     if (!Array.isArray(loc) || loc.length === 0) continue;
-    const field = loc[0];
+    const field: unknown = loc[0];
     if (typeof field === "string" && field.length > 0) keys.add(field);
   }
   return [...keys];

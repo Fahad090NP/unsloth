@@ -9,7 +9,7 @@ export function mentionTokenAt(text: string, caret: number): MentionToken | null
   const match = /(?:^|\s)@([a-z0-9-]*)$/i.exec(prefix);
   if (!match) return null;
   const tail = /^[a-z0-9-]*/i.exec(text.slice(caret))?.[0] ?? "";
-  return { start: prefix.lastIndexOf("@"), end: caret + tail.length, query: match[1] ?? "" };
+  return { start: prefix.lastIndexOf("@"), end: caret + tail.length, query: match[1] };
 }
 
 export function replaceMentionToken(

@@ -30,7 +30,9 @@ export function createRuntimeLoader(manifest: PreviewRuntimeManifest, fetchBytes
   };
 
   const fetchFile = async (name: string): Promise<string> => {
-    const file = manifest.files[name];
+    const file = manifest.files[name] as
+      | (typeof manifest.files)[string]
+      | undefined;
     if (!file) throw new Error(`Unknown preview library "${name}"`);
     const bytes = await fetchBytes(file.url);
     // A stale or wrong path can come back as the app's index.html; never inline that as a script.

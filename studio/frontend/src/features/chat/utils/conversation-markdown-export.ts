@@ -47,7 +47,7 @@ export function createConversationMarkdownBuilder<
     }
     const normalizedMessages: ConversationMarkdownMessage[] = messages.map(
       (message) => ({
-        role: String(message.role ?? ""),
+        role: typeof message.role === "string" ? message.role : "",
         // Strip renderer tokens here, not in the exporter, so the copy chord strips them too.
         content: stripSearchImageTokens(renderMessage(message)),
       }),

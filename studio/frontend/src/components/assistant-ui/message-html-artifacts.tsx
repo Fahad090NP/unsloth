@@ -14,11 +14,12 @@ import {
   memoOnArray,
   partsHaveRenderableRenderHtmlTool,
 } from "@/components/assistant-ui/message-derived";
-import { ArtifactCard, useChatRuntimeStore } from "@/features/chat";
 import {
+  ArtifactCard,
   extractHtmlFences,
   extractReactFences,
-} from "@/features/chat/artifacts/html-fences";
+  useChatRuntimeStore,
+} from "@/features/chat";
 import { useAuiState } from "@assistant-ui/react";
 import { type FC, useMemo } from "react";
 

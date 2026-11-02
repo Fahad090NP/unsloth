@@ -22,10 +22,12 @@ export function applyThreadWidthSteps(
 }
 
 export function observeThreadWidthSteps(root: HTMLElement): () => void {
-  if (typeof ResizeObserver === "undefined") return () => {};
+  if (typeof ResizeObserver === "undefined") {
+    return () => undefined;
+  }
   const observer = new ResizeObserver((entries) => {
-    const entry = entries[entries.length - 1];
-    if (!entry) return;
+    const entry = entries.at(-1);
+    if (entry === undefined) return;
     const remPx =
       Number.parseFloat(getComputedStyle(document.documentElement).fontSize) ||
       16;

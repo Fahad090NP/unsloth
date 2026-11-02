@@ -71,6 +71,12 @@ export function resolveStagedDiffusionClassification(
     | undefined,
 ): boolean | undefined {
   if (knownDiffusion) return true;
-  if (staged == null || staged.diffusionUnknown) return undefined;
+  if (
+    staged === null ||
+    staged === undefined ||
+    staged.diffusionUnknown
+  ) {
+    return undefined;
+  }
   return staged.isDiffusion;
 }

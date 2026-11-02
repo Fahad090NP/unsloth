@@ -35,7 +35,7 @@ export function planUserPromptQueueStop(
   }
   const activeIndex = runIndex;
   const activeItem = items[activeIndex];
-  const dropActive = Boolean(activeItem?.dispatched);
+  const dropActive = activeItem.dispatched;
   const retainedItemIndexes = items.flatMap((_, index) =>
     dropActive && index === activeIndex ? [] : [index],
   );

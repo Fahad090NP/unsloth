@@ -125,7 +125,7 @@ async function mcpRequest<T>(
   });
   // 204 No Content (DELETE) has no body — calling .json() would throw.
   if (response.status === 204) return undefined as T;
-  const json = await response.json().catch(() => null);
+  const json: unknown = await response.json().catch(() => null);
   if (!response.ok) throw new Error(parseErrorText(response.status, json));
   return json as T;
 }

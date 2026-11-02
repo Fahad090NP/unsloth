@@ -35,10 +35,11 @@ export function planLocalPromptQueueStop(
   runIndex: number,
 ): LocalPromptQueueStopPlan {
   const activeIndex = Math.max(runIndex, 0);
-  const activeItem = items[activeIndex];
-  const cancelActiveItem = Boolean(
-    activeItem?.usesLocalModel && activeItem.dispatched,
-  );
+  const activeItem = items[activeIndex] as
+    | PromptQueueModelStopItem
+    | undefined;
+  const cancelActiveItem =
+    activeItem?.usesLocalModel === true && activeItem.dispatched;
   const retainedItemIndexes = items.flatMap((_, index) =>
     cancelActiveItem && index === activeIndex ? [] : [index],
   );

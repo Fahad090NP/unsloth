@@ -34,7 +34,9 @@ function isTombstone(value: unknown): value is Tombstone {
 function loadTombstones(): Tombstone[] {
   if (!canUseStorage()) return [];
   try {
-    const raw = JSON.parse(localStorage.getItem(TOMBSTONES_KEY) ?? "[]");
+    const raw: unknown = JSON.parse(
+      localStorage.getItem(TOMBSTONES_KEY) ?? "[]",
+    );
     if (!Array.isArray(raw)) return [];
     const now = nowMs();
     const out: Tombstone[] = [];

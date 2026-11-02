@@ -67,7 +67,7 @@ export const AudioPlayer: FC<AudioPlayerProps> = ({
   };
 
   const handleDownload = () => {
-    void downloadUrl(src, filename).catch((error) => {
+    void downloadUrl(src, filename).catch((error: unknown) => {
       if (!isDownloadCancelled(error)) {
         toast.error("Could not save audio.");
       }

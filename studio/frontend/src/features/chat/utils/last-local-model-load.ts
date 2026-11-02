@@ -130,7 +130,7 @@ export async function readLastLocalModelLoad(
           backendLoadedAt -= data.server_now - Date.now();
         }
         if (
-          legacy &&
+          legacy?.loadedAt !== undefined &&
           legacy.loadedAt !== null &&
           (backendLoadedAt === null
             ? legacy.pendingSync

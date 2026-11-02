@@ -48,7 +48,12 @@ export function CopyBtn({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <IconActionButton label={copied ? "Copied" : "Copy to clipboard"} onClick={copy}>
+    <IconActionButton
+      label={copied ? "Copied" : "Copy to clipboard"}
+      onClick={() => {
+        void copy();
+      }}
+    >
       {copied ? (
         <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-3" />
       ) : (
@@ -61,7 +66,7 @@ export function CopyBtn({ text }: { text: string }) {
 function DownloadBtn({ code, name }: { code: string; name: string }) {
   // A bare blob anchor is silently dropped by WebView2; the shared boundary gives Tauri a save chooser.
   const download = useCallback(() => {
-    void downloadFile(code, name, "text/plain;charset=utf-8").catch((error) => {
+    void downloadFile(code, name, "text/plain;charset=utf-8").catch((error: unknown) => {
       if (!isDownloadCancelled(error)) {
         toast.error("Could not save file.");
       }

@@ -119,7 +119,7 @@ export function createChatPinsApi(sessionSignal: AbortSignal) {
     );
     return {
       applied: result.applied,
-      pinnedIds: validatePinnedIds(result.settings?.pinnedChatIds),
+      pinnedIds: validatePinnedIds(result.settings.pinnedChatIds),
     };
   }
 

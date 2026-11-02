@@ -56,7 +56,10 @@ function messageText(content: unknown): string {
   return content
     .map((part) =>
       part && typeof part === "object" && (part as { type?: unknown }).type === "text"
-        ? String((part as { text?: unknown }).text ?? "")
+        ? (() => {
+            const text = (part as { text?: unknown }).text;
+            return typeof text === "string" ? text : "";
+          })()
         : "",
     )
     .join(" ");

@@ -175,7 +175,7 @@ interface FinalizeAppWindowLayoutOptions<Monitor extends WorkAreaMonitor> {
 export async function finalizeAppWindowLayout<Monitor extends WorkAreaMonitor>({
   restored,
   nativeRestored = false,
-  measured,
+  measured: initialMeasured,
   show,
   waitForSettled,
   measure,
@@ -183,6 +183,7 @@ export async function finalizeAppWindowLayout<Monitor extends WorkAreaMonitor>({
   enforceBounds,
   isCurrent,
 }: FinalizeAppWindowLayoutOptions<Monitor>): Promise<void> {
+  let measured = initialMeasured;
   if (!isCurrent()) return;
   // restoreState returns before native resize lands; showing now flashes the setup size.
   if (restored && !nativeRestored) {
@@ -240,7 +241,7 @@ export function createMinimumSizeApplier(
   };
 
   const flush = async () => {
-    if (!pending || !(await win.isRestored()) || !pending) return;
+    if (!pending || !(await win.isRestored())) return;
     const minimum = pending;
     pending = null;
     stopListening();

@@ -65,9 +65,6 @@ export function toolRunIsExempt(
 ): boolean {
   for (let i = start; i <= end && i < parts.length; i += 1) {
     const part = parts[i];
-    if (!part) {
-      continue;
-    }
     if (holdsOwnOutput(part) || awaitsConfirmation(part, toolConfirmations)) {
       return true;
     }

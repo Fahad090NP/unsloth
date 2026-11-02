@@ -20,7 +20,7 @@ const keeper = createAutoContinueLeaseKeeper({
     isRunning: (threadId) => {
       const state = useChatRuntimeStore.getState();
       return (
-        Boolean(state.runningByThreadId[threadId]) &&
+        state.runningByThreadId[threadId] === true &&
         !isImageGateRunOnly(state.runOwnerByThreadId[threadId])
       );
     },
@@ -41,7 +41,7 @@ function tick(): void {
 /** The adapter wrapper's per-thread failure event is the only way to tell failed from slow. */
 function onRunFailed(event: Event): void {
   const threadId = (event as CustomEvent<PromptQueueRunFailedEventDetail>)
-    .detail?.threadId;
+    .detail.threadId;
   if (!threadId) {
     return;
   }

@@ -45,6 +45,8 @@ export function defaultOpenFor(
       return true;
     case "collapsed":
       return false;
+    case "auto":
+      return active;
     default:
       return active;
   }

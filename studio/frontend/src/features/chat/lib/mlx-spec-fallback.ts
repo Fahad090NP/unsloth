@@ -16,7 +16,7 @@ export function mlxSpecFallbackMessage(
   drafterKind: string | null,
 ): string | null {
   const outcome =
-    drafterKind == null
+    drafterKind === null
       ? "so it is running without speculative decoding"
       : drafterKind === "ngram"
         ? "so it is drafting with n-gram copies only"

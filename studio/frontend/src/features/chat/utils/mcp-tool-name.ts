@@ -32,7 +32,7 @@ export function formatMcpToolName(
 ): string | null {
   const parts = splitMcpToolName(toolName);
   return parts
-    ? `${mcpServer || parts.serverId} · ${mcpTool || parts.tool}`
+    ? `${mcpServer ?? parts.serverId} · ${mcpTool ?? parts.tool}`
     : null;
 }
 

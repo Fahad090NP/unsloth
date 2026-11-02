@@ -34,7 +34,10 @@ function PassageItem({
   // Code and config read by their indentation and alignment, which a proportional font loses.
   const code = attachmentFileKind(citation.filename, undefined) === "code";
   const [expanded, setExpanded] = useState(false);
-  const location = citation.page != null ? `p.${citation.page}` : null;
+  const location =
+    citation.page !== null && citation.page !== undefined
+      ? `p.${citation.page}`
+      : null;
 
   return (
     <li

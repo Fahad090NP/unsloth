@@ -109,7 +109,8 @@ function parseErrorText(status: number, body: unknown): string {
     body &&
     typeof body === "object" &&
     "detail" in body &&
-    body.detail != null
+    body.detail !== null &&
+    body.detail !== undefined
   ) {
     return `Request failed (${status}): ${JSON.stringify(body.detail)}`;
   }
@@ -125,7 +126,7 @@ function parseErrorText(status: number, body: unknown): string {
 }
 
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
-  const body = await response.json().catch((error: unknown) => {
+  const body: unknown = await response.json().catch((error: unknown) => {
     // A 200 cut off or aborted mid-body has no answer; invalid JSON (SyntaxError) still returns null.
     if (response.ok && (error instanceof TypeError || isAbortOrTimeout(error))) {
       throw asBodyTransportFailure(error);

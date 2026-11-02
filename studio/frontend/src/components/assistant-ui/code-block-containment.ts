@@ -13,7 +13,11 @@ import { engineFindsSkippedContent } from "./math-block-containment";
 
 const readBuildFlag = (): string => {
   try {
-    return import.meta.env.VITE_UNSLOTH_CODE_BLOCK_CONTAINMENT ?? "";
+    return (
+      (import.meta.env.VITE_UNSLOTH_CODE_BLOCK_CONTAINMENT as
+        | string
+        | undefined) ?? ""
+    );
   } catch {
     return "";
   }

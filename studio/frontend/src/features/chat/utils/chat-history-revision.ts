@@ -11,7 +11,7 @@ let revisionWriteTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** Coalesced chunk saves must not count as structural, or listeners starve all generation. */
 export function isCoalescedHistoryEvent(event: Event): boolean {
-  return (event as CustomEvent<{ coalesce?: boolean }>).detail?.coalesce === true;
+  return (event as CustomEvent<{ coalesce?: boolean }>).detail.coalesce === true;
 }
 
 /** Debounces `run` on history events: chunk saves wait `streamMs` for a lull, a structural change

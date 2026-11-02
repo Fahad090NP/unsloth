@@ -99,6 +99,9 @@ export function loadFallbackNotice(
   return {
     title: `${baseTitle}${suffix}`,
     description: parts.length > 0 ? parts.join(" ") : undefined,
-    degraded: Boolean(cpuFallbackReason || offload || mmprojFallbackReason),
+    degraded:
+      Boolean(cpuFallbackReason) ||
+      Boolean(offload) ||
+      Boolean(mmprojFallbackReason),
   };
 }

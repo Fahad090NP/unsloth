@@ -79,13 +79,14 @@ export const rehypeAutoDirection: Plugin<[], Root> =
           wrapTightItemText(node);
         }
         if (node.type === "element" && node.properties.dir === undefined) {
-          if (TEXT_BLOCKS.has(node.tagName)) {
-            node.properties.dir = "auto";
-          } else if (CONTAINERS.has(node.tagName)) {
+          const element = node;
+          if (TEXT_BLOCKS.has(element.tagName)) {
+            element.properties.dir = "auto";
+          } else if (CONTAINERS.has(element.tagName)) {
             // Explicit ltr too, or an English list nested in an RTL one inherits rtl.
-            const letter = firstLetter(node);
+            const letter = firstLetter(element);
             if (letter) {
-              node.properties.dir = RTL_LETTER.test(letter) ? "rtl" : "ltr";
+              element.properties.dir = RTL_LETTER.test(letter) ? "rtl" : "ltr";
             }
           }
         }

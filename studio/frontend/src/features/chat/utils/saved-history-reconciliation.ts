@@ -51,7 +51,7 @@ export function shouldReconcileOrdinaryStoredAssistant(options: {
   if (editingMessageId === stored.id) {
     return false;
   }
-  if (runtime.status?.type === "running") {
+  if (runtime.status.type === "running") {
     return false;
   }
 

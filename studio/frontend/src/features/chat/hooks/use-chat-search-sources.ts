@@ -63,7 +63,7 @@ export function useChatSearchSources(open: boolean): ChatSearchSources {
             publish(state.items);
           }
         });
-        void useLibraryStore.getState().refresh().catch(() => {});
+        void useLibraryStore.getState().refresh().catch(() => undefined);
       })
       .catch(() => {
         if (!cancelled) setSources((prev) => ({ ...prev, ready: true }));

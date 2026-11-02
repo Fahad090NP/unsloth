@@ -106,7 +106,7 @@ function useClickPin(enabled: boolean) {
     if (!pinned) return;
     const release = (event: Event) => {
       const target = event.target as Element | null;
-      if (triggerRef.current?.contains(target) || target?.closest?.('[data-slot="tooltip-content"]')) {
+      if (triggerRef.current?.contains(target) || target?.closest('[data-slot="tooltip-content"]')) {
         return;
       }
       setPinned(false);

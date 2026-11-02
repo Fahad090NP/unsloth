@@ -36,11 +36,12 @@ export const rehypeSandboxImages: Plugin<[SandboxScope], Root> =
 		return (tree) => {
 			function walk(node: Root | RootContent): void {
 				if (node.type === "element" && node.tagName === "img") {
-					const src = node.properties.src;
+					const image = node;
+					const src = image.properties.src;
 					if (typeof src === "string") {
 						// Check URLs before harden changes relative paths or removes origins.
-						const safe = safeMarkdownUrl(src, "src", node);
-						node.properties.src =
+						const safe = safeMarkdownUrl(src, "src", image);
+						image.properties.src =
 							safe && !unsafeImagePath(safe)
 								? (markdownSandboxImageSrc(safe, scope) ?? safe)
 								: undefined;
@@ -48,10 +49,11 @@ export const rehypeSandboxImages: Plugin<[SandboxScope], Root> =
 				}
 				// File links too, which harden would block as relative paths; the link's menu opens them.
 				if (node.type === "element" && node.tagName === "a") {
-					const href = node.properties.href;
+					const link = node;
+					const href = link.properties.href;
 					if (typeof href === "string") {
 						const resolved = markdownSandboxLinkHref(href, scope);
-						if (resolved) node.properties.href = resolved;
+						if (resolved) link.properties.href = resolved;
 					}
 				}
 				if ("children" in node) node.children.forEach(walk);

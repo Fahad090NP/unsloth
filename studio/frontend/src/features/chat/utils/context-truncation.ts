@@ -30,7 +30,7 @@ export function compactionBoundary(
   // Fallback only for turns saved before boundary_messages existed; elsewhere it is a per-refit total.
   return (
     truncation.boundary_messages ??
-    (truncation.fits ? (truncation.dropped_messages ?? 0) : 0)
+    (truncation.fits ? truncation.dropped_messages : 0)
   );
 }
 
@@ -86,7 +86,9 @@ export function appendCompactionMarker(
 }
 
 function nonNegativeInt(value: number | undefined): number {
-  return Number.isFinite(value) ? Math.max(0, Math.trunc(value!)) : 0;
+  return value !== undefined && Number.isFinite(value)
+    ? Math.max(0, Math.trunc(value))
+    : 0;
 }
 
 export function latestTurnOwnTokens(

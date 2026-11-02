@@ -107,7 +107,7 @@ export function keepUnchangedLines(
   return {
     ...next,
     tokens: next.tokens.map((line, index) => {
-      const old = previous.tokens[index];
+      const old = previous.tokens[index] as TokenLine | undefined;
       return old !== undefined && sameLine(old, line) ? old : line;
     }),
   };

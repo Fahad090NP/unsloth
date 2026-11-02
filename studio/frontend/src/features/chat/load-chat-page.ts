@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-type ChatPageModule = typeof import("./chat-page");
+import type * as ChatPageModuleNamespace from "./chat-page";
+
+type ChatPageModule = typeof ChatPageModuleNamespace;
 
 // One shared promise so preload, idle prefetch and mount share a single fetch.
 let chatPageModule: Promise<ChatPageModule> | null = null;
 let loadedModule: ChatPageModule | null = null;
 
 export function loadChatPage(): Promise<ChatPageModule> {
-  if (!chatPageModule) {
+  if (chatPageModule === null) {
     chatPageModule = import("./chat-page").then(
       (module) => {
         loadedModule = module;

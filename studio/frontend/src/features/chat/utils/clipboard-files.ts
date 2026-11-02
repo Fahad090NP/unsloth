@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
+import type { Image as ClipboardImage } from "@tauri-apps/api/image";
 import { isTauri } from "@/lib/api-base";
 import { MAX_AUDIO_SIZE } from "@/lib/audio-utils";
 import { decodeBase64Bytes } from "@/lib/base64-bytes";
@@ -103,9 +104,7 @@ async function readLinuxClipboardImage(): Promise<File | null> {
 }
 
 async function readNativeClipboardImage(): Promise<File | null> {
-  let image: Awaited<ReturnType<
-    typeof import("@tauri-apps/plugin-clipboard-manager").readImage
-  >> | null = null;
+  let image: ClipboardImage | null = null;
 
   try {
     if (isLinuxDesktop()) return await readLinuxClipboardImage();

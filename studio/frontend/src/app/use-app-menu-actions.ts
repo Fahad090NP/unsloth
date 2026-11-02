@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { useKeyboardShortcutsStore } from "@/features/settings";
-import { isMacPlatform } from "@/features/settings/lib/keyboard-shortcuts";
+import { isMacPlatform, useKeyboardShortcutsStore } from "@/features/settings";
 import { isTauri } from "@/lib/api-base";
 import { useEffect, useMemo, useRef } from "react";
 import { type AppMenuAction, menuAccelerators } from "./app-menu-chords";
@@ -44,7 +43,10 @@ export function useAppMenuActions(
 
   useEffect(() => {
     if (!hasAppMenus) return;
-    sync(enabled ? enabled.split(",") : [], JSON.parse(accelerators));
+    sync(
+      enabled ? enabled.split(",") : [],
+      JSON.parse(accelerators) as Partial<Record<AppMenuAction, string | null>>,
+    );
   }, [enabled, accelerators]);
 
   useEffect(() => {

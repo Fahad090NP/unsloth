@@ -36,7 +36,9 @@ export function useToolOutputFor(
   toolCallId: string,
 ): string {
   const unresolvedScope = useUnresolvedToolPaneScope();
-  const own = map[toolOutputKey(paneScope, toolCallId)];
+  const own = map[toolOutputKey(paneScope, toolCallId)] as
+    | string
+    | undefined;
   // Only a running thread may fall back (local ids repeat). Select the string, not isRunning,
   // so a run starting or ending does not re-render every tool card in the history.
   const fallback = useAuiState(({ thread }) =>

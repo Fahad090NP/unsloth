@@ -21,7 +21,7 @@ export function attachWheelHoverSuppression(viewport: HTMLElement): () => void {
   };
   const onBoundary = (event: MouseEvent) => {
     const target = event.target as Element | null;
-    if (!target?.matches?.(MESSAGE)) return;
+    if (!target?.matches(MESSAGE)) return;
     if (timer !== undefined && event.buttons === 0) {
       event.stopPropagation();
     } else if (event.type === "mouseenter") {

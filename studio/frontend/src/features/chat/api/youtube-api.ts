@@ -28,7 +28,7 @@ export async function fetchYoutubeTranscript(
     body: JSON.stringify({ url, languages }),
     signal,
   });
-  const body = await response.json().catch(() => null);
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const detail =
       body && typeof body === "object"

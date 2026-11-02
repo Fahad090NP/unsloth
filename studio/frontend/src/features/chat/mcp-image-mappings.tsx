@@ -175,7 +175,7 @@ export function McpImageMappings({
                 value=""
                 disabled={disabled}
                 onValueChange={(index) => {
-                  const option = addable[Number(index)];
+                  const option = addable.at(Number(index));
                   if (option) onChange(withImageField(value, option));
                 }}
               >

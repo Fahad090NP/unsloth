@@ -129,14 +129,15 @@ export function loadedPlacementFrom(response: {
   if (response.is_gguf === false) return null;
   const manualExperts =
     response.gpu_memory_mode === "manual" ? count(response.n_cpu_moe) : null;
+  const expertCache = count(response.expert_cache_mib);
   const placement: LoadedPlacement = {
     offloaded: count(response.offloaded_layers),
     total: count(response.offload_total_layers),
-    overflowLayers:
-      count(response.overflow_layers) ?? (manualExperts ? manualExperts : null),
+    overflowLayers: count(response.overflow_layers) ?? manualExperts,
     gpuWeightsMib: count(response.gpu_weights_mib),
     hostWeightsMib: count(response.host_weights_mib),
-    expertCacheMib: count(response.expert_cache_mib) || null,
+    expertCacheMib:
+      expertCache === null || expertCache === 0 ? null : expertCache,
   };
   return placement.total === null &&
     placement.gpuWeightsMib === null &&

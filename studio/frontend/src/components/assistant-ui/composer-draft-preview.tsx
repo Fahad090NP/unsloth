@@ -16,7 +16,7 @@ const components: NonNullable<ComponentProps<typeof Streamdown>["components"]> =
       <span className="text-primary underline">{children}</span>
     ),
     img: ({ alt }) => (
-      <span className="text-muted-foreground">[{alt || "image"}]</span>
+      <span className="text-muted-foreground">[{alt ?? "image"}]</span>
     ),
     table: StaticMarkdownTable,
   };

@@ -102,7 +102,7 @@ function contextLimitAdvice(
   // An unbounded (or unjudged MLX) cache is not a limit: nothing rotates or stops.
   if (
     enforced === false ||
-    (isMlx && enforced == null) ||
+    (isMlx && (enforced === null || enforced === undefined)) ||
     (unboundedWhenBatched && (slots ?? 1) > 1)
   ) {
     return "unenforced-limit";

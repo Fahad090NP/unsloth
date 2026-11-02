@@ -54,9 +54,9 @@ export function getCodeFence(blockContent: string): CodeFence | null {
   }
 
   return {
-    language: match[1]?.trim() || null,
+    language: match[1].trim() || null,
     // Absent only for a fence that closes on the line after it opens.
-    source: match[2] ?? "",
+    source: match[2],
   };
 }
 

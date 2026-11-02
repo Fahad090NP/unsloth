@@ -195,7 +195,7 @@ export function sandboxFileForHref(href: string): string | null {
   if (!file || !ext) return null;
   const [first, ...rest] = file.split("/");
   if (rest.length === 0) return LINK_FILE_EXTS.has(ext) ? file : null;
-  return HOST_SEGMENT_RE.test(first ?? "") ? null : file;
+  return HOST_SEGMENT_RE.test(first) ? null : file;
 }
 
 function sandboxPathForSrc(src: string): string | null {

@@ -16,7 +16,11 @@ import {
 
 const readBuildFlag = (): string => {
   try {
-    return import.meta.env.VITE_UNSLOTH_MATH_BLOCK_CONTAINMENT ?? "";
+    return (
+      (import.meta.env.VITE_UNSLOTH_MATH_BLOCK_CONTAINMENT as
+        | string
+        | undefined) ?? ""
+    );
   } catch {
     return "";
   }

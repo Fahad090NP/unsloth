@@ -18,7 +18,7 @@ export function createRetryableSharedRead<T>(
         }
         return value;
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (shared === current) {
           shared = null;
         }

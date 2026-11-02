@@ -37,7 +37,7 @@ export function useMessageMemo<T>(
     }
     const next = select(message);
     const value =
-      last !== null && equal !== undefined && equal(last.value, next)
+      last !== null && equal?.(last.value, next) === true
         ? last.value
         : next;
     memo.current = { message, deps, value };

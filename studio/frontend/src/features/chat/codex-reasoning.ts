@@ -103,7 +103,7 @@ export function codexReasoningForToolCalls(
 ): unknown[] | undefined {
   if (!ledger) return undefined;
   for (const id of toolCallIds) {
-    const items = ledger.byToolCall[id];
+    const items = ledger.byToolCall[id] as unknown[] | undefined;
     if (items) return items;
   }
   return undefined;

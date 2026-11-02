@@ -14,7 +14,7 @@ export interface ProjectSourceThread {
 
 function modelLabel(thread: ProjectSourceThread): string | undefined {
   const label = thread.modelId?.split("/").pop()?.split(":")[0]?.trim();
-  return label || undefined;
+  return label === "" ? undefined : label;
 }
 
 /** listStoredChatThreads sorts by updatedAt, so name by modelType, not index. */

@@ -51,12 +51,11 @@ export function removeCustomSectionWithUndo(section: SidebarCustomSection): () =
         sectionByChatId,
         sectionByProjectId,
         sectionByPageId,
-        hiddenSections: hidden
-          ? [...now.hiddenSections, section.id]
-          : now.hiddenSections,
-        manualOrder: order
-          ? { ...now.manualOrder, [customSectionScope(section.id)]: order }
-          : now.manualOrder,
+        hiddenSections: [...now.hiddenSections, section.id],
+        manualOrder: {
+          ...now.manualOrder,
+          [customSectionScope(section.id)]: order,
+        },
       };
     });
   };

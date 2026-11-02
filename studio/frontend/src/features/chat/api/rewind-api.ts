@@ -18,7 +18,7 @@ export async function rewindChatThread(
       body: JSON.stringify(body),
     },
   );
-  const payload = await response.json().catch(() => null);
+  const payload: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(
       formatApiErrorBody(payload) ?? `Request failed (${response.status})`,

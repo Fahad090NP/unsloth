@@ -45,22 +45,29 @@ export function createPinnedChatsJournal(storage: Storage, scope: string) {
       if (raw === null) {
         continue;
       }
-      const value = JSON.parse(raw) as Entry;
-      if (!(value && Number.isFinite(value.order))) {
+      const value: unknown = JSON.parse(raw);
+      if (
+        typeof value !== "object" ||
+        value === null ||
+        !("order" in value) ||
+        typeof value.order !== "number" ||
+        !Number.isFinite(value.order)
+      ) {
         throw new Error("Invalid saved pin change");
       }
-      if (kind === "pending" || value.operation !== undefined) {
-        value.operation = validatePinOperation(value.operation);
+      const entry = value as Entry;
+      if (kind === "pending" || entry.operation !== undefined) {
+        entry.operation = validatePinOperation(entry.operation);
       }
       if (kind === "fallback") {
-        value.baseIds = validatePinnedIds(value.baseIds);
-        if (!value.baseIds) {
+        entry.baseIds = validatePinnedIds(entry.baseIds);
+        if (!entry.baseIds) {
           throw new Error("Invalid saved pin state");
         }
       }
       observed[kind].add(key);
-      lastOrder = Math.max(lastOrder, value.order);
-      result.push([key, value]);
+      lastOrder = Math.max(lastOrder, entry.order);
+      result.push([key, entry]);
     }
     return result.sort(
       ([a, x], [b, y]) => x.order - y.order || a.localeCompare(b),

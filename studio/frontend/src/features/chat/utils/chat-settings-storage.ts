@@ -83,7 +83,12 @@ function canUseStorage(): boolean {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return value != null && typeof value === "object" && !Array.isArray(value);
+  return (
+    value !== null &&
+    value !== undefined &&
+    typeof value === "object" &&
+    !Array.isArray(value)
+  );
 }
 
 function hasKeys(value: object): boolean {
@@ -130,7 +135,7 @@ function loadBool(key: string): boolean | undefined {
 
 function loadInt(key: string, min: number): number | undefined {
   const raw = getStorageItem(key);
-  if (raw == null || raw.trim() === "") return undefined;
+  if (raw === null || raw === undefined || raw.trim() === "") return undefined;
   const value = Number(raw);
   return Number.isInteger(value) && value >= min ? value : undefined;
 }

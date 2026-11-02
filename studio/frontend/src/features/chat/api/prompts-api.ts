@@ -20,7 +20,7 @@ export interface PromptListEntry {
 }
 
 async function parseJsonOrThrow<T>(res: Response): Promise<T> {
-  const body = await res.json().catch(() => null);
+  const body: unknown = await res.json().catch(() => null);
   if (!res.ok) {
     const detail = (body as { detail?: string } | null)?.detail;
     throw new Error(detail ?? `Request failed (${res.status})`);

@@ -55,7 +55,8 @@ export function modelReadsSamplingSeed(
   return (
     activeModel?.isGguf === true ||
     activeModel?.isMlx === true ||
-    (activeModel != null && loadedEngine === "vllm")
+    ((activeModel !== null && activeModel !== undefined) &&
+      loadedEngine === "vllm")
   );
 }
 

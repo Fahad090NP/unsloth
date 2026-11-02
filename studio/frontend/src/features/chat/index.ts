@@ -667,3 +667,115 @@ export { chatLocalModelOptions } from "./local-model-options";
 export { readLastLocalModelLoad } from "./utils/last-local-model-load";
 export { decideAutoRead } from "./utils/auto-read-aloud";
 export { wantsDownloadManagerStaging } from "./utils/model-download-staging";
+
+export {
+  canQueueTextAttachment,
+  normalizeQueuedPrompt,
+  prepareQueuedPromptFiles,
+  queuedPromptHasContent,
+  queuedPromptMessage,
+  snapshotQueuedTextPrompt,
+  type QueuedPrompt,
+} from "./utils/queued-text-attachments";
+export { forkChatThread } from "./api/chat-api";
+export {
+  findLatestUserAudioBase64,
+  resolveProjectId,
+  sentAudioNames,
+  toolResultModelText,
+} from "./api/chat-adapter";
+export {
+  PromptStorageDialog,
+  exportConversationShareGPT,
+  exportConversationRawJsonl,
+  exportConversationMessagesJsonl,
+  exportConversationCsv,
+  exportConversationMarkdown,
+} from "./prompt-storage/prompt-storage-dialog";
+export {
+  listPromptEntries,
+  listPromptLists,
+  type PromptEntry,
+  type PromptListEntry,
+} from "./api/prompts-api";
+export { PromptCountBadge } from "./prompt-storage/prompt-count-badge";
+export {
+  DeepResearchComposerButton,
+  DeepResearchWebsiteAccessDialog,
+} from "./components/deep-research-composer-button";
+export { cancelResearchRun } from "./api/research-api";
+export {
+  ingestResearchUpdate,
+  useResearchRunStore,
+} from "./stores/research-run-store";
+export { researchReplyOwnsRun } from "./utils/research-run-binding";
+export { providerModelSupportsStudioTools } from "./external-providers";
+export { toolStatusKind } from "./utils/tool-status";
+export { replySourceMarkdown } from "./utils/reply-source-markdown";
+export {
+  collectGeminiAnswerReplayParts,
+  collectGeminiThoughtReplayParts,
+  continuationGeminiReplayTurns,
+} from "./gemini-thought-replay";
+export {
+  CONTINUATION_RUN_CONFIG_KEY,
+  type ContinuationRequest,
+  carriedThought,
+  incompleteLabel,
+  incompleteRemedy,
+  isContinuableContent,
+  isProviderReportedReason,
+  modeAllowsContinuation,
+  providerCompactionContinuationFields,
+  readContinuationSource,
+  readTextThoughtSignature,
+  claimAutoContinue,
+  forgetAutoContinue,
+  recordAutoContinue,
+  shouldAutoContinueMessage,
+} from "./utils/continuation";
+export {
+  holdAutoContinueRun,
+  watchAutoContinueRun,
+} from "./utils/auto-continue-run-keeper";
+export { McpComposerButton } from "./mcp-composer-button";
+export {
+  SkillsComposerButton,
+  useSkillsSwitch,
+} from "./skills-composer-button";
+export { pickerAcceptForTextBasenames } from "./text-attachment-accept";
+export {
+  clampReasoningEffortToLevels,
+  kimiSearchExcludesThinking,
+} from "./provider-capabilities";
+export { useRagToolDisabled } from "./hooks/use-rag-tool-disabled";
+export { BypassPermissionsMenuItem } from "./bypass-permissions-menu-item";
+export { PermissionModeComposerPill } from "./permission-mode-select";
+export {
+  codeToolsOn,
+  imageToolAvailable,
+  localImagePillCount,
+  settleThreadScopedSettingsForCopy,
+} from "./stores/chat-runtime-store";
+export {
+  forkBoundaryAnchor,
+  setForkBoundaryAnchor,
+} from "./stores/fork-boundary-store";
+export {
+  applySentTextGuard,
+  armSentTextGuard,
+  isGuardRetiringKey,
+  markSentTextGuardUserInput,
+  sentTextGuardBlocksDraft,
+  type SentTextGuard,
+} from "./utils/composer-send-guard";
+export { deleteThreadMessage } from "./utils/delete-thread-message";
+export { updateStoredChatThread } from "./utils/chat-history-storage";
+export {
+  dictationSendBlocked,
+  shouldSubmitDictation,
+} from "./utils/dictation-send";
+export { applyQwenThinkingParams } from "./utils/qwen-params";
+export { extractTaggedText, updateThreadMessage } from "./utils/update-thread-message";
+
+export { extractHtmlFences, extractReactFences } from './artifacts/html-fences';

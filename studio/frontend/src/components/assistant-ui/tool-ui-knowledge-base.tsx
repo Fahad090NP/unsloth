@@ -106,10 +106,11 @@ const KnowledgeBaseToolUIImpl: ToolCallMessagePartComponent = ({
   status,
   toolCallId,
 }) => {
-  const query = toolArgText((args as { query?: unknown })?.query);
+  const query = toolArgText((args as { query?: unknown }).query);
   const isRunning = isToolCallRunning(status);
 
-  const resultText = result == null ? "" : stringifyToolResult(result);
+  const resultText =
+    result === null || result === undefined ? "" : stringifyToolResult(result);
   const citations = useMemo(() => parseCitations(result), [result]);
   // The documents behind the passages, listed in the expanded card.
   const documents = useMemo(

@@ -27,9 +27,9 @@ export function memoOnArray<A extends readonly unknown[], T>(
 
 const memoByArrayAndKey = new WeakMap<object, Map<unknown, unknown>>();
 
-export function memoOnArrayByKey<K, V>(
+export function memoOnArrayByKey<V>(
   array: readonly unknown[],
-  key: K,
+  key: unknown,
   compute: () => V,
 ): V {
   let byKey = memoByArrayAndKey.get(array);

@@ -12,7 +12,9 @@ export function isSafeNavigableSourceUrl(raw: unknown): string {
       // has no `://`, so openLink would treat it as relative and let it replace Studio's own page.
       return parsed.href;
     }
-  } catch {}
+  } catch {
+    // Not an absolute http(s) URL.
+  }
   return "";
 }
 
@@ -40,7 +42,7 @@ export function documentCitationToSource(
   const title = docTitle || source || `Document ${fallbackIdx + 1}`;
   const cited = typeof cit.cited_text === "string" ? cit.cited_text.trim() : "";
   const description = cited.length > 240 ? `${cited.slice(0, 240)}...` : cited;
-  const citationType = typeof cit.type === "string" ? String(cit.type) : "";
+  const citationType = typeof cit.type === "string" ? cit.type : "";
   const positionParts = [
     cit.search_result_index,
     cit.start_char_index,

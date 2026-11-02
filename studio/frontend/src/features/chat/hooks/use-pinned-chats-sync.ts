@@ -15,8 +15,10 @@ import {
   discardUnboundPinEdits,
 } from "../stores/pinned-chats-store";
 
+import type * as SyncPinnedChats from "../sync-pinned-chats";
+
 // Loaded on mount, not at startup: the sync runtime would push the eager bundle over budget.
-let runtime: Promise<typeof import("../sync-pinned-chats")> | undefined;
+let runtime: Promise<typeof SyncPinnedChats> | undefined;
 const loadRuntime = () =>
   (runtime ??= import("../sync-pinned-chats").catch((error: unknown) => {
     // Browsers refetch a failed dynamic import, so the next focus/online/poll retries it.

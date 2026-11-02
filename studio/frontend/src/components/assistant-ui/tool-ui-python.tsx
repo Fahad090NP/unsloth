@@ -78,7 +78,7 @@ const PythonToolUIImpl: ToolCallMessagePartComponent = ({
   result,
   status,
 }) => {
-  const code = toolArgText((args as { code?: unknown })?.code);
+  const code = toolArgText((args as { code?: unknown }).code);
   const firstLine = code.split("\n")[0]?.slice(0, 60) ?? "";
   const isRunning = isToolCallRunning(status);
   // Args still streaming = the model is WRITING the code, not running it yet.
@@ -95,7 +95,7 @@ const PythonToolUIImpl: ToolCallMessagePartComponent = ({
     images = result.images;
     files = result.files ?? [];
     sessionId = result.sessionId;
-  } else if (result != null) {
+  } else if (result !== null && result !== undefined) {
     output = toolResultText(result);
   } else {
     output = "";

@@ -2,8 +2,9 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 export function parseCsv(text: string): string[][] {
+  let source = text;
   // Tauri text reads keep the BOM our exports write; File.text() strips it.
-  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  if (source.charCodeAt(0) === 0xfeff) source = source.slice(1);
   const rows: string[][] = [];
   let row: string[] = [];
   let i = 0;
@@ -13,13 +14,13 @@ export function parseCsv(text: string): string[][] {
     row = [];
   }
 
-  while (i < text.length) {
-    if (text[i] === '"') {
+  while (i < source.length) {
+    if (source[i] === '"') {
       i++;
       let cell = "";
-      while (i < text.length) {
-        if (text[i] === '"') {
-          if (text[i + 1] === '"') {
+      while (i < source.length) {
+        if (source[i] === '"') {
+          if (source[i + 1] === '"') {
             cell += '"';
             i += 2;
           } else {
@@ -27,31 +28,31 @@ export function parseCsv(text: string): string[][] {
             break;
           }
         } else {
-          cell += text[i++];
+          cell += source[i++];
         }
       }
       row.push(cell);
-      if (text[i] === ",") { i++; }
-      else if (text[i] === "\r") { i++; if (text[i] === "\n") i++; finishRow(); }
-      else if (text[i] === "\n") { i++; finishRow(); }
-    } else if (text[i] === "\r") {
+      if (source[i] === ",") { i++; }
+      else if (source[i] === "\r") { i++; if (source[i] === "\n") i++; finishRow(); }
+      else if (source[i] === "\n") { i++; finishRow(); }
+    } else if (source[i] === "\r") {
       i++;
-      if (text[i] === "\n") i++;
+      if (source[i] === "\n") i++;
       row.push("");
       finishRow();
-    } else if (text[i] === "\n") {
+    } else if (source[i] === "\n") {
       i++;
       row.push("");
       finishRow();
     } else {
       let cell = "";
-      while (i < text.length && text[i] !== "," && text[i] !== "\r" && text[i] !== "\n") {
-        cell += text[i++];
+      while (i < source.length && source[i] !== "," && source[i] !== "\r" && source[i] !== "\n") {
+        cell += source[i++];
       }
       row.push(cell);
-      if (text[i] === ",") { i++; }
-      else if (text[i] === "\r") { i++; if (text[i] === "\n") i++; finishRow(); }
-      else if (text[i] === "\n") { i++; finishRow(); }
+      if (source[i] === ",") { i++; }
+      else if (source[i] === "\r") { i++; if (source[i] === "\n") i++; finishRow(); }
+      else if (source[i] === "\n") { i++; finishRow(); }
     }
   }
   if (row.length > 0) rows.push(row);

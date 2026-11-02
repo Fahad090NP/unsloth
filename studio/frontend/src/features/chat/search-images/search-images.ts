@@ -138,9 +138,10 @@ function firstMatchOutsideCode(
   regions: [number, number][],
 ): number | null {
   if (!text) return null;
-  pattern.lastIndex = 0;
+  const regex = pattern;
+  regex.lastIndex = 0;
   let match: RegExpExecArray | null;
-  while ((match = pattern.exec(text)) !== null) {
+  while ((match = regex.exec(text)) !== null) {
     const at = match.index + match[1].length;
     if (!isInRegion(at, regions)) return at;
   }
@@ -351,7 +352,7 @@ function looksLikeStep(name: string): boolean {
     .split(/\s+/)[0]
     ?.toLowerCase()
     .replace(/[^a-z]/g, "");
-  return first !== undefined && STEP_VERBS.has(first);
+  return STEP_VERBS.has(first);
 }
 
 const ABSTRACT_HEADS = new Set([

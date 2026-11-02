@@ -26,6 +26,10 @@ function baseModelLabel(source: LocalModelInfo["source"]): string {
       return "Hermes";
     case "custom":
       return "Custom Folders";
+    case "hf_cache":
+    case "models_dir":
+    case "unsloth":
+      return "Local models";
     default:
       return "Local models";
   }

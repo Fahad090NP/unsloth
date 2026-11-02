@@ -62,8 +62,7 @@ export function reasoningHighlightReply(
     revision: request.revision,
     lines: result
       ? request.lines.flatMap((line) => {
-          const tokens = result.tokens[line];
-          return tokens ? [{ line, tokens }] : [];
+          return [{ line, tokens: result.tokens[line] }];
         })
       : [],
     ...(request.full ? { result } : {}),

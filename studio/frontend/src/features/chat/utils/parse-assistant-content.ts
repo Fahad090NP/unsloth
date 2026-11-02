@@ -92,7 +92,8 @@ export function appendTextPart(parts: ContentPart[], text: string): void {
   if (!text) return;
   const last = parts.at(-1);
   if (last?.type === "text") {
-    parts[parts.length - 1] = { type: "text", text: last.text + text };
+    const target = parts;
+    target[target.length - 1] = { type: "text", text: last.text + text };
     return;
   }
   parts.push({ type: "text", text });
@@ -102,7 +103,8 @@ export function appendReasoningPart(parts: ContentPart[], text: string): void {
   if (!text) return;
   const last = parts.at(-1);
   if (last?.type === "reasoning") {
-    parts[parts.length - 1] = { type: "reasoning", text: last.text + text };
+    const target = parts;
+    target[target.length - 1] = { type: "reasoning", text: last.text + text };
     return;
   }
   parts.push({ type: "reasoning", text });

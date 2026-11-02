@@ -45,10 +45,11 @@ export function startDictationLevelMeter(
   };
 
   try {
-    const Ctx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
+    const audioWindow = window as unknown as {
+      AudioContext?: typeof AudioContext;
+      webkitAudioContext?: typeof AudioContext;
+    };
+    const Ctx = audioWindow.AudioContext ?? audioWindow.webkitAudioContext;
     if (!Ctx) {
       return stop;
     }

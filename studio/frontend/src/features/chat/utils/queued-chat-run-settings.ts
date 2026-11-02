@@ -118,7 +118,8 @@ export function shouldPersistRunModel(
   if (!storedThread || !modelId || storedThread.pairId) return false;
   if (storedThread.modelId !== modelId) return true;
   return (
-    modelGgufVariant != null &&
+    modelGgufVariant !== null &&
+    modelGgufVariant !== undefined &&
     modelGgufVariant !== (storedThread.modelGgufVariant ?? null)
   );
 }

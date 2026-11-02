@@ -73,11 +73,11 @@ export function withSandboxAttachmentPaths<
     name: path.slice(path.lastIndexOf("/") + 1),
   }));
   const annotated = messages.map((message) => {
-    let changed = false;
+    const state = { changed: false };
     const attachments = (message.attachments ?? []).map((attachment) => {
       const copy = sandboxCopy(attachment);
       if (!copy || !carried.has(copy.path)) return attachment;
-      changed = true;
+      state.changed = true;
       const { name = "", content = [] } = attachment as Attachment;
       const reader = sandboxReader(copy.path);
       const path = JSON.stringify(copy.path);
@@ -90,7 +90,7 @@ export function withSandboxAttachmentPaths<
         content: [{ type: "text", text: note }, ...content],
       };
     });
-    return changed ? ({ ...message, attachments }) : message;
+    return state.changed ? { ...message, attachments } : message;
   });
   return { messages: annotated, sandboxAttachments };
 }

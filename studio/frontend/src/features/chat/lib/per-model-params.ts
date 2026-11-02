@@ -72,7 +72,8 @@ export function setInferenceParam(
   key: PersistedInferenceParamKey,
   value: PersistedInferenceParams[PersistedInferenceParamKey],
 ): void {
-  (params as Record<PersistedInferenceParamKey, unknown>)[key] = value;
+  const target = params as Record<PersistedInferenceParamKey, unknown>;
+  target[key] = value;
 }
 
 export function pickRememberedParams(
@@ -138,7 +139,9 @@ export function getReplayedParams(
   if (!(enabled && checkpointChanged)) {
     return capped(current);
   }
-  const saved = paramsByModel[modelId];
+  const saved = paramsByModel[modelId] as
+    | PersistedInferenceParams
+    | undefined;
   const remembered = saved ? normalizeSavedMinP(saved) : undefined;
   if (!remembered) {
     return capped(current);

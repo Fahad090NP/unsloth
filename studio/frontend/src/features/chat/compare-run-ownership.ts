@@ -39,7 +39,8 @@ export class CompareRunOwnership<Model> {
     if (!this.owns(run)) {
       return false;
     }
-    run.loadingModel = model;
+    const ownedRun = run;
+    ownedRun.loadingModel = model;
     return true;
   }
 
@@ -47,7 +48,8 @@ export class CompareRunOwnership<Model> {
     if (!this.owns(run)) {
       return false;
     }
-    run.cleanup = cleanup;
+    const ownedRun = run;
+    ownedRun.cleanup = cleanup;
     return true;
   }
 

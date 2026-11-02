@@ -9,7 +9,11 @@ import {
 
 const readBuildFlag = (): string => {
   try {
-    return import.meta.env.VITE_UNSLOTH_REASONING_ROW_CONTAINMENT ?? "";
+    return (
+      (import.meta.env.VITE_UNSLOTH_REASONING_ROW_CONTAINMENT as
+        | string
+        | undefined) ?? ""
+    );
   } catch {
     return "";
   }

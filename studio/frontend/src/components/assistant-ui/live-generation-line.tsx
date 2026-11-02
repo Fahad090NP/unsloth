@@ -28,7 +28,7 @@ const LiveDecodeFigures: FC = () => {
   const threadKey =
     useAuiState(({ threadListItem }) => threadListItem.remoteId) ?? "__default";
   const decode = useChatRuntimeStore(
-    (s) => s.liveGenerationByThreadId[threadKey]?.decode ?? null,
+    (s) => s.liveGenerationByThreadId[threadKey].decode ?? null,
   );
   if (!decode) {
     return null;

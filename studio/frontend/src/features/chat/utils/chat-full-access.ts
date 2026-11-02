@@ -17,7 +17,13 @@ export function hasChatFullAccess(
   threadId: string | null | undefined,
   runId?: string,
 ): boolean {
-  const ownRun = runId && Object.hasOwn(grants, runId) ? grants[runId] : undefined;
+  const ownRun =
+    runId !== undefined &&
+    runId !== null &&
+    runId !== "" &&
+    Object.hasOwn(grants, runId)
+      ? grants[runId]
+      : undefined;
   return Boolean((ownRun && (!ownRun.threadId || ownRun.threadId === threadId)) ||
     (threadId && Object.values(grants).some((grant) => grant.threadId === threadId)));
 }

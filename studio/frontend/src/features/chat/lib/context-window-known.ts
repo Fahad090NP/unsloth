@@ -18,7 +18,13 @@ export function hasKnownContextWindow({
   residentCheckpoint,
 }: KnownContextWindowInput): boolean {
   if (modelLoading || isExternalModel) return false;
-  if (loadedContextLength == null || loadedContextLength <= 0) return false;
+  if (
+    loadedContextLength === null ||
+    loadedContextLength === undefined ||
+    loadedContextLength <= 0
+  ) {
+    return false;
+  }
   // undefined means status not read yet, not evicted.
   return residentCheckpoint !== null;
 }

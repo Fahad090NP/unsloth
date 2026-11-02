@@ -257,11 +257,16 @@ export const buildChunkGrid = (
     const fragment = fragments[i];
     heights[i + 1] = heights[i] + (estimates[i] ?? 0);
     const key = groupKeyOf(fragment);
-    const previous = groups[groups.length - 1];
+    const previous = groups.at(-1);
     const sameFence =
-      previous?.end === i
+      previous !== undefined
+      && previous.end === i
       && groupKeyOf(fragments[previous.first]) === key;
-    if (sameFence && (previous.chars < maxChars || !startsLine(fragment))) {
+    if (
+      sameFence
+      && previous !== undefined
+      && (previous.chars < maxChars || !startsLine(fragment))
+    ) {
       groups[groups.length - 1] = {
         ...previous,
         end: i + 1,
@@ -469,7 +474,7 @@ export const mountedRanges = (
     const from = Math.max(island.start, shown);
     const to = Math.min(island.end, total);
     if (to <= from) continue;
-    const last = ranges[ranges.length - 1];
+    const last = ranges.at(-1);
     if (last !== undefined && from <= last[1]) last[1] = Math.max(last[1], to);
     else ranges.push([from, to]);
   }

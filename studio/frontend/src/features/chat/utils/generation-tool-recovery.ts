@@ -397,7 +397,8 @@ export function createGenerationToolRecovery(
       );
       const part = at === -1 ? undefined : record(carried[at].part);
       if (part && suffix) {
-        carried[at].part = {
+        const target = carried[at];
+        target.part = {
           ...part,
           provenance: withToolModelSuffix(record(part.provenance), suffix),
         };
