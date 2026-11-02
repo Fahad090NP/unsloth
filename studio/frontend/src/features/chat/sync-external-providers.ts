@@ -85,8 +85,6 @@ export function resolveUiProviderTypeFromConfig(
   configProviderType: string,
   configDisplayName: string | null | undefined,
   configBaseUrl: string | null | undefined,
-  _registryRows: ProviderRegistryEntry[],
-  _existingProviderType: string | undefined,
 ): string {
   if (configProviderType !== CUSTOM_BACKEND_PROVIDER_TYPE) {
     return configProviderType;
@@ -241,8 +239,6 @@ export async function syncExternalProvidersFromBackend(
         config.provider_type,
         config.display_name,
         config.base_url,
-        registryRows,
-        existing?.providerType,
       );
       const createdAt = Number.isFinite(Date.parse(config.created_at))
         ? Date.parse(config.created_at)

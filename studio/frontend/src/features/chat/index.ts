@@ -788,3 +788,44 @@ export { getCodeFence, isFullHtmlDocument, isHtmlFence, isSvgFence } from "./art
 export { hasChatFullAccess, withChatFullAccess } from "./utils/chat-full-access";
 export { imeOwnsInputKeydown, inputImeHandlers, newInputImeState } from "./utils/composer-preferences";
 export { splitMcpToolName } from "./utils/mcp-tool-name";
+export { createAudioRecorder } from "./adapters/pcm-recorder";
+export type { SegmentRecorder } from "./adapters/pcm-recorder";
+export { isMissingDeviceError } from "./adapters/studio-web-speech-dictation-adapter";
+export {
+  clearApiMonitor,
+  getApiMonitor,
+  getApiMonitorEntry,
+  getDatasetDownloadProgress,
+  getDownloadProgress,
+} from "./api/chat-api";
+export type { DownloadProgressResponse } from "./api/chat-api";
+export type { ProviderApiType } from "./api/providers-api";
+export { ChatProvidersSettings } from "./chat-providers-dialog";
+export { ContextUsageBar } from "./components/context-usage-bar";
+export { MODEL_LOAD_TOAST_CLASSNAMES } from "./components/model-load-status";
+export { useTransferStats } from "./hooks/use-transfer-stats";
+export { unpinnedLoadContext } from "./presets/preset-policy";
+export { buildChatItemMarkdown } from "./prompt-storage/prompt-storage-dialog";
+export { useActiveChatMenuStore } from "./stores/active-chat-menu-store";
+export {
+  PENDING_CHAT_ATTACHMENT_KEY,
+  distributeByWeight,
+  readPendingAttachmentTargetClaim,
+  rebalanceSplit,
+} from "./stores/chat-runtime-store";
+export type { RagMode } from "./stores/chat-runtime-store";
+export { syncExternalProvidersFromBackend } from "./sync-external-providers";
+export type { ApiMonitorResponse, AudioConvertCaps } from "./types/api";
+export {
+  returnToChatThreadId,
+  useApprovalWaitingStore,
+  watchApprovalWaiting,
+} from "./utils/approval-waiting";
+export { resetInputIme } from "./utils/composer-preferences";
+export { formatEta } from "./utils/format-transfer";
+export { normalizeGgufVisionCapability } from "./utils/model-vision-capability";
+export { keepOpenedChats, touchOpenedChat } from "./utils/opened-chats";
+export { PASTED_TEXT_THRESHOLD_CHOICES } from "./utils/pasted-text";
+export { CHAT_PROJECT_ATTACHMENT_TARGET_KEY } from "./utils/project-attachment-target";
+export type { ProjectAttachmentTarget } from "./utils/project-attachment-target";
+export { isAssistantLocalThreadId } from "./utils/thread-ids";

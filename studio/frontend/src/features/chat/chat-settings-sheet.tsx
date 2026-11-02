@@ -746,49 +746,13 @@ export function ChatSettingsPanel({
     params,
     committedSeed,
     paramsWithCommittedSeed,
-    customContextLength,
-    loadedContextLength,
-    kvCacheDtype,
-    mlxKvQuant,
-    gpuMemoryMode,
-    gpuLayers,
-    nCpuMoe,
-    tensorParallel,
-    disableVision,
-    speculativeType,
-    specDraftNMax,
-    nParallel,
-    reasoningBudget,
-    reasoningBudgetMessage,
-    nBatch,
-    nUbatch,
-    params.maxSeqLength,
   ]);
   const activePresetLoadSummary = useMemo(
     () => formatPresetLoadConfigSummary(activePresetDefinition?.loadConfig),
     [activePresetDefinition],
   );
-  const currentLoadSummary = useMemo(
-    () => formatPresetLoadConfigSummary(capturePresetLoadConfig()),
-    [
-      customContextLength,
-      loadedContextLength,
-      kvCacheDtype,
-      mlxKvQuant,
-      gpuMemoryMode,
-      gpuLayers,
-      nCpuMoe,
-      tensorParallel,
-      disableVision,
-      speculativeType,
-      specDraftNMax,
-      nParallel,
-      reasoningBudget,
-      reasoningBudgetMessage,
-      nBatch,
-      nUbatch,
-      params.maxSeqLength,
-    ],
+  const currentLoadSummary = formatPresetLoadConfigSummary(
+    capturePresetLoadConfig(),
   );
   const presetSaveState = useMemo(
     () =>

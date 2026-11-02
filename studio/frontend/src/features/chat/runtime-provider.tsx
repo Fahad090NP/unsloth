@@ -584,9 +584,10 @@ class VisionImageAdapter implements AttachmentAdapter {
     };
   }
 
-  async remove(attachment: { id: string }): Promise<void> {
+  remove(attachment: { id: string }): Promise<void> {
     this.converted.delete(attachment.id);
     this.toolOnlyIds.delete(attachment.id);
+    return Promise.resolve();
   }
 
   private async fileToBase64DataURL(file: File): Promise<string> {
@@ -745,15 +746,15 @@ class TextAttachmentAdapter implements AttachmentAdapter {
 class HtmlAttachmentAdapter implements AttachmentAdapter {
   accept = "text/html";
 
-  async add({ file }: { file: File }): Promise<PendingAttachment> {
-    return {
+  add({ file }: { file: File }): Promise<PendingAttachment> {
+    return Promise.resolve({
       id: crypto.randomUUID(),
       type: "document",
       name: file.name,
       contentType: file.type,
       file,
       status: { type: "requires-action", reason: "composer-send" },
-    };
+    });
   }
 
   async send(attachment: PendingAttachment): Promise<CompleteAttachment> {
@@ -1309,9 +1310,10 @@ class ToolOnlyAttachmentAdapter implements AttachmentAdapter {
     return original ? ({ ...complete, original } as CompleteAttachment) : complete;
   }
 
-  async remove(attachment: { id: string }): Promise<void> {
+  remove(attachment: { id: string }): Promise<void> {
     this.uploads.delete(attachment.id);
     this.uploadedAt.delete(attachment.id);
+    return Promise.resolve();
   }
 }
 
@@ -1394,11 +1396,11 @@ function cloneAttachments(
   if (!Array.isArray(attachments)) {
     return [];
   }
-  return JSON.parse(
-    JSON.stringify(
-      attachments.map((attachment) => ({ ...attachment, file: undefined })),
-    ),
-  ) as readonly CompleteAttachment[];
+  const serialized = JSON.stringify(
+    attachments.map((attachment) => ({ ...attachment, file: undefined })),
+  );
+  const parsed: unknown = JSON.parse(serialized);
+  return parsed as readonly CompleteAttachment[];
 }
 
 function toThreadMessage(m: MessageRecord): ThreadMessage {
@@ -2082,7 +2084,7 @@ export async function persistTemporaryThread({
         content: cloneContent(message.content),
         ...(attachments.length > 0 && { attachments }),
         ...(metadata && { metadata }),
-        createdAt: message.createdAt.getTime() ?? Date.now(),
+        createdAt: message.createdAt.getTime(),
       };
     }));
     await syncStoredChatMessages(threadId, records, { pruneMissing: false });
@@ -2146,7 +2148,7 @@ function createStudioDbAdapter(
       const incognitoAtInit = claim ? claim.incognito : runtimeStateAtInit.incognito;
       const modelIdAtInit = claim
         ? claim.modelId
-        : (runtimeStateAtInit.params.checkpoint ?? "");
+        : runtimeStateAtInit.params.checkpoint;
       const modelGgufVariantAtInit = claim
         ? claim.modelGgufVariant
         : runtimeStateAtInit.activeGgufVariant;
@@ -2165,7 +2167,7 @@ function createStudioDbAdapter(
           modelGgufVariant: modelGgufVariantAtInit,
           createdAt: createdAtInit,
         }),
-      );
+      ).catch(reportBackgroundError);
       // Re-key handles a running stream filed under "__default".
       useChatRuntimeStore.getState().adoptDefaultThreadRun(threadId);
       return Promise.resolve({ remoteId: threadId, externalId: undefined });
@@ -2550,13 +2552,14 @@ function useStudioRuntimeAdapters(
               const signatures = content.map((part) =>
                 chatContentPartAttachmentSignature(part),
               );
-              const ids = await Promise.all(
-                signatures.map((signature) =>
+              const ids: (string | null)[] = [];
+              for (const signature of signatures) {
+                ids.push(
                   signature === null
                     ? null
-                    : chatContentPartAttachmentIdFromSignature(signature),
-                ),
-              );
+                    : await chatContentPartAttachmentIdFromSignature(signature),
+                );
+              }
               const targetAttachments = (
                 target.message as {
                   attachments?: readonly { id: string }[];
@@ -2988,9 +2991,7 @@ function useStudioRuntimeAdapters(
               : [];
           const custom = message.metadata.custom;
           const createdAt =
-            existingMessage?.createdAt ??
-            message.createdAt.getTime() ??
-            Date.now();
+            existingMessage?.createdAt ?? message.createdAt.getTime();
           const existingMetadata = existingMessage?.metadata;
           const incomingRevision = Number(
             (custom as Record<string, unknown> | undefined)?.serverRevision ??
@@ -3005,10 +3006,6 @@ function useStudioRuntimeAdapters(
           const sameResearchRun =
             typeof existingMetadata?.researchRunId === "string" &&
             existingMetadata.researchRunId === incomingMetadata?.researchRunId;
-          const sameGenerationRun =
-            typeof existingMetadata?.generationRunId === "string" &&
-            existingMetadata.generationRunId ===
-              incomingMetadata?.generationRunId;
           const preserveGeneration = shouldPreserveGenerationMetadata(
             existingMetadata,
             incomingMetadata,
@@ -3201,13 +3198,12 @@ function ThreadAutoSwitch({
       }
       // A temporary chat is unreachable after this switch, so stop its queue.
       requestTemporaryPromptQueueStop();
-      const switchResult = aui.threads().switchToThread(threadId) as unknown;
-      if (
-        switchResult &&
-        typeof (switchResult as Promise<void>).then === "function"
-      ) {
-        // Both arms retire the claim, or a rejected switch's claim stays armed.
-        (switchResult as Promise<void>).then(
+      // Both arms retire the claim, or a rejected switch's claim stays armed.
+      Promise.resolve()
+        .then(() => {
+          aui.threads().switchToThread(threadId);
+        })
+        .then(
           () => {
             claim.settled = true;
           },
@@ -3222,9 +3218,6 @@ function ThreadAutoSwitch({
             }
           },
         );
-      } else {
-        claim.settled = true;
-      }
     }
   }, [
     aui,
@@ -3355,11 +3348,15 @@ function ThreadNewChatSwitch({
       const at = switchStateNow.pendingSavedThreadIds.indexOf(reopenClaim);
       if (at !== -1) switchStateNow.pendingSavedThreadIds.splice(at, 1);
     };
-    Promise.resolve(
-      returningToOwnChat && recorded
-        ? aui.threads().switchToThread(recorded)
-        : aui.threads().switchToNewThread(),
-    ).then(
+    Promise.resolve()
+      .then(() => {
+        if (returningToOwnChat && recorded) {
+          aui.threads().switchToThread(recorded);
+        } else {
+          aui.threads().switchToNewThread();
+        }
+      })
+      .then(
       () => {
         settleReopenClaim();
         {
@@ -3422,11 +3419,15 @@ function ThreadNewChatSwitch({
       switchState.nonceThread?.nonce === nonce
         ? switchState.nonceThread.threadId
         : null;
-    Promise.resolve(
-      reattachTo && reattachTo !== mainThreadId
-        ? aui.threads().switchToThread(reattachTo)
-        : aui.threads().switchToNewThread(),
-    ).catch(() => undefined);
+    Promise.resolve()
+      .then(() => {
+        if (reattachTo && reattachTo !== mainThreadId) {
+          aui.threads().switchToThread(reattachTo);
+        } else {
+          aui.threads().switchToNewThread();
+        }
+      })
+      .catch(() => undefined);
   }, [aui, isLoading, mainThreadId, newThreadSwitchStateRef, nonce, paused]);
 
   useEffect(() => {
@@ -3480,7 +3481,7 @@ function ActiveThreadSync({
     if (!enabled) {
       return;
     }
-    setActiveThreadId(mainThreadId ?? null);
+    setActiveThreadId(mainThreadId);
   }, [enabled, mainThreadId, setActiveThreadId]);
 
   return null;
@@ -4127,7 +4128,9 @@ function ThreadBackendAutosave({
   const fullSaveDueRef = useRef(new Set<string>());
   // A ref: the save may resolve after the pane is hidden, so read at publish time.
   const backgroundedRef = useRef(backgrounded);
-  backgroundedRef.current = backgrounded;
+  useEffect(() => {
+    backgroundedRef.current = backgrounded;
+  }, [backgrounded]);
 
   const reportAutosaveError = useCallback((error: unknown): void => {
     if (!isExpectedBackgroundChatStorageError(error)) {
@@ -4213,7 +4216,9 @@ function ThreadBackendAutosave({
           pendingFirstSavesRef.current.delete(threadId);
         });
       pendingFirstSavesRef.current.set(threadId, promise);
-      ThreadAutosaveHandle.registerFirstSave(threadId, promise);
+      ThreadAutosaveHandle.registerFirstSave(threadId, promise).catch(
+        reportAutosaveError,
+      );
     },
     [reportAutosaveError, saveThread],
   );
@@ -4298,7 +4303,7 @@ function ThreadBackendAutosave({
 
   useAuiEvent("thread.runEnd", ({ threadId }) => {
     checkpoints().stop(threadId);
-    queueSave(threadId);
+    queueSave(threadId).catch(reportAutosaveError);
     nameUntitledFork(threadId).catch(reportBackgroundError);
   });
 
@@ -4311,7 +4316,7 @@ function ThreadBackendAutosave({
       saveFirstThreadSnapshot(threadId);
       return;
     }
-    queueSave(threadId);
+    queueSave(threadId).catch(reportAutosaveError);
   });
 
   return null;

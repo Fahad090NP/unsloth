@@ -566,7 +566,7 @@ export async function importConversationsFromSource(
   report();
 
   if (failure !== undefined) {
-    const serializedFailure: string | undefined = JSON.stringify(failure);
+    const serializedFailure = JSON.stringify(failure) as string | undefined;
     const reason =
       failure instanceof Error
         ? failure.message

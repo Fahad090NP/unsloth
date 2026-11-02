@@ -262,6 +262,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -341,11 +342,11 @@ function useDictation(
   const startingRef = useRef(false);
   const finalizingRef = useRef(false);
 
-  const start = useCallback(async () => {
-    if (startingRef.current || sessionRef.current) return;
+  const start = useCallback((): Promise<void> => {
+    if (startingRef.current || sessionRef.current) return Promise.resolve();
     if (!isStudioDictationAvailable()) {
       notifyStudioDictationUnavailable();
-      return;
+      return Promise.resolve();
     }
     startingRef.current = true;
 
@@ -356,7 +357,7 @@ function useDictation(
     } catch {
       startingRef.current = false;
       notifyStudioDictationUnavailable();
-      return;
+      return Promise.resolve();
     }
     sessionRef.current = session;
     setIsDictating(true);
@@ -375,6 +376,7 @@ function useDictation(
       setIsDictating(false);
     });
     startingRef.current = false;
+    return Promise.resolve();
   }, [setText]);
 
   const stop = useCallback(() => {
@@ -391,7 +393,7 @@ function useDictation(
     finalizingRef.current = true;
     setIsFinalizing(true);
     // Keep the session alive while the final segment transcribes; onEnd clears it.
-    void session.stop().catch((error: unknown) => {
+    session.stop().catch((error: unknown) => {
       console.error("Could not stop dictation:", error);
       session.cancel();
       if (sessionRef.current === session) sessionRef.current = null;
@@ -525,14 +527,10 @@ function PendingImageThumb({
   file: File;
   onRemove: () => void;
 }): ReactElement {
-  const [src, setSrc] = useState<string | null>(null);
+  const src = useMemo(() => URL.createObjectURL(file), [file]);
   useEffect(() => {
-    const url = URL.createObjectURL(file);
-    setSrc(url);
-    return () => { URL.revokeObjectURL(url); };
-  }, [file]);
-  if (!src)
-    return <div className="size-14 animate-pulse rounded-lg bg-muted" />;
+    return () => { URL.revokeObjectURL(src); };
+  }, [src]);
   return (
     <div
       data-reload-snapshot-sensitive
@@ -1060,14 +1058,13 @@ export function SharedComposer({
   const { pillRowRef, pillCompact } = useComposerPillFit(
     isMobile || pillCount > 4,
   );
-  const toolsDisabled = codeDisabled;
   const setPendingAudioStore = useChatRuntimeStore((s) => s.setPendingAudio);
   const clearPendingAudioStore = useChatRuntimeStore(
     (s) => s.clearPendingAudio,
   );
   const mirroredAudioRef = useRef(false);
   useEffect(() => {
-    const [first] = pendingAudio;
+    const first = pendingAudio.at(0);
     if (first) {
       setPendingAudioStore(first.base64, first.name);
       mirroredAudioRef.current = true;
@@ -1120,7 +1117,7 @@ export function SharedComposer({
     return () => { clearInterval(id); };
   }, [handlesRef]);
 
-  function resetPromptQueue() {
+  const resetPromptQueue = useCallback(() => {
     if (!isQueueRunningRef.current && queueRef.current.length === 0) {
       return;
     }
@@ -1129,9 +1126,9 @@ export function SharedComposer({
     queueRef.current = [];
     queueIndexRef.current = 0;
     setQueueProgress({ current: 0, total: 0 });
-  }
+  }, []);
 
-  function advanceQueue() {
+  const advanceQueue = useCallback(() => {
     const nextIndex = queueIndexRef.current + 1;
     if (nextIndex >= queueRef.current.length) {
       resetPromptQueue();
@@ -1145,8 +1142,10 @@ export function SharedComposer({
       description: next.length > 80 ? next.slice(0, 80) + "…" : next,
     });
     setCurrentText(next);
-    setTimeout(() => { sendRef.current?.(); }, 100);
-  }
+    setTimeout(() => {
+      sendRef.current?.().catch(reportBackgroundError);
+    }, 100);
+  }, [resetPromptQueue, setCurrentText]);
 
   // Stop on a failed step so queued prompts are not burned on incomplete results.
   useEffect(() => {
@@ -1162,14 +1161,14 @@ export function SharedComposer({
     }
     prevRunningRef.current = false;
     advanceQueue();
-  }, [comparing]);
+  }, [advanceQueue, comparing]);
 
   useEffect(() => {
     const wasRunning = prevRunningRef.current;
     prevRunningRef.current = running;
     if (!isQueueRunningRef.current || !wasRunning || running || comparing) return;
     advanceQueue();
-  }, [running, comparing]);
+  }, [advanceQueue, running, comparing]);
 
   // The single composer's editor frame (12 rows, animated height), measured by hand: no autosize here.
   const inputId = useId();
@@ -1199,7 +1198,7 @@ export function SharedComposer({
     setEditorHeight(next);
     setEditorRows(Math.round((next - paddingY) / lineHeight));
   }, []);
-  useEffect(measureEditor, [text]);
+  useEffect(measureEditor, [measureEditor, text]);
   // Width only: wrapping follows it, while the height is the frame's own animation.
   useEffect(() => {
     const editor = editorRef.current;
@@ -1261,22 +1260,24 @@ export function SharedComposer({
             audioAddError ??= addError;
             continue;
           }
-          const clip = {
-            id: newAttachmentId(),
-            name: file.name,
-            base64: "",
-            contentType: file.type,
-            size: file.size,
-          };
-          readingAudioRef.current.set(clip.id, clip.size);
+          const clipId = newAttachmentId();
+          readingAudioRef.current.set(clipId, file.size);
+          let base64: string;
           try {
-            clip.base64 = await fileToBase64(file);
+            base64 = await fileToBase64(file);
           } catch {
             toast.error("Could not read that audio file.");
             continue;
           } finally {
-            readingAudioRef.current.delete(clip.id);
+            readingAudioRef.current.delete(clipId);
           }
+          const clip = {
+            id: clipId,
+            name: file.name,
+            base64,
+            contentType: file.type,
+            size: file.size,
+          };
           // Updated now, not on commit, so the next check already counts it.
           pendingAudioRef.current = [...pendingAudioRef.current, clip];
           setPendingAudio((prev) => [...prev, clip]);
@@ -1430,9 +1431,8 @@ export function SharedComposer({
       return;
     }
 
-    const hasCompareHandles = Boolean(
-      handlesRef.current.model1 || handlesRef.current.model2,
-    );
+    const hasCompareHandles =
+      "model1" in handlesRef.current || "model2" in handlesRef.current;
     const isGeneralizedCompare =
       hasCompareHandles && Boolean(model1?.id && model2?.id);
     const submittedCompareCheckpoint = requireStableCheckpoint
@@ -1465,6 +1465,7 @@ export function SharedComposer({
         const image = await fileToBase64DataURL(file);
         content.push({ type: "image", image });
       } catch {
+        // Skip an unreadable image; send the rest of the message.
       }
     }
     for (const clip of submittedAudio) {
@@ -1600,7 +1601,7 @@ export function SharedComposer({
       clearSubmittedDraft();
       const run = compareRunsRef.current.begin();
       const compareSignal = run.controller.signal;
-      let upgradeUnloadedActive = false;
+      const upgradeState = { unloadedActive: false };
       const compareSelectionNeedsLoad = (sel: CompareModelSelection) => {
         const currentStore = useChatRuntimeStore.getState();
         const isAlreadyActive =
@@ -1639,23 +1640,26 @@ export function SharedComposer({
           (sel.ggufVariant ?? null) != null ||
           sel.id.toLowerCase().endsWith(".gguf");
         const platform = usePlatformStore.getState();
-        let resolvedIsDiffusion = sel.isDiffusion;
-        let diffusionUnknown = false;
-        if (targetIsGguf && resolvedIsDiffusion === undefined) {
+        let stagedMetadata:
+          | { isDiffusion: boolean | undefined; diffusionUnknown: boolean }
+          | null = null;
+        if (targetIsGguf && sel.isDiffusion === undefined) {
           const preparedToken = await prepareHfTokenForUse(
             currentStore.hfToken,
           );
           if (!preparedToken.proceed) {
             throw new Error("Model load cancelled.");
           }
-          const staged = await fetchGgufStagedMetadata({
+          stagedMetadata = await fetchGgufStagedMetadata({
             model_path: sel.id,
             gguf_variant: sel.ggufVariant ?? null,
             hf_token: preparedToken.token,
           });
-          resolvedIsDiffusion = staged.isDiffusion;
-          diffusionUnknown = staged.diffusionUnknown;
         }
+        const resolvedIsDiffusion = stagedMetadata
+          ? stagedMetadata.isDiffusion
+          : sel.isDiffusion;
+        const diffusionUnknown = stagedMetadata?.diffusionUnknown ?? false;
         // /load inherits pass-through args from a resident instance, which a cold pane lacks.
         if (
           targetIsGguf &&
@@ -1892,7 +1896,7 @@ export function SharedComposer({
               .consumeServerUnloadedChat()
             && currentStore.params.checkpoint
           ) {
-            upgradeUnloadedActive = true;
+            upgradeState.unloadedActive = true;
           }
           if (!upgraded) {
             throw new Error(
@@ -1954,7 +1958,7 @@ export function SharedComposer({
             { description: compareOffload.description, duration: 8000 },
           );
         }
-        upgradeUnloadedActive = false;
+        upgradeState.unloadedActive = false;
         const store = useChatRuntimeStore.getState();
         store.setCheckpoint(
           resp.model,
@@ -2101,15 +2105,17 @@ export function SharedComposer({
             ...currentModels,
             {
               id: sel.id,
-              name: resp.display_name ?? sel.id,
+              name: resp.display_name || sel.id,
               isLora: sel.isLora,
               ...synced,
             },
           ]);
         } else {
-          const next = [...currentModels];
-          next[idx] = { ...next[idx], ...synced };
-          store.setModels(next);
+          store.setModels(
+            currentModels.map((model, index) =>
+              index === idx ? { ...model, ...synced } : model,
+            ),
+          );
         }
         return resp.status;
       }
@@ -2117,8 +2123,8 @@ export function SharedComposer({
       const handle1 = handlesRef.current.model1;
       const handle2 = handlesRef.current.model2;
 
-      if (handle1) handle1.appendMessage(content);
-      if (handle2) handle2.appendMessage(content);
+      if ("model1" in handlesRef.current) handle1.appendMessage(content);
+      if ("model2" in handlesRef.current) handle2.appendMessage(content);
 
       const name1 = model1?.id ? compareModelDisplayName(model1.id) : "";
       const name2 = model2?.id ? compareModelDisplayName(model2.id) : "";
@@ -2127,7 +2133,7 @@ export function SharedComposer({
       setComparing(true);
       onComparingChange?.(true);
       try {
-        if (handle1 && model1?.id) {
+        if ("model1" in handlesRef.current && model1?.id) {
           toast("Loading Model 1…", {
             id: toastId,
             description: name1,
@@ -2147,7 +2153,7 @@ export function SharedComposer({
           throwIfCompareCancelled(compareSignal);
         }
 
-        if (handle2 && model2?.id) {
+        if ("model2" in handlesRef.current && model2?.id) {
           acquireCompareModelLifecycle();
           const needsLoad = compareSelectionNeedsLoad(model2);
           if (needsLoad) {
@@ -2199,7 +2205,7 @@ export function SharedComposer({
           }
           await resyncInferenceStatusAfterServerModelChange();
         }
-        if (upgradeUnloadedActive) {
+        if (upgradeState.unloadedActive) {
           useChatRuntimeStore.getState().clearCheckpoint();
         }
         if (cancelled && !cleanupError) {
@@ -2452,9 +2458,8 @@ export function SharedComposer({
         });
         return;
       }
-      const hasCompareHandles = Boolean(
-        handlesRef.current.model1 || handlesRef.current.model2,
-      );
+      const hasCompareHandles =
+        "model1" in handlesRef.current || "model2" in handlesRef.current;
       const isGeneralizedCompare =
         hasCompareHandles && Boolean(model1?.id && model2?.id);
       if (hasCompareHandles && !isGeneralizedCompare) {
@@ -2476,7 +2481,7 @@ export function SharedComposer({
       });
       setCurrentText(filtered[0]);
       setTimeout(() => {
-        sendRef.current?.();
+        sendRef.current?.().catch(reportBackgroundError);
       }, 100);
     },
     [busy, isDictating, audioUpload.busy, handlesRef, model1?.id, model2?.id, setCurrentText],
@@ -3055,15 +3060,14 @@ export function SharedComposer({
                   setCurrentText(e.target.value);
                   skillMentions.update(
                     e.target.value,
-                    e.target.selectionStart ?? e.target.value.length,
+                    e.target.selectionStart,
                   );
                 }}
 
                 onSelect={(event) => {
                   skillMentions.update(
                     event.currentTarget.value,
-                    event.currentTarget.selectionStart ??
-                      event.currentTarget.value.length,
+                    event.currentTarget.selectionStart,
                   );
                 }}
                 onScroll={(event) =>

@@ -1052,8 +1052,8 @@ function rememberRejectedPayload(
 /** Deterministic JSON: key order must not decide whether two payloads look equal. */
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") {
-    const json: string | undefined = JSON.stringify(value);
-    return json ?? "null";
+    const json: unknown = JSON.stringify(value);
+    return typeof json === "string" ? json : "null";
   }
   if (Array.isArray(value)) {
     return `[${value.map(stableStringify).join(",")}]`;

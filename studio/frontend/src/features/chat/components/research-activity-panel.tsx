@@ -334,9 +334,9 @@ const ActivityRow = memo(function ActivityRow({
   runId: string;
   activity: ResearchActivity;
 }): ReactElement {
-  const storedOpen: boolean | undefined = useResearchRunStore(
+  const storedOpen = useResearchRunStore(
     (state) => state.activityOpenByRunId[runId][activity.id],
-  );
+  ) as boolean | undefined;
   const setActivityOpen = useResearchRunStore(
     (state) => state.setActivityOpen,
   );
@@ -521,9 +521,9 @@ const ActivityRow = memo(function ActivityRow({
 
 function PlanReview({ runId }: { runId: string }): ReactElement | null {
   const run = useResearchRunStore((state) => state.sessions[runId].run);
-  const review: ResearchPlanReviewState | undefined = useResearchRunStore(
+  const review = useResearchRunStore(
     (state) => state.planReviewByRunId[runId],
-  );
+  ) as ResearchPlanReviewState | undefined;
   const setOpen = useResearchRunStore((state) => state.setPlanReviewOpen);
   const setEditing = useResearchRunStore(
     (state) => state.setPlanReviewEditing,
@@ -788,9 +788,9 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
 }
 
 function ResearchActions({ runId }: { runId: string }): ReactElement | null {
-  const run: ResearchSession["run"] | undefined = useResearchRunStore(
+  const run = useResearchRunStore(
     (state) => state.sessions[runId].run,
-  );
+  ) as ResearchSession["run"] | undefined;
   const [pending, setPending] = useState(false);
   if (!run) return null;
   const canRetry = run.status === "failed" || run.status === "cancelled";
@@ -839,15 +839,14 @@ export function ResearchActivityPanel({
   onClose: () => void;
   variant?: "panel" | "sheet";
 }): ReactElement {
-  const session: ResearchSession | undefined = useResearchRunStore(
+  const session = useResearchRunStore(
     (state) => state.sessions[runId],
-  );
+  ) as ResearchSession | undefined;
   const [elapsedNow, setElapsedNow] = useState<number | null>(null);
   const { viewportRef, isAtBottom, scrollToLatest } =
     useResearchActivityScroll(runId);
   const hydrating =
-    session != null &&
-    session.connection === "connecting" &&
+    session?.connection === "connecting" &&
     session.lastAppliedSeq < session.run.lastEventSeq;
 
   useEffect(() => {

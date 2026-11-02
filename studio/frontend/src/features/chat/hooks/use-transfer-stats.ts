@@ -27,12 +27,10 @@ export function useTransferStats(
   // Sampling belongs in an effect: the clock is impure, so it cannot run during render.
   useEffect(() => {
     const cur = typeof bytes === "number" && Number.isFinite(bytes) ? bytes : 0;
-    if (typeof document !== "undefined" && document.hidden) {
-      // Hidden tabs clamp polling to ~1/min, which would skew the rate; drop stale samples.
-      setSamples([]);
-      return;
-    }
+    // Hidden tabs clamp polling to ~1/min, which would skew the rate; drop stale samples.
+    const hidden = typeof document !== "undefined" && document.hidden;
     setSamples((current) => {
+      if (hidden) return [];
       const next = [...current];
       appendSample(next, Date.now() / 1000, cur);
       return next;

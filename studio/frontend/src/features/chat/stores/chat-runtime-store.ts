@@ -3128,7 +3128,7 @@ function forgetModelParams(
     modelsShowingPresetPick.add(modelId);
   }
   saveSettingsPatch({ forgetInferenceParamsByModel: { [modelId]: forgotten } });
-  const entry: PersistedInferenceParams | undefined = current[modelId];
+  const entry = current[modelId] as PersistedInferenceParams | undefined;
   if (entry === undefined) {
     return outgoing;
   }
@@ -3455,8 +3455,9 @@ function getHydratedSettingsState(
       hydrated[modelId] = entry;
     }
     for (const modelId of locallyRememberedModels) {
-      const local: PersistedInferenceParams | undefined =
-        state.paramsByModel[modelId];
+      const local = state.paramsByModel[modelId] as
+        | PersistedInferenceParams
+        | undefined;
       if (local) {
         hydrated[modelId] = local;
       }
@@ -3574,9 +3575,9 @@ function getHydratedSettingsState(
     }
   }
   // The already-selected model never crossed a transition, so replay its memory here.
-  const remembered: PersistedInferenceParams | undefined = (
-    nextState.paramsByModel ?? state.paramsByModel
-  )[params.checkpoint];
+  const remembered = (nextState.paramsByModel ?? state.paramsByModel)[
+    params.checkpoint
+  ] as PersistedInferenceParams | undefined;
   if (
     (nextState.rememberParamsPerModel ?? state.rememberParamsPerModel) &&
     remembered
@@ -3922,8 +3923,9 @@ function adoptMigratedFieldsAfterLocalEdit(
     if (!changed) {
       return state;
     }
-    const storedRow: PersistedInferenceParams | undefined =
-      state.paramsByModel[checkpoint];
+    const storedRow = state.paramsByModel[checkpoint] as
+      | PersistedInferenceParams
+      | undefined;
     return {
       // As the normal application path does: applying a thread pin advances no
       // mutation version, so nothing above would have noticed it.
@@ -4565,8 +4567,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const current = state.loadingModelPick;
       if (
         current?.id !== expected.id ||
-        current?.ggufVariant !== expected.ggufVariant ||
-        current?.nativePathToken !== expected.nativePathToken
+        current.ggufVariant !== expected.ggufVariant ||
+        current.nativePathToken !== expected.nativePathToken
       ) {
         return state;
       }
@@ -5614,8 +5616,9 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     }); },
   adoptChatFullAccessRun: (runId, threadId) => { set((state) => {
       if (!runId || !threadId || threadId === "__default") return state;
-      const grant: ChatFullAccessGrant | undefined =
-        state.chatFullAccessGrants[runId];
+      const grant = state.chatFullAccessGrants[runId] as
+        | ChatFullAccessGrant
+        | undefined;
       const recorded = state.chatFullAccessThreadByRunId[runId];
       if (recorded && recorded !== threadId) return state;
       const runThreads = recorded
@@ -5635,8 +5638,9 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     }); },
   clearUnadoptedChatFullAccessRun: (runId) => { set((state) => {
       // The run's thread mapping stays: a first-turn upgrade acknowledged after the run ended binds through it.
-      const grant: ChatFullAccessGrant | undefined =
-        state.chatFullAccessGrants[runId];
+      const grant = state.chatFullAccessGrants[runId] as
+        | ChatFullAccessGrant
+        | undefined;
       if (!grant || grant.threadId) return state;
       const grants = { ...state.chatFullAccessGrants };
       Reflect.deleteProperty(grants, runId);
@@ -5738,8 +5742,9 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       if (claim !== undefined && claim !== pendingAttachmentTargetClaim) {
         return state;
       }
-      const pending: ProjectAttachmentTarget | undefined =
-        state.projectAttachmentTargetByThread[PENDING_CHAT_ATTACHMENT_KEY];
+      const pending = state.projectAttachmentTargetByThread[
+        PENDING_CHAT_ATTACHMENT_KEY
+      ] as ProjectAttachmentTarget | undefined;
       if (
         pending === undefined ||
         threadId in state.projectAttachmentTargetByThread

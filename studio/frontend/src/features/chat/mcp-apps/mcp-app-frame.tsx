@@ -113,6 +113,7 @@ export function McpAppFrame(props: McpAppFrameProps) {
   const pendingRef = useRef<PendingToolCall[]>([]);
   const portRef = useRef<MessagePort | null>(null);
   const initializedRef = useRef(false);
+  const fedFrameRef = useRef<object | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,7 +147,6 @@ export function McpAppFrame(props: McpAppFrameProps) {
       html,
       src: frameSrc(resource.ui.csp),
       scope: resource.scope,
-      fed: false,
     };
   }, [resource]);
 
@@ -181,7 +181,7 @@ export function McpAppFrame(props: McpAppFrameProps) {
           permission_mode: useChatRuntimeStore.getState().permissionMode,
           approved,
         }).then((res) => ({
-          content: res.content ?? [],
+          content: res.content,
           ...(res.structured_content !== null
             ? { structuredContent: res.structured_content }
             : {}),
@@ -318,7 +318,8 @@ export function McpAppFrame(props: McpAppFrameProps) {
         if (!viewOwnsSize) setHeight(clampHeight(data.mcpAppHeight));
         return;
       }
-      if (!data || data.jsonrpc !== "2.0" || typeof data.method !== "string") return;
+      if (!data) return;
+      if (data.jsonrpc !== "2.0" || typeof data.method !== "string") return;
       const params = isObject(data.params) ? data.params : {};
       const now = latest.current.props;
       if (data.id !== undefined) {
@@ -389,7 +390,7 @@ export function McpAppFrame(props: McpAppFrameProps) {
         event.source !== iframeRef.current?.contentWindow ||
         event.origin !== "null" ||
         data?.__unslothMcpApp !== frame.token ||
-        data?.__unslothMcpAppPort !== true ||
+        data.__unslothMcpAppPort !== true ||
         !port
       ) {
         return;
@@ -419,8 +420,8 @@ export function McpAppFrame(props: McpAppFrameProps) {
 
   // Only the first parent-initiated load is seeded.
   const onLoad = () => {
-    if (!frame || frame.fed) return;
-    frame.fed = true;
+    if (!frame || fedFrameRef.current === frame) return;
+    fedFrameRef.current = frame;
     // Opaque origin requires a wildcard target; it still only reaches this iframe.
     iframeRef.current?.contentWindow?.postMessage(
       { type: "unsloth:artifact-html", html: frame.html },
@@ -449,7 +450,7 @@ export function McpAppFrame(props: McpAppFrameProps) {
     );
   }
 
-  const asking = pendingCalls[0];
+  const asking = pendingCalls.at(0);
   const answer = (allow: boolean, always = false) => {
     if (!asking) return;
     const rest = pendingRef.current.filter((call) => call !== asking);

@@ -664,14 +664,14 @@ export function createAutoContinueTab({
     if (!manager) {
       return mutate();
     }
-    let ran: boolean = false;
+    const state = { ran: false };
     try {
       return await manager.request(AUTO_CONTINUE_LOCK_NAME, () => {
-        ran = true;
+        state.ran = true;
         return mutate();
       });
     } catch {
-      return ran ? fallback : mutate();
+      return state.ran ? fallback : mutate();
     }
   }
 
@@ -694,7 +694,7 @@ export function createAutoContinueTab({
       return null;
     }
     try {
-      const lease: Lease | undefined = readLeases(store)[messageId];
+      const lease = readLeases(store)[messageId] as Lease | undefined;
       return lease && lease.expires > now ? lease : null;
     } catch {
       return null;
@@ -716,7 +716,7 @@ export function createAutoContinueTab({
     } catch {
       return "started";
     }
-    const held: Lease | undefined = leases[messageId];
+    const held = leases[messageId] as Lease | undefined;
     if (
       held &&
       held.expires > now &&

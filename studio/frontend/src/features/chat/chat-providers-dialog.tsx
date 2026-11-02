@@ -1966,7 +1966,6 @@ export function ChatProvidersSettings({
                 try {
                   const currentProviders = providersRef.current;
                   const synced = await syncExternalProvidersFromBackend(currentProviders);
-                  providersRef.current = synced;
                   onProvidersChange(synced);
                   if (request !== codexCatalogRequestRef.current) {
                     owned = false;

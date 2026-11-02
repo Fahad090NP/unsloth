@@ -847,8 +847,8 @@ function docxMathText(element: Element, w: string): string {
   const arg = (key: string) =>
     ["0", "false", "off"].includes(prop(`${key}Hide`, "off")) ? join(children(key).slice(0, 1)) : "";
   const prop = (key: string, fallback: string) => {
-    const node = children(`${name}Pr`).flatMap((pr) => childElements(pr, ns, key))[0];
-    return node ? (node.getAttributeNS(ns, "val") || "") : fallback;
+    const node = children(`${name}Pr`).flatMap((pr) => childElements(pr, ns, key)).at(0);
+    return node?.getAttributeNS(ns, "val") || fallback;
   };
   const scripts = (sub: string, sup: string) => (sub ? `_{${sub}}` : "") + (sup ? `^{${sup}}` : "");
   const all = Array.from(element.childNodes).filter((node): node is Element => node.nodeType === 1);
@@ -1613,13 +1613,11 @@ function addKeptDocxImages(bytes: Uint8Array, archive: DocxArchive, mainDocument
     const kept = [...strFromU8(xml).replace(XML_NON_ELEMENT_RE, "").matchAll(element)]
       .map(([whole]) => whole)
       .filter((whole) => {
-        let id: string | undefined;
-        for (const open of docxElementTags(whole)) {
-          id = [...open.attributes].find(
-            ([name]) => name === "id" || name.endsWith(":id"),
-          )?.[1];
-          break;
-        }
+        const first = docxElementTags(whole).next();
+        if (first.done) return false;
+        const id = [...first.value.attributes].find(
+          ([name]) => name === "id" || name.endsWith(":id"),
+        )?.[1];
         return id !== undefined && noteIds.has(id);
       });
     addImages(docxRelationships(archive.entries[docxRelationshipsPath(part)], dirname(part)), relationshipIdsIn(kept.join("")));
@@ -1794,6 +1792,9 @@ function textBudget(limit: number) {
     get cut() {
       return cut;
     },
+    isCut(): boolean {
+      return cut;
+    },
   };
 }
 
@@ -1829,7 +1830,7 @@ export async function extractOfficeAttachmentText(
       if (budget.cut) break;
       const lines = [budget.take(`Sheet: ${sheet.name}`)];
       for (const row of sheet.rows) {
-        if (budget.cut) continue;
+        if (budget.isCut()) continue;
         const line = Array.from(row, (cell) => budget.take(cell?.text ?? ""))
           .filter((_, index) => !sheet.hidden?.columns.has(index))
           .join("\t")

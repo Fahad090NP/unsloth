@@ -420,7 +420,17 @@ export function ChatMcpServersDialog({
   const togglingIdsRef = useRef(new Set<string>());
   const busyIdsRef = useRef(new Set<string>());
   const importingRef = useRef(false);
-  openRef.current = open;
+  const isDialogOpen = () => openRef.current;
+  const finishImport = useCallback((importGeneration: number) => {
+    if (importGenerationRef.current === importGeneration) {
+      importingRef.current = false;
+      if (openRef.current) setImporting(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
 
   useEffect(() => {
     return () => {
@@ -807,8 +817,7 @@ export function ChatMcpServersDialog({
       if (actionGenerationRef.current !== generation || !openRef.current)
         return;
       const result = await importMcpServers(config);
-      const stillOpen = openRef.current;
-      if (actionGenerationRef.current !== generation || !stillOpen)
+      if (actionGenerationRef.current !== generation || !isDialogOpen())
         return;
       const parts = [`${result.created.length} added`];
       if (result.skipped.length) parts.push(`${result.skipped.length} skipped`);
@@ -836,10 +845,7 @@ export function ChatMcpServersDialog({
         description: err instanceof Error ? err.message : String(err),
       });
     } finally {
-      if (importGenerationRef.current === importGeneration) {
-        importingRef.current = false;
-        if (openRef.current) setImporting(false);
-      }
+      finishImport(importGeneration);
     }
   }
 
