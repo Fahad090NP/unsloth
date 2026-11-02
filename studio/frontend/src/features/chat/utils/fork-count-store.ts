@@ -60,7 +60,7 @@ function cancelTimers(): void {
 function runRefresh(): void {
   cancelTimers();
   for (const threadId of entries.keys()) {
-    refresh(threadId).catch((_error: unknown) => undefined);
+    refresh(threadId).catch(() => undefined);
   }
 }
 

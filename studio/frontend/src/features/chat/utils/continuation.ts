@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
+import type { MessageStatus } from "@assistant-ui/react";
 import {
   type GeminiAnswerReplayPart,
   type GeminiContinuationReplayTurn,
@@ -116,7 +117,7 @@ const STATUS_REASON: Record<
 
 export function restoredAssistantStatus(
   metadata: unknown,
-): import("@assistant-ui/react").MessageStatus {
+): MessageStatus {
   const incomplete = readIncompleteInfo(metadata);
   if (!incomplete) {
     return { type: "complete", reason: "unknown" };
@@ -570,9 +571,7 @@ function browserLeaseStorage(): AutoContinueLeaseStorage | null {
     if (typeof window === "undefined") {
       return null;
     }
-    return (
-      (window.localStorage) ?? null
-    );
+    return window.localStorage;
   } catch {
     return null;
   }
@@ -612,9 +611,9 @@ function readLeases(storage: AutoContinueLeaseStorage): Record<string, Lease> {
 }
 
 function newLeaseToken(): string {
-  const uuid = (globalThis.crypto as Crypto | undefined)?.randomUUID;
-  if (typeof uuid === "function") {
-    return uuid.call(globalThis.crypto);
+  const cryptoApi = globalThis.crypto as Crypto | undefined;
+  if (cryptoApi && typeof cryptoApi.randomUUID === "function") {
+    return cryptoApi.randomUUID();
   }
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
@@ -665,7 +664,7 @@ export function createAutoContinueTab({
     if (!manager) {
       return mutate();
     }
-    let ran = false;
+    let ran: boolean = false;
     try {
       return await manager.request(AUTO_CONTINUE_LOCK_NAME, () => {
         ran = true;
@@ -695,7 +694,7 @@ export function createAutoContinueTab({
       return null;
     }
     try {
-      const lease = readLeases(store)[messageId];
+      const lease: Lease | undefined = readLeases(store)[messageId];
       return lease && lease.expires > now ? lease : null;
     } catch {
       return null;
@@ -717,7 +716,7 @@ export function createAutoContinueTab({
     } catch {
       return "started";
     }
-    const held = leases[messageId];
+    const held: Lease | undefined = leases[messageId];
     if (
       held &&
       held.expires > now &&
@@ -1058,7 +1057,8 @@ export function noteRunStartedThisSession(
 export function runStartedThisSession(
   messageId: string | null | undefined,
 ): boolean {
-  return Boolean(messageId) && startedThisSession.has(messageId!);
+  if (!messageId) return false;
+  return startedThisSession.has(messageId);
 }
 
 /** The budget is per turn but the claim is per message; check both or a spinner never resolves. */

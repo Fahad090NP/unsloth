@@ -112,12 +112,12 @@ async function readOpenDocumentXmlFiles(
     });
   }
 
-  const content: Uint8Array | undefined = files["content.xml"];
+  const content = files["content.xml"] as Uint8Array | undefined;
   if (!content) {
     throw new Error(`OpenDocument file is missing content.xml: ${file.name}`);
   }
 
-  const styles: Uint8Array | undefined = files["styles.xml"];
+  const styles = files["styles.xml"] as Uint8Array | undefined;
   assertOpenDocumentXmlSize(file.name, "content.xml", content.length);
   if (styles) {
     assertOpenDocumentXmlSize(file.name, "styles.xml", styles.length);

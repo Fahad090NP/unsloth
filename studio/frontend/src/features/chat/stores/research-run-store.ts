@@ -1105,7 +1105,9 @@ export function ensureResearchRunFollowed(
           );
       }
     }
-  })();
+  })().catch((error: unknown) => {
+    console.error("Background chat operation failed", error);
+  });
 }
 
 export function resetResearchRunState(): void {

@@ -287,21 +287,33 @@ export function ArtifactHtmlFrame({
   }, [artifactHtml]);
 
   useEffect(() => {
+    type CanvasMessage = {
+      type?: unknown;
+      v?: unknown;
+      blockedURI?: unknown;
+      effectiveDirective?: unknown;
+      chatArtifactHeight?: unknown;
+    };
     const handler = (event: MessageEvent) => {
       if (event.source !== iframeRef.current?.contentWindow) return;
       if (event.origin !== "null") return;
-      if (event.data?.type === "unsloth:artifact-blocked") {
+      const data = event.data as CanvasMessage | null;
+      if (data?.type === "unsloth:artifact-blocked") {
         // event.source survives the swap, so drop reports from the outgoing canvas by version stamp.
-        if (event.data.v !== loadVersion) return;
-        const uri = event.data.blockedURI;
+        if (data.v !== loadVersion) return;
+        const uri = data.blockedURI;
         // The canvas can post these directly, so cap size too, not just entry count.
         if (typeof uri !== "string" || uri.length > BLOCKED_URI_MAX_CHARS) {
           return;
         }
+        const directive =
+          typeof data.effectiveDirective === "string"
+            ? data.effectiveDirective
+            : "";
         // The grant cannot fix these; prompting would widen policy and hide the banner for nothing.
-        if (GRANT_CANNOT_FIX.has(event.data.effectiveDirective)) return;
+        if (GRANT_CANNOT_FIX.has(directive)) return;
         // The grant widens worker-src to blob: but not data:, so a data: Worker stays blocked.
-        if (GRANT_CANNOT_FIX_SCHEME[event.data.effectiveDirective] === uri) {
+        if (GRANT_CANNOT_FIX_SCHEME[directive] === uri) {
           return;
         }
         const host = blockedHost(uri);
@@ -310,19 +322,19 @@ export function ArtifactHtmlFrame({
         return;
       }
       if (
-        event.data?.type === "unsloth:artifact-error" ||
-        event.data?.type === "unsloth:artifact-console"
+        data?.type === "unsloth:artifact-error" ||
+        data?.type === "unsloth:artifact-console"
       ) {
-        if (event.data.v !== loadVersion) return;
-        const entry = parseCanvasReport(event.data);
+        if (data.v !== loadVersion) return;
+        const entry = parseCanvasReport(data);
         if (!entry) return;
         queueEntry(entry);
         return;
       }
-      if (typeof event.data?.chatArtifactHeight !== "number") return;
+      if (!data || typeof data.chatArtifactHeight !== "number") return;
       setHeight(
         Math.min(
-          Math.max(event.data.chatArtifactHeight, 160),
+          Math.max(data.chatArtifactHeight, 160),
           HTML_FRAME_MAX_HEIGHT,
         ),
       );
@@ -346,7 +358,7 @@ export function ArtifactHtmlFrame({
     });
   };
   const showErrorBanner = errorsDismissedCode !== code && errors.length > 0;
-  const firstError = errors[0];
+  const firstError = errors.at(0);
   const errorTitle =
     errors.length === 1
       ? t("settings.chat.artifacts.errorTitle")

@@ -398,10 +398,15 @@ export function ChatMcpServersDialog({
   const [refreshingIds, setRefreshingIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
-  const [togglingIds, setTogglingIds] = useState<ReadonlySet<string>>(
+  const [, setTogglingIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
   const [busyIds, setBusyIds] = useState<ReadonlySet<string>>(() => new Set());
+  const reportAsyncError = useCallback((error: unknown) => {
+    toast.error("Action failed", {
+      description: error instanceof Error ? error.message : undefined,
+    });
+  }, []);
   const [confirmingDelete, setConfirmingDelete] =
     useState<McpServerConfig | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -546,9 +551,9 @@ export function ChatMcpServersDialog({
       transport: isHttpAddress(server.url) ? "http" : "stdio",
       arguments: [],
       stdioSnapshot: null,
-      headers: headersFromObject(server.headers ?? {}),
+      headers: headersFromObject(server.headers),
       credentialTransport: isHttpAddress(server.url) ? "http" : "stdio",
-      useOauth: server.use_oauth ?? false,
+      useOauth: server.use_oauth,
       oauthClientId: server.oauth_client_id ?? "",
       oauthClientSecret: "",
       imageInputMappings: server.image_input_mappings ?? [],
@@ -577,11 +582,11 @@ export function ChatMcpServersDialog({
       const decodedForm: FormState = {
         ...baseForm,
         url: decoded.command,
-        arguments: argumentsFromStrings(decoded.arguments ?? []),
+        arguments: argumentsFromStrings(decoded.arguments),
         stdioSnapshot: createMcpStdioSnapshot(
           server.url,
           decoded.command,
-          decoded.arguments ?? [],
+          decoded.arguments,
         ),
         useOauth: false,
       };
@@ -781,8 +786,9 @@ export function ChatMcpServersDialog({
   }
 
   async function onImportFile(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // let the user re-pick the same file later
+    const target = e.target;
+    const file = target.files?.[0];
+    target.value = ""; // let the user re-pick the same file later
     if (!file || importingRef.current) return;
     const generation = actionGenerationRef.current;
     const importGeneration = importGenerationRef.current + 1;
@@ -801,7 +807,8 @@ export function ChatMcpServersDialog({
       if (actionGenerationRef.current !== generation || !openRef.current)
         return;
       const result = await importMcpServers(config);
-      if (actionGenerationRef.current !== generation || !openRef.current)
+      const stillOpen = openRef.current;
+      if (actionGenerationRef.current !== generation || !stillOpen)
         return;
       const parts = [`${result.created.length} added`];
       if (result.skipped.length) parts.push(`${result.skipped.length} skipped`);
@@ -953,7 +960,9 @@ export function ChatMcpServersDialog({
           type="file"
           accept="application/json,.json"
           className="hidden"
-          onChange={onImportFile}
+          onChange={(event) => {
+            onImportFile(event).catch(reportAsyncError);
+          }}
           disabled={importing || formPending}
         />
 
@@ -1070,7 +1079,9 @@ export function ChatMcpServersDialog({
                       const server = servers.find(
                         (candidate) => candidate.id === view.id,
                       );
-                      if (server) void startEdit(server);
+                      if (server) {
+                        startEdit(server).catch(reportAsyncError);
+                      }
                     }}
                   >
                     Retry
@@ -1170,7 +1181,9 @@ export function ChatMcpServersDialog({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={testConnection}
+                onClick={() => {
+                  testConnection().catch(reportAsyncError);
+                }}
                 disabled={
                   formPending ||
                   codecError !== null ||
@@ -1190,7 +1203,9 @@ export function ChatMcpServersDialog({
                   Cancel
                 </Button>
                 <Button
-                  onClick={submitForm}
+                  onClick={() => {
+                  submitForm().catch(reportAsyncError);
+                }}
                   disabled={
                     formPending ||
                     codecError !== null ||
@@ -1247,7 +1262,9 @@ export function ChatMcpServersDialog({
                     <div className="flex items-center gap-1">
                       <Switch
                         checked={server.is_enabled}
-                        onCheckedChange={(next) => toggleEnabled(server, next)}
+                        onCheckedChange={(next) => {
+                          toggleEnabled(server, next).catch(reportAsyncError);
+                        }}
                         aria-label="Enable server"
                         disabled={importing || busyIds.has(server.id)}
                       />
@@ -1255,7 +1272,9 @@ export function ChatMcpServersDialog({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => refreshTools(server)}
+                        onClick={() => {
+                          refreshTools(server).catch(reportAsyncError);
+                        }}
                         aria-label="Refresh tools"
                         title="Refresh tools from this server"
                         disabled={importing || busyIds.has(server.id)}
@@ -1270,7 +1289,9 @@ export function ChatMcpServersDialog({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => void startEdit(server)}
+                        onClick={() => {
+                          startEdit(server).catch(reportAsyncError);
+                        }}
                         aria-label="Edit server"
                         disabled={importing || busyIds.has(server.id)}
                       >
@@ -1318,7 +1339,9 @@ export function ChatMcpServersDialog({
               onClick={() => {
                 const server = confirmingDelete;
                 setConfirmingDelete(null);
-                if (server) void removeServer(server);
+                if (server) {
+                  removeServer(server).catch(reportAsyncError);
+                }
               }}
             >
               Delete

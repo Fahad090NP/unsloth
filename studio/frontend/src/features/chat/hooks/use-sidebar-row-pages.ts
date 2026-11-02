@@ -50,6 +50,11 @@ function toSidebarItem(row: SidebarRowRecord): SidebarItem | null {
 
 let serverPages: boolean | null = null;
 
+/** Set from an async path: TS cannot prove another await did not rewrite the flag. */
+function setServerPages(value: boolean): void {
+  serverPages = value;
+}
+
 let fullList: {
   epoch: number;
   session: number;
@@ -120,7 +125,7 @@ export async function fetchSidebarRowPage(
   ) {
     const page = await fetchSidebarRows({ ...query, limit, cursor });
     if (page) {
-      serverPages = true;
+      setServerPages(true);
       const shown = page.rows.flatMap((row) =>
         (row.threadIds.length ? row.threadIds : [row.id]).map((id, index) => ({
           id,
@@ -137,7 +142,7 @@ export async function fetchSidebarRowPage(
         total: page.total ?? null,
       };
     }
-    serverPages = false;
+    setServerPages(false);
   }
   return await fullListPage(query, limit, continuesFullList ? cursor : null);
 }
@@ -182,7 +187,7 @@ function onHistoryUpdated() {
     fullListEpoch += 1;
     for (const pager of livePagers) {
       const { loaded, loading } = pager.getState();
-      if (loaded || loading) void pager.refresh();
+      if (loaded || loading) pager.refresh().catch(() => undefined);
     }
   }, SIDEBAR_REFRESH_DEBOUNCE_MS);
 }
@@ -372,7 +377,11 @@ export function useSidebarRowPages(
           // render now, not on the batched timer: a caller acting on the rows (Select All) renders next
           bump();
           const { error } = pager.getState();
-          if (error) throw error;
+          if (error) {
+            throw error instanceof Error
+              ? error
+              : new Error("Sidebar rows failed to load.");
+          }
         },
         retry: () => pager.retry(),
       };

@@ -34,9 +34,10 @@ db.version(3)
     tx
       .table("threads")
       .toCollection()
-      .modify((thread: { modelId?: string }) => {
-        if (!thread.modelId) thread.modelId = "";
-      }),
+      .modify((thread: { modelId?: string }) => ({
+        ...thread,
+        modelId: thread.modelId ?? "",
+      })),
   );
 
 export { db };

@@ -499,6 +499,8 @@ const ATOMIC_SETTING_KEYS = new Set<string>(["ragSource"]);
 const NESTED_MAP_SETTING_KEYS = new Set<string>(["inferenceParamsByModel"]);
 
 function mergePatch(into: SettingsPatch, more: SettingsPatch): void {
+  // Writes go through one alias: `into` is a parameter, and its members are merged in place.
+  const intoAny = into as Record<string, unknown>;
   // The server forgets before it merges, so an older queued edit to a forgotten key goes too.
   const forget = more.forgetInferenceParamsByModel;
   if (forget) {
@@ -513,13 +515,12 @@ function mergePatch(into: SettingsPatch, more: SettingsPatch): void {
         );
       }
     }
-    into.forgetInferenceParamsByModel = merged;
+    intoAny.forgetInferenceParamsByModel = merged;
   }
   for (const [key, value] of Object.entries(more)) {
     if (key === "forgetInferenceParamsByModel") {
       continue;
     }
-    const intoAny = into as Record<string, unknown>;
     const prev = intoAny[key];
     if (ATOMIC_SETTING_KEYS.has(key)) {
       intoAny[key] = value;
@@ -3127,7 +3128,7 @@ function forgetModelParams(
     modelsShowingPresetPick.add(modelId);
   }
   saveSettingsPatch({ forgetInferenceParamsByModel: { [modelId]: forgotten } });
-  const entry = current[modelId];
+  const entry: PersistedInferenceParams | undefined = current[modelId];
   if (entry === undefined) {
     return outgoing;
   }
@@ -3197,7 +3198,7 @@ function rememberOutgoingModel(
   );
   // Only to seed a model with no entry: later changes are written key by key, and a full
   // snapshot would put this browser's copy of untouched keys over another tab's.
-  const seeding = state.paramsByModel[outgoing.checkpoint] === undefined;
+  const seeding = !Object.hasOwn(state.paramsByModel, outgoing.checkpoint);
   const next = trackParamsByModel(
     state,
     getRememberedParamsPatch(
@@ -3454,7 +3455,8 @@ function getHydratedSettingsState(
       hydrated[modelId] = entry;
     }
     for (const modelId of locallyRememberedModels) {
-      const local = state.paramsByModel[modelId];
+      const local: PersistedInferenceParams | undefined =
+        state.paramsByModel[modelId];
       if (local) {
         hydrated[modelId] = local;
       }
@@ -3496,7 +3498,7 @@ function getHydratedSettingsState(
     remembersPerModel &&
     left &&
     !sameCheckpointIdentity(left, checkpoint) &&
-    !byModel[left]
+    !Object.hasOwn(byModel, left)
   ) {
     const inherited: PersistedInferenceParams = {};
     for (const key of REMEMBERED_INFERENCE_PARAM_KEYS) {
@@ -3572,9 +3574,9 @@ function getHydratedSettingsState(
     }
   }
   // The already-selected model never crossed a transition, so replay its memory here.
-  const remembered = (nextState.paramsByModel ?? state.paramsByModel)[
-    params.checkpoint
-  ];
+  const remembered: PersistedInferenceParams | undefined = (
+    nextState.paramsByModel ?? state.paramsByModel
+  )[params.checkpoint];
   if (
     (nextState.rememberParamsPerModel ?? state.rememberParamsPerModel) &&
     remembered
@@ -3895,7 +3897,7 @@ function applyLegacyQwenDefaultsAfterPresetChange(
 function adoptMigratedFieldsAfterLocalEdit(
   patch: PersistedChatSettings,
   checkpoint: string,
-  versionsBefore: Record<PersistedInferenceParamKey, number>,
+  versionsBefore: Partial<Record<PersistedInferenceParamKey, number>>,
 ): void {
   const migratedRow =
     patch.inferenceParamsByModel?.[checkpoint] ?? patch.inferenceParams;
@@ -3920,7 +3922,8 @@ function adoptMigratedFieldsAfterLocalEdit(
     if (!changed) {
       return state;
     }
-    const storedRow = state.paramsByModel[checkpoint];
+    const storedRow: PersistedInferenceParams | undefined =
+      state.paramsByModel[checkpoint];
     return {
       // As the normal application path does: applying a thread pin advances no
       // mutation version, so nothing above would have noticed it.
@@ -4021,7 +4024,6 @@ async function retryLegacyQwenDefaultsAfterPresetChange(
           migrateOwnedGlobalAlongsideModelMemory,
         );
       } else if (
-        migration.patch &&
         useChatRuntimeStore.getState().activePresetSource !== "custom"
       ) {
         adoptMigratedFieldsAfterLocalEdit(
@@ -4494,12 +4496,13 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           }
         }
         const hydratedSettings = migration.settings;
-        let applied = false;
+        // A holder, not a `let`: the store callback runs synchronously but TS cannot see the write.
+        const applied = { value: false };
         set((state) => {
           if (state.settingsHydrated) {
             return state;
           }
-          applied = true;
+          applied.value = true;
           const nextState: Partial<ChatRuntimeStore> = {
             settingsHydrated: true,
             ...getHydratedPresetState(
@@ -4515,7 +4518,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           };
           return nextState;
         });
-        if (applied) {
+        if (applied.value) {
           cacheHydratedSettings(hydratedSettings, hydrationVersions);
           mirroredSettingsHydrated = true;
           // Only an authoritative read can say a mirrored field is unset; else backfill clobbers.
@@ -4561,10 +4564,9 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
   clearLoadingModelPick: (expected) => { set((state) => {
       const current = state.loadingModelPick;
       if (
-        !current ||
-        current.id !== expected.id ||
-        current.ggufVariant !== expected.ggufVariant ||
-        current.nativePathToken !== expected.nativePathToken
+        current?.id !== expected.id ||
+        current?.ggufVariant !== expected.ggufVariant ||
+        current?.nativePathToken !== expected.nativePathToken
       ) {
         return state;
       }
@@ -4682,16 +4684,17 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       return { activePreset };
     }); },
   setActivePresetSource: (activePresetSource) => {
-    let returnedToBuiltInDefault = false;
+    // A holder, not a `let`: the store callback runs synchronously but TS cannot see the write.
+    const returnedToBuiltInDefault = { value: false };
     set((state) => {
-      returnedToBuiltInDefault =
+      returnedToBuiltInDefault.value =
         activePresetSource === "builtin-default" &&
         state.activePresetSource !== "builtin-default";
       activePresetSourceMutationVersion += 1;
       saveSettingsPatch({ activePresetSource });
       return { activePresetSource };
     });
-    if (returnedToBuiltInDefault) {
+    if (returnedToBuiltInDefault.value) {
       // Defer a microtask so the final slider edit lands before the migration inspects it.
       scheduleLegacyQwenDefaultsRetry(
         useChatRuntimeStore.getState().params.checkpoint,
@@ -4747,7 +4750,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const key = "__default";
       if (!threadId || threadId === key) return state;
       // Two first turns can share "__default"; moving wholesale could hand over a sibling's handle.
-      if ((state.runOwnerByThreadId[key].length ?? 0) > 1) return state;
+      if (state.runOwnerByThreadId[key].length > 1) return state;
       const moved: Partial<ChatRuntimeStore> = {};
       const move = <T,>(
         map: Record<string, T>,
@@ -4807,7 +4810,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
   // Unresolved ids share "__default", so remove only this run's cancel.
   clearThreadServerCancel: (threadId, cancel) => { set((state) => {
       const current = state.serverCancelByThreadId[threadId];
-      if (current === undefined) return state;
+      if (!Object.hasOwn(state.serverCancelByThreadId, threadId)) return state;
       const remaining =
         cancel === undefined ? [] : current.filter((c) => c !== cancel);
       if (remaining.length === current.length) return state;
@@ -4827,7 +4830,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
   setModelsError: (modelsError) => { set({ modelsError }); },
   setLastModelLoadError: (lastModelLoadError) => { set({ lastModelLoadError }); },
   setCheckpoint: (modelId, ggufVariant, options) => {
-    let scheduleQwenMigration = false;
+    // A holder, not a `let`: the store callback runs synchronously but TS cannot see the write.
+    const scheduleQwenMigration = { value: false };
     set((state) => {
       // Only external selections persist; a stale local id would race the freshly loaded model.
       saveLastExternalCheckpoint(isExternalModelId(modelId) ? modelId : null);
@@ -4840,7 +4844,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       if (checkpointChanged && !state.settingsHydrated) {
         unownedCheckpointBeforeHydration = modelId;
       }
-      scheduleQwenMigration = checkpointChanged && state.settingsHydrated;
+      scheduleQwenMigration.value = checkpointChanged && state.settingsHydrated;
       const outgoing =
         checkpointChanged && options?.persist !== false
           ? rememberOutgoingModel(state, state.params)
@@ -4948,7 +4952,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       };
     });
     // No load or status follows an external pick, so schedule here; never with ownership.
-    if (scheduleQwenMigration) {
+    if (scheduleQwenMigration.value) {
       scheduleLegacyQwenDefaultsRetry(null);
     }
   },
@@ -5610,7 +5614,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     }); },
   adoptChatFullAccessRun: (runId, threadId) => { set((state) => {
       if (!runId || !threadId || threadId === "__default") return state;
-      const grant = state.chatFullAccessGrants[runId];
+      const grant: ChatFullAccessGrant | undefined =
+        state.chatFullAccessGrants[runId];
       const recorded = state.chatFullAccessThreadByRunId[runId];
       if (recorded && recorded !== threadId) return state;
       const runThreads = recorded
@@ -5630,7 +5635,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     }); },
   clearUnadoptedChatFullAccessRun: (runId) => { set((state) => {
       // The run's thread mapping stays: a first-turn upgrade acknowledged after the run ended binds through it.
-      const grant = state.chatFullAccessGrants[runId];
+      const grant: ChatFullAccessGrant | undefined =
+        state.chatFullAccessGrants[runId];
       if (!grant || grant.threadId) return state;
       const grants = { ...state.chatFullAccessGrants };
       Reflect.deleteProperty(grants, runId);
@@ -5732,7 +5738,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       if (claim !== undefined && claim !== pendingAttachmentTargetClaim) {
         return state;
       }
-      const pending =
+      const pending: ProjectAttachmentTarget | undefined =
         state.projectAttachmentTargetByThread[PENDING_CHAT_ATTACHMENT_KEY];
       if (
         pending === undefined ||
@@ -5908,7 +5914,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     })); },
   clearActiveDiffusionCanvasForThread: (threadId) => { set((state) => {
       const key = threadId || "__default";
-      if (state.activeDiffusionCanvasByThreadId[key] === undefined) return state;
+      if (!Object.hasOwn(state.activeDiffusionCanvasByThreadId, key)) return state;
       const next = { ...state.activeDiffusionCanvasByThreadId };
       Reflect.deleteProperty(next, key);
       return { activeDiffusionCanvasByThreadId: next };
@@ -5932,7 +5938,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           ...state.liveGenerationByThreadId,
           [key]: {
             prefill: current.prefill ?? null,
-            prefillShown: current.prefillShown ?? false,
+            prefillShown: current.prefillShown,
             decode,
           },
         },
@@ -5940,7 +5946,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     }); },
   clearLiveGenerationForThread: (threadId) => { set((state) => {
       const key = threadId || "__default";
-      if (state.liveGenerationByThreadId[key] === undefined) return state;
+      if (!Object.hasOwn(state.liveGenerationByThreadId, key)) return state;
       const next = { ...state.liveGenerationByThreadId };
       Reflect.deleteProperty(next, key);
       return { liveGenerationByThreadId: next };
@@ -6118,7 +6124,6 @@ export function resolveSpeculativeSettingsForLoad({
     speculativeType,
     specDraftNMax:
       !usePersistedPreference &&
-      speculativeType != null &&
       DRAFT_N_MAX_SPEC_TYPES.has(speculativeType)
         ? state.specDraftNMax
         : null,

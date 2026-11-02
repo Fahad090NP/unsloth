@@ -35,6 +35,8 @@ export function readDeepResearchToolEvent(
   handoff: DeepResearchHandoff,
   event: DeepResearchToolEvent,
 ): boolean {
+  // Mutation is the contract: the caller keeps observing this handoff.
+  const state = handoff;
   const callId =
     typeof event.tool_call_id === "string" ? event.tool_call_id : "";
   if (event.type === "tool_start") {
@@ -44,8 +46,8 @@ export function readDeepResearchToolEvent(
     const question =
       typeof rawQuestion === "string" ? rawQuestion.trim() : "";
     if (handoff.question === null && question) {
-      handoff.pendingCallId = callId;
-      handoff.pendingQuestion = Array.from(question)
+      state.pendingCallId = callId;
+      state.pendingQuestion = Array.from(question)
         .slice(0, DEEP_RESEARCH_QUESTION_MAX_CHARS)
         .join("");
     }
@@ -65,7 +67,7 @@ export function readDeepResearchToolEvent(
     result.startsWith(DEEP_RESEARCH_STARTED_MARKER) &&
     handoff.question === null
   ) {
-    handoff.question =
+    state.question =
       callId === handoff.pendingCallId ? handoff.pendingQuestion : "";
   }
   return handoff.hiddenCallIds.has(callId);

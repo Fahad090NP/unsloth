@@ -64,6 +64,8 @@ import {
 import { useChatRuntimeStore } from "../stores/chat-runtime-store";
 import {
   type ResearchActivity,
+  type ResearchPlanReviewState,
+  type ResearchSession,
   ensureResearchRunFollowed,
   ingestResearchUpdate,
   isSettledResearchRun,
@@ -110,7 +112,7 @@ function useResearchActivityScroll(runId: string) {
     const updateAtBottom = (value: boolean) =>
       { setIsAtBottom((current) => (current === value ? current : value)); };
     const requestTick = () => {
-      if (animationFrame === null) animationFrame = requestAnimationFrame(tick);
+      animationFrame ??= requestAnimationFrame(tick);
     };
     // Reflows without DOM mutation (webfont swap) reach no observer; one deferred check covers them.
     const scheduleSettleCheck = () => {
@@ -209,10 +211,10 @@ function useResearchActivityScroll(runId: string) {
       }
     };
     const onTouchStart = (event: TouchEvent) => {
-      touchStartY = event.touches[0].clientY ?? 0;
+      touchStartY = event.touches[0].clientY;
     };
     const onTouchMove = (event: TouchEvent) => {
-      const y = event.touches[0].clientY ?? 0;
+      const y = event.touches[0].clientY;
       if (
         y - touchStartY > 4 &&
         element.scrollTop > 0 &&
@@ -332,7 +334,7 @@ const ActivityRow = memo(function ActivityRow({
   runId: string;
   activity: ResearchActivity;
 }): ReactElement {
-  const storedOpen = useResearchRunStore(
+  const storedOpen: boolean | undefined = useResearchRunStore(
     (state) => state.activityOpenByRunId[runId][activity.id],
   );
   const setActivityOpen = useResearchRunStore(
@@ -448,7 +450,7 @@ const ActivityRow = memo(function ActivityRow({
       ))}
       {activity.evidenceSources?.map((source) => (
         <div
-          key={`${activity.id}-${source.chunkId}`}
+          key={`${activity.id}-${source.chunkId ?? ""}`}
           className="rounded-lg bg-muted/45 px-3 py-2"
         >
           <p className="line-clamp-2 wrap-break-word font-medium text-foreground/85">
@@ -519,7 +521,7 @@ const ActivityRow = memo(function ActivityRow({
 
 function PlanReview({ runId }: { runId: string }): ReactElement | null {
   const run = useResearchRunStore((state) => state.sessions[runId].run);
-  const review = useResearchRunStore(
+  const review: ResearchPlanReviewState | undefined = useResearchRunStore(
     (state) => state.planReviewByRunId[runId],
   );
   const setOpen = useResearchRunStore((state) => state.setPlanReviewOpen);
@@ -530,7 +532,7 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
   const [pending, setPending] = useState(false);
   const stepKeyPrefix = useId();
   const [stepKeys, setStepKeys] = useState(() =>
-    (review.draft.steps ?? []).map((_, index) => `${stepKeyPrefix}-${index}`),
+    (review?.draft.steps ?? []).map((_, index) => `${stepKeyPrefix}-${index}`),
   );
   const reduceMotion = useReducedMotion();
 
@@ -766,7 +768,9 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
                     (step) => !step.title.trim() || !step.query.trim(),
                   )
                 }
-                onClick={() => void start()}
+                onClick={() => {
+                  start().catch(() => undefined);
+                }}
               >
                 {pending ? (
                   <Spinner />
@@ -784,7 +788,9 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
 }
 
 function ResearchActions({ runId }: { runId: string }): ReactElement | null {
-  const run = useResearchRunStore((state) => state.sessions[runId].run);
+  const run: ResearchSession["run"] | undefined = useResearchRunStore(
+    (state) => state.sessions[runId].run,
+  );
   const [pending, setPending] = useState(false);
   if (!run) return null;
   const canRetry = run.status === "failed" || run.status === "cancelled";
@@ -814,7 +820,9 @@ function ResearchActions({ runId }: { runId: string }): ReactElement | null {
       <Button
         className="w-full"
         disabled={pending}
-        onClick={() => void retry()}
+        onClick={() => {
+          retry().catch(() => undefined);
+        }}
       >
         {pending ? <Spinner /> : <RefreshGlyph />} Retry research
       </Button>
@@ -831,24 +839,27 @@ export function ResearchActivityPanel({
   onClose: () => void;
   variant?: "panel" | "sheet";
 }): ReactElement {
-  const session = useResearchRunStore((state) => state.sessions[runId]);
+  const session: ResearchSession | undefined = useResearchRunStore(
+    (state) => state.sessions[runId],
+  );
   const [elapsedNow, setElapsedNow] = useState<number | null>(null);
   const { viewportRef, isAtBottom, scrollToLatest } =
     useResearchActivityScroll(runId);
-  const hydrating = (
+  const hydrating =
+    session != null &&
     session.connection === "connecting" &&
-      session.lastAppliedSeq < session.run.lastEventSeq
-  );
+    session.lastAppliedSeq < session.run.lastEventSeq;
 
   useEffect(() => {
+    if (!session) return;
     ensureResearchRunFollowed(runId, session.run);
-  }, [runId, session.following]);
+  }, [runId, session]);
 
   useEffect(() => {
     if (!session || terminalStatuses.has(session.run.status)) return;
     const timer = window.setInterval(() => { setElapsedNow(Date.now()); }, 1000);
     return () => { window.clearInterval(timer); };
-  }, [session.run.status]);
+  }, [session]);
 
   if (!session) {
     return (

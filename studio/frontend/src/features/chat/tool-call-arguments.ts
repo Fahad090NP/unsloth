@@ -312,7 +312,7 @@ class JsonTextParser {
 }
 
 function stringifyJson(value: unknown): string {
-  const serializedValue: string | undefined = JSON.stringify(value);
+  const serializedValue = JSON.stringify(value) as string | undefined;
   return serializedValue ?? "null";
 }
 
@@ -403,7 +403,7 @@ export function streamedToolCallArguments(value: unknown): string {
     return "";
   }
   try {
-    const serializedValue: string | undefined = JSON.stringify(value);
+    const serializedValue = JSON.stringify(value) as string | undefined;
     return serializedValue ?? "";
   } catch {
     return "";

@@ -177,8 +177,12 @@ export function subscribeChatHistoryUpdated(
   listener: (detail: ChatHistoryUpdatedDetail) => void,
 ): () => void {
   if (typeof window === "undefined") return () => undefined;
-  const onEvent = (event: Event) =>
-    { listener((event as CustomEvent<ChatHistoryUpdatedDetail>).detail ?? {}); };
+  const onEvent = (event: Event) => {
+    const detail = (
+      event as CustomEvent<ChatHistoryUpdatedDetail | undefined>
+    ).detail;
+    listener(detail ?? {});
+  };
   window.addEventListener(CHAT_HISTORY_UPDATED_EVENT, onEvent);
   return () => { window.removeEventListener(CHAT_HISTORY_UPDATED_EVENT, onEvent); };
 }
@@ -301,7 +305,7 @@ async function parseJsonOrThrow<T>(
   response: Response,
   paddedLabel?: string,
 ): Promise<T> {
-  const body = await response.json().catch(() => null);
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const detail = (body as { detail?: unknown } | null)?.detail;
     throw new LoadModelError(parseErrorText(response.status, body), response.status, detail);
@@ -407,7 +411,7 @@ export async function loadModel(
   // Announced after the token prompt so a cancelled load never shows a row.
   return await withModelLoadNotice(
     options?.runtime ?? "chat",
-    payload.model_path ?? null,
+    payload.model_path,
     async () => {
       // An uncached model selected here is downloaded by the backend inside this request, bypassing
       // the download manager's disk check, so check here (throttled).
@@ -1024,7 +1028,7 @@ export async function fetchChatAttachmentBlob(
     `/api/chat/attachments/${encodeURIComponent(messageId)}/${encodeURIComponent(attachmentId)}/file`,
   );
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
+    const body: unknown = await response.json().catch(() => null);
     throw new Error(parseErrorText(response.status, body));
   }
   return await response.blob();
@@ -1100,11 +1104,11 @@ export async function saveChatThread(
     [thread.id],
   );
   if (response.status === 410) {
-    const body = await response.json().catch(() => null);
+    const body: unknown = await response.json().catch(() => null);
     throw new ChatThreadDeletedError(parseErrorText(response.status, body));
   }
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
+    const body: unknown = await response.json().catch(() => null);
     throw new ChatThreadWriteError(
       parseErrorText(response.status, body),
       response.status,
@@ -1453,7 +1457,7 @@ export async function saveChatMessage(
     response.headers.get(CONFLICT_KIND_HEADER) === CONFLICT_KIND_PROTECTED
   ) {
     // Read here, not in parseJsonOrThrow: a body is single-use.
-    const body = await response.json().catch(() => null);
+    const body: unknown = await response.json().catch(() => null);
     throw new ChatMessageProtectedError(
       message.threadId,
       message.id,
@@ -1617,7 +1621,7 @@ export async function browseFolders(
   signal?: AbortSignal,
 ): Promise<BrowseFoldersResponse> {
   const params = new URLSearchParams();
-  if (path !== undefined && path !== null) params.set("path", path);
+  if (path !== undefined) params.set("path", path);
   if (showHidden) params.set("show_hidden", "true");
   const qs = params.toString();
   // Forward the signal so a cancelled navigation also cancels the server-side walk.
@@ -1827,7 +1831,7 @@ export async function* streamChatCompletions(
   });
 
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
+    const body: unknown = await response.json().catch(() => null);
     throw new Error(parseErrorText(response.status, body));
   }
 
@@ -1861,7 +1865,7 @@ export async function* streamChatCompletions(
         providerReportedWindow
           ? "context_window"
           : lengthStopCause({
-              cap: payload.max_tokens ?? null,
+              cap: payload.max_tokens,
               contextLength: loadedContextLength ?? null,
               promptTokens,
               completionTokens: windowCount,
@@ -1871,7 +1875,7 @@ export async function* streamChatCompletions(
   };
 
   try {
-    while (true) {
+    for (;;) {
       const { done, value } = await reader.read();
       if (done) {
         completed = true;
@@ -1943,7 +1947,6 @@ export async function* streamChatCompletions(
           continue;
         }
         if (
-          parsed &&
           typeof parsed === "object" &&
           "type" in parsed &&
           parsed.type === "reasoning_summary"
@@ -2039,7 +2042,7 @@ export async function generateAudio(
   });
 
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
+    const body: unknown = await response.json().catch(() => null);
     throw new Error(parseErrorText(response.status, body));
   }
 

@@ -88,8 +88,6 @@ export function resolveUiProviderTypeFromConfig(
   _registryRows: ProviderRegistryEntry[],
   _existingProviderType: string | undefined,
 ): string {
-  void _registryRows;
-  void _existingProviderType;
   if (configProviderType !== CUSTOM_BACKEND_PROVIDER_TYPE) {
     return configProviderType;
   }

@@ -78,11 +78,12 @@ export function pinGeminiTextThoughtSignature<T extends { type: string }>(
     if (part.type !== "text") {
       continue;
     }
-    parts[index] = {
+    const next = [...parts];
+    next[index] = {
       ...part,
       _google_thought_signature: thoughtSignature,
     };
-    break;
+    return next;
   }
   return parts;
 }
@@ -147,22 +148,23 @@ export function pinGeminiThoughtReplayParts<T extends { type: string }>(
     round.push({ text, ...(thoughtSignature ? { thoughtSignature } : {}) });
     byToolRound.set(afterToolCalls, round);
   }
+  const next = [...parts];
   for (const [afterToolCalls, replayMetadata] of byToolRound) {
-    const { targetIndex, insertIndex } = replayPlacement(parts, afterToolCalls);
+    const { targetIndex, insertIndex } = replayPlacement(next, afterToolCalls);
     if (targetIndex === -1) {
-      parts.splice(insertIndex, 0, {
+      next.splice(insertIndex, 0, {
         type: "reasoning",
         text: "",
         _google_thought_parts: replayMetadata,
       } as unknown as T);
     } else {
-      parts[targetIndex] = {
-        ...parts[targetIndex],
+      next[targetIndex] = {
+        ...next[targetIndex],
         _google_thought_parts: replayMetadata,
       };
     }
   }
-  return parts;
+  return next;
 }
 
 export function pinGeminiAnswerReplayParts<T extends { type: string }>(
@@ -176,12 +178,13 @@ export function pinGeminiAnswerReplayParts<T extends { type: string }>(
     round.push({ text, ...(thoughtSignature ? { thoughtSignature } : {}) });
     byToolRound.set(afterToolCalls, round);
   }
+  const next = [...parts];
   for (const [afterToolCalls, replayMetadata] of byToolRound) {
     let toolCallsSeen = 0;
     let targetIndex = -1;
-    let insertIndex = parts.length;
-    for (let index = 0; index < parts.length; index += 1) {
-      const type = parts[index].type;
+    let insertIndex = next.length;
+    for (let index = 0; index < next.length; index += 1) {
+      const type = next[index].type;
       if (type === "tool-call") {
         if (toolCallsSeen === afterToolCalls) insertIndex = index;
         toolCallsSeen += 1;
@@ -191,19 +194,19 @@ export function pinGeminiAnswerReplayParts<T extends { type: string }>(
       }
     }
     if (targetIndex === -1) {
-      parts.splice(insertIndex, 0, {
+      next.splice(insertIndex, 0, {
         type: "text",
         text: "",
         _google_answer_parts: replayMetadata,
       } as unknown as T);
     } else {
-      parts[targetIndex] = {
-        ...parts[targetIndex],
+      next[targetIndex] = {
+        ...next[targetIndex],
         _google_answer_parts: replayMetadata,
       };
     }
   }
-  return parts;
+  return next;
 }
 
 export function parseGeminiThoughtReplayParts(

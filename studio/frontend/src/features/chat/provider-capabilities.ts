@@ -1198,7 +1198,7 @@ function catalogCapabilities(
   modelId: string,
   byName = false,
 ): ExternalReasoningCapabilities | null {
-  const wire: ReasoningWire | undefined = CATALOG_REASONING_WIRE[providerType];
+  const wire = CATALOG_REASONING_WIRE[providerType] as ReasoningWire | undefined;
   if (!wire) return null;
   const entry = byName
     ? resolveModelCatalogEntryByName(modelId)

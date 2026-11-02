@@ -107,7 +107,9 @@ export function McpAppFrame(props: McpAppFrameProps) {
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const [pendingCalls, setPendingCalls] = useState<PendingToolCall[]>([]);
   const latest = useRef({ props, theme });
-  latest.current = { props, theme };
+  useEffect(() => {
+    latest.current = { props, theme };
+  }, [props, theme]);
   const pendingRef = useRef<PendingToolCall[]>([]);
   const portRef = useRef<MessagePort | null>(null);
   const initializedRef = useRef(false);
@@ -117,12 +119,16 @@ export function McpAppFrame(props: McpAppFrameProps) {
     setResource(null);
     setError(null);
     readMcpUiResource(serverId, ui.resourceUri, { threadId, sessionId }).then(
-      (loaded) =>
-        !cancelled &&
-        setResource({ ...loaded, scope: { serverId, threadId, sessionId } }),
-      (err: unknown) =>
-        !cancelled &&
-        setError(err instanceof Error ? err.message : String(err)),
+      (loaded) => {
+        if (!cancelled) {
+          setResource({ ...loaded, scope: { serverId, threadId, sessionId } });
+        }
+      },
+      (err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      },
     );
     return () => {
       cancelled = true;
@@ -295,15 +301,24 @@ export function McpAppFrame(props: McpAppFrameProps) {
     };
 
     let inFlight = 0;
+    type BridgeMessage = {
+      mcpAppHeight?: unknown;
+      jsonrpc?: unknown;
+      method?: unknown;
+      params?: unknown;
+      id?: unknown;
+      __unslothMcpApp?: unknown;
+      __unslothMcpAppPort?: unknown;
+    };
     const handler = (event: MessageEvent) => {
       // Reply on the port, never contentWindow: the window survives navigation.
       const port = event.target as MessagePort;
-      const data = event.data;
+      const data = event.data as BridgeMessage | null;
       if (typeof data?.mcpAppHeight === "number") {
         if (!viewOwnsSize) setHeight(clampHeight(data.mcpAppHeight));
         return;
       }
-      if (data?.jsonrpc !== "2.0" || typeof data.method !== "string") return;
+      if (!data || data.jsonrpc !== "2.0" || typeof data.method !== "string") return;
       const params = isObject(data.params) ? data.params : {};
       const now = latest.current.props;
       if (data.id !== undefined) {
@@ -355,25 +370,26 @@ export function McpAppFrame(props: McpAppFrameProps) {
         });
       } else if (
         data.method === "ui/notifications/size-changed" &&
+        typeof params.height === "number" &&
         Number.isFinite(params.height)
       ) {
         viewOwnsSize = true;
-        setHeight(clampHeight(params.height as number));
+        setHeight(clampHeight(params.height));
       } else if (data.method === "notifications/message") {
-        const log = params.level === "error" ? console.error : console.info;
+        const log = params.level === "error" ? console.error : console.warn;
         log(`[mcp-app ${now.toolName}]`, params.text);
       }
     };
 
     // Only the token-checked handshake is read off the window.
     const onHandshake = (event: MessageEvent) => {
-      const data = event.data;
-      const port = event.ports[0];
+      const data = event.data as BridgeMessage | null;
+      const port = event.ports.at(0);
       if (
         event.source !== iframeRef.current?.contentWindow ||
         event.origin !== "null" ||
         data?.__unslothMcpApp !== frame.token ||
-        data.__unslothMcpAppPort !== true ||
+        data?.__unslothMcpAppPort !== true ||
         !port
       ) {
         return;

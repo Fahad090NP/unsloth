@@ -279,7 +279,7 @@ function loadCollapsibleState(): Record<string, boolean> {
   try {
     const raw = localStorage.getItem(COLLAPSIBLE_STATE_KEY);
     if (!raw) return {};
-    const parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
     if (
       typeof parsed !== "object" ||
       parsed === null ||
@@ -552,7 +552,7 @@ export function ChatSettingsPanel({
   // The backend's own classification: the native token survives a switch to a remote GGUF, and
   // org/name.gguf is a repo id, not a file.
   const isLocalGguf =
-    isGguf && (activeModelIsLocal || isLocalModelPath(currentCheckpoint ?? ""));
+    isGguf && (activeModelIsLocal || isLocalModelPath(currentCheckpoint));
   const maxContextLength = useChatRuntimeStore(
     (s) => s.maxContextLength,
   );
@@ -604,7 +604,13 @@ export function ChatSettingsPanel({
     apply: applyLlamaUpdate,
   } = useLlamaUpdateCheck({
     enabled: mtpUpdatable,
-    onReloadRequired: resyncInferenceStatusAfterServerModelChange,
+    onReloadRequired: () => {
+      resyncInferenceStatusAfterServerModelChange().catch(
+        (error: unknown) => {
+          console.error("Background chat operation failed", error);
+        },
+      );
+    },
   });
   const handleMtpUpdate = useCallback(async () => {
     const result = await applyLlamaUpdate();
@@ -795,8 +801,8 @@ export function ChatSettingsPanel({
     [activePreset, hasUnsavedPresetChanges, presetNameInput, presets],
   );
   const systemVariablesError = getPromptVariablesError(systemVariablesDraft);
-  const currentSystemPrompt = params.systemPrompt ?? "";
-  const currentSystemVariables = params.systemVariables ?? "";
+  const currentSystemPrompt = params.systemPrompt;
+  const currentSystemVariables = params.systemVariables;
   const systemPromptEditorDirty =
     systemPromptDraft !== currentSystemPrompt ||
     systemVariablesDraft !== currentSystemVariables;
@@ -1158,7 +1164,11 @@ export function ChatSettingsPanel({
                     <Button
                       size="sm"
                       className="corner-squircle mt-2 text-ui-12"
-                      onClick={handleMtpUpdate}
+                      onClick={() => {
+                        handleMtpUpdate().catch((error: unknown) => {
+                          console.error("Background chat operation failed", error);
+                        });
+                      }}
                       disabled={llamaUpdating}
                       data-test-id="mtp-update-button"
                     >
@@ -1333,7 +1343,7 @@ export function ChatSettingsPanel({
           </div>
         </CollapsibleSection>
 
-        {showPromptCachingControl && activeExternalProvider ? (
+        {showPromptCachingControl ? (
           <CollapsibleSection label="Provider" defaultOpen={true}>
             <div className="flex min-h-8 items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-1.5">
@@ -1423,7 +1433,7 @@ export function ChatSettingsPanel({
           </CollapsibleSection>
         ) : null}
 
-        {showOpenAICodeExecSection && activeExternalProvider ? (
+        {showOpenAICodeExecSection ? (
           <CollapsibleSection label="Code Execution" defaultOpen={false}>
             <OpenAICodeExecSection
               provider={activeExternalProvider}

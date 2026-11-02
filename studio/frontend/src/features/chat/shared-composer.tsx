@@ -253,7 +253,7 @@ import {
   type DragEvent as ReactDragEvent,
   type KeyboardEvent,
   type CSSProperties,
-  type MutableRefObject,
+  type RefObject,
   type ReactElement,
   type ReactNode,
   Fragment,
@@ -327,6 +327,10 @@ function formatReasoningDisabledLabel(
   return supportsReasoningOff && isExternalOpenAIReasoning ? "None" : "Off";
 }
 
+function reportBackgroundError(error: unknown): void {
+  console.error("Background chat operation failed", error);
+}
+
 function useDictation(
   setText: (value: string | ((prev: string) => string)) => void,
 ) {
@@ -359,7 +363,7 @@ function useDictation(
 
     session.onSpeech((result) => {
       if (!result.isFinal) return;
-      const transcript = result.transcript.trim() ?? "";
+      const transcript = result.transcript.trim();
       if (transcript) {
         setText((prev) => (prev ? `${prev} ${transcript}` : transcript));
       }
@@ -387,7 +391,7 @@ function useDictation(
     finalizingRef.current = true;
     setIsFinalizing(true);
     // Keep the session alive while the final segment transcribes; onEnd clears it.
-    void session.stop().catch((error) => {
+    void session.stop().catch((error: unknown) => {
       console.error("Could not stop dictation:", error);
       session.cancel();
       if (sessionRef.current === session) sessionRef.current = null;
@@ -409,7 +413,7 @@ function useDictation(
   return { isDictating, isFinalizing, start, stop, supported };
 }
 
-export type CompareHandles = MutableRefObject<Record<string, CompareHandle>>;
+export type CompareHandles = RefObject<Record<string, CompareHandle>>;
 
 const CompareHandlesContext = createContext<CompareHandles | null>(null);
 
@@ -491,7 +495,9 @@ export function RegisterCompareHandle({
             return;
           }
           let wasRunning = thread.getState().isRunning;
-          let unsubscribe = () => {};
+          let unsubscribe = () => {
+            /* reassigned after subscribing */
+          };
           unsubscribe = thread.subscribe(() => {
             const isRunning = thread.getState().isRunning;
             if (isRunning) wasRunning = true;
@@ -630,7 +636,7 @@ export function SharedComposer({
       onExitCompare();
       return;
     }
-    navigate({ to: "/chat" });
+    navigate({ to: "/chat" }).catch(reportBackgroundError);
   }, [navigate, onExitCompare]);
   const incognito = useChatRuntimeStore((s) => s.incognito);
   const [text, setText] = useState(() =>
@@ -761,7 +767,7 @@ export function SharedComposer({
   const compareRunsRef = useRef(
     new CompareRunOwnership<{ modelPath: string; requestId: string }>(),
   );
-  const sendRef = useRef<(() => void) | null>(null);
+  const sendRef = useRef<(() => Promise<void>) | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pendingFixPrompt = useChatArtifactsStore(
     (state) => state.pendingFixPrompt,
@@ -834,7 +840,10 @@ export function SharedComposer({
     composingRef,
     enabled: supportsTools && skillsSwitchOn,
   });
-  mentionOpenRef.current = skillMentions.inputProps["aria-expanded"];
+  const mentionsOpen = skillMentions.inputProps["aria-expanded"];
+  useEffect(() => {
+    mentionOpenRef.current = mentionsOpen;
+  }, [mentionsOpen]);
   const supportsBuiltinWebSearch = useChatRuntimeStore(
     (s) => s.supportsBuiltinWebSearch,
   );
@@ -856,7 +865,9 @@ export function SharedComposer({
     .slice(0, 3);
   const openProject = (projectId: string) => {
     useChatRuntimeStore.getState().setActiveProjectId(projectId);
-    navigate({ to: "/chat", search: { project: projectId } });
+    navigate({ to: "/chat", search: { project: projectId } }).catch(
+      reportBackgroundError,
+    );
   };
   const webFetchToolsEnabled = useChatRuntimeStore(
     (s) => s.webFetchToolsEnabled,
@@ -1097,7 +1108,7 @@ export function SharedComposer({
       audioUpload.openDialog();
       return;
     }
-    startDictationSession();
+    startDictationSession().catch(reportBackgroundError);
   }, [audioUpload, chatActive, startDictationSession]);
 
   useEffect(() => {
@@ -1235,9 +1246,7 @@ export function SharedComposer({
       let audioAddError: string | null = null;
       let videoUnsupported = false;
       let conversionError: string | null = null;
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file) continue;
+      for (const file of files) {
         if (isAudioAttachmentFile(file)) {
           const counted = [
             ...pendingAudioRef.current.map((clip) => clip.size),
@@ -2259,7 +2268,9 @@ export function SharedComposer({
       }
     }
   }
-  sendRef.current = send;
+  useEffect(() => {
+    sendRef.current = send;
+  });
 
   function stop() {
     if (isDictating) stopDictation();
@@ -2286,7 +2297,7 @@ export function SharedComposer({
     const msSinceCompositionEnd = e.timeStamp - compositionEndedAtRef.current;
     compositionEndedAtRef.current = -Infinity;
     // IME: Enter commits the candidate (#5318); re-pin composingRef and re-arm the watchdog (#5546).
-    const imeKey = e.nativeEvent.isComposing || e.keyCode === 229;
+    const imeKey = e.nativeEvent.isComposing;
     if (imeKey) {
       if (
         imeKeydownBlocksComposerSubmit(
@@ -2322,7 +2333,7 @@ export function SharedComposer({
     ) {
       e.preventDefault();
       if (!busy && !isDictating) {
-        send();
+        send().catch(reportBackgroundError);
       }
     }
   }
@@ -2366,7 +2377,8 @@ export function SharedComposer({
   );
   const sendFollowUp = () => {
     if (!isSurfaceInForeground(COMPOSER_INPUT_SELECTOR)) return;
-    sendRef.current?.();
+    const sendCurrent = sendRef.current;
+    if (sendCurrent) sendCurrent().catch(reportBackgroundError);
   };
   const followUpOptions = {
     enabled: chatActive && canSend,
@@ -2386,7 +2398,7 @@ export function SharedComposer({
   const [plusOpen, setPlusOpen] = useState(false);
   const setPlusMenuOpen = (open: boolean) => {
     setPlusOpen(open);
-    if (open) void refreshRecentPrompts();
+    if (open) refreshRecentPrompts().catch(reportBackgroundError);
   };
   useShortcut(
     "openComposerMenu",
@@ -2600,7 +2612,7 @@ export function SharedComposer({
                   for (const id of exportThreadIds) {
                     await fn(id);
                   }
-                })().catch((error) => {
+                })().catch((error: unknown) => {
                   if (!isDownloadCancelled(error)) toast.error("Export failed.");
                 });
               }}
@@ -2678,7 +2690,7 @@ export function SharedComposer({
           if (isTauri || isPortaledDrop(e)) return;
           e.preventDefault();
           setDragging(false);
-          void addFiles(e.dataTransfer.files);
+          addFiles(e.dataTransfer.files).catch(reportBackgroundError);
         }}
       >
         {/* Gemini-style drop affordance, mirrored from the single composer. */}
@@ -2752,8 +2764,9 @@ export function SharedComposer({
               multiple
               className="hidden"
               onChange={(e) => {
-                void addFiles(e.target.files);
-                e.target.value = "";
+                const target = e.target;
+                addFiles(target.files).catch(reportBackgroundError);
+                target.value = "";
               }}
             />
             <input
@@ -2763,8 +2776,9 @@ export function SharedComposer({
               multiple
               className="hidden"
               onChange={(e) => {
-                void addFiles(e.target.files);
-                e.target.value = "";
+                const target = e.target;
+                addFiles(target.files).catch(reportBackgroundError);
+                target.value = "";
               }}
             />
             <NewProjectDialog
@@ -3410,7 +3424,9 @@ export function SharedComposer({
                 variant="primary"
                 size="icon"
                 className="aui-composer-send ml-1.5 size-9 rounded-full"
-                onClick={send}
+                onClick={() => {
+                  send().catch(reportBackgroundError);
+                }}
                 disabled={!canSend}
                 aria-label={t("promptQueue.sendLabel")}
               >

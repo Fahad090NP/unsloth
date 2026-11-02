@@ -101,7 +101,7 @@ function collectBlocks(
       for (const child of node.children) {
         collectBlocks(child, out, inList);
       }
-      return;
+      break;
     case "break":
     case "footnoteReference":
     case "image":
@@ -109,7 +109,7 @@ function collectBlocks(
     case "inlineCode":
     case "inlineMath":
     case "text":
-      return;
+      break;
   }
 }
 

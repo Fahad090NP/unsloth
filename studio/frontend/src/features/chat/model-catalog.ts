@@ -188,8 +188,9 @@ function snapshotNamespace(
   const normalizedProviderType = catalogNamespace(providerType);
   hydrateModelsDev();
   const served = modelsDev?.providers[normalizedProviderType];
-  const bundled: Readonly<Record<string, ModelCatalogSnapshotEntry>> | undefined =
-    MODEL_CATALOG_SNAPSHOT[normalizedProviderType];
+  const bundled = MODEL_CATALOG_SNAPSHOT[normalizedProviderType] as
+    | Readonly<Record<string, ModelCatalogSnapshotEntry>>
+    | undefined;
   if (!served) return bundled;
   if (!bundled) return served;
   // Merge per model so a stale cache cannot hide models the bundled snapshot knows.
@@ -199,7 +200,8 @@ function snapshotNamespace(
   const merged: Record<string, ModelCatalogSnapshotEntry> = { ...bundled };
   for (const [id, entry] of Object.entries(served)) {
     // Older backends lack the context field, so fall back to the bundled value.
-    const context = entry.context ?? bundled[id]?.context;
+    const bundledEntry = bundled[id] as ModelCatalogSnapshotEntry | undefined;
+    const context = entry.context ?? bundledEntry?.context;
     merged[id] = context == null ? entry : { ...entry, context };
   }
   mergedNamespaces.set(normalizedProviderType, merged);
@@ -309,18 +311,21 @@ export function resolveModelCatalogEntry(
   const live = LIVE_CATALOG.get(normalizedProvider)?.models;
   if (live) {
     for (const candidate of candidates) {
-      const entry: ModelCatalogEntry | undefined = live[candidate];
+      const entry = live[candidate] as ModelCatalogEntry | undefined;
       if (!entry) continue;
       if (entry.contextLength != null || !snapshot) return entry;
       const fallback = candidates
-        .map((id) => snapshot[id]?.context)
+        .map(
+          (id) =>
+            (snapshot[id] as ModelCatalogSnapshotEntry | undefined)?.context,
+        )
         .find((context) => typeof context === "number" && context > 0);
       return fallback == null ? entry : { ...entry, contextLength: fallback };
     }
   }
   if (!snapshot) return null;
   for (const candidate of candidates) {
-    const entry: ModelCatalogSnapshotEntry | undefined = snapshot[candidate];
+    const entry = snapshot[candidate] as ModelCatalogSnapshotEntry | undefined;
     if (entry) return fromSnapshotEntry(entry);
   }
   if (normalizedProvider === "ollama") {

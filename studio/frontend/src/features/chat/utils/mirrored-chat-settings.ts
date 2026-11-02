@@ -186,15 +186,15 @@ export function assignSanitizedMirroredSettings(
     value.researchWebsitePolicy,
   );
   if (researchWebsitePolicy) {
-    settings.researchWebsitePolicy = researchWebsitePolicy;
+    target.researchWebsitePolicy = researchWebsitePolicy;
   }
   if (Array.isArray(value.researchMcpSources)) {
-    settings.researchMcpSources = normalizeResearchMcpSources(
+    target.researchMcpSources = normalizeResearchMcpSources(
       value.researchMcpSources,
     );
   }
   const ragSource = sanitizeRagSource(value.ragSource);
-  if (ragSource) settings.ragSource = ragSource;
+  if (ragSource) target.ragSource = ragSource;
 }
 
 /** Legacy "true"/"false" values are rejected by the backend, so migrate before backfill. */

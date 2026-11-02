@@ -182,7 +182,7 @@ function addNativeClipboardFiles(
       if (files.length > 0) addClipboardFiles(files, addFiles, onError);
       else onError?.();
     })
-    .catch((_error: unknown) => {
+    .catch(() => {
       onError?.();
     });
 }

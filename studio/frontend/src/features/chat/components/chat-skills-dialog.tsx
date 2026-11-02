@@ -390,7 +390,8 @@ export function ChatSkillsDialog({
   async function importFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     // Lets the same file fire change again.
-    event.target.value = "";
+    const input = event.target;
+    input.value = "";
     if (!file || importing) return;
     setImporting(true);
     try {
@@ -528,13 +529,13 @@ export function ChatSkillsDialog({
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
                     disabled={usable.every((skill) => skill.enabled)}
-                    onSelect={() => void toggleAll(true)}
+                    onSelect={() => { toggleAll(true).catch(() => undefined); }}
                   >
                     {t("skills.enableAll")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     disabled={!usable.some((skill) => skill.enabled)}
-                    onSelect={() => void toggleAll(false)}
+                    onSelect={() => { toggleAll(false).catch(() => undefined); }}
                   >
                     {t("skills.disableAll")}
                   </DropdownMenuItem>
@@ -549,7 +550,7 @@ export function ChatSkillsDialog({
                 type="file"
                 accept=".zip,application/zip"
                 className="hidden"
-                onChange={(event) => void importFile(event)}
+                onChange={(event) => { importFile(event).catch(() => undefined); }}
               />
               <Button
                 type="button"
@@ -597,7 +598,7 @@ export function ChatSkillsDialog({
                           skill={skill}
                           changing={changing !== null}
                           onOpen={() => { openSkill(skill); }}
-                          onToggle={(enabled) => void toggle(skill.name, enabled)}
+                          onToggle={(enabled) => { toggle(skill.name, enabled).catch(() => undefined); }}
                         />
                       ))}
                     </section>
@@ -691,7 +692,7 @@ export function ChatSkillsDialog({
                   onInstructions={(value) =>
                     { setNewDraft((prev) => ({ ...prev, instructions: value })); }
                   }
-                  onSubmit={() => void create()}
+                  onSubmit={() => { create().catch(() => undefined); }}
                 />
               ) : selected ? (
                 readable && !manifest ? (
@@ -731,7 +732,7 @@ export function ChatSkillsDialog({
                     onDescription={(value) => { editDraft({ description: value }); }}
                     onInstructions={(value) => { editDraft({ instructions: value }); }}
                     details={detailsOf(selected, t)}
-                    onSubmit={() => void save()}
+                    onSubmit={() => { save().catch(() => undefined); }}
                   />
                 )
               ) : null}
@@ -750,7 +751,7 @@ export function ChatSkillsDialog({
                     aria-label={t(selected.enabled ? "skills.disable" : "skills.enable", {
                       name: selected.name,
                     })}
-                    onCheckedChange={(checked) => void toggle(selected.name, checked)}
+                    onCheckedChange={(checked) => { toggle(selected.name, checked).catch(() => undefined); }}
                   />
                   {t("skills.enabledLabel")}
                 </label>
@@ -761,7 +762,7 @@ export function ChatSkillsDialog({
                     type="button"
                     variant="outline"
                     disabled={busy}
-                    onClick={() => void exportSelected()}
+                    onClick={() => { exportSelected().catch(() => undefined); }}
                   >
                     {exporting ? <Spinner /> : <HugeiconsIcon icon={Download01Icon} strokeWidth={2} />}
                     {t("common.export")}
@@ -778,7 +779,7 @@ export function ChatSkillsDialog({
                       {t("skills.create")}
                     </Button>
                   </>
-                ) : editable && selected ? (
+                ) : editable ? (
                   <>
                     <Button
                       type="button"
@@ -830,7 +831,7 @@ export function ChatSkillsDialog({
               onClick={() => {
                 const skill = confirmingDelete;
                 setConfirmingDelete(null);
-                if (skill) void remove(skill);
+                if (skill) remove(skill).catch(() => undefined);
               }}
             >
               {t("common.delete")}

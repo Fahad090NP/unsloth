@@ -408,8 +408,9 @@ export function ProjectsPage({
       return next;
     });
     if (!opening) return;
-    const cached: (SidebarItem[] | "loading" | "error") | undefined =
-      projectChats[projectId];
+    const cached = projectChats[projectId] as
+      | (SidebarItem[] | "loading" | "error")
+      | undefined;
     const loaded = cached !== undefined && cached !== "error";
     if (loaded && !staleProjectIds.has(projectId)) return;
     // Stale rows stay on screen while the retry runs.
@@ -803,8 +804,9 @@ export function ProjectsPage({
           {visibleProjects.map((project) => {
             const pinned = pinnedProjectIdSet.has(project.id);
             const chatsOpen = openProjectIds.has(project.id);
-            const chats: (SidebarItem[] | "loading" | "error") | undefined =
-              projectChats[project.id];
+            const chats = projectChats[project.id] as
+              | (SidebarItem[] | "loading" | "error")
+              | undefined;
             return (
             <div key={`wrap-${project.id}`}>
             <div

@@ -20,6 +20,7 @@ import {
   ExportedMessageRepository,
   type ExportedMessageRepositoryItem,
   type LocalRuntimeOptions,
+  type MessageTiming,
   type PendingAttachment,
   type ThreadHistoryAdapter,
   type ThreadMessage,
@@ -341,14 +342,14 @@ class PreStreamAwareAttachmentAdapter implements AttachmentAdapter {
       toast.error(reason, { description: UNSUPPORTED_ATTACHMENT_HINT });
       throw new Error(reason);
     }
-    if (file !== state.file) state = { ...state, file };
+    const nextState = file !== state.file ? { ...state, file } : state;
     // A composite picks its adapter synchronously from the name and MIME type, and both say "video"
     // for an audio-only 3GP recording or a TypeScript .ts, so settle that from the file's own bytes
     // first, as the native readers do. Every other file goes straight through.
-    if (!needsAttachmentTrackInspection(state.file)) {
-      return this.delegate.add(state);
+    if (!needsAttachmentTrackInspection(nextState.file)) {
+      return this.delegate.add(nextState);
     }
-    return this.addInspected(state);
+    return this.addInspected(nextState);
   }
 
   private async addInspected(state: {
@@ -656,7 +657,7 @@ class PDFAttachmentAdapter implements AttachmentAdapter {
       content: [
         {
           type: "text",
-          text: `[PDF: ${attachment.name}]\n${textError ?? text}`,
+          text: `[PDF: ${attachment.name}]\n${textError ?? text ?? ""}`,
         },
       ],
       status: { type: "complete" },
@@ -1320,11 +1321,17 @@ function clip(input: string, maxLen: number): string {
   return text.slice(0, maxLen).trimEnd();
 }
 
+function reportBackgroundError(error: unknown): void {
+  console.error("Background chat operation failed", error);
+}
+
 function extractTextParts(m: ThreadMessage | undefined): string {
   if (!m) return "";
-  const content = Array.isArray(m.content) ? m.content : [];
+  const content = (Array.isArray(m.content)
+    ? m.content
+    : []) as { type?: string; text?: string }[];
   return content
-    .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
+    .filter((p): p is { type: "text"; text: string } => p.type === "text")
     .map((p) => p.text)
     .join("")
     .trim();
@@ -1376,7 +1383,9 @@ function cloneContent(
   if (typeof content === "string") {
     return content;
   }
-  return Array.isArray(content) ? JSON.parse(JSON.stringify(content)) : [];
+  return Array.isArray(content)
+    ? (JSON.parse(JSON.stringify(content)) as ThreadMessage["content"])
+    : [];
 }
 
 function cloneAttachments(
@@ -1385,7 +1394,11 @@ function cloneAttachments(
   if (!Array.isArray(attachments)) {
     return [];
   }
-  return JSON.parse(JSON.stringify(attachments.map((attachment) => ({ ...attachment, file: undefined }))));
+  return JSON.parse(
+    JSON.stringify(
+      attachments.map((attachment) => ({ ...attachment, file: undefined })),
+    ),
+  ) as readonly CompleteAttachment[];
 }
 
 function toThreadMessage(m: MessageRecord): ThreadMessage {
@@ -1411,9 +1424,7 @@ function toThreadMessage(m: MessageRecord): ThreadMessage {
     };
   }
   const custom = m.metadata ?? {};
-  const savedTiming = custom.timing as
-    | import("@assistant-ui/react").MessageTiming
-    | undefined;
+  const savedTiming = custom.timing as MessageTiming | undefined;
   const generationStatus = custom.generationStatus;
   const hasRunId = typeof custom.generationRunId === "string";
   const generationUnfinished =
@@ -1518,9 +1529,9 @@ function scheduleGenerationRecovery(
           cache_creation_input_tokens?: unknown;
           cache_read_input_tokens?: unknown;
         }
-      | undefined = (metadata.generationRecoveryUsage as typeof recoveryUsage) ?? undefined;
+      | undefined = metadata.generationRecoveryUsage as typeof recoveryUsage;
     let recoveryTimings: Record<string, unknown> | undefined =
-      (metadata.generationRecoveryTimings as Record<string, unknown>) ?? undefined;
+      metadata.generationRecoveryTimings as Record<string, unknown>;
     let firstChunkAt =
       typeof metadata.generationFirstChunkAt === "number" &&
       Number.isFinite(metadata.generationFirstChunkAt)
@@ -1533,7 +1544,7 @@ function scheduleGenerationRecovery(
       "quote_cut";
     let currentMetadata = { ...metadata };
     const serverCancel = () => {
-      void cancelChatGenerationRun(runId).catch(() => {});
+      cancelChatGenerationRun(runId).catch(() => undefined);
     };
     const runtime = useChatRuntimeStore.getState();
     runtime.registerThreadServerCancel(threadId, serverCancel);
@@ -1711,7 +1722,7 @@ function scheduleGenerationRecovery(
                       : "",
                   ),
               );
-              seededApprovals.catch(() => {});
+              seededApprovals.catch(() => undefined);
             }
             if (typeof metadata.parseThinkTags !== "boolean") {
               parseThink = requestParsesThinkTags(update.run.requestPayload);
@@ -1916,14 +1927,14 @@ function scheduleGenerationRecovery(
       // Joined first because the arming is no longer awaited at its call site, so without this a
       // late arm lands after the disarm and leaves the card up on a finished run.
       unregisterStop();
-      if (seededApprovals) await seededApprovals.catch(() => {});
+      if (seededApprovals) await seededApprovals.catch(() => undefined);
       toolRecovery.disarmAll();
       const store = useChatRuntimeStore.getState();
       store.setThreadRunning(threadId, false, { owner: serverCancel });
       store.clearThreadServerCancel(threadId, serverCancel);
     }
   })()
-    .catch(() => {})
+    .catch(() => undefined)
     .finally(() => generationRecoveries.delete(runId));
   generationRecoveries.set(runId, { promise: recovery, views });
 }
@@ -1960,7 +1971,7 @@ export async function ensureThreadRecord({
   // Snapshot synchronously before the await, so later toggles cannot change a retry's identity.
   const runtimeStateAtInit = useChatRuntimeStore.getState();
   const incognitoAtInit = incognito ?? runtimeStateAtInit.incognito;
-  const modelIdAtInit = modelId ?? runtimeStateAtInit.params.checkpoint ?? "";
+  const modelIdAtInit = modelId ?? runtimeStateAtInit.params.checkpoint;
   const modelGgufVariantAtInit =
     modelGgufVariant !== undefined
       ? modelGgufVariant
@@ -2250,11 +2261,13 @@ function createStudioDbAdapter(
           const running = useChatRuntimeStore.getState().runningByThreadId;
           if (running[paired.id]) {
             setTimeout(() => {
-              void createStudioDbAdapter(
+              createStudioDbAdapter(
                 modelType,
                 pairId,
                 projectId,
-              ).generateTitle(remoteId, messages);
+              )
+                .generateTitle(remoteId, messages)
+                .catch(reportBackgroundError);
             }, 600);
             return streamTitle(thread.title || defaultTitle);
           }
@@ -2477,7 +2490,7 @@ function useStudioRuntimeAdapters(
       const remoteId = aui.threadListItem().getState().remoteId;
       if (!remoteId) return;
       const generation = beginSavedHistoryReconciliation(remoteId);
-      void readStoredChatMessages(remoteId)
+      readStoredChatMessages(remoteId)
         .then(({ messages, fromBackend }) => {
           if (isSavedHistoryReconciliationSuperseded(remoteId, generation)) {
             return;
@@ -2505,7 +2518,7 @@ function useStudioRuntimeAdapters(
             }
           }
         })
-        .catch(() => {});
+        .catch(() => undefined);
     };
     return subscribeGenerationRecoveryTriggers(
       globalThis,
@@ -2525,7 +2538,8 @@ function useStudioRuntimeAdapters(
         try {
           const thread = aui.thread();
           if (attachmentId.startsWith("content-part-sha256-")) {
-            for (let attempt = 0; attempt < 3 && active; attempt += 1) {
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+              if (!active) return;
               const exported = thread.export();
               const target = exported.messages.find(
                 (item) => item.message.id === messageId,
@@ -2879,7 +2893,7 @@ function useStudioRuntimeAdapters(
         }
         // recount only without exact usage; model switches qualify, and compare panes never own the bar (#7450)
         if ((!shownUsage || shownUsage.estimated) && modelType === "base" && !pairId) {
-          void refreshContextUsage({ threadId: remoteId });
+          refreshContextUsage({ threadId: remoteId }).catch(reportBackgroundError);
         }
 
         // rebuild branches when parentIds exist; infer sequential parents for mixed legacy threads
@@ -3155,7 +3169,7 @@ function ThreadAutoSwitch({
   threadId,
   syncActiveThreadId = true,
   paused,
-  newThreadSwitchStateRef,
+  newThreadSwitchStateRef: newThreadSwitchStateRefProp,
   onSwitchFailed,
 }: {
   threadId: string;
@@ -3167,6 +3181,7 @@ function ThreadAutoSwitch({
   const aui = useAui();
   const isLoading = useAuiState(({ threads }) => threads.isLoading);
   const mainThreadId = useAuiState(({ threads }) => threads.mainThreadId);
+  const newThreadSwitchStateRef = newThreadSwitchStateRefProp;
 
   useEffect(() => {
     // Paused too: the stop names every temporary queue on the page.
@@ -3192,7 +3207,7 @@ function ThreadAutoSwitch({
         typeof (switchResult as Promise<void>).then === "function"
       ) {
         // Both arms retire the claim, or a rejected switch's claim stays armed.
-        void (switchResult as Promise<void>).then(
+        (switchResult as Promise<void>).then(
           () => {
             claim.settled = true;
           },
@@ -3305,7 +3320,7 @@ function ThreadNewChatSwitch({
     const clearAttachments = () => {
       try {
         // Chained: clearAttachments() may reject via the adapter's remove().
-        void Promise.resolve(aui.composer().clearAttachments()).catch(
+        Promise.resolve(aui.composer().clearAttachments()).catch(
           () => undefined,
         );
       } catch {
@@ -3340,7 +3355,7 @@ function ThreadNewChatSwitch({
       const at = switchStateNow.pendingSavedThreadIds.indexOf(reopenClaim);
       if (at !== -1) switchStateNow.pendingSavedThreadIds.splice(at, 1);
     };
-    void Promise.resolve(
+    Promise.resolve(
       returningToOwnChat && recorded
         ? aui.threads().switchToThread(recorded)
         : aui.threads().switchToNewThread(),
@@ -3407,7 +3422,7 @@ function ThreadNewChatSwitch({
       switchState.nonceThread?.nonce === nonce
         ? switchState.nonceThread.threadId
         : null;
-    void Promise.resolve(
+    Promise.resolve(
       reattachTo && reattachTo !== mainThreadId
         ? aui.threads().switchToThread(reattachTo)
         : aui.threads().switchToNewThread(),
@@ -3427,7 +3442,7 @@ function ThreadNewChatSwitch({
     }
     const store = useChatRuntimeStore.getState();
     if (store.activeThreadId != null || store.contextUsage != null) return;
-    void refreshContextUsage();
+    refreshContextUsage().catch(reportBackgroundError);
     // runActive is a dependency: refreshContextUsage declines while generating.
   }, [
     checkpoint,
@@ -3573,7 +3588,7 @@ function ThreadScopedSettingsSync({
       const read = new AbortController();
       reads.add(read);
       // The deadline covers the waits too, which are unbounded on their own.
-      void Promise.race([
+      Promise.race([
         Promise.all([
           // This chat's PATCH first, or the read returns the pre-edit snapshot.
           awaitThreadScopedSettingsWrite(activeThreadId),
@@ -3842,7 +3857,7 @@ function ThreadContextUsageRecount({
     } catch {
       return;
     }
-    void refreshContextUsage();
+    refreshContextUsage().catch(reportBackgroundError);
   }, [activeThreadId, aui, checkpoint, enabled, loadedContextLength, modelLoading, promptSettings, reasoningSettings, savedUsage, threadLoading, threadSettingsPending]);
 
   useEffect(() => {
@@ -3859,7 +3874,9 @@ function ThreadContextUsageRecount({
     // Only into a blank or estimated bar: restored usage is exact.
     const shown = useChatRuntimeStore.getState().contextUsage;
     if (shown != null && !shown.estimated) return;
-    void refreshContextUsage({ threadId: activeThreadId });
+    refreshContextUsage({ threadId: activeThreadId }).catch(
+          reportBackgroundError,
+        );
   }, [
     activeThreadId,
     checkpoint,
@@ -3954,7 +3971,9 @@ function ThreadContextUsageRecount({
       pricedTipRef.current = current;
       store.setContextUsage(null);
       if (!runActive && !queuedPromptPending) {
-        void refreshContextUsage({ threadId: activeThreadId });
+        refreshContextUsage({ threadId: activeThreadId }).catch(
+          reportBackgroundError,
+        );
       }
       return;
     }
@@ -3998,7 +4017,9 @@ function ThreadContextUsageRecount({
     }
     if (recount) {
       store.setContextUsage(usage ?? estimateBranch(branch));
-      void refreshContextUsage({ threadId: activeThreadId });
+      refreshContextUsage({ threadId: activeThreadId }).catch(
+          reportBackgroundError,
+        );
       return;
     }
     if (usage == null && priced.ran && shown != null && !shown.estimated) return;
@@ -4072,7 +4093,7 @@ function CancelRegistrar(): ReactElement | null {
         return;
       }
       // assistant-ui runs before preflight sets runningByThreadId, so keep the cancel handle.
-      let unsubscribe = () => {};
+      let unsubscribe = () => { /* reassigned below */ };
       unsubscribe = thread.subscribe(() => {
         if (thread.getState().isRunning) {
           return;
@@ -4168,7 +4189,7 @@ function ThreadBackendAutosave({
   const queueSave = useCallback(
     (threadId: string, replyOnly = false): Promise<void> => {
       const queued = saveChainRef.current
-        .catch(() => {})
+        .catch(() => undefined)
         .then(async () => {
           await pendingFirstSavesRef.current.get(threadId);
           await saveThread(threadId, replyOnly);
@@ -4278,7 +4299,7 @@ function ThreadBackendAutosave({
   useAuiEvent("thread.runEnd", ({ threadId }) => {
     checkpoints().stop(threadId);
     queueSave(threadId);
-    void nameUntitledFork(threadId);
+    nameUntitledFork(threadId).catch(reportBackgroundError);
   });
 
   useAuiEvent("thread.runStart", ({ threadId }) => {
@@ -4342,7 +4363,9 @@ export function ChatRuntimeProvider({
   const signalReady = useAppShellReadySignal();
   // A ref so the memo never sees it change and rebuild the runtime.
   const backgroundedRef = useRef(backgrounded);
-  backgroundedRef.current = backgrounded;
+  useEffect(() => {
+    backgroundedRef.current = backgrounded;
+  }, [backgrounded]);
   const newThreadSwitchStateRef = useRef<NewThreadSwitchState>({
     activeNonce: null,
     hasSwitched: false,

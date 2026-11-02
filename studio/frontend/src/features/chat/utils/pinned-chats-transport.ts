@@ -98,7 +98,7 @@ function compactReplay(operations: PinOperation[]): PinOperation[] {
       continue;
     }
     const serverId = operation.serverId ?? operation.operationId;
-    unpinFor.get(fenceId)!.cancels.push(serverId);
+    unpinFor.get(fenceId)?.cancels.push(serverId);
     const ids = operation.ids.filter((id) => !unpinFor.has(id));
     // Same server ID, replayed before the fence: an already-committed copy is just acknowledged.
     if (ids.length > 0) kept.push({ ...operation, ids, serverId });
@@ -121,6 +121,10 @@ export function createPinnedChatsTransport(options: PinnedChatsTransportOptions)
   let generation = 0;
   let lastRemote: string[] | undefined;
   let recoveredOnLoad = false;
+  // Assign through a call so the awaited legacy migration is not read as racing earlier reads.
+  const setLastRemote = (next: string[] | undefined): void => {
+    lastRemote = next;
+  };
 
   function assertCurrent(epoch: number): void {
     if (epoch !== generation) throw new Error("Pinned chat session changed");
@@ -129,7 +133,7 @@ export function createPinnedChatsTransport(options: PinnedChatsTransportOptions)
   function readFallback(): PinnedChatsFallbackState | undefined {
     const state = options.readFallback();
     if (state === undefined) return undefined;
-    if (!state || !Array.isArray(state.operations) || state.operations.length > 10_000)
+    if (!Array.isArray(state.operations) || state.operations.length > 10_000)
       throw new PinnedChatsValidationError("Invalid local pin journal");
     const baseIds = validatePinnedIds(state.baseIds);
     const pinnedIds = validatePinnedIds(state.pinnedIds);
@@ -144,7 +148,11 @@ export function createPinnedChatsTransport(options: PinnedChatsTransportOptions)
     if (!isUnsupported(error)) throw error;
     let state = readFallback();
     if (!state) {
-      const baseIds = validatePinnedIds(expected ?? lastRemote ?? options.readLegacy())!;
+      const baseIds = validatePinnedIds(
+        expected ?? lastRemote ?? options.readLegacy(),
+      );
+      if (baseIds === undefined)
+        throw new PinnedChatsValidationError("Invalid local pin journal");
       state = { baseIds, pinnedIds: baseIds.slice(), operations: [] };
       // Failure to save the recovery record must not be reported as a local save.
       options.writeFallback(state);
@@ -157,7 +165,7 @@ export function createPinnedChatsTransport(options: PinnedChatsTransportOptions)
   }
 
   function validateResult(result: { pinnedIds: string[] | undefined; applied: boolean }) {
-    if (!result || typeof result.applied !== "boolean")
+    if (typeof result.applied !== "boolean")
       throw new PinnedChatsValidationError("Invalid pinned chats response");
     const pinnedIds = validatePinnedIds(result.pinnedIds);
     if (result.applied && pinnedIds === undefined)
@@ -182,15 +190,17 @@ export function createPinnedChatsTransport(options: PinnedChatsTransportOptions)
   }
 
   async function recover(state: PinnedChatsFallbackState, current: string[] | undefined, epoch: number) {
-    current = await remoteMigration(state.baseIds, current, epoch);
+    let currentIds = await remoteMigration(state.baseIds, current, epoch);
     for (const operation of compactReplay(state.operations)) {
       let applied = false;
       for (let attempt = 0; attempt < 8; attempt += 1) {
         assertCurrent(epoch);
-        const next = validatePinnedIds(applyPinOperation(current ?? [], operation))!;
-        const result = validateResult(await options.compareAndSet(current, next, operation));
+        const next = validatePinnedIds(applyPinOperation(currentIds ?? [], operation));
+        if (next === undefined)
+          throw new PinnedChatsValidationError("Invalid pin operation");
+        const result = validateResult(await options.compareAndSet(currentIds, next, operation));
         assertCurrent(epoch);
-        current = result.pinnedIds;
+        currentIds = result.pinnedIds;
         if (result.applied) {
           applied = true;
           break;
@@ -202,9 +212,9 @@ export function createPinnedChatsTransport(options: PinnedChatsTransportOptions)
     // Cleared only once every write is acknowledged; the server deduplicates a retried replay.
     options.writeFallback(undefined);
     localOnly = false;
-    lastRemote = current?.slice();
+    lastRemote = currentIds?.slice();
     recoveredOnLoad = true;
-    return current;
+    return currentIds;
   }
 
   function localCompareAndSet(expected: string[] | undefined, next: string[], operation?: PinOperation) {
@@ -223,8 +233,15 @@ export function createPinnedChatsTransport(options: PinnedChatsTransportOptions)
       ? state.operations : [...state.operations, validatePinOperation(operation)];
     if (operations.length > 10_000)
       throw new PinnedChatsValidationError("Too many pending pin changes");
-    const pinnedIds = existing || !operation
-      ? state.pinnedIds : validatePinnedIds(applyPinOperation(state.pinnedIds, operation))!;
+    let pinnedIds = state.pinnedIds;
+    if (!existing && operation) {
+      const appliedPinnedIds = validatePinnedIds(
+        applyPinOperation(state.pinnedIds, operation),
+      );
+      if (appliedPinnedIds === undefined)
+        throw new PinnedChatsValidationError("Invalid pin operation");
+      pinnedIds = appliedPinnedIds;
+    }
     options.writeFallback({ ...state, pinnedIds, operations });
     return { pinnedIds, applied: true };
   }
@@ -259,9 +276,13 @@ export function createPinnedChatsTransport(options: PinnedChatsTransportOptions)
       // load() just replayed the baseline and offline changes; reimporting would duplicate them.
       if (recoveredOnLoad) return lastRemote?.slice();
       try {
-        const current = await remoteMigration(validatePinnedIds(ids)!, lastRemote, epoch);
+        const validatedIds = validatePinnedIds(ids);
+        if (validatedIds === undefined)
+          throw new PinnedChatsValidationError("Invalid pinned chats ids");
+        const knownRemote = lastRemote;
+        const current = await remoteMigration(validatedIds, knownRemote, epoch);
         assertCurrent(epoch);
-        lastRemote = current?.slice();
+        setLastRemote(current?.slice());
         return current;
       } catch (error) {
         return fallback(error, epoch).pinnedIds;

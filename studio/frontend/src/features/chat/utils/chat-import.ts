@@ -566,6 +566,7 @@ export async function importConversationsFromSource(
   report();
 
   if (failure !== undefined) {
+    const serializedFailure: string | undefined = JSON.stringify(failure);
     const reason =
       failure instanceof Error
         ? failure.message
@@ -576,7 +577,7 @@ export async function importConversationsFromSource(
               "message" in failure &&
               typeof (failure as { message?: unknown }).message === "string"
             ? (failure as { message: string }).message
-            : (JSON.stringify(failure) ?? "Import failed");
+            : (serializedFailure ?? "Import failed");
     throw new Error(
       progress.imported > 0
         ? `${reason} ${progress.imported} conversation${progress.imported === 1 ? " was" : "s were"} imported before it stopped.`

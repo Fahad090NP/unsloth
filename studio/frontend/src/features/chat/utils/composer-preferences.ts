@@ -46,25 +46,27 @@ export function newInputImeState(): InputImeState {
 }
 
 export function resetInputIme(ime: InputImeState) {
-  ime.open = false;
-  ime.endedAt = -Infinity;
-  ime.commitKeydownSeen = false;
+  const state = ime;
+  state.open = false;
+  state.endedAt = -Infinity;
+  state.commitKeydownSeen = false;
 }
 
 export function inputImeHandlers(ime: InputImeState) {
   // compositionend can go missing (#5546); a focus change always ends the composition.
+  const state = ime;
   const reset = () => { resetInputIme(ime); };
   return {
     onFocus: reset,
     onBlur: reset,
     onCompositionStart: () => {
-      ime.open = true;
-      ime.commitKeydownSeen = false;
+      state.open = true;
+      state.commitKeydownSeen = false;
     },
     onCompositionEnd: (event: { timeStamp: number }) => {
-      ime.open = false;
-      ime.endedAt = ime.commitKeydownSeen ? -Infinity : event.timeStamp;
-      ime.commitKeydownSeen = false;
+      state.open = false;
+      state.endedAt = state.commitKeydownSeen ? -Infinity : event.timeStamp;
+      state.commitKeydownSeen = false;
     },
   };
 }
@@ -77,18 +79,19 @@ export function imeOwnsInputKeydown(
   ime: InputImeState,
   options?: { modifiedEnterSubmits?: boolean },
 ): boolean {
+  const state = ime;
   if (event.key === "Enter" && (event.nativeEvent.isComposing || ime.open)) {
-    ime.commitKeydownSeen = true;
+    state.commitKeydownSeen = true;
   }
   const msSinceCompositionEnd = event.timeStamp - ime.endedAt;
-  ime.endedAt = -Infinity;
+  state.endedAt = -Infinity;
   // A held candidate Enter repeats past compositionend: same press, never the submit.
   if (event.key === "Enter" && event.repeat) return true;
   if (event.nativeEvent.isComposing) return true;
   if (event.keyCode !== 229) {
     // Candidate-confirming Enter can arrive as keyCode 13 mid-composition; swallow it once.
     const confirmsCandidate = ime.open && event.key === "Enter";
-    ime.open = false;
+    state.open = false;
     return confirmsCandidate;
   }
   const candidate = options?.modifiedEnterSubmits

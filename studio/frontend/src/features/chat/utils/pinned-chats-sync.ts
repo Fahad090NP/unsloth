@@ -263,7 +263,7 @@ export function createPinnedChatsSync(options: PinnedChatsSyncOptions) {
       if (epoch !== generation) {
         return;
       }
-      if (!result || typeof result.applied !== "boolean") {
+      if (typeof result.applied !== "boolean") {
         throw new PinnedChatsValidationError("Invalid pinned chats response");
       }
       const ids = validatePinnedIds(result.pinnedIds);

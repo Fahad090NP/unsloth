@@ -428,7 +428,7 @@ export async function refreshContextUsage(
     ) {
       refreshContextUsage(
         hadQueued ? queued : { ...options, invalidate: false },
-      ).catch((_error: unknown) => undefined);
+      ).catch(() => undefined);
     }
   }
 }

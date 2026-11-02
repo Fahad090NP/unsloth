@@ -753,7 +753,7 @@ export function ChatProvidersSettings({
         providerType,
       );
       const backendProviderType =
-        toExternalBackendProviderType(providerType) ?? providerType;
+        toExternalBackendProviderType(providerType);
       const models = await listProviderModels({
         providerType: backendProviderType,
 
@@ -837,7 +837,7 @@ export function ChatProvidersSettings({
         id: created.id,
         providerType: created.provider_type,
         name: created.display_name,
-        baseUrl: created.base_url ?? "",
+        baseUrl: created.base_url,
         ...connectionApiFields(created.api_type),
         models,
         availableModels: available,
@@ -969,7 +969,7 @@ export function ChatProvidersSettings({
         providerType: uiProviderType,
         backendProviderType: created.provider_type,
         name: created.display_name,
-        baseUrl: created.base_url ?? "",
+        baseUrl: created.base_url,
         ...connectionApiFields(created.api_type),
         models: modelsToSave,
         availableModels: manualOnly
@@ -1039,7 +1039,7 @@ export function ChatProvidersSettings({
     const credentialEdit = resolveProviderCredentialEdit(
       Boolean(
         existing.hasApiKey ||
-          (!existing.hasApiKey && getExternalProviderApiKey(existing.id).trim()),
+          getExternalProviderApiKey(existing.id).trim(),
       ),
       apiKey,
       clearApiKeyRequested,
@@ -1155,7 +1155,7 @@ export function ChatProvidersSettings({
         ...existing,
         backendProviderType: updated.provider_type,
         name: updated.display_name,
-        baseUrl: updated.base_url ?? "",
+        baseUrl: updated.base_url,
         ...connectionApiFields(updated.api_type),
         models: keepSavedModels
           ? (updated.models?.length ? updated.models : existing.models)
@@ -1454,8 +1454,7 @@ export function ChatProvidersSettings({
     try {
       const result = await testProviderConnection({
         providerType:
-          toExternalBackendProviderType(provider.providerType) ??
-          provider.providerType,
+          toExternalBackendProviderType(provider.providerType),
 
         providerId: provider.id,
         apiKey: savedKey,
@@ -1965,7 +1964,8 @@ export function ChatProvidersSettings({
                 setModelsLoading(true);
                 let owned = true;
                 try {
-                  const synced = await syncExternalProvidersFromBackend(providersRef.current);
+                  const currentProviders = providersRef.current;
+                  const synced = await syncExternalProvidersFromBackend(currentProviders);
                   providersRef.current = synced;
                   onProvidersChange(synced);
                   if (request !== codexCatalogRequestRef.current) {
@@ -2032,7 +2032,11 @@ export function ChatProvidersSettings({
                       }
                       disabled={loadModelsDisabled}
                       title={loadModelsTitle}
-                      onClick={() => void loadModels()}
+                      onClick={() => {
+                        loadModels().catch((error: unknown) => {
+                          console.error("Background chat operation failed", error);
+                        });
+                      }}
                     >
                       {modelsLoading ? (
                         <>
@@ -2420,7 +2424,11 @@ export function ChatProvidersSettings({
                         variant="ghost"
                         className="size-7 hover:text-foreground"
                         disabled={mutatingProvider}
-                        onClick={() => editProvider(provider)}
+                        onClick={() => {
+                          editProvider(provider).catch((error: unknown) => {
+                            console.error("Background chat operation failed", error);
+                          });
+                        }}
                         title="Edit connection"
                         aria-label={`Edit ${provider.name}`}
                       >
@@ -2437,7 +2445,11 @@ export function ChatProvidersSettings({
                           testingProviderIds.has(provider.id)
                         }
                         aria-busy={testingProviderIds.has(provider.id)}
-                        onClick={() => void testProvider(provider)}
+                        onClick={() => {
+                          testProvider(provider).catch((error: unknown) => {
+                            console.error("Background chat operation failed", error);
+                          });
+                        }}
                         title="Check connection"
                         aria-label={`Check ${provider.name}`}
                       >
@@ -2491,7 +2503,11 @@ export function ChatProvidersSettings({
               onClick={() => {
                 const provider = pendingDeleteProvider;
                 setPendingDeleteProvider(null);
-                if (provider) void deleteProvider(provider.id);
+                if (provider) {
+                  deleteProvider(provider.id).catch((error: unknown) => {
+                    console.error("Background chat operation failed", error);
+                  });
+                }
               }}
             >
               Delete

@@ -535,17 +535,25 @@ function joinDocxPath(basePath: string, target: string): string {
 
 // mammoth's parser entity-decodes attributes, so targets match the archive only once decoded.
 function decodeXmlEntities(value: string): string {
-  return value.replace(XML_ENTITY_RE, (match, decimal, hex, name) => {
-    const code = decimal
-      ? Number.parseInt(decimal, 10)
-      : hex
-        ? Number.parseInt(hex, 16)
-        : Number.NaN;
-    if (Number.isNaN(code)) {
-      return lookUp(XML_NAMED_ENTITIES, name) ?? match;
-    }
-    return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match;
-  });
+  return value.replace(
+    XML_ENTITY_RE,
+    (
+      match: string,
+      decimal: string | undefined,
+      hex: string | undefined,
+      name: string,
+    ) => {
+      const code = decimal
+        ? Number.parseInt(decimal, 10)
+        : hex
+          ? Number.parseInt(hex, 16)
+          : Number.NaN;
+      if (Number.isNaN(code)) {
+        return lookUp(XML_NAMED_ENTITIES, name) ?? match;
+      }
+      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match;
+    },
+  );
 }
 
 // Scanned, not parsed (no DOMParser under test); accepts every attribute form mammoth resolves so
@@ -565,7 +573,7 @@ function readDocxXmlTargets(
     for (const [, name, quoted, apostrophed] of tag.matchAll(
       XML_ATTRIBUTE_RE,
     )) {
-      const value = quoted ?? apostrophed ?? "";
+      const value = quoted || apostrophed || "";
       if (name === "Type") {
         type = decodeXmlEntities(value);
       } else if (name === "Target") {
@@ -602,7 +610,7 @@ const DOCX_IMAGE_PART = /\.(png|jpe?g|gif|bmp|tiff?|emf|wmf|svg|webp)$/i;
 
 function docxPreviewImages(bytes: Uint8Array): { isImage: (name: string) => boolean; used: Set<string> } {
   const names = new Set<string>();
-  const read = (name: string) =>
+  const read = (name: string): Uint8Array | undefined =>
     unzipSync(bytes, {
       filter: (entry) => {
         names.add(entry.name);
@@ -615,8 +623,8 @@ function docxPreviewImages(bytes: Uint8Array): { isImage: (name: string) => bool
   const markup = types ? strFromU8(types).replace(XML_NON_ELEMENT_RE, "") : "";
   for (const [, tag, attributes] of markup.matchAll(/<(?:[\w.-]+:)?(Default|Override)\b([^>]*)>/g)) {
     const values = new Map<string, string>();
-    for (const [, key, double, single] of attributes!.matchAll(XML_ATTRIBUTE_RE)) {
-      values.set(key!, double ?? single ?? "");
+    for (const [, key, double, single] of attributes.matchAll(XML_ATTRIBUTE_RE)) {
+      values.set(key, double || single || "");
     }
     const type = (values.get("ContentType") ?? "").toLowerCase();
     if (tag === "Default") defaults.set((values.get("Extension") ?? "").toLowerCase(), type);
@@ -664,7 +672,7 @@ function unpackDocxEntries(
     filter: (entry) => {
       names.add(entry.name);
       const image = images?.isImage(entry.name) ?? false;
-      if (image && (skipImages || !images!.used.has(entry.name))) return false;
+      if (image && (skipImages || !(images?.used.has(entry.name) ?? false))) return false;
       if (entry.originalSize > MAX_OPEN_DOCUMENT_XML_BYTES) {
         oversized.add(entry.name);
         if (!image) return false;
@@ -789,10 +797,10 @@ function childElements(node: Node, ns: string, name: string): Element[] {
 function isDocxPlaceholder(element: Element, ns: string): boolean {
   const flag = childElements(element, ns, "sdtPr").flatMap((pr) =>
     childElements(pr, ns, "showingPlcHdr"),
-  )[0];
+  ).at(0);
   return (
     flag !== undefined &&
-    !["0", "false", "off"].includes(flag.getAttributeNS(ns, "val") ?? "")
+    !["0", "false", "off"].includes(flag.getAttributeNS(ns, "val") || "")
   );
 }
 
@@ -805,7 +813,7 @@ function docxNoteText(node: Node, ns: string): string {
     if (DOCX_NOTE_SKIP.has(name)) continue;
     if (name === "sdt" && isDocxPlaceholder(element, ns)) continue;
     if (name === "t" && element.namespaceURI === ns) {
-      text += element.textContent ?? "";
+      text += element.textContent || "";
     } else if (name === "noBreakHyphen") {
       text += "-";
     } else {
@@ -833,14 +841,14 @@ function docxMathText(element: Element, w: string): string {
   const ns = element.namespaceURI ?? "";
   if (DOCX_NOTE_SKIP.has(name) || (name === "sdt" && isDocxPlaceholder(element, w))) return "";
   if (ns === w && name === "r") return docxNoteText(element, w);
-  if (OMML_NAMESPACES.has(ns) && name === "t") return element.textContent ?? "";
+  if (OMML_NAMESPACES.has(ns) && name === "t") return element.textContent || "";
   const children = (key: string) => childElements(element, ns, key);
   const join = (nodes: Element[], sep = "") => nodes.map((node) => docxMathText(node, w)).join(sep);
   const arg = (key: string) =>
     ["0", "false", "off"].includes(prop(`${key}Hide`, "off")) ? join(children(key).slice(0, 1)) : "";
   const prop = (key: string, fallback: string) => {
     const node = children(`${name}Pr`).flatMap((pr) => childElements(pr, ns, key))[0];
-    return node ? (node.getAttributeNS(ns, "val") ?? "") : fallback;
+    return node ? (node.getAttributeNS(ns, "val") || "") : fallback;
   };
   const scripts = (sub: string, sup: string) => (sub ? `_{${sub}}` : "") + (sup ? `^{${sup}}` : "");
   const all = Array.from(element.childNodes).filter((node): node is Element => node.nodeType === 1);
@@ -883,7 +891,7 @@ function docxMathText(element: Element, w: string): string {
     case "d":
       return prop("begChr", "(") + join(children("e"), prop("sepChr", "|")) + prop("endChr", ")");
   }
-  const row = OMML_ROWS[name];
+  const row = OMML_ROWS[name] as [string, string] | undefined;
   return row ? join(children(row[0]), row[1]) : join(all);
 }
 
@@ -904,7 +912,7 @@ function linearizeDocxMathParts(select: DocxPartSelect): Record<string, Uint8Arr
     // Chromium keeps the root of malformed XML and drops everything after the error.
     if (!WORDPROCESSINGML_NAMESPACES.has(w) || doc.getElementsByTagName("parsererror").length) continue;
     const tag = (local: string) => (root.prefix ? `${root.prefix}:${local}` : local);
-    let found = false;
+    const foundState = { found: false };
     const visit = (node: Node) => {
       for (const child of Array.from(node.childNodes)) {
         if (child.nodeType !== 1) continue;
@@ -922,11 +930,11 @@ function linearizeDocxMathParts(select: DocxPartSelect): Record<string, Uint8Arr
         text.appendChild(doc.createTextNode(docxMathText(element, w)));
         run.appendChild(text);
         node.replaceChild(run, element);
-        found = true;
+        foundState.found = true;
       }
     };
     visit(doc);
-    if (found) rewritten[name] = strToU8(new XMLSerializer().serializeToString(doc));
+    if (foundState.found) rewritten[name] = strToU8(new XMLSerializer().serializeToString(doc));
   }
   return Object.keys(rewritten).length ? rewritten : null;
 }
@@ -1081,16 +1089,17 @@ function listNumber(n: number, format: string | undefined): string {
     const suffix = n % 100 >= 11 && n % 100 <= 13 ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th");
     return `${n}${suffix}`;
   }
-  const lower = format?.startsWith("lower");
+  const formatName = format ?? "";
+  const lower = formatName.startsWith("lower");
   // Out-of-range counters read as decimals, like CSS (roman stops at 3999); this also bounds the loops below.
-  const limit = format?.endsWith("Roman") ? 3999 : format?.endsWith("Alpha") ? Number.MAX_SAFE_INTEGER : 26 * 256;
-  if (n < 1 || n > limit || !Number.isInteger(n) || !(lower || format?.startsWith("upper"))) {
-    return format === "decimalZero" && n >= 0 && n < 10 ? `0${n}` : String(n);
+  const limit = formatName.endsWith("Roman") ? 3999 : formatName.endsWith("Alpha") ? Number.MAX_SAFE_INTEGER : 26 * 256;
+  if (n < 1 || n > limit || !Number.isInteger(n) || !(lower || formatName.startsWith("upper"))) {
+    return formatName === "decimalZero" && n >= 0 && n < 10 ? `0${n}` : String(n);
   }
   let text = "";
-  if (format!.endsWith("Roman")) text = romanNumeral(n);
+  if (formatName.endsWith("Roman")) text = romanNumeral(n);
   // CSS lower-alpha is bijective (z, aa, ab); Word's lowerLetter repeats the letter (z, aa, bb).
-  else if (format!.endsWith("Alpha")) for (let k = n; k > 0; k = Math.floor((k - 1) / 26)) text = String.fromCharCode(97 + ((k - 1) % 26)) + text;
+  else if (formatName.endsWith("Alpha")) for (let k = n; k > 0; k = Math.floor((k - 1) / 26)) text = String.fromCharCode(97 + ((k - 1) % 26)) + text;
   else text = String.fromCharCode(97 + ((n - 1) % 26)).repeat(Math.ceil(n / 26));
   return lower ? text : text.toUpperCase();
 }
@@ -1155,7 +1164,7 @@ function injectDocxListNumbers(select: DocxPartSelect): Record<string, Uint8Arra
     if (styleNumbering.has(key)) return styleNumbering.get(key);
     const style = styleById.get(id);
     if (!style || depth > 20) return undefined;
-    const pPr = childElements(style, style.namespaceURI ?? "", "pPr")[0];
+    const pPr = childElements(style, style.namespaceURI ?? "", "pPr").at(0);
     const numPr = pPr && childElements(pPr, style.namespaceURI ?? "", "numPr")[0];
     const value = wordValue(numPr, name) ?? styleNum(wordValue(style, "basedOn"), name, depth + 1);
     styleNumbering.set(key, value);
@@ -1200,7 +1209,7 @@ function injectDocxListNumbers(select: DocxPartSelect): Record<string, Uint8Arra
           format: wordValue(lvl, "numFmt"),
           restart: wordValue(lvl, "lvlRestart"),
           // isLgl (legal numbering) shows every level's number in Arabic digits: "Section 1.01" under "Article I".
-          legal: !!lvl && childElements(lvl, n, "isLgl").some((node) => !/^(?:0|false|off)$/.test(node.getAttributeNS(n, "val") ?? "")),
+          legal: lvl !== undefined && childElements(lvl, n, "isLgl").some((node) => !/^(?:0|false|off)$/.test(node.getAttributeNS(n, "val") || "")),
           text: wordValue(lvl, "lvlText") ?? "",
         };
       });
@@ -1229,7 +1238,7 @@ function injectDocxListNumbers(select: DocxPartSelect): Record<string, Uint8Arra
   const started = new Set<string>();
   const { doc, w } = body;
   const tag = (local: string) => (body.root.prefix ? `${body.root.prefix}:${local}` : local);
-  let found = false;
+  const foundState = { found: false };
   let budget = 1 << 20;
   const label = (p: Element, pPr: Element | undefined) => {
     // A tracked-deleted paragraph mark removes the item; Mammoth folds its text into the next paragraph.
@@ -1238,7 +1247,8 @@ function injectDocxListNumbers(select: DocxPartSelect): Record<string, Uint8Arra
     const direct = pPr && childElements(pPr, w, "numPr")[0];
     const styleId = wordValue(pPr, "pStyle") ?? defaultStyle;
     const numId = wordValue(direct, "numId") ?? styleNum(styleId, "numId");
-    const list = numId === undefined ? undefined : instance(numId);
+    if (numId === undefined) return;
+    const list = instance(numId);
     if (!list) return;
     const { abstractId, levels, restarts, byStyle } = list;
     // A heading style's numPr often names only the list; the level linked to its style supplies ilvl.
@@ -1254,8 +1264,8 @@ function injectDocxListNumbers(select: DocxPartSelect): Record<string, Uint8Arra
     const counts = counters.get(abstractId) ?? [];
     counters.set(abstractId, counts);
     if (restartsAfterBreak.has(abstractId)) restartable.add(abstractId);
-    if (!started.has(numId!)) {
-      started.add(numId!);
+    if (!started.has(numId)) {
+      started.add(numId);
       for (const at of restarts) if (at < counts.length) counts.length = at;
     }
     for (let i = 0; i < ilvl; i++) counts[i] ??= levels[i].start;
@@ -1285,21 +1295,22 @@ function injectDocxListNumbers(select: DocxPartSelect): Record<string, Uint8Arra
     t.appendChild(doc.createTextNode(`${value} `));
     run.appendChild(t);
     p.insertBefore(run, pPr ? pPr.nextSibling : p.firstChild);
-    found = true;
+    foundState.found = true;
   };
   // Mammoth reads only mc:Fallback, so paragraphs under mc:Choice must not count twice.
   const MC = "http://schemas.openxmlformats.org/markup-compatibility/2006";
   const paragraphs: Element[] = [];
   const stack: Element[] = [doc.documentElement];
   while (stack.length) {
-    const node = stack.pop()!;
+    const node = stack.pop();
+    if (!node) break;
     if (node.localName === "Choice" && node.namespaceURI === MC) continue;
     if (node.localName === "p" && node.namespaceURI === w) paragraphs.push(node);
     const kids = Array.from(node.childNodes).filter((child): child is Element => child.nodeType === ELEMENT_NODE);
     for (let i = kids.length - 1; i >= 0; i--) stack.push(kids[i]);
   }
   for (const p of paragraphs) {
-    const pPr = childElements(p, w, "pPr")[0];
+    const pPr = childElements(p, w, "pPr").at(0);
     label(p, pPr);
     if (budget < 0) return null;
     // w15:restartNumberingAfterBreak
@@ -1308,7 +1319,7 @@ function injectDocxListNumbers(select: DocxPartSelect): Record<string, Uint8Arra
       restartable.clear();
     }
   }
-  if (!found) return null;
+  if (!foundState.found) return null;
   return { [main]: strToU8(new XMLSerializer().serializeToString(doc)) };
 }
 
@@ -1318,6 +1329,7 @@ const DOCX_NOTE_ID_RE = /(?:^|\s)(?:[\w.-]+:)?id\s*=\s*["']([^"']*)["']/;
 
 function romanNumeral(n: number): string {
   let out = "";
+  let remaining = n;
   for (const [value, digits] of [
     [1000, "m"],
     [900, "cm"],
@@ -1333,7 +1345,7 @@ function romanNumeral(n: number): string {
     [4, "iv"],
     [1, "i"],
   ] as const) {
-    for (; n >= value; n -= value) out += digits;
+    for (; remaining >= value; remaining -= value) out += digits;
   }
   return out;
 }
@@ -1356,7 +1368,7 @@ function markDocxNoteParts(select: DocxPartSelect): {
   label: (text: string) => string;
 } {
   const names = new Set<string>();
-  const read = (name: string) =>
+  const read = (name: string): Uint8Array | undefined =>
     select((entry) => {
       names.add(entry);
       return entry === name;
@@ -1447,12 +1459,14 @@ function markDocxNoteParts(select: DocxPartSelect): {
       endnote: new Map<string, number>(),
     };
     const body = text.replace(sentinel, (match, index: string) => {
-      const ref = refs[Number(index)];
+      const ref = refs.at(Number(index));
       if (!ref) return match;
       const { kind, id } = ref;
       const seen = numbers[kind];
       if (!seen.has(id)) seen.set(id, seen.size + 1);
-      return `[${kinds[kind].label(seen.get(id)!)}]`;
+      const number = seen.get(id);
+      if (number === undefined) return match;
+      return `[${kinds[kind].label(number)}]`;
     });
     const sections: string[] = [];
     for (const [kind, notes] of Object.entries(kinds)) {
@@ -1467,7 +1481,7 @@ function markDocxNoteParts(select: DocxPartSelect): {
         .sort((a, b) => a[1] - b[1])
         .filter(([id]) => notes.bodies.get(id))
         .map(
-          ([id, number]) => `[${notes.label(number)}] ${notes.bodies.get(id)}`,
+          ([id, number]) => `[${notes.label(number)}] ${notes.bodies.get(id) ?? ""}`,
         );
       if (lines.length) sections.push([notes.heading, ...lines].join("\n"));
     }
@@ -1510,7 +1524,7 @@ export function repackDocxPreviewArchive(
 ): { archive: Uint8Array; truncated: boolean } {
   const archive = unpackDocxEntries(filename, bytes, true, keptImagesOnly);
   const mainDocument = assertDocxPartSizes(filename, archive);
-  const main = archive.entries[mainDocument];
+  const main = archive.entries[mainDocument] as Uint8Array | undefined;
   const cut = main ? cutDocxParagraphs(strFromU8(main), maxParagraphs) : null;
   if (cut !== null) archive.entries[mainDocument] = strToU8(cut);
   if (keptImagesOnly && main) {
@@ -1535,7 +1549,7 @@ function docxRelationships(rels: Uint8Array | undefined, base: string): DocxRela
     let target = "";
     let type = "";
     for (const [, name, double, single] of tag.matchAll(XML_ATTRIBUTE_RE)) {
-      const value = decodeXmlEntities(double ?? single ?? "");
+      const value = decodeXmlEntities(double || single || "");
       if (name === "Id") id = value;
       else if (name === "Target") target = value;
       else if (name === "Type") type = value;
@@ -1548,10 +1562,10 @@ function docxRelationships(rels: Uint8Array | undefined, base: string): DocxRela
 /** Each element tag's local name and attributes; comments, CDATA and text are skipped. */
 function* docxElementTags(xml: string): Generator<{ local: string; attributes: Map<string, string> }> {
   for (const tag of xml.replace(XML_NON_ELEMENT_RE, "").match(XML_ELEMENT_TAG_RE) ?? []) {
-    const name = /^<([^\s/>]+)/.exec(tag)![1]!;
+    const name = /^<([^\s/>]+)/.exec(tag)?.[1] ?? "";
     const attributes = new Map<string, string>();
     for (const [, key, double, single] of tag.matchAll(XML_ATTRIBUTE_RE)) {
-      attributes.set(key!, decodeXmlEntities(double ?? single ?? ""));
+      attributes.set(key, decodeXmlEntities(double || single || ""));
     }
     yield { local: name.slice(name.indexOf(":") + 1), attributes };
   }
@@ -1599,8 +1613,13 @@ function addKeptDocxImages(bytes: Uint8Array, archive: DocxArchive, mainDocument
     const kept = [...strFromU8(xml).replace(XML_NON_ELEMENT_RE, "").matchAll(element)]
       .map(([whole]) => whole)
       .filter((whole) => {
-        const open = docxElementTags(whole).next().value;
-        const id = open && [...open.attributes].find(([name]) => name === "id" || name.endsWith(":id"))?.[1];
+        let id: string | undefined;
+        for (const open of docxElementTags(whole)) {
+          id = [...open.attributes].find(
+            ([name]) => name === "id" || name.endsWith(":id"),
+          )?.[1];
+          break;
+        }
         return id !== undefined && noteIds.has(id);
       });
     addImages(docxRelationships(archive.entries[docxRelationshipsPath(part)], dirname(part)), relationshipIdsIn(kept.join("")));
@@ -1610,7 +1629,7 @@ function addKeptDocxImages(bytes: Uint8Array, archive: DocxArchive, mainDocument
   let unpacked = Object.values(archive.entries).reduce((total, entry) => total + entry.length, 0);
   const images = unzipSync(bytes, {
     filter: (entry) => {
-      if (!wanted.has(entry.name) || archive.entries[entry.name]) return false;
+      if (!wanted.has(entry.name) || entry.name in archive.entries) return false;
       if (unpacked + entry.originalSize > MAX_DOCX_UNPACKED_BYTES) return false;
       unpacked += entry.originalSize;
       return true;
@@ -1726,12 +1745,14 @@ export async function extractPdfAttachmentText(file: File): Promise<string> {
     const hasFields = await pdf.getFieldObjects().then(Boolean, () => false);
     const pages = await Promise.all(
       text.map(async (pageText, index) => {
-        const annotations = hasFields
-          ? await pdf
-              .getPage(index + 1)
-              .then((page) => page.getAnnotations())
-              .catch(() => [])
-          : [];
+        const annotations = (
+          hasFields
+            ? await pdf
+                .getPage(index + 1)
+                .then((page) => page.getAnnotations())
+                .catch(() => [])
+            : []
+        ) as Parameters<typeof pdfFormFieldLines>[0];
         const fields = pdfFormFieldLines(annotations);
         return [pageText, ...fields].filter(Boolean).join("\n");
       }),
@@ -1808,7 +1829,7 @@ export async function extractOfficeAttachmentText(
       if (budget.cut) break;
       const lines = [budget.take(`Sheet: ${sheet.name}`)];
       for (const row of sheet.rows) {
-        if (!row || budget.cut) continue;
+        if (budget.cut) continue;
         const line = Array.from(row, (cell) => budget.take(cell?.text ?? ""))
           .filter((_, index) => !sheet.hidden?.columns.has(index))
           .join("\t")
@@ -1849,7 +1870,7 @@ export async function extractDocxAttachmentText(file: File): Promise<string> {
   // Each rewrite reads the parts the one before it left, as it would from the rezipped archive.
   const select: DocxPartSelect = (keep) => {
     const picked: Record<string, Uint8Array> = {};
-    for (const [name, bytes] of Object.entries(parts!)) {
+    for (const [name, bytes] of Object.entries(parts ?? {})) {
       if (keep(name, bytes.length)) picked[name] = bytes;
     }
     return picked;

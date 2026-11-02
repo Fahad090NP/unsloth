@@ -3,7 +3,7 @@
 
 /** Rate and ETA from cumulative byte samples; `stable` needs 3+ samples over 3s+. */
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   type TransferSample,
@@ -19,33 +19,25 @@ export function useTransferStats(
   totalBytes: number | null | undefined,
 ): TransferStats {
   const [samples, setSamples] = useState<TransferSample[]>([]);
-  const [prev, setPrev] = useState({ bytes, totalBytes });
-  const [state, setState] = useState<TransferStats>({
-    rateBytesPerSecond: 0,
-    etaSeconds: 0,
-    stable: false,
-  });
+  const total =
+    typeof totalBytes === "number" && Number.isFinite(totalBytes)
+      ? totalBytes
+      : 0;
 
-  if (prev.bytes !== bytes || prev.totalBytes !== totalBytes) {
-    setPrev({ bytes, totalBytes });
-    const now = Date.now() / 1000;
+  // Sampling belongs in an effect: the clock is impure, so it cannot run during render.
+  useEffect(() => {
     const cur = typeof bytes === "number" && Number.isFinite(bytes) ? bytes : 0;
-    const total =
-      typeof totalBytes === "number" && Number.isFinite(totalBytes)
-        ? totalBytes
-        : 0;
-
     if (typeof document !== "undefined" && document.hidden) {
       // Hidden tabs clamp polling to ~1/min, which would skew the rate; drop stale samples.
       setSamples([]);
-      setState({ rateBytesPerSecond: 0, etaSeconds: 0, stable: false });
-    } else {
-      const nextSamples = [...samples];
-      appendSample(nextSamples, now, cur);
-      setSamples(nextSamples);
-      setState(computeTransferStats(nextSamples, total));
+      return;
     }
-  }
+    setSamples((current) => {
+      const next = [...current];
+      appendSample(next, Date.now() / 1000, cur);
+      return next;
+    });
+  }, [bytes]);
 
-  return state;
+  return useMemo(() => computeTransferStats(samples, total), [samples, total]);
 }

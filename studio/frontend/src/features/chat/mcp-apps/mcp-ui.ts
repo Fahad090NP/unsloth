@@ -177,7 +177,7 @@ export function cspFrameQuery(csp: unknown): string {
 
 /** getRandomValues, not randomUUID (missing over plain-HTTP LAN); null without Web Crypto. */
 export function newBridgeToken(): string | null {
-  if (typeof globalThis.crypto?.getRandomValues !== "function") return null;
+  if (typeof globalThis.crypto.getRandomValues !== "function") return null;
   const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }

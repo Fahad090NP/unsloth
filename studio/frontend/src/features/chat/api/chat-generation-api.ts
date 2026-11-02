@@ -459,6 +459,7 @@ export async function* followChatGenerationRun(
   let stalled = false;
   const isStalled = (): boolean => stalled;
   let settled = false;
+  const hasSettled = (): boolean => settled;
   // Spans reconnects on purpose: see the onActivity contract in streamChatGenerationEvents.
   let lastKeepAliveStamp: string | null = null;
   const noteProgress = (keepAliveStamp?: string): void => {
@@ -556,5 +557,5 @@ export async function* followChatGenerationRun(
 
   yield* stream();
   // Every exit funnels here; `settled` stops a same-tick terminal run being reported stalled.
-  if (isStalled() && !settled) throw new ChatGenerationStalledError(id);
+  if (isStalled() && !hasSettled()) throw new ChatGenerationStalledError(id);
 }
