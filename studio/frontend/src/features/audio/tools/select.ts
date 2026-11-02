@@ -3,7 +3,7 @@
 
 // Which tool panels a model gets. Free of JSX so the node test runner can load it.
 
-import type { AudioConvertCaps } from "@/features/chat/types/api";
+import type { AudioConvertCaps } from "@/features/chat";
 import type { AudioOptionSpec } from "../audio-options";
 import {
   type NativeAudioInstructionsKind,

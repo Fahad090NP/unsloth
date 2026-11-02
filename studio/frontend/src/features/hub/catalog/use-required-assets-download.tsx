@@ -6,7 +6,7 @@ import {
   getDiffusionDownloadPlan,
   type DiffusionDownloadPlan,
 } from "@/features/images";
-import { getVideoDownloadPlan } from "@/features/video/api";
+import { getVideoDownloadPlan } from "@/features/video";
 import { getAudioDownloadPlan } from "@/features/audio";
 import { toast } from "@/lib/toast";
 import { useInventoryVersion } from "../stores/inventory-events";

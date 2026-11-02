@@ -589,7 +589,7 @@ function commitGalleryPage(images: GalleryImage[], hasMore: boolean): void {
 
 /** Resets a ref from outside the async function that read it. */
 function assignRef<T>(ref: { current: T }, value: T): void {
-  ref.current = value;
+  Object.assign(ref, { current: value });
 }
 
 /** A check-and-set in-flight guard whose flag never lives directly in an async body. */
@@ -2085,10 +2085,12 @@ export function ImagesPage({
   useEffect(() => {
     if (!status?.loaded) return;
     // Deferred one microtask: the reconcilers decide whether to set state from the loaded status.
-    void Promise.resolve().then(() => {
-      reconcileInitialComponents(status);
-      reconcileResidentComponents(status);
-    });
+    Promise.resolve()
+      .then(() => {
+        reconcileInitialComponents(status);
+        reconcileResidentComponents(status);
+      })
+      .catch(() => undefined);
   }, [status, reconcileInitialComponents, reconcileResidentComponents]);
   const { familyOverride, setFamilyOverride, familySelect, opaqueKind, selectorModelId } = useFamilyOverride(status, status?.supported_families);
   // A connection is not bound by the resident model's size grid or presets.
@@ -2333,7 +2335,7 @@ export function ImagesPage({
   useEffect(() => {
     let cancelled = false;
     // Deferred one microtask: the catalog reset and reseed must not cascade a render from the effect body.
-    void Promise.resolve().then(() => {
+    Promise.resolve().then(() => {
       setLoraCatalogFamily(undefined);
       if (!loraCapable) {
         // Keep the selection: it may have just been restored.
@@ -2368,7 +2370,7 @@ export function ImagesPage({
           // Clear only the options: selections are valid without being in the catalog.
           if (!cancelled) setAvailableLoras([]);
         });
-    });
+    }).catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -2507,11 +2509,13 @@ export function ImagesPage({
   );
   useEffect(() => {
     if (!controlnetSupported) {
-      void Promise.resolve().then(() => {
-        setAvailableControlNets([]);
-        setControlnetId("");
-        setControlImage(null);
-      });
+      Promise.resolve()
+        .then(() => {
+          setAvailableControlNets([]);
+          setControlnetId("");
+          setControlImage(null);
+        })
+        .catch(() => undefined);
       return;
     }
     let cancelled = false;
@@ -3422,7 +3426,7 @@ export function ImagesPage({
       refreshStatus().catch(() => undefined);
       return;
     }
-    let cancelled = false;
+    const runState = { cancelled: false };
     (async () => {
       await Promise.all([
         refreshStatus(),
@@ -3435,12 +3439,12 @@ export function ImagesPage({
           if (initialSelection) await ensureSrc(initialSelection);
         })(),
       ]);
-      if (cancelled) return;
+      if (runState.cancelled) return;
       initialReadySent.current = true;
       onInitialReady?.();
     })().catch(() => undefined);
     return () => {
-      cancelled = true;
+      runState.cancelled = true;
     };
   }, [active, ensureSrc, loadGallery, onInitialReady, refreshStatus]);
 
@@ -3469,10 +3473,12 @@ export function ImagesPage({
 
   useEffect(() => {
     if (active) return;
-    void Promise.resolve().then(() => {
-      setSelectorOpen(false);
-      setAspectOpen(false);
-    });
+    Promise.resolve()
+      .then(() => {
+        setSelectorOpen(false);
+        setAspectOpen(false);
+      })
+      .catch(() => undefined);
   }, [active]);
 
   const offerLoadAnywayFor = useCallback(
@@ -3808,7 +3814,7 @@ export function ImagesPage({
     const record = status?.loaded ? status.resolved : null;
     if (!record) return;
     // Deferred one microtask: reseeding the selects must not cascade a render from the effect body.
-    void Promise.resolve().then(() => {
+    Promise.resolve().then(() => {
       const family = resolvedFamilyOverrideSelection(record.family_override);
       if (family) setFamilyOverride(family);
       const quant = resolvedSelectValue(record.transformer_quant, (v) =>
@@ -3835,7 +3841,7 @@ export function ImagesPage({
         ) ?? null,
       );
       if (attention) setAttentionBackend(attention);
-    });
+    }).catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- resolvedKey stands for the record
   }, [resolvedKey]);
 
@@ -4100,7 +4106,7 @@ export function ImagesPage({
     if (!dataUrl) return;
     editRequest.current += 1;
     // Deferred one microtask: applying the source sets form state.
-    void Promise.resolve().then(() => { applyEditSource(dataUrl); });
+    Promise.resolve().then(() => { applyEditSource(dataUrl); }).catch(() => undefined);
   }, [pendingLibraryEdit, capabilitiesKnown, applyEditSource]);
   const editImageItem = (image: GalleryImage) => (
     <EditImageMenuItem onClick={() => { editGalleryImage(image).catch(() => undefined); }} />
@@ -4464,7 +4470,7 @@ export function ImagesPage({
       }
       return await handleLoadRef.current(repoId, opts, advanced, pickToastId);
     },
-    [stage, currentLoadAdvanced, pickComponentFiles, requestDownloadPlan, modelSelectionAction, pickGuard, revertPick, pickToast, engineFor, offerLoadAnyway, dismissLoadAnyway, queuedDownloadKeys],
+    [stage, currentLoadAdvanced, pickComponentFiles, requestDownloadPlan, modelSelectionAction, pickGuard, pickToast, engineFor, offerLoadAnyway, dismissLoadAnyway, queuedDownloadKeys],
   );
   const loadOrStageRef = useRef(loadOrStage);
   useEffect(() => {
@@ -4590,7 +4596,7 @@ export function ImagesPage({
     const token = downloadOnlyPick ? undefined : pickGuard.claim();
     if (!downloadOnlyPick) {
       setFamilyOverride("auto");
-      void Promise.resolve().then(() => { setExternalModelId(null); });
+      Promise.resolve().then(() => { setExternalModelId(null); }).catch(() => undefined);
     }
     navigateSelf({ to: "/images", search: {}, replace: true }).catch(() => undefined);
     if (routedLabel) {
@@ -4890,13 +4896,17 @@ export function ImagesPage({
       busy,
       currentLoadAdvanced,
       familyOverride,
+      guidance,
       handleLoad,
       loadGgufRepoPick,
       loadOrStage,
+      modelSelectionAction,
       pickGuard,
       pickToast,
       quant,
       revertPick,
+      setFamilyOverride,
+      steps,
     ],
   );
 
@@ -4940,7 +4950,9 @@ export function ImagesPage({
     if (!active || !deployFromVideo) return;
     const request = useImageWorkflowStore.getState().takeDeploy();
     // Deferred one microtask: deploying the adapter sets the form state.
-    if (request) void Promise.resolve().then(() => { handleDeployAdapter(request); });
+    if (request) {
+      Promise.resolve().then(() => { handleDeployAdapter(request); }).catch(() => undefined);
+    }
   }, [active, deployFromVideo, handleDeployAdapter]);
   const trainingCompletions = useImageWorkflowStore((s) => s.trainingCompletions);
   // The key only exists to re-run the LoRA catalog effect, so it just tracks the completion count.
@@ -5738,19 +5750,21 @@ export function ImagesPage({
   ]);
   useEffect(() => {
     if (!shouldRunQueuedOversizedRetry({ queued: oversizedRetryQueued, busy })) return;
-    void Promise.resolve().then(() => {
+    Promise.resolve().then(() => {
       setOversizedRetryQueued(false);
       oversizedOnce.current = true;
       handleGenerateWithRecall().finally(() => {
         oversizedOnce.current = false;
       }).catch(() => undefined);
-    });
+    }).catch(() => undefined);
   }, [oversizedRetryQueued, busy, handleGenerateWithRecall]);
 
   const canVary =
     !external && Boolean(status?.loaded && sdCaps?.variation_seed) && workflow === "create" && selected !== null &&
     canVaryImage(selected, status?.display_repo_id ?? status?.repo_id ?? null);
-  const varyBlocked = canVary && selected ? varyBlockedReason(selected, loraCapable, sdCaps, status ?? {}) : null;
+  const varyBlocked = selected != null && canVary
+    ? varyBlockedReason(selected, loraCapable, sdCaps, status ?? {})
+    : null;
   // Vary runs the SELECTED image's recipe, not the form: restore it, then generate once the form has rendered.
   const [varyQueued, setVaryQueued] = useState(false);
   const handleVary = useCallback(() => {
@@ -5765,10 +5779,10 @@ export function ImagesPage({
   }, [busy, restoreSettings, sdCaps, selected, varyBlocked]);
   useEffect(() => {
     if (!varyQueued || busy !== null) return;
-    void Promise.resolve().then(() => {
+    Promise.resolve().then(() => {
       setVaryQueued(false);
       handleGenerate().catch(() => undefined);
-    });
+    }).catch(() => undefined);
   }, [varyQueued, busy, handleGenerate]);
 
   useEffect(() => {
@@ -7241,7 +7255,8 @@ export function ImagesPage({
             data-testid="images-import-settings-input"
             onChange={(event) => {
               const file = event.target.files?.[0];
-              event.currentTarget.value = "";
+              const input = event.currentTarget;
+              input.value = "";
               if (file) importSettingsFromFile(file).catch(() => undefined);
             }}
           />

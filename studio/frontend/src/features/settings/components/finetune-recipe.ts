@@ -2,9 +2,9 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { type FineTuneFormat, buildFineTuneJsonl } from "@/features/chat";
-import { saveRecipe } from "@/features/data-recipes/data/recipes-db";
+import { saveRecipe } from "@/features/data-recipes";
 import { createEmptyRecipePayload } from "@/features/recipe-studio";
-import { inspectSeedUpload } from "@/features/recipe-studio/api";
+import { inspectSeedUpload } from "@/features/recipe-studio";
 import { uploadTrainingDataset } from "@/features/training";
 import { useTrainingConfigStore } from "@/features/training";
 import { toast } from "@/lib/toast";

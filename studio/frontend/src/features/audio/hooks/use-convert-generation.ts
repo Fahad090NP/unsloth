@@ -131,23 +131,23 @@ export function useConvertGeneration({
   const [expiredIds, setExpiredIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
-  // Uploading the same audio again returns the same id, which is live again.
   const sourceId = source?.id ?? null;
   const targetId = target?.id ?? null;
-  useEffect(() => {
-    setExpiredIds((previous) => {
-      if (![sourceId, targetId].some((id) => id && previous.has(id))) {
-        return previous;
-      }
-      const next = new Set(previous);
+  const liveIdsKey = `${sourceId ?? ""}|${targetId ?? ""}`;
+  const [trackedLiveIdsKey, setTrackedLiveIdsKey] = useState(liveIdsKey);
+  if (trackedLiveIdsKey !== liveIdsKey) {
+    setTrackedLiveIdsKey(liveIdsKey);
+    // Uploading the same audio again returns the same id, which is live again.
+    if ([sourceId, targetId].some((id) => id !== null && expiredIds.has(id))) {
+      const next = new Set(expiredIds);
       for (const id of [sourceId, targetId]) {
-        if (id) {
+        if (id !== null) {
           next.delete(id);
         }
       }
-      return next;
-    });
-  }, [sourceId, targetId]);
+      setExpiredIds(next);
+    }
+  }
   const [runningNotice, setRunningNotice] = useState<string | null>(null);
 
   const transcriber = useReferenceTranscribe({
@@ -281,45 +281,37 @@ export function useConvertGeneration({
     sourceText,
     panelError: toolRequest.error,
   });
-  const againAction = (
-    handle: typeof sourceHandle,
-    clear: () => void,
-  ): GenerateBlocker["actions"] => [
-    {
-      label: "Add it again",
-      onClick: () => {
-        clear();
-        readRef(handle)?.browse();
-      },
-    },
-  ];
-  const focusAction = (label: string, handle: typeof sourceHandle) => [
-    { label, onClick: () => readRef(handle)?.focus() },
-  ];
+  // Ref reads live in these callbacks, so the action lists stay render-pure.
+  const focusSource = useCallback(() => { readRef(sourceHandle)?.focus(); }, []);
+  const focusTarget = useCallback(() => { readRef(targetHandle)?.focus(); }, []);
+  const againSource = useCallback(() => {
+    useAudioConvertStore.getState().setSource(null);
+    readRef(sourceHandle)?.browse();
+  }, []);
+  const againTarget = useCallback(() => {
+    useAudioConvertStore.getState().setTarget(null);
+    readRef(targetHandle)?.browse();
+  }, []);
+  const transcribeSource = useCallback(() => {
+    (transcriber.transcribe(source)).catch(() => { /* noop */ });
+  }, [transcriber, source]);
   const blockerActions = (
     kind: ConvertBlockerKind,
   ): GenerateBlocker["actions"] => {
     switch (kind) {
       case "source":
       case "source-error":
-        return focusAction("Add a recording", sourceHandle);
+        return [{ label: "Add a recording", onClick: focusSource }];
       case "target":
       case "target-error":
-        return focusAction("Add the target voice", targetHandle);
+        return [{ label: "Add the target voice", onClick: focusTarget }];
       case "source-expired":
-        return againAction(sourceHandle, () =>
-          { useAudioConvertStore.getState().setSource(null); },
-        );
+        return [{ label: "Add it again", onClick: againSource }];
       case "target-expired":
-        return againAction(targetHandle, () =>
-          { useAudioConvertStore.getState().setTarget(null); },
-        );
+        return [{ label: "Add it again", onClick: againTarget }];
       case "source-text":
         return [
-          {
-            label: "Transcribe it",
-            onClick: () => { (transcriber.transcribe(source)).catch(() => { /* noop */ }); },
-          },
+          { label: "Transcribe it", onClick: transcribeSource },
           {
             label: "type it",
             onClick: () =>
@@ -328,8 +320,6 @@ export function useConvertGeneration({
         ];
       case "mode":
       case "panel":
-        return undefined;
-      default:
         return undefined;
     }
   };

@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   COLOR_THEMES,
   HALLOWEEN_THEME_IDS,
-} from "@/features/settings/lib/color-themes";
+} from "@/features/settings";
 import { usePalette } from "@/features/settings";
 import { useT } from "@/i18n";
 import {

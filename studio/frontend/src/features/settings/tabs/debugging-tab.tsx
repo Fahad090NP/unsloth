@@ -275,7 +275,9 @@ export function DebuggingTab() {
 
   useEffect(() => {
     const controller = new AbortController();
-    (refreshSources({ signal: controller.signal })).catch(() => { /* noop */ });
+    queueMicrotask(() => {
+      refreshSources({ signal: controller.signal }).catch(() => { /* noop */ });
+    });
     return () => { controller.abort(); };
   }, [refreshSources]);
 
@@ -283,7 +285,9 @@ export function DebuggingTab() {
   useEffect(() => {
     if (pendingLogRequest === NO_PENDING_LOG_REQUEST) return;
     const controller = new AbortController();
-    (refreshSources({ signal: controller.signal })).catch(() => { /* noop */ });
+    queueMicrotask(() => {
+      refreshSources({ signal: controller.signal }).catch(() => { /* noop */ });
+    });
     return () => { controller.abort(); };
   }, [pendingLogRequest, refreshSources]);
 
@@ -374,13 +378,16 @@ export function DebuggingTab() {
   useEffect(() => {
     selectionRef.current += 1;
     cursorRef.current = null;
-    setBuffer(EMPTY_BUFFER);
-    setRealpath(null);
-    // Every notice describes the file being left, so reset all of them; manual mode never retries.
-    setDropped(false);
-    setMorePending(false);
-    setStaleSession(false);
-    setNotice(null);
+    // Deferred one microtask: resetting the pane must not cascade a render from the effect body.
+    queueMicrotask(() => {
+      setBuffer(EMPTY_BUFFER);
+      setRealpath(null);
+      // Every notice describes the file being left, so reset all of them; manual mode never retries.
+      setDropped(false);
+      setMorePending(false);
+      setStaleSession(false);
+      setNotice(null);
+    });
   }, [sourceId]);
 
   useEffect(() => {
@@ -388,8 +395,9 @@ export function DebuggingTab() {
     let timer: number | undefined;
 
     // Self-scheduling so a slow link builds no backlog.
+    const isAborted = () => controller.signal.aborted;
     const tick = async () => {
-      if (controller.signal.aborted) return;
+      if (isAborted()) return;
       if (
         typeof document === "undefined" ||
         document.visibilityState !== "hidden"
@@ -397,7 +405,7 @@ export function DebuggingTab() {
         await rescanSourcesIfStale(controller.signal);
         await poll(controller.signal);
       }
-      if (controller.signal.aborted) return;
+      if (isAborted()) return;
       const delay = pollDelayMs(mode);
       if (delay !== null) timer = window.setTimeout(() => { tick().catch(() => undefined); }, delay);
     };

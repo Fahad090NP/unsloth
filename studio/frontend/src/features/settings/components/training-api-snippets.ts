@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import type { TrainingStartRequest } from "@/features/training/types/api";
+import type { TrainingStartRequest } from "@/features/training";
 import type { TrainingApiRequest } from "../stores/settings-dialog-store";
 import { psSingle, shSingle } from "./agent-command.ts";
 import type { AudioApiLang, AudioApiOs } from "./audio-api-snippets";

@@ -22,7 +22,7 @@ import {
   useChatRuntimeStore,
   usePlusMenuPrefsStore,
 } from "@/features/chat";
-import { PASTED_TEXT_THRESHOLD_CHOICES } from "@/features/chat/utils/pasted-text";
+import { PASTED_TEXT_THRESHOLD_CHOICES } from "@/features/chat";
 import { refreshContextUsage } from "@/features/chat";
 import { formatBindingLabel, isMacPlatform } from "../lib/keyboard-shortcuts";
 import { useIsAccountOwner } from "@/features/auth";

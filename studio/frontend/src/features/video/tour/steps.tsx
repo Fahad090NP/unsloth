@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { buildImagesTourSteps } from "@/features/images/tour/steps";
+import { buildImagesTourSteps } from "@/features/images";
 import type { TourStep } from "@/features/tour";
 
 const modeStep: TourStep = {

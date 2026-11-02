@@ -306,15 +306,15 @@ export function ExportPage() {
       prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
     );
   }, []);
-  // Wait for hardware to load: before that hasNvidia reads false.
-  useEffect(() => {
-    if (!hardware.loaded) return;
-    const allowed = new Set(availableFormats.map((f) => f.value));
-    setSelectedFormats((prev) => {
-      const next = prev.filter((v) => allowed.has(v));
-      return next.length === prev.length ? prev : next;
-    });
-  }, [availableFormats, hardware.loaded]);
+  // Wait for hardware to load: before that hasNvidia reads false. Filtered during render so a
+  // format this host cannot write never survives a hardware update.
+  if (hardware.loaded) {
+    const allowedFormats = new Set(availableFormats.map((f) => f.value));
+    const keptFormats = selectedFormats.filter((v) => allowedFormats.has(v));
+    if (keptFormats.length !== selectedFormats.length) {
+      setSelectedFormats(keptFormats);
+    }
+  }
   // IQ quants are imatrix-only; llama.cpp rejects them without one.
   const requiresImatrix = quantLevels.some(
     (q) => QUANT_OPTIONS.find((o) => o.value === q)?.imatrix,
@@ -330,7 +330,7 @@ export function ExportPage() {
   const [destination, setDestination] = useState<"local" | "hub">("local");
   // The converter writes beside the GGUFs, so a Hub-only export has nowhere to put it.
   const [npuStatus] = useNpuStatus();
-  const hasNpu = !!npuStatus?.supported;
+  const hasNpu = Boolean(npuStatus?.supported);
   const effectiveNpuQ4nx =
     hasNpu && npuQ4nx && q4nxSourceSelected && destination === "local";
   const [customSaveDirectory, setCustomSaveDirectory] = useState<string | null>(
@@ -365,7 +365,7 @@ export function ExportPage() {
           setModels(models);
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (!cancelled && !hadCache) {
           setCheckpointError(
             err instanceof Error ? err.message : "Failed to load checkpoints",
@@ -409,7 +409,7 @@ export function ExportPage() {
         if (cancelled) return;
         setLocalModels(models);
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (cancelled || hadCache) return;
         setLocalModelsError(
           error instanceof Error
@@ -449,8 +449,8 @@ export function ExportPage() {
   );
 
   const baseModelName = selectedModelData?.base_model ?? "—";
-  const isAdapter = !!selectedModelData?.peft_type;
-  const isQuantized = !!selectedModelData?.is_quantized;
+  const isAdapter = Boolean(selectedModelData?.peft_type);
+  const isQuantized = Boolean(selectedModelData?.is_quantized);
   // Checkpoint metadata is stale in "model" source mode, so ignore it there.
   const effectiveIsAdapter = sourceMode === "checkpoint" && isAdapter;
   const effectiveIsQuantized = sourceMode === "checkpoint" && isQuantized;
@@ -581,7 +581,9 @@ export function ExportPage() {
           setDecisionState({ path: decisionProbePath, info: null });
         }
       });
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+    };
   }, [decisionProbePath]);
   const decisionInfo =
     decisionProbePath && decisionState?.path === decisionProbePath
@@ -615,7 +617,7 @@ export function ExportPage() {
     (sourceMode !== "checkpoint" && modelSource === "hf"
       ? selectedSourceModel || null
       : null);
-  const moeProbeToken = debouncedHfToken?.trim() || "";
+  const moeProbeToken = debouncedHfToken.trim() || "";
   const moeProbeKey = moeProbeTarget
     ? `${moeProbeTarget}|${moeProbeToken}`
     : "";
@@ -637,7 +639,9 @@ export function ExportPage() {
         if (!controller.signal.aborted)
           setMoeState({ key: moeProbeKey, info: null, failed: true });
       });
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+    };
   }, [moeProbeKey, moeProbeTarget, moeProbeToken, moeRetry]);
   const moeInfo =
     moeProbeKey && moeState?.key === moeProbeKey ? moeState.info : null;
@@ -679,47 +683,40 @@ export function ExportPage() {
   const sourceTab: SourceTab =
     sourceMode === "checkpoint" ? "checkpoint" : modelSource;
 
-  useEffect(() => {
-    setCheckpoint(null);
-  }, [selectedModelIdx]);
+  // Reset the checkpoint when the training run changes, then select that run's first one.
+  // Adjusted during render so the reset runs before the auto-select, as the effects did.
+  const [prevModelIdx, setPrevModelIdx] = useState<string | null>(null);
+  if (prevModelIdx !== selectedModelIdx) {
+    setPrevModelIdx(selectedModelIdx);
+    if (checkpoint !== null) setCheckpoint(null);
+  }
+  const firstCheckpoint = checkpointsForModel.at(0);
+  if (sourceMode === "checkpoint" && checkpoint === null && firstCheckpoint) {
+    setCheckpoint(firstCheckpoint.display_name);
+  }
 
-  // Declared after the reset effect so it runs last.
-  useEffect(() => {
-    if (sourceMode !== "checkpoint") return;
-    if (checkpoint != null || checkpointsForModel.length === 0) return;
-    setCheckpoint(checkpointsForModel[0].display_name);
-  }, [sourceMode, selectedModelIdx, checkpoint, checkpointsForModel]);
-
-  useEffect(() => {
-    // Only LoRA needs a real adapter; Merged and GGUF work for non-PEFT base models too.
-    if (!effectiveIsAdapter && exportMethod === "lora") {
-      setExportMethod(null);
-    }
-    if (!effectiveIsAdapter && effectiveIsQuantized && exportMethod !== null) {
-      setExportMethod(null);
-    }
-    if (
-      exportMethod !== null &&
-      diffusionDisabledMethods.includes(exportMethod)
-    ) {
-      setExportMethod(null);
-    }
-    if (diffusionDisabledMethods.includes("gguf") && loraAsGguf) {
-      setLoraAsGguf(false);
-    }
-    // The GGUF LoRA target only applies to an adapter checkpoint on a non-Mac host.
-    if ((!effectiveIsAdapter || isMacHost) && ggufTarget !== "model") {
-      setGgufTarget("model");
-    }
-  }, [
-    effectiveIsAdapter,
-    effectiveIsQuantized,
-    exportMethod,
-    isMacHost,
-    ggufTarget,
-    diffusionDisabledMethods,
-    loraAsGguf,
-  ]);
+  // Clear disabled combinations during render, so no export can run with a method the model or
+  // host no longer supports.
+  // Only LoRA needs a real adapter; Merged and GGUF work for non-PEFT base models too.
+  if (!effectiveIsAdapter && exportMethod === "lora") {
+    setExportMethod(null);
+  }
+  if (!effectiveIsAdapter && effectiveIsQuantized && exportMethod !== null) {
+    setExportMethod(null);
+  }
+  if (
+    exportMethod !== null &&
+    diffusionDisabledMethods.includes(exportMethod)
+  ) {
+    setExportMethod(null);
+  }
+  if (diffusionDisabledMethods.includes("gguf") && loraAsGguf) {
+    setLoraAsGguf(false);
+  }
+  // The GGUF LoRA target only applies to an adapter checkpoint on a non-Mac host.
+  if ((!effectiveIsAdapter || isMacHost) && ggufTarget !== "model") {
+    setGgufTarget("model");
+  }
 
   const handleSourceTabChange = useCallback((next: string) => {
     if (next === "checkpoint") {
@@ -737,11 +734,14 @@ export function ExportPage() {
     localModelInputRef.current = "";
   }, []);
 
-  useEffect(() => {
-    setSelectedSourceModel(null);
-    setLocalModelInput("");
-    setModelInput("");
-  }, [modelSource]);
+  // Switching between Hub and local clears the other picker's selection during render.
+  const [prevModelSource, setPrevModelSource] = useState(modelSource);
+  if (prevModelSource !== modelSource) {
+    setPrevModelSource(modelSource);
+    if (selectedSourceModel !== null) setSelectedSourceModel(null);
+    if (localModelInput !== "") setLocalModelInput("");
+    if (modelInput !== "") setModelInput("");
+  }
 
   useEffect(() => {
     hfModelInputRef.current = modelInput;
@@ -830,11 +830,12 @@ export function ExportPage() {
     !isMacHost &&
     !isDecision &&
     !exportUnsupported &&
-    !!exportMethod &&
+    exportMethod !== null &&
     !diffusionDisabledMethods.includes(exportMethod) &&
     (exportMethod === "merged" || (exportMethod === "gguf" && !ggufAsLora));
-  const showReap =
-    !!moeInfo && reapAllowedSparsities(moeInfo).length > 0 && reapMethodApplies;
+  // Computed from the probe result itself, so `moeInfo` still narrows where REAP is offered.
+  const reapSparsities = moeInfo ? reapAllowedSparsities(moeInfo) : [];
+  const showReap = reapSparsities.length > 0 && reapMethodApplies;
   // With REAP on, a merged / full-model GGUF export started before the new source's probe
   // answers would go out unpruned. Other methods never send REAP, so they never wait.
   const reapPending =
@@ -853,13 +854,13 @@ export function ExportPage() {
       reapSettings,
       moeProbeKey,
       moeState?.key,
-      !!moeState?.failed,
+      moeState?.failed === true,
       showReap,
     );
   const reapOptions =
-    showReap && moeInfo ? reapRequest(reapSettings, moeInfo) : null;
+    moeInfo && showReap ? reapRequest(reapSettings, moeInfo) : null;
   const reapLabel =
-    showReap && moeInfo ? reapSummaryLabel(reapSettings, moeInfo) : null;
+    moeInfo && showReap ? reapSummaryLabel(reapSettings, moeInfo) : null;
 
   // Restrict a Hub merged export to a single format; multi-format stays available for local export.
   const hubMultiFormat =
@@ -867,7 +868,7 @@ export function ExportPage() {
     exportMethod === "merged" &&
     selectedFormats.length > 1;
 
-  const canExport = !!(
+  const canExport = Boolean(
     selectedExportSource &&
     exportMethod &&
     !exportUnsupported &&
@@ -902,12 +903,12 @@ export function ExportPage() {
             ? [{ label: "LoRA rank", value: String(loraRank), mono: true }]
             : []),
           { label: "Method", value: exportMethodTitle },
-          { label: "Est. size", value: estimatedSize ?? "—" },
+          { label: "Est. size", value: estimatedSize || "—" },
         ]
       : [
           { label: "Model", value: selectedSourceModel ?? "—" },
           { label: "Method", value: exportMethodTitle },
-          { label: "Est. size", value: estimatedSize ?? "—" },
+          { label: "Est. size", value: estimatedSize || "—" },
         ];
 
   const applyHfSourceModel = useCallback((value: string) => {
@@ -948,16 +949,21 @@ export function ExportPage() {
     setSelectedSourceModel(next || null);
   }, []);
 
-  useEffect(() => {
-    setCustomSaveDirectory(null);
-  }, [
-    checkpoint,
-    exportMethod,
+  // A custom save directory only applies to the source it was typed for; a change in any part of
+  // that source clears it during render.
+  const saveDirectoryKey = JSON.stringify([
+    sourceMode,
     modelSource,
     selectedModelIdx,
+    checkpoint,
     selectedSourceModel,
-    sourceMode,
+    exportMethod,
   ]);
+  const [saveDirectoryKeySeen, setSaveDirectoryKeySeen] = useState(saveDirectoryKey);
+  if (saveDirectoryKeySeen !== saveDirectoryKey) {
+    setSaveDirectoryKeySeen(saveDirectoryKey);
+    if (customSaveDirectory !== null) setCustomSaveDirectory(null);
+  }
 
   const handleLocalSourceInputChange = useCallback(
     (value: string, eventDetails?: { reason?: string }) => {
@@ -1051,7 +1057,7 @@ export function ExportPage() {
       installMissingDependencies = llmCompressor.installMissingDependencies;
     }
 
-    void runExport({
+    runExport({
       sourceMode,
       checkpointPath,
       source,
@@ -1096,7 +1102,7 @@ export function ExportPage() {
         destination,
         reapLabel,
       },
-    });
+    }).catch(() => undefined);
   }, [
     reapPending,
     reapFailed,
@@ -1160,22 +1166,28 @@ export function ExportPage() {
     const id = window.setTimeout(() => {
       panelEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }, 60);
-    return () => window.clearTimeout(id);
+    return () => {
+      window.clearTimeout(id);
+    };
   }, [showPanel]);
 
   useEffect(() => {
     const el = panelEndRef.current;
     if (!showPanel || !el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => setPanelEndVisible(entry.isIntersecting),
+      ([entry]) => {
+        setPanelEndVisible(entry.isIntersecting);
+      },
       { rootMargin: "0px 0px -40px 0px" },
     );
     obs.observe(el);
-    return () => obs.disconnect();
+    return () => {
+      obs.disconnect();
+    };
   }, [showPanel]);
 
   return (
-    <div data-wallpaper-page-canvas="" className="flex min-h-[calc(100dvh-var(--studio-titlebar-height,0px))] flex-col bg-background">
+    <div data-wallpaper-page-canvas="" className="flex min-h-[calc(100dvh-var(--studio-titlebar-height,0))] flex-col bg-background">
       <main className="mx-auto flex w-full max-w-[calc(1180px*var(--ui-space-scale,1))] 3xl:max-w-[calc(1440px*var(--ui-space-scale,1))] 4xl:max-w-[calc(1760px*var(--ui-space-scale,1))] flex-col gap-7 px-5 pb-20 pt-8 max-sm:px-4 sm:px-9">
         <GuidedTour {...tour.tourProps} />
 
@@ -1202,7 +1214,7 @@ export function ExportPage() {
           </div>
         )}
 
-        {(loadingCheckpoints || !!checkpointError) && (
+        {(loadingCheckpoints || checkpointError !== null) && (
           <>
             <ImageLoraExportCard preselect={preselectImageLora} />
             {hasNpu && <Q4nxConvertCard />}
@@ -1252,7 +1264,7 @@ export function ExportPage() {
                             </SelectTrigger>
                             <SelectContent>
                               {models.map((m) => {
-                                const tsMatch = m.name.match(/_(\d{10,})$/);
+                                const tsMatch = /_(\d{10,})$/.exec(m.name);
                                 const displayName = tsMatch
                                   ? m.name.slice(0, tsMatch.index)
                                   : m.name;
@@ -1377,11 +1389,11 @@ export function ExportPage() {
                                   <ComboboxInput
                                     placeholder="Search models..."
                                     className="w-full"
-                                    onBlur={() =>
+                                    onBlur={() => {
                                       applyHfSourceModel(
                                         hfModelInputRef.current,
-                                      )
-                                    }
+                                      );
+                                    }}
                                     onKeyDown={(event) => {
                                       if (event.key !== "Enter") return;
                                       event.preventDefault();
@@ -1447,7 +1459,9 @@ export function ExportPage() {
                                   name="hf-token-export-source"
                                   placeholder="hf_..."
                                   value={hfToken}
-                                  onChange={(e) => setHfToken(e.target.value)}
+                                  onChange={(e) => {
+                                    setHfToken(e.target.value);
+                                  }}
                                 />
                               </InputGroup>
                               {isCheckingToken && (
@@ -1487,11 +1501,11 @@ export function ExportPage() {
                                       : "./models/my-model"
                                   }
                                   className="w-full"
-                                  onBlur={() =>
+                                  onBlur={() => {
                                     applyLocalSourceModel(
                                       localModelInputRef.current,
-                                    )
-                                  }
+                                    );
+                                  }}
                                   onKeyDown={(event) => {
                                     if (event.key !== "Enter") return;
                                     event.preventDefault();
@@ -1599,7 +1613,9 @@ export function ExportPage() {
                             <div className="mt-2">
                               <Button
                                 size="xs"
-                                onClick={() => setFullInstallOpen(true)}
+                                onClick={() => {
+                                  setFullInstallOpen(true);
+                                }}
                               >
                                 Install Training
                               </Button>
@@ -1612,7 +1628,9 @@ export function ExportPage() {
                       <FullInstallDialog
                         open={fullInstallOpen}
                         onOpenChange={setFullInstallOpen}
-                        onConfirm={() => void fullInstall.repairInstall()}
+                        onConfirm={() => {
+                          fullInstall.repairInstall().catch(() => undefined);
+                        }}
                       />
                     )}
 
@@ -1677,7 +1695,9 @@ export function ExportPage() {
                                     type="button"
                                     variant={active ? "dark" : "outline"}
                                     size="sm"
-                                    onClick={() => toggleFormat(f.value)}
+                                    onClick={() => {
+                                      toggleFormat(f.value);
+                                    }}
                                     title={f.hint}
                                   >
                                     {f.label}
@@ -1720,10 +1740,12 @@ export function ExportPage() {
                                         checked={selectedFormats.includes(
                                           f.value,
                                         )}
-                                        onCheckedChange={() =>
-                                          toggleFormat(f.value)
-                                        }
-                                        onSelect={(e) => e.preventDefault()}
+                                        onCheckedChange={() => {
+                                          toggleFormat(f.value);
+                                        }}
+                                        onSelect={(e) => {
+                                          e.preventDefault();
+                                        }}
                                       >
                                         <span className="flex flex-col">
                                           <span>
@@ -1758,9 +1780,9 @@ export function ExportPage() {
                                 {selectedFormats.length > 1 && (
                                   <button
                                     type="button"
-                                    onClick={() =>
-                                      setSelectedFormats(["16-bit"])
-                                    }
+                                    onClick={() => {
+                                      setSelectedFormats(["16-bit"]);
+                                    }}
                                     className="text-ui-11 text-muted-foreground/70 hover:text-foreground transition-colors"
                                   >
                                     Reset to 16-bit
@@ -1821,7 +1843,9 @@ export function ExportPage() {
                                 type="button"
                                 variant={loraAsGguf ? "outline" : "dark"}
                                 size="sm"
-                                onClick={() => setLoraAsGguf(false)}
+                                onClick={() => {
+                                  setLoraAsGguf(false);
+                                }}
                                 title="Adapter weights as safetensors."
                               >
                                 Adapter (safetensors)
@@ -1830,7 +1854,9 @@ export function ExportPage() {
                                 type="button"
                                 variant={loraAsGguf ? "dark" : "outline"}
                                 size="sm"
-                                onClick={() => setLoraAsGguf(true)}
+                                onClick={() => {
+                                  setLoraAsGguf(true);
+                                }}
                                 disabled={diffusionDisabledMethods.includes(
                                   "gguf",
                                 )}
@@ -1869,7 +1895,9 @@ export function ExportPage() {
                                     adapterFormat === "mlx" ? "dark" : "outline"
                                   }
                                   size="sm"
-                                  onClick={() => setAdapterFormat("mlx")}
+                                  onClick={() => {
+                                    setAdapterFormat("mlx");
+                                  }}
                                   title="Native mlx-lm adapter (adapters.safetensors)."
                                 >
                                   MLX
@@ -1882,7 +1910,9 @@ export function ExportPage() {
                                       : "outline"
                                   }
                                   size="sm"
-                                  onClick={() => setAdapterFormat("peft")}
+                                  onClick={() => {
+                                    setAdapterFormat("peft");
+                                  }}
                                   title="Standard Hugging Face PEFT adapter (adapter_model.safetensors)."
                                 >
                                   PEFT
@@ -1906,7 +1936,9 @@ export function ExportPage() {
                               </div>
                               <Select
                                 value={loraGgufOuttype}
-                                onValueChange={(v) => setLoraGgufOuttype(v)}
+                                onValueChange={(v) => {
+                                  setLoraGgufOuttype(v);
+                                }}
                               >
                                 <SelectTrigger className="w-full sm:w-56">
                                   <SelectValue />
@@ -1995,7 +2027,9 @@ export function ExportPage() {
                                     ggufTarget === "model" ? "dark" : "outline"
                                   }
                                   size="sm"
-                                  onClick={() => setGgufTarget("model")}
+                                  onClick={() => {
+                                    setGgufTarget("model");
+                                  }}
                                   title="Merge the adapter into the base model, then quantize the full model to GGUF."
                                 >
                                   Full model
@@ -2006,7 +2040,9 @@ export function ExportPage() {
                                     ggufTarget === "lora" ? "dark" : "outline"
                                   }
                                   size="sm"
-                                  onClick={() => setGgufTarget("lora")}
+                                  onClick={() => {
+                                    setGgufTarget("lora");
+                                  }}
                                   title="Export just the adapter as a GGUF LoRA (llama.cpp `--lora`); the base model stays separate."
                                 >
                                   LoRA adapter
@@ -2027,7 +2063,9 @@ export function ExportPage() {
                               </div>
                               <Select
                                 value={loraGgufOuttype}
-                                onValueChange={(v) => setLoraGgufOuttype(v)}
+                                onValueChange={(v) => {
+                                  setLoraGgufOuttype(v);
+                                }}
                               >
                                 <SelectTrigger className="w-full sm:w-56">
                                   <SelectValue />
@@ -2060,7 +2098,7 @@ export function ExportPage() {
                                   </div>
                                 </div>
                                 <Switch
-                                  className="mt-[var(--ui-title-cap-inset)]"
+                                  className="mt-(--ui-title-cap-inset)"
                                   aria-label="Importance matrix (imatrix)"
                                   checked={effectiveImatrix}
                                   onCheckedChange={setUseImatrix}
@@ -2081,12 +2119,12 @@ export function ExportPage() {
                                       aria-describedby="export-imatrix-path-help"
                                       placeholder="/path/to/imatrix.gguf"
                                       value={imatrixPath}
-                                      onChange={(e) =>
+                                      onChange={(e) => {
                                         setCustomImatrix({
                                           sourceKey: imatrixSourceKey,
                                           path: e.target.value,
-                                        })
-                                      }
+                                        });
+                                      }}
                                     />
                                   </InputGroup>
                                   <p
@@ -2115,7 +2153,7 @@ export function ExportPage() {
                                     </div>
                                   </div>
                                   <Switch
-                                    className="mt-[var(--ui-title-cap-inset)]"
+                                    className="mt-(--ui-title-cap-inset)"
                                     aria-label="Also convert to Q4NX (AMD NPU)"
                                     checked={effectiveNpuQ4nx}
                                     onCheckedChange={setNpuQ4nx}
@@ -2153,7 +2191,9 @@ export function ExportPage() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => setMoeRetry((n) => n + 1)}
+                            onClick={() => {
+                              setMoeRetry((n) => n + 1);
+                            }}
                           >
                             Retry
                           </Button>
@@ -2161,9 +2201,9 @@ export function ExportPage() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() =>
-                              setReapSettings((s) => ({ ...s, enabled: false }))
-                            }
+                            onClick={() => {
+                              setReapSettings((s) => ({ ...s, enabled: false }));
+                            }}
                           >
                             Turn off expert pruning
                           </Button>
@@ -2186,9 +2226,9 @@ export function ExportPage() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() =>
-                              setReapSettings((s) => ({ ...s, enabled: false }))
-                            }
+                            onClick={() => {
+                              setReapSettings((s) => ({ ...s, enabled: false }));
+                            }}
                           >
                             Turn off expert pruning
                           </Button>
@@ -2210,7 +2250,7 @@ export function ExportPage() {
                     saveDirectory={saveDirectory}
                     saveDirectoryInput={saveDirectoryInput}
                     defaultSaveDirectory={defaultSaveDirectory}
-                    saveDirectoryOverridden={!!customSaveDirectory}
+                    saveDirectoryOverridden={Boolean(customSaveDirectory)}
                     onSaveDirectoryChange={setCustomSaveDirectory}
                     hfUsername={hfUsername}
                     onHfUsernameChange={setHfUsername}
@@ -2220,7 +2260,9 @@ export function ExportPage() {
                     onHfTokenChange={setHfToken}
                     privateRepo={privateRepo}
                     onPrivateRepoChange={setPrivateRepo}
-                    onStart={handleStart}
+                    onStart={() => {
+                      handleStart().catch(() => undefined);
+                    }}
                     onClose={handleClosePanel}
                     decisionNote={
                       decisionInfo
@@ -2249,7 +2291,7 @@ export function ExportPage() {
                       })
                     }
                     aria-label="Scroll to export output"
-                    className="fixed bottom-6 right-6 z-30 flex size-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur transition-colors hover:bg-muted"
+                    className="fixed bottom-6 right-6 z-30 flex size-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md backdrop-blur-sm transition-colors hover:bg-muted"
                   >
                     <HugeiconsIcon
                       icon={ChevronDownStandardIcon}
@@ -2275,7 +2317,7 @@ export function ExportPage() {
                         className={cn(
                           "w-full justify-center rounded-full text-ui-13p5 font-semibold tracking-tight",
                           "bg-action text-background shadow-sm hover:opacity-90",
-                          "disabled:bg-[color-mix(in_oklab,var(--foreground)_calc(8%*var(--contrast-wash-gain,1)),transparent)] disabled:text-muted-foreground disabled:shadow-none dark:disabled:bg-[rgb(255_255_255_/_calc(0.06*var(--contrast-wash-gain,1)))]",
+                          "disabled:bg-[color-mix(in_oklab,var(--foreground)_calc(8%*var(--contrast-wash-gain,1)),transparent)] disabled:text-muted-foreground disabled:shadow-none dark:disabled:bg-[rgb(255_255_255/calc(0.06*var(--contrast-wash-gain,1)))]",
                         )}
                       >
                         Export Model

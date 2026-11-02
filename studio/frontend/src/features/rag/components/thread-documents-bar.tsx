@@ -50,8 +50,8 @@ import { cn } from "@/lib/utils";
 import {
   PENDING_CHAT_ATTACHMENT_KEY,
   readPendingAttachmentTargetClaim,
-} from "@/features/chat/stores/chat-runtime-store";
-import type { ProjectAttachmentTarget } from "@/features/chat/utils/project-attachment-target";
+} from "@/features/chat";
+import type { ProjectAttachmentTarget } from "@/features/chat";
 import {
   chatHistoryClearBoundary,
   ChatThreadDeletedError,

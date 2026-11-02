@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { subscribeResidentStatusRefresh } from "@/features/hub/lib/resident-status-refresh";
+import { subscribeResidentStatusRefresh } from "@/features/hub";
 import { type ProfileStats, loadProfileStats } from "../api/profile-stats";
 
 interface ProfileStatsState {

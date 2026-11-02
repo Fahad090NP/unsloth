@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useSidebarPin } from "@/hooks/use-sidebar-pin";
 import { useChatPreferencesStore } from "@/features/chat";
 import { useUserProfileStore } from "@/features/profile";
-import { TrickOrTreatSettingsRow } from "@/features/halloween/trick-or-treat-settings-row";
+import { TrickOrTreatSettingsRow } from "@/features/halloween";
 import { useT } from "@/i18n";
 import { isTauri } from "@/lib/api-base";
 import {

@@ -6,8 +6,8 @@ import {
   type ExampleOs,
   ExampleToggle,
   useExampleOs,
-} from "@/features/settings/components/api-example-parts";
-import { useSettingsPanelPrefsStore } from "@/features/settings/stores/settings-panel-prefs-store";
+} from "@/features/settings";
+import { useSettingsPanelPrefsStore } from "@/features/settings";
 import {
   API_EXAMPLE_LANGUAGES,
   type ApiExampleLanguage,

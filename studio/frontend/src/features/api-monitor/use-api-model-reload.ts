@@ -6,11 +6,11 @@ import {
   type useChatModelRuntime,
   useChatRuntimeStore,
 } from "@/features/chat";
-import { isPrecisionFolderName } from "@/features/hub/lib/dataset-size";
+import { isPrecisionFolderName } from "@/features/hub";
 import { isStandaloneGgufPath } from "@/features/hub";
 import {
   isNativeFileLabel,
-} from "@/features/hub/lib/model-identity";
+} from "@/features/hub";
 import { isNpuModelId } from "@/features/npu";
 import {
   currentRuntimePerModelConfig,

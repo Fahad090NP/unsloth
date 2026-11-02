@@ -15,13 +15,13 @@ import {
   useChatRuntimeStore,
 } from "@/features/chat";
 import { disposableTimeoutSignal } from "@/features/hub";
-import { modelIdsMatch } from "@/features/hub/lib/model-identity";
+import { modelIdsMatch } from "@/features/hub";
 import {
   getDiffusionStatus,
   unloadDiffusionModel,
-} from "@/features/images/api";
-import { getVideoStatus, unloadVideoModel } from "@/features/video/api";
-import { unloadEmbeddingModel } from "@/features/settings/api/embedding-model";
+} from "@/features/images";
+import { getVideoStatus, unloadVideoModel } from "@/features/video";
+import { unloadEmbeddingModel } from "@/features/settings";
 import { useEmbeddingModelStore } from "@/features/settings";
 import { notifyModelEjected } from "@/lib/model-lifecycle-events";
 import { ejectChatModel } from "./eject-chat-model";

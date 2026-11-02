@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { getApiMonitor } from "@/features/chat/api/chat-api";
+import { getApiMonitor } from "@/features/chat";
 import { useChatRuntimeStore } from "@/features/chat";
 import type {
   ApiMonitorEntry,
   ApiMonitorResponse,
-} from "@/features/chat/types/api";
+} from "@/features/chat";
 import { FIND_PORTAL_ATTRIBUTE } from "@/features/find-in-page";
 import { useMonitorFrameStore, useShortcut } from "@/features/settings";
 import { FLOATING_PANEL_POSITION_KEYS } from "@/hooks/floating-panel-position";

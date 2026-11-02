@@ -3,7 +3,7 @@
 
 // Marks come only from what the request path resolves, never from the model's name.
 
-import type { ProviderApiType } from "@/features/chat/api/providers-api";
+import type { ProviderApiType } from "@/features/chat";
 // eslint-disable-next-line no-restricted-imports -- Avoid the chat barrel's React exports.
 import { providerModelSupportsVision } from "@/features/chat/external-providers";
 // eslint-disable-next-line no-restricted-imports -- Avoid the chat barrel's React exports.

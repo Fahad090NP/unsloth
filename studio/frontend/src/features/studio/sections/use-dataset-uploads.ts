@@ -307,6 +307,7 @@ export function useDatasetUploads() {
       return;
     }
     let disposed = false;
+    const isDisposed = () => disposed;
     let unlistenDragDrop: (() => void) | undefined;
     let unlistenScaleChanged: (() => void) | undefined;
     let scaleFactor = window.devicePixelRatio || 1;
@@ -357,7 +358,7 @@ export function useDatasetUploads() {
 
         const revisionBeforeRead = scaleFactorRevision;
         const currentScaleFactor = await currentWindow.scaleFactor();
-        if (disposed) {
+        if (isDisposed()) {
           return;
         }
         if (scaleFactorRevision === revisionBeforeRead) {
@@ -399,7 +400,7 @@ export function useDatasetUploads() {
             handleNativeDrop(event.payload.paths);
           }
         });
-        if (disposed) {
+        if (isDisposed()) {
           stopDragDrop();
         } else {
           unlistenDragDrop = stopDragDrop;

@@ -159,10 +159,12 @@ export function ChatBackground({ active = true }: { active?: boolean }) {
 			};
 		}
 		const cancelState = { current: false };
+		// Read through a call: an inline re-read keeps the last check's narrowing.
+		const isCancelled = () => cancelState.current;
 		const job = acquireRender(blob, effect, renderLight);
 		void job.promise
 			.then(async (blob) => {
-				if (cancelState.current) return;
+				if (isCancelled()) return;
 				const url = URL.createObjectURL(blob);
 				const image = new Image();
 				image.src = url;
@@ -173,7 +175,7 @@ export function ChatBackground({ active = true }: { active?: boolean }) {
 					URL.revokeObjectURL(url);
 					throw new Error("decode");
 				}
-				if (cancelState.current) {
+				if (isCancelled()) {
 					urls.current.delete(url);
 					URL.revokeObjectURL(url);
 					return;

@@ -351,7 +351,7 @@ function useSourceSide(clip: AudioGalleryClip | null): {
   const kind = clip?.source_clip_id ? "clip" : "input";
   const [side, setSide] = useState<{ src?: string; unavailable?: string }>({});
   const missing = !savedUrl && !sourceId;
-  const sideKey = `${missing}|${savedUrl ?? ""}|${sourceId ?? ""}|${kind}`;
+  const sideKey = `${missing ? "missing" : "present"}|${savedUrl ?? ""}|${sourceId ?? ""}|${kind}`;
   const [trackedSideKey, setTrackedSideKey] = useState(sideKey);
   if (trackedSideKey !== sideKey) {
     setTrackedSideKey(sideKey);

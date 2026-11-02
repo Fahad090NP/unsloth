@@ -15,8 +15,8 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   type DiffusionLoraInfo,
   listDiffusionLoras,
-} from "@/features/images/api";
-import { matchCatalogId } from "@/features/images/train/diffusion-train-deploy";
+} from "@/features/images";
+import { matchCatalogId } from "@/features/images";
 import { ImageAdd02Icon } from "@hugeicons/core-free-icons";
 import { useEffect, useState } from "react";
 import { exportDiffusionLora } from "../api/export-api";

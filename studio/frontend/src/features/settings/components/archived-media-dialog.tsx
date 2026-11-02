@@ -233,7 +233,9 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
     );
     let observing = true;
     if (typeof IntersectionObserver === "undefined") {
-      setVisible(new Set(displayed.map((r) => r.id)));
+      queueMicrotask(() => {
+        setVisible(new Set(displayed.map((r) => r.id)));
+      });
       return;
     }
     const io = new IntersectionObserver(
@@ -482,8 +484,11 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
 
   useEffect(() => {
     if (!bulkIntent || hasMore || loading || paging || pageError) return;
-    setConfirming({ rows: [...filtered], action: bulkIntent });
-    setBulkIntent(null);
+    // Deferred one microtask: opening the confirmation must not cascade a render from the effect body.
+    queueMicrotask(() => {
+      setConfirming({ rows: [...filtered], action: bulkIntent });
+      setBulkIntent(null);
+    });
   }, [bulkIntent, hasMore, loading, paging, pageError, filtered]);
 
   async function run(targets: ArchivedRow[], action: "delete" | "restore") {

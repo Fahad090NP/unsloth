@@ -19,7 +19,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   isHalloweenSeason,
   pickHalloweenTheme,
-} from "@/features/halloween/halloween-store";
+} from "@/features/halloween";
 import {
   COLOR_THEMES,
   FLAVOR_THEME_IDS,

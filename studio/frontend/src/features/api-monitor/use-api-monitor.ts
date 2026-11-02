@@ -5,11 +5,11 @@ import {
   clearApiMonitor,
   getApiMonitor,
   getApiMonitorEntry,
-} from "@/features/chat/api/chat-api";
+} from "@/features/chat";
 import type { ApiMonitorEntry } from "@/features/chat";
 import type {
   ApiMonitorResponse,
-} from "@/features/chat/types/api";
+} from "@/features/chat";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { clearMonitor } from "./clear-monitor";
 import {

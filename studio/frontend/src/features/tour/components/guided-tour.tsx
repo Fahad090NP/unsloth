@@ -52,7 +52,7 @@ export function GuidedTour({
     if (open) setIdx(0);
   }
 
-  const step = steps[idx] ?? null;
+  const step = steps.at(idx) ?? null;
   const total = steps.length;
   const isLast = idx === total - 1;
 
@@ -63,13 +63,19 @@ export function GuidedTour({
   }, [step?.target, targetRect, vw, vh]);
 
   // Cleanup so a step is also left on unmount, or onEnter side effects (sidebar pin) leak.
+  const stepOnEnter = step?.onEnter;
+  const stepOnExit = step?.onExit;
   useEffect(() => {
-    if (!open || !step) return;
-    void step.onEnter?.();
+    if (!open) return;
+    if (stepOnEnter) {
+      Promise.resolve(stepOnEnter()).catch(() => undefined);
+    }
     return () => {
-      void step.onExit?.();
+      if (stepOnExit) {
+        Promise.resolve(stepOnExit()).catch(() => undefined);
+      }
     };
-  }, [open, step?.id]); // stays above the target lookup effect below
+  }, [open, stepOnEnter, stepOnExit]); // stays above the target lookup effect below
 
   useEffect(() => {
     if (!open) return;
@@ -91,8 +97,9 @@ export function GuidedTour({
 
   useEffect(() => {
     if (!open || !step) return;
+    const target = step.target;
 
-    const sel = `[data-tour="${cssEscape(step.target)}"]`;
+    const sel = `[data-tour="${cssEscape(target)}"]`;
     let el: HTMLElement | null = null;
     let ro: ResizeObserver | null = null;
     let retryTimer = 0;
@@ -111,7 +118,7 @@ export function GuidedTour({
       const found = [...document.querySelectorAll(sel)].filter(
         (c): c is HTMLElement => c instanceof HTMLElement,
       );
-      return found.find(isUsableTarget) ?? found[0] ?? null;
+      return found.find(isUsableTarget) ?? found.at(0) ?? null;
     }
 
     function rectChanged(a: Rect | null, b: Rect): boolean {
@@ -145,7 +152,7 @@ export function GuidedTour({
     function attach(candidate: HTMLElement) {
       el = candidate;
 
-      if (step.target !== "navbar") {
+      if (target !== "navbar") {
         el.scrollIntoView({
           block: "center",
           inline: "center",
@@ -153,7 +160,7 @@ export function GuidedTour({
         });
       }
 
-      raf = window.requestAnimationFrame(() => { read(el!); });
+      raf = window.requestAnimationFrame(() => { read(candidate); });
       t = window.setTimeout(schedule, 240);
 
       ro = new ResizeObserver(() => { schedule(); });
@@ -192,7 +199,7 @@ export function GuidedTour({
         rafRef.current = null;
       }
     };
-  }, [open, step?.id]);
+  }, [open, step]);
 
   useLayoutEffect(() => {
     if (!open || !spotlightRect || !vw || !vh) return;
@@ -220,7 +227,9 @@ export function GuidedTour({
     if (reason === "skip") {
       onSkip();
     } else {
-      if (celebrate) void fireConfettiFireworks();
+      if (celebrate) {
+        fireConfettiFireworks().catch(() => undefined);
+      }
       onComplete();
     }
     onOpenChange(false);

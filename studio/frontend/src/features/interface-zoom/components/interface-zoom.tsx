@@ -12,11 +12,11 @@ import {
 } from "@/features/settings";
 import {
   formatBindingValueLabel,
-} from "@/features/settings/lib/keyboard-shortcuts";
-import { INTERFACE_SCALE_RANGE } from "@/features/settings/stores/interface-scale-store";
+} from "@/features/settings";
+import { INTERFACE_SCALE_RANGE } from "@/features/settings";
 import {
   shortcutOwningBinding,
-} from "@/features/settings/stores/keyboard-shortcuts-store";
+} from "@/features/settings";
 import { useT } from "@/i18n";
 import { isTauri } from "@/lib/api-base";
 import { Z_LAYER } from "@/lib/z-layers";

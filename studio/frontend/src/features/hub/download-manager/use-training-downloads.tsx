@@ -11,7 +11,7 @@ import {
 import {
   ModelLoadDescription,
   MODEL_LOAD_TOAST_CLASSNAMES,
-} from "@/features/chat/components/model-load-status";
+} from "@/features/chat";
 import { toast } from "@/lib/toast";
 import { formatBytes } from "../lib/format";
 import { getAllActiveModelDownloads } from "./api";

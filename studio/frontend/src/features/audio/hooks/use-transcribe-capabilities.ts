@@ -23,7 +23,7 @@ export function useTranscribeCapabilities(
   const [caps, setCaps] = useState<SttCapabilities | null>(
     key ? (cache.get(key) ?? null) : null,
   );
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(key !== null && !cache.has(key));
   const [generation, setGeneration] = useState(0);
   const [trackedKey, setTrackedKey] = useState(key);
   const [trackedGeneration, setTrackedGeneration] = useState(generation);
@@ -31,7 +31,8 @@ export function useTranscribeCapabilities(
     setTrackedKey(key);
     setTrackedGeneration(generation);
     setCaps(key ? (cache.get(key) ?? null) : null);
-    setLoading(false);
+    // A cache hit on the first pass needs no fetch, so nothing is loading.
+    setLoading(key !== null && !(generation === 0 && cache.has(key)));
   }
 
   useEffect(() => {
@@ -39,7 +40,6 @@ export function useTranscribeCapabilities(
     const cached = cache.get(key);
     if (cached && generation === 0) return;
     const controller = new AbortController();
-    setLoading(true);
     fetchSttCapabilities(model, engine, controller.signal)
       .then((next) => {
         cache.set(key, next);

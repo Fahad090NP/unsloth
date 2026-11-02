@@ -555,7 +555,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         const chats = { ...state.chats };
         const saved = (chats as Record<string, ChatBrowser | undefined>)[from];
         Reflect.deleteProperty(chats, from);
-        if (saved && !chats[to]) chats[to] = saved;
+        if (saved && !Object.hasOwn(chats, to)) chats[to] = saved;
         return { tabs, chats, chat: state.chat === from ? to : state.chat };
       });
       for (const listener of adoptListeners) listener(from, to);
@@ -756,7 +756,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
     leaveDownload: (tabId, entry) =>
       { set((state) => ({
         tabs: patchTab(state.tabs, tabId, (tab) => {
-          const previous: BrowserEntry | undefined = tab.history[tab.index - 1];
+          const previous = tab.history.at(tab.index - 1);
           if (currentEntry(tab) !== entry || !previous || sentFrom.get(entry) !== previous) return tab;
           const history = tab.history.filter((candidate) => candidate !== entry);
           pageCache.delete(entry);

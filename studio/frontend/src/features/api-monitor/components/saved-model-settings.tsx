@@ -11,7 +11,7 @@ import {
   fetchModelOverrides,
   putModelOverride,
 } from "@/features/model-picker";
-import { forgetPerModelConfigsForOverrideKeys } from "@/features/model-picker/model-config/saved-run-settings";
+import { forgetPerModelConfigsForOverrideKeys } from "@/features/model-picker";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {

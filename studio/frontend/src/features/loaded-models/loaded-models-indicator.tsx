@@ -9,7 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useAudioWorkspaceStore } from "@/features/audio/stores/audio-workspace-store";
+import { useAudioWorkspaceStore } from "@/features/audio";
 import { hasAuthToken, mustChangePassword } from "@/features/auth";
 import { useSettingsDialogStore } from "@/features/settings";
 import { usePersistedToggle } from "@/hooks/use-persisted-toggle";

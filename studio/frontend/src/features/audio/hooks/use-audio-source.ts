@@ -4,8 +4,8 @@
 import {
   type SegmentRecorder,
   createAudioRecorder,
-} from "@/features/chat/adapters/pcm-recorder";
-import { isMissingDeviceError } from "@/features/chat/adapters/studio-web-speech-dictation-adapter";
+} from "@/features/chat";
+import { isMissingDeviceError } from "@/features/chat";
 import { loadUploadLimitSettings } from "@/features/settings";
 import { useVoiceSettingsStore } from "@/features/settings";
 import { isTauri } from "@/lib/api-base";

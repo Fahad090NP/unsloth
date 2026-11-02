@@ -4,8 +4,8 @@
 import { Switch } from "@/components/ui/switch";
 // Direct path, not the barrel: the barrel re-exports the page, defeating its lazy route.
 import { useApiMonitorOverlayStore } from "@/features/api-monitor";
-import { getApiMonitor } from "@/features/chat/api/chat-api";
-import type { ApiMonitorResponse } from "@/features/chat/types/api";
+import { getApiMonitor } from "@/features/chat";
+import type { ApiMonitorResponse } from "@/features/chat";
 import { useLocale, useT } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { ActivityIcon } from "@hugeicons/core-free-icons";

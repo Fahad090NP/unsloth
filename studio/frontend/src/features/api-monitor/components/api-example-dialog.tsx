@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { authFetch } from "@/features/auth";
-import { useFreshApiKeyStore } from "@/features/settings/stores/fresh-api-key-store";
+import { useFreshApiKeyStore } from "@/features/settings";
 import { type ReactElement, useEffect, useState } from "react";
 import {
   type ApiSamplingDefaults,

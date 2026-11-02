@@ -27,8 +27,8 @@ import {
   useChatModelRuntime,
   useChatRuntimeStore,
 } from "@/features/chat";
-import type { ApiMonitorResponse } from "@/features/chat/types/api";
-import { modelIdsMatch } from "@/features/hub/lib/model-identity";
+import type { ApiMonitorResponse } from "@/features/chat";
+import { modelIdsMatch } from "@/features/hub";
 import {
   type ModelConfigHandoffRequest,
   createModelConfigHandoffRequestId,
@@ -44,12 +44,12 @@ import {
 import {
   type ApiExampleKind,
   ApiExampleTabNav,
-} from "@/features/settings/components/api-example-tabs";
-import { AudioApiExamples } from "@/features/settings/components/audio-api-examples";
-import { DecisionApiSection } from "@/features/settings/components/decision-api-section";
-import { MediaApiExamples } from "@/features/settings/components/media-api-examples";
-import { useApiTunnelPref } from "@/features/settings/components/usage-examples";
-import { remoteApiOrigin } from "@/features/settings/api/remote-access-state";
+} from "@/features/settings";
+import { AudioApiExamples } from "@/features/settings";
+import { DecisionApiSection } from "@/features/settings";
+import { MediaApiExamples } from "@/features/settings";
+import { useApiTunnelPref } from "@/features/settings";
+import { remoteApiOrigin } from "@/features/settings";
 import { getApiBase, isTauri } from "@/lib/api-base";
 import { copyToClipboard } from "@/lib/copy-to-clipboard";
 import { Tick02Icon } from "@/lib/tick-icon";
@@ -100,7 +100,7 @@ import { PAYLOAD_SHOW_ALL_MAX_CHARS, payloadPreview } from "./payload-preview";
 import { ToolbarTooltip } from "./components/toolbar-tooltip";
 import { unloadResident } from "./unload-resident";
 import { useApiModelReload } from "./use-api-model-reload";
-import { ContextUsageBar as ContextUsageChip } from "@/features/chat/components/context-usage-bar";
+import { ContextUsageBar as ContextUsageChip } from "@/features/chat";
 import {
   residentHasRunSettings,
   keptRunSettingsRequest,
@@ -119,7 +119,7 @@ import {
   useApiMonitor,
 } from "./use-api-monitor";
 import { PlayIcon } from "lucide-react";
-import { useFreshApiKeyStore } from "@/features/settings/stores/fresh-api-key-store";
+import { useFreshApiKeyStore } from "@/features/settings";
 
 const API_INFERENCE_PREFIX_RE = /^\/api\/inference/;
 const V1_PREFIX_RE = /^\/v1\//;

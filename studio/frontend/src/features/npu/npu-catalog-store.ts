@@ -111,6 +111,8 @@ export function followNpuDownload(
   const run = async (): Promise<boolean> => {
     let joined = follow;
     const flags = { completed: false, streamed: false };
+    // Read through a call so assignments made by the stream callback stay visible.
+    const hasStreamed = (): boolean => flags.streamed;
     // A followed stream replays earlier events, so only a higher percent is progress.
     let best = percent ?? -1;
     const advance = (next: number | null | undefined): boolean => {
@@ -151,7 +153,7 @@ export function followNpuDownload(
             setReconnecting(id, unreachable);
             advance(running?.percent);
             stalledReconnects =
-              flags.streamed || (wasUnreachable && !unreachable)
+              hasStreamed() || (wasUnreachable && !unreachable)
                 ? 0
                 : stalledReconnects + 1;
             wasUnreachable = unreachable;

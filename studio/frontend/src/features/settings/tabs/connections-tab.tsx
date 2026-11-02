@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { ChatProvidersSettings } from "@/features/chat/chat-providers-dialog";
+import { ChatProvidersSettings } from "@/features/chat";
 import { useExternalProvidersStore } from "@/features/chat";
 import { useSettingsDialogStore } from "../stores/settings-dialog-store";
 

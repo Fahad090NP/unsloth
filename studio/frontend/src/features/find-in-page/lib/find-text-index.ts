@@ -278,6 +278,8 @@ export function buildTextIndex(
   let length = 0;
   let truncated = false;
   let full = false;
+  // Read through a call: an inline re-read is narrowed to the value the last check saw.
+  const isFull = (): boolean => full;
   let ceiling =
     MAX_INDEX_CHARS - (extraRoots.length > 0 ? PORTAL_RESERVE_CHARS : 0);
   // Written lazily, so no separator lands at either end.
@@ -357,7 +359,7 @@ export function buildTextIndex(
         }
       } else if (child.nodeType === ELEMENT_NODE) {
         visit(child as FindElementLike, preserved);
-        if (full) return;
+        if (isFull()) return;
       }
     }
     if (block) {
@@ -373,7 +375,7 @@ export function buildTextIndex(
   ceiling = MAX_INDEX_CHARS;
   full = false;
   for (const extra of extraRoots) {
-    if (full) break;
+    if (isFull()) break;
     pendingSeparator = true;
     dropped = null;
     const firstSegment = segments.length;

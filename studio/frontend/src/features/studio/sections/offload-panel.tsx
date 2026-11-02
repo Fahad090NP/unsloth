@@ -54,12 +54,13 @@ export function useOffloadState(enabled: boolean, intervalMs = 2000): OffloadSta
       return;
     }
     let cancelled = false;
+    const isCancelled = () => cancelled;
     async function poll() {
       try {
         const res = await authFetch("/api/train/offload");
-        if (!res.ok || cancelled) return;
+        if (!res.ok || isCancelled()) return;
         const json = (await res.json()) as OffloadState;
-        if (!cancelled) setData(json);
+        if (!isCancelled()) setData(json);
       } catch {
         // Retry on the next poll.
       }

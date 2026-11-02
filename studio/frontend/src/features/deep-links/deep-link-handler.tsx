@@ -30,6 +30,8 @@ export function DeepLinkHandler({
     if (!isTauri) return;
 
     let disposed = false;
+    // Read through a call: an inline re-read keeps the last check's narrowing.
+    const isDisposed = () => disposed;
     let receivedLiveIntent = false;
     let unlisten: (() => void) | undefined;
 
@@ -91,7 +93,7 @@ export function DeepLinkHandler({
           receivedLiveIntent = true;
         }
       });
-      if (disposed) {
+      if (isDisposed()) {
         cleanup();
         return;
       }

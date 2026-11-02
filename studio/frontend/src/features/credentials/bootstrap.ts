@@ -3,8 +3,8 @@
 
 import { getAuthSessionEpoch, hasAuthToken } from "@/features/auth";
 import { useExternalProvidersStore } from "@/features/chat";
-import { syncExternalProvidersFromBackend } from "@/features/chat/sync-external-providers";
-import { hydrateHfTokenFromBackend } from "@/features/hub/stores/hf-token-store";
+import { syncExternalProvidersFromBackend } from "@/features/chat";
+import { hydrateHfTokenFromBackend } from "@/features/hub";
 import { runCredentialBootstrap } from "./reconciliation";
 
 export function bootstrapPersistedCredentials(): Promise<void> {

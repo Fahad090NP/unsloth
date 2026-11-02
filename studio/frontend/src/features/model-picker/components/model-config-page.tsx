@@ -62,7 +62,7 @@ import {
 import {
   distributeByWeight,
   rebalanceSplit,
-} from "@/features/chat/stores/chat-runtime-store";
+} from "@/features/chat";
 import { prepareHfTokenForUse } from "@/features/hf-auth";
 import {
   type VramBudgetSettings,
@@ -1463,7 +1463,10 @@ function MlxSpeculativeRows({
   const [drafters, setDrafters] = useState<MlxDrafter[]>([]);
   useEffect(() => {
     const controller = new AbortController();
-    setDrafters([]);
+    // Deferred one microtask: clearing the stale list must not cascade a render from the effect body.
+    queueMicrotask(() => {
+      setDrafters([]);
+    });
     fetchMlxDrafters(modelPath, controller.signal)
       .then((found) => {
         if (!controller.signal.aborted) setDrafters(found);
@@ -2671,8 +2674,11 @@ export function ModelConfigPage({
   // Only a different model retires the row's objection, not its unmount.
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the model, not on the setter
   useEffect(() => {
-    setExtraArgsLoadable(true);
-    setExtraArgsHydrating(!isDiffusion);
+    // Deferred one microtask: retiring the row's objection must not cascade a render from the effect body.
+    queueMicrotask(() => {
+      setExtraArgsLoadable(true);
+      setExtraArgsHydrating(!isDiffusion);
+    });
   }, [configId, target.ggufVariant, target.isGguf, isDiffusion]);
 
   // Compare to what was requested, so a staged value retires a verdict for a different request.
@@ -2873,7 +2879,9 @@ export function ModelConfigPage({
     const args = configState.llamaExtraArgs;
     if (args == null || args.length === 0) {
       // Reset with Advanced collapsed must re-enable Load.
-      setExtraArgsLoadable(true);
+      queueMicrotask(() => {
+        setExtraArgsLoadable(true);
+      });
       return;
     }
     let cancelled = false;
@@ -2911,7 +2919,9 @@ export function ModelConfigPage({
   // biome-ignore lint/correctness/useExhaustiveDependencies: the model is the identity
   useEffect(() => {
     if (resolvedIsDiffusion) {
-      setExtraArgsHydrating(false);
+      queueMicrotask(() => {
+        setExtraArgsHydrating(false);
+      });
       return;
     }
     // Same order as the auto-switch loader: load path first, then the derived configId alias.
@@ -3255,7 +3265,9 @@ export function ModelConfigPage({
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the classification, not on the setter
   useEffect(() => {
     if (resolvedIsDiffusion) {
-      setExtraArgsLoadable(true);
+      queueMicrotask(() => {
+        setExtraArgsLoadable(true);
+      });
     }
   }, [resolvedIsDiffusion]);
   const pinFixedLayerContext =

@@ -137,7 +137,6 @@ import { studioPageForTask } from "./lib/unsloth-support";
 import {
   buildDiscoverRows,
   detectResultFormat,
-  discoveryInventorySignature,
   hasRecommendedCheckpointLikes,
   isUnslothFinetunable,
   matchesHubCapability,
@@ -583,6 +582,10 @@ export function ModelsPage() {
     setFirstPickArmed(false);
     setUploaderPick(next);
   }, []);
+  const hubSource = useHubSource();
+  const [storedSearchFilters, setSearchFilters] = useState<ModelSearchFilters>(
+    {},
+  );
   const urlResourceType: ResourceTypeFilter =
     hubSearch.kind === "datasets" ? "datasets" : "models";
   const [resourceType, setResourceType] =
@@ -646,10 +649,6 @@ export function ModelsPage() {
     },
     [isDiscoverTab, urlSection, navigate],
   );
-  const hubSource = useHubSource();
-  const [storedSearchFilters, setSearchFilters] = useState<ModelSearchFilters>(
-    {},
-  );
   // Several capabilities show models with any of them; none shows every model.
   const [capabilityFilters, setCapabilityFilters] = useState<
     HubCapabilityFilter[]
@@ -666,7 +665,7 @@ export function ModelsPage() {
       setFirstPickArmed(false);
       setSearchFilters(next);
     },
-    [],
+    [setSearchFilters],
   );
   // Pipeline tasks from an audio page's Search Hub link; they apply while the Audio filter is on.
   const [linkedAudioTask, setLinkedAudioTask] = useState<
@@ -1133,10 +1132,6 @@ export function ModelsPage() {
     isLoading,
   ]);
 
-  const modelDiscoveryInventorySignature = useMemo(
-    () => discoveryInventorySignature(effectiveCachedRows, effectiveLocalRows),
-    [effectiveCachedRows, effectiveLocalRows],
-  );
   const modelDiscoverRows = useMemo<DiscoverRow[]>(
     () =>
       buildDiscoverRows(

@@ -15,8 +15,8 @@ import {
   isAudioWorkflowId,
 } from "../audio/workflows.ts";
 import type { InferenceStatusResponse } from "@/features/chat";
-import type { DiffusionStatus } from "@/features/images/api";
-import type { VideoStatus } from "@/features/video/api";
+import type { DiffusionStatus } from "@/features/images";
+import type { VideoStatus } from "@/features/video";
 
 /** What the row is, for the icon and label. */
 export type LoadedModelKind =

@@ -3,8 +3,8 @@
 
 import { LocalFileDialog } from "@/components/assistant-ui/attachment-document-dialog";
 import { MAX_DOCUMENT_PREVIEW_BYTES } from "@/components/file-viewer";
-import { canShowFile } from "@/features/browser/file-kind";
-import { useBrowserPanelAvailable } from "@/features/browser/panel-availability";
+import { canShowFile } from "@/features/browser";
+import { useBrowserPanelAvailable } from "@/features/browser";
 import { useBrowserPrefsStore } from "@/features/browser";
 import { type ReactElement, cloneElement } from "react";
 import {

@@ -512,6 +512,8 @@ async function confirmSelectedModelRemoteCode(
   }
 
   let approvalApplied = true;
+  // Read through a call: `onApprove` may flip this after an await inside the request.
+  const isApprovalApplied = (): boolean => approvalApplied;
   const approved = await confirmRemoteCodeIfNeeded({
     modelName,
     hfToken,
@@ -525,7 +527,7 @@ async function confirmSelectedModelRemoteCode(
       });
     },
   });
-  if (!approvalApplied || attempt.abortIfInputsChanged()) {
+  if (!isApprovalApplied() || attempt.abortIfInputsChanged()) {
     return false;
   }
   return approved || attempt.cancel();

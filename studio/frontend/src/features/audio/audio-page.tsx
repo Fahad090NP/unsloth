@@ -8,7 +8,14 @@ import { SparklesIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MediaHeaderActions } from "@/components/media-header-actions";
 import { LibraryPageLink } from "@/components/media-page-link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { MediaRailResizeHandle } from "@/components/media-rail-resize-handle";
 import { MEDIA_RAIL_ROOT_ATTR, useMediaRailWidth } from "@/hooks/use-media-rail-width";
@@ -272,7 +279,14 @@ export function AudioPage({
   const initialReadySent = useRef(false);
   const isMobileShell = useIsMobileShell();
   const { pinned } = useSidebar();
-  const [mode, setMode] = useState<CreateMode>("speak");
+  const [mode, setModeState] = useState<CreateMode>("speak");
+  const modeRef = useRef<CreateMode>(mode);
+  // The ref mirrors the state at the moment it changes, so async children never read a stale mode.
+  const setMode = useCallback((next: SetStateAction<CreateMode>) => {
+    const resolved = typeof next === "function" ? next(modeRef.current) : next;
+    modeRef.current = resolved;
+    setModeState(resolved);
+  }, []);
   const workflow = useAudioWorkspaceStore((state) => state.workflow);
   const pageWorkflow: AudioWorkflowId =
     slotForWorkflow(workflow) === mode
@@ -293,9 +307,16 @@ export function AudioPage({
     enabled: active,
   });
   const [selectorOpen, setSelectorOpen] = useState(false);
-  const [busy, setBusy] = useState<AudioBusy>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const [busy, setBusyState] = useState<AudioBusy>(null);
   const busyRef = useRef<AudioBusy>(busy);
-  busyRef.current = busy;
+  // Mirror busy into the ref as it changes: a new generation drops the previous clip announcement.
+  const setBusy = useCallback((next: SetStateAction<AudioBusy>) => {
+    const resolved = typeof next === "function" ? next(busyRef.current) : next;
+    busyRef.current = resolved;
+    if (resolved === "generating") setAnnouncement("");
+    setBusyState(resolved);
+  }, []);
   const [generationPhase, setGenerationPhase] =
     useState<AudioGenerationPhase>(null);
   const generationPhaseRef = useRef<AudioGenerationPhase>(generationPhase);
@@ -317,9 +338,9 @@ export function AudioPage({
   }, [updateGenerationPhase]);
   const ttsStatusRefreshGeneration = useRef(0);
   const activeRef = useRef(active);
-  activeRef.current = active;
-  const modeRef = useRef(mode);
-  modeRef.current = mode;
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
 
   const {
     attach: attachSettingsScroll,
@@ -472,7 +493,7 @@ export function AudioPage({
       (refreshGallery(undefined, galleryCache.clips.length)).catch(() => { /* noop */ });
       return;
     }
-    let cancelled = false;
+    const lifecycle = { cancelled: false };
     ((async () => {
       const [initialClips] = await Promise.all([
         refreshGallery(),
@@ -482,13 +503,13 @@ export function AudioPage({
       const initialSelection =
         initialClips.find((clip) => clip.id === galleryCache.selectedId) ??
         initialClips[0];
-      if (initialSelection) await ensureClipSrc(initialSelection);
-      if (cancelled || initialReadySent.current) return;
+      await ensureClipSrc(initialSelection);
+      if (lifecycle.cancelled || initialReadySent.current) return;
       initialReadySent.current = true;
       onInitialReady?.();
     })()).catch(() => { /* noop */ });
     return () => {
-      cancelled = true;
+      lifecycle.cancelled = true;
     };
   }, [
     active,
@@ -520,7 +541,6 @@ export function AudioPage({
 
   const {
     replayQueuedTtsPick,
-    transitionMode,
     transitionWorkflow,
     pendingTranscribeRelease,
     handleModelSelect,
@@ -567,7 +587,6 @@ export function AudioPage({
   });
 
   const [freshClipId, setFreshClipId] = useState<string | null>(null);
-  const [announcement, setAnnouncement] = useState("");
   const selectGeneratedClip = useCallback(
     (id: string, keepFallback?: boolean) => {
       selectClip(id, keepFallback);
@@ -579,9 +598,6 @@ export function AudioPage({
   const clearFreshClip = useCallback(() => {
     setFreshClipId(null);
   }, []);
-  useEffect(() => {
-    if (busy === "generating") setAnnouncement("");
-  }, [busy]);
 
   const speakConnection = useSpeakConnection();
   const connection =
@@ -676,11 +692,9 @@ export function AudioPage({
   const handleGenerate = musicStudio ? music.handleGenerate : handleSpeechGenerate;
 
   // Clone's Transcribe uses Transcribe's model, else one on disk, so it works without Settings.
-  const lastSttDownloaded =
-    lastSttRepo != null &&
-    downloadedSttArtifacts.some(
-      (artifact) => artifact.repoId.toLowerCase() === lastSttRepo.toLowerCase(),
-    );
+  const lastSttDownloaded = downloadedSttArtifacts.some(
+    (artifact) => artifact.repoId.toLowerCase() === lastSttRepo.toLowerCase(),
+  );
   const cloneSttRepo =
     (selectedSttRepo ??
       (lastSttDownloaded ? lastSttRepo : null) ??
@@ -1013,7 +1027,7 @@ export function AudioPage({
     setSavingVoice(true);
   }, []);
   const handleSendStem = useCallback(
-    async (target: SendTarget, clip: AudioGalleryClip, name: string) => {
+    (target: SendTarget, clip: AudioGalleryClip, name: string) => {
       if (target.workflow === "voice") {
         setVoiceClip({ id: clip.id, name, transcript: "" });
         setSavingVoice(true);
@@ -1192,7 +1206,7 @@ export function AudioPage({
   const recommendedSeparateActions = recommendedActions("separate");
   // RVC, Seed-VC and MeanVC2 only convert; Speak must not send their users to Clone.
   const loadedConvertsOnly =
-    !!status?.audio_workflows?.includes("convert") &&
+    status?.audio_workflows?.includes("convert") === true &&
     !status.audio_workflows.includes("clone");
   const loadedSeparates =
     status?.audio_workflows?.includes("separate") === true;
@@ -1425,13 +1439,17 @@ export function AudioPage({
     setMusicGenerationError,
   ]);
   const [elapsedSeconds, setElapsedSeconds] = useState<number | null>(null);
+  const [timingGeneration, setTimingGeneration] = useState(
+    busy === "generating",
+  );
+  const generating = busy === "generating";
+  if (timingGeneration !== generating) {
+    setTimingGeneration(generating);
+    setElapsedSeconds(generating ? 0 : null);
+  }
   useEffect(() => {
-    if (busy !== "generating") {
-      setElapsedSeconds(null);
-      return;
-    }
+    if (!generating) return;
     const startedAt = Date.now();
-    setElapsedSeconds(0);
     const timer = window.setInterval(
       () => {
         setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
@@ -1441,7 +1459,7 @@ export function AudioPage({
     return () => {
       window.clearInterval(timer);
     };
-  }, [busy]);
+  }, [generating]);
   const transcribeSource = useAudioTranscribeStore((state) => state.source);
   const transcribePrefs = useAudioTranscribeStore(
     useShallow((state) => ({
@@ -1451,6 +1469,14 @@ export function AudioPage({
     })),
   );
   const transcribeSourceHandle = useRef<AudioSourceInputHandle | null>(null);
+  // Ref reads live in callbacks, so the blocker actions stay render-pure.
+  const focusTranscribeSource = useCallback(() => {
+    transcribeSourceHandle.current?.focus();
+  }, []);
+  const againTranscribeSource = useCallback(() => {
+    useAudioTranscribeStore.setState({ source: null });
+    transcribeSourceHandle.current?.browse();
+  }, []);
   const [transcribeSourceStatus, setTranscribeSourceStatus] =
     useState<AudioSourceStatus>({ phase: "idle" });
   const [expiredTranscribeSourceId, setExpiredTranscribeSourceId] = useState<
@@ -1519,15 +1545,26 @@ export function AudioPage({
     transcribePrefs.language,
     transcribeLanguages,
   );
+  // Uploads expire on a clock, so tick a slow "now" instead of reading Date.now() during render.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!transcribeSource?.expiresAt) return;
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 30_000);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [transcribeSource]);
   const transcribeSourceExpired =
     transcribeSourceStatus.phase === "expired" ||
-    selectionExpired(transcribeSource, Date.now()) ||
+    selectionExpired(transcribeSource, nowMs) ||
     (transcribeSource !== null &&
       transcribeSource.id === expiredTranscribeSourceId);
   const addAudioActions = [
     {
       label: "Add audio",
-      onClick: () => transcribeSourceHandle.current?.focus(),
+      onClick: focusTranscribeSource,
     },
   ];
   const recommendedSttActions = [
@@ -1575,15 +1612,7 @@ export function AudioPage({
             : transcribeSourceExpired
               ? {
                   reason: "This upload expired.",
-                  actions: [
-                    {
-                      label: "Add it again",
-                      onClick: () => {
-                        useAudioTranscribeStore.setState({ source: null });
-                        transcribeSourceHandle.current?.browse();
-                      },
-                    },
-                  ],
+                  actions: [{ label: "Add it again", onClick: againTranscribeSource }],
                 }
               : transcribeSourceStatus.phase === "uploading" ||
                   transcribeSourceStatus.phase === "loading"
@@ -1684,10 +1713,12 @@ export function AudioPage({
     ttsWorkflow === "clone" ? clone.handleGenerate :
     ttsWorkflow === "edit" ? edit.handleGenerate :
     ttsWorkflow === "convert" ? convert.handleGenerate : handleGenerate;
-  generateShortcut.current = () => {
-    if (canTranscribe) handleTranscribe();
-    else if (canGenerate) (handlePageGenerate()).catch(() => { /* noop */ });
-  };
+  useEffect(() => {
+    generateShortcut.current = () => {
+      if (canTranscribe) handleTranscribe();
+      else if (canGenerate) (handlePageGenerate()).catch(() => { /* noop */ });
+    };
+  });
   useEffect(() => {
     if (!active) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1748,7 +1779,7 @@ export function AudioPage({
         return;
       }
       if (modeRef.current === "speak") setSpeakConnectionId(null);
-      return handleModelSelect(id, withCatalogPipelineTag(audioCatalog.byId, id, meta));
+      (handleModelSelect(id, withCatalogPipelineTag(audioCatalog.byId, id, meta))).catch(() => { /* noop */ });
     },
     [
       audioCatalog.byId,
@@ -1798,7 +1829,7 @@ export function AudioPage({
       ? connection
         ? `Speaks through ${connection.providerName}, a saved connection.`
         : showLastPageModel
-        ? `${lastPageModel.split("/").pop()} is not loaded. Pick it above to load it.`
+        ? `${lastPageModel.split("/").pop() ?? lastPageModel} is not loaded. Pick it above to load it.`
         : ttsLoaded
         ? pageModelLoaded
           ? audioCapabilityLine(
@@ -1913,7 +1944,7 @@ export function AudioPage({
               externalModels={
                 mode === "transcribe"
                   ? transcribeExternalModels
-                  : mode === "speak" && ttsWorkflow === "speak"
+                  : mode === "speak"
                     ? speakConnection.models
                     : undefined
               }
@@ -2035,7 +2066,7 @@ export function AudioPage({
             ref={attachSettingsScroll}
             onScroll={onSettingsScroll}
             className={cn(
-              "hover-scrollbar flex min-h-0 flex-1 flex-col gap-4 px-10 max-sm:px-5 pt-9 pb-6 @[50rem]:overflow-y-auto @[50rem]:scrollbar-gutter-stable @[50rem]:pr-[calc(var(--spacing)*10-var(--classic-scrollbar-width,0px))]",
+              "hover-scrollbar flex min-h-0 flex-1 flex-col gap-4 px-10 max-sm:px-5 pt-9 pb-6 @[50rem]:overflow-y-auto @[50rem]:scrollbar-gutter-stable @[50rem]:pr-[calc(var(--spacing)*10-var(--classic-scrollbar-width,0))]",
               mode === "speak"
                 ? "panel-scroll-fade-action"
                 : "panel-scroll-fade",
@@ -2050,10 +2081,10 @@ export function AudioPage({
                   workflow={pageWorkflow}
                   onSelect={transitionWorkflow}
                 />
-                <p className="text-ui-11p5/snug  text-muted-foreground">
+                <p className="text-ui-11p5/snug text-muted-foreground">
                   {workflowTab.hint}
                 </p>
-                <p className="text-ui-12/snug  text-muted-foreground">
+                <p className="text-ui-12/snug text-muted-foreground">
                   {capabilityLine}
                 </p>
               </div>
@@ -2374,14 +2405,14 @@ export function AudioPage({
                     {...outputProps}
                     modelReady={pageModelLoaded}
                     recommendedModels={selectorModels}
-                    onPickModel={pickRecommendedModel}
+                    onPickModel={(id) => { (pickRecommendedModel(id)).catch(() => { /* noop */ }); }}
                   />
                 ) : ttsWorkflow === "separate" ? (
                   <SeparateOutput
                     {...outputProps}
                     modelReady={pageModelLoaded}
                     recommendedModels={selectorModels}
-                    onPickModel={pickRecommendedModel}
+                    onPickModel={(id) => { (pickRecommendedModel(id)).catch(() => { /* noop */ }); }}
                     separate={separate}
                     onSendStem={handleSendStem}
                     handleDeleteGroup={handleDeleteGroup}
@@ -2391,7 +2422,7 @@ export function AudioPage({
                     {...outputProps}
                     modelReady={pageModelLoaded}
                     recommendedModels={selectorModels}
-                    onPickModel={pickRecommendedModel}
+                    onPickModel={(id) => { (pickRecommendedModel(id)).catch(() => { /* noop */ }); }}
                   />
                 ) : ttsWorkflow === "convert" ? (
                   <ConvertOutput
@@ -2399,7 +2430,7 @@ export function AudioPage({
                     useAgainLabel="Use these inputs again"
                     modelReady={pageModelLoaded}
                     recommendedModels={selectorModels}
-                    onPickModel={pickRecommendedModel}
+                    onPickModel={(id) => { (pickRecommendedModel(id)).catch(() => { /* noop */ }); }}
                   />
                 ) : (
                   <SpeakOutput {...outputProps} modelReady={pageModelLoaded} />

@@ -1335,7 +1335,7 @@ async function screenshot(tab: BrowserTab, context: Run): Promise<Result> {
   // A page at work off screen is captured on its own; one on screen as the panel shows it.
   const hidden = !chatOnScreen(context) && hasNativeView(tab.id);
   const pages = document.querySelectorAll<HTMLElement>("[data-browser-page]");
-  const element = pages.item(pages.length - 1);
+  const element = Array.from(pages).at(-1);
   if (!hidden && !element) return { ok: false, error: "the browser panel is not on screen." };
   // What the user typed into card, code and password fields stays out of the picture, as out of the text.
   const masked = await pageCall(tab, { op: "mask", on: true }).catch(() => null);

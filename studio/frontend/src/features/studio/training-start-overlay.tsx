@@ -23,9 +23,9 @@ import {
   getDatasetDownloadProgress,
   getDownloadProgress,
   type DownloadProgressResponse,
-} from "@/features/chat/api/chat-api";
-import { useTransferStats } from "@/features/chat/hooks/use-transfer-stats";
-import { formatEta } from "@/features/chat/utils/format-transfer";
+} from "@/features/chat";
+import { useTransferStats } from "@/features/chat";
+import { formatEta } from "@/features/chat";
 import { formatBytes, formatRate } from "@/features/hub";
 import { useHfTokenStore } from "@/features/hub";
 import {
@@ -33,7 +33,7 @@ import {
   coerceCachedStateReady,
   downloadStateFromProgress,
   type DownloadState,
-} from "@/features/studio/download-state";
+} from "@/features/studio";
 import {
   classifyPreparation,
   hasTrainingLoopStarted,
@@ -105,12 +105,14 @@ function useHfDownloadProgress(
     let issued = 0;
     let applied = 0;
 
+    const stopped = () => status.cancelled || status.finished;
+
     const poll = async () => {
-      if (status.cancelled || status.finished) return;
+      if (stopped()) return;
       const generation = ++issued;
       try {
         const prog = await fetcher(repoId);
-        if (status.cancelled || generation <= applied) return;
+        if (stopped() || generation <= applied) return;
         applied = generation;
         const next = downloadStateFromProgress(prog, latest);
         latest = next;

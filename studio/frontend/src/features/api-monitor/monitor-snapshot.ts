@@ -6,7 +6,7 @@
 import type {
   ApiMonitorEntry,
   ApiMonitorResponse,
-} from "@/features/chat/types/api";
+} from "@/features/chat";
 
 export type MonitorStatusFilter =
   | "all"

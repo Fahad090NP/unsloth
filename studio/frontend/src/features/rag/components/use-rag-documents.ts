@@ -409,9 +409,11 @@ export function useRagDocuments(
         queueMicrotask(() => { setLoading(false); });
       }
     } else if (prev === null && scope && !uploadInFlightRef.current) {
-      (scope.type === "project"
-        ? loadProjectSources(scope.projectId)
-        : refresh()).catch(() => undefined);
+      queueMicrotask(() => {
+        (scope.type === "project"
+          ? loadProjectSources(scope.projectId)
+          : refresh()).catch(() => undefined);
+      });
     }
     return () => {
       // Keep in-flight tracking across the materialization flip (React can commit the new id after the

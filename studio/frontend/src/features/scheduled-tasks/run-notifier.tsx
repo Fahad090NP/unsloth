@@ -178,6 +178,8 @@ export function ScheduledTaskRunNotifier() {
       lastDelay: 0,
     };
     let timer: ReturnType<typeof setTimeout> | null = null;
+    // Read through a call: the cleanup below flips this after the poll's awaits.
+    const isDisposed = (): boolean => state.disposed;
 
     const openChat = (threadId: string) => {
       navigateRef.current({ to: "/chat", search: { thread: threadId } }).catch((err: unknown) => {
@@ -275,7 +277,7 @@ export function ScheduledTaskRunNotifier() {
           if (shouldSaveSeen(stored, claim.record, claim.mine.length)) saveSeen(owner, claim.record);
           return claim.mine;
         });
-        if (state.disposed) return;
+        if (isDisposed()) return;
         if (mine === null) {
           state.recheckAfterPoll = true;
           return;

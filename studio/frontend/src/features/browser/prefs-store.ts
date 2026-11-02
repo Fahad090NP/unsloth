@@ -113,7 +113,11 @@ export const useBrowserPrefsStore = create<BrowserPrefsState>()(
 );
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (event) => {
-    if (event.key === useBrowserPrefsStore.persist.getOptions().name) void useBrowserPrefsStore.persist.rehydrate();
+    if (event.key === useBrowserPrefsStore.persist.getOptions().name) {
+      Promise.resolve(useBrowserPrefsStore.persist.rehydrate()).catch(
+        () => undefined,
+      );
+    }
   });
 }
 
