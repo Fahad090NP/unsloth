@@ -238,6 +238,10 @@ export default defineConfig([
           ],
         },
       ],
+      // The tests register external ESM resolver/loader modules, which
+      // `registerHooks` cannot replace: it only supports synchronous,
+      // in-process hooks. Migration would change loader semantics.
+      "@typescript-eslint/no-deprecated": "off",
     },
   },
   {
