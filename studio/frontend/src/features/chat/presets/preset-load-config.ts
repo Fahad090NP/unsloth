@@ -27,7 +27,7 @@ import {
   normalizeMaxSeqLength,
   savedContextPin,
   type PerModelConfig,
-} from "@/features/model-picker/model-config/per-model-config";
+} from "@/features/model-picker";
 import {
   DRAFT_N_MAX_SPEC_TYPES,
   SPECULATIVE_TYPES,

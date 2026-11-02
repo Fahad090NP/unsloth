@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { getAuthSessionEpoch } from "@/features/auth";
-import { extractDocumentText } from "@/features/rag/api/rag-api";
+import { extractDocumentText } from "@/features/rag";
 import { MAX_SERVER_DOCUMENT_BYTES } from "./open-document-accept";
 import { MAX_TEXT_ATTACHMENT_BYTES } from "./text-attachment-accept";
 

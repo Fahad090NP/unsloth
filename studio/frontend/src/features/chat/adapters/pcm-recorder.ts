@@ -171,7 +171,7 @@ export class PcmRecorder implements SegmentRecorder {
     this.stopListeners.push({ listener, once: options?.once === true });
   }
 
-  /** `timesliceMs` is ignored; it exists only for MediaRecorder parity. */
+  /** `timesliceMs` is ignored by this recorder; the parameter exists only for MediaRecorder parity. */
   start(_timesliceMs?: number): void {
     if (this.recordingState !== "inactive") return;
     this.recordingState = "recording";

@@ -8,7 +8,7 @@ import { useChatRuntimeStore } from "./stores/chat-runtime-store";
 export function useToolAwaitingApproval(toolCallId?: string): boolean {
   return useChatRuntimeStore(
     (s) =>
-      !!toolCallId &&
+      toolCallId !== undefined &&
       Object.prototype.hasOwnProperty.call(s.toolConfirmations, toolCallId),
   );
 }

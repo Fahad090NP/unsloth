@@ -18,7 +18,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useChatFavoritesStore } from "@/features/library/chats/favorites-store";
+import { useChatFavoritesStore } from "@/features/library";
 import { resumesThought } from "@/features/model-picker";
 import { useShortcutLabel } from "@/features/settings";
 import type { ShortcutId } from "@/features/settings";

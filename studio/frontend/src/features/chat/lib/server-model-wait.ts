@@ -7,7 +7,7 @@ import {
   disposableTimeoutSignal,
   pollSignal,
   type PollSignal,
-} from "@/features/hub/lib/abort-signals";
+} from "@/features/hub";
 
 let outstanding = 0;
 

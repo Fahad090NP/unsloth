@@ -7,11 +7,11 @@ import {
   createLinkedFolder,
   noteProjectWork,
   watchProjectFolderJob,
-} from "@/features/rag/api/rag-api";
+} from "@/features/rag";
 import {
   isProjectLandingMounted,
   markProjectSourcesPending,
-} from "@/features/rag/components/project-source-dropzone";
+} from "@/features/rag";
 import { toast } from "@/lib/toast";
 import { useSyncExternalStore } from "react";
 import { createChatProject } from "../hooks/use-chat-projects";

@@ -6,7 +6,7 @@ import {
   type DictationEngine,
   sttModelVariant,
   useVoiceSettingsStore,
-} from "@/features/settings/stores/voice-settings-store";
+} from "@/features/settings";
 import { toast } from "@/lib/toast";
 import type { DictationAdapter } from "@assistant-ui/react";
 import { useExternalProvidersStore } from "../stores/external-providers-store";

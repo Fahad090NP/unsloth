@@ -5,7 +5,7 @@ import type { PerModelConfig } from "@/features/model-picker";
 import {
   normalizeMlxKvQuant,
   normalizeMlxOffload,
-} from "@/features/model-picker/model-config/per-model-config";
+} from "@/features/model-picker";
 
 import {
   parseGpuLayersOverride,

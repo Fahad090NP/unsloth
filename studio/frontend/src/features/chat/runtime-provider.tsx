@@ -45,7 +45,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useBrowserAgentStore } from "@/features/browser";
-import { browserAgentToolsForTurn } from "@/features/browser/agent/tools";
+import { browserAgentToolsForTurn } from "@/features/browser";
 import { StudioDictationAdapter } from "./adapters/studio-dictation-adapter";
 import { StudioSpeechSynthesisAdapter } from "./adapters/studio-speech-synthesis-adapter";
 import {
@@ -1393,7 +1393,7 @@ function cloneContent(
 function cloneAttachments(
   attachments: readonly CompleteAttachment[] | undefined,
 ): readonly CompleteAttachment[] {
-  if (!Array.isArray(attachments)) {
+  if (!attachments) {
     return [];
   }
   const serialized = JSON.stringify(
@@ -2440,7 +2440,7 @@ function createPersistedRunAdapter(
         // even after a steer. Queued runs carry no reservation, so this also stops pending work.
         requestPromptQueueStop(persistedRunThreadIds);
         notifyPromptQueueRunFailed(
-          options.unstable_threadId ?? persistedRunThreadIds[0] ?? null,
+          options.unstable_threadId ?? persistedRunThreadIds.at(0) ?? null,
         );
         throw error;
       }
@@ -2458,9 +2458,6 @@ function createPersistedRunAdapter(
           ? { ...options, unstable_threadId: adoptedThreadId }
           : options,
       );
-      if (!result) {
-        return;
-      }
       if (typeof result === "object" && Symbol.asyncIterator in result) {
         yield* result;
       } else {
@@ -2531,22 +2528,26 @@ function useStudioRuntimeAdapters(
 
   // Mirror Data-tab deletions, or a later sync writes the attachment back.
   useEffect(() => {
-    let active = true;
+    // Mutable lifecycle object: the async callback below runs after this render,
+    // so neither flag can be a plain `let` captured by a closure.
+    const state = { active: true };
+    // Read through calls: the flags below change from async callbacks and cleanup.
+    const isActive = (): boolean => state.active;
     let pendingDeletion = Promise.resolve();
     const unsubscribe = onChatAttachmentDeleted((event) => {
       pendingDeletion = pendingDeletion.then(async () => {
-        if (!active) return;
+        if (!isActive()) return;
         const { messageId, attachmentId } = event;
         try {
           const thread = aui.thread();
           if (attachmentId.startsWith("content-part-sha256-")) {
             for (let attempt = 0; attempt < 3; attempt += 1) {
-              if (!active) return;
+              if (!isActive()) return;
               const exported = thread.export();
               const target = exported.messages.find(
                 (item) => item.message.id === messageId,
               );
-              if (!target || !Array.isArray(target.message.content)) return;
+              if (!target) return;
               const content = target.message.content;
 
               const signatures = content.map((part) =>
@@ -2566,13 +2567,12 @@ function useStudioRuntimeAdapters(
                 }
               ).attachments;
               const hasTargetAttachment =
-                Array.isArray(targetAttachments) &&
-                targetAttachments.some(
+                targetAttachments?.some(
                   (attachment) => attachment.id === attachmentId,
-                );
+                ) ?? false;
               if (
                 (!ids.includes(attachmentId) && !hasTargetAttachment) ||
-                !active
+                !isActive()
               ) {
                 return;
               }
@@ -2582,7 +2582,7 @@ function useStudioRuntimeAdapters(
                 (item) => item.message.id === messageId,
               );
               const latestContent = latestTarget?.message.content;
-              if (!Array.isArray(latestContent)) return;
+              if (!latestContent) return;
               const latestSignatures = latestContent.map((part) =>
                 chatContentPartAttachmentSignature(part),
               );
@@ -2604,8 +2604,9 @@ function useStudioRuntimeAdapters(
                 ).attachments;
                 if (
                   !ids.includes(attachmentId) &&
-                  !(Array.isArray(attachments) &&
-                    attachments.some((attachment) => attachment.id === attachmentId))
+                  !(attachments?.some(
+                    (attachment) => attachment.id === attachmentId,
+                  ) ?? false)
                 ) return item;
                 return {
                   ...item,
@@ -2615,7 +2616,7 @@ function useStudioRuntimeAdapters(
                       (_, index) => ids[index] !== attachmentId,
                     ),
                     metadata: withMessageRevision(item.message.metadata),
-                    ...(Array.isArray(attachments)
+                    ...(attachments
                       ? {
                           attachments: attachments.filter(
                             (attachment) => attachment.id !== attachmentId,
@@ -2625,14 +2626,15 @@ function useStudioRuntimeAdapters(
                   } as typeof item.message,
                 };
               });
-              if (active) thread.import({ ...latest, messages });
+              if (isActive()) thread.import({ ...latest, messages });
               return;
             }
             return;
           }
 
           const exported = thread.export();
-          let changed = false;
+          const state2 = { changed: false };
+          const hasChanged = (): boolean => state2.changed;
           const messages = exported.messages.map((item) => {
             if (item.message.id !== messageId) return item;
             const message = item.message;
@@ -2640,10 +2642,11 @@ function useStudioRuntimeAdapters(
               message as { attachments?: readonly { id: string }[] }
             ).attachments;
             if (
-              Array.isArray(attachments) &&
-              attachments.some((attachment) => attachment.id === attachmentId)
+              attachments?.some(
+                (attachment) => attachment.id === attachmentId,
+              )
             ) {
-              changed = true;
+              state2.changed = true;
               return {
                 ...item,
                 message: {
@@ -2652,14 +2655,13 @@ function useStudioRuntimeAdapters(
                     (attachment) => attachment.id !== attachmentId,
                   ),
                   metadata: withMessageRevision(message.metadata),
-                } as typeof message,
+                } as unknown as typeof message,
               };
             }
             if (/^content-part-[0-9]+$/.test(attachmentId)) {
               const idx = Number(attachmentId.slice("content-part-".length));
               const content = message.content;
               if (
-                !Array.isArray(content) ||
                 !Number.isInteger(idx) ||
                 idx < 0 ||
                 idx >= content.length
@@ -2668,19 +2670,19 @@ function useStudioRuntimeAdapters(
               }
               const part = content[idx] as { type?: string };
               if (part.type !== "image" && part.type !== "audio") return item;
-              changed = true;
+              state2.changed = true;
               return {
                 ...item,
                 message: {
                   ...message,
                   content: content.filter((_, i) => i !== idx),
                   metadata: withMessageRevision(message.metadata),
-                } as typeof message,
+                } as unknown as typeof message,
               };
             }
             return item;
           });
-          if (changed && active) thread.import({ ...exported, messages });
+          if (hasChanged() && isActive()) thread.import({ ...exported, messages });
         } catch {
           // No active thread mounted: storage already holds the truth.
         }
@@ -2688,7 +2690,7 @@ function useStudioRuntimeAdapters(
       return pendingDeletion;
     });
     return () => {
-      active = false;
+      state.active = false;
       unsubscribe();
     };
   }, [aui]);
@@ -2947,7 +2949,7 @@ function useStudioRuntimeAdapters(
           message.id,
           initializeThread.then(({ remoteId }) => remoteId),
           localThreadId,
-        );
+        ).catch(() => undefined);
         const write = (async () => {
           const { remoteId } = await initializeThread;
           // Clear-all tombstones directly so a stalled request cannot block it.
@@ -3561,7 +3563,7 @@ function ThreadScopedSettingsSync({
       return () => {
         const now = useChatRuntimeStore.getState();
         if (!now.settingsHydrated || now.activeThreadId !== activeThreadId) {
-          commitHeldThreadScopedEditsToTheirThread();
+          commitHeldThreadScopedEditsToTheirThread().catch(() => undefined);
         }
       };
     }
@@ -3642,7 +3644,7 @@ function ThreadScopedSettingsSync({
     // Retry a bounded few times.
     const retryThreadRead = () => {
       if (cancelled) return;
-      commitHeldThreadScopedEditsToTheirThread();
+      commitHeldThreadScopedEditsToTheirThread().catch(() => undefined);
       if (retryTimer !== null) return;
       if (retriesLeft <= 0) {
         applyThreadScopedSettings(null, null);
@@ -3667,7 +3669,7 @@ function ThreadScopedSettingsSync({
       cancelled = true;
       if (retryTimer !== null) clearTimeout(retryTimer);
       abortReads();
-      commitHeldThreadScopedEditsToTheirThread();
+      commitHeldThreadScopedEditsToTheirThread().catch(() => undefined);
       window.removeEventListener(CHAT_HISTORY_UPDATED_EVENT, sync);
     };
   }, [activeThreadId, enabled, pendingNewThreadId, settingsHydrated]);

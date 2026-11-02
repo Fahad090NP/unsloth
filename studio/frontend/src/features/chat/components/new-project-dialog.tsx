@@ -23,7 +23,7 @@ import {
   ProjectSourceDropzone,
   type StagedSource,
   uploadStagedSources,
-} from "@/features/rag/components/project-source-dropzone";
+} from "@/features/rag";
 import { toast } from "@/lib/toast";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ProjectIcon } from "@/lib/project-icon";

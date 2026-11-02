@@ -9,7 +9,7 @@ import {
   disposableTimeoutSignal,
   pollSignal,
   withAbort,
-} from "@/features/hub/lib/abort-signals";
+} from "@/features/hub";
 
 /** Matches the Hub client's bound on the same listing (features/hub/inventory/api.ts). */
 export const GGUF_VARIANTS_TIMEOUT_MS = 30_000;

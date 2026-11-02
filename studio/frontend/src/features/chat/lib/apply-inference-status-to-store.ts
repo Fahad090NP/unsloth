@@ -11,7 +11,7 @@ import {
 import { loadedPlacementFrom } from "./partial-offload";
 // eslint-disable-next-line no-restricted-imports -- Avoid the hub barrel's React and download-manager exports.
 import { normalizeMlxKvQuant } from "@/features/model-picker/model-config/per-model-config";
-import { modelDisplayName } from "@/features/hub/lib/model-identity";
+import { modelDisplayName } from "@/features/hub";
 import { getInferenceStatus } from "../api/chat-api";
 import { isSpeechOnlyStatus } from "./speech-only-status";
 import {

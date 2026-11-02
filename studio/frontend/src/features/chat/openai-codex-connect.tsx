@@ -50,7 +50,8 @@ export function OpenAICodexConnect({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const [activeProviderId, setActiveProviderId] = useState(providerId);
+  const [startedProviderId, setStartedProviderId] = useState<string | null>(null);
+  const resolvedActiveProviderId = providerId ?? startedProviderId;
   const [locallyDisconnected, setLocallyDisconnected] = useState(false);
   const mounted = useRef(true);
 
@@ -61,10 +62,7 @@ export function OpenAICodexConnect({
     };
   }, []);
   useEffect(() => {
-    if (providerId) setActiveProviderId(providerId);
-  }, [providerId]);
-  useEffect(() => {
-    if (flow?.status !== "pending" || !activeProviderId) return;
+    if (flow?.status !== "pending" || !resolvedActiveProviderId) return;
     const delay = flow.method === "device" ? 2500 : 1500;
     const timer = window.setInterval(() => {
       if (Date.now() >= flow.expires_at * 1000) {
@@ -76,17 +74,23 @@ export function OpenAICodexConnect({
         setError("Authorization expired. Start a new connection.");
         return;
       }
-      void getCodexOAuthFlow(activeProviderId, flow.flow_id)
+      getCodexOAuthFlow(resolvedActiveProviderId, flow.flow_id)
         .then((next) => {
           if (!mounted.current) return;
           setFlow(next);
-          if (next.status === "connected") void onChanged();
+          if (next.status === "connected") {
+            Promise.resolve(onChanged()).catch(() => undefined);
+          }
           if (next.status === "error") setError(next.message || "Authorization failed.");
         })
-        .catch((cause) => mounted.current && setError(cause instanceof Error ? cause.message : "Authorization failed."));
+        .catch((cause: unknown) => {
+          if (mounted.current) {
+            setError(cause instanceof Error ? cause.message : "Authorization failed.");
+          }
+        });
     }, delay);
     return () => { window.clearInterval(timer); };
-  }, [flow, activeProviderId, onChanged]);
+  }, [flow, resolvedActiveProviderId, onChanged]);
 
   async function start(method: "browser" | "device") {
     setBusy(true);
@@ -94,11 +98,11 @@ export function OpenAICodexConnect({
 
     setLocallyDisconnected(false);
     try {
-      const resolvedProviderId = activeProviderId ?? await ensureProvider?.();
+      const resolvedProviderId = resolvedActiveProviderId ?? await ensureProvider?.();
       if (!resolvedProviderId) {
         throw new Error("Could not create the ChatGPT connection.");
       }
-      setActiveProviderId(resolvedProviderId);
+      setStartedProviderId(resolvedProviderId);
       const next = await startCodexOAuth(resolvedProviderId, method);
       setFlow(next);
       const url = next.authorization_url || next.verification_url;
@@ -115,11 +119,11 @@ export function OpenAICodexConnect({
   }
 
   async function complete() {
-    if (!flow || !activeProviderId || !callbackUrl.trim()) return;
+    if (!flow || !resolvedActiveProviderId || !callbackUrl.trim()) return;
     setBusy(true);
     setError("");
     try {
-      const next = await completeCodexOAuth(activeProviderId, flow.flow_id, callbackUrl.trim());
+      const next = await completeCodexOAuth(resolvedActiveProviderId, flow.flow_id, callbackUrl.trim());
       setFlow(next);
 
       setLocallyDisconnected(false);
@@ -132,11 +136,11 @@ export function OpenAICodexConnect({
     }
   }
   async function cancel() {
-    if (!flow || !activeProviderId || flow.status !== "pending") return;
+    if (!flow || !resolvedActiveProviderId || flow.status !== "pending") return;
     setBusy(true);
     setError("");
     try {
-      await cancelCodexOAuthFlow(activeProviderId, flow.flow_id);
+      await cancelCodexOAuthFlow(resolvedActiveProviderId, flow.flow_id);
       setFlow({ ...flow, status: "cancelled", message: "Authorization cancelled." });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Cancellation failed.");
@@ -148,11 +152,11 @@ export function OpenAICodexConnect({
 
 
   async function disconnect() {
-    if (!activeProviderId) return;
+    if (!resolvedActiveProviderId) return;
     setBusy(true);
     setError("");
     try {
-      await disconnectCodexOAuth(activeProviderId);
+      await disconnectCodexOAuth(resolvedActiveProviderId);
       setFlow(null);
 
       setLocallyDisconnected(true);
@@ -191,7 +195,7 @@ export function OpenAICodexConnect({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => void copyToClipboard(flow.user_code || "")}
+            onClick={() => { copyToClipboard(flow.user_code || "").catch(() => undefined); }}
           >
             Copy code
           </Button>
@@ -206,7 +210,7 @@ export function OpenAICodexConnect({
           <p className="text-xs text-muted-foreground">If the browser cannot return automatically, paste the complete localhost callback URL.</p>
           <div className="flex gap-2">
             <Input data-reload-snapshot-sensitive value={callbackUrl} onChange={(event) => { setCallbackUrl(event.target.value); }} placeholder="http://localhost:1455/auth/callback?..." />
-            <Button type="button" variant="outline" disabled={busy || !callbackUrl.trim()} onClick={() => void complete()}>Complete</Button>
+            <Button type="button" variant="outline" disabled={busy || !callbackUrl.trim()} onClick={() => { complete().catch(() => undefined); }}>Complete</Button>
           </div>
         </div>
       ) : null}
@@ -218,16 +222,16 @@ export function OpenAICodexConnect({
       <div className="flex flex-wrap gap-2">
         {!connected ? (
           <>
-            <Button variant="dark" type="button" size="sm" disabled={busy} onClick={() => void start("browser")}>
+            <Button variant="dark" type="button" size="sm" disabled={busy} onClick={() => { start("browser").catch(() => undefined); }}>
               {authStatus === "reauthorization_required" ? "Reconnect in browser" : "Connect in browser"}
             </Button>
-            <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => void start("device")}>Use device code</Button>
+            <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => { start("device").catch(() => undefined); }}>Use device code</Button>
             {flow?.status === "pending" ? (
-              <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => void cancel()}>Cancel</Button>
+              <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => { cancel().catch(() => undefined); }}>Cancel</Button>
             ) : null}
           </>
         ) : (
-          <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => void disconnect()}>Disconnect locally</Button>
+          <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => { disconnect().catch(() => undefined); }}>Disconnect locally</Button>
         )}
       </div>
     </section>

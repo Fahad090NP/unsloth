@@ -37,7 +37,7 @@ import { AiSpeechIcon, FileSearchIcon } from "@/lib/hugeicons-derived";
 import { InternetGlyph } from "@/lib/internet-icon";
 import { MicIcon } from "@/lib/mic-icon";
 import { MenuTickIcon, Tick02Icon } from "@/lib/tick-icon";
-import { BrowserAgentMenuItem, BrowserAgentPill } from "@/features/browser/agent/lazy-composer-toggle";
+import { BrowserAgentMenuItem, BrowserAgentPill } from "@/features/browser";
 import { markComposerScrollEdges } from "@/lib/composer-scroll-fade";
 import { cn } from "@/lib/utils";
 import {
@@ -90,7 +90,7 @@ import {
   isChatImageFile,
   normalizeChatImage,
 } from "./image-normalize";
-import { modelIdsMatch } from "@/features/hub/lib/model-identity";
+import { modelIdsMatch } from "@/features/hub";
 import { CONVERSATION_MARKDOWN_LABEL } from "./utils/conversation-markdown";
 import { pasteClipboardFiles } from "./utils/clipboard-files";
 import {
@@ -170,9 +170,9 @@ import {
   type PerModelConfig,
   loadedContextFields,
 } from "@/features/model-picker";
-import { loadManagedLlamaFlags } from "@/features/model-picker/api/llama-flags";
-import { fetchLoadExtraArgs } from "@/features/model-picker/api/model-overrides";
-import { sanitizeStoredExtraArgs } from "@/features/model-picker/model-config/llama-extra-args";
+import { loadManagedLlamaFlags } from "@/features/model-picker";
+import { fetchLoadExtraArgs } from "@/features/model-picker";
+import { sanitizeStoredExtraArgs } from "@/features/model-picker";
 import { usePlatformStore } from "@/config/env";
 import {
   confirmTransformersUpgradeIfNeeded,
@@ -1161,7 +1161,7 @@ export function SharedComposer({
     }
     prevRunningRef.current = false;
     advanceQueue();
-  }, [advanceQueue, comparing]);
+  }, [advanceQueue, comparing, resetPromptQueue]);
 
   useEffect(() => {
     const wasRunning = prevRunningRef.current;
@@ -1569,7 +1569,9 @@ export function SharedComposer({
       const specSettings = resolveSpeculativeSettingsForLoad({
         usePersistedPreference: true,
       });
-      let loadedFromConfig = false;
+      const loadedState = { fromConfig: false };
+      // Read through a call: ensureModelLoaded updates it after awaits.
+      const isLoadedFromConfig = (): boolean => loadedState.fromConfig;
 
       // Warm the device cache first: on a cold cache the reconcile passes a stale GPU pick.
       try {
@@ -1608,7 +1610,7 @@ export function SharedComposer({
           currentStore.params.checkpoint === sel.id &&
           (currentStore.activeGgufVariant ?? null) ===
             (sel.ggufVariant ?? null);
-        return !isAlreadyActive || sel.config != null || loadedFromConfig;
+        return !isAlreadyActive || sel.config != null || isLoadedFromConfig();
       };
       const applyCompareStopDecision = () => {
         cancelPreStreamRunReservations(
@@ -1626,13 +1628,15 @@ export function SharedComposer({
         const resolved = config
           ? { config, remembered: true }
           : resolveResidentInitialConfig(sel.id, sel.ggufVariant ?? null);
-        const ownConfig = resolved.config;
+        // Local copy: the resolve cache's config may be shared, and these fields are
+        // rewritten after awaits below.
+        const ownConfig = { ...resolved.config };
         const ownRemembered = resolved.remembered;
         const isAlreadyActive =
           currentStore.params.checkpoint === sel.id &&
           (currentStore.activeGgufVariant ?? null) ===
             (sel.ggufVariant ?? null);
-        if (isAlreadyActive && !config && !loadedFromConfig) {
+        if (isAlreadyActive && !config && !isLoadedFromConfig()) {
           applyCompareStopDecision();
           return "ready";
         }
@@ -2086,7 +2090,7 @@ export function SharedComposer({
             ),
           });
         }
-        loadedFromConfig = config != null;
+        loadedState.fromConfig = config != null;
         // /api/models/list can lag the model's actual state.
         const currentModels = useChatRuntimeStore.getState().models;
         const idx = currentModels.findIndex((m) => m.id === sel.id);
@@ -2166,7 +2170,6 @@ export function SharedComposer({
               throw new Error("Second comparison model load cancelled.");
             }
             throwIfCompareCancelled(compareSignal);
-            compareStopDecision = currentStopDecision;
             toast("Loading Model 2…", {
               id: toastId,
               description: name2,
@@ -2373,7 +2376,7 @@ export function SharedComposer({
     "sendMessage",
     () => {
       if (!isSurfaceInForeground(COMPOSER_INPUT_SELECTOR)) return;
-      sendRef.current?.();
+      sendRef.current?.().catch(reportBackgroundError);
     },
     {
       enabled: chatActive && canSend,

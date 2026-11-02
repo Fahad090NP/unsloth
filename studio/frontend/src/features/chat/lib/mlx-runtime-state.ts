@@ -6,7 +6,7 @@ import {
   normalizeMlxOffload,
   type MlxKvQuant,
   type MlxOffload,
-} from "@/features/model-picker/model-config/per-model-config";
+} from "@/features/model-picker";
 import type { LoadModelResponse } from "../types/api";
 
 type MlxRuntimeResponse = Pick<

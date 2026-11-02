@@ -483,29 +483,32 @@ export function ChatProvidersSettings({
     if (!providerType || editingProviderId) return;
     if (seededProviderTypeRef.current === providerType) return;
     seededProviderTypeRef.current = providerType;
-    setMaxOutputTokensDraft("");
-    setApiType("chat_completions");
-    setReasoningConfig(null);
-    setEditingBackendProviderType(null);
-    const entry = registryByType.get(providerType);
-    if (!entry) {
-      if (isCustomProviderType(providerType)) {
-        setCustomProviderName(customProviderDisplayName(providerType));
-        setBaseUrlDraft("");
+    // Deferred one microtask: seeding the form must not cascade a render from the effect body.
+    queueMicrotask(() => {
+      setMaxOutputTokensDraft("");
+      setApiType("chat_completions");
+      setReasoningConfig(null);
+      setEditingBackendProviderType(null);
+      const entry = registryByType.get(providerType);
+      if (!entry) {
+        if (isCustomProviderType(providerType)) {
+          setCustomProviderName(customProviderDisplayName(providerType));
+          setBaseUrlDraft("");
+        }
+        return;
       }
-      return;
-    }
-    // Seed defaults only for curated providers; others stay empty until "Load available models".
-    const seedDefaults = entry.model_list_mode === "curated";
-    setAvailableModels(seedDefaults ? [...entry.default_models] : []);
-    setSelectedModelIds(
-      isDecisionConnection({ providerType })
-        ? entry.default_models.slice(0, 1)
-        : [],
-    );
-    setManualModelIds("");
-    setModelSearchQuery("");
-    setBaseUrlDraft("");
+      // Seed defaults only for curated providers; others stay empty until "Load available models".
+      const seedDefaults = entry.model_list_mode === "curated";
+      setAvailableModels(seedDefaults ? [...entry.default_models] : []);
+      setSelectedModelIds(
+        isDecisionConnection({ providerType })
+          ? entry.default_models.slice(0, 1)
+          : [],
+      );
+      setManualModelIds("");
+      setModelSearchQuery("");
+      setBaseUrlDraft("");
+    });
   }, [providerType, editingProviderId, registryByType]);
 
   const totalModels = useMemo(
@@ -1384,10 +1387,13 @@ export function ChatProvidersSettings({
     );
     if (!provider) return;
     openedProviderRef.current = openProviderId;
-    editProvider(provider).catch((error: unknown) => {
-      console.error("Background chat operation failed", error);
+    // Deferred one microtask: opening the form must not cascade a render from the effect body.
+    queueMicrotask(() => {
+      editProvider(provider).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
+      onOpenProviderConsumed?.();
     });
-    onOpenProviderConsumed?.();
     // editProvider is redeclared each render; the latch above is what fires this once per id.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openProviderId, providers, providersReady, onOpenProviderConsumed]);

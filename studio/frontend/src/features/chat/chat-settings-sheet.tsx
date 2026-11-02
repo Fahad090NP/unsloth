@@ -557,28 +557,6 @@ export function ChatSettingsPanel({
     (s) => s.maxContextLength,
   );
   const customContextLength = useChatRuntimeStore((s) => s.customContextLength);
-  const kvCacheDtype = useChatRuntimeStore((s) => s.kvCacheDtype);
-  const mlxKvQuant = useChatRuntimeStore((s) => s.mlxKvQuant);
-  const gpuMemoryMode = useChatRuntimeStore((s) => s.gpuMemoryMode);
-  const gpuLayers = useChatRuntimeStore((s) => s.gpuLayers);
-  const nCpuMoe = useChatRuntimeStore((s) => s.nCpuMoe);
-  const tensorParallel = useChatRuntimeStore((s) => s.tensorParallel);
-  const disableVision = useChatRuntimeStore((s) => s.disableVision);
-  const specDraftNMax = useChatRuntimeStore((s) => s.specDraftNMax);
-  const nParallel = useChatRuntimeStore((s) => s.nParallel);
-  const reasoningBudget = useChatRuntimeStore((s) =>
-    s.reasoningBudget === s.loadedReasoningBudget
-      ? (s.loadedReasoningBudgetRequested ?? s.reasoningBudget)
-      : s.reasoningBudget,
-  );
-  const reasoningBudgetMessage = useChatRuntimeStore(
-    (s) =>
-      s.reasoningBudgetMessage === s.loadedReasoningBudgetMessage
-        ? (s.loadedReasoningBudgetMessageRequested ?? s.reasoningBudgetMessage)
-        : s.reasoningBudgetMessage,
-  );
-  const nBatch = useChatRuntimeStore((s) => s.nBatch);
-  const nUbatch = useChatRuntimeStore((s) => s.nUbatch);
   const speculativeType = useChatRuntimeStore((s) => s.speculativeType);
   const specFallbackReason = useChatRuntimeStore((s) => s.specFallbackReason);
   const specDrafterKind = useChatRuntimeStore((s) => s.specDrafterKind);
@@ -662,13 +640,44 @@ export function ChatSettingsPanel({
   const settingsHydrated = useChatRuntimeStore((s) => s.settingsHydrated);
 
   const baseContext = loadedContextLength;
-  const [presetNameInput, setPresetNameInput] = useState(activePreset);
-  const [systemPromptEditorOpen, setSystemPromptEditorOpen] = useState(false);
+  // A rename draft keyed by the preset it belongs to; a different preset drops it without
+  // an effect, so the field follows activePreset again.
+  const [presetNameDraft, setPresetNameDraft] = useState<{
+    preset: string;
+    value: string;
+  } | null>(null);
+  const presetNameInput =
+    presetNameDraft?.preset === activePreset
+      ? presetNameDraft.value
+      : activePreset;
+  const setPresetNameInput = (value: string) => {
+    setPresetNameDraft({ preset: activePreset, value });
+  };
+  const [systemPromptEditorOpenState, setSystemPromptEditorOpen] =
+    useState(false);
+  // Derive the closing side so the sheet closing hides the editor without an effect.
+  const systemPromptEditorOpen = open && systemPromptEditorOpenState;
+  // Closing the sheet abandons the editor; reset it on the same user actions that close the sheet.
+  const closeSheet = () => {
+    setSystemPromptEditorOpen(false);
+    onOpenChange?.(false);
+  };
   const [systemPromptDraft, setSystemPromptDraft] = useState("");
   const [systemVariablesDraft, setSystemVariablesDraft] = useState("");
   const [systemVariablesOpen, setSystemVariablesOpen] = useState(false);
   // Raw draft until blur: clamping mid-entry would rewrite the box.
-  const [seedDraft, setSeedDraft] = useState<string | null>(null);
+  // Keyed by scope so switching model or hiding the seed box drops the draft without
+  // a reset effect; removing a focused element fires no blur.
+  const seedScope = `${currentCheckpoint}\u0000${String(showSeed)}`;
+  const [seedDraftState, setSeedDraftState] = useState<{
+    scope: string;
+    value: string | null;
+  }>({ scope: seedScope, value: null });
+  const seedDraft =
+    seedDraftState.scope === seedScope ? seedDraftState.value : null;
+  const setSeedDraft = (value: string | null) => {
+    setSeedDraftState({ scope: seedScope, value });
+  };
   // Save's mousedown blurs before React re-renders, so onClick needs this pre-blur commit value.
   const committedSeed = useMemo<number | null>(() => {
     if (seedDraft === null) return params.seed ?? null;
@@ -685,10 +694,6 @@ export function ChatSettingsPanel({
         : { ...params, seed: committedSeed },
     [committedSeed, params],
   );
-  // Removing a focused element fires no blur, so drop the draft here.
-  useEffect(() => {
-    setSeedDraft(null);
-  }, [currentCheckpoint, showSeed]);
   const systemPromptBoxRef = useRef<HTMLTextAreaElement>(null);
   const [systemPromptOverflows, setSystemPromptOverflows] = useState(false);
   const promptObserverRef = useRef<ResizeObserver | null>(null);
@@ -860,8 +865,11 @@ export function ChatSettingsPanel({
     const nextSource = isSamePresetConfig(activePresetBaseline, nextParams)
       ? getPresetSource(activePreset)
       : "modified";
-    setActivePresetSource(nextSource);
-    setParams(nextParams);
+    // Deferred one microtask: clamping must not cascade a render from the effect body.
+    queueMicrotask(() => {
+      setActivePresetSource(nextSource);
+      setParams(nextParams);
+    });
   }, [
     activeExternalProvider,
     activePreset,
@@ -1000,7 +1008,10 @@ export function ChatSettingsPanel({
 
   useEffect(() => {
     if (activePresetSource !== "modified") {
-      setActivePresetBaseline(params);
+      // Deferred one microtask: snapshotting the baseline must not cascade a render from the effect body.
+      queueMicrotask(() => {
+        setActivePresetBaseline(params);
+      });
     }
   }, [activePresetSource, params]);
 
@@ -1008,18 +1019,21 @@ export function ChatSettingsPanel({
     if (!settingsHydrated) {
       return;
     }
-    if (presets.some((preset) => preset.name === activePreset)) {
-      const expectedSource = getPresetSource(activePreset);
-      if (
-        activePresetSource !== "modified" &&
-        activePresetSource !== expectedSource
-      ) {
-        setActivePresetSource(expectedSource);
+    // Deferred one microtask: reconciling the preset must not cascade a render from the effect body.
+    queueMicrotask(() => {
+      if (presets.some((preset) => preset.name === activePreset)) {
+        const expectedSource = getPresetSource(activePreset);
+        if (
+          activePresetSource !== "modified" &&
+          activePresetSource !== expectedSource
+        ) {
+          setActivePresetSource(expectedSource);
+        }
+        return;
       }
-      return;
-    }
-    setActivePreset("Default");
-    setActivePresetSource("builtin-default");
+      setActivePreset("Default");
+      setActivePresetSource("builtin-default");
+    });
   }, [
     activePreset,
     activePresetSource,
@@ -1029,15 +1043,7 @@ export function ChatSettingsPanel({
     settingsHydrated,
   ]);
 
-  useEffect(() => {
-    setPresetNameInput(activePreset);
-  }, [activePreset]);
 
-  useEffect(() => {
-    if (!open) {
-      setSystemPromptEditorOpen(false);
-    }
-  }, [open]);
 
   useEffect(() => {
     measurePromptRef.current = () => {
@@ -1049,7 +1055,10 @@ export function ChatSettingsPanel({
           el.scrollHeight > el.clientHeight + 1,
       );
     };
-    measurePromptRef.current();
+    // Deferred one microtask: measuring must not cascade a render from the effect body.
+    queueMicrotask(() => {
+      measurePromptRef.current();
+    });
   }, [currentSystemPrompt, open]);
 
   useEffect(() => () => promptObserverRef.current?.disconnect(), []);
@@ -1078,7 +1087,7 @@ export function ChatSettingsPanel({
                 <TooltipPrimitive.Trigger asChild={true}>
                 <button
                   type="button"
-                  onClick={() => onOpenChange?.(false)}
+                  onClick={closeSheet}
                   className="mt-[calc((var(--studio-chat-control-height,33px)-30px*var(--ui-space-scale,1))/2)] flex size-[calc(30px*var(--ui-space-scale,1))] cursor-pointer items-center justify-center rounded-[10px] text-nav-icon-idle dark:text-nav-fg-muted transition-colors hover:bg-nav-surface-hover hover:text-black dark:hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   aria-label="Close run settings"
                 >
@@ -1828,7 +1837,13 @@ export function ChatSettingsPanel({
 
   if (isCompact) {
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setSystemPromptEditorOpen(false);
+          onOpenChange?.(nextOpen);
+        }}
+      >
         <SheetContent side="right" className="w-[min(calc(18rem*var(--ui-space-scale,1)),100vw)] p-0 font-heading">
           <SheetHeader className="sr-only">
             <SheetTitle>Run settings</SheetTitle>

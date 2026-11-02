@@ -4,10 +4,9 @@
 import {
   reconcileLegacyProviderKeys,
   settleTasksIfCurrent,
-} from "@/features/credentials/reconciliation";
+} from "@/features/credentials";
 
 import {
-  type ProviderRegistryEntry,
   fetchModelCatalog,
   listProviderConfigs,
   listProviderModelCapabilities,

@@ -24,7 +24,7 @@ import {
   sttModelVariant,
   useVoiceSettingsStore,
   withSttVariant,
-} from "@/features/settings/stores/voice-settings-store";
+} from "@/features/settings";
 import type { DictationAdapter } from "@assistant-ui/react";
 import { toast } from "sonner";
 import { withAbort } from "../../hub/lib/abort-signals";

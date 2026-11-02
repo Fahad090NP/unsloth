@@ -9,7 +9,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useChatFavoritesStore } from "@/features/library/chats/favorites-store";
+import { useChatFavoritesStore } from "@/features/library";
 import { useT } from "@/i18n";
 import { Settings01Icon, StarPointedIcon } from "@/lib/hugeicons-derived";
 import { isDownloadCancelled } from "@/lib/native-files";

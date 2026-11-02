@@ -7,7 +7,7 @@ import {
   recordRecentDictation,
   resolveDictationLanguage,
   useVoiceSettingsStore,
-} from "@/features/settings/stores/voice-settings-store";
+} from "@/features/settings";
 import { isTauri } from "@/lib/api-base";
 import type { DictationAdapter } from "@assistant-ui/react";
 import { toast } from "sonner";

@@ -4,7 +4,7 @@
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import type { ComponentType } from "react";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import { useFullAccessAllowed } from "@/features/auth/account-session";
+import { useFullAccessAllowed } from "@/features/auth";
 import { useSettingsDialogStore } from "@/features/settings";
 import { useT } from "@/i18n";
 

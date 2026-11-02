@@ -76,19 +76,15 @@ export async function exportConversationByFormat(
 ): Promise<void> {
   switch (format) {
     case "raw-jsonl":
-      return exportConversationRawJsonl(threadId);
+      return await exportConversationRawJsonl(threadId);
     case "messages-jsonl":
-      return exportConversationMessagesJsonl(threadId);
+      return await exportConversationMessagesJsonl(threadId);
     case "csv":
-      return exportConversationCsv(threadId);
+      return await exportConversationCsv(threadId);
     case "sharegpt-jsonl":
-      return exportConversationShareGPT(threadId);
+      return await exportConversationShareGPT(threadId);
     case CONVERSATION_MARKDOWN_FORMAT:
-      return exportConversationMarkdown(threadId);
-    default: {
-      const unhandled: never = format;
-      throw new Error(`Unhandled export format: ${String(unhandled)}`);
-    }
+      return await exportConversationMarkdown(threadId);
   }
 }
 
@@ -139,10 +135,18 @@ const TITLE_REGENERATE_DEADLINE_MS = 30_000;
 
 async function titleFromModel(checkpoint: string, excerpt: string): Promise<string | null> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TITLE_MODEL_WAIT_MS);
+  const timer = setTimeout(() => {
+    controller.abort();
+  }, TITLE_MODEL_WAIT_MS);
   // Covers building the request too: a stored provider key is encrypted through the backend.
   const timedOut = new Promise<never>((_, reject) => {
-    controller.signal.addEventListener("abort", () => reject(new Error("title request timed out")), { once: true });
+    controller.signal.addEventListener(
+      "abort",
+      () => {
+        reject(new Error("title request timed out"));
+      },
+      { once: true },
+    );
   });
   timedOut.catch(() => undefined);
   try {
@@ -164,14 +168,20 @@ async function titleModelServing(checkpoint: string): Promise<boolean> {
   try {
     // Raced, not only signalled: a 401 first awaits a token refresh that takes no signal.
     const timedOut = new Promise<never>((_, reject) => {
-      wait.signal.addEventListener("abort", () => reject(new Error("status check timed out")), { once: true });
+      wait.signal.addEventListener(
+        "abort",
+        () => {
+          reject(new Error("status check timed out"));
+        },
+        { once: true },
+      );
     });
     timedOut.catch(() => undefined);
     const status = await Promise.race([getInferenceStatus(wait.signal, checkpoint), timedOut]);
     if (!status.active_model || status.is_audio || status.is_diffusion) return false;
     const want = normalizeModelIdentity(checkpoint);
     return [status.model_identifier, status.active_model, ...(status.serving_checkpoints ?? [])].some(
-      (id) => !!id && (id === checkpoint || normalizeModelIdentity(id) === want),
+      (id) => id != null && id !== "" && (id === checkpoint || normalizeModelIdentity(id) === want),
     );
   } catch {
     return false;
