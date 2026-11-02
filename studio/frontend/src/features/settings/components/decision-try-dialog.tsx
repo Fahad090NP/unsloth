@@ -707,7 +707,8 @@ function ModelPicker({
     if (connection) return `${connection.provider} · ${connection.model}`;
     const option = settings.models.find((m) => m.name === name);
     if (option?.kind === "fine_tune" && option.label) return option.label;
-    const key: TranslationKey | undefined = DECISION_MODEL_LABELS[name];
+    const labels: Record<string, TranslationKey | undefined> = DECISION_MODEL_LABELS;
+    const key = labels[name];
     if (!key) return name;
     return isClefDecisionModel(name)
       ? t(key)

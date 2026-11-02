@@ -86,10 +86,8 @@ function closestPreset(
   height: number,
   limits: VideoSizeLimits,
 ): [number, number] {
-  return (
-    limits.presets[closestResolutionIndex(limits.presets, width, height)] ??
-    limits.presets[0] ?? [768, 512]
-  );
+  const index = closestResolutionIndex(limits.presets, width, height);
+  return limits.presets.at(index) ?? limits.presets.at(0) ?? [768, 512];
 }
 
 /** One side on the family grid and inside the request bounds. */

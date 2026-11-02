@@ -23,6 +23,8 @@ const LOG_POLL_INTERVAL_MS = 750;
 export function useExportRuntimeLifecycle(): void {
   useEffect(() => {
     const runtime = { disposed: false, logPolling: false };
+    const isDisposed = () => runtime.disposed;
+    const isLogPolling = () => runtime.logPolling;
     let openingStream = false;
     let streamController: AbortController | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -53,10 +55,10 @@ export function useExportRuntimeLifecycle(): void {
     // Polling runs alongside SSE; over a Cloudflare tunnel the SSE is buffered, so polls fill
     // the log. A successful poll marks the stream connected.
     const pollLogsOnce = async () => {
-      if (runtime.disposed || !store.getState().isExporting) return;
+      if (isDisposed() || !store.getState().isExporting) return;
       try {
         const res = await fetchExportLogs(store.getState().lastSeq);
-        if (runtime.disposed) return;
+        if (isDisposed()) return;
         store.getState().setConnected(true);
         if (res.entries.length > 0) {
           store.getState().appendLogs(res.entries);
@@ -67,9 +69,9 @@ export function useExportRuntimeLifecycle(): void {
     };
 
     const logPollLoop = async () => {
-      if (runtime.disposed || !runtime.logPolling) return;
+      if (isDisposed() || !isLogPolling()) return;
       await pollLogsOnce();
-      if (runtime.disposed || !runtime.logPolling) return;
+      if (isDisposed() || !isLogPolling()) return;
       logPollTimer = setTimeout(() => {
         logPollLoop().catch(() => undefined);
       }, LOG_POLL_INTERVAL_MS);
@@ -129,7 +131,7 @@ export function useExportRuntimeLifecycle(): void {
         // Do not clear `connected`: tunnel SSE reconnects would flap it. The poll owns the flag.
 
         if (
-          !runtime.disposed &&
+          !isDisposed() &&
           !controller.signal.aborted &&
           store.getState().isExporting
         ) {

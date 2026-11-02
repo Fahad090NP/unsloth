@@ -132,6 +132,10 @@ async function composeGrid(
   return { title, blob: out, url: URL.createObjectURL(out), width: layout.width, height: layout.height };
 }
 
+function setRefValue<T>(ref: { current: T }, value: T): void {
+  ref.current = value;
+}
+
 export default function ComparePanel(props: ComparePanelProps) {
   const { context, busy } = props;
   const [enabled, setEnabled] = useState(false);
@@ -144,6 +148,7 @@ export default function ComparePanel(props: ComparePanelProps) {
   const [grids, setGrids] = useState<GridResult[]>([]);
   const [open, setOpen] = useState(false);
   const mounted = useRef(true);
+  const isMounted = () => mounted.current;
   const active = useRef(false);
 
   const defs = useMemo(() => availableAxes(context), [context]);
@@ -188,14 +193,14 @@ export default function ComparePanel(props: ComparePanelProps) {
         setProgress((n) => n + 1);
       },
     };
-    active.current = true;
+    setRefValue(active, true);
     setProgress(0);
     setRunning(tracked);
     // Busy until the grid is composed too: a second run composing alongside would multiply canvas memory and race
     // this one's result.
     try {
       await props.onRun(tracked);
-      if (!mounted.current) return;
+      if (!isMounted()) return;
       const done = state.results.filter(Boolean).length;
       if (done === 0) return;
       const plan = result.plan;
@@ -215,7 +220,7 @@ export default function ComparePanel(props: ComparePanelProps) {
           const grid = await composeGrid(state, iz, titles[iz], { legend, margin }, infotext);
           if (grid) made.push(grid);
         }
-        if (!mounted.current) return;
+        if (!isMounted()) return;
         setGrids(made);
         if (made.length) setOpen(true);
         if (done < plan.cellCount) toast.info(`Grid made from ${done} of ${plan.cellCount} cells`);
@@ -223,8 +228,8 @@ export default function ComparePanel(props: ComparePanelProps) {
         toast.error(err instanceof Error ? `Could not build the grid: ${err.message}` : "Could not build the grid");
       }
     } finally {
-      active.current = false;
-      if (mounted.current) setRunning(null);
+      setRefValue(active, false);
+      if (isMounted()) setRunning(null);
     }
   };
 
@@ -266,6 +271,7 @@ export default function ComparePanel(props: ComparePanelProps) {
         <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-2">
           {effective.map((axis, i) => {
             const def = defs.find((d) => d.id === axis.axisId);
+            const choices = def?.choices;
             return (
               <div key={AXIS_NAMES[i]} className="flex items-center gap-1.5">
                 <span className="w-3 shrink-0 text-xs font-medium text-muted-foreground">{AXIS_NAMES[i]}</span>
@@ -289,14 +295,14 @@ export default function ComparePanel(props: ComparePanelProps) {
                   onChange={(e) => { setAxis(i, { text: e.target.value }); }}
                   className="h-8 min-w-0 flex-1 text-xs"
                 />
-                {def?.choices && (
+                {choices && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="h-8 shrink-0 px-2 text-xs"
                     title={`Fill every ${def.label.toLowerCase()}`}
-                    onClick={() => { setAxis(i, { text: joinAxisList(def.choices!.map((c) => c.label)) }); }}
+                    onClick={() => { setAxis(i, { text: joinAxisList(choices.map((c) => c.label)) }); }}
                   >
                     All
                   </Button>
@@ -338,11 +344,11 @@ export default function ComparePanel(props: ComparePanelProps) {
               {running
                 ? `${progress} of ${running.cellCount} cells done`
                 : preview.ok
-                  ? `${shape} = ${count} cell${count === 1 ? "" : "s"} (limit ${MAX_COMPARE_CELLS})`
+                  ? `${shape} = ${preview.plan.cellCount} cell${preview.plan.cellCount === 1 ? "" : "s"} (limit ${MAX_COMPARE_CELLS})`
                   : preview.error}
             </p>
             <Button variant="dark" type="button" size="sm" disabled={busy || running !== null || !preview.ok} onClick={() => { (run()).catch(() => { /* noop */ }); }}>
-              {preview.ok ? `Generate grid (${count})` : "Generate grid"}
+              {preview.ok ? `Generate grid (${preview.plan.cellCount})` : "Generate grid"}
             </Button>
           </div>
         </div>

@@ -66,7 +66,8 @@ export function samplerRecipeLabel(
   scheduleType: string | null | undefined,
 ): string | null {
   if (!sampler && !scheduleType) return null;
-  const name = SAMPLER_LABELS[sampler ?? DEFAULT_SAMPLER] ?? sampler ?? "";
+  const label: string | undefined = SAMPLER_LABELS[sampler ?? DEFAULT_SAMPLER];
+  const name = label ?? sampler ?? "";
   const schedule = scheduleType ? (SCHEDULE_LABELS[scheduleType] ?? scheduleType) : "";
   return [name, schedule].filter(Boolean).join(" ");
 }
@@ -75,8 +76,10 @@ const KEY = "unsloth:images:sampler-by-model";
 
 export function readSamplerChoices(): Record<string, SamplerChoice> {
   try {
-    const value = JSON.parse(localStorage.getItem(KEY) ?? "{}");
-    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const value: unknown = JSON.parse(localStorage.getItem(KEY) ?? "{}");
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, SamplerChoice>)
+      : {};
   } catch {
     return {};
   }

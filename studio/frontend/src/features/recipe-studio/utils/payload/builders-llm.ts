@@ -83,7 +83,7 @@ export function buildLlmColumn(
     const scores = (config.scores ?? [])
       .map((score) => {
         const options: Record<string, string> = {};
-        for (const option of score.options ?? []) {
+        for (const option of score.options) {
           const key = option.value.trim();
           const value = option.description.trim();
           if (!key || !value) {

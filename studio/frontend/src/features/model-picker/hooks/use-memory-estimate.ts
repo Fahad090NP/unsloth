@@ -82,11 +82,14 @@ export function useMemoryEstimate(
   });
   // Ref so the effect depends on the key alone; `request` is a fresh object every render.
   const latestRequest = useRef(request);
-  latestRequest.current = request;
+  useEffect(() => {
+    latestRequest.current = request;
+  });
   // A model switch, including a quant switch on the same path, must clear the numbers.
   const shownModel = useRef<string | null>(null);
 
   useEffect(() => {
+    const isAborted = (c: AbortController) => c.signal.aborted;
     const pending = latestRequest.current;
     if (key == null || pending == null) {
       shownModel.current = null;
@@ -109,17 +112,17 @@ export function useMemoryEstimate(
     const timer = setTimeout(() => {
       fetchMemoryEstimate(pending, controller.signal)
         .then(async (estimate) => {
-          if (controller.signal.aborted) return;
+          if (isAborted(controller)) return;
           if (refreshMemory && estimate.available) {
             const probe = await fetchSystemInfo({ refreshMemory: true });
             if (!probe?.memory_refreshed) throw new Error("Memory probe unavailable");
           }
-          if (controller.signal.aborted) return;
+          if (isAborted(controller)) return;
           shownModel.current = identity;
           setState({ estimate, loading: false, stale: false, identity, probeKey: refreshMemory ? key : null });
         })
         .catch(() => {
-          if (controller.signal.aborted) return;
+          if (isAborted(controller)) return;
           shownModel.current = identity;
           setState({ estimate: null, loading: false, stale: false, identity, probeKey: null });
         });

@@ -59,22 +59,22 @@ export function LlmScoresTab({
   }
 
   function addOption(scoreIndex: number): void {
-    const score: (typeof scores)[number] | undefined = scores[scoreIndex];
+    const score = scores.at(scoreIndex);
     if (!score) {
       return;
     }
     updateScore(scoreIndex, {
-      options: [...(score.options), { value: "", description: "" }],
+      options: [...score.options, { value: "", description: "" }],
     });
   }
 
   function removeOption(scoreIndex: number, optionIndex: number): void {
-    const score: (typeof scores)[number] | undefined = scores[scoreIndex];
+    const score = scores.at(scoreIndex);
     if (!score) {
       return;
     }
     updateScore(scoreIndex, {
-      options: (score.options).filter(
+      options: score.options.filter(
         (_option, currentIndex) => currentIndex !== optionIndex,
       ),
     });
@@ -85,12 +85,12 @@ export function LlmScoresTab({
     optionIndex: number,
     patch: { value?: string; description?: string },
   ): void {
-    const score: (typeof scores)[number] | undefined = scores[scoreIndex];
+    const score = scores.at(scoreIndex);
     if (!score) {
       return;
     }
     updateScore(scoreIndex, {
-      options: (score.options).map((option, currentIndex) =>
+      options: score.options.map((option, currentIndex) =>
         currentIndex === optionIndex ? { ...option, ...patch } : option,
       ),
     });

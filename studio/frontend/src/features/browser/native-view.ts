@@ -145,9 +145,15 @@ let listening = false;
 function listenOnce(): void {
   if (listening) return;
   listening = true;
-  void import("@tauri-apps/api/event").then(({ listen }) =>
-    listen<NativeEvent>(EVENT, (event) => { onNativeEvent(event.payload); }),
-  );
+  import("@tauri-apps/api/event")
+    .then(({ listen }) =>
+      listen<NativeEvent>(EVENT, (event) => {
+        onNativeEvent(event.payload);
+      }),
+    )
+    .catch((error: unknown) => {
+      console.error("Failed to listen for native events:", error);
+    });
 }
 
 // Prompts asked for beside a temporary chat: their downloads land later, often after the chat is gone.
@@ -276,11 +282,15 @@ function onNativeEvent(event: NativeEvent): void {
       if (event.icon && icons.get(tab.id) !== event.icon) {
         const icon = event.icon;
         icons.set(tab.id, icon);
-        void proxiedFavicon(icon).then((favicon) => {
-          if (!favicon || icons.get(tab.id) !== icon) return;
-          page(tab.id).favicon = favicon;
-          useBrowserStore.getState().updateTab(tab.id, { favicon });
-        });
+        proxiedFavicon(icon)
+          .then((favicon) => {
+            if (!favicon || icons.get(tab.id) !== icon) return;
+            page(tab.id).favicon = favicon;
+            useBrowserStore.getState().updateTab(tab.id, { favicon });
+          })
+          .catch((error: unknown) => {
+            console.error("Failed to fetch proxied favicon:", error);
+          });
       }
       break;
     }
@@ -597,8 +607,8 @@ function markHole(): boolean {
   for (let node: HTMLElement | null = element; node; node = node.parentElement) chain.push(node);
   // Theme: html classes, palette and inline color vars, minus our own.
   const root = document.documentElement;
-  const theme = (root.style.cssText ?? "").replace(/--native-hole-[^;]*;?/g, "");
-  const signature = `${root.dataset.palette}|${theme}|${chain.map((node) => node.className).join("|")}`;
+  const theme = root.style.cssText.replace(/--native-hole-[^;]*;?/g, "");
+  const signature = `${root.dataset.palette ?? ""}|${theme}|${chain.map((node) => node.className).join("|")}`;
   if (signature === holeSignature && holed.every((node) => node.isConnected)) return false;
   unmarkHole();
   holeSignature = signature;
@@ -726,7 +736,7 @@ function pageRect(): { tab: BrowserTab; entry: Extract<BrowserEntry, { kind: "we
   const entry = currentEntry(tab);
   if (entry.kind !== "web") return null;
   const element = placeholder(tab.id);
-  if (!element || element.offsetParent === null) return null;
+  if (element?.offsetParent == null) return null;
   const rect = visibleRect(element);
   return rect ? { tab, entry, rect } : null;
 }
@@ -766,7 +776,9 @@ export function whenNativeViewShown(tabId: string, timeoutMs = 1500): Promise<bo
       clearTimeout(timer);
       resolve(shown);
     };
-    const wake = () => shownView === tabId && finish(true);
+    const wake = () => {
+      if (shownView === tabId) finish(true);
+    };
     const timer = setTimeout(() => { finish(false); }, timeoutMs);
     shownWaiters.add(wake);
   });
@@ -933,7 +945,8 @@ function retryCover(): void {
 }
 
 async function coverView(tabId: string, zoom: number, bounds: Bounds): Promise<void> {
-  if (parkedView !== tabId) {
+  const currentParked = parkedView;
+  if (currentParked !== tabId) {
     // Parked without a snapshot, the placeholder would show blank.
     if (!(await paintSnapshot(tabId))) {
       retryCover();
@@ -957,10 +970,13 @@ async function coverView(tabId: string, zoom: number, bounds: Bounds): Promise<v
     await call("browser_view_zoom", { tabId, zoom });
     staleSnapshot = tabId;
   }
-  if (staleSnapshot !== tabId) return;
+  const currentStale = staleSnapshot;
+  if (currentStale !== tabId) return;
   if (await paintSnapshot(tabId, true)) {
-    staleSnapshot = null;
-    coverFails = 0;
+    if (staleSnapshot === tabId) {
+      staleSnapshot = null;
+      coverFails = 0;
+    }
   } else retryCover();
 }
 
@@ -968,13 +984,17 @@ async function coverView(tabId: string, zoom: number, bounds: Bounds): Promise<v
 export function refreshCoveredPage(tabId: string): void {
   if (parkedView !== tabId) return;
   staleSnapshot = tabId;
-  void paintSnapshot(tabId, true).then((painted) => {
-    if (!painted) retryCover();
-    else if (staleSnapshot === tabId) {
-      staleSnapshot = null;
-      coverFails = 0;
-    }
-  });
+  paintSnapshot(tabId, true)
+    .then((painted) => {
+      if (!painted) retryCover();
+      else if (staleSnapshot === tabId) {
+        staleSnapshot = null;
+        coverFails = 0;
+      }
+    })
+    .catch((error: unknown) => {
+      console.error("Failed to paint snapshot:", error);
+    });
 }
 
 async function applyView(desired: Desired): Promise<void> {

@@ -40,6 +40,6 @@ export function playWithMutedFallback(video: Pick<HTMLMediaElement, "play" | "mu
 export async function fetchWithFreshLink(url: string, mint: () => Promise<string>): Promise<Response> {
   const response = await fetch(url);
   if (response.status !== 401 && response.status !== 403) return response;
-  void response.body?.cancel();
+  await response.body?.cancel();
   return await fetch(await mint());
 }

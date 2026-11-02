@@ -5,7 +5,7 @@ import { isTauri } from "@/lib/api-base";
 import { MAX_FOLDER_FILES, filesFromDrop } from "@/lib/dropped-folders";
 import { toast } from "@/lib/toast";
 import type React from "react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { registerNativeAttachmentPath } from "./api";
 import { nativeAttachmentIntentToFile } from "./native-attachment-file";
 import type { NativeIntent } from "./types";
@@ -138,7 +138,9 @@ export function useNativeFileDrop(
   const [dragging, setDragging] = useState(false);
   // Ref so a fresh caller closure does not re-register the target.
   const latest = useRef(options);
-  latest.current = options;
+  useEffect(() => {
+    latest.current = options;
+  }, [options]);
   // dragenter/dragleave fire per child, so a boolean would flicker.
   const dragDepth = useRef(0);
 
@@ -146,9 +148,14 @@ export function useNativeFileDrop(
   const deliver = useCallback(
     (files: File[], current: NativeFileDropOptions) => {
       if (files.length === 0) return;
-      void current.onFiles(
+      const res = current.onFiles(
         current.multiple === false ? files.slice(0, 1) : files,
       );
+      if (res) {
+        res.catch((err: unknown) => {
+          console.error("onFiles failed:", err);
+        });
+      }
     },
     [],
   );
@@ -184,7 +191,12 @@ export function useNativeFileDrop(
       );
       if (ready.length > 0) {
         if (takeIntents) {
-          void takeIntents(ready as NativeIntent[]);
+          const res = takeIntents(ready as NativeIntent[]);
+          if (res) {
+            res.catch((err: unknown) => {
+              console.error("takeIntents failed:", err);
+            });
+          }
         } else {
           deliver(ready as File[], current);
         }
@@ -199,7 +211,11 @@ export function useNativeFileDrop(
   );
 
   const ref = useNativeDropTarget({
-    onDrop: (paths) => void handleNativePaths(paths),
+    onDrop: (paths) => {
+      handleNativePaths(paths).catch((err: unknown) => {
+        console.error("handleNativePaths failed:", err);
+      });
+    },
     onDragOver: (over) => { setDragging(over && !latest.current.disabled); },
   });
 
@@ -210,7 +226,7 @@ export function useNativeFileDrop(
 
   // Files only: preventDefault on a text drag kills editing in wrapped inputs.
   const isFileDrag = (event: React.DragEvent): boolean =>
-    Array.from(event.dataTransfer?.types ?? []).includes("Files");
+    Array.from(event.dataTransfer.types).includes("Files");
 
   // preventDefault always, or the webview navigates to the dropped file.
   const dragHandlers = {
@@ -266,7 +282,7 @@ export function useNativeFileDrop(
         toastPartiallySkipped(dropped.length - supported.length);
       };
       if (!current.folders) {
-        take(Array.from(event.dataTransfer.files ?? []));
+        take(Array.from(event.dataTransfer.files));
         return;
       }
       void filesFromDrop(event.dataTransfer, (name) =>

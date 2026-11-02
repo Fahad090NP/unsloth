@@ -217,12 +217,12 @@ export function isServedByLlamaCpp(x: {
   if (isExternalModelId(x.checkpoint)) return false;
   // Variant and path token outlive the pick, so a reported non-GGUF backend settles it.
   if (x.loadedIsGguf === false) return false;
-  const checkpoint: string | null | undefined = x.checkpoint;
+  const checkpoint = typeof x.checkpoint === "string" ? x.checkpoint : "";
   return (
     x.loadedIsGguf === true ||
     x.activeGgufVariant != null ||
     x.activeNativePathToken != null ||
-    (checkpoint ?? "").toLowerCase().endsWith(".gguf")
+    checkpoint.toLowerCase().endsWith(".gguf")
   );
 }
 

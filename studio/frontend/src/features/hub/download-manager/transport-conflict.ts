@@ -17,6 +17,7 @@ import {
   effectiveTransportMode,
 } from "./download-api-adapter";
 import type {
+  ConflictEntry,
   DownloadRequest,
   ManagedDownload,
 } from "./download-manager-types";
@@ -42,7 +43,11 @@ import { ACTIVE_STATES, TRANSPORT_STATUS_TIMEOUT_MS } from "./download-manager-c
 
 function reportConflictStartError(error: unknown): void {
   const description =
-    error instanceof Error ? error.message : String(error || "Unknown error");
+    error instanceof Error
+      ? error.message
+      : typeof error === "string" && error.length > 0
+        ? error
+        : "Unknown error";
   toast.error("Couldn't start download", { description });
 }
 
@@ -103,7 +108,8 @@ export type DownloadStartOutcome = "started" | "conflict" | "busy" | "error";
 
 // A start can no-op without throwing, so derive the outcome from this exact key's job state.
 function isJobActiveFor(req: DownloadRequest): boolean {
-  const job = getState().jobs[jobKeyOf(req.kind, req.repoId, req.variant)];
+  const job: ManagedDownload | undefined =
+    getState().jobs[jobKeyOf(req.kind, req.repoId, req.variant)];
   if (!job || !ACTIVE_STATES.has(job.state)) return false;
   return !scopedFileSetDiffers(job, req);
 }
@@ -288,7 +294,7 @@ export async function requestStart(
 }
 
 export function resumeConflict(conflictKey: string): void {
-  const entry = getState().conflicts[conflictKey];
+  const entry: ConflictEntry | undefined = getState().conflicts[conflictKey];
   if (!entry) return;
   setConflict(conflictKey, null);
   (runWithPendingStartGuard(entry.pending, async () => {
@@ -300,7 +306,7 @@ export function resumeConflict(conflictKey: string): void {
 }
 
 export function restartConflict(conflictKey: string): void {
-  const entry = getState().conflicts[conflictKey];
+  const entry: ConflictEntry | undefined = getState().conflicts[conflictKey];
   if (!entry) return;
   setConflict(conflictKey, null);
   (runWithPendingStartGuard(entry.pending, async () => {

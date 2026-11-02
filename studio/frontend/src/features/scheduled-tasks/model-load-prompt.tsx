@@ -49,7 +49,7 @@ export default function ModelLoadPrompt({
   }
 
   return (
-    <AlertDialog open={true} onOpenChange={(open) => { !open && onDone(); }}>
+    <AlertDialog open={true} onOpenChange={(open) => { if (!open) onDone(); }}>
       <AlertDialogContent onOverlayClick={onDone}>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -70,7 +70,13 @@ export default function ModelLoadPrompt({
         </label>
         <AlertDialogFooter>
           <AlertDialogCancel>{t("scheduledTasks.loadPrompt.notNow")}</AlertDialogCancel>
-          <AlertDialogAction onClick={() => void load()}>
+          <AlertDialogAction
+            onClick={() => {
+              load().catch((err: unknown) => {
+                console.error("Load failed:", err);
+              });
+            }}
+          >
             {t("scheduledTasks.loadPrompt.load")}
           </AlertDialogAction>
         </AlertDialogFooter>

@@ -25,7 +25,7 @@ function buildCategoryConditionalParams(
       errors.push(`Sampler ${config.name}: conditional rule needs condition text.`);
       continue;
     }
-    const values = (params.values ?? [])
+    const values = params.values
       .map((value) => value.trim())
       .filter(Boolean);
     if (values.length === 0) {

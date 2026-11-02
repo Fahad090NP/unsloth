@@ -138,8 +138,6 @@ function canRun(model: AudioApiModel, example: AudioApiExample): boolean {
     case "music":
     case "edit":
       return false;
-    default:
-      return false;
   }
 }
 
@@ -206,8 +204,6 @@ function refExpr(name: string, style: Style): string {
     case "powershell":
       return `"$($${name}.id)"`;
     case "json":
-      return `${name}.id`;
-    default:
       return `${name}.id`;
   }
 }
@@ -315,9 +311,7 @@ function runPlan(workflow: AudioRunWorkflow, model: string): RunPlan {
             "[verse]\nCity lights are calling me\n[chorus]\nWe dance until the morning",
         },
       };
-    case "music":
-    case "edit":
-    default: {
+    case "edit": {
       const edit = Object.fromEntries(
         Object.entries(
           EDIT_ADAPTERS[editFamily(model)].buildEdit({
@@ -781,8 +775,6 @@ export function buildAudioApiSnippet(
     case "convert":
     case "music":
     case "edit":
-      return runSnippet(example, input);
-    default:
       return runSnippet(example, input);
   }
 }

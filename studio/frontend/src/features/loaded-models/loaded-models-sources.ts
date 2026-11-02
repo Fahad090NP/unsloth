@@ -123,8 +123,6 @@ export function loadedModelTarget(
       return { open: "settings", tab: "data", label: "Data settings" };
     case "chat":
       return { open: "route", to: "/chat", label: "Chat" };
-    default:
-      return { open: "route", to: "/chat", label: "Chat" };
   }
 }
 
@@ -249,7 +247,7 @@ export function describeInferenceStatus(
     });
   }
   // /status reports the whole load, so loads started in another tab still show.
-  for (const name of status.loading ?? []) {
+  for (const name of status.loading) {
     if (entries.some((entry) => entry.name === name)) continue;
     entries.push({
       id: `chat:${name}`,
@@ -285,7 +283,7 @@ export function describeInferenceStatus(
   }
   // Only the Transformers backend caches past the active model, but it is memory
   // nothing else surfaces or releases.
-  for (const name of status.loaded ?? []) {
+  for (const name of status.loaded) {
     if (name === active) continue;
     if (entries.some((entry) => entry.name === name)) continue;
     entries.push({

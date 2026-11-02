@@ -42,18 +42,24 @@ function currentDatabase() {
 	}
 	return database;
 }
+interface BackgroundRow {
+	id: string;
+	value?: Partial<BackgroundAdjustments> & { blob?: unknown };
+}
+
 export function hydrateBackground(): Promise<void> {
 	const db = currentDatabase();
 	if (!hydration) {
 		const ticket = revision;
 		hydration = db
-			.table("backgrounds")
+			.table<BackgroundRow>("backgrounds")
 			.get("current")
 			.then((row) => {
 				if (ticket !== revision) return;
+				const val = row?.value;
 				committed =
-					row?.value?.blob instanceof Blob
-						? { ...sanitizeAdjustments(row.value), blob: row.value.blob }
+					val && val.blob instanceof Blob
+						? { ...sanitizeAdjustments(val), blob: val.blob }
 						: null;
 				useBackgroundStore.setState({ value: committed, ready: true });
 			})
@@ -66,7 +72,9 @@ export function hydrateBackground(): Promise<void> {
 }
 export function useChatBackground() {
 	useEffect(() => {
-		void hydrateBackground();
+		hydrateBackground().catch((err: unknown) => {
+			console.error("Failed to hydrate chat background:", err);
+		});
 	}, []);
 	return useBackgroundStore();
 }
@@ -104,10 +112,12 @@ async function persist(
 export function patchBackground(patch: Partial<BackgroundAdjustments>) {
 	const value = useBackgroundStore.getState().value;
 	if (value)
-		void persist(
+		persist(
 			{ ...value, ...sanitizeAdjustments({ ...value, ...patch }) },
 			true,
-		);
+		).catch((err: unknown) => {
+			console.error("Failed to persist background patch:", err);
+		});
 }
 let uploadTicket = 0;
 export function beginBackgroundUpload() {

@@ -320,12 +320,7 @@ export function useSttSidecar({
         if (sttLoadingGeneration.current === generation) {
           sttLoadingGeneration.current = null;
           await refreshSttStatus();
-          const loadingGeneration: number | null =
-            sttLoadingGeneration.current;
-          if (
-            generation === sttLoadGeneration.current &&
-            loadingGeneration === null
-          ) {
+          if (generation === sttLoadGeneration.current) {
             setBusy(null);
           }
         } else {

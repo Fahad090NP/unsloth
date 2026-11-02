@@ -188,10 +188,7 @@ function drainQueuedUploadCleanups(
   if (pending.length === 0) {
     return;
   }
-  const ui =
-    savedPayload && typeof savedPayload === "object"
-      ? (savedPayload as { ui?: Record<string, unknown> }).ui
-      : undefined;
+  const ui = (savedPayload as { ui?: Record<string, unknown> }).ui;
   const savedUid =
     ui && typeof ui.unstructured_upload_uid === "string"
       ? ui.unstructured_upload_uid
@@ -227,6 +224,11 @@ export function useRecipePersistence({
   getCurrentPayloadFromStore,
 }: UseRecipePersistenceParams): UseRecipePersistenceResult {
   const [initialRecipeReady, setInitialRecipeReady] = useState(false);
+  const [prevRecipeId, setPrevRecipeId] = useState(recipeId);
+  if (recipeId !== prevRecipeId) {
+    setPrevRecipeId(recipeId);
+    setInitialRecipeReady(false);
+  }
   const [workflowName, setWorkflowName] = useState("Unnamed");
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [savedSignature, setSavedSignature] = useState("");
@@ -252,7 +254,6 @@ export function useRecipePersistence({
   const savedAtLabel = formatSavedLabel(lastSavedAt);
 
   useEffect(() => {
-    setInitialRecipeReady(false);
     const nextName = normalizeNonEmptyName(initialRecipeName, "Unnamed");
     resetRecipe();
     setWorkflowName(nextName);
@@ -318,7 +319,7 @@ export function useRecipePersistence({
       return;
     }
     const timeoutId = window.setTimeout(() => {
-      void persistRecipe();
+      persistRecipe().catch(() => undefined);
     }, 800);
     return () => { window.clearTimeout(timeoutId); };
   }, [currentSignature, failedSignature, isDirty, persistRecipe, saveLoading]);

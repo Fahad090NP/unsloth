@@ -31,7 +31,7 @@ export function buildSeedConfig(
   config: SeedConfig,
   errors: string[],
 ): Record<string, unknown> | undefined {
-  const seedSourceType = config.seed_source_type ?? "hf";
+  const seedSourceType = config.seed_source_type;
   const path = config.hf_path.trim();
 
   // Only a user-set endpoint: the backend fetches the seed with its own HF_ENDPOINT, and must not
@@ -164,7 +164,7 @@ export function buildSeedDropProcessor(
   config: SeedConfig,
   errors: string[],
 ): Record<string, unknown> | null {
-  const seedSourceType = config.seed_source_type ?? "hf";
+  const seedSourceType = config.seed_source_type;
   const loadedCols = (config.seed_columns ?? []).map((c) => c.trim()).filter(Boolean);
   const selectedDropColumns = (config.seed_drop_columns ?? [])
     .map((c) => c.trim())

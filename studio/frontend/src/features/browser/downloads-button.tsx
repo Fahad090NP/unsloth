@@ -52,12 +52,18 @@ function useMissing(downloads: DownloadItem[], enabled: boolean) {
     if (!enabled || !isTauri || !ids) return;
     const list = ids.split("\n");
     let live = true;
-    const check = () =>
-      nativeDownloadsExist(list).then(
-        (found) => live && setMissing(new Set(list.filter((_, index) => !found[index]))),
-        () => undefined,
-      );
-    check().catch(() => undefined);
+    const check = () => {
+      nativeDownloadsExist(list)
+        .then((found) => {
+          if (live) {
+            setMissing(new Set(list.filter((_, index) => !found[index])));
+          }
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to check missing downloads:", error);
+        });
+    };
+    check();
     window.addEventListener("focus", check);
     return () => {
       live = false;
@@ -156,9 +162,15 @@ function DownloadRow({
           ) : null}
           {item.url ? (
             <DropdownMenuItem
-              onSelect={() =>
-                void copyToClipboard(item.url ?? "").then((ok) => ok && toast.success(t("browser.linkCopied")))
-              }
+              onSelect={() => {
+                copyToClipboard(item.url ?? "")
+                  .then((ok) => {
+                    if (ok) toast.success(t("browser.linkCopied"));
+                  })
+                  .catch((error: unknown) => {
+                    console.error("Failed to copy link:", error);
+                  });
+              }}
             >
               <HugeiconsIcon icon={Copy01Icon} strokeWidth={1.75} className="size-4" />
               {t("browser.downloads.copyLink")}
@@ -361,7 +373,16 @@ export function DownloadsButton({
   const lit = active || mode === "finished";
 
   return (
-    <Popover open={mode !== "closed"} onOpenChange={(open) => { open ? setMode("list") : close(); }}>
+    <Popover
+      open={mode !== "closed"}
+      onOpenChange={(open) => {
+        if (open) {
+          setMode("list");
+        } else {
+          close();
+        }
+      }}
+    >
       <PopoverAnchor asChild={true}>
         <span
           ref={anchorRef}
@@ -376,7 +397,13 @@ export function DownloadsButton({
                 type="button"
                 aria-label={label}
                 aria-expanded={mode !== "closed"}
-                onClick={() => { mode === "list" ? close() : setMode("list"); }}
+                onClick={() => {
+                  if (mode === "list") {
+                    close();
+                  } else {
+                    setMode("list");
+                  }
+                }}
                 className={cn(className, lit && "text-primary hover:text-primary")}
               >
                 {active ? (
@@ -395,7 +422,9 @@ export function DownloadsButton({
       <PopoverContent
         align="end"
         sideOffset={8}
-        onOpenAutoFocus={(event) => mode === "finished" && event.preventDefault()}
+        onOpenAutoFocus={(event) => {
+          if (mode === "finished") event.preventDefault();
+        }}
         // The button is only the anchor: a press on it would dismiss here, then its click reopen.
         // Pointer only: focus arriving by keyboard still closes, so Enter reopens with autofocus.
         onPointerDownOutside={(event) => {

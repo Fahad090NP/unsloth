@@ -14,11 +14,17 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useT } from "@/i18n";
 import { useId, useState } from "react";
-import { answerDownload, useApprovalStore } from "./download-approval-queue";
+import {
+  answerDownload,
+  type DownloadRequest,
+  useApprovalStore,
+} from "./download-approval-queue";
 
 export function DownloadApprovalDialog() {
   const t = useT();
-  const request = useApprovalStore((state) => state.queue[0]);
+  const request: DownloadRequest | undefined = useApprovalStore((state) =>
+    state.queue.at(0),
+  );
   const [remember, setRemember] = useState(false);
   const checkboxId = useId();
 
@@ -30,21 +36,26 @@ export function DownloadApprovalDialog() {
   };
 
   return (
-    <AlertDialog open={request != null} onOpenChange={(open) => !open && answer(false, false)}>
+    <AlertDialog
+      open={request != null}
+      onOpenChange={(open) => {
+        if (!open) answer(false, false);
+      }}
+    >
       <AlertDialogContent onOverlayClick={() => { answer(false, false); }}>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("browser.downloadPrompt.title")}</AlertDialogTitle>
           <AlertDialogDescription className="wrap-break-word">
             {request ? t("browser.downloadPrompt.description", { host: request.label, name: request.name }) : null}
           </AlertDialogDescription>
-          {request.dangerous ? (
+          {request?.dangerous ? (
             <p className="text-sm font-medium text-destructive">
               {t("browser.downloadPrompt.dangerous", { host: request.label })}
             </p>
           ) : null}
         </AlertDialogHeader>
         {/* Files that run code ask every time, so there's nothing to remember. */}
-        {request.origin && !request.dangerous ? (
+        {request?.origin && !request.dangerous ? (
           <label htmlFor={checkboxId} className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
             <Checkbox id={checkboxId} checked={remember} onCheckedChange={(checked) => { setRemember(checked === true); }} />
             {t("browser.downloadPrompt.remember")}

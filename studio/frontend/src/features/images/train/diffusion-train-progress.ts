@@ -42,7 +42,7 @@ export function diffusionTrainingProgress(status: Status | null) {
   const preparing =
     running &&
     !terminal &&
-    ((status.in_model_load ?? false) || (status.step ?? 0) <= 0);
+    (status.in_model_load || status.step <= 0);
   if (preparing) {
     const note = backendNote(status.message);
     const legacy = LEGACY_PREPARING.exec(status.message);
@@ -57,30 +57,38 @@ export function diffusionTrainingProgress(status: Status | null) {
         : null);
     if (prep) {
       const { done, total } = prep;
-      const known =
+      const isKnown =
+        typeof done === "number" &&
         Number.isFinite(done) &&
+        done >= 0 &&
+        typeof total === "number" &&
         Number.isFinite(total) &&
-        (done!) >= 0 &&
-        (total!) > 0;
-      // MiniMax-H3 encodes every caption in one go (n/n) and only then caches latents; that is not done yet.
-      const finished =
-        known &&
-        (done!) >= (total!) &&
-        prep.stage !== "encode_prompts";
+        total > 0;
+      if (isKnown) {
+        // MiniMax-H3 encodes every caption in one go (n/n) and only then caches latents; that is not done yet.
+        const finished =
+          done >= total &&
+          prep.stage !== "encode_prompts";
+        return {
+          preparing: true,
+          title: finished ? "Training data prepared" : "Preparing training data",
+          detail:
+            note ??
+            (finished
+              ? "Finishing model setup before training starts."
+              : "Preparing images and captions so the model can train on them."),
+          count: `${Math.min(done, total)} / ${total} prepared`,
+          percent: Math.min(100, (done / total) * 100),
+        };
+      }
       return {
         preparing: true,
-        title: finished ? "Training data prepared" : "Preparing training data",
+        title: "Preparing training data",
         detail:
           note ??
-          (finished
-            ? "Finishing model setup before training starts."
-            : "Preparing images and captions so the model can train on them."),
-        count: known
-          ? `${Math.min(done!, total!)} / ${total} prepared`
-          : null,
-        percent: known
-          ? Math.min(100, ((done!) / (total!)) * 100)
-          : null,
+          "Preparing images and captions so the model can train on them.",
+        count: null,
+        percent: null,
       };
     }
     const load = status.model_load_progress;

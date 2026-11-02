@@ -82,16 +82,26 @@ export async function fireConfettiFireworks(opts: FireworksOpts = {}) {
         Math.floor(36 * (timeLeft / duration)),
       );
 
-      fire({
+      const p1 = fire({
         ...defaults,
         particleCount,
         origin: { x: randomInRange(0.12, 0.3), y: Math.random() - 0.2 },
       });
-      fire({
+      if (p1) {
+        p1.catch((err: unknown) => {
+          console.warn("Failed to fire confetti particle:", err);
+        });
+      }
+      const p2 = fire({
         ...defaults,
         particleCount,
         origin: { x: randomInRange(0.7, 0.88), y: Math.random() - 0.2 },
       });
+      if (p2) {
+        p2.catch((err: unknown) => {
+          console.warn("Failed to fire confetti particle:", err);
+        });
+      }
     }, intervalMs);
   } catch {
     // best-effort

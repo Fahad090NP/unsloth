@@ -198,7 +198,7 @@ function DownloadRow({
   jobKey: string;
   pendingStart?: PendingStart;
 }) {
-  const job = useDownloadManagerStore((state) => state.jobs[jobKey]);
+  const job: ManagedDownload | undefined = useDownloadManagerStore((state) => state.jobs[jobKey]);
   if (!job) return null;
   const starting = pendingStart !== undefined;
   const subject = pendingStart ?? job;
@@ -234,7 +234,9 @@ function DownloadRow({
               disabled={job.state === "cancelling" || starting}
               onClick={() => {
                 if (active) {
-                  downloadManager.cancel(job.key);
+                  downloadManager.cancel(job.key).catch((error: unknown) => {
+                    console.error("Failed to cancel download", error);
+                  });
                 } else {
                   downloadManager.dismiss(job.key);
                 }
@@ -300,7 +302,7 @@ export function DownloadManagerPanel({
     hydrateDownloadManager();
   }, [enabled]);
 
-  const selectOrderedJobKeys = useMemo(createOrderedJobKeysSelector, []);
+  const selectOrderedJobKeys = useMemo(() => createOrderedJobKeysSelector(), []);
   const jobKeys = useDownloadManagerStore(selectOrderedJobKeys);
   const hubQueued = useQueuedHubEntries();
   const stagedQueues = useStagedDownloadQueues((s) => s.queues);

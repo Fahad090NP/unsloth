@@ -8,6 +8,8 @@ import { isTauri } from "@/lib/api-base";
 import { NATIVE_FILE_NAME_HEADER, encodeNativeFilename } from "@/lib/native-files";
 import { isWebUrl } from "./address";
 
+async function invoke(command: string, args?: Record<string, unknown>): Promise<void>;
+async function invoke<T>(command: string, args?: Record<string, unknown>): Promise<T>;
 async function invoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   const core = await import("@tauri-apps/api/core");
   return await core.invoke<T>(command, args);
@@ -46,12 +48,12 @@ function safeHref(url: string): string | null {
 }
 
 export function revealNativeDownload(id: string): Promise<void> {
-  return invoke<void>("browser_download_reveal", { id });
+  return invoke("browser_download_reveal", { id });
 }
 
 /** Opens with the default app; programs and scripts are refused. */
 export function openNativeDownload(id: string): Promise<void> {
-  return invoke<void>("browser_download_open", { id });
+  return invoke("browser_download_open", { id });
 }
 
 /** Whether each download is still where it was saved; all true outside the desktop app. */
@@ -75,11 +77,11 @@ export function resetNativeDownloadFolder(): Promise<DownloadFolder> {
 }
 
 export function decideNativeDownload(id: string, allow: boolean, ask: boolean): Promise<void> {
-  return invoke<void>("browser_download_decide", { id, allow, ask });
+  return invoke("browser_download_decide", { id, allow, ask });
 }
 
 /** Forget downloads taken off the history; the files stay. */
 export function forgetNativeDownloads(ids: string[]): void {
   if (!isTauri || ids.length === 0) return;
-  invoke<void>("browser_download_forget", { ids }).catch(() => undefined).catch(() => undefined);
+  invoke("browser_download_forget", { ids }).catch(() => undefined).catch(() => undefined);
 }

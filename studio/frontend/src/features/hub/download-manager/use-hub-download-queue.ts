@@ -42,7 +42,7 @@ export function enqueueHubDownload(
   );
 }
 export function useHubDownloadQueue() {
-  const plan = useHubQueue((s) => s.plans[0]);
+  const plan = useHubQueue((s) => s.plans.at(0));
   const started = useRef<number | null>(null);
   const finish = () =>
     { useHubQueue.setState((s) => ({

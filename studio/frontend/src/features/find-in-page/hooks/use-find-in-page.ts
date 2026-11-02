@@ -121,7 +121,9 @@ export function useFindInPage(
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const queryPendingRef = useRef(queryPending);
-  queryPendingRef.current = queryPending;
+  useEffect(() => {
+    queryPendingRef.current = queryPending;
+  }, [queryPending]);
 
   /** The only place highlights and React state are written. */
   const apply = useCallback((reveal: boolean) => {
@@ -224,12 +226,14 @@ export function useFindInPage(
 
     // The thread mounts its tail first, so complete progressive mounts for this scope only.
     let live = true;
-    void completeProgressiveMounts((viewport) =>
+    completeProgressiveMounts((viewport) =>
       indexReaches(scope, viewport),
     ).then(() => {
       if (!live) return;
       // Only re-anchor if completion actually renumbered, so a mid-run Enter is kept.
       search(false, reindex());
+    }).catch((err: unknown) => {
+      console.error("Progressive mounts failed:", err);
     });
 
     let scrolledAt = Number.NEGATIVE_INFINITY;
@@ -286,7 +290,7 @@ export function useFindInPage(
     }
 
     // Observe body, not scope: portaled surfaces are siblings of the shell.
-    const watched = scope?.ownerDocument?.body ?? scope;
+    const watched = scope?.ownerDocument.body ?? scope;
     let observer: MutationObserver | null = null;
     if (watched && typeof MutationObserver !== "undefined") {
       observer = new MutationObserver((records) => {

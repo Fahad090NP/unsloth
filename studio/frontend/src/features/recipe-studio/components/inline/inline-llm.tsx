@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type ReactElement, useMemo, useRef } from "react";
+import { type ReactElement, useEffect, useMemo, useRef } from "react";
 import { useRecipeStudioStore } from "../../stores/recipe-studio";
 import type { LlmConfig } from "../../types";
 import { InlineField } from "./inline-field";
@@ -63,13 +63,12 @@ export function InlineLlm({ config, onUpdate }: InlineLlmProps): ReactElement {
     [configs],
   );
   const aliasInputRef = useRef(config.model_alias);
-  const lastAliasRef = useRef(config.model_alias);
   const anchorRef = useRef<HTMLDivElement>(null);
   const toolAnchorRef = useRef<HTMLDivElement>(null);
-  if (lastAliasRef.current !== config.model_alias) {
-    lastAliasRef.current = config.model_alias;
+
+  useEffect(() => {
     aliasInputRef.current = config.model_alias;
-  }
+  }, [config.model_alias]);
 
   return (
     <div className="space-y-3">

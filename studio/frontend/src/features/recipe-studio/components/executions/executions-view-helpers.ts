@@ -44,7 +44,7 @@ export function formatCellValue(value: unknown): string {
   try {
     return JSON.stringify(value);
   } catch {
-    return String(value);
+    return "[unserializable]";
   }
 }
 
@@ -82,15 +82,15 @@ function parseString(value: unknown): string {
 export function parseAnalysisColumns(
   analysis: RecipeExecutionAnalysis | null,
 ): AnalysisColumnStat[] {
-  const items = Array.isArray(analysis?.column_statistics)
+  const items: unknown[] = Array.isArray(analysis?.column_statistics)
     ? analysis.column_statistics
     : [];
   return items
-    .map((item) => {
+    .map((item: unknown) => {
       if (!item || typeof item !== "object" || Array.isArray(item)) {
         return null;
       }
-      const row = item;
+      const row = item as Record<string, unknown>;
       return {
         column_name: parseString(row.column_name),
         column_type: parseString(row.column_type),

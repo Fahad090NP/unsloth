@@ -142,7 +142,7 @@ export function sanitizeStoredExtraArgs(
       continue;
     }
     const flag = extraArgFlagName(token);
-    const next: string | undefined = tokens[index + 1];
+    const next: string | undefined = tokens.at(index + 1);
     if (flag !== null && managed.has(flag)) {
       skipNext = takesNextToken(token, flag, next);
       continue;
@@ -179,7 +179,7 @@ export function sanitizeStoredExtraArgs(
     (commandBudget > 0 && windowsCommandLength(bounded) > commandBudget);
   while (bounded.length > 0 && overBounds()) {
     bounded.pop();
-    const last: string | undefined = bounded[bounded.length - 1];
+    const last: string | undefined = bounded.at(-1);
     const lastFlag = last == null ? null : extraArgFlagName(last);
     // extraArgFlagName folds underscores, so check attachment rather than the normalized spelling.
     if (last != null && lastFlag != null && !valueIsAttached(last, lastFlag)) {
@@ -209,13 +209,13 @@ function dropUnusableValues(tokens: readonly string[]): string[] {
       continue;
     }
     const attached = valueIsAttached(token, flag);
-    const next: string | undefined = tokens[index + 1];
-    const value = attached ? token.split("=")[1] : next;
+    const next: string | undefined = tokens.at(index + 1);
+    const value: string | undefined = attached ? token.split("=").at(1) : next;
     const missing =
       value == null ||
       value === "" ||
       (!attached && extraArgFlagName(value) !== null);
-    const minimum: number | undefined = INTEGER_VALUE_MINIMUM[flag];
+    const minimum: number | undefined = (INTEGER_VALUE_MINIMUM as Record<string, number | undefined>)[flag];
     const unusable =
       missing ||
       // false: a stored list's mode is unknown, so drop only what no mode can run.
@@ -604,8 +604,8 @@ function lastIntegerFlagValue(
     }
     const attached = valueIsAttached(token, flag);
     const raw: string | undefined = attached
-      ? token.split("=")[1]
-      : tokens[index + 1];
+      ? token.split("=").at(1)
+      : tokens.at(index + 1);
     if (raw != null && INTEGER.test(raw.trim())) {
       found = Number(raw.trim());
     }
@@ -873,8 +873,8 @@ export function diagnoseExtraArgs(
     if (INTEGER_VALUE_FLAGS.has(flag) || VALUE_REQUIRED_FLAGS.has(flag)) {
       const attached = valueIsAttached(token, flag);
       const value: string | undefined = attached
-        ? token.split("=")[1]
-        : tokens[index + 1];
+        ? token.split("=").at(1)
+        : tokens.at(index + 1);
       // `--ctx-size --numa` reads as a missing value, as the backend parser does.
       const missing =
         value == null ||
@@ -882,7 +882,7 @@ export function diagnoseExtraArgs(
         (!attached &&
           !valueIndices.has(index + 1) &&
           extraArgFlagName(value) !== null);
-      const minimum: number | undefined = INTEGER_VALUE_MINIMUM[flag];
+      const minimum: number | undefined = (INTEGER_VALUE_MINIMUM as Record<string, number | undefined>)[flag];
       const numeric = INTEGER_VALUE_FLAGS.has(flag);
       let message: string | null = null;
       if (missing) {
@@ -920,7 +920,7 @@ export function diagnoseExtraArgs(
       continue;
     }
     seen.add(flag);
-    const managedControl: string | undefined = MANAGED_CONTROL_FLAGS[flag];
+    const managedControl: string | undefined = (MANAGED_CONTROL_FLAGS as Record<string, string | undefined>)[flag];
     const isManaged =
       managedControl != null || Boolean(catalog?.managed.has(flag));
 

@@ -22,10 +22,12 @@ export function PathInfoButton({
 }) {
   const { copied, copy } = useCopyFeedback();
 
-  const handleCopy = async (event: MouseEvent<HTMLButtonElement>) => {
+  const handleCopy = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    await copy(path);
+    copy(path).catch((error: unknown) => {
+      console.error("Failed to copy path", error);
+    });
   };
 
   return (

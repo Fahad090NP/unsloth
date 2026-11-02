@@ -115,9 +115,17 @@ export function VideoFile({
   const copyFrame = () => {
     const el = video();
     if (!el) return;
-    void copyVideoFrame(el).then((ok) =>
-      ok ? toast.success(t("browser.video.frameCopied")) : toast.error(t("browser.video.copyFrameFailed")),
-    );
+    copyVideoFrame(el)
+      .then((ok) => {
+        if (ok) {
+          toast.success(t("browser.video.frameCopied"));
+        } else {
+          toast.error(t("browser.video.copyFrameFailed"));
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to copy video frame:", error);
+      });
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -134,7 +142,7 @@ export function VideoFile({
       m: toggleMute,
       f: fullscreen,
     };
-    const handler = handlers[event.key];
+    const handler: (() => void) | undefined = handlers[event.key];
     if (!handler) return;
     event.preventDefault();
     handler();

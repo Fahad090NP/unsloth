@@ -227,6 +227,9 @@ export function stageLegacyHfTokenForMigration(value: string): void {
 
 let hydrationPromise: Promise<void> | null = null;
 let hydrationReplayRequested = false;
+function isHydrationReplayRequested(): boolean {
+  return hydrationReplayRequested;
+}
 
 export function hydrateHfTokenFromBackend(): Promise<void> {
   if (hydrationPromise) return hydrationPromise;
@@ -291,8 +294,7 @@ export async function refreshHfTokenFromBackend(): Promise<void> {
   } catch {
     // The replay is the authoritative retry for the cross-tab notification.
   }
-  const replayRequested: boolean = hydrationReplayRequested;
-  if (!replayRequested) return;
+  if (!isHydrationReplayRequested()) return;
   hydrationReplayRequested = false;
   await hydrateHfTokenFromBackend();
 }

@@ -84,8 +84,9 @@ function extractToken(
   params: Parameters<typeof modelInfo>[0],
 ): string | undefined {
   if (params.accessToken) return params.accessToken;
-  if (params.credentials && "accessToken" in params.credentials) {
-    return params.credentials.accessToken;
+  const legacy = params as { credentials?: { accessToken?: string } };
+  if (legacy.credentials?.accessToken) {
+    return legacy.credentials.accessToken;
   }
   return undefined;
 }

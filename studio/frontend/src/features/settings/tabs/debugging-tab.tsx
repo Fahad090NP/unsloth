@@ -206,7 +206,10 @@ export function DebuggingTab() {
     readStoredPaneHeight,
   );
   const pinnedRef = useRef(true);
-  const lastSourceScanRef = useRef(Date.now());
+  const lastSourceScanRef = useRef(0);
+  useEffect(() => {
+    lastSourceScanRef.current = Date.now();
+  }, []);
 
   useEffect(() => {
     try {

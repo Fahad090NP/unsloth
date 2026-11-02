@@ -20,6 +20,10 @@ function resolveErrorToast(
   return typeof errorToast === "function" ? errorToast(error) : errorToast;
 }
 
+function setRefValue<T>(ref: { current: T }, value: T): void {
+  ref.current = value;
+}
+
 export function useDeleteConfirmAction({
   action,
   successMessage,
@@ -46,7 +50,7 @@ export function useDeleteConfirmAction({
 
   const runDelete = useCallback(async () => {
     if (inFlightRef.current) return;
-    inFlightRef.current = true;
+    setRefValue(inFlightRef, true);
     setDeleting(true);
     try {
       await action();
@@ -56,7 +60,7 @@ export function useDeleteConfirmAction({
       const resolved = resolveErrorToast(errorToast, error);
       toast.error(resolved.title, { description: resolved.description });
     } finally {
-      inFlightRef.current = false;
+      setRefValue(inFlightRef, false);
       if (mountedRef.current) setDeleting(false);
       onSettled?.();
     }

@@ -525,7 +525,7 @@ export const useExportRuntimeStore = create<ExportRuntimeStore>()((set, get) => 
         }
         if (!isCurrent()) return;
         set({ quantIndex: get().quantTotal });
-      } else if (params.exportMethod === "lora") {
+      } else {
         const { outputPath, details: loraDetails } = await runRecoverableOp(() =>
           exportLoRA({
             save_directory: params.saveDirectory,

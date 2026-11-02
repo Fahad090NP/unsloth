@@ -223,62 +223,64 @@ export function OnDeviceFoldersDialog({
     }
   }, [handleAdd, isOwner]);
 
-  const handleOpen = useCallback(async (folder: ScanFolderInfo) => {
-    try {
-      await openModelsDir(folder.path);
-    } catch (err) {
+  const handleOpen = useCallback((folder: ScanFolderInfo) => {
+    openModelsDir(folder.path).catch((err: unknown) => {
       toast.error("Couldn't open folder", { description: formatError(err) });
-    }
+    });
   }, []);
 
   const handleRecursive = useCallback(
-    async (folder: ScanFolderInfo, recursive: boolean) => {
+    (folder: ScanFolderInfo, recursive: boolean) => {
       if (pending) return;
       setPending(`recursive:${folder.id}`);
-      try {
-        await setScanFolderRecursive(folder, recursive);
-        onInventoryChange?.();
-      } catch (err) {
-        toast.error("Couldn't change the folder", {
-          description: formatError(err),
+      setScanFolderRecursive(folder, recursive)
+        .then(() => {
+          onInventoryChange?.();
+        })
+        .catch((err: unknown) => {
+          toast.error("Couldn't change the folder", {
+            description: formatError(err),
+          });
+        })
+        .finally(() => {
+          setPending(null);
         });
-      } finally {
-        setPending(null);
-      }
     },
     [onInventoryChange, pending],
   );
 
   const handleRemove = useCallback(
-    async (folder: ScanFolderInfo) => {
+    (folder: ScanFolderInfo) => {
       if (pending) return;
       setPending(`remove:${folder.id}`);
-      try {
-        await removeScanFolderFromStore(folder.id);
-        onInventoryChange?.();
-        // Removing only stops the scan, so an undo is safer than a confirm step.
-        toast.success("Folder removed", {
-          description: folderDisplayName(folder.path),
-          action: {
-            label: "Undo",
-            onClick: () => {
-              addScanFolderToStore(folder.path, Boolean(folder.recursive))
-                .then(() => onInventoryChange?.())
-                .catch((err: unknown) =>
-                  toast.error("Couldn't restore folder", {
-                    description: formatError(err),
-                  }),
-                ).catch(() => { /* noop */ });
+      removeScanFolderFromStore(folder.id)
+        .then(() => {
+          onInventoryChange?.();
+          // Removing only stops the scan, so an undo is safer than a confirm step.
+          toast.success("Folder removed", {
+            description: folderDisplayName(folder.path),
+            action: {
+              label: "Undo",
+              onClick: () => {
+                addScanFolderToStore(folder.path, Boolean(folder.recursive))
+                  .then(() => onInventoryChange?.())
+                  .catch((err: unknown) =>
+                    toast.error("Couldn't restore folder", {
+                      description: formatError(err),
+                    }),
+                  ).catch(() => { /* noop */ });
+              },
             },
-          },
+          });
+        })
+        .catch((err: unknown) => {
+          toast.error("Couldn't remove folder", {
+            description: formatError(err),
+          });
+        })
+        .finally(() => {
+          setPending(null);
         });
-      } catch (err) {
-        toast.error("Couldn't remove folder", {
-          description: formatError(err),
-        });
-      } finally {
-        setPending(null);
-      }
     },
     [onInventoryChange, pending],
   );

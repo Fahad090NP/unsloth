@@ -338,13 +338,13 @@ export interface VideoGalleryPage {
 
 /** `archived`: false is the strip, true is the archive. */
 export async function getVideoGallery(
-  offset = 0,
-  limit = 50,
-  archived = false,
+  offset: number = 0,
+  limit: number = 50,
+  archived: boolean = false,
 ): Promise<VideoGalleryPage> {
   return await parseJson(
     await authFetch(
-      `/api/inference/video/gallery?offset=${offset}&limit=${limit}&archived=${archived}`,
+      `/api/inference/video/gallery?offset=${String(offset)}&limit=${String(limit)}&archived=${String(archived)}`,
     ),
   );
 }

@@ -64,16 +64,16 @@ function saveSeen(account: string, seen: SeenRuns): void {
 
 /** `claim` under a Web Lock where available (secure contexts); elsewhere two tabs may both announce. */
 async function exclusively<T>(name: string, claim: () => T): Promise<T> {
-  const locks = (navigator as Navigator & { locks?: LockManager }).locks;
+  const locks = (navigator as Partial<Navigator>).locks;
   if (!locks) return claim();
-  let claimed = false;
+  const state = { claimed: false };
   try {
     return await locks.request(name, () => {
-      claimed = true;
+      state.claimed = true;
       return claim();
     });
   } catch (error) {
-    if (claimed) throw error;
+    if (state.claimed) throw error;
     return claim();
   }
 }
@@ -99,11 +99,13 @@ function notifySystem(runs: FinishedScheduledTaskRun[]): void {
       ? translate("scheduledTasks.notificationBody")
       : runErrorText(run, translate);
   if (isTauri) {
-    void notifyNative({
+    notifyNative({
       key: `scheduled-task:${runs.map((entry) => entry.id).join(",")}`,
       title,
       body,
       requestPermission: false,
+    }).catch((err: unknown) => {
+      console.error("Failed to show native notification:", err);
     });
     return;
   }
@@ -166,18 +168,27 @@ export function ScheduledTaskRunNotifier() {
   }, [navigate, pathname]);
 
   useEffect(() => {
-    let disposed = false;
-    let polling = false;
-    let recheckAfterPoll = false;
+    const state = {
+      disposed: false,
+      polling: false,
+      recheckAfterPoll: false,
+      account: null as string | null,
+      seen: null as SeenRuns | null,
+      lastState: "",
+      lastDelay: 0,
+    };
     let timer: ReturnType<typeof setTimeout> | null = null;
-    let account: string | null = null;
-    let seen: SeenRuns | null = null;
-    let lastState = "";
-    let lastDelay = 0;
 
-    const openChat = (threadId: string) =>
-      void navigateRef.current({ to: "/chat", search: { thread: threadId } });
-    const openTasks = () => void navigateRef.current({ to: "/tasks" });
+    const openChat = (threadId: string) => {
+      navigateRef.current({ to: "/chat", search: { thread: threadId } }).catch((err: unknown) => {
+        console.error("Navigation to chat failed:", err);
+      });
+    };
+    const openTasks = () => {
+      navigateRef.current({ to: "/tasks" }).catch((err: unknown) => {
+        console.error("Navigation to tasks failed:", err);
+      });
+    };
 
     const refreshFor = (finished: FinishedScheduledTaskRun[]) => {
       if (finished.some((run) => run.status === "succeeded" && run.threadId)) {
@@ -232,62 +243,67 @@ export function ScheduledTaskRunNotifier() {
     };
 
     const schedule = (delay: number) => {
-      if (disposed) return;
+      if (state.disposed) return;
       if (timer !== null) clearTimeout(timer);
-      timer = setTimeout(() => void poll(), delay);
+      timer = setTimeout(() => {
+        poll().catch((err: unknown) => {
+          console.error("Poll failed:", err);
+        });
+      }, delay);
     };
 
     const poll = async () => {
-      if (disposed || polling) return;
+      if (state.disposed || state.polling) return;
       if (!hasSettledAuthSession()) {
         schedule(IDLE_POLL_MS);
         return;
       }
       const owner = currentAccount();
-      if (owner !== account) {
-        account = owner;
-        seen = loadSeen(owner);
-        lastState = "";
+      if (owner !== state.account) {
+        state.account = owner;
+        state.seen = loadSeen(owner);
+        state.lastState = "";
       }
       const epoch = getAuthSessionEpoch();
-      polling = true;
+      state.polling = true;
       try {
-        const result = await collectFinishedRuns(seen, getScheduledTaskActivity);
+        const result = await collectFinishedRuns(state.seen, getScheduledTaskActivity);
         const mine = await exclusively(ANNOUNCE_LOCK_PREFIX + owner, () => {
-          if (disposed || getAuthSessionEpoch() !== epoch || currentAccount() !== owner) return null;
+          if (state.disposed || getAuthSessionEpoch() !== epoch || currentAccount() !== owner) return null;
           const stored = loadSeen(owner);
           const claim = claimAnnouncements(stored, result.seen, result.fresh);
           if (shouldSaveSeen(stored, claim.record, claim.mine.length)) saveSeen(owner, claim.record);
           return claim.mine;
         });
-        if (disposed) return;
+        if (state.disposed) return;
         if (mine === null) {
-          recheckAfterPoll = true;
+          state.recheckAfterPoll = true;
           return;
         }
-        seen = result.seen;
-        const state = `${result.last.activeRuns}:${result.last.nextRunAt}`;
+        state.seen = result.seen;
+        const nextAt = result.last.nextRunAt !== null ? String(result.last.nextRunAt) : "";
+        const nextState = `${result.last.activeRuns}:${nextAt}`;
         // The first answer only sets the baseline: a page that just mounted read its own list.
-        const changed = result.fresh.length > 0 || (lastState !== "" && state !== lastState);
-        lastState = state;
+        const changed = result.fresh.length > 0 || (state.lastState !== "" && nextState !== state.lastState);
+        state.lastState = nextState;
         if (changed) refreshFor(result.fresh);
         if (mine.length > 0) announce(mine);
-        lastDelay = nextPollDelay(result.last, changed ? 0 : lastDelay);
-        schedule(pollDelayFor(lastDelay, document.visibilityState === "hidden"));
+        state.lastDelay = nextPollDelay(result.last, changed ? 0 : state.lastDelay);
+        schedule(pollDelayFor(state.lastDelay, document.visibilityState === "hidden"));
       } catch {
         schedule(IDLE_POLL_MS);
       } finally {
-        polling = false;
-        if (recheckAfterPoll) {
-          recheckAfterPoll = false;
+        state.polling = false;
+        if (state.recheckAfterPoll) {
+          state.recheckAfterPoll = false;
           schedule(RECHECK_MS);
         }
       }
     };
 
     const recheck = () => {
-      lastDelay = 0;
-      if (polling) recheckAfterPoll = true;
+      state.lastDelay = 0;
+      if (state.polling) state.recheckAfterPoll = true;
       else schedule(RECHECK_MS);
     };
     const onVisible = () => {
@@ -302,9 +318,11 @@ export function ScheduledTaskRunNotifier() {
     window.addEventListener(AUTH_SESSION_STORED_EVENT, recheck);
     window.addEventListener("focus", recheck);
     document.addEventListener("visibilitychange", onVisible);
-    void poll();
+    poll().catch((err: unknown) => {
+      console.error("Initial poll failed:", err);
+    });
     return () => {
-      disposed = true;
+      state.disposed = true;
       if (timer !== null) clearTimeout(timer);
       window.removeEventListener(SCHEDULED_TASKS_CHANGED_EVENT, recheck);
       window.removeEventListener("storage", onStorage);
@@ -314,7 +332,7 @@ export function ScheduledTaskRunNotifier() {
     };
   }, []);
 
-  const ask = asking[0];
+  const ask = asking.at(0);
   if (!ask) return null;
   return (
     <Suspense fallback={null}>

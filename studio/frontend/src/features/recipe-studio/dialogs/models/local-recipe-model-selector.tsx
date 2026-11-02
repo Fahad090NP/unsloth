@@ -53,7 +53,7 @@ function hasGgufSuffix(value: string | null | undefined): boolean {
 }
 
 function getModelLabel(model: LocalModelInfo): string {
-  return model.model_id?.trim() ?? model.display_name ?? model.id;
+  return model.model_id?.trim() || model.display_name || model.id;
 }
 
 function isDirectGguf(model: LocalModelInfo): boolean {
@@ -642,7 +642,9 @@ export function LocalRecipeModelSelector({
               expandedModelId={expandedModelId}
               probingVariantModelId={probingVariantModelId}
               onRefresh={requestModelRefresh}
-              onSelectModel={selectModel}
+              onSelectModel={(model) => {
+                selectModel(model).catch(() => undefined);
+              }}
               onSelectVariant={selectVariant}
             />
           </div>

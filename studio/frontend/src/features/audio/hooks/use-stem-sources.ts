@@ -74,7 +74,7 @@ export function useStemSources(
       const [clipId, url] = entry.split("\u0000");
       return { clipId, url };
     });
-    let cancelled = false;
+    const tracker = { cancelled: false };
     const cache = new BlobUrlCache(Number.POSITIVE_INFINITY);
     const peaksById: Record<string, readonly number[]> = {};
     const failedIds: string[] = [];
@@ -84,7 +84,7 @@ export function useStemSources(
       if (peaks) peaksById[clipId] = peaks;
     }
     const publish = () => {
-      if (cancelled) return;
+      if (tracker.cancelled) return;
       setState({
         key: stateKey,
         srcById: cache.toRecord(),
@@ -97,11 +97,11 @@ export function useStemSources(
     const loadSrc = async ({ clipId, url }: StemSourceInput) => {
       try {
         const blob = await fetchAudioBlob(url);
-        if (cancelled) return;
+        if (tracker.cancelled) return;
         cache.set(clipId, URL.createObjectURL(blob), blob.size);
         blobs.set(clipId, blob);
       } catch {
-        if (cancelled) return;
+        if (tracker.cancelled) return;
         failedIds.push(clipId);
       }
       publish();
@@ -113,15 +113,17 @@ export function useStemSources(
       );
       for (const { clipId } of group) {
         await loads.get(clipId);
-        if (cancelled) return;
+        if (tracker.cancelled) return;
         const blob = blobs.get(clipId);
         blobs.delete(clipId);
-        if (peaksById[clipId] || !blob) continue;
+        const currentPeaks: readonly number[] | undefined = peaksById[clipId];
+        if (currentPeaks || !blob) continue;
         try {
           const peaks = await decodePeaks(blob);
           rememberPeaks(clipId, peaks);
-          if (cancelled) return;
-          peaksById[clipId] = peaks;
+          if (tracker.cancelled) return;
+          const targetPeaks = peaksById;
+          targetPeaks[clipId] = peaks;
           publish();
         } catch {
           // Undecodable: the row keeps its flat placeholder and still plays.
@@ -130,7 +132,7 @@ export function useStemSources(
     })()).catch(() => { /* noop */ });
 
     return () => {
-      cancelled = true;
+      tracker.cancelled = true;
       cache.clear();
     };
   }, [key, stateKey]);

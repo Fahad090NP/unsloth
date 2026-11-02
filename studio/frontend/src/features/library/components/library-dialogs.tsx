@@ -35,7 +35,7 @@ interface NameDialogProps {
 export function NameDialog({ open, title, onOpenChange, ...form }: NameDialogProps) {
   const [busy, setBusy] = useState(false);
   return (
-    <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
+    <Dialog open={open} onOpenChange={(next) => { if (!busy) { onOpenChange(next); } }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -159,7 +159,7 @@ export function UnsavedChangesDialog({
   const t = useT();
   const reason = error && !/[.!?。！？؟।]$/.test(error) ? `${error}.` : error;
   return (
-    <AlertDialog open={error !== null} onOpenChange={(open) => !open && onKeepEditing()}>
+    <AlertDialog open={error !== null} onOpenChange={(open) => { if (!open) { onKeepEditing(); } }}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("library.dialog.unsavedTitle")}</AlertDialogTitle>

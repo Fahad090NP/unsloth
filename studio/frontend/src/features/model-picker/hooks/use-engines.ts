@@ -17,17 +17,18 @@ export function useEngines(enabled = true, background = false) {
   useEffect(() => {
     if (!enabled) return;
     let disposed = false;
+    const isDisposed = () => disposed;
     let timer: ReturnType<typeof setTimeout>;
     let fetching = false;
     let installing = false;
     const refresh = async () => {
-      if (fetching || disposed) {
+      if (fetching || isDisposed()) {
         return;
       }
       fetching = true;
       try {
         const result = await listEngines();
-        if (!disposed) {
+        if (!isDisposed()) {
           installing = result.some((engine) => engine.job.state === "running");
           for (const engine of result) {
             const key = `engine:${engine.engine}`;
@@ -63,7 +64,7 @@ export function useEngines(enabled = true, background = false) {
           setError("");
         }
       } catch (err) {
-        if (!disposed) {
+        if (!isDisposed()) {
           setError(
             err instanceof Error
               ? err.message
@@ -71,10 +72,11 @@ export function useEngines(enabled = true, background = false) {
           );
         }
       } finally {
-        fetching = false;
-        if (!disposed) {
+        const setFetching = (val: boolean) => { fetching = val; };
+        setFetching(false);
+        if (!isDisposed()) {
           timer = setTimeout(
-            refresh,
+            () => { void refresh(); },
             document.hidden
               ? 30000
               : installing

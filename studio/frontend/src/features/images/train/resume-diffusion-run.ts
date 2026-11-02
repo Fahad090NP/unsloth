@@ -31,13 +31,11 @@ export function buildDiffusionResumePayload(
     );
   }
 
-  // Destructured out so the new run never inherits the old run's resume target.
-  const {
-    hf_token: _replacedToken,
-    resume_from_checkpoint: _replacedCheckpoint,
-    resumed_from_job_id: _replacedJobId,
-    ...inherited
-  } = config;
+  // Omitted so the new run never inherits the old run's resume target.
+  const inherited = { ...config };
+  delete inherited.hf_token;
+  delete inherited.resume_from_checkpoint;
+  delete inherited.resumed_from_job_id;
   return {
     ...inherited,
     base_model: config.base_model,

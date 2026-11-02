@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { TransportConflictInfo } from "@/features/hub";
 
-export type { TransportConflictInfo } from "@/features/hub/download-manager";
+export type { TransportConflictInfo };
 
 export function TransportConflictDialog({
   conflict,

@@ -67,6 +67,10 @@ interface Queue {
 
 const queues = new Map<string, Queue>();
 
+function queueHasRecord(q: Queue): boolean {
+  return q.record !== null;
+}
+
 async function drain(id: string, queue: Queue): Promise<void> {
   let carried: Waiter[] = [];
   const state = queue;
@@ -86,7 +90,7 @@ async function drain(id: string, queue: Queue): Promise<void> {
       if (isTransient(error) && attempt < RETRY_DELAYS_MS.length) {
         await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
         attempt += 1;
-        if (!state.record) {
+        if (!queueHasRecord(state)) {
           state.record = record;
           state.epoch = epoch;
         }
@@ -112,7 +116,7 @@ export function saveRecipeExecution(
     queue.waiters.push({ resolve, reject });
     if (!running) {
       queues.set(execution.id, queue);
-      void drain(execution.id, queue);
+      drain(execution.id, queue).catch(() => undefined);
     }
   });
 }

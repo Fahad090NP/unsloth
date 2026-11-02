@@ -245,7 +245,7 @@ export function syncEdgesForConfigPatch(
         return true;
       }
       const otherId = edge.source === current.id ? edge.target : edge.source;
-      const other = configs[otherId];
+      const other: NodeConfig | undefined = configs[otherId];
       if (!other) {
         return true;
       }

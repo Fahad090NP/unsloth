@@ -190,6 +190,7 @@ export function useHfOwnerAvatar(
     };
 
     const attempt = async () => {
+      await Promise.resolve();
       const cached = readCache(key);
       if (cached?.kind === "url") {
         if (!cancelled) setState({ key, url: cached.url });

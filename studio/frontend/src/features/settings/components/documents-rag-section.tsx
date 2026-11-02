@@ -140,7 +140,7 @@ export function DocumentsRagSection(): ReactElement {
   }, [loadCachedRepos]);
 
   const savedModel = embeddingModel?.embeddingModel;
-  const resetKey = `${savedModel ?? ""}::${hfToken ?? ""}::${resolveNonce}`;
+  const resetKey = `${savedModel ?? ""}::${hfToken}::${resolveNonce}`;
   const [appliedResetKey, setAppliedResetKey] = useState<string | undefined>(
     undefined,
   );

@@ -19,6 +19,7 @@ export function backendDisplayName(
   if (!backend) {
     return t(LLAMA_BACKEND_LABELS.auto);
   }
-  const key: TranslationKey | undefined = LLAMA_BACKEND_LABELS[backend];
+  const labels: Record<string, TranslationKey | undefined> = LLAMA_BACKEND_LABELS;
+  const key = labels[backend];
   return key ? t(key) : backend;
 }

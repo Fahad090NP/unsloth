@@ -13,6 +13,13 @@ interface TaskCursor<T> {
   take: (onFailure: (reason: unknown) => void) => Promise<IteratorResult<T>>;
 }
 
+function setTaskPending<T>(
+  state: { pending: Promise<TaskPull<T>> },
+  next: Promise<TaskPull<T>>,
+): void {
+  state.pending = next;
+}
+
 function createTaskCursor<T>(iterator: AsyncGenerator<T>): TaskCursor<T> {
   const pull = (): Promise<TaskPull<T>> =>
     Promise.resolve()
@@ -42,7 +49,7 @@ function createTaskCursor<T>(iterator: AsyncGenerator<T>): TaskCursor<T> {
         active = false;
         return next.result;
       }
-      state.pending = pull();
+      setTaskPending(state, pull());
       return next.result;
     },
   };

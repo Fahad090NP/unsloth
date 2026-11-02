@@ -31,7 +31,7 @@ export function ProcessorsDialog({
   const schemaIndex = useMemo(
     () =>
       processors.findIndex(
-        (processor) => processor.processor_type === "schema_transform",
+        (processor) => (processor.processor_type as string) === "schema_transform",
       ),
     [processors],
   );
@@ -51,7 +51,7 @@ export function ProcessorsDialog({
     }
     onProcessorsChange(
       processors.filter(
-        (processor) => processor.processor_type !== "schema_transform",
+        (processor) => (processor.processor_type as string) !== "schema_transform",
       ),
     );
   };

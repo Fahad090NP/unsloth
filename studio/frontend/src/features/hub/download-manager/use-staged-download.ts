@@ -122,7 +122,9 @@ export function useStagedDownload({
   });
 
   const onCancelledRef = useRef(onCancelled);
-  onCancelledRef.current = onCancelled;
+  useEffect(() => {
+    onCancelledRef.current = onCancelled;
+  });
   const onResetRef = useRef(onReset);
   useEffect(() => {
     onResetRef.current = onReset;
@@ -153,6 +155,7 @@ export function useStagedDownload({
   useEffect(() => {
     if (!current) return;
     let active = true;
+    const isActive = (): boolean => active;
     const started = { key: entryKey(current), generation: generation.current };
     // Register ownership before the start request so an immediate cancel belongs to this plan.
     inFlight.current = started;
@@ -182,7 +185,7 @@ export function useStagedDownload({
               downloadDir: current.downloadDir,
             },
       );
-      if (!active) return;
+      if (!isActive()) return;
       if (outcome === "started") return;
       if (inFlight.current === started) inFlight.current = null;
       // A failed start never completes, so clear the queue instead of stalling the head.
@@ -195,7 +198,7 @@ export function useStagedDownload({
           description:
             "An earlier partial download used a different transport. Open the Model hub tab to resume or restart it.",
         });
-      } else if (outcome === "busy") {
+      } else {
         toast.info("Download already in progress", {
           description:
             "Reselect this model once the running download finishes to load it.",

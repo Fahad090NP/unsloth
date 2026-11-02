@@ -214,9 +214,12 @@ export function EngineInstall({
                   version: engine.version,
                 })}
           </p>
-          {wslNoticeKey(engine) && (
-            <p>{t(wslNoticeKey(engine)!, { engine: names[engine.engine] })}</p>
-          )}
+          {(() => {
+            const notice = wslNoticeKey(engine);
+            return notice ? (
+              <p>{t(notice, { engine: names[engine.engine] })}</p>
+            ) : null;
+          })()}
           <p>{t("managedEngines.background")}</p>
           <div className={cn("flex gap-2", centered && "justify-center pt-3")}>
             <Button
@@ -407,7 +410,7 @@ export function InferenceEnginePicker({
               {t("managedEngines.scope")}
             </p>
           )}
-          {devices && devices.length > 0 && (
+          {devices.length > 0 && (
             <div
               role="group"
               aria-label={t("managedEngines.gpu")}

@@ -36,7 +36,7 @@ export function InlineSeed({
   config,
   onUpdate,
 }: InlineSeedProps): ReactElement {
-  const mode = config.seed_source_type ?? "hf";
+  const mode = config.seed_source_type;
 
   if (mode === "github_repo") {
     const repos = parseGithubRepos(config.github_repo_slug);

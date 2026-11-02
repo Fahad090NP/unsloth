@@ -52,7 +52,7 @@ export function supportsHighlightApi(): boolean {
 export function resolveFindScope(): Element | null {
   if (typeof document === "undefined") return null;
   return (
-    document.querySelector(`[${FIND_SCOPE_ATTRIBUTE}]`) ?? document.body ?? null
+    document.querySelector(`[${FIND_SCOPE_ATTRIBUTE}]`) ?? document.body
   );
 }
 
@@ -185,16 +185,17 @@ function removeRegisteredHighlight(
 function forceHighlightRepaint(): void {
   if (typeof document === "undefined") return;
   // The index includes body-level portals, so repaint the document root.
-  const root = document.documentElement ?? resolveFindScope();
+  const root = document.documentElement;
   if (
-    root === null ||
     typeof HTMLElement === "undefined" ||
     !(root instanceof HTMLElement)
   )
     return;
   const previous = root.style.opacity;
   root.style.opacity = previous === "0.999999" ? "0.999998" : "0.999999";
-  root.offsetHeight;
+  if (root.offsetHeight >= 0) {
+    // force reflow
+  }
   root.style.opacity = previous;
 }
 

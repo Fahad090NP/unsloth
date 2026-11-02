@@ -4,6 +4,7 @@
 import { cn } from "@/lib/utils";
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -88,22 +89,25 @@ export const NumericValueInput = forwardRef<
   const isEdit = (final: number) =>
     final !== value || displayValue != null || derived;
 
-  const commitDraft = (raw: string): number | null => {
-    const parsed = Number.parseFloat(raw);
-    if (!Number.isFinite(parsed)) {
-      return null;
-    }
-    // Committing the shown number means that number, even off the control's grid.
-    const shown = parsed === value;
-    if (shown && ((max != null && parsed > max) || (min != null && parsed < min))) {
-      return null;
-    }
-    const final = shown ? parsed : snapToStep(parsed, step, min, max);
-    if (isEdit(final)) {
-      onChange(final);
-    }
-    return final;
-  };
+  const commitDraft = useCallback(
+    (raw: string): number | null => {
+      const parsed = Number.parseFloat(raw);
+      if (!Number.isFinite(parsed)) {
+        return null;
+      }
+      // Committing the shown number means that number, even off the control's grid.
+      const shown = parsed === value;
+      if (shown && ((max != null && parsed > max) || (min != null && parsed < min))) {
+        return null;
+      }
+      const final = shown ? parsed : snapToStep(parsed, step, min, max);
+      if (isEdit(final)) {
+        onChange(final);
+      }
+      return final;
+    },
+    [derived, displayValue, max, min, onChange, step, value],
+  );
 
   useImperativeHandle(
     ref,
@@ -136,7 +140,7 @@ export const NumericValueInput = forwardRef<
         return null;
       },
     }),
-    [derived, displayValue, draft, focused, max, min, onChange, step, value],
+    [commitDraft, derived, displayValue, draft, focused, max, min, onChange, step, value],
   );
 
   const displayed = focused ? draft : (displayValue ?? String(value));

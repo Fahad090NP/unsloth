@@ -130,8 +130,13 @@ function useFrameMessages(tabId: string, origin: string | null, entry: BrowserEn
             temporary,
             agentRule: agentDownloadRule(tabId, site, site),
           };
-          if (message.askFirst) saveBrowserDownloadOnClick(download);
-          else void saveBrowserDownload(download);
+          if (message.askFirst) {
+            saveBrowserDownloadOnClick(download);
+          } else {
+            saveBrowserDownload(download).catch((error: unknown) => {
+              console.error("Failed to save browser download:", error);
+            });
+          }
           break;
         }
         case "loaded": {
@@ -145,10 +150,16 @@ function useFrameMessages(tabId: string, origin: string | null, entry: BrowserEn
             useBrowserHistoryStore.getState().recordIcon(hostOf(tab.displayUrl ?? entry.url), favicon, loadTemporary(tabId, entry));
           }
           if (favicon && entry) {
-            void proxiedFavicon(favicon).then((icon) => {
-              const now = useBrowserStore.getState().tabs.find((candidate) => candidate.id === tabId);
-              if (icon && now && currentEntry(now) === entry) useBrowserStore.getState().updateTab(tabId, { favicon: icon });
-            });
+            proxiedFavicon(favicon)
+              .then((icon) => {
+                const now = useBrowserStore.getState().tabs.find((candidate) => candidate.id === tabId);
+                if (icon && now && currentEntry(now) === entry) {
+                  useBrowserStore.getState().updateTab(tabId, { favicon: icon });
+                }
+              })
+              .catch((error: unknown) => {
+                console.error("Failed to load proxied favicon:", error);
+              });
           }
           // POST results can't be revisited, so they stay out of history.
           if (tab && entry?.kind === "web" && entry.method !== "POST") {
@@ -215,14 +226,30 @@ function useFrameMessages(tabId: string, origin: string | null, entry: BrowserEn
             else if (key === "d") store.bookmarkPage();
           };
           // A full screen page covers the panel; leave it first so the shortcut's result shows.
-          if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined).then(run);
-          else run();
+          if (document.fullscreenElement) {
+            document
+              .exitFullscreen()
+              .catch(() => undefined)
+              .then(run)
+              .catch((error: unknown) => {
+                console.error("Failed to exit fullscreen:", error);
+              });
+          } else {
+            run();
+          }
           break;
         }
         case "zoom":
           // A key goes through the scope, so the View menu repeating it doesn't zoom twice.
           if (message.wheel) zoomTab(tabId, message.direction);
           else zoomScopeFromChord({ contains: () => true, zoom: (direction) => { zoomTab(tabId, direction); } }, message.direction);
+          break;
+        case "agent":
+        case "annotate":
+        case "request":
+        case "requestAbort":
+        case "snapshot":
+        case "storage":
           break;
       }
     },
@@ -379,7 +406,7 @@ function WebPage({
           if (savesFile(name, page.contentType, page.attachment)) {
             // use the sender or requested address, not the redirect target, so another site's permission cannot apply.
             saveBrowserDownload({ blob: page.blob, name, contentType: page.contentType, url: page.url, site: entry.from ?? url, temporary: loadTemporary(tab.id, entry) || undefined, agentRule: stricterDownloadRule(agentRuleAtStart, agentDownloadRule(tab.id, entry.from ?? url, page.url)) }).catch(() => undefined);
-            if (entry.kind === "web" && entry.from) useBrowserStore.getState().leaveDownload(tab.id, entry);
+            if (entry.from) useBrowserStore.getState().leaveDownload(tab.id, entry);
           }
         }
       })

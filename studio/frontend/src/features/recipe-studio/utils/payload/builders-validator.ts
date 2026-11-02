@@ -21,7 +21,7 @@ export function buildValidatorColumn(
   errors: string[],
   nameToConfig?: Map<string, NodeConfig>,
 ): Record<string, unknown> {
-  const targetColumns = (config.target_columns ?? [])
+  const targetColumns = config.target_columns
     .map((value) => value.trim())
     .filter(Boolean);
   if (targetColumns.length === 0) {
@@ -78,7 +78,7 @@ export function buildValidatorColumn(
       validator_params: {
         // The backend resolves this marker to a real callable.
         // biome-ignore lint/style/useNamingConvention: api schema
-        validation_function: `${OXC_VALIDATION_FN_MARKER}:${codeLang}:${config.oxc_validation_mode}:${config.oxc_code_shape ?? "auto"}`,
+        validation_function: `${OXC_VALIDATION_FN_MARKER}:${codeLang}:${config.oxc_validation_mode}:${config.oxc_code_shape}`,
       },
       // biome-ignore lint/style/useNamingConvention: api schema
       batch_size: parseBatchSize(config.batch_size),

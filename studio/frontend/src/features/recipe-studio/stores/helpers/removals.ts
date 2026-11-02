@@ -21,7 +21,7 @@ export function applyNodeRemovals(
   const removedNames: string[] = [];
 
   for (const id of removedIds) {
-    const removed = configs[id];
+    const removed: NodeConfig | undefined = configs[id];
     Reflect.deleteProperty(configs, id);
     if (removed?.name) {
       removedNames.push(removed.name);
@@ -64,8 +64,8 @@ export function applyEdgeRemovals(
 
   let next = configs;
   for (const edge of removedEdges) {
-    const source = next[edge.source];
-    const target = next[edge.target];
+    const source: NodeConfig | undefined = next[edge.source];
+    const target: NodeConfig | undefined = next[edge.target];
     if (!(source && target)) {
       continue;
     }

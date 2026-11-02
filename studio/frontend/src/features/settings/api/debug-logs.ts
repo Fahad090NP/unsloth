@@ -136,11 +136,11 @@ export async function loadDebugLog(
     cursor: body.cursor ?? null,
     reset: Boolean(body.reset),
     resetReason: body.reset_reason ?? null,
-    droppedBytes: Number(body.dropped_bytes ?? 0),
+    droppedBytes: body.dropped_bytes ?? 0,
     truncatedHead: Boolean(body.truncated_head),
     morePending: Boolean(body.more_pending),
     fileLoggingDisabled: Boolean(body.file_logging_disabled),
-    sizeBytes: Number(body.size_bytes ?? 0),
+    sizeBytes: body.size_bytes ?? 0,
   };
 }
 

@@ -116,6 +116,7 @@ export function AudioOptionFields({
           );
         }
         const numeric = spec.type === "int" || spec.type === "float";
+        const rawValue: AudioOptionValue | undefined = values[spec.name];
         return (
           <div key={spec.name} className="grid gap-1.5">
             <FieldLabel className="text-ui-13 font-medium text-foreground" htmlFor={id}>
@@ -130,7 +131,7 @@ export function AudioOptionFields({
               max={spec.max ?? undefined}
               // As typed: clamping mid-entry breaks multi-digit input. The request clamps.
               value={
-                values[spec.name] == null ? "" : String(values[spec.name])
+                rawValue == null ? "" : String(rawValue)
               }
               placeholder={
                 spec.default != null ? String(spec.default) : "Model default"

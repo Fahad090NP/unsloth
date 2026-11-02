@@ -148,8 +148,6 @@ function fetchErrorMessage(
       return "Couldn't scan trained and exported models";
     case "localDatasets":
       return "Couldn't scan local datasets";
-    default:
-      return "Couldn't scan inventory";
   }
 }
 
@@ -206,8 +204,6 @@ async function runSourceFetch<K extends DeviceInventorySource>(
         rows: (await listLocalDatasets()).datasets as DeviceInventoryRows[K],
         scanConfirmed: true,
       };
-    default:
-      throw new Error("Unsupported inventory source");
   }
 }
 
@@ -413,7 +409,7 @@ export function useDeviceInventorySources<
       ),
     );
     for (const [index, result] of results.entries()) {
-      const source = sourceList[index];
+      const source = sourceList.at(index);
       if (source && result.status === "rejected") {
         logInventorySourceFailure(source, result.reason);
       }
@@ -449,7 +445,7 @@ export function useDeviceInventorySources<
       );
       for (const [index, result] of results.entries()) {
         if (result.status === "rejected") {
-          const source = requests[index].source;
+          const source = requests.at(index)?.source;
           if (source) logInventorySourceFailure(source, result.reason);
         }
       }

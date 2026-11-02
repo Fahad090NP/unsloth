@@ -381,6 +381,23 @@ function useRangeFilter() {
 
 type RangeFilter = ReturnType<typeof useRangeFilter>;
 
+function FilterOption({
+  label,
+  checked,
+  onSelect,
+}: {
+  label: string;
+  checked: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <DropdownMenuItem role="menuitemradio" aria-checked={checked} onSelect={onSelect}>
+      <span className="flex-1">{label}</span>
+      <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className={cn("ml-2 size-4", !checked && "invisible")} />
+    </DropdownMenuItem>
+  );
+}
+
 /** The search field, with the range filter (presets or chosen dates) at its end. */
 function SearchWithFilter({
   query,
@@ -398,12 +415,6 @@ function SearchWithFilter({
   const [datesOpen, setDatesOpen] = useState(false);
   // Opened once the filter menu has closed, so its focus return doesn't dismiss the picker.
   const openDatesOnClose = useRef(false);
-  const filterOption = (label: string, checked: boolean, onSelect: () => void) => (
-    <DropdownMenuItem key={label} role="menuitemradio" aria-checked={checked} onSelect={onSelect}>
-      <span className="flex-1">{label}</span>
-      <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className={cn("ml-2 size-4", !checked && "invisible")} />
-    </DropdownMenuItem>
-  );
   return (
     <Popover open={datesOpen} onOpenChange={setDatesOpen}>
       <PopoverAnchor asChild>
@@ -442,13 +453,22 @@ function SearchWithFilter({
                 setDatesOpen(true);
               }}
             >
-              {(Object.keys(RANGE_LABELS) as PresetRange[]).map((id) =>
-                filterOption(t(RANGE_LABELS[id].menu), range === id, () => { setRange(id); }),
-              )}
+              {(Object.keys(RANGE_LABELS) as PresetRange[]).map((id) => (
+                <FilterOption
+                  key={id}
+                  label={t(RANGE_LABELS[id].menu)}
+                  checked={range === id}
+                  onSelect={() => { setRange(id); }}
+                />
+              ))}
               <DropdownMenuSeparator className="mx-3" />
-              {filterOption(t("browser.pages.customDates"), range === "custom", () => {
-                openDatesOnClose.current = true;
-              })}
+              <FilterOption
+                label={t("browser.pages.customDates")}
+                checked={range === "custom"}
+                onSelect={() => {
+                  openDatesOnClose.current = true;
+                }}
+              />
               {range !== "all" && (
                 <>
                   <DropdownMenuSeparator className="mx-3" />
@@ -641,12 +661,18 @@ function useMissingDownloads(downloads: DownloadItem[]) {
     if (!isTauri) return;
     const ids = downloads.flatMap((item) => (item.nativeId ? [item.nativeId] : []));
     let live = true;
-    const check = () =>
-      nativeDownloadsExist(ids).then(
-        (found) => live && setMissing(new Set(ids.filter((_, index) => !found[index]))),
-        () => undefined,
-      );
-    check().catch(() => undefined);
+    const check = () => {
+      nativeDownloadsExist(ids)
+        .then((found) => {
+          if (live) {
+            setMissing(new Set(ids.filter((_, index) => !found[index])));
+          }
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to check missing downloads:", error);
+        });
+    };
+    check();
     window.addEventListener("focus", check);
     return () => {
       live = false;

@@ -3,11 +3,9 @@ import { canvasBlob, decodeImage } from "./image";
 import type { BackgroundEffect } from "./model";
 
 interface Job { promise: Promise<Blob>; release: () => void }
+type JobEntry = { promise: Promise<Blob>; users: number; cancel: () => void };
 const cache = new WeakMap<Blob, Map<string, Blob>>();
-const jobs = new WeakMap<
-	Blob,
-	Map<string, { promise: Promise<Blob>; users: number; cancel: () => void }>
->();
+const jobs = new WeakMap<Blob, Map<string, JobEntry>>();
 /** Shared by chat and previews: the last release cancels pixel work; blobs are cached, never URLs. */
 export function acquireRender(
 	blob: Blob,
@@ -16,10 +14,10 @@ export function acquireRender(
 ): Job {
 	if (effect === "None")
 		return { promise: Promise.resolve(blob), release: () => { /* no-op */ } };
-	const key = `${effect}:${effect === "Dither" ? false : light}`;
+	const key = `${effect}:${String(effect === "Dither" ? false : light)}`;
 	const cached = cache.get(blob)?.get(key);
 	if (cached) return { promise: Promise.resolve(cached), release: () => { /* no-op */ } };
-	const pending = jobs.get(blob) ?? new Map();
+	const pending = jobs.get(blob) ?? new Map<string, JobEntry>();
 	jobs.set(blob, pending);
 	let entry = pending.get(key);
 	if (!entry) {
@@ -41,7 +39,6 @@ export function acquireRender(
 				} finally {
 					decoded.close();
 				}
-				if (cancelled) return;
 				const pixels = ctx.getImageData(
 					0,
 					0,
@@ -80,9 +77,10 @@ export function acquireRender(
 		})
 			.then((result) => {
 				if (!cancelled) {
-					const images = cache.get(blob) ?? new Map();
+					const images = cache.get(blob) ?? new Map<string, Blob>();
 					images.set(key, result);
-					if (images.size > 4) images.delete(images.keys().next().value);
+					const firstKey = images.keys().next().value;
+					if (images.size > 4 && firstKey !== undefined) images.delete(firstKey);
 					cache.set(blob, images);
 				}
 				return result;
@@ -102,16 +100,17 @@ export function acquireRender(
 		};
 		pending.set(key, entry);
 	}
-	entry.users++;
+	const currentEntry = entry;
+	currentEntry.users++;
 	let released = false;
 	return {
-		promise: entry.promise,
+		promise: currentEntry.promise,
 		release: () => {
 			if (released) return;
 			released = true;
-			if (--entry!.users === 0 && pending.get(key) === entry) {
+			if (--currentEntry.users === 0 && pending.get(key) === currentEntry) {
 				pending.delete(key);
-				entry!.cancel();
+				currentEntry.cancel();
 			}
 		},
 	};

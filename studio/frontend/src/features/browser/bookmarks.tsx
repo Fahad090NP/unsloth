@@ -31,7 +31,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Folder01Icon } from "@/lib/folder-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { type ReactNode, type RefObject, useEffect, useId, useMemo, useRef, useState } from "react";
+import { type ReactNode, type RefObject, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { hostOf } from "./address";
 import {
   type Bookmark,
@@ -88,9 +88,13 @@ function saveBookmarkIcon(url: string, favicon: string | null): void {
   if (!favicon?.startsWith("data:image/")) return;
   const bookmark = useBrowserBookmarksStore.getState().bookmarks.find((candidate) => candidate.url === url);
   if (!bookmark) return;
-  void bookmarkIcon(favicon).then((icon) => {
-    if (icon) useBrowserBookmarksStore.getState().setBookmarkIcon(bookmark.id, icon);
-  });
+  bookmarkIcon(favicon)
+    .then((icon) => {
+      if (icon) useBrowserBookmarksStore.getState().setBookmarkIcon(bookmark.id, icon);
+    })
+    .catch((error: unknown) => {
+      console.error("Failed to save bookmark icon:", error);
+    });
 }
 
 function tabAddress(tab: BrowserTab): string | null {
@@ -105,7 +109,7 @@ useBrowserStore.subscribe((state, previous) => {
     if (!tab.favicon) continue;
     const before = previous.tabs.find((candidate) => candidate.id === tab.id);
     const url = tabAddress(tab);
-    if (!url || (before?.favicon === tab.favicon && before && tabAddress(before) === url)) continue;
+    if (!url || (before?.favicon === tab.favicon && tabAddress(before) === url)) continue;
     saveBookmarkIcon(url, tab.favicon);
   }
 });
@@ -148,7 +152,10 @@ function BookmarkEditor({
   const [title, setTitle] = useState(bookmarkTitle(bookmark));
   const [folder, setFolder] = useState(bookmark.folder);
   const draft = useRef({ title, folder, discard: false });
-  draft.current = { ...draft.current, title, folder };
+  useLayoutEffect(() => {
+    draft.current.title = title;
+    draft.current.folder = folder;
+  });
   // Applies on unmount, so a click outside the panel keeps the edits as Firefox's does.
   useEffect(
     () => () => {
@@ -306,7 +313,9 @@ export function BookmarkStar({
     else toast.success(t("browser.bookmarks.saved"));
   };
   const pressRef = useRef(press);
-  pressRef.current = press;
+  useLayoutEffect(() => {
+    pressRef.current = press;
+  });
   useEffect(() => {
     // Each ⌘D once: the bar remounts per tab, and a later tab shouldn't answer an earlier press.
     if (sequence === handledBookmarkSequence) return;
@@ -325,7 +334,9 @@ export function BookmarkStar({
       bookmark={bookmark}
       isNew={editing?.isNew}
       open={editing !== null}
-      onOpenChange={(open) => !open && setEditing(null)}
+      onOpenChange={(open) => {
+        if (!open) setEditing(null);
+      }}
     >
       <Tooltip>
         <TooltipTrigger asChild={true}>
@@ -335,7 +346,13 @@ export function BookmarkStar({
               aria-label={label}
               aria-pressed={bookmark !== undefined}
               aria-expanded={editing !== null}
-              onClick={() => { editing ? setEditing(null) : press(); }}
+              onClick={() => {
+                if (editing) {
+                  setEditing(null);
+                } else {
+                  press();
+                }
+              }}
               className={cn(
                 "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(8%*var(--contrast-wash-gain,1)),transparent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-expanded:bg-[color-mix(in_oklab,var(--foreground)_calc(10%*var(--contrast-wash-gain,1)),transparent)]",
                 bookmark && "text-primary hover:text-primary [&_path]:fill-current",

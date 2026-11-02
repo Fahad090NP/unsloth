@@ -441,7 +441,7 @@ for (const host of ["accelerated", "gguf-only", "unknown"] as const) {
 }
 for (const id of ["stabilityai/sdxl-turbo", "stabilityai/stable-diffusion-xl-base-1.0"]) {
   const row = curatedRowLabelFor(id, IMAGE_CATALOG, "dense-quant");
-  assert.ok(row && !row.name.includes("(Fast)"), `${id} reads "${row?.name}"`);
+  assert.ok(row && !row.name.includes("(Fast)"), `${id} reads "${row?.name ?? ""}"`);
 }
 
 for (const [label, catalog] of [
@@ -457,7 +457,7 @@ for (const [label, catalog] of [
       assert.equal(
         (claims),
         label === "image" && artifact.denseQuantable === true,
-        `${label}: ${artifact.repoId} reads "${row?.name}" ${JSON.stringify(row?.tags)}`,
+        `${label}: ${artifact.repoId} reads "${row?.name ?? ""}" ${JSON.stringify(row?.tags)}`,
       );
     }
   }
@@ -542,7 +542,7 @@ for (const id of [
   "ideogram-ai/ideogram-4-fp8",
 ]) {
   const row = curatedRowLabelFor(id, IMAGE_CATALOG, "dense-quant");
-  assert.ok(row && !row.name.includes("(Fast)"), `${id} reads "${row?.name}"`);
+  assert.ok(row && !row.name.includes("(Fast)"), `${id} reads "${row?.name ?? ""}"`);
 }
 
 // Non-GGUF is not the test: diffusion runs on MPS and STT via the whisper.cpp sidecar.
@@ -588,7 +588,7 @@ for (const catalog of [IMAGE_CATALOG, VIDEO_CATALOG, AUDIO_CATALOG]) {
     for (const artifact of group.artifacts) {
       if (artifact.format !== "gguf") continue;
       const row = curatedRowLabelFor(artifact.repoId, catalog);
-      assert.ok(row?.name.endsWith("-GGUF"), `${artifact.repoId} row reads "${row?.name}"`);
+      assert.ok(row?.name.endsWith("-GGUF"), `${artifact.repoId} row reads "${row?.name ?? ""}"`);
       assert.deepEqual(
         row?.tags,
         LLAMA_CPP_TWINS.has(artifact.repoId) ? ["llama.cpp"] : [],
@@ -1426,7 +1426,7 @@ for (const schemes of [[], ["fp8"], ["int8"]]) {
   }
 }
 
-console.log("model-catalog check: all assertions passed");
+console.warn("model-catalog check: all assertions passed");
 
 // Opt-in `--network` pass; anonymous on purpose (what a fresh install sees). Only definitive verdicts fail.
 
@@ -1518,7 +1518,7 @@ async function checkCatalogAgainstTheHub(catalogs: CatalogGroup[][]): Promise<st
       repo = JSON.parse(body) as HubRepo;
     } catch (err) {
       // A 200 that is not JSON is a captive portal or proxy.
-      failures.push(`${repoId}: the Hub answered 200 with unreadable JSON (${err})`);
+      failures.push(`${repoId}: the Hub answered 200 with unreadable JSON (${String(err)})`);
       return;
     }
     const hubGated = Boolean(repo.gated);
@@ -1603,7 +1603,7 @@ async function checkCatalogAgainstTheHub(catalogs: CatalogGroup[][]): Promise<st
 }
 
 if (process.argv.includes("--network")) {
-  console.log("model-catalog check: --network, asking the Hub about every declared artifact...");
+  console.warn("model-catalog check: --network, asking the Hub about every declared artifact...");
   const audioCppGroups = AUDIO_CATALOG.filter((group) =>
     group.artifacts.some((artifact) => isAudioCppFolderId(artifact.repoId)),
   );
@@ -1613,5 +1613,5 @@ if (process.argv.includes("--network")) {
     console.error(`model-catalog network check: ${failures.length} problem(s)`);
     process.exit(1);
   }
-  console.log("model-catalog network check: every declared repo, file and gated flag agrees with the Hub");
+  console.warn("model-catalog network check: every declared repo, file and gated flag agrees with the Hub");
 }

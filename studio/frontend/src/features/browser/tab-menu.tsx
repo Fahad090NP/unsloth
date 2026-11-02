@@ -121,7 +121,7 @@ export function unpinPage(pinnedId: string): void {
 export function renameTabTo(tab: BrowserTab | undefined, pinned: PinnedPage | undefined, title: string): void {
   if (tab) useBrowserStore.getState().renameTab(tab.id, title);
   const pinnedId = pinned?.id ?? tab?.pinnedId;
-  if (pinnedId) usePinnedPagesStore.getState().rename(pinnedId, title.trim() ?? tab?.title ?? "");
+  if (pinnedId) usePinnedPagesStore.getState().rename(pinnedId, title.trim() || tab?.title || "");
 }
 
 /** Focus a rename field once a menu has let go of focus. */
@@ -138,16 +138,20 @@ type Navigate = ReturnType<typeof useNavigate>;
 function forkToChat(navigate: Navigate, source: { tab?: BrowserTab; url: string }, temporary: boolean): void {
   resetToNewChat();
   if (temporary) useChatRuntimeStore.getState().setIncognito(true);
-  void navigate({ to: "/chat", search: { new: crypto.randomUUID() } }).then(() => {
-    // After the switch has closed the panel for the chat that was open.
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        const store = useBrowserStore.getState();
-        if (source.tab && store.tabs.some((tab) => tab.id === source.tab?.id)) store.duplicateTab(source.tab.id);
-        else store.openUrl(source.url, { newTab: true });
-      }),
-    );
-  });
+  navigate({ to: "/chat", search: { new: crypto.randomUUID() } })
+    .then(() => {
+      // After the switch has closed the panel for the chat that was open.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const store = useBrowserStore.getState();
+          if (source.tab && store.tabs.some((tab) => tab.id === source.tab?.id)) store.duplicateTab(source.tab.id);
+          else store.openUrl(source.url, { newTab: true });
+        }),
+      );
+    })
+    .catch((error: unknown) => {
+      console.error("Failed to navigate to chat:", error);
+    });
 }
 
 function Row({
@@ -203,7 +207,7 @@ export function TabMenuItems({
           {t("browser.tabMenu.unpin")}
         </Row>
       ) : tab && url ? (
-        <Row key="pin" P={P} icon={PinIcon} onSelect={() => { pinTab(tab, tab.customTitle ?? tab.title ?? hostOf(url)); }}>
+        <Row key="pin" P={P} icon={PinIcon} onSelect={() => { pinTab(tab, tab.customTitle ?? tab.title); }}>
           {t("browser.tabMenu.pin")}
         </Row>
       ) : null,
@@ -224,7 +228,13 @@ export function TabMenuItems({
           key="duplicate"
           P={P}
           icon={Copy01Icon}
-          onSelect={() => (tab ? store.duplicateTab(tab.id) : url && store.openUrl(url, { newTab: true }))}
+          onSelect={() => {
+            if (tab) {
+              store.duplicateTab(tab.id);
+            } else if (url) {
+              store.openUrl(url, { newTab: true });
+            }
+          }}
         >
           {t("browser.tabMenu.duplicate")}
         </Row>
@@ -250,7 +260,15 @@ export function TabMenuItems({
           key="copyUrl"
           P={P}
           icon={Link01Icon}
-          onSelect={() => void copyToClipboard(url).then((ok) => ok && toast.success(t("browser.linkCopied")))}
+          onSelect={() => {
+            copyToClipboard(url)
+              .then((ok) => {
+                if (ok) toast.success(t("browser.linkCopied"));
+              })
+              .catch((error: unknown) => {
+                console.error("Failed to copy link:", error);
+              });
+          }}
         >
           {t("browser.tabMenu.copyUrl")}
         </Row>

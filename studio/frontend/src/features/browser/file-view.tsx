@@ -32,7 +32,11 @@ function useObjectUrl(blob: Blob, enabled: boolean, svg: boolean): string | null
       // A data: URL, so an opened SVG can't run as a page on Studio's origin.
       let live = true;
       const reader = new FileReader();
-      reader.onload = () => live && typeof reader.result === "string" && setUrl(reader.result);
+      reader.onload = () => {
+        if (live && typeof reader.result === "string") {
+          setUrl(reader.result);
+        }
+      };
       reader.readAsDataURL(new Blob([blob], { type: "image/svg+xml" }));
       return () => {
         live = false;
@@ -83,18 +87,34 @@ function TextFile({
     let active = true;
     // HTML runs whole: a cut document breaks its scripts and closing tags.
     const bytes = kind === "html" ? blob.size : MAX_TEXT_BYTES;
-    blob.slice(0, bytes).text().then((value) => active && setText(value)).catch(() => undefined);
+    blob
+      .slice(0, bytes)
+      .text()
+      .then((value) => {
+        if (active) {
+          setText(value);
+        }
+      })
+      .catch(() => undefined);
     return () => {
       active = false;
     };
   }, [blob, kind]);
   // Stable: the frame reports its counts from an effect that depends on these.
   const onConsoleOpenChange = useCallback(
-    (consoleOpen: boolean) => tabId && useBrowserStore.getState().setFileView(tabId, { consoleOpen }),
+    (consoleOpen: boolean) => {
+      if (tabId) {
+        useBrowserStore.getState().setFileView(tabId, { consoleOpen });
+      }
+    },
     [tabId],
   );
   const onOutputCountChange = useCallback(
-    ({ errors }: { errors: number }) => tabId && useBrowserStore.getState().setFileView(tabId, { errorCount: errors }),
+    ({ errors }: { errors: number }) => {
+      if (tabId) {
+        useBrowserStore.getState().setFileView(tabId, { errorCount: errors });
+      }
+    },
     [tabId],
   );
   const onFrameReady = useCallback(
@@ -212,7 +232,11 @@ export function FileView({
   const [failed, setFailed] = useState(false);
   const pageTarget = useBrowserStore((state) => (tabId ? state.fileViews[tabId].pageTarget : undefined));
   const dropPageTarget = useCallback(
-    () => tabId && useBrowserStore.getState().setFileView(tabId, { pageTarget: null }),
+    () => {
+      if (tabId) {
+        useBrowserStore.getState().setFileView(tabId, { pageTarget: null });
+      }
+    },
     [tabId],
   );
 

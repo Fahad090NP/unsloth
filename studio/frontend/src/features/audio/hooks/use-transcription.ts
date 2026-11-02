@@ -127,7 +127,7 @@ export function useTranscription({
         "This transcript could not be saved. Download it before continuing, or continue and discard it?",
       )
     );
-  }, [transcript, transcriptRecord, transcriptExported]);
+  }, [busyRef, transcript, transcriptRecord, transcriptExported]);
 
   useEffect(() => {
     const unsaved = Boolean(
@@ -160,7 +160,6 @@ export function useTranscription({
     if (!unsaved) return;
     const warn = (eventParam: BeforeUnloadEvent) => { const event = eventParam;
       event.preventDefault();
-      event.returnValue = "";
     };
     const confirmLogout = (event: Event) => {
       if (
@@ -188,7 +187,8 @@ export function useTranscription({
       toast.info("Pick a speech-to-text model first.");
       return null;
     }
-    selectedSttRepoRef.current = repo;
+    const repoRef = selectedSttRepoRef;
+    repoRef.current = repo;
     setSelectedSttRepo(repo);
     const model = sttSidecarKeyFor(repo);
     const engine = sttEngineFor(repo);
@@ -203,10 +203,10 @@ export function useTranscription({
     // Nothing is busy during that read, so an Eject, a pick or leaving the page meanwhile wins; a
     // status refresh that cleared the selection (nothing resident yet) does not.
     if (sttLoadGeneration.current !== generation || !activeRef.current) return null;
-    const current = selectedSttRepoRef.current;
+    const current: string | null = (repoRef as { current: string | null }).current;
     if (current != null && current !== repo) return null;
     if (current == null) {
-      selectedSttRepoRef.current = repo;
+      repoRef.current = repo;
       setSelectedSttRepo(repo);
     }
     if (
@@ -224,13 +224,17 @@ export function useTranscription({
     setLastSttRepo(repo);
     return { model, engine };
   }, [
-    lastSttRepo,
-    sttLoadedModel,
-    sttLoadedEngine,
-    sttEngineFor,
-    readSttResidency,
+    activeRef,
     ensureSttLoaded,
+    lastSttRepo,
+    readSttResidency,
+    selectedSttRepoRef,
+    setSelectedSttRepo,
     setLastSttRepo,
+    sttEngineFor,
+    sttLoadGeneration,
+    sttLoadedEngine,
+    sttLoadedModel,
   ]);
 
   const runTranscription = useCallback(
@@ -285,7 +289,7 @@ export function useTranscription({
             if (!controller.signal.aborted) setTranscriptionProgress(progress);
           },
         );
-        if (controller.signal.aborted) return;
+        if ((controller.signal as { aborted: boolean }).aborted) return;
         setTranscript(result.text);
         setTranscriptModel(result.model);
         setTranscriptRecord(result.record);
@@ -323,10 +327,13 @@ export function useTranscription({
       }
     },
     [
+      activeRef,
+      busyRef,
       clearTranscript,
       confirmTranscriptReplacement,
       prepareTranscriptionModel,
       refreshSttStatus,
+      setBusy,
     ],
   );
 

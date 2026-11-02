@@ -86,8 +86,10 @@ export function classifyMetaToken(raw: string): MetaToken | null {
     return { kind: "param", label: t.toUpperCase() };
   }
   const lower = t.toLowerCase();
+  const formatToneMap: Record<string, FormatTone | undefined> = FORMAT_TONE;
+  const firstWord = lower.split(META_WHITESPACE_RE).at(0);
   const tone: FormatTone | undefined =
-    FORMAT_TONE[lower] ?? FORMAT_TONE[lower.split(META_WHITESPACE_RE)[0]];
+    formatToneMap[lower] ?? (firstWord ? formatToneMap[firstWord] : undefined);
   if (tone) {
     return { kind: "format", label: t, tone };
   }

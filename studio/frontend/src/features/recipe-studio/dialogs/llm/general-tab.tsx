@@ -116,7 +116,7 @@ export function LlmGeneralTab({
     [configs],
   );
   const hasHfSeed = Boolean(
-    seedConfig && (seedConfig.seed_source_type ?? "hf") === "hf",
+    seedConfig && seedConfig.seed_source_type === "hf",
   );
   const seedColumns = useMemo(
     () => seedConfig?.seed_columns ?? [],
@@ -170,7 +170,7 @@ export function LlmGeneralTab({
   const advancedOpen = config.advancedOpen === true;
   const toolAliasAnchorRef = useRef<HTMLDivElement>(null);
   const needsSetupHelp = !hasModelConfigs || !hasModelProviders;
-  const needsModelChoice = !config.model_alias?.trim();
+  const needsModelChoice = !config.model_alias.trim();
 
   return (
     <div className="space-y-4">

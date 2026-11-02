@@ -7,6 +7,8 @@ import { NATIVE_FILE_NAME_HEADER, encodeNativeFilename } from "@/lib/native-file
 export interface LocalCopy { id: string; path: string }
 export interface OpenWithApp { path: string; name: string; icon: string | null; default: boolean }
 
+async function invoke(command: string, args?: Record<string, unknown>): Promise<void>;
+async function invoke<T>(command: string, args?: Record<string, unknown>): Promise<T>;
 async function invoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   const core = await import("@tauri-apps/api/core");
   return await core.invoke<T>(command, args);
@@ -31,13 +33,13 @@ export function localCopy(blob: Blob, name: string): Promise<LocalCopy> {
   return pending;
 }
 
-export async function withLocalCopy<T>(blob: Blob, name: string, use: (copy: LocalCopy) => Promise<T>): Promise<T> {
+export async function withLocalCopy<T>(blob: Blob, name: string, consumer: (copy: LocalCopy) => Promise<T>): Promise<T> {
   const pending = localCopy(blob, name);
   try {
-    return await use(await pending);
+    return await consumer(await pending);
   } catch {
     if (copies.get(blob)?.get(name) === pending) copies.get(blob)?.delete(name);
-    return await use(await localCopy(blob, name));
+    return await consumer(await localCopy(blob, name));
   }
 }
 
@@ -46,7 +48,7 @@ export function openWithApps(id: string): Promise<OpenWithApp[]> {
 }
 
 export function openLocalCopy(id: string, app?: string): Promise<void> {
-  return invoke<void>("browser_file_open", { id, with: app ?? null });
+  return invoke("browser_file_open", { id, with: app ?? null });
 }
 
 export function localCopyPath(id: string): Promise<string> {
@@ -54,5 +56,5 @@ export function localCopyPath(id: string): Promise<string> {
 }
 
 export function revealLocalCopy(id: string): Promise<void> {
-  return invoke<void>("browser_file_reveal", { id });
+  return invoke("browser_file_reveal", { id });
 }

@@ -31,11 +31,13 @@ export function startLibraryChat(
   const nonce = createModelConfigHandoffRequestId();
   resetToNewChat();
   // Drained earlier it would attach to the old thread's composer.
-  void navigate({ to: "/chat", search: { new: nonce } }).then(() => {
-    requestAnimationFrame(() =>
-      { useLibraryChatHandoffStore.getState().offer(`single:${nonce}`, handoff); },
-    );
-  });
+  navigate({ to: "/chat", search: { new: nonce } })
+    .then(() => {
+      requestAnimationFrame(() => {
+        useLibraryChatHandoffStore.getState().offer(`single:${nonce}`, handoff);
+      });
+    })
+    .catch(() => undefined);
 }
 
 export const MAX_IMAGE_OR_TEXT_BYTES = 20 * 1024 * 1024;
@@ -64,6 +66,10 @@ const LOADING_TOAST_DELAY_MS = 400;
 // A second click during a large download would open a second chat.
 let handoffInFlight = false;
 
+function releaseHandoff(): void {
+  handoffInFlight = false;
+}
+
 export async function chatAboutMedia(
   navigate: Navigate,
   load: () => Promise<Response>,
@@ -79,9 +85,9 @@ export async function chatAboutMedia(
         size: Math.round(media.bytes / (1024 * 1024)),
       }),
     });
-  let loadingToast: string | number | null = null;
+  const toastHolder = { loadingToast: null as string | number | null };
   const loadingTimer = setTimeout(() => {
-    loadingToast = toast.loading(translate(media.attaching));
+    toastHolder.loadingToast = toast.loading(translate(media.attaching));
   }, LOADING_TOAST_DELAY_MS);
   // A sign-out mid-download would hand the file to the next account's chat.
   const epoch = getAuthSessionEpoch();
@@ -113,7 +119,9 @@ export async function chatAboutMedia(
     });
   } finally {
     clearTimeout(loadingTimer);
-    if (loadingToast != null) toast.dismiss(loadingToast);
-    handoffInFlight = false;
+    if (toastHolder.loadingToast !== null) {
+      toast.dismiss(toastHolder.loadingToast);
+    }
+    releaseHandoff();
   }
 }

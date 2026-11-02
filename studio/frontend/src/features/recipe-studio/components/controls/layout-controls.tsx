@@ -36,7 +36,7 @@ export function LayoutControls({
     requestAnimationFrame(() => {
       refreshNodeInternals();
       requestAnimationFrame(() => {
-        fitView(buildFitViewOptions(getNodes()));
+        fitView(buildFitViewOptions(getNodes())).catch(() => undefined);
       });
     });
   }, [fitView, getNodes, onLayout, refreshNodeInternals]);
@@ -48,7 +48,7 @@ export function LayoutControls({
       requestAnimationFrame(() => {
         refreshNodeInternals();
         requestAnimationFrame(() => {
-          fitView(buildFitViewOptions(getNodes()));
+          fitView(buildFitViewOptions(getNodes())).catch(() => undefined);
         });
       });
     });

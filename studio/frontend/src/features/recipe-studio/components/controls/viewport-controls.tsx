@@ -29,15 +29,15 @@ export function ViewportControls({
   const { zoomIn, zoomOut, fitView, getNodes } = useReactFlow();
 
   const handleZoomIn = useCallback(() => {
-    zoomIn({ duration: 150 });
+    zoomIn({ duration: 150 }).catch(() => undefined);
   }, [zoomIn]);
 
   const handleZoomOut = useCallback(() => {
-    zoomOut({ duration: 150 });
+    zoomOut({ duration: 150 }).catch(() => undefined);
   }, [zoomOut]);
 
   const handleFitView = useCallback(() => {
-    fitView(buildFitViewOptions(getNodes()));
+    fitView(buildFitViewOptions(getNodes())).catch(() => undefined);
   }, [fitView, getNodes]);
 
   return (

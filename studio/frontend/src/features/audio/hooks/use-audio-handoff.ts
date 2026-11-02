@@ -141,18 +141,11 @@ export function useAudioHandoff({
   }, [
     active,
     busy,
+    busyRef,
     committedWorkflow,
-    routeSearch.model,
-    routeSearch.quant,
-    routeSearch.ggufQuant,
-    routeSearch.task,
-    routeSearch.workflow,
-    routeSearch.audioType,
-    routeSearch.loadId,
-    routeSearch.gguf,
-    routeSearch.item,
     handleModelSelect,
     navigateSelf,
+    routeSearch,
     transitionWorkflow,
   ]);
 

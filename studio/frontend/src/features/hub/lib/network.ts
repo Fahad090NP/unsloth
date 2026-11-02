@@ -341,6 +341,7 @@ export async function fetchWithTimeout(
   const parentSignal = init.signal;
   const controller = new AbortController();
   let timedOut = false;
+  const isTimedOut = (): boolean => timedOut;
   const timeout = setTimeout(() => {
     timedOut = true;
     controller.abort();
@@ -366,12 +367,12 @@ export async function fetchWithTimeout(
     return response;
   } catch (error) {
     // A superseded query must not blacklist the Hub or overwrite a diagnosis.
-    if (parentSignal?.aborted && !timedOut) {
+    if (parentSignal?.aborted && !isTimedOut()) {
       throw error;
     }
-    const failure = classifyFetchFailure(error, origin, { timedOut });
+    const failure = classifyFetchFailure(error, origin, { timedOut: isTimedOut() });
     // Connectivity failures only: a slow optional asset timing out must not take the origin down.
-    if (origin && !timedOut && isNetworkFetchError(error)) {
+    if (origin && !isTimedOut() && isNetworkFetchError(error)) {
       markRemoteNetworkOffline(origin, REMOTE_OFFLINE_TTL_MS, failure);
     }
     throw new HubFetchError(failure, { cause: error });

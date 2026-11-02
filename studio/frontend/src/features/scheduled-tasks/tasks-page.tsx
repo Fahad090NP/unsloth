@@ -305,9 +305,9 @@ function TaskRow({
             {task.status !== "completed" && (
               <DropdownMenuItem
                 disabled={busy}
-                onSelect={() =>
-                  act(() => update(task.id, { enabled: !task.enabled }), "updateFailed").catch(() => undefined)
-                }
+                onSelect={() => {
+                  act(() => update(task.id, { enabled: !task.enabled }), "updateFailed").catch(() => undefined);
+                }}
               >
                 {task.enabled ? (
                   <HugeiconsIcon icon={PauseIcon} strokeWidth={1.75} className="size-icon" />

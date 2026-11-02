@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSettingsDialogStore } from "@/features/settings";
 import { useStripReorder } from "@/hooks/use-strip-reorder";
 import { copyToClipboard } from "@/lib/copy-to-clipboard";
@@ -72,7 +72,9 @@ export function useAudioGallery({
     workflow: "speak" | "music" | "clone" | "edit" | "convert" | "separate";
   } | null>(null);
   const fallbackClipRef = useRef(fallbackClip);
-  fallbackClipRef.current = fallbackClip;
+  useLayoutEffect(() => {
+    fallbackClipRef.current = fallbackClip;
+  });
   const loadingMoreRef = useRef(false);
   const galleryRefreshGeneration = useRef(0);
   // overlapping refreshes read stale order, so defer and rerun them after order writes finish.
@@ -251,7 +253,8 @@ export function useAudioGallery({
       setHasMore(page.has_more);
     } catch {
      /* noop */ } finally {
-      loadingMoreRef.current = false;
+      const targetLoadingMore = loadingMoreRef;
+      targetLoadingMore.current = false;
     }
   }, []);
 
@@ -628,7 +631,7 @@ export function useWorkflowHistory({
 
   useEffect(() => {
     if (!enabled || selectedClip || pageFallbackClip) return;
-    const first = visibleClips[0];
+    const first = visibleClips.at(0);
     // Keep another page's unsaved clip: it is the only copy.
     if (first) selectClip(first.id, fallbackClip != null);
   }, [enabled, selectedClip, pageFallbackClip, fallbackClip, visibleClips, selectClip]);
@@ -647,7 +650,9 @@ export function useWorkflowHistory({
   // Load until this page gains a row: an all-other-page batch adds no height, so no scroll fires again.
   const visibleLoad = useRef(false);
   const current = useRef({ workflow, enabled });
-  current.current = { workflow, enabled };
+  useLayoutEffect(() => {
+    current.current = { workflow, enabled };
+  });
   const loadMoreVisible = useCallback(async () => {
     if (visibleLoad.current) return;
     visibleLoad.current = true;
@@ -669,7 +674,8 @@ export function useWorkflowHistory({
           !current.current.enabled || current.current.workflow !== workflow,
       });
     } finally {
-      visibleLoad.current = false;
+      const targetLoad = visibleLoad;
+      targetLoad.current = false;
     }
   }, [workflow, loadMore, loadingMoreRef]);
 

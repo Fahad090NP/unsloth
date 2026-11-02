@@ -46,7 +46,7 @@ export function LlmDialog({
     <Tabs defaultValue="general" className="w-full">
       <TabsList className="w-full">
         <TabsTrigger value="general">General</TabsTrigger>
-        {config.llm_type === "judge" && <TabsTrigger value="scores">Scores</TabsTrigger>}
+        <TabsTrigger value="scores">Scores</TabsTrigger>
       </TabsList>
       <TabsContent value="general" className="pt-3">
         <LlmGeneralTab
@@ -58,11 +58,9 @@ export function LlmDialog({
           onUpdate={onUpdate}
         />
       </TabsContent>
-      {config.llm_type === "judge" && (
-        <TabsContent value="scores" className="pt-3">
-          <LlmScoresTab config={config} onUpdate={onUpdate} />
-        </TabsContent>
-      )}
+      <TabsContent value="scores" className="pt-3">
+        <LlmScoresTab config={config} onUpdate={onUpdate} />
+      </TabsContent>
     </Tabs>
   );
 }

@@ -226,7 +226,8 @@ export function DecisionApiSection({
     if (connection) return `${connection.provider} · ${connection.model}`;
     const option = settings?.models.find((m) => m.name === name);
     if (option?.label) return option.label;
-    const label: TranslationKey | undefined = DECISION_MODEL_LABELS[name];
+    const labels: Record<string, TranslationKey | undefined> = DECISION_MODEL_LABELS;
+    const label = labels[name];
     return label ? t(label) : name;
   };
 

@@ -29,11 +29,17 @@ interface UnseenState extends Stored {
 
 const NOTHING_UNSEEN: Stored = { tasks: {}, page: false, threads: [] };
 
+interface StoredRaw {
+  tasks?: Record<string, string | null> | null;
+  page?: boolean;
+  threads?: string[];
+}
+
 function stored(): Stored | null {
   const key = storageKey();
   if (key === null) return null;
   try {
-    const value = JSON.parse(localStorage.getItem(key) ?? "null") as Partial<Stored> | null;
+    const value = JSON.parse(localStorage.getItem(key) ?? "null") as StoredRaw | null;
     if (value && typeof value.tasks === "object" && value.tasks !== null) {
       const threads = Array.isArray(value.threads)
         ? value.threads.filter((id): id is string => typeof id === "string")

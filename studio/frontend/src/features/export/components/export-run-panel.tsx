@@ -632,7 +632,14 @@ export function ExportRunPanel(props: ExportRunPanelProps) {
           </>
         )}
         {isExporting && (
-          <Button variant="destructive" onClick={() => void requestCancel()}>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              requestCancel().catch((error: unknown) => {
+                console.error("Failed to cancel export:", error);
+              });
+            }}
+          >
             Cancel Export
           </Button>
         )}

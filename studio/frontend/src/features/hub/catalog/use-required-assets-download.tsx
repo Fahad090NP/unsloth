@@ -20,6 +20,10 @@ import { enqueueHubDownload } from "../download-manager/use-hub-download-queue";
 import type { StagedDownloadEntry } from "../download-manager/use-staged-download";
 export type AssetRuntime = "images" | "video" | "audio";
 
+function setRefValue<T>(ref: { current: T }, value: T): void {
+  ref.current = value;
+}
+
 export function useRequiredAssetsDownload({
   repoId,
   filename,
@@ -93,12 +97,13 @@ export function useRequiredAssetsDownload({
     return () => { window.clearTimeout(timer); };
   }, [resolvePlan, runtime]);
   useEffect(() => {
+    const seq = sequence;
     ++sequence.current;
     setPending(null);
     setChecking(false);
     starting.current = false;
     return () => {
-      ++sequence.current;
+      ++seq.current;
     };
   }, [fetchPlan, runtime]);
   const request = async (fallback: () => void) => {
@@ -107,7 +112,7 @@ export function useRequiredAssetsDownload({
       return;
     }
     if (starting.current) return;
-    starting.current = true;
+    setRefValue(starting, true);
     setChecking(true);
     const id = ++sequence.current;
     try {
@@ -133,7 +138,7 @@ export function useRequiredAssetsDownload({
       });
     } finally {
       if (sequence.current === id) {
-        starting.current = false;
+        setRefValue(starting, false);
         setChecking(false);
       }
     }

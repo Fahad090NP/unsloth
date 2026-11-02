@@ -229,7 +229,6 @@ export function describeUnacceptedStart(state: DownloadStartState): string {
     case "cancelled":
     case "complete":
     case "error":
-    default:
       return "The download could not be started. Try again in a moment.";
   }
 }

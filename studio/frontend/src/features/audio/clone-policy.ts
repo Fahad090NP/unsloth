@@ -21,7 +21,6 @@ export function referenceTextField(
     case "optional":
     case null:
     case undefined:
-    default:
       return "optional";
   }
 }

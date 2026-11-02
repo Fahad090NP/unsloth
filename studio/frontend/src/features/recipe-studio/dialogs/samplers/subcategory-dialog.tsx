@@ -106,41 +106,46 @@ export function SubcategoryDialog({
         </div>
         {categoryValues.length > 0 && (
           <div className="grid gap-4">
-            {categoryValues.map((value) => (
-              <div key={value}>
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-foreground">
-                    {value}
-                  </p>
-                  <span className="text-xs text-muted-foreground">
-                    {mapping[value]?.length ?? 0} subvalues
-                  </span>
+            {categoryValues.map((value) => {
+              const subvalues: string[] | undefined = mapping[value];
+              return (
+                <div key={value}>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      {value}
+                    </p>
+                    <span className="text-xs text-muted-foreground">
+                      {subvalues?.length ?? 0} subvalues
+                    </span>
+                  </div>
+                  <ChipInput
+                    values={subvalues ?? []}
+                    onAdd={(item) => {
+                      const next = { ...mapping };
+                      const existing: string[] | undefined = next[value];
+                      const list = existing ? [...existing] : [];
+                      list.push(item);
+                      next[value] = list;
+                      updateField("subcategory_mapping", next);
+                    }}
+                    onRemove={(index) => {
+                      const next = { ...mapping };
+                      const existing: string[] | undefined = next[value];
+                      const list = [...(existing ?? [])];
+                      list.splice(index, 1);
+                      next[value] = list;
+                      updateField("subcategory_mapping", next);
+                    }}
+                    placeholder="Type subcategory and press Enter"
+                  />
+                  {(subvalues ?? []).length === 0 && (
+                    <p className="mt-2 text-xs text-rose-500">
+                      Add at least 1 subcategory.
+                    </p>
+                  )}
                 </div>
-                <ChipInput
-                  values={mapping[value] ?? []}
-                  onAdd={(item) => {
-                    const next = { ...mapping };
-                    const list = next[value] ? [...next[value]] : [];
-                    list.push(item);
-                    next[value] = list;
-                    updateField("subcategory_mapping", next);
-                  }}
-                  onRemove={(index) => {
-                    const next = { ...mapping };
-                    const list = [...(next[value] ?? [])];
-                    list.splice(index, 1);
-                    next[value] = list;
-                    updateField("subcategory_mapping", next);
-                  }}
-                  placeholder="Type subcategory and press Enter"
-                />
-                {(mapping[value] ?? []).length === 0 && (
-                  <p className="mt-2 text-xs text-rose-500">
-                    Add at least 1 subcategory.
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

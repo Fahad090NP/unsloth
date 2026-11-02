@@ -234,7 +234,7 @@ export async function chatWithModel(
       (usePlatformStore.getState().deviceType !== "mac" ||
         trainedTtsCheckpointIsRunnableOnMac(audioType, exportType))
     ) {
-      void navigate({
+      navigate({
         to: "/audio",
         search: {
           model: model.path,
@@ -243,7 +243,7 @@ export async function chatWithModel(
           audioType,
           workflow: audioWorkflowForAudioType(audioType),
         },
-      });
+      }).catch(() => undefined);
       return;
     }
     toast(translate("library.toast.speechModel", { name: item.name }), {

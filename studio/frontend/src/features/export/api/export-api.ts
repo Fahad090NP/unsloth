@@ -477,7 +477,7 @@ export async function streamExportLogs(options: {
   let buffer = "";
 
   try {
-    while (true) {
+    for (;;) {
       const { value, done } = await reader.read();
       if (done) return;
 

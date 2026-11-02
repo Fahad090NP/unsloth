@@ -131,7 +131,9 @@ export function useLibraryFavorites() {
   }, [load]);
   return {
     isFavorite: (id: string) => ids.has(id),
-    toggleFavorite: (id: string) => void setFavorite(id, !ids.has(id)),
+    toggleFavorite: (id: string) => {
+      setFavorite(id, !ids.has(id)).catch(() => undefined);
+    },
   };
 }
 
@@ -139,12 +141,16 @@ export function useLibraryFavorite(id: string | null, active: boolean) {
   const favorite = useLibraryFavoritesStore((s) => (id ? s.ids.has(id) : false));
   const load = useLibraryFavoritesStore((s) => s.load);
   useEffect(() => {
-    if (active && id) void load();
+    if (active && id) {
+      load().catch(() => undefined);
+    }
   }, [active, id, load]);
   return {
     favorite,
     toggleFavorite: () => {
-      if (id) void useLibraryFavoritesStore.getState().setFavorite(id, !favorite);
+      if (id) {
+        useLibraryFavoritesStore.getState().setFavorite(id, !favorite).catch(() => undefined);
+      }
     },
   };
 }

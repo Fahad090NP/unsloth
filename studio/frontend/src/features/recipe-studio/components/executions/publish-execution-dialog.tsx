@@ -80,6 +80,24 @@ export function PublishExecutionDialog({
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [prevOpen, setPrevOpen] = useState(open);
+
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (!open) {
+      setPublishing(false);
+      setPublishError(null);
+      setPublishedUrl(null);
+      setRepoId("");
+      setDescription("");
+      setHfToken("");
+      setPrivateRepo(false);
+    } else {
+      setPublishError(null);
+      setPublishedUrl(null);
+      setDescription(buildDefaultDescription(execution));
+    }
+  }
 
   const defaultDescription = useMemo(
     () => buildDefaultDescription(execution),
@@ -89,22 +107,6 @@ export function PublishExecutionDialog({
   const recordCount = getExecutionRecordCount(execution);
   const recordLabel =
     typeof recordCount === "number" ? recordCount.toLocaleString() : "--";
-
-  useEffect(() => {
-    if (!open) {
-      setPublishing(false);
-      setPublishError(null);
-      setPublishedUrl(null);
-      setRepoId("");
-      setDescription("");
-      setHfToken("");
-      setPrivateRepo(false);
-      return;
-    }
-    setPublishError(null);
-    setPublishedUrl(null);
-    setDescription(buildDefaultDescription(execution));
-  }, [execution, open]);
 
   const canSubmit =
     !publishing &&
@@ -192,7 +194,7 @@ export function PublishExecutionDialog({
               <p className="break-all font-medium text-foreground">{publishedUrl}</p>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleCopyUrl}>
+              <Button variant="outline" onClick={() => { handleCopyUrl().catch(() => undefined); }}>
                 <HugeiconsIcon icon={Copy01Icon} className="mr-2 size-4" />
                 Copy link
               </Button>
@@ -338,7 +340,7 @@ export function PublishExecutionDialog({
               >
                 Cancel
               </Button>
-              <Button variant="dark" onClick={() => void handlePublish()} disabled={!canSubmit}>
+              <Button variant="dark" onClick={() => { handlePublish().catch(() => undefined); }} disabled={!canSubmit}>
                 {publishing ? "Publishing..." : "Publish to Hugging Face"}
               </Button>
             </DialogFooter>

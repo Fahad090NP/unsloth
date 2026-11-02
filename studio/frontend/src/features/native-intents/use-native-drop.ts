@@ -223,12 +223,21 @@ export function useNativeModelDrop(
   const [dropState, setDropState] = useState<NativeModelDropState>({
     status: "idle",
   });
+  const [prevEnabled, setPrevEnabled] = useState(enabled);
+  if (enabled !== prevEnabled) {
+    setPrevEnabled(enabled);
+    if (!enabled && dropState.status !== "idle") {
+      setDropState({ status: "idle" });
+    }
+  }
+
   const optionsRef = useRef(options);
-  optionsRef.current = options;
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   useEffect(() => {
     if (!isTauri || !enabled) {
-      setDropState({ status: "idle" });
       return;
     }
     let disposed = false;

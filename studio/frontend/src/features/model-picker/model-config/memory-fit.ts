@@ -126,8 +126,7 @@ export function resolveReclaimableMemoryCredit(
 	const residentIds = residentPool.ids;
 	const includesResidentPool =
 		!requestedIds?.length ||
-		(requestedIds != null &&
-			residentIds != null &&
+		(residentIds != null &&
 			residentIds.length > 0 &&
 			residentPool.indexKind != null &&
 			residentPool.indexKind === requestedPool.indexKind &&

@@ -18,7 +18,7 @@ export class BookmarksFileError extends Error {}
 function isToolbarHeading(heading: Element): boolean {
   return (
     heading.getAttribute("personal_toolbar_folder") === "true" ||
-    TOOLBAR_NAMES.test((heading.textContent ?? "").trim())
+    TOOLBAR_NAMES.test(heading.textContent.trim())
   );
 }
 

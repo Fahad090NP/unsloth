@@ -85,7 +85,6 @@ export function matchesFormatFilter(
     case "npu":
       return false;
     case "all":
-    default:
       return true;
   }
 }

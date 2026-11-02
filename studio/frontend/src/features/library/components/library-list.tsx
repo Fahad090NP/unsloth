@@ -154,15 +154,21 @@ function Row({
       <button
         type="button"
         aria-pressed={selecting ? selected : undefined}
-        onClick={(event) => { selecting ? onToggle(event.shiftKey) : onOpen(); }}
+        onClick={(event) => {
+          if (selecting) {
+            onToggle(event.shiftKey);
+          } else {
+            onOpen();
+          }
+        }}
         className="flex min-w-0 flex-1 items-center gap-4 rounded-md py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {tile}
         <span className="flex min-w-0 items-center gap-2 text-ui-14 text-foreground">{name}</span>
         {activity ? (
           <span className={cn(ACTIVITY_COLUMN, CELL, "ml-auto")}>
-            {(opened ?? 0) > modified
-              ? t("library.list.opened", { time: formatActivityTime(opened!, locale, t) })
+            {opened != null && opened > modified
+              ? t("library.list.opened", { time: formatActivityTime(opened, locale, t) })
               : t("library.list.modified", { time: formatActivityTime(modified, locale, t) })}
           </span>
         ) : (
@@ -273,23 +279,25 @@ export function LibraryList({
             activity={activity}
           />
         ))}
-        {items.map((item) => (
-          <Row
-            key={item.id}
-            target={{ kind: "item", item }}
-            selected={selection.has(`item:${item.id}`)}
-            selecting={selecting}
-            onToggle={(range) => { onToggle(`item:${item.id}`, range); }}
-            onOpen={() => { actions.openItem(item); }}
-            tile={<ItemTile item={item} />}
-            name={
-              <>
-                <span className="truncate">{item.name}</span>
-                {item.model && (
-                  <span className="shrink-0 text-muted-foreground text-sm">
-                    {t(modelLabelKey(item)!)}
-                  </span>
-                )}
+        {items.map((item) => {
+          const labelKey = item.model ? modelLabelKey(item) : null;
+          return (
+            <Row
+              key={item.id}
+              target={{ kind: "item", item }}
+              selected={selection.has(`item:${item.id}`)}
+              selecting={selecting}
+              onToggle={(range) => { onToggle(`item:${item.id}`, range); }}
+              onOpen={() => { actions.openItem(item); }}
+              tile={<ItemTile item={item} />}
+              name={
+                <>
+                  <span className="truncate">{item.name}</span>
+                  {labelKey && (
+                    <span className="shrink-0 text-muted-foreground text-sm">
+                      {t(labelKey)}
+                    </span>
+                  )}
                 {item.audio && (
                   <span className="shrink-0 text-muted-foreground text-sm tabular-nums">
                     {audioSummary(item).join(" · ")}
@@ -310,7 +318,8 @@ export function LibraryList({
             size={item.sizeBytes}
             activity={activity}
           />
-        ))}
+        );
+      })}
       </div>
     </div>
   );

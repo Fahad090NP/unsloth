@@ -15,7 +15,7 @@ import {
 } from "@xyflow/react";
 import { memo, type ReactElement, useEffect } from "react";
 import { useRecipeStudioStore } from "../stores/recipe-studio";
-import type { LlmConfig, Score, ScoreOption } from "../types";
+import type { LlmConfig, NodeConfig, Score, ScoreOption } from "../types";
 import { AUX_HANDLE_CLASS } from "../utils/handle-layout";
 import { HANDLE_IDS } from "../utils/handles";
 import { findInvalidJinjaReferences } from "../utils/refs";
@@ -76,7 +76,7 @@ function AuxNodeBase({
   id,
   data,
 }: NodeProps<RecipeGraphAuxNodeType>): ReactElement | null {
-  const config = useRecipeStudioStore((state) => state.configs[data.llmId]);
+  const config: NodeConfig | undefined = useRecipeStudioStore((state) => state.configs[data.llmId]);
   const configs = useRecipeStudioStore((state) => state.configs);
   const updateConfig = useRecipeStudioStore((state) => state.updateConfig);
   const updateNodeInternals = useUpdateNodeInternals();
@@ -85,7 +85,7 @@ function AuxNodeBase({
     updateNodeInternals(id);
   }, [id, updateNodeInternals]);
 
-  if (!(config && config.kind === "llm")) {
+  if (config?.kind !== "llm") {
     return null;
   }
   const executionLocked = Boolean(data.executionLocked);

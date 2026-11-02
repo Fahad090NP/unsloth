@@ -105,7 +105,7 @@ export function ValidatorDialog({
         })
         .filter((item) => item.name.trim())
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [config.code_lang, config.validator_type, configs],
+    [config, configs],
   );
   const currentTarget = config.target_columns[0] ?? "";
 
@@ -142,7 +142,7 @@ export function ValidatorDialog({
               return;
             }
             const targetConfig = targetOptions.find((item) => item.name === value);
-            const nextCodeLang = targetConfig?.codeLang?.trim();
+            const nextCodeLang = targetConfig?.codeLang.trim();
             onUpdate({
               // biome-ignore lint/style/useNamingConvention: api schema
               target_columns: [value],

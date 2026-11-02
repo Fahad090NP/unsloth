@@ -99,10 +99,14 @@ export function ReferenceMediaPicker({
             onChange({ name: file.name, dataUrl });
             return;
           }
-          void readVideoDuration(dataUrl).then((durationSeconds) => {
-            if (!claim.isCurrent()) return;
-            onChange({ name: file.name, dataUrl, durationSeconds });
-          });
+          readVideoDuration(dataUrl)
+            .then((durationSeconds) => {
+              if (!claim.isCurrent()) return;
+              onChange({ name: file.name, dataUrl, durationSeconds });
+            })
+            .catch((error: unknown) => {
+              console.error("Failed to read video duration:", error);
+            });
         },
         onError: (message) => toast.error(message),
       });
@@ -112,7 +116,11 @@ export function ReferenceMediaPicker({
 
   // Tauri suppresses webview drop events, so claim the OS drop here (#9036).
   const { ref: dropRef, dragging, dragHandlers } = useNativeFileDrop({
-    onFiles: (files) => void readFile(files[0]),
+    onFiles: (files) => {
+      readFile(files[0]).catch((error: unknown) => {
+        console.error("Failed to read dropped file:", error);
+      });
+    },
     accept: REFERENCE_DROP_ACCEPT[kind],
     multiple: false,
   });
@@ -179,7 +187,11 @@ export function ReferenceMediaPicker({
         type="file"
         accept={REFERENCE_PICKER_ACCEPT[kind]}
         className="hidden"
-        onChange={(e) => void readFile(e.target.files?.[0])}
+        onChange={(e) => {
+          readFile(e.target.files?.[0]).catch((error: unknown) => {
+            console.error("Failed to read selected file:", error);
+          });
+        }}
       />
     </button>
   );

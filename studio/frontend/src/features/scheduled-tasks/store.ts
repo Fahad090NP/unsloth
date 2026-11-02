@@ -77,7 +77,11 @@ export const useScheduledTasksStore = create<ScheduledTasksState>()((set, get) =
       const stale = refreshesInFlight > 0 || refreshesDone !== listedBefore;
       refreshGeneration += 1;
       apply(result);
-      if (stale) void get().refresh();
+      if (stale) {
+        get().refresh().catch((err: unknown) => {
+          console.error("Scheduled tasks stale refresh failed:", err);
+        });
+      }
     }
     announceChange();
     return result;
@@ -147,7 +151,11 @@ export const useScheduledTasksStore = create<ScheduledTasksState>()((set, get) =
 if (typeof window !== "undefined") {
   window.addEventListener(SCHEDULED_TASK_RUNS_FINISHED_EVENT, () => {
     const { status, refresh } = useScheduledTasksStore.getState();
-    if (status !== "idle") void refresh();
+    if (status !== "idle") {
+      refresh().catch((err: unknown) => {
+        console.error("Scheduled tasks refresh on finished runs failed:", err);
+      });
+    }
   });
   // Module state: a sign-out must drop it or the next account sees these tasks.
   window.addEventListener(AUTH_SESSION_CLEARED_EVENT, () => {

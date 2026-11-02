@@ -36,11 +36,15 @@ function setResult(next: FindTargetResult): void {
 
 function nativeStep(tabId: string, backwards: boolean): void {
   const asked = query;
-  nativeFind(tabId, asked, backwards).then((found) => {
-    // The native view walks matches without counting them: null keeps the walk open.
-    if (asked === query && searchedTabId === tabId) setResult({ count: found ? null : 0, active: found ? 0 : -1 });
-    refreshCoveredPage(tabId);
-  });
+  nativeFind(tabId, asked, backwards)
+    .then((found) => {
+      // The native view walks matches without counting them: null keeps the walk open.
+      if (asked === query && searchedTabId === tabId) setResult({ count: found ? null : 0, active: found ? 0 : -1 });
+      refreshCoveredPage(tabId);
+    })
+    .catch((error: unknown) => {
+      console.error("Failed to run native find:", error);
+    });
 }
 
 function run(): void {

@@ -130,10 +130,12 @@ function ViewRepositoryButton({
 function CopyRepoButton({ repoId }: { repoId: string }) {
   const { copied, copy } = useCopyFeedback();
 
-  const handleCopy = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleCopy = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    await copy(repoId);
+    copy(repoId).catch((error: unknown) => {
+      console.error("Failed to copy repo ID", error);
+    });
   };
 
   return (
@@ -390,7 +392,7 @@ function ModelStatusChips({
           </TooltipContent>
         </Tooltip>
       )}
-      {showVram && vramInfo && (
+      {showVram && (
         <Tooltip>
           <TooltipTrigger asChild={true}>
             <span tabIndex={0} className="inline-flex outline-none">

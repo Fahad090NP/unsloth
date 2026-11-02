@@ -12,7 +12,7 @@ import type { Plan } from "./use-hub-download-queue";
 
 /** "Model file · 1 of 2" while a step runs, "Queued" before. */
 export function hubPlanStepLabel(plan: Plan, running: boolean): string {
-  const entry = plan.remaining[0];
+  const entry = plan.remaining.at(0);
   if (!entry || !running) return "Queued";
   const what =
     entry.checkpoint !== false ? "Model file" : assetLabel(entry, "Required assets");
@@ -54,7 +54,7 @@ export function HubPlanProgress({ plan }: { plan: Plan }) {
         progress={
           job
             ? presentedProgress(job)
-            : { expectedBytes: Math.max(0, entry?.bytes ?? 0), downloadedBytes: 0, fraction: 0 }
+            : { expectedBytes: Math.max(0, entry.bytes), downloadedBytes: 0, fraction: 0 }
         }
         bytesPerSec={job?.bytesPerSec ?? 0}
         cancelling={job?.state === "cancelling"}

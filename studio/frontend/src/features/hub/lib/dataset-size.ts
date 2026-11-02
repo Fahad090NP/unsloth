@@ -82,6 +82,7 @@ function fetchCachedSize<T>(
   if (existing) return attachInflight(existing, signal);
 
   let timedOut = false;
+  const isTimedOut = (): boolean => timedOut;
   const controller = new AbortController();
   const inflightEntry: InflightSizeEntry<T> = {
     promise: Promise.resolve(null),
@@ -118,14 +119,14 @@ function fetchCachedSize<T>(
     } catch (err) {
       if (
         import.meta.env.DEV &&
-        (!inflightEntry.cancelledByConsumers || timedOut)
+        (!inflightEntry.cancelledByConsumers || isTimedOut())
       ) {
-        console.debug(`${debugContext.label} size lookup failed`, {
+        console.warn(`${debugContext.label} size lookup failed`, {
           id: debugContext.id,
           error: err,
         });
       }
-      if (!inflightEntry.cancelledByConsumers || timedOut) {
+      if (!inflightEntry.cancelledByConsumers || isTimedOut()) {
         cache.set(cacheKey, {
           kind: "miss-transient",
           until: Date.now() + TRANSIENT_MISS_TTL_MS,

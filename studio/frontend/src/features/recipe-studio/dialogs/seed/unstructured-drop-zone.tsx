@@ -172,7 +172,7 @@ export function UnstructuredDropZone({
   const deletedIdsRef = useRef(new Set<string>());
   const handleRemove = useCallback(
     (index: number) => {
-      const entry = filesRef.current[index];
+      const entry = filesRef.current.at(index);
       if (!entry) return;
       if (entry.status === "uploading" && entry.abortController) {
         entry.abortController.abort();
@@ -228,7 +228,7 @@ export function UnstructuredDropZone({
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const selected = Array.from(e.target.files ?? []);
-      handleFiles(selected);
+      handleFiles(selected).catch(() => undefined);
       const target = e.target;
       target.value = "";
     },

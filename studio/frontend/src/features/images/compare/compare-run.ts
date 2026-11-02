@@ -71,11 +71,11 @@ export function createCompareRun(
       return `Cell ${Math.min(done + 1, plan.cellCount)}/${plan.cellCount}${label ? `: ${label}` : ""}`;
     },
     sentSeed(run) {
-      const cell = plan.order[run];
+      const cell = plan.order.at(run);
       return cell == null ? undefined : requests[cell]?.seed;
     },
     onImages(run, images) {
-      const cell = plan.order[run];
+      const cell = plan.order.at(run);
       if (cell == null) return;
       // A lost-response recovery passes every record the gallery gained: the cell's own carries its seed.
       const seed = requests[cell]?.seed;
@@ -175,7 +175,16 @@ export function gridRecipeFields(
   const height = shared("height");
   const fields: [string, string | number | null | undefined][] = [
     ["Steps", sent.length ? shared("steps") : form.steps],
-    ["Sampler", sampler ? (SAMPLER_LABELS[String(sampler.value ?? "default")] ?? scalar(sampler.value)) : undefined],
+    [
+      "Sampler",
+      sampler
+        ? typeof sampler.value === "string"
+          ? (SAMPLER_LABELS[sampler.value] ?? sampler.value)
+          : sampler.value == null
+            ? SAMPLER_LABELS["default"]
+            : undefined
+        : undefined,
+    ],
     ["Schedule type", schedule ? (SCHEDULE_LABELS[String(schedule)] ?? schedule) : undefined],
     ["Shift", shared("shift")],
     ["Base shift", shared("base_shift")],

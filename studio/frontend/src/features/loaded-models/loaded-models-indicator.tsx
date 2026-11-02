@@ -271,7 +271,9 @@ export function LoadedModelsIndicator({
         return;
       }
       // Navigation only (Audio carries its workflow): no new thread, no reload.
-      void navigate({ to: target.to, search: target.search });
+      navigate({ to: target.to, search: target.search }).catch((err: unknown) => {
+        console.error("Loaded model navigation failed:", err);
+      });
     },
     [navigate],
   );
@@ -489,7 +491,11 @@ export function LoadedModelsIndicator({
                 key={entry.id}
                 entry={entry}
                 ejecting={ejecting.has(entry.id)}
-                onEject={() => void eject(entry)}
+                onEject={() => {
+                  eject(entry).catch((err: unknown) => {
+                    console.error("Loaded model eject failed:", err);
+                  });
+                }}
                 onOpen={() => { openEntry(entry); }}
               />
             ))}

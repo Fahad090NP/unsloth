@@ -31,7 +31,16 @@ function nativeCommand(command: FrameCommand): NativeCommand | null {
       return { command: "forget", id: command.id };
     case "annotateNumbers":
       return { command: "number", numbers: command.numbers };
-    default:
+    case "agent":
+    case "clearStorage":
+    case "find":
+    case "findStep":
+    case "go":
+    case "mute":
+    case "response":
+    case "snapshot":
+    case "storageSync":
+    case "zoom":
       return null;
   }
 }
@@ -62,7 +71,6 @@ export function startNativeAnnotate(
     installed = answer.installed;
     // The page can write to the queue too, so validate like frame messages.
     for (const event of answer.events) {
-      if (!live) return;
       const data = event && typeof event === "object" ? { ...event, source: "unsloth-browser" } : null;
       const message = parseFrameMessage(data);
       if (message?.type === "annotate") listener(message.event);
@@ -90,9 +98,13 @@ export function startNativeAnnotate(
       live || command.command === "stop" ? call() : undefined,
     );
     tabQueues.set(tabId, next);
-    void next.finally(() => {
-      if (tabQueues.get(tabId) === next) tabQueues.delete(tabId);
-    });
+    next
+      .finally(() => {
+        if (tabQueues.get(tabId) === next) tabQueues.delete(tabId);
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to run tab queue task:", error);
+      });
     return next;
   };
 
@@ -115,9 +127,13 @@ export function startNativeAnnotate(
   const timer = window.setInterval(() => {
     if (polling) return;
     polling = true;
-    void run({ command: "poll" }).finally(() => {
-      polling = false;
-    });
+    run({ command: "poll" })
+      .finally(() => {
+        polling = false;
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to poll native annotate:", error);
+      });
   }, POLL_MS);
 
   return {

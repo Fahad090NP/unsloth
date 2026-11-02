@@ -80,7 +80,6 @@ export function keylessAudience(
     case "colab":
       return "Anyone who can reach this Colab runtime";
     case null:
-    default:
       return "Anything running on this computer";
   }
 }

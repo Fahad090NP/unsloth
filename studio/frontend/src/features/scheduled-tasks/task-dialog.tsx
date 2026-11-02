@@ -84,7 +84,9 @@ const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, index) => index + 1);
 /** Ask for notification permission from the save click: browsers prompt only during a user gesture. */
 function askToNotify(): void {
   if (isTauri) {
-    void primeNativeNotificationPermission();
+    primeNativeNotificationPermission().catch((err: unknown) => {
+      console.error("Failed to prime native notification permission:", err);
+    });
     return;
   }
   if ("Notification" in window && Notification.permission === "default") {
@@ -210,7 +212,7 @@ function effortChoices(
   const { provider, modelId } = connection;
   const caps = getExternalReasoningCapabilities(provider.providerType, modelId, {
     isReasoningProvider: provider.isReasoningModel === true,
-    baseUrl: provider.baseUrl ?? null,
+    baseUrl: provider.baseUrl,
     apiType: provider.apiType,
     reasoningConfig: provider.reasoningConfig,
   });
@@ -346,7 +348,9 @@ export function TaskDialog({
         onKeyDown={(event) => {
           if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();
-            void save();
+            save().catch((err: unknown) => {
+              console.error("Save task failed:", err);
+            });
           }
         }}
       >
@@ -699,7 +703,15 @@ export function TaskDialog({
             <Button type="button" variant="muted" disabled={busy} onClick={onClose}>
               {t("common.cancel")}
             </Button>
-            <Button type="button" disabled={!valid || busy} onClick={() => void save()}>
+            <Button
+              type="button"
+              disabled={!valid || busy}
+              onClick={() => {
+                save().catch((err: unknown) => {
+                  console.error("Save task failed:", err);
+                });
+              }}
+            >
               {busy
                 ? t("common.saving")
                 : task

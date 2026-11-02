@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 export function canvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
-	return new Promise((resolve, reject) =>
-		{ canvas.toBlob(
-			(blob) => { blob ? resolve(blob) : reject(new Error("decode")); },
+	return new Promise((resolve, reject) => {
+		canvas.toBlob(
+			(blob) => {
+				if (blob) {
+					resolve(blob);
+				} else {
+					reject(new Error("decode"));
+				}
+			},
 			"image/png",
-		); },
-	);
+		);
+	});
 }
 export async function decodeImage(blob: Blob): Promise<{
 	source: CanvasImageSource;

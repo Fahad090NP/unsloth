@@ -21,6 +21,7 @@ import {
   type ReactNode,
   Suspense,
   lazy,
+  use,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -54,7 +55,7 @@ function FindBarAfterComposition({
   children: ReactNode;
 }) {
   if (handoffBlock) {
-    throw handoffBlock;
+    use(handoffBlock);
   }
   return children;
 }

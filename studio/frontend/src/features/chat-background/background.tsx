@@ -158,11 +158,11 @@ export function ChatBackground({ active = true }: { active?: boolean }) {
 				cancelled = true;
 			};
 		}
-		let cancelled = false;
+		const cancelState = { current: false };
 		const job = acquireRender(blob, effect, renderLight);
 		void job.promise
 			.then(async (blob) => {
-				if (cancelled) return;
+				if (cancelState.current) return;
 				const url = URL.createObjectURL(blob);
 				const image = new Image();
 				image.src = url;
@@ -173,7 +173,7 @@ export function ChatBackground({ active = true }: { active?: boolean }) {
 					URL.revokeObjectURL(url);
 					throw new Error("decode");
 				}
-				if (cancelled) {
+				if (cancelState.current) {
 					urls.current.delete(url);
 					URL.revokeObjectURL(url);
 					return;
@@ -181,10 +181,10 @@ export function ChatBackground({ active = true }: { active?: boolean }) {
 				adoptFrame(url);
 			})
 			.catch(() => {
-				if (!cancelled) setBackgroundError("effect");
+				if (!cancelState.current) setBackgroundError("effect");
 			});
 		return () => {
-			cancelled = true;
+			cancelState.current = true;
 			job.release();
 		};
 		// Visual controls are CSS only, never inputs to image processing.

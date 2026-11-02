@@ -91,7 +91,7 @@ export function applyRenameToConfig(
     next = { ...base, tool_alias: to };
   }
   if (config.kind === "validator") {
-    const targets = config.target_columns ?? [];
+    const targets = config.target_columns;
     if (targets.includes(from)) {
       const base = next as typeof config;
       next = {
@@ -156,10 +156,10 @@ export function applyRemovalToConfig(
     next = { ...base, tool_alias: "" };
   }
   if (config.kind === "validator") {
-    const targets = (config.target_columns ?? []).filter(
+    const targets = config.target_columns.filter(
       (target) => target !== ref,
     );
-    if (targets.length !== (config.target_columns ?? []).length) {
+    if (targets.length !== config.target_columns.length) {
       const base = next as typeof config;
       next = {
         ...base,

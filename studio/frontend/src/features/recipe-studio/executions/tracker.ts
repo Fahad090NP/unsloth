@@ -220,8 +220,10 @@ export async function trackRecipeExecution({
       latestExecution = applyExecutionStatusSnapshot(latestExecution, status);
       onUpsert(latestExecution);
 
-      done = isTerminalStatus(mappedStatus);
-      if (!done && Date.now() - lastDatasetPollAt >= 2500) {
+      if (isTerminalStatus(mappedStatus) || done) {
+        break;
+      }
+      if (Date.now() - lastDatasetPollAt >= 2500) {
         lastDatasetPollAt = Date.now();
         try {
           const datasetPage = Math.max(1, latestExecution.datasetPage);
@@ -250,9 +252,7 @@ export async function trackRecipeExecution({
           // 404 until the first batch lands.
         }
       }
-      if (!done) {
-        await delay(1200);
-      }
+      await delay(1200);
     }
   } catch (error) {
     const terminal = isTerminalStatus(lastStatus);

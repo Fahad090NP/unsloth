@@ -56,12 +56,14 @@ export async function printFramePage(tabId: string): Promise<boolean> {
       setTimeout(() => { frame.remove(); }, 1000);
       resolve(printed);
     };
-    const listener = (event: MessageEvent) => {
-      if (event.source !== frame.contentWindow || event.data?.source !== "unsloth-print") return;
-      if (event.data.type === "ready") {
+    const listener = (event: MessageEvent<unknown>) => {
+      if (event.source !== frame.contentWindow) return;
+      const data = typeof event.data === "object" && event.data !== null ? (event.data as Record<string, unknown>) : null;
+      if (data?.source !== "unsloth-print") return;
+      if (data.type === "ready") {
         clearTimeout(timer);
         frame.contentWindow?.postMessage({ type: "unsloth:browser-print", html }, "*");
-      } else if (event.data.type === "printed") finish(true);
+      } else if (data.type === "printed") finish(true);
     };
     // Only until the copy arrives: the dialog itself stays open as long as the reader wants.
     const timer = setTimeout(() => { finish(false); }, PRINT_TIMEOUT_MS);
@@ -126,7 +128,7 @@ async function regionScreenshot(element: HTMLElement): Promise<Blob | null> {
   } as DisplayMediaStreamOptions);
   const video = document.createElement("video");
   try {
-    const [track] = stream.getVideoTracks();
+    const track: MediaStreamTrack | undefined = stream.getVideoTracks().at(0);
     if (!track) return null;
     try {
       await (track as CroppableTrack).cropTo(target);
@@ -147,7 +149,8 @@ async function regionScreenshot(element: HTMLElement): Promise<Blob | null> {
       return await new Promise<Blob | null>((resolve) => { canvas.toBlob(resolve, "image/png"); });
     });
   } finally {
-    video.srcObject = null;
+    const el = video;
+    el.srcObject = null;
     for (const track of stream.getTracks()) track.stop();
   }
 }

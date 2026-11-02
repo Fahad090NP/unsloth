@@ -220,7 +220,8 @@ export function TranscriptGallery({
       );
     } finally {
       if (ticket === generation.current) {
-        loadingRef.current = false;
+        const activeLoading = loadingRef;
+        activeLoading.current = false;
         setLoading(false);
       }
     }

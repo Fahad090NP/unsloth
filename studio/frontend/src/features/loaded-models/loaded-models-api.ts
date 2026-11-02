@@ -188,7 +188,7 @@ async function ejectChatRow(entry: LoadedModelEntry): Promise<EjectOutcome> {
       },
       matches: modelIdsMatch,
       cachedRow: entry.inactive === true,
-      readCached: async () => (await bounded(getInferenceStatus)).loaded ?? [],
+      readCached: async () => (await bounded(getInferenceStatus)).loaded,
     },
   );
   if (stillResident) return { status: "stillResident", model: stillResident };
