@@ -34,13 +34,13 @@ import {
   deleteAudioClip,
   listAudioGallery,
   setAudioClipFlags,
-} from "@/features/audio/api";
+} from "@/features/audio";
 import {
   deleteGalleryImage,
   fetchGalleryObjectUrl,
   getGallery,
   setGalleryImageFlags,
-} from "@/features/images/api";
+} from "@/features/images";
 import {
   deleteGalleryVideo,
   fetchGalleryVideoThumbnail,
@@ -192,7 +192,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    void (async () => {
+    ((async () => {
       try {
         const page = await loadPage(0);
         if (cancelled) return;
@@ -210,7 +210,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
       } finally {
         if (!cancelled) setLoading(false);
       }
-    })();
+    })()).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -273,7 +273,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
     for (const id of evicted) requested.current.delete(id);
     setThumbs((prev) => {
       const next = { ...prev };
-      for (const id of evicted) delete next[id];
+      for (const id of evicted) Reflect.deleteProperty(next, id);
       return next;
     });
   }, [visible]);
@@ -292,7 +292,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
   useEffect(() => {
     if (isAudio) return;
     let cancelled = false;
-    void (async () => {
+    ((async () => {
       for (const row of rows) {
         if (cancelled) return;
         if (!visible.has(row.id)) continue;
@@ -324,7 +324,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
             setThumbs((prev) => {
               const next = { ...prev, [row.id]: url };
               for (const id of evicted) {
-                delete next[id];
+                Reflect.deleteProperty(next, id);
                 requested.current.delete(id);
               }
               return next;
@@ -344,7 +344,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
           }
         }
       }
-    })();
+    })()).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -368,7 +368,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
       setThumbs((prev) => {
         if (!(id in prev)) return prev;
         const next = { ...prev };
-        delete next[id];
+        Reflect.deleteProperty(next, id);
         return next;
       });
     },
@@ -456,7 +456,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
   useEffect(() => {
     if (!scanAll || loading || paging || pageError || busy || !hasMore) return;
     const timer = setTimeout(
-      () => void showMore(),
+      () => { (showMore()).catch(() => { /* noop */ }); },
       rows.length <= ARCHIVED_PAGE_SIZE ? 250 : 0,
     );
     return () => { clearTimeout(timer); };
@@ -624,7 +624,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
                       title: row.title,
                     })}
                     className="rounded-full bg-muted/60 hover:bg-muted"
-                    onClick={() => void run([row], "restore")}
+                    onClick={() => { (run([row], "restore")).catch(() => { /* noop */ }); }}
                   >
                     {t("settings.data.library.unarchive")}
                   </Button>
@@ -650,13 +650,13 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
             size="sm"
             disabled={paging || busy}
             onClick={() => {
-              if (pageError) void showMore();
+              if (pageError) (showMore()).catch(() => { /* noop */ });
               else if (filtered.length > visibleCount)
                 setVisibleCount((count) => count + ARCHIVED_PAGE_SIZE);
               else
-                void showMore().then(() =>
+                (showMore().then(() =>
                   { setVisibleCount((count) => count + ARCHIVED_PAGE_SIZE); },
-                );
+                )).catch(() => { /* noop */ });
             }}
           >
             {paging
@@ -707,7 +707,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
               }
               onClick={(event) => {
                 event.preventDefault();
-                if (confirming) void run(confirming.rows, confirming.action);
+                if (confirming) (run(confirming.rows, confirming.action)).catch(() => { /* noop */ });
               }}
             >
               {busy

@@ -128,11 +128,13 @@ function PermissionsTable() {
               value={rule[column]}
               isDefault={site === null}
               label={`${title}: ${name}`}
-              onChange={(value) =>
-                { site === null
-                  ? setDefaultRule({ [column]: value })
-                  : setSiteRule(site, { ...rule, [column]: value }); }
-              }
+              onChange={(value) => {
+                if (site === null) {
+                  setDefaultRule({ [column]: value });
+                } else {
+                  setSiteRule(site, { ...rule, [column]: value });
+                }
+              }}
             />
           </div>
         ))}

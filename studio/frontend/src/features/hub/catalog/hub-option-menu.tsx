@@ -184,8 +184,8 @@ export function HubOptionMenu<T extends string>({
         >
           <span className="min-w-0 flex-1 truncate text-left">
             {triggerContent ??
-              selected?.triggerLabel ??
-              selected?.label ??
+              selected.triggerLabel ??
+              selected.label ??
               value}
           </span>
           {showChevron && (

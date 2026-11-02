@@ -95,3 +95,15 @@ export {
   SharedRunConfigLinkHandler,
   receiveSharedRunConfigUrls,
 } from "./sharing";
+
+export { explicitFamily, resolvedFamilyOverrideSelection, useFamilyOverride } from "./components/model-selector/family-override";
+export { IMAGE_GEN_TASKS } from "./components/model-selector/pickers";
+export { PillTabs } from "./components/model-selector/pill-tabs";
+export type { HostClass } from "./components/model-selector/host-artifact-policy";
+export { hostOffersDensePrecision } from "./components/model-selector/host-artifact-policy";
+export { IMAGE_CATALOG, catalogToModelOptions, curatedArtifactTakesDenseQuant, loadSpecFor, AUDIO_CATALOG, artifactForRepoId, groupForRepoId } from "./components/model-selector/model-catalog";
+export { ggufQuantLabel } from "./model-config/model-identity";
+export { taskForMediaPick, audioPickIsRoutable, curatedAudioInventoryTask, speechGgufIsUndecodable } from "./components/model-selector/audio-picker-policy";
+export { InferenceEnginesSection } from "./components/inference-engines";
+export { isChatGgufTask, reconcileGgufPinsAfterDelete } from "./components/model-selector/reconcile-gguf-pins";
+export { useEngines } from "./hooks/use-engines";

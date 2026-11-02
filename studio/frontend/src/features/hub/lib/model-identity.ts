@@ -126,7 +126,7 @@ function hfCacheRepoId(path: string): string | null {
 export function isHfCacheSnapshotPath(
   identifier: string | null | undefined,
 ): boolean {
-  return identifier != null && hfCacheRepoId(identifier) !== null;
+  return (identifier !== null && identifier !== undefined) && hfCacheRepoId(identifier) !== null;
 }
 
 /** Mirrors `public_model_id` in core/inference/model_ids.py (what /status reports). */
@@ -212,14 +212,14 @@ export function isOllamaModelId(modelId: string | null | undefined): boolean {
 const NATIVE_FILE_LABEL_RE = /^[^/\\]+\.gguf$/i;
 
 export function isNativeFileLabel(modelId: string | null | undefined): boolean {
-  return modelId != null && NATIVE_FILE_LABEL_RE.test(modelId);
+  return (modelId !== null && modelId !== undefined) && NATIVE_FILE_LABEL_RE.test(modelId);
 }
 
 // A scanned standalone .gguf has no variant. Repo ids may end in .gguf too, so require a local path.
 export function isStandaloneGgufPath(
   modelId: string | null | undefined,
 ): boolean {
-  if (modelId == null || !GGUF_SUFFIX_RE.test(modelId)) {
+  if ((modelId === null || modelId === undefined) || !GGUF_SUFFIX_RE.test(modelId)) {
     return false;
   }
   return (

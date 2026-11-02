@@ -3,9 +3,9 @@
 
 import { useEffect, useState } from "react";
 import { getHfEndpoint, useHfEndpoint } from "@/lib/hf-endpoint";
-import { LruMap } from "@/features/hub/lib/lru-map";
-import { fetchWithTimeout } from "@/features/hub/lib/network";
-import { useOnlineStatus } from "@/features/hub/hooks/use-online-status";
+import { LruMap } from "@/features/hub";
+import { fetchWithTimeout } from "@/features/hub";
+import { useOnlineStatus } from "@/features/hub";
 
 type AvatarCacheEntry =
   | { kind: "url"; url: string; expiresAt: number }
@@ -172,21 +172,21 @@ export function useHfOwnerAvatar(
     const scheduleRetry = (until: number) => {
       const wait = Math.max(until - Date.now(), 0) + 100;
       retryTimer = setTimeout(() => {
-        if (!cancelled) void attempt();
+        if (!cancelled) (attempt()).catch(() => { /* noop */ });
       }, wait);
     };
 
     const runFetch = () => {
-      void loadAvatar(key).then((next) => {
+      (loadAvatar(key).then((next) => {
         if (cancelled) return;
         setState({ key, url: next });
-        if (next == null) {
+        if ((next === null || next === undefined)) {
           const post = readCache(key);
           if (post?.kind === "miss-transient") {
             scheduleRetry(post.until);
           }
         }
-      });
+      })).catch(() => { /* noop */ });
     };
 
     const attempt = async () => {
@@ -194,9 +194,9 @@ export function useHfOwnerAvatar(
       if (cached?.kind === "url") {
         if (!cancelled) setState({ key, url: cached.url });
         if (cached.expiresAt <= Date.now()) {
-          void loadAvatar(key).then((next) => {
+          (loadAvatar(key).then((next) => {
             if (!cancelled && next) setState({ key, url: next });
-          });
+          })).catch(() => { /* noop */ });
         }
         return;
       }
@@ -212,12 +212,12 @@ export function useHfOwnerAvatar(
       fetchTimer = setTimeout(runFetch, AVATAR_FETCH_DEBOUNCE_MS);
     };
 
-    void attempt();
+    (attempt()).catch(() => { /* noop */ });
 
     return () => {
       cancelled = true;
-      if (retryTimer != null) clearTimeout(retryTimer);
-      if (fetchTimer != null) clearTimeout(fetchTimer);
+      if ((retryTimer !== null && retryTimer !== undefined)) clearTimeout(retryTimer);
+      if ((fetchTimer !== null && fetchTimer !== undefined)) clearTimeout(fetchTimer);
     };
   }, [key, online, enabled, hfEndpoint]);
 

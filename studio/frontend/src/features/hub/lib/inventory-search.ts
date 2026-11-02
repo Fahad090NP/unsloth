@@ -5,7 +5,7 @@ import {
   matchTokens,
   normalizeForSearch,
   tokenizeQuery,
-} from "@/features/hub/lib/search-text";
+} from "@/features/hub";
 import type { CachedInventoryRow, LocalInventoryRow } from "../types";
 
 export { tokenizeQuery };

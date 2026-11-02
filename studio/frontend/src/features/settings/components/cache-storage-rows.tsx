@@ -14,7 +14,7 @@ import {
   bumpInventoryVersion,
   getInventoryVersion,
   useInventoryVersion,
-} from "@/features/hub/stores/inventory-events";
+} from "@/features/hub";
 import { type TranslationKey, useT } from "@/i18n";
 import { toast } from "@/lib/toast";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
@@ -150,7 +150,7 @@ export function useCacheStorage() {
           scheduleFollowUp(
             next.refreshing && attempt < FOLLOW_UP_LIMIT,
             request,
-            () => void load(attempt + 1),
+            () => { (load(attempt + 1)).catch(() => { /* noop */ }); },
           );
         } catch (error) {
           if (request !== latestRequest.current || attempt > 0) return;
@@ -178,7 +178,7 @@ export function useCacheStorage() {
     // A move forces a re-measure; the first load does not, since a cold walk costs seconds.
     const moved = measuredVersion.current !== inventoryVersion;
     measuredVersion.current = inventoryVersion;
-    void refresh(moved ? { refresh: true } : {});
+    (refresh(moved ? { refresh: true } : {})).catch(() => { /* noop */ });
     // Leaving the page also drops a follow-up read still in flight.
     return () => {
       latestRequest.current += 1;
@@ -202,7 +202,7 @@ export function useCacheStorage() {
         scheduleFollowUp(
           outcome.inventory.refreshing,
           request,
-          () => void refresh({}, 1),
+          () => { (refresh({}, 1)).catch(() => { /* noop */ }); },
         );
       }
       if (keys.some((key) => HUB_INVENTORY_KEYS.has(key))) {
@@ -267,7 +267,7 @@ export function HuggingFaceCacheFolders({
     let current = true;
     setRows(null);
     setError(null);
-    void loadCacheBreakdown(entry.key).then(
+    (loadCacheBreakdown(entry.key).then(
       (next) => {
         if (current) {
           setRows(
@@ -280,7 +280,7 @@ export function HuggingFaceCacheFolders({
           setError(reason instanceof Error ? reason.message : String(reason));
         }
       },
-    );
+    )).catch(() => { /* noop */ });
     return () => {
       current = false;
     };
@@ -474,11 +474,13 @@ export function CacheStorageRows({ cache }: { cache: CacheStorage }) {
                       !entry.purgeable ||
                       (entry.clearEntryCount ?? entry.entryCount) === 0
                     }
-                    onClick={() =>
-                      { entry.optIn
-                        ? setTarget({ kind: "single", key: entry.key })
-                        : void runPurge([entry.key]); }
-                    }
+                    onClick={() => {
+                      if (entry.optIn) {
+                        setTarget({ kind: "single", key: entry.key });
+                      } else {
+                        runPurge([entry.key]).catch(() => { /* noop */ });
+                      }
+                    }}
                   >
                     {t("settings.resources.storage.caches.clearOneAction")}
                   </Button>
@@ -519,9 +521,9 @@ export function CacheStorageRows({ cache }: { cache: CacheStorage }) {
               // A failed measurement is the same hazard as one still running.
               disabled={loading || clearing || loadError !== null}
               onClick={() =>
-                void runPurge(
+                { (runPurge(
                   target?.kind === "single" ? [target.key] : bulkKeys,
-                )
+                )).catch(() => { /* noop */ }); }
               }
             >
               {clearing

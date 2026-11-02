@@ -104,7 +104,7 @@ export function WaveformRangeSelect({
     const chips =
       listRef.current?.querySelectorAll<HTMLElement>("[data-range-chip]");
     if (!chips || chips.length === 0) return;
-    chips[Math.max(0, Math.min(index, chips.length - 1))]?.focus();
+    chips[Math.max(0, Math.min(index, chips.length - 1))].focus();
   };
 
   const remove = (index: number) => {

@@ -11,5 +11,5 @@ export function normalizeTimestamp(value?: number | null): number | null {
 export function epochMillisecondsToSeconds(
   value?: number | null,
 ): number | undefined {
-  return value == null ? undefined : value / 1000;
+  return (value === null || value === undefined) ? undefined : value / 1000;
 }

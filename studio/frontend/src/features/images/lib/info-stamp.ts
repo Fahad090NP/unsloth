@@ -63,11 +63,11 @@ export interface StampLayout {
 
 /** Font scales with the short side; a long line shrinks to fit, dropping the brand first. */
 export function layoutInfoStamp(
-  ctx: StampContext,
+  ctxParam: StampContext,
   width: number,
   height: number,
   text: string,
-): StampLayout {
+): StampLayout { const ctx = ctxParam;
   let fontPx = Math.max(10, Math.round(Math.min(width, height) / 48));
   const padX = Math.round(fontPx * 0.75);
   const widthAt = (s: string, px: number) => {
@@ -105,11 +105,11 @@ export function layoutInfoStamp(
 }
 
 export function drawInfoStamp(
-  ctx: StampContext,
+  ctxParam: StampContext,
   width: number,
   height: number,
   text: string,
-): StampLayout {
+): StampLayout { const ctx = ctxParam;
   const layout = layoutInfoStamp(ctx, width, height, text);
   const top = height - layout.barHeight;
   const mid = top + layout.barHeight / 2;

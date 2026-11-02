@@ -17,7 +17,7 @@ import {
   type KeylessApiAccessSettings,
   loadKeylessApiAccess,
   updateKeylessApiAccess,
-} from "@/features/settings/api/keyless-api-access";
+} from "@/features/settings";
 import { LaptopIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useCallback, useEffect, useState } from "react";
@@ -111,7 +111,7 @@ export function KeylessApiAccessSection({
               : "Couldn't load keyless API access.",
           );
         }
-      });
+      }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -157,27 +157,27 @@ export function KeylessApiAccessSection({
 
   const request = (next: KeylessApiAccessScope, confirmAs: PendingGrant) => {
     if (next === "off" || scope === "full") {
-      void save(next);
+      (save(next)).catch(() => { /* noop */ });
       return;
     }
-    void confirm(confirmAs);
+    (confirm(confirmAs)).catch(() => { /* noop */ });
   };
 
   const requestTools = (on: boolean) => {
     if (!on) {
-      void save(scope, false);
+      (save(scope, false)).catch(() => { /* noop */ });
       return;
     }
-    void confirm("tools");
+    (confirm("tools")).catch(() => { /* noop */ });
   };
 
   const applyPending = () => {
     if (pending === "tools") {
-      void save(scope, true);
+      (save(scope, true)).catch(() => { /* noop */ });
       return;
     }
     if (pending) {
-      void save(pending);
+      (save(pending)).catch(() => { /* noop */ });
     }
   };
 
@@ -260,7 +260,9 @@ export function KeylessApiAccessSection({
 
       <Dialog
         open={pending !== null}
-        onOpenChange={(open) => !open && setPending(null)}
+        onOpenChange={(open) => {
+          if (!open) setPending(null);
+        }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>

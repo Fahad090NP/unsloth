@@ -90,7 +90,7 @@ export function withSamplerChoice(
   if (!modelKey) return choices;
   const next = { ...choices };
   if (choice.sampler === DEFAULT_SAMPLER && choice.scheduleType === AUTOMATIC_SCHEDULE) {
-    delete next[modelKey];
+    Reflect.deleteProperty(next, modelKey);
   } else {
     next[modelKey] = choice;
   }

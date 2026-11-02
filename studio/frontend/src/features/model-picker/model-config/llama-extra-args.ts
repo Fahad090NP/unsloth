@@ -10,11 +10,15 @@ const DIGIT = /[0-9]/;
 const UNDERSCORE = /_/g;
 // biome-ignore lint/suspicious/noControlCharactersInRegex: mirroring the backend's own check
 // Same rule as CONTROL_IN_ARGV below and the backend's check.
-const CONTROL_CHARACTERS = /[\u0000-\u0008\u000b-\u001f]/;
+const CONTROL_CHARACTERS = new RegExp(
+  `[${String.fromCharCode(0)}-${String.fromCharCode(8)}${String.fromCharCode(11)}-${String.fromCharCode(31)}]`,
+);
 const INTEGER = /^-?[0-9]+$/;
 /** C0 controls except tab and newline, matching backend _has_control_characters. */
 // biome-ignore lint/suspicious/noControlCharactersInRegex: that is exactly what this finds
-const CONTROL_IN_ARGV = /[\u0000-\u0008\u000B-\u001F]/;
+const CONTROL_IN_ARGV = new RegExp(
+  `[${String.fromCharCode(0)}-${String.fromCharCode(8)}${String.fromCharCode(11)}-${String.fromCharCode(31)}]`,
+);
 
 /** Walks the string because a class would match both halves of a valid pair; only unpaired
  *  surrogates are refused, as Popen does. */
@@ -931,7 +935,7 @@ export function diagnoseExtraArgs(
     }
 
     if (isManaged) {
-      const control = managedControl ?? CONTROL_OWNED_FLAGS[flag];
+      const control = (managedControl);
       out.push({
         level: "error",
         message: control

@@ -60,7 +60,7 @@ export function speakerLabel(
   speakers: readonly TranscriptSpeaker[],
   names: Readonly<Record<string, string>>,
 ): string {
-  const named = names[id]?.trim();
+  const named = names[id].trim();
   if (named) return named;
   return speakers.find((speaker) => speaker.id === id)?.label ?? id;
 }

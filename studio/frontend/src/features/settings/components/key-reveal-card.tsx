@@ -10,7 +10,7 @@ import { Copy01Icon } from "@/lib/copy-icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
 
-function selectToken(input: HTMLInputElement | null) {
+function selectToken(inputParam: HTMLInputElement | null) { const input = inputParam;
   if (!input) return;
   input.focus();
   input.select();

@@ -70,7 +70,7 @@ export interface ApiLanAccessStatus {
   // biome-ignore lint/style/useNamingConvention: API schema
   keyless_lan_eligible?: boolean | null;
   // biome-ignore lint/style/useNamingConvention: API schema
-  keyless_scope?: LanKeylessScope | string | null;
+  keyless_scope?: string | null;
   // biome-ignore lint/style/useNamingConvention: API schema
   keyless_tools?: boolean | null;
 }

@@ -7,7 +7,7 @@ import {
   seededMeasuredTransfer,
 } from "./adopt-rules";
 import { invalidateGgufVariantsCache } from "../inventory/api";
-import { checkDiskSpace } from "@/features/settings/low-disk-check";
+import { checkDiskSpace } from "@/features/settings";
 import { getHfToken } from "../stores/hf-token-store";
 import { bumpInventoryVersion } from "../stores/inventory-events";
 import { toast } from "@/lib/toast";
@@ -78,7 +78,7 @@ import {
   composeRestartNoticeDescription,
   shouldShowXetNotice,
 } from "./xet-progress-notice";
-import { reserveXetNoticeFromServer } from "@/features/settings/api/xet-notice";
+import { reserveXetNoticeFromServer } from "@/features/settings";
 import {
   currentRoute,
   currentStartToastSelectionEpoch,
@@ -219,15 +219,15 @@ function shouldPollProgress(rt: JobRuntime, force: boolean): boolean {
   return Date.now() - rt.lastProgressPollAt >= progressPollDelayMs(rt);
 }
 
-function markPollSuccess(key: string, rt: JobRuntime): void {
+function markPollSuccess(key: string, rtParam: JobRuntime): void { const rt = rtParam;
   rt.pollFailureStartedAt = null;
   const job = getState().jobs[key];
-  if (job?.error === POLL_DEGRADED_MESSAGE && ACTIVE_STATES.has(job.state)) {
+  if (job.error === POLL_DEGRADED_MESSAGE && ACTIVE_STATES.has(job.state)) {
     patchJob(key, { error: null });
   }
 }
 
-function markPollFailure(key: string, rt: JobRuntime): void {
+function markPollFailure(key: string, rtParam: JobRuntime): void { const rt = rtParam;
   const now = Date.now();
   rt.pollFailureStartedAt ??= now;
   if (now - rt.pollFailureStartedAt < POLL_DEGRADED_AFTER_MS) return;
@@ -251,7 +251,7 @@ export function finalize(
   if (TERMINAL_DISPLAY_STATES.has(job.state)) return;
   // Re-check disk after a download so pressure surfaces without waiting for the next start.
   // Forced so the reading is taken after the write rather than swallowed by the throttle.
-  void checkDiskSpace({ force: true });
+  (checkDiskSpace({ force: true })).catch(() => { /* noop */ });
   if (job.kind === DOWNLOAD_KIND.MODEL) {
     invalidateGgufVariantsCache(job.repoId);
   }
@@ -321,8 +321,8 @@ function syncServerGeneration(
   key: string,
   job: ManagedDownload,
   status: PollStatus,
-  rt: JobRuntime,
-): "generation" | "attempt" | null {
+  rtParam: JobRuntime,
+): "generation" | "attempt" | null { const rt = rtParam;
   const change = serverRunChange(
     {
       generation: job.serverGeneration,
@@ -342,7 +342,7 @@ function syncServerGeneration(
     };
   } else {
     if (change === "generation") rt.floorHold = null;
-    if (rt.floorHold == null && Number.isSafeInteger(status.attempt)) {
+    if ((rt.floorHold === null || rt.floorHold === undefined) && Number.isSafeInteger(status.attempt)) {
       patch.serverAttempt = status.attempt;
     }
   }
@@ -372,7 +372,7 @@ async function finalizeTerminalStatus(
         finalBytes = downloadedBytes;
       }
     } catch {
-    }
+     /* noop */ }
     finalize(key, "complete", { bytes: finalBytes });
   } else if (terminalKind === "error") {
     finalize(key, "error", { error: status.error ?? null });
@@ -397,12 +397,12 @@ function applySpeedSample(
 }
 
 function reconcileProgressAndSpeed(
-  rt: JobRuntime,
+  rtParam: JobRuntime,
   key: string,
   current: ManagedDownload,
   progressResp: ProgressLike,
   generationChanged: boolean,
-): { madeProgress: boolean } {
+): { madeProgress: boolean } { const rt = rtParam;
   const {
     expected,
     downloadedBytes,
@@ -413,7 +413,7 @@ function reconcileProgressAndSpeed(
     madeProgress,
   } = resolveProgressUpdate(current, progressResp, {
     resetMonotonic: generationChanged,
-    skipFloor: rt.floorHold != null,
+    skipFloor: (rt.floorHold !== null && rt.floorHold !== undefined),
   });
   let acknowledgedAttempt: number | undefined;
   if (
@@ -446,11 +446,11 @@ function reconcileProgressAndSpeed(
 }
 
 function handleIdleAfterProgress(
-  rt: JobRuntime,
+  rtParam: JobRuntime,
   key: string,
   madeProgress: boolean,
   progressResp: ProgressLike,
-): void {
+): void { const rt = rtParam;
   const updatedJob = getState().jobs[key];
   if (updatedJob && hasObservedExpectedBytes(updatedJob)) {
     finalize(key, "complete", { bytes: updatedJob.downloadedBytes });
@@ -540,7 +540,7 @@ async function tick(key: string): Promise<void> {
       return;
     }
     rt.lastProgressPollAt = Date.now();
-    const jobForProgress = getState().jobs[key] ?? job;
+    const jobForProgress = (getState().jobs[key]);
     const progressResp = await withPollRequestTimeout(abort, (signal) =>
       apiGetProgress(jobForProgress, signal),
     );
@@ -597,14 +597,14 @@ async function runPollTick(key: string): Promise<void> {
       isCurrent(key, epoch)
     ) {
       rt.pollTimer = window.setTimeout(
-        () => void runPollTick(key),
+        () => { (runPollTick(key)).catch(() => { /* noop */ }); },
         pollDelayMs(rt),
       );
     }
   }
 }
 
-function beginPolling(key: string, rt: JobRuntime): void {
+function beginPolling(key: string, rtParam: JobRuntime): void { const rt = rtParam;
   rt.pollingStarted = true;
   if (typeof document !== "undefined") {
     const epoch = rt.epoch;
@@ -613,15 +613,15 @@ function beginPolling(key: string, rt: JobRuntime): void {
       const live = runtimeRegistry.runtimes.get(key);
       if (live !== rt) return;
       if (live.inFlight) return;
-      if (live.pollTimer != null) {
+      if ((live.pollTimer !== null && live.pollTimer !== undefined)) {
         window.clearTimeout(live.pollTimer);
         live.pollTimer = null;
       }
-      void runPollTick(key);
+      (runPollTick(key)).catch(() => { /* noop */ });
     };
     document.addEventListener("visibilitychange", rt.visibilityListener);
   }
-  void runPollTick(key);
+  (runPollTick(key)).catch(() => { /* noop */ });
 }
 
 function reissueDroppedStartCancel(
@@ -631,9 +631,9 @@ function reissueDroppedStartCancel(
   if (!Number.isSafeInteger(generation)) {
     return;
   }
-  void withDownloadTimeout(async (signal) => {
+  (withDownloadTimeout(async (signal) => {
     await apiCancelRequest(req, generation, signal);
-  }).catch(() => {});
+  }).catch(() => { /* noop */ })).catch(() => { /* noop */ });
 }
 
 export async function startJob(
@@ -664,7 +664,7 @@ export async function startJob(
   const adoptingCancel =
     opts.adopt === true &&
     (opts.state === "cancelling" ||
-      (opts.state === undefined && existing?.state === "cancelling"));
+      (opts.state === undefined && existing.state === "cancelling"));
   const rt: JobRuntime = {
     kind: req.kind,
     repoId: req.repoId,
@@ -687,7 +687,7 @@ export async function startJob(
 
   const carryOverSeed = carriesOverSeed(
     opts.adopt === true,
-    existing?.serverGeneration,
+    existing.serverGeneration,
     opts.generation,
   );
   const expected = Math.max(
@@ -713,21 +713,23 @@ export async function startJob(
     teardownRuntime(key);
     throw error;
   }
-  const seedDownloaded = carryOverSeed ? (existing?.downloadedBytes ?? 0) : 0;
+  const seedDownloaded = carryOverSeed
+    ? (existing?.downloadedBytes ?? 0)
+    : 0;
   const seedCompleted = carryOverSeed ? (existing?.completedBytes ?? 0) : 0;
   const seedFraction = carryOverSeed ? (existing?.fraction ?? 0) : 0;
     // The measured flag must travel with the seeded bytes.
   const seedMeasuredTransfer = seededMeasuredTransfer(
     carryOverSeed,
-    existing?.measuredTransfer,
+    existing.measuredTransfer,
   );
     // An adopted job learns the run's generation from the probe to scope a later cancel.
   const seedGeneration = opts.adopt
     ? Number.isSafeInteger(opts.generation)
       ? opts.generation
-      : existing?.serverGeneration
+      : existing.serverGeneration
     : undefined;
-  const seedAttempt = carryOverSeed ? existing?.serverAttempt : undefined;
+  const seedAttempt = carryOverSeed ? existing.serverAttempt : undefined;
   const adopted = opts.adopt
     ? adoptedTransports(
         { transport: opts.transport, cancelTransport: opts.cancelTransport },
@@ -738,7 +740,7 @@ export async function startJob(
   const inventoryKind = downloadRequestInventoryKind(req);
   const presentation = presentationForJobStart(
     req.presentation,
-    existing?.presentation,
+    existing.presentation,
     expected,
     carryOverSeed,
   );
@@ -778,22 +780,22 @@ export async function startJob(
       : {}),
     ...(req.files && req.files.length > 0
       ? { scopedFiles: [...req.files] }
-      : opts.adopt && existing?.scopedFiles
+      : opts.adopt && existing.scopedFiles
         ? { scopedFiles: existing.scopedFiles }
         : {}),
     ...(req.checkpoint !== undefined
       ? { checkpoint: req.checkpoint }
-      : opts.adopt && existing?.checkpoint !== undefined
+      : opts.adopt && existing.checkpoint !== undefined
         ? { checkpoint: existing.checkpoint }
         : {}),
     ...(req.downloadDir !== undefined
       ? { downloadDir: req.downloadDir }
-      : opts.adopt && existing?.downloadDir !== undefined
+      : opts.adopt && existing.downloadDir !== undefined
         ? { downloadDir: existing.downloadDir }
         : {}),
     ...(inventoryKind !== undefined
       ? { inventoryKind }
-      : opts.adopt && existing?.inventoryKind !== undefined
+      : opts.adopt && existing.inventoryKind !== undefined
         ? { inventoryKind: existing.inventoryKind }
         : {}),
   });
@@ -844,7 +846,7 @@ export async function startJob(
         live: result.state === "running" && !stopping,
       })
     ) {
-      void reserveXetNoticeFromServer().then(({ granted }) => {
+      (reserveXetNoticeFromServer().then(({ granted }) => {
         // finalize() may already have dismissed by id, so raising now would show a finished job as running.
         if (!isCurrent(key, epoch) || rt.cancelRequested) return;
         const caller = liveCallerToast(req.callerToast);
@@ -871,7 +873,7 @@ export async function startJob(
           return;
         }
         showCallerToast(key, caller, startRoute, startSelectionEpoch);
-      });
+      })).catch(() => { /* noop */ });
     } else if (!stopping && onOriginRoute && onOriginSelection) {
       const caller = liveCallerToast(req.callerToast);
       if (discloseRestart) {
@@ -897,11 +899,11 @@ export async function startJob(
 
 function armCancelWatchdog(
   key: string,
-  rt: JobRuntime,
+  rtParam: JobRuntime,
   cancelEpoch: number,
-): void {
+): void { const rt = rtParam;
   rt.watchdog = window.setTimeout(() => {
-    void resolveCancelWatchdog(key, cancelEpoch);
+    (resolveCancelWatchdog(key, cancelEpoch)).catch(() => { /* noop */ });
   }, CANCEL_WATCHDOG_MS);
 }
 
@@ -918,7 +920,7 @@ async function resolveCancelWatchdog(
   const live = runtimeRegistry.runtimes.get(key);
   if (live?.epoch !== cancelEpoch || !live.cancelRequested) return;
   if (probe.terminal === "complete") {
-    finalize(key, "complete", { bytes: getState().jobs[key]?.downloadedBytes ?? 0 });
+    finalize(key, "complete", { bytes: (getState().jobs[key]?.downloadedBytes)});
   } else if (probe.terminal === "error") {
     finalize(key, "error", { error: probe.error });
   } else {
@@ -945,7 +947,7 @@ function applyCancelResult(
   }
   if (result.state === "complete") {
     finalize(key, "complete", {
-      bytes: getState().jobs[key]?.downloadedBytes ?? 0,
+      bytes: (getState().jobs[key]?.downloadedBytes)
     });
   } else if (result.state === "error") {
     finalize(key, "error");
@@ -1054,7 +1056,7 @@ export async function cancelJob(key: string): Promise<void> {
     if (probe.terminal !== null) {
       if (probe.terminal === "complete") {
         const current = getState().jobs[key];
-        finalize(key, "complete", { bytes: current?.downloadedBytes ?? 0 });
+        finalize(key, "complete", { bytes: (current?.downloadedBytes)});
       } else if (probe.terminal === "error") {
         finalize(key, "error", { error: probe.error });
       } else {
@@ -1083,7 +1085,7 @@ export function adoptJob(
   const key = jobKeyOf(req.kind, req.repoId, req.variant);
   if (runtimeRegistry.runtimes.get(key)?.pollingStarted) {
   // Only apply a late response to the run it described; a restart in between is a different job.
-    const known = getState().jobs[key]?.serverGeneration;
+    const known = getState().jobs[key].serverGeneration;
     if (probeDescribesCurrentRun(known, generation)) {
       const inventoryKind = downloadRequestInventoryKind(req);
       patchJob(key, {
@@ -1098,13 +1100,13 @@ export function adoptJob(
     }
     return;
   }
-  void startJob(req, {
+  (startJob(req, {
     adopt: true,
     generation,
     state,
     ...(transport ? { transport } : {}),
     ...(cancelTransport === undefined ? {} : { cancelTransport }),
-  });
+  })).catch(() => { /* noop */ });
 }
 
 interface ProbeAndAdoptOptions {

@@ -20,8 +20,8 @@ import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { ParamSlider } from "@/features/chat";
-import { formatRelativeShort } from "@/features/hub/lib/format";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
+import { formatRelativeShort } from "@/features/hub";
+import { PillTabs } from "@/features/model-picker";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import {
@@ -334,7 +334,7 @@ export function TtsRailFields({
               step={1 / MOSS_TTS_FRAMES_PER_SECOND}
               onChange={setMossMaxSeconds}
               valueSize={8}
-              info={`Starts at ${MOSS_TTS_DEFAULT_SECONDS} seconds. This model reports ${mossFrameLimit?.toLocaleString()} frames (${mossMaxSecondsLimit.toLocaleString(undefined, { maximumFractionDigits: 2 })} seconds); the prompt uses part of that context.`}
+              info={`Starts at ${MOSS_TTS_DEFAULT_SECONDS} seconds. This model reports ${mossFrameLimit.toLocaleString()} frames (${mossMaxSecondsLimit.toLocaleString(undefined, { maximumFractionDigits: 2 })} seconds); the prompt uses part of that context.`}
             />
           ) : samplingControls ? (
             <ParamSlider
@@ -637,10 +637,10 @@ export function TtsOutput({
       active={active}
       pinned={Boolean(clip.pinned)}
       archived={false}
-      onTogglePin={() => void handleTogglePin(clip.id, !clip.pinned)}
-      onToggleArchive={() => void handleArchiveClip(clip.id)}
-      onDelete={() => void handleDeleteClip(clip.id)}
-      onDownload={() => void handleDownloadClipById(clip)}
+      onTogglePin={() => { (handleTogglePin(clip.id, !clip.pinned)).catch(() => { /* noop */ }); }}
+      onToggleArchive={() => { (handleArchiveClip(clip.id)).catch(() => { /* noop */ }); }}
+      onDelete={() => { (handleDeleteClip(clip.id)).catch(() => { /* noop */ }); }}
+      onDownload={() => { (handleDownloadClipById(clip)).catch(() => { /* noop */ }); }}
       onAddToProject={(projectId) => addAudioClipToProject(clip.id, projectId)}
       leadingItems={
         <>
@@ -674,7 +674,7 @@ export function TtsOutput({
             </DropdownMenuItem>
           ) : null}
           {showCopyText ? (
-            <DropdownMenuItem onClick={() => void handleCopyPrompt(clip.prompt)}>
+            <DropdownMenuItem onClick={() => { (handleCopyPrompt(clip.prompt)).catch(() => { /* noop */ }); }}>
               <HugeiconsIcon
                 icon={Copy01Icon}
                 strokeWidth={1.75}
@@ -783,7 +783,7 @@ export function TtsOutput({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => void handleClearGallery()}
+              onClick={() => { (handleClearGallery()).catch(() => { /* noop */ }); }}
             >
               Clear all
             </Button>
@@ -797,7 +797,7 @@ export function TtsOutput({
                 hasMore &&
                 el.scrollTop + el.clientHeight >= el.scrollHeight - 40
               ) {
-                void loadMore();
+                (loadMore()).catch(() => { /* noop */ });
               }
             }}
           >
@@ -851,7 +851,7 @@ export function TtsOutput({
                     <GalleryPinBadge
                       noun="clip"
                       className="static shrink-0"
-                      onUnpin={() => void handleTogglePin(clip.id, false)}
+                      onUnpin={() => { (handleTogglePin(clip.id, false)).catch(() => { /* noop */ }); }}
                     />
                   )}
                   {clipMenu(clip, "row")}

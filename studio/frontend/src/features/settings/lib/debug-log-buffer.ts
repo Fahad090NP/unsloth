@@ -83,7 +83,7 @@ export async function withRequestTimeout<T>(
   let timer: ReturnType<typeof setTimeout> | undefined;
   const running = task(local.signal);
   // An unobserved rejection is a process-level crash under node:test.
-  running.catch(() => {});
+  running.catch(() => { /* noop */ });
   const deadline = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
       // Reject before aborting, or the synchronous AbortError would win the race and be dropped.

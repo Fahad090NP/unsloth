@@ -6,8 +6,8 @@ import {
   clearCompletedInventoryHint,
   downloadInventoryHintKind,
   useDownloadManagerStore,
-} from "@/features/hub/download-manager";
-import { useHfTokenStore } from "@/features/hub/stores/hf-token-store";
+} from "@/features/hub";
+import { useHfTokenStore } from "@/features/hub";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { LocalDatasetInfo, LocalModelInfo } from "./api";
 import {
@@ -352,7 +352,7 @@ export function useHubInventory(
     enabled && !isDatasetMode && includeLocal && includeUnslothModels;
   useEffect(() => {
     if (unslothModelsEnabled) {
-      refreshUnslothModelInventory().catch(() => undefined);
+      refreshUnslothModelInventory().catch(() => undefined).catch(() => { /* noop */ });
     }
   }, [unslothModelsEnabled, refreshUnslothModelInventory]);
   const refreshModelInventoryIfOlderThan = modelInventory.refreshIfOlderThan;
@@ -805,7 +805,7 @@ export function useHubInventory(
       return;
     }
     const timer = window.setTimeout(() => {
-      void refreshDeviceInventory();
+      (refreshDeviceInventory()).catch(() => { /* noop */ });
     }, 500);
     return () => { window.clearTimeout(timer); };
   }, [emptyRevalidationRequired, enabled, refreshDeviceInventory]);

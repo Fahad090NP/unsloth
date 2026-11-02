@@ -210,7 +210,7 @@ export function resolveRestoredHires(choice: HiresChoice, cap: HiresCapability |
 }
 
 function labelOf(id: string, cap?: HiresCapability | null): string {
-  return cap?.upscalers.find((u) => u.id === id)?.label ?? HIRES_UPSCALER_LABELS[id] ?? id.replace(/^local:/, "");
+  return (cap?.upscalers.find((u) => u.id === id)?.label ?? HIRES_UPSCALER_LABELS[id]);
 }
 
 export const HIRES_UPSCALER_LABELS: Record<string, string> = {
@@ -231,16 +231,16 @@ export function hiresSummary(choice: HiresChoice, cap?: HiresCapability | null):
 
 /** A1111 hires keys -> recipe fields; mapped labels are removed from `fields`, the rest reported unapplied. */
 export function parseHiresInfotext(
-  fields: Record<string, string>,
+  fieldsParam: Record<string, string>,
   denoise: number | undefined,
   size: { width?: unknown; height?: unknown },
-): Record<string, unknown> {
+): Record<string, unknown> { const fields = fieldsParam;
   const out: Record<string, unknown> = {};
   const take = (label: string): string | undefined => {
     const key = Object.keys(fields).find((k) => k.toLowerCase() === label);
     if (key === undefined) return undefined;
     const value = fields[key];
-    delete fields[key];
+    Reflect.deleteProperty(fields, key);
     return value;
   };
   const num = (v: string | undefined) => {
@@ -267,7 +267,7 @@ export function parseHiresInfotext(
     };
     if (factor >= 1 && factor <= 4 && (reaches(2048) || reaches(Math.max(rw, rh)))) {
       scale = factor;
-      delete fields[resizeKey!];
+      Reflect.deleteProperty(fields, resizeKey!);
     }
   }
   // Without a factor or a usable size, Studio cannot size the pass: leave it all unapplied.

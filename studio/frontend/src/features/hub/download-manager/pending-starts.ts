@@ -48,7 +48,7 @@ export function retirePendingStart(start: PendingStart): void {
   usePendingStarts.setState(({ starts }) => {
     if (starts[start.key] !== start) return { starts };
     const next = { ...starts };
-    delete next[start.key];
+    Reflect.deleteProperty(next, start.key);
     return { starts: next };
   });
 }

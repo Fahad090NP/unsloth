@@ -7,10 +7,10 @@ export interface RefreshSupersession {
 
 /** Call in start order, synchronously with the sequence number, so `latest` is the newest read. */
 export function registerRefresh(
-  supersession: RefreshSupersession,
+  supersessionParam: RefreshSupersession,
   seq: number,
   settled: Promise<void>,
-): void {
+): void { const supersession = supersessionParam;
   supersession.latest = { seq, settled };
 }
 

@@ -96,7 +96,7 @@ export function useDownloadCardState({
     }
   }, [cancelling, disabled, downloading]);
   const progressPercent =
-    job.progress != null
+    (job.progress !== null && job.progress !== undefined)
       ? Math.round(Math.min(job.progress.fraction, 1) * 100)
       : null;
   const effectiveDisabled = disabled || starting;
@@ -107,11 +107,11 @@ export function useDownloadCardState({
       return;
     }
     setStarting(true);
-    void job
+    (job
       .requestStartDownload(variant, expectedBytes, presentation)
       .finally(() => {
         if (mountedRef.current) setStarting(false);
-      });
+      })).catch(() => { /* noop */ });
   }, [
     cancelling,
     disabled,

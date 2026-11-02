@@ -459,7 +459,7 @@ export function SkeletonList({ count }: { count?: number }) {
   const scale = useUiSpaceScale();
 
   useLayoutEffect(() => {
-    if (count != null) return;
+    if ((count !== null && count !== undefined)) return;
     const container = ref.current?.parentElement;
     if (!container || typeof window === "undefined") return;
 

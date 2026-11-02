@@ -11,7 +11,7 @@ export interface PollSignal {
 // On the ponyfill path the timer pins the controller, so callers settling early MUST dispose.
 export function disposableTimeoutSignal(ms: number): PollSignal {
   if (typeof AbortSignal.timeout === "function") {
-    return { signal: AbortSignal.timeout(ms), dispose: () => {} };
+    return { signal: AbortSignal.timeout(ms), dispose: () => { /* noop */ } };
   }
   const controller = new AbortController();
   const timer = setTimeout(
@@ -27,7 +27,7 @@ export function disposableTimeoutSignal(ms: number): PollSignal {
 // Callers MUST dispose() once the request settles so abort listeners don't pile up.
 export function combineAbortSignals(signals: AbortSignal[]): PollSignal {
   if (typeof AbortSignal.any === "function") {
-    return { signal: AbortSignal.any(signals), dispose: () => {} };
+    return { signal: AbortSignal.any(signals), dispose: () => { /* noop */ } };
   }
   const controller = new AbortController();
   const detachers: (() => void)[] = [];

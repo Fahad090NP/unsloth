@@ -7,11 +7,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { classifyUnslothSupport } from "@/features/hub/hooks/use-hub-model-search";
-import { ownerPaletteColor } from "@/features/hub/lib/avatar-theme";
-import { buildAdaptiveCardAccentStyle } from "@/features/hub/lib/card-accent";
-import { useDominantColor } from "@/features/hub/lib/use-dominant-color";
-import { formatModelParamLabel } from "@/features/hub/lib/view-models";
+import { classifyUnslothSupport } from "@/features/hub";
+import { ownerPaletteColor } from "@/features/hub";
+import { buildAdaptiveCardAccentStyle } from "@/features/hub";
+import { useDominantColor } from "@/features/hub";
+import { formatModelParamLabel } from "@/features/hub";
 import { cn, formatCompact } from "@/lib/utils";
 import { Download01Icon, FavouriteIcon } from "@hugeicons/core-free-icons";
 import { type CSSProperties, memo, useMemo } from "react";
@@ -200,8 +200,7 @@ function resolveTrendingGlow(row: DiscoverRow): Pick<
 export function buildTrendingAuraStyle(row: DiscoverRow): TrendingCardStyle {
   const hash = hashString(`${row.id}:${row.owner}:${row.repo}`);
   const layout =
-    TRENDING_AURA_LAYOUTS[hash % TRENDING_AURA_LAYOUTS.length] ??
-    DEFAULT_TRENDING_AURA_LAYOUT;
+    (TRENDING_AURA_LAYOUTS[hash % TRENDING_AURA_LAYOUTS.length]);
   const glowX = clamp(layout.x + ((hash >>> 4) % 11) - 5, 12, 88);
   const glowY = clamp(layout.y + ((hash >>> 8) % 9) - 4, 6, 56);
   const secondaryX = clamp(
@@ -258,11 +257,11 @@ export const ModelCard = memo(function ModelCard({
           }),
     [isDataset, row.id, row.result, deviceType, vllmAvailable, vllmPlatform],
   );
-  const unsupported = support?.status === "unsupported" && !support?.supportedIn;
+  const unsupported = support?.status === "unsupported" && !support.supportedIn;
   const partial = row.isAvailableOnDevice && row.isPartialOnDevice;
   const downloading = partial && row.isDownloadingOnDevice === true;
   const onDevice = row.isAvailableOnDevice && !row.isPartialOnDevice;
-  const topCapability = row.capabilities[0] ?? null;
+  const topCapability = (row.capabilities[0]);
   const sizeLabel = formatModelParamLabel(row.repo, row.result.totalParams);
   const hasSize = sizeLabel !== "N/A";
   const tip = buildRowStatusTooltip({

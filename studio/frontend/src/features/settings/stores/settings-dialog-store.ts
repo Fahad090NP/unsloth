@@ -239,7 +239,7 @@ export function pendingLogRequestKey(state: {
   logSourcePathRequested: string | null;
   logRequestSeq?: number;
 }): string {
-  if (state.logFamilyRequested == null && state.logSourcePathRequested == null)
+  if ((state.logFamilyRequested === null || state.logFamilyRequested === undefined) && (state.logSourcePathRequested === null || state.logSourcePathRequested === undefined))
     return NO_PENDING_LOG_REQUEST;
   return `${state.logFamilyRequested ?? ""}|${state.logSourcePathRequested ?? ""}|${state.logRequestSeq ?? 0}`;
 }

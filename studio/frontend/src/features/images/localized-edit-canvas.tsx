@@ -110,7 +110,7 @@ export function LocalizedEditCanvas({
         dirty.current = !applyMask.empty;
         onLayerChange(applyMask.empty ? null : url);
       })
-      .catch(() => {});
+      .catch(() => { /* noop */ });
     return () => {
       live = false;
     };

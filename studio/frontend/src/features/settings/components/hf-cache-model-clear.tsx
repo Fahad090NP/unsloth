@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import {
   DeleteImpactSummary,
   useDeleteImpact,
-} from "@/features/hub/catalog/delete-impact";
-import { DeleteConfirmDialog } from "@/features/hub/catalog/download-card";
-import { deleteCachedModel } from "@/features/hub/inventory";
-import { useHfTokenStore } from "@/features/hub/stores/hf-token-store";
+} from "@/features/hub";
+import { DeleteConfirmDialog } from "@/features/hub";
+import { deleteCachedModel } from "@/features/hub";
+import { useHfTokenStore } from "@/features/hub";
 import { useT } from "@/i18n";
 import { toast } from "@/lib/toast";
 
@@ -80,7 +80,7 @@ export function HfCacheModelClear({
         }
         deleting={deleting}
         blocked={disabled || (impact?.blocked_by.length ?? 0) > 0}
-        onConfirm={() => void clear()}
+        onConfirm={() => { (clear()).catch(() => { /* noop */ }); }}
       />
     </>
   );

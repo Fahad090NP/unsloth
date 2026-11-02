@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
+import { PillTabs } from "@/features/model-picker";
 import { prefersReducedMotion } from "@/features/settings";
 import { cn } from "@/lib/utils";
 import {

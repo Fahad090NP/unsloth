@@ -48,7 +48,7 @@ function lengthWords(seconds: number): string {
 
 /** The source card's hint; without a model's limit it keeps the 30 minutes every engine takes. */
 export function transcribeSourceHint(maxSeconds?: number | null): string {
-  if (maxSeconds == null)
+  if ((maxSeconds === null || maxSeconds === undefined))
     return "Up to 30 minutes. Drop a file, record, or reuse a clip.";
   return `Up to ${lengthWords(maxSeconds)} with this model. Drop a file, record, or reuse a clip.`;
 }

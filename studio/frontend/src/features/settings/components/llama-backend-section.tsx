@@ -55,17 +55,17 @@ function LlamaCppPathRow({ onChanged }: { onChanged: () => void }) {
 
   useEffect(() => {
     let active = true;
-    void loadLlamaCppPathSettings()
+    (loadLlamaCppPathSettings()
       .then((next) => {
         if (!active) return;
         setSettings(next);
         setDraftPath(next.path ?? "");
         setError(null);
       })
-      .catch((reason) => {
+      .catch((reason: unknown) => {
         if (!active) return;
         setError(reason instanceof Error ? reason.message : String(reason));
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       active = false;
     };
@@ -134,7 +134,7 @@ function LlamaCppPathRow({ onChanged }: { onChanged: () => void }) {
                     size="xs"
                     className="h-auto shrink-0 px-0 text-xs"
                     disabled={saving}
-                    onClick={() => void save(null)}
+                    onClick={() => { (save(null)).catch(() => { /* noop */ }); }}
                     data-testid="llama-cpp-path-reset"
                   >
                     {t("settings.resources.llamaBackend.customPath.useBundled")}
@@ -158,7 +158,7 @@ function LlamaCppPathRow({ onChanged }: { onChanged: () => void }) {
             onChange={(event) => { setDraftPath(event.target.value); }}
             onKeyDown={(event) => {
               if (event.key === "Enter" && pathDirty && !saving) {
-                void save(draftPath.trim() || null);
+                (save(draftPath.trim() || null)).catch(() => { /* noop */ });
               }
             }}
             title={settings?.resolvedBinary ?? settings?.path ?? undefined}
@@ -169,7 +169,7 @@ function LlamaCppPathRow({ onChanged }: { onChanged: () => void }) {
             variant="outline"
             size="sm"
             disabled={!pathDirty || saving}
-            onClick={() => void save(draftPath.trim() || null)}
+            onClick={() => { (save(draftPath.trim() || null)).catch(() => { /* noop */ }); }}
             data-testid="llama-cpp-path-save"
           >
             {saving ? t("common.saving") : t("common.save")}
@@ -200,7 +200,7 @@ function LlamaCppPathRow({ onChanged }: { onChanged: () => void }) {
       <FolderBrowser
         open={browserOpen}
         onOpenChange={setBrowserOpen}
-        onSelect={(path) => void save(path)}
+        onSelect={(path) => { (save(path)).catch(() => { /* noop */ }); }}
         initialPath={settings?.path ?? undefined}
         title={t("settings.resources.llamaBackend.customPath.chooseTitle")}
         description={t(
@@ -232,7 +232,7 @@ export function LlamaBackendSection() {
   };
 
   const job = status?.job;
-  const envLocked = status?.envBackend != null;
+  const envLocked = (status?.envBackend !== null && status?.envBackend !== undefined);
   // Null means a newer Unsloth wrote the choice; show it as unknown, not Automatic.
   const unknownRecorded = status?.backendRequest === null;
   // A value with no item renders a blank Select that reads as "no backends at all".
@@ -250,8 +250,7 @@ export function LlamaBackendSection() {
   const dirty = !running && llamaBackendSelectionNeedsApply(status, selected);
   const unsupportedKey =
     status && !status.supported && !running
-      ? (UNSUPPORTED_REASONS[status.reason ?? ""] ??
-        "settings.resources.llamaBackend.unsupported.unresolved")
+      ? ((UNSUPPORTED_REASONS[status.reason ?? ""]))
       : null;
 
   return (
@@ -320,7 +319,7 @@ export function LlamaBackendSection() {
       <LlamaCppPathRow
         onChanged={() => {
           invalidateLlamaFlagCatalog();
-          void refresh(true);
+          (refresh(true)).catch(() => { /* noop */ });
         }}
       />
 
@@ -350,7 +349,7 @@ export function LlamaBackendSection() {
       {envLocked ? (
         <p className="pb-3 text-xs text-amber-600 dark:text-amber-400">
           {t("settings.resources.llamaBackend.envLocked", {
-            backend: backendDisplayName(status?.envBackend, t),
+            backend: backendDisplayName(status.envBackend, t),
           })}
         </p>
       ) : null}

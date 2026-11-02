@@ -7,7 +7,7 @@
 import type {
   CachedInventoryRow,
   LocalInventoryRow,
-} from "@/features/hub/inventory/types";
+} from "@/features/hub";
 import {
   type HubCapabilityFilter,
   detectCapabilities,

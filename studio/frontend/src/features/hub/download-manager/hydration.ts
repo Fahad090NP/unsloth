@@ -119,7 +119,7 @@ async function adoptActiveDatasetDownloads(): Promise<void> {
     getActiveDatasetDownloads(signal),
   );
   for (const download of downloads) {
-    const repoId = download.repo_id?.trim();
+    const repoId = download.repo_id.trim();
     if (!repoId || !ACTIVE_STATES.has(download.state)) continue;
     removeLocalActivePeers(DOWNLOAD_KIND.DATASET, repoId, null);
     adoptJob(
@@ -167,7 +167,7 @@ function scheduleBackendAdoptionRetry(
 ): void {
   const timer = window.setTimeout(() => {
     runtimeRegistry.hydrationRetryTimers.delete(timer);
-    void hydrateBackendActiveDownloads(attempt, sides);
+    (hydrateBackendActiveDownloads(attempt, sides)).catch(() => { /* noop */ });
   }, HYDRATE_ADOPTION_RETRY_MS);
   runtimeRegistry.hydrationRetryTimers.add(timer);
 }
@@ -222,7 +222,7 @@ async function settleHydratedJob(
     const job = getState().jobs[key];
     if (job && hasObservedExpectedBytes(job)) {
       finalize(key, "complete", { bytes: job.downloadedBytes });
-    } else if (job?.state === "running" || job?.state === "cancelling") {
+    } else if (job.state === "running" || job.state === "cancelling") {
       const probeResult = await probeHydratedIdleProgress(key, job);
       if (probeResult === "settled") return;
       if (probeResult === "active" && job.state === "running") {
@@ -250,7 +250,7 @@ function scheduleHydrationProbeRetry(
     runtimeRegistry.hydrationRetryTimers.delete(timer);
     const job = getState().jobs[key];
     if (!job || !ACTIVE_STATES.has(job.state)) return;
-    void probeHydratedJob(key, req, attempt);
+    (probeHydratedJob(key, req, attempt)).catch(() => { /* noop */ });
   }, HYDRATE_STATUS_RETRY_MS);
   runtimeRegistry.hydrationRetryTimers.add(timer);
 }
@@ -281,7 +281,7 @@ async function probeHydratedJob(
 export function hydrateDownloadManager(): void {
   if (hydrated) return;
   hydrated = true;
-  void hydrateBackendActiveDownloads();
+  (hydrateBackendActiveDownloads()).catch(() => { /* noop */ });
   const jobs = Object.values(getState().jobs);
   for (const job of jobs) {
     if (job.external) continue;
@@ -299,7 +299,7 @@ export function hydrateDownloadManager(): void {
       ...(job.presentation ? { presentation: job.presentation } : {}),
       expectedBytes: job.expectedBytes,
     };
-    void probeHydratedJob(job.key, req, 0);
+    (probeHydratedJob(job.key, req, 0)).catch(() => { /* noop */ });
   }
 }
 

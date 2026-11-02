@@ -143,3 +143,24 @@ export {
   isModEnter,
   modEnterLabel,
 } from "./lib/keyboard-shortcuts";
+
+export { generationFailureLogsAction } from "./lib/view-logs-action";
+export { modelMemorySettingsAction } from "./lib/model-memory-action";
+export type { VramBudgetSettings } from "./api/vram-budget";
+export { dropVramBudgetRetry, flushVramBudgetSave, isVramBudgetLocked, loadVramBudgetSettings, setVramBudgetLocked, settleVramBudgetSave, stageVramBudgetSave, subscribeVramBudgetLock, subscribeVramBudgetSettings, updateVramBudgetSettings } from "./api/vram-budget";
+export type { ModelMemorySettings } from "./api/model-memory";
+export { loadModelMemorySettings, subscribeModelMemorySettings } from "./api/model-memory";
+export { sttModelSize } from "./stores/stt-model-catalog";
+export { checkDiskSpace } from "./low-disk-check";
+export { reserveXetNoticeFromServer } from "./api/xet-notice";
+export { SettingsRow } from "./components/settings-row";
+export { SettingsSection } from "./components/settings-section";
+export { startLanAccess, stopLanAccess, updateLanAccessAddresses, updateLanAccessAutoStart, updateLanAccessPort } from "./api/lan-access";
+export { LAN_ACCESS_POLL_MS, defaultLanAccessAddressSelection, keylessLanAccessDescription, lanAccessAddressChoices, lanAccessAddressesReadOnly, lanAccessAutoStartReadOnly, lanAccessBlockMessage, lanAccessErrorMessage, lanAccessPortReadOnly, lanAccessStopDisconnectsOrigin, sameLanAccessAddresses, staleLanUrls, validLanAccessPort } from "./api/lan-access-state";
+export type { LanAccessStatus } from "./api/lan-access-state";
+export { trackSttDownload } from "./lib/stt-download-mirror";
+export type { KeylessApiAccessScope, KeylessApiAccessSettings } from "./api/keyless-api-access";
+export { loadKeylessApiAccess, updateKeylessApiAccess } from "./api/keyless-api-access";
+export { loadRemoteAccess, startRemoteAccess, stopRemoteAccess, updateRemoteAccessAutoStart } from "./api/remote-access";
+export type { RemoteAccessStatus } from "./api/remote-access-state";
+export { remoteAccessAutoStartReadOnly, remoteAccessBlockMessage, remoteAccessErrorMessage, remoteAccessPollDelay, remoteAccessSelfStopPoll, remoteAccessStopDisconnectsOrigin } from "./api/remote-access-state";

@@ -61,16 +61,23 @@ function DownloadLocationRow() {
   useEffect(() => {
     let live = true;
     nativeDownloadFolder().then(
-      (current) => live && setFolder(current),
+      (current) => {
+        if (live) setFolder(current);
+      },
       () => undefined,
-    );
+    ).catch(() => { /* noop */ });
     return () => {
       live = false;
     };
   }, []);
   const failed = (error: unknown) => toast.error(error instanceof Error ? error.message : String(error));
   const change = () =>
-    pickNativeDownloadFolder().then((picked) => picked && setFolder(picked), failed);
+    pickNativeDownloadFolder().then(
+      (picked) => {
+        if (picked) setFolder(picked);
+      },
+      failed,
+    );
   const reset = () => resetNativeDownloadFolder().then(setFolder, failed);
   return (
     <SettingsRow
@@ -455,11 +462,11 @@ export function BrowserTab() {
             type="file"
             accept=".html,.htm,text/html"
             className="hidden"
-            onChange={(event) => {
+            onChange={(eventParam) => { const event = eventParam;
               const file = event.target.files?.[0];
               // Cleared, so choosing the same file again still imports it.
               event.target.value = "";
-              if (file) void importBookmarks(file);
+              if (file) (importBookmarks(file)).catch(() => { /* noop */ });
             }}
           />
         </SettingsRow>

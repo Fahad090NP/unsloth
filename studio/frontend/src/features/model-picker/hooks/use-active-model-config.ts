@@ -134,8 +134,8 @@ export function useActiveModelConfig(): ActiveModelConfigState {
       loadMode: loadMode ?? null,
       ctxCheckpoints: ctxCheckpoints ?? null,
       cacheRam: cacheRam ?? null,
-      tensorParallel: tensorParallel ?? false,
-      disableVision: disableVision ?? false,
+      tensorParallel: (tensorParallel),
+      disableVision: (disableVision),
       chatTemplateOverride: chatTemplateOverride ?? null,
       ...(isGguf || isMlx ? {} : { loadIn4bit }),
     };
@@ -160,7 +160,7 @@ export function useActiveModelConfig(): ActiveModelConfigState {
       selectedGpuIndexKind,
       tensorSplit: splitRatio,
       // Undefined until the runtime reports a list, so the editor can hydrate the stored row.
-      ...(loadedLlamaExtraArgs != null
+      ...((loadedLlamaExtraArgs !== null && loadedLlamaExtraArgs !== undefined)
         ? { llamaExtraArgs: [...loadedLlamaExtraArgs] }
         : {}),
     };

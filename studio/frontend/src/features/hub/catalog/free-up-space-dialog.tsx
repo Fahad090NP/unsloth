@@ -12,13 +12,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { formatBytes } from "@/features/hub/lib/format";
+import { formatBytes } from "@/features/hub";
 import {
   type OrphanCompanion,
   deleteCachedModel,
   fetchOrphanCompanions,
 } from "../inventory";
-import { useHfTokenStore } from "@/features/hub/stores/hf-token-store";
+import { useHfTokenStore } from "@/features/hub";
 import { toast } from "@/lib/toast";
 import { useCallback, useEffect, useState } from "react";
 
@@ -61,7 +61,7 @@ export function FreeUpSpaceDialog({
   }, []);
 
   useEffect(() => {
-    if (open) void refresh();
+    if (open) (refresh()).catch(() => { /* noop */ });
   }, [open, refresh]);
 
   const selectedCompanions = companions.filter((c) => selected.has(companionIdentity(c)));
@@ -169,7 +169,7 @@ export function FreeUpSpaceDialog({
           <Button
             variant="destructive"
             disabled={deleting || selectedCompanions.length === 0}
-            onClick={() => void runDelete()}
+            onClick={() => { (runDelete()).catch(() => { /* noop */ }); }}
             data-testid="free-up-space-confirm"
           >
             {deleting

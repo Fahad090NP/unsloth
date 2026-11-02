@@ -192,7 +192,7 @@ export function TranscriptGallery({
   }, [refresh]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: `latest` is the trigger; a newly saved transcript refetches the list.
   useEffect(() => {
-    if (active) void refresh();
+    if (active) (refresh()).catch(() => { /* noop */ });
     return () => {
       generation.current += 1;
     };
@@ -279,7 +279,7 @@ export function TranscriptGallery({
         onScroll={(event) => {
           const el = event.currentTarget;
           if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40)
-            void loadMore();
+            (loadMore()).catch(() => { /* noop */ });
         }}
       >
         {records.map((record) => (
@@ -334,15 +334,15 @@ export function TranscriptGallery({
                       Download .{format}
                     </>
                   )}
-                  onExport={(format) => void downloadRecord(record, format)}
+                  onExport={(format) => { (downloadRecord(record, format)).catch(() => { /* noop */ }); }}
                 />
                 <DropdownMenuItem
                   onClick={() =>
-                    void copyToClipboard(record.text).then((ok) =>
+                    { (copyToClipboard(record.text).then((ok) =>
                       ok
                         ? toast.success("Transcript copied")
                         : toast.error("Could not copy transcript."),
-                    )
+                    )).catch(() => { /* noop */ }); }
                   }
                 >
                   <HugeiconsIcon icon={Copy01Icon} />
@@ -351,10 +351,10 @@ export function TranscriptGallery({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() =>
-                    void mutate(
+                    { (mutate(
                       () => archiveTranscript(record.id, !record.archived),
                       [record.id],
-                    )
+                    )).catch(() => { /* noop */ }); }
                   }
                 >
                   <HugeiconsIcon icon={Archive02Icon} />
@@ -363,7 +363,7 @@ export function TranscriptGallery({
                 <DropdownMenuItem
                   variant="destructive"
                   onClick={() =>
-                    void mutate(() => deleteTranscript(record.id), [record.id])
+                    { (mutate(() => deleteTranscript(record.id), [record.id])).catch(() => { /* noop */ }); }
                   }
                 >
                   <HugeiconsIcon icon={Delete02Icon} />
@@ -387,7 +387,7 @@ export function TranscriptGallery({
             variant="ghost"
             size="sm"
             disabled={loading}
-            onClick={() => void loadMore()}
+            onClick={() => { (loadMore()).catch(() => { /* noop */ }); }}
           >
             {loading ? "Loading…" : "Load more"}
           </Button>
@@ -406,7 +406,7 @@ export function TranscriptGallery({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => void mutate(() => deleteTranscript(), null)}
+              onClick={() => { (mutate(() => deleteTranscript(), null)).catch(() => { /* noop */ }); }}
             >
               Clear all
             </AlertDialogAction>

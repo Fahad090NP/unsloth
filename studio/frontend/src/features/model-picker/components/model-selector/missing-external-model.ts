@@ -59,9 +59,9 @@ export function missingExternalModel(
   );
   // An empty catalogue is unknown, since one is never written with no enabled models.
   const dropped =
-    connection == null ||
+    (connection === null || connection === undefined) ||
     (catalogCoversEveryId &&
-      catalog != null &&
+      (catalog !== null && catalog !== undefined) &&
       catalog.length > 0 &&
       !catalog.includes(parsed.modelId));
   if (dropped) {

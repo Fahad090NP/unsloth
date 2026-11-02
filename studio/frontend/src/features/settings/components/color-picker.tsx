@@ -244,7 +244,7 @@ export function ColorPickerSwatch({
             {eyeDropperCtor && (
               <button
                 type="button"
-                onClick={() => void pickFromScreen()}
+                onClick={() => { (pickFromScreen()).catch(() => { /* noop */ }); }}
                 aria-label={t(
                   "settings.appearance.custom.colorPicker.eyedropper",
                 )}

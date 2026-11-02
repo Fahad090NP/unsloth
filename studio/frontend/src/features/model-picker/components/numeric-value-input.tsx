@@ -86,7 +86,7 @@ export const NumericValueInput = forwardRef<
   });
 
   const isEdit = (final: number) =>
-    final !== value || displayValue != null || derived;
+    final !== value || (displayValue !== null && displayValue !== undefined) || derived;
 
   const commitDraft = (raw: string): number | null => {
     const parsed = Number.parseFloat(raw);
@@ -95,7 +95,7 @@ export const NumericValueInput = forwardRef<
     }
     // Committing the shown number means that number, even off the control's grid.
     const shown = parsed === value;
-    if (shown && ((max != null && parsed > max) || (min != null && parsed < min))) {
+    if (shown && (((max !== null && max !== undefined) && parsed > max) || ((min !== null && min !== undefined) && parsed < min))) {
       return null;
     }
     const final = shown ? parsed : snapToStep(parsed, step, min, max);
@@ -114,7 +114,7 @@ export const NumericValueInput = forwardRef<
           const final = commitDraft(raw);
           dirtyRef.current = false;
           lastBlurCommittedRef.current = null;
-          if (final == null) {
+          if ((final === null || final === undefined)) {
             draftRef.current = String(value);
           }
           if (focused) {
@@ -123,7 +123,7 @@ export const NumericValueInput = forwardRef<
           return final;
         }
         const blurCommitted = lastBlurCommittedRef.current;
-        if (blurCommitted != null) {
+        if ((blurCommitted !== null && blurCommitted !== undefined)) {
           lastBlurCommittedRef.current = null;
           if (focused) {
             setFocused(false);
@@ -179,7 +179,7 @@ export const NumericValueInput = forwardRef<
         } else if (dirtyRef.current) {
           const final = commitDraft(draftRef.current);
           dirtyRef.current = false;
-          if (final == null) {
+          if ((final === null || final === undefined)) {
             draftRef.current = String(value);
             lastBlurCommittedRef.current = null;
           } else {

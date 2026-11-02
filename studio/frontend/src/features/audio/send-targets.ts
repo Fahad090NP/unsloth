@@ -21,7 +21,7 @@ const SPEECH_WORKFLOWS: ReadonlySet<string> = new Set([
 // edit refuses a longer recording rather than cutting it.
 function fitsEdit(durationS: number | null | undefined): boolean {
   return (
-    durationS == null ||
+    (durationS === null || durationS === undefined) ||
     durationS <= EDIT_SOURCE_MAX_SECONDS + EDIT_SOURCE_SLACK_SECONDS
   );
 }

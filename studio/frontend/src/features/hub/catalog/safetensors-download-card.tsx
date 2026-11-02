@@ -130,7 +130,7 @@ export function SafetensorsDownloadCard({
     if (!repoId) return;
     const controller = new AbortController();
     const { signal } = controller;
-    void fetchModelSize(repoId, hfToken || undefined, signal)
+    (fetchModelSize(repoId, hfToken || undefined, signal)
       .then((info) => {
         if (signal.aborted || !info) return;
         const upstream = info.weightsBytes ?? info.totalBytes;
@@ -139,11 +139,11 @@ export function SafetensorsDownloadCard({
           setJobExpectedBytes(upstream);
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (!signal.aborted && import.meta.env.DEV) {
           console.debug("Model size lookup failed", err);
         }
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       controller.abort();
     };
@@ -185,7 +185,7 @@ export function SafetensorsDownloadCard({
   // Without the preview, Delete stayed enabled for a base an installed image GGUF needs.
   const deleteImpact = useDeleteImpact(
     deleteRepoOpen && Boolean(repoId),
-    repoId ?? "",
+    (repoId),
   );
 
   return (
@@ -203,7 +203,7 @@ export function SafetensorsDownloadCard({
             title="Delete cached model?"
             deleting={deleting}
             blocked={(deleteImpact?.blocked_by.length ?? 0) > 0}
-            onConfirm={() => void runDelete()}
+            onConfirm={() => { (runDelete()).catch(() => { /* noop */ }); }}
             description={
               <>
                 This will remove{" "}
@@ -277,7 +277,7 @@ export function SafetensorsDownloadCard({
             stopMode={downloadAction.stopMode}
             progressPercent={downloadAction.progressPercent}
             disabled={downloadAction.disabled || assets.checking}
-            onClick={() => { downloading ? downloadAction.onClick() : void assets.request(downloadAction.onClick); }}
+            onClick={() => { if (downloading) { downloadAction.onClick(); } else { assets.request(downloadAction.onClick).catch(() => { /* noop */ }); } }}
             className={repoPeerActive ? "opacity-70" : undefined}
           />
         )}

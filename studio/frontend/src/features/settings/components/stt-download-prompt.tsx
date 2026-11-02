@@ -12,7 +12,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { audioCppSizeLabel } from "@/features/audio/audio-cpp-catalog";
+import { audioCppSizeLabel } from "@/features/audio";
 import { startSttDownload } from "@/features/chat";
 import { hfApiToken, listGgufVariants, useHfTokenStore } from "@/features/hub";
 import { useT } from "@/i18n";
@@ -73,7 +73,7 @@ export function SttDownloadPrompt() {
           size: audioCppSizeLabel(row.download_size_bytes ?? row.size_bytes),
         });
       })
-      .catch(() => {});
+      .catch(() => { /* noop */ }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -149,7 +149,7 @@ export function SttDownloadPrompt() {
               event.preventDefault();
               const request = pending;
               dismiss();
-              if (request) void confirm(request);
+              if (request) (confirm(request)).catch(() => { /* noop */ });
             }}
           >
             {t("settings.voice.dictation.sttDownload")}

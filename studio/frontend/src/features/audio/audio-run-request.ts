@@ -201,25 +201,25 @@ function buildConvertRunBody(
   request: AudioConvertRunRequest,
 ): Record<string, unknown> {
   const inputs: Record<string, unknown> = {};
-  const source = cleanRef(request.inputs?.source);
+  const source = cleanRef(request.inputs.source);
   if (source) inputs.source = source;
-  const target = cleanRef(request.inputs?.target);
+  const target = cleanRef(request.inputs.target);
   if (target) inputs.target = target;
-  const sourceText = request.inputs?.source_text?.trim();
+  const sourceText = request.inputs.source_text?.trim();
   if (sourceText) inputs.source_text = sourceText;
   const params = request.convert;
   const convert: Record<string, unknown> = {
-    mode: CONVERT_MODES.has(params?.mode) ? params.mode : "speech",
-    pitch_auto: params?.pitch_auto,
+    mode: CONVERT_MODES.has(params.mode) ? params.mode : "speech",
+    pitch_auto: params.pitch_auto,
     pitch:
-      typeof params?.pitch === "number" && Number.isFinite(params.pitch)
+      typeof params.pitch === "number" && Number.isFinite(params.pitch)
         ? Math.min(24, Math.max(-24, Math.round(params.pitch)))
         : null,
   };
-  if (params?.style === "source" || params?.style === "target") {
+  if (params.style === "source" || params.style === "target") {
     convert.style = params.style;
   }
-  const voice = params?.voice?.trim();
+  const voice = params.voice?.trim();
   if (voice) convert.voice = voice;
   const body: Record<string, unknown> = {
     workflow: "convert",

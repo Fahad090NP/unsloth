@@ -155,13 +155,13 @@ export function ModelRowMenu({
   const onUpdateConfirm = update?.onConfirm;
   const handleUpdateConfirm = useCallback(() => {
     // The Downloads panel owns progress and cancel; only a failure to start toasts.
-    void Promise.resolve()
+    (Promise.resolve()
       .then(onUpdateConfirm)
-      .catch((err) => {
+      .catch((err: unknown) => {
         toast.error(
           err instanceof Error ? err.message : "Failed to start update",
         );
-      });
+      })).catch(() => { /* noop */ });
     setUpdateOpen(false);
   }, [onUpdateConfirm]);
 
@@ -173,7 +173,7 @@ export function ModelRowMenu({
       : cachePathRepoId
         ? revealCachedModel(cachePathRepoId, cachePathVariant)
         : null;
-    reveal?.catch((err) => {
+    reveal?.catch((err: unknown) => {
       toast.error(
         err instanceof Error ? err.message : "Failed to open file manager",
       );
@@ -305,7 +305,7 @@ export function ModelRowMenu({
           }
           deleting={deleting}
           blocked={(deleteImpact?.blocked_by.length ?? 0) > 0}
-          onConfirm={() => void handleDeleteConfirm()}
+          onConfirm={() => { (handleDeleteConfirm()).catch(() => { /* noop */ }); }}
         />
       )}
 

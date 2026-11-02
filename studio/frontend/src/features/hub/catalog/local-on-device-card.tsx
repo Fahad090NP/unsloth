@@ -206,11 +206,11 @@ function CardRevealButton({ onReveal }: { onReveal: () => Promise<unknown> }) {
           aria-label={revealLabel}
           onClick={(e) => {
             e.stopPropagation();
-            onReveal().catch((err) => {
+            onReveal().catch((err: unknown) => {
               toast.error(
                 err instanceof Error ? err.message : "Failed to open file manager",
               );
-            });
+            }).catch(() => { /* noop */ });
           }}
           className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground opacity-0 transition-[opacity,background-color,color] duration-150 hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/dl:opacity-100"
         >
@@ -262,9 +262,7 @@ export function LocalOnDeviceCard({
     null,
   );
   const updateTransportConflict = useDownloadManagerStore((state) =>
-    updateConflictKey
-      ? (state.conflicts[updateConflictKey]?.info ?? null)
-      : null,
+    updateConflictKey ? (state.conflicts[updateConflictKey]?.info ?? null) : null,
   );
   const cancelUpdateConflict = useCallback(() => {
     if (updateConflictKey) downloadManager.cancelConflict(updateConflictKey);
@@ -442,7 +440,7 @@ export function LocalOnDeviceCard({
   const handleConfirmUpdate = () => {
     if (!repoId || !updateTargetVariant) return;
     setUpdateOpen(false);
-    void downloadManager
+    downloadManager
       .requestStart({
         kind: "model",
         repoId,
@@ -453,8 +451,8 @@ export function LocalOnDeviceCard({
         if (outcome === "conflict") {
           setUpdateConflictKey(jobKeyOf("model", repoId, updateTargetVariant));
         }
-        void currentVariantState.refresh();
-        void remoteVariantState.refresh();
+        currentVariantState.refresh().catch(() => { /* noop */ });
+        remoteVariantState.refresh().catch(() => { /* noop */ });
       });
   };
   const formatLabel =
@@ -687,7 +685,7 @@ export function LocalOnDeviceCard({
         deleting={deleting}
         // Same gate as the row menu: blocked deletes would otherwise just return a 400.
         blocked={(deleteImpact?.blocked_by.length ?? 0) > 0}
-        onConfirm={() => void runDelete()}
+        onConfirm={() => { (runDelete()).catch(() => { /* noop */ }); }}
         description={
           isCacheRow ? (
             <>

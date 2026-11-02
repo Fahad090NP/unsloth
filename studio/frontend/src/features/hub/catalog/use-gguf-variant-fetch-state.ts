@@ -145,7 +145,7 @@ export function useGgufVariantFetchState({
   ]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => void refresh(), 0);
+    const timer = window.setTimeout(() => { (refresh()).catch(() => { /* noop */ }); }, 0);
     return () => {
       window.clearTimeout(timer);
       abortRef.current?.abort();

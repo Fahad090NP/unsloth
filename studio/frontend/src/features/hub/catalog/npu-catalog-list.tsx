@@ -57,7 +57,7 @@ export function NpuCatalogList({
         progress={catalog.downloads[model.id]}
         downloading={model.id in catalog.downloads}
         reconnecting={model.id in catalog.reconnecting}
-        onDownload={() => void catalog.download(model)}
+        onDownload={() => { (catalog.download(model)).catch(() => { /* noop */ }); }}
         onRun={() => { onRun(model); }}
         onRemove={() => catalog.remove(model)}
       />
@@ -160,12 +160,12 @@ function NpuCatalogRow({
             title={`Delete ${model.id}?`}
             description="This removes the model's NPU files from this device."
             deleting={deleting}
-            onConfirm={() => void remove()}
+            onConfirm={() => { (remove()).catch(() => { /* noop */ }); }}
           />
         </>
       ) : (
         <Button size="sm" variant="outline" onClick={onDownload}>
-          {model.resume_percent == null ? "Download" : "Resume"}
+          {(model.resume_percent === null || model.resume_percent === undefined) ? "Download" : "Resume"}
         </Button>
       )}
     </div>

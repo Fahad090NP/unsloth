@@ -9,7 +9,7 @@ import {
   isExternalJob,
   updateExternalActivity,
   finishExternalJob,
-} from "@/features/hub/download-manager/external-jobs";
+} from "@/features/hub";
 
 export function useEngines(enabled = true, background = false) {
   const [engines, setEngines] = useState<EngineStatus[]>([]);
@@ -88,9 +88,9 @@ export function useEngines(enabled = true, background = false) {
     };
     const changed = () => {
       clearTimeout(timer);
-      void refresh();
+      (refresh()).catch(() => { /* noop */ });
     };
-    void refresh();
+    (refresh()).catch(() => { /* noop */ });
     window.addEventListener("studio-engines-changed", changed);
     return () => {
       disposed = true;

@@ -77,6 +77,6 @@ export function releasePromptUpsampler(): Promise<void> {
   const release = (async () => {
     await parseJson<unknown>(await authFetch(PROMPT_UPSAMPLER_ROUTES.release, { method: "POST" }));
   })();
-  pendingRelease = release.catch(() => {});
+  pendingRelease = release.catch(() => { /* noop */ });
   return release;
 }

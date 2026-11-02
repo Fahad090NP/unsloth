@@ -219,9 +219,9 @@ export function isServedByLlamaCpp(x: {
   if (x.loadedIsGguf === false) return false;
   return (
     x.loadedIsGguf === true ||
-    x.activeGgufVariant != null ||
-    x.activeNativePathToken != null ||
-    String(x.checkpoint ?? "").toLowerCase().endsWith(".gguf")
+    (x.activeGgufVariant !== null && x.activeGgufVariant !== undefined) ||
+    (x.activeNativePathToken !== null && x.activeNativePathToken !== undefined) ||
+    (x.checkpoint ?? "").toLowerCase().endsWith(".gguf")
   );
 }
 
@@ -277,7 +277,7 @@ export function loadedContextFields(resp: {
   const isGguf = resp.is_gguf ?? false;
   // Unknown, not a default: omitted when reading the window failed.
   const loaded = resp.context_length ?? null;
-  if (!isGguf && !resp.is_mlx && resp.native_context_length == null) {
+  if (!isGguf && !resp.is_mlx && (resp.native_context_length === null || resp.native_context_length === undefined)) {
     return {
       loadedContextLength: null,
       maxContextLength: null,
@@ -601,7 +601,7 @@ export function pinSpeculativeMode(
   shownMode: string,
   patch: Partial<PerModelConfig>,
 ): Partial<PerModelConfig> {
-  return config.speculativeType == null
+  return (config.speculativeType === null || config.speculativeType === undefined)
     ? { ...patch, speculativeType: shownMode }
     : patch;
 }
@@ -807,7 +807,7 @@ function deleteOldestEvictableEntry(
       continue;
     }
     const value = map[key];
-    delete map[key];
+    Reflect.deleteProperty(map, key);
     evicted?.push(key);
     return { key, value };
   }
@@ -901,9 +901,9 @@ function legacyEntryToConfig(raw: Record<string, unknown>): PerModelConfig {
 }
 
 function mergeLegacyEntries(
-  map: StoredMap,
+  mapParam: StoredMap,
   legacy: Record<string, unknown>,
-): string[] {
+): string[] { const map = mapParam;
   const addedKeys: string[] = [];
   for (const [legacyKey, value] of Object.entries(legacy)) {
     if (!value || typeof value !== "object") {
@@ -1004,7 +1004,7 @@ function writeMap(map: StoredMap): boolean {
     return false;
   }
   // Best-effort: the write already landed.
-  if (typeof window?.dispatchEvent === "function") {
+  if (typeof window.dispatchEvent === "function") {
     window.dispatchEvent(new Event(PER_MODEL_CONFIG_UPDATED_EVENT));
   }
   return true;
@@ -1014,7 +1014,7 @@ function warnDroppedFields(
   raw: Record<string, unknown>,
   version: number,
 ): void {
-  if (!import.meta.env?.DEV) {
+  if (!import.meta.env.DEV) {
     return;
   }
   const dropped = Object.keys(raw).filter(
@@ -1036,7 +1036,7 @@ function normalizeV1(partial: RawConfig): PerModelConfig {
   const speculativeType =
     rawSpecType ?? DEFAULT_PER_MODEL_CONFIG.speculativeType;
   const specDraftNMax =
-    speculativeType != null &&
+    (speculativeType !== null && speculativeType !== undefined) &&
     DRAFT_N_MAX_SPEC_TYPES.has(speculativeType) &&
     typeof partial.specDraftNMax === "number" &&
     Number.isFinite(partial.specDraftNMax)
@@ -1044,14 +1044,14 @@ function normalizeV1(partial: RawConfig): PerModelConfig {
       : null;
   // A dtype stored under a mode with no separate drafter would show a phantom row.
   const specDraftCacheDtype =
-    speculativeType != null &&
+    (speculativeType !== null && speculativeType !== undefined) &&
     SEPARATE_DRAFT_MODEL_SPEC_TYPES.has(speculativeType) &&
     typeof partial.specDraftCacheDtype === "string" &&
     VALID_KV_CACHE_DTYPES.has(partial.specDraftCacheDtype)
       ? partial.specDraftCacheDtype
       : null;
   const specDraftModel =
-    speculativeType != null &&
+    (speculativeType !== null && speculativeType !== undefined) &&
     DRAFTER_MODEL_SPEC_TYPES.has(speculativeType) &&
     typeof partial.specDraftModel === "string" &&
     partial.specDraftModel.trim().length > 0 &&
@@ -1175,19 +1175,19 @@ function storedSchemaVersion(normalized: PerModelConfig): number {
   if (normalized.mlxAnePrefill) {
     return STORAGE_SCHEMA_VERSION;
   }
-  if (normalized.mlxPleOffload != null || normalized.mlxExpertOffload != null) {
+  if ((normalized.mlxPleOffload !== null && normalized.mlxPleOffload !== undefined) || (normalized.mlxExpertOffload !== null && normalized.mlxExpertOffload !== undefined)) {
     return PRE_MLX_ANE_PREFILL_SCHEMA_VERSION;
   }
-  if (normalized.specDraftModel != null || mlxMode) {
+  if ((normalized.specDraftModel !== null && normalized.specDraftModel !== undefined) || mlxMode) {
     return PRE_MLX_OFFLOAD_SCHEMA_VERSION;
   }
-  if (normalized.tensorSplit != null) {
+  if ((normalized.tensorSplit !== null && normalized.tensorSplit !== undefined)) {
     return PRE_MLX_DRAFTER_SCHEMA_VERSION;
   }
   if (normalized.mlxInt8Prefill) {
     return PRE_TENSOR_SPLIT_SCHEMA_VERSION;
   }
-  if (normalized.mlxKvQuant != null) {
+  if ((normalized.mlxKvQuant !== null && normalized.mlxKvQuant !== undefined)) {
     return PRE_MLX_INT8_PREFILL_SCHEMA_VERSION;
   }
   const hasReasoningBudget =
@@ -1196,20 +1196,20 @@ function storedSchemaVersion(normalized: PerModelConfig): number {
     return PRE_MLX_KV_QUANT_SCHEMA_VERSION;
   }
   const hasServerTuning =
-    normalized.loadMode != null ||
-    normalized.specDraftCacheDtype != null ||
-    normalized.ctxCheckpoints != null ||
-    normalized.cacheRam != null;
+    (normalized.loadMode !== null && normalized.loadMode !== undefined) ||
+    (normalized.specDraftCacheDtype !== null && normalized.specDraftCacheDtype !== undefined) ||
+    (normalized.ctxCheckpoints !== null && normalized.ctxCheckpoints !== undefined) ||
+    (normalized.cacheRam !== null && normalized.cacheRam !== undefined);
   if (hasServerTuning) {
     return PRE_REASONING_BUDGET_SCHEMA_VERSION;
   }
   if (normalized.disableVision) {
     return PRE_SERVER_TUNING_SCHEMA_VERSION;
   }
-  if (normalized.llamaExtraArgs != null && normalized.llamaExtraArgs.length > 0) {
+  if ((normalized.llamaExtraArgs !== null && normalized.llamaExtraArgs !== undefined) && normalized.llamaExtraArgs.length > 0) {
     return PRE_VISION_SCHEMA_VERSION;
   }
-  if (normalized.nBatch != null || normalized.nUbatch != null) {
+  if ((normalized.nBatch !== null && normalized.nBatch !== undefined) || (normalized.nUbatch !== null && normalized.nUbatch !== undefined)) {
     return PRE_EXTRA_ARGS_SCHEMA_VERSION;
   }
   return PRE_BATCH_SCHEMA_VERSION;
@@ -1299,7 +1299,7 @@ function deleteConfigEntriesForModelVariant(
     if (!configKeyMatchesModelVariant(key, modelId, ggufVariant)) {
       continue;
     }
-    delete map[key];
+    Reflect.deleteProperty(map, key);
     changed = true;
   }
   return changed;
@@ -1361,38 +1361,38 @@ export function isDefaultConfig(config: PerModelConfig): boolean {
     (config.enginePrecision ?? "auto") === "auto" &&
     (config.engineParallelism ?? "tensor") === "tensor" &&
     (config.engineKvCacheDtype ?? "auto") === "auto" &&
-    config.engineSeed == null &&
-    config.engineGpuMemoryUtilization == null &&
+    (config.engineSeed === null || config.engineSeed === undefined) &&
+    (config.engineGpuMemoryUtilization === null || config.engineGpuMemoryUtilization === undefined) &&
     config.loadIn4bit !== false &&
-    config.customContextLength == null &&
-    config.maxSeqLength == null &&
+    (config.customContextLength === null || config.customContextLength === undefined) &&
+    (config.maxSeqLength === null || config.maxSeqLength === undefined) &&
     (config.kvCacheDtype ?? null) === DEFAULT_PER_MODEL_CONFIG.kvCacheDtype &&
     (config.mlxKvQuant ?? null) === DEFAULT_PER_MODEL_CONFIG.mlxKvQuant &&
     !config.mlxInt8Prefill &&
     !config.mlxAnePrefill &&
-    config.mlxPleOffload == null &&
-    config.mlxExpertOffload == null &&
+    (config.mlxPleOffload === null || config.mlxPleOffload === undefined) &&
+    (config.mlxExpertOffload === null || config.mlxExpertOffload === undefined) &&
     config.speculativeType === DEFAULT_PER_MODEL_CONFIG.speculativeType &&
-    config.specDraftNMax == null &&
-    config.nParallel == null &&
+    (config.specDraftNMax === null || config.specDraftNMax === undefined) &&
+    (config.nParallel === null || config.nParallel === undefined) &&
     config.reasoningBudget === DEFAULT_PER_MODEL_CONFIG.reasoningBudget &&
     config.reasoningBudgetMessage ===
       DEFAULT_PER_MODEL_CONFIG.reasoningBudgetMessage &&
-    config.nBatch == null &&
-    config.nUbatch == null &&
+    (config.nBatch === null || config.nBatch === undefined) &&
+    (config.nUbatch === null || config.nUbatch === undefined) &&
     // Compared against null: 0 checkpoints and 0 or -1 cache are values, and a default-judged entry is deleted.
     (config.specDraftCacheDtype ?? null) === null &&
     (config.specDraftModel ?? null) === null &&
     (config.loadMode ?? null) === null &&
-    config.ctxCheckpoints == null &&
-    config.cacheRam == null &&
-    Boolean(config.tensorParallel) ===
-      Boolean(DEFAULT_PER_MODEL_CONFIG.tensorParallel) &&
-    Boolean(config.disableVision) ===
-      Boolean(DEFAULT_PER_MODEL_CONFIG.disableVision) &&
+    (config.ctxCheckpoints === null || config.ctxCheckpoints === undefined) &&
+    (config.cacheRam === null || config.cacheRam === undefined) &&
+    (config.tensorParallel) ===
+      (DEFAULT_PER_MODEL_CONFIG.tensorParallel) &&
+    (config.disableVision) ===
+      (DEFAULT_PER_MODEL_CONFIG.disableVision) &&
     (config.chatTemplateOverride ?? null) === null &&
     // Or an Extra Arguments-only change reads as default and is deleted.
-    (config.llamaExtraArgs == null || config.llamaExtraArgs.length === 0) &&
+    ((config.llamaExtraArgs === null || config.llamaExtraArgs === undefined) || config.llamaExtraArgs.length === 0) &&
     gpuFieldsAtDefault(config)
   );
 }
@@ -1400,10 +1400,10 @@ export function isDefaultConfig(config: PerModelConfig): boolean {
 function gpuFieldsAtDefault(config: PerModelConfig): boolean {
   return (
     (config.gpuMemoryMode ?? "auto") === "auto" &&
-    (config.gpuLayers == null || config.gpuLayers < 0) &&
-    (config.nCpuMoe == null || config.nCpuMoe === 0) &&
-    config.selectedGpuIds == null &&
-    config.tensorSplit == null
+    ((config.gpuLayers === null || config.gpuLayers === undefined) || config.gpuLayers < 0) &&
+    ((config.nCpuMoe === null || config.nCpuMoe === undefined) || config.nCpuMoe === 0) &&
+    (config.selectedGpuIds === null || config.selectedGpuIds === undefined) &&
+    (config.tensorSplit === null || config.tensorSplit === undefined)
   );
 }
 
@@ -1586,7 +1586,7 @@ export function adoptLegacyConfigKey(
   const alreadySaved =
     findConfigKeyForModelVariant(map, modelId, ggufVariant) !== null;
   const bytesBefore = serializedMapSize(map);
-  delete map[legacyKey];
+  Reflect.deleteProperty(map, legacyKey);
   deleteConfigEntriesForModelVariant(map, legacyModelId, ggufVariant);
   if (!(alreadySaved || isDefaultConfig(legacy))) {
     const [key] = storageKeysForModelVariant(modelId, ggufVariant);

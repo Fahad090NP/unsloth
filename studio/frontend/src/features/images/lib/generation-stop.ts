@@ -32,5 +32,5 @@ export function stopButtonLabel(input: {
 }): string {
   if (input.stopping) return "Stopping…";
   const idle = input.idle ?? "Stop";
-  return input.done != null && input.count > 1 ? `${idle} (${input.done}/${input.count})` : idle;
+  return (input.done !== null && input.done !== undefined) && input.count > 1 ? `${idle} (${input.done}/${input.count})` : idle;
 }

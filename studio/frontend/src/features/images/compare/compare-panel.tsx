@@ -230,12 +230,12 @@ export default function ComparePanel(props: ComparePanelProps) {
 
   const download = (g: GridResult, i: number) => {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-    void downloadBlobStreaming(g.blob, `compare-grid-${stamp}${grids.length > 1 ? `-${i + 1}` : ""}.png`).catch((err) => {
+    (downloadBlobStreaming(g.blob, `compare-grid-${stamp}${grids.length > 1 ? `-${i + 1}` : ""}.png`).catch((err: unknown) => {
       // Cancelling the save dialog is not a failure; a native open / write / finalize error is.
       if (!isDownloadCancelled(err)) {
         toast.error(err instanceof Error ? `Could not save the grid: ${err.message}` : "Could not save the grid");
       }
-    });
+    })).catch(() => { /* noop */ });
   };
 
   const count = preview.ok ? preview.plan.cellCount : preview.cellCount;
@@ -341,7 +341,7 @@ export default function ComparePanel(props: ComparePanelProps) {
                   ? `${shape} = ${count} cell${count === 1 ? "" : "s"} (limit ${MAX_COMPARE_CELLS})`
                   : preview.error}
             </p>
-            <Button variant="dark" type="button" size="sm" disabled={busy || running !== null || !preview.ok} onClick={() => void run()}>
+            <Button variant="dark" type="button" size="sm" disabled={busy || running !== null || !preview.ok} onClick={() => { (run()).catch(() => { /* noop */ }); }}>
               {preview.ok ? `Generate grid (${count})` : "Generate grid"}
             </Button>
           </div>

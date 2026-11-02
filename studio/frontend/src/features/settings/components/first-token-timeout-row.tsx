@@ -38,17 +38,17 @@ export function FirstTokenTimeoutRow() {
 
   useEffect(() => {
     let cancelled = false;
-    void firstTokenTimeoutSettings(t("settings.chat.firstTokenLoadError"))
+    (firstTokenTimeoutSettings(t("settings.chat.firstTokenLoadError"))
       .then((value) => {
         if (cancelled) return;
         setSettings(value);
         setMode(modeFor(value.minutes, value.default_minutes));
         if (value.minutes > 0) setCustomMinutes(String(value.minutes));
       })
-      .catch((reason) => {
+      .catch((reason: unknown) => {
         if (!cancelled)
           setError(String(reason instanceof Error ? reason.message : reason));
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -131,7 +131,7 @@ export function FirstTokenTimeoutRow() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => void save()}
+            onClick={() => { (save()).catch(() => { /* noop */ }); }}
             disabled={
               !settings || saving || !valid || minutes === settings.minutes
             }

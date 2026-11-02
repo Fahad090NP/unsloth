@@ -265,7 +265,7 @@ export function hfModelFitsDevice(
   const isGguf = isGgufId(model.id, model.isGguf);
   if (
     params &&
-    model.curatedSizeBytes == null &&
+    (model.curatedSizeBytes === null || model.curatedSizeBytes === undefined) &&
     !isGguf &&
     !isMlxId(model.id) &&
     !opts.mediaLoad &&
@@ -431,7 +431,7 @@ export function orderRecommendedRows<
   const seedById = new Map(seeds.map((s) => [s.id, s]));
   const rows = results.filter(keep).map((row) => {
     const curatedSizeBytes = seedById.get(row.id)?.curatedSizeBytes;
-    return curatedSizeBytes != null && row.curatedSizeBytes == null
+    return (curatedSizeBytes !== null && curatedSizeBytes !== undefined) && (row.curatedSizeBytes === null || row.curatedSizeBytes === undefined)
       ? { ...row, curatedSizeBytes }
       : row;
   });
@@ -478,7 +478,7 @@ export function orderRecommendedRows<
     const key = keyOf(r);
     // Pinned families lead, ahead of first-party rows that trend higher.
     const pin = pinIndex.get(key);
-    if (pin != null) {
+    if ((pin !== null && pin !== undefined)) {
       const slot = slotOf.get(i) ?? 0;
       return together.has(key)
         ? [0, pin, slot, firstSeen.get(key) ?? i, i]
@@ -516,7 +516,7 @@ export function curatedBudget(
   fit: Omit<NonNullable<ReturnType<typeof curatedArtifactFit>>, "device"> & { device?: CuratedBudget["device"] },
 ): CuratedBudget | undefined {
   const { allowanceGb, deviceGb, device, sizeGb } = fit;
-  return allowanceGb != null && deviceGb != null && device && sizeGb != null
+  return (allowanceGb !== null && allowanceGb !== undefined) && (deviceGb !== null && deviceGb !== undefined) && device && (sizeGb !== null && sizeGb !== undefined)
     ? { allowanceGb, deviceGb, device, sizeGb }
     : undefined;
 }

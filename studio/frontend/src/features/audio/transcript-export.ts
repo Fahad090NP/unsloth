@@ -106,7 +106,7 @@ export function toJson(input: TranscriptExport): string {
       speakers: details.speakers.map((speaker) => ({
         id: speaker.id,
         label: speaker.label,
-        name: input.names[speaker.id]?.trim() || null,
+        name: input.names[speaker.id].trim() || null,
       })),
     },
     null,

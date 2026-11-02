@@ -71,7 +71,7 @@ export function AudioOptionFields({
             </div>
           );
         }
-        if (audioOptionUsesSlider(spec) && spec.min != null && spec.max != null) {
+        if (audioOptionUsesSlider(spec) && (spec.min !== null && spec.min !== undefined) && (spec.max !== null && spec.max !== undefined)) {
           const step = spec.type === "int" ? 1 : audioOptionFloatStep(spec.min, spec.max);
           return (
             <ParamSlider
@@ -133,7 +133,7 @@ export function AudioOptionFields({
                 values[spec.name] === undefined ? "" : String(values[spec.name])
               }
               placeholder={
-                spec.default != null ? String(spec.default) : "Model default"
+                (spec.default !== null && spec.default !== undefined) ? String(spec.default) : "Model default"
               }
               disabled={disabled}
               onChange={(event) => {

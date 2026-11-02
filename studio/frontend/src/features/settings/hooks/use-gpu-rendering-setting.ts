@@ -37,7 +37,7 @@ export function useGpuRenderingSetting({
         setStatus(loaded);
         setError(null);
       })
-      .catch((cause) => {
+      .catch((cause: unknown) => {
         if (cancelled) return;
         setError(cause instanceof Error ? cause.message : loadError);
       });

@@ -59,7 +59,7 @@ export function catalogById(
   for (const row of rows) {
     map.set(row.id.trim().toLowerCase(), {
       ...row,
-      supported: row.unsupported_reason == null && row.workflows.length > 0,
+      supported: (row.unsupported_reason === null || row.unsupported_reason === undefined) && row.workflows.length > 0,
     });
   }
   return map;
@@ -103,7 +103,7 @@ export function catalogMoreRows(
   runtimeSpecs = false,
 ): AudioCatalogRow[] {
   return rows
-    .filter((row) => row.unsupported_reason == null && row.workflows.length > 0)
+    .filter((row) => (row.unsupported_reason === null || row.unsupported_reason === undefined) && row.workflows.length > 0)
     .filter((row) =>
       row.source === "community"
         ? !SEED_IDS.has(row.id.toLowerCase())
@@ -254,7 +254,7 @@ export function createAudioCatalogStore(
       if (inflight || now() < nextFetchAt) return inflight ?? Promise.resolve();
       inflight = fetchCatalog()
         .then((response) => {
-          const rows = Array.isArray(response?.models) ? response.models : [];
+          const rows = Array.isArray(response.models) ? response.models : [];
           snapshot = {
             rows,
             byId: catalogById(rows),

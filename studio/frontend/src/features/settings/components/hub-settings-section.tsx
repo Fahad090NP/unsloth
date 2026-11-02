@@ -64,7 +64,7 @@ export function HubSettingsSection() {
         if (!cancelled) {
           setError(t("settings.general.hub.loadFailed"));
         }
-      });
+      }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -155,7 +155,7 @@ export function HubSettingsSection() {
                 aria-checked={active}
                 disabled={locked}
                 onClick={() => {
-                  if (!active) void saveSource(option.value);
+                  if (!active) (saveSource(option.value)).catch(() => { /* noop */ });
                 }}
                 className={cn(
                   "relative flex h-8 items-center rounded-full px-3 text-xs font-medium transition-colors disabled:cursor-not-allowed",
@@ -209,7 +209,7 @@ export function HubSettingsSection() {
           >
             <Switch
               checked={settings?.datasetsServerFollowsEndpoint ?? false}
-              disabled={locked || !settings?.hfEndpoint}
+              disabled={locked || !settings.hfEndpoint}
               onCheckedChange={(checked) =>
                 settings &&
                 void save({

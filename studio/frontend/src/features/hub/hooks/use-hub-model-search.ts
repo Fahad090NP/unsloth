@@ -212,7 +212,7 @@ function makeMapModel(
       tags?: string[];
       config?: { quantization_config?: { quant_method?: string } };
     };
-    if (suffixLower && !m.name?.toLowerCase().endsWith(suffixLower)) {
+    if (suffixLower && !m.name.toLowerCase().endsWith(suffixLower)) {
       return null;
     }
     const isEmbedding = m.tags?.some((t) => EMBEDDING_TAGS.has(t));
@@ -308,8 +308,8 @@ function primeFromListing(
 }
 
 type ModelListingTransform = (
-  iterator: AsyncGenerator<unknown>,
-) => AsyncGenerator<unknown>;
+  iterator: AsyncGenerator,
+) => AsyncGenerator;
 
 /** Merged generator yielding unsloth-owned models first, then deduped general results. */
 async function* mergedModelIterator(
@@ -322,7 +322,7 @@ async function* mergedModelIterator(
   signal?: AbortSignal,
   parameterFilter = "",
   filterPriority?: ModelListingTransform,
-): AsyncGenerator<unknown> {
+): AsyncGenerator {
   const tasks = normalizeTaskFilter(task);
   const common = {
     additionalFields: ALL_FIELDS,
@@ -337,7 +337,7 @@ async function* mergedModelIterator(
         search: { query, owner: "unsloth", ...(task ? { task } : {}) },
         fetch: makeSortFetch(sortBy, direction, taskSignal, parameterFilter),
         ...common,
-      }) as AsyncGenerator<unknown>,
+      }) as AsyncGenerator,
     signal,
   );
   const generalIter = mergeTaskIterators(
@@ -348,7 +348,7 @@ async function* mergedModelIterator(
         search: { query, ...(task ? { task } : {}) },
         fetch: makeSortFetch(sortBy, direction, taskSignal, parameterFilter),
         ...common,
-      }) as AsyncGenerator<unknown>,
+      }) as AsyncGenerator,
     signal,
   );
 
@@ -424,7 +424,7 @@ async function* priorityThenListingIterator(
   direction: HfSortDirection = "desc",
   signal?: AbortSignal,
   parameterFilter = "",
-): AsyncGenerator<unknown> {
+): AsyncGenerator {
   const tasks = normalizeTaskFilter(task);
   const common = {
     additionalFields: ALL_FIELDS,
@@ -461,7 +461,7 @@ async function* priorityThenListingIterator(
         search: { owner: "unsloth", ...(task ? { task } : {}) },
         fetch: makeSortFetch(sortBy, direction, taskSignal, parameterFilter),
         ...common,
-      }) as AsyncGenerator<unknown>,
+      }) as AsyncGenerator,
     signal,
   );
   for await (const model of generalIter) {
@@ -511,7 +511,7 @@ function rankListing(
  */
 async function* providerUnslothFirstIterator(
   provider: ProviderLogo,
-  inner: AsyncGenerator<unknown>,
+  inner: AsyncGenerator,
   opts: {
     sortBy: HfSortKey;
     sortDirection: HfSortDirection;
@@ -521,7 +521,7 @@ async function* providerUnslothFirstIterator(
     includeOrgs: boolean;
     filterPriority?: ModelListingTransform;
   },
-): AsyncGenerator<unknown> {
+): AsyncGenerator {
   const listing = (search: { query?: string; owner: string }) =>
     listModels({
       hubUrl: getHfEndpoint(),
@@ -530,9 +530,9 @@ async function* providerUnslothFirstIterator(
       fetch: makeSortFetch(opts.sortBy, opts.sortDirection, opts.signal, opts.parameterFilter),
       sort: hubListingSort(opts.sortBy),
       ...(opts.accessToken ? { credentials: { accessToken: opts.accessToken } } : {}),
-    }) as AsyncGenerator<unknown>;
+    }) as AsyncGenerator;
   // Read by hand: breaking out of a for-await would close the listing its tail continues.
-  const take = async (iter: AsyncGenerator<unknown>) => {
+  const take = async (iter: AsyncGenerator) => {
     const items: unknown[] = [];
     try {
       while (items.length < PROVIDER_POOL) {
@@ -545,7 +545,7 @@ async function* providerUnslothFirstIterator(
     }
     return items;
   };
-  const drain = async function* (iter: AsyncGenerator<unknown>) {
+  const drain = async function* (iter: AsyncGenerator) {
     try {
       yield* iter;
     } catch {
@@ -580,7 +580,7 @@ async function* providerUnslothFirstIterator(
       yield model as unknown;
     }
   };
-  const tail = async function* (iters: AsyncGenerator<unknown>[], keep: (name: string) => boolean) {
+  const tail = async function* (iters: AsyncGenerator[], keep: (name: string) => boolean) {
     for (const iter of iters) {
       for await (const model of drain(iter)) {
         const name = nameOf(model);
@@ -623,7 +623,7 @@ async function* freshChannelIterator(
   opts: Omit<Parameters<typeof createChannelIterator>[1], "sortBy" | "task"> & {
     tasks?: readonly PipelineType[];
   },
-): AsyncGenerator<unknown> {
+): AsyncGenerator {
   const { tasks = [], ...listingOpts } = opts;
   const listing = (sortBy: HfSortKey) =>
     mergeTaskIterators(
@@ -642,7 +642,7 @@ async function* freshChannelIterator(
   // Read by hand: breaking out of a for-await would close the listing the tail continues.
   // The task listings alternate, so each task gets a full pool of its own.
   const poolSize = FRESH_POOL * Math.max(1, tasks.length);
-  const take = async (iter: AsyncGenerator<unknown>) => {
+  const take = async (iter: AsyncGenerator) => {
     const items: unknown[] = [];
     while (items.length < poolSize) {
       const next = await iter.next();
@@ -653,7 +653,7 @@ async function* freshChannelIterator(
   };
   const trending = listing("trendingScore");
   const [byDate, byTrend] = await Promise.all([take(newest), take(trending)]);
-  void trending.return(undefined);
+  (trending.return(undefined)).catch(() => { /* noop */ });
   const pool = new Map<string, FreshRankable>();
   for (const model of [...byDate, ...byTrend]) {
     const name = (model as { name?: string }).name;
@@ -677,12 +677,11 @@ function createChannelIterator(
     parameterFilter?: string;
     task?: PipelineType;
   },
-): AsyncGenerator<unknown> {
+): AsyncGenerator {
   if (opts.sortBy === "fresh") {
     return freshChannelIterator(channel, opts);
   }
-  const channelTags =
-    channel.tags && channel.tags.length ? [...channel.tags] : undefined;
+  const channelTags = channel.tags?.length ? [...channel.tags] : undefined;
   const queryString = opts.query || channel.query || undefined;
   return listModels({
     hubUrl: getHfEndpoint(),
@@ -703,7 +702,7 @@ function createChannelIterator(
     ...(opts.accessToken
       ? { credentials: { accessToken: opts.accessToken } }
       : {}),
-  }) as AsyncGenerator<unknown>;
+  }) as AsyncGenerator;
 }
 
 // Bounded so a huge unsloth slice cannot starve the general listing.
@@ -720,7 +719,7 @@ async function* channelUnslothFirstIterator(
     parameterFilter?: string;
     filterPriority?: ModelListingTransform;
   },
-): AsyncGenerator<unknown> {
+): AsyncGenerator {
   const queryString = opts.query || channel.query || undefined;
   const creds = opts.accessToken
     ? { credentials: { accessToken: opts.accessToken } }
@@ -743,7 +742,7 @@ async function* channelUnslothFirstIterator(
     ),
     sort: hubListingSort(opts.sortBy),
     ...creds,
-  }) as AsyncGenerator<unknown>;
+  }) as AsyncGenerator;
   let count = 0;
   let rejected = 0;
   for await (const model of opts.filterPriority
@@ -775,7 +774,7 @@ async function* channelUnslothFirstIterator(
     ),
     sort: hubListingSort(opts.sortBy),
     ...creds,
-  }) as AsyncGenerator<unknown>;
+  }) as AsyncGenerator;
   for await (const model of generalIter) {
     const name = (model as { name?: string }).name;
     if (name && seen.has(name)) continue;
@@ -821,7 +820,7 @@ export async function fetchChannelFirstPage(
     channel.idSuffix ?? "",
     deviceType,
   );
-  async function* primed(): AsyncGenerator<unknown> {
+  async function* primed(): AsyncGenerator {
     const iter = createChannelIterator(channel, {
       sortBy,
       sortDirection,
@@ -999,7 +998,7 @@ export function useHubModelSearch(
             sortDirection,
             signal,
             filterRange,
-          ) as AsyncGenerator<unknown>;
+          ) as AsyncGenerator;
         }
         if (hasFilters && pinUnslothFirst && !unslothOnly) {
           return mergedModelIterator(
@@ -1033,7 +1032,7 @@ export function useHubModelSearch(
               ),
               sort: hubListingSort(sortBy),
               ...(accessToken ? { credentials: { accessToken } } : {}),
-            }) as AsyncGenerator<unknown>,
+            }) as AsyncGenerator,
           signal,
         );
       }
@@ -1053,7 +1052,7 @@ export function useHubModelSearch(
           fetch: makeSortFetch(sortBy, sortDirection, signal, filterRange),
           sort: hubListingSort(sortBy),
           ...(accessToken ? { credentials: { accessToken } } : {}),
-        }) as AsyncGenerator<unknown>;
+        }) as AsyncGenerator;
         return queryProvider
           ? providerUnslothFirstIterator(queryProvider, orgSearch, {
               ...providerOpts,
@@ -1075,7 +1074,7 @@ export function useHubModelSearch(
         signal,
         filterRange,
         filterPriority,
-      ) as AsyncGenerator<unknown>;
+      ) as AsyncGenerator;
       return queryProvider
         ? providerUnslothFirstIterator(queryProvider, merged, {
             ...providerOpts,
@@ -1182,7 +1181,7 @@ export function useHubModelSearch(
       const fetchJson = (path: string) => {
         let request = metadata.get(path);
         if (!request) {
-          request = requestJson(path);
+          request = requestJson(path).catch(() => { /* noop */ });
           metadata.set(path, request);
         }
         return request;

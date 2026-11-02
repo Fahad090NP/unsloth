@@ -87,7 +87,7 @@ function MemoryFigure({
     const observer = new ResizeObserver(fit);
     observer.observe(row);
     observer.observe(measurement);
-    void document.fonts.ready.then(fit);
+    (document.fonts.ready.then(fit)).catch(() => { /* noop */ });
     return () => {
       active = false;
       observer.disconnect();
@@ -219,7 +219,7 @@ export function MemoryEstimateRow({
   );
   const kvNote = resolveKvNote(estimate);
   const weightsNote = [
-    estimate.gpuLayers != null && estimate.layerCount != null
+    (estimate.gpuLayers !== null && estimate.gpuLayers !== undefined) && (estimate.layerCount !== null && estimate.layerCount !== undefined)
       ? `${estimate.gpuLayers} of ${estimate.layerCount + 1} layers on GPU`
       : null,
     estimate.mlxPleOffload ? `PLE ${mlxOffloadPercent(estimate.mlxPleOffload)} on disk` : null,

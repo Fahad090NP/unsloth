@@ -43,7 +43,7 @@ export function resolveReadmeUrl(
 export const rehypeReadmeUrls: Plugin<[{ baseUrl: string }], Root> =
   function rehypeReadmeUrls({ baseUrl }) {
     return (tree) => {
-      function walk(node: Root | RootContent): void {
+      function walk(nodeParam: Root | RootContent): void { const node = nodeParam;
         if (node.type === "element") {
           const media = MEDIA_TAGS.has(node.tagName);
           for (const key of ["src", "href", "poster"]) {

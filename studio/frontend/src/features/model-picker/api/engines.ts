@@ -47,7 +47,7 @@ export function isEngineReady(engine: EngineStatus | undefined): boolean {
 /** The backend says this host can run vLLM, installed or not. */
 export function vllmHostSupported(engines: readonly EngineStatus[]): boolean {
   const vllm = engines.find((engine) => engine.engine === "vllm");
-  return vllm !== undefined && vllm.unsupported_reason === null;
+  return vllm?.unsupported_reason === null;
 }
 
 /** A retained precision the newly picked engine cannot load would fail only after unloading. */
@@ -76,7 +76,7 @@ export function wslNoticeKey(
 ): "managedEngines.wslSetup" | "managedEngines.wslReady" | "managedEngines.wslRestart" | null {
   if (engine.host !== "wsl") return null;
   if (engine.wsl?.state === "restart_required") return "managedEngines.wslRestart";
-  if (engine.wsl?.state === "ready" && engine.wsl?.distro) return "managedEngines.wslReady";
+  if (engine.wsl?.state === "ready" && engine.wsl.distro) return "managedEngines.wslReady";
   return "managedEngines.wslSetup";
 }
 

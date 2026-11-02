@@ -35,7 +35,7 @@ export function ModelAliasesSection() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadModelAliases()
+    (loadModelAliases()
       .then((loaded) => {
         if (cancelled) {
           return;
@@ -43,7 +43,7 @@ export function ModelAliasesSection() {
         setSaved(loaded);
         setDraft(loaded);
       })
-      .catch((loadError) => {
+      .catch((loadError: unknown) => {
         if (cancelled) {
           return;
         }
@@ -52,15 +52,15 @@ export function ModelAliasesSection() {
             ? loadError.message
             : t("settings.general.modelAliases.loadError"),
         );
-      });
+      })).catch(() => { /* noop */ });
     // Suggestions only: a failed listing leaves the model field free text.
-    void listOpenAIModels()
+    (listOpenAIModels()
       .then((models) => {
         if (!cancelled) {
           setModelIds(models.map((m) => m.id));
         }
       })
-      .catch(() => {});
+      .catch(() => { /* noop */ })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -158,7 +158,7 @@ export function ModelAliasesSection() {
             variant="outline"
             size="sm"
             disabled={!dirty || isSaving}
-            onClick={() => void handleSave()}
+            onClick={() => { (handleSave()).catch(() => { /* noop */ }); }}
           >
             {isSaving ? t("common.saving") : t("common.save")}
           </Button>

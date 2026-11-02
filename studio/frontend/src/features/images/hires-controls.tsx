@@ -104,7 +104,7 @@ export function HiresControls({
                     ...choice,
                     enabled,
                     scale: choice.scale || capability.defaults.scale,
-                    denoise: choice.denoise ?? capability.defaults.denoise,
+                    denoise: (choice.denoise),
                   }
                 : { ...choice, enabled },
             ); }

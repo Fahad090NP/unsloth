@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { checkDiskSpace } from "@/features/settings/low-disk-check";
+import { checkDiskSpace } from "@/features/settings";
 import { toast } from "@/lib/toast";
 import { disposableTimeoutSignal } from "../lib/abort-signals";
 import { getActiveModelDownloads } from "./api";
@@ -160,7 +160,7 @@ export function withDownloadDir(req: DownloadRequest): DownloadRequest {
   return {
     ...req,
     downloadDir:
-      previous?.state === "cancelled" && previous.downloadDir !== undefined
+      previous.state === "cancelled" && previous.downloadDir !== undefined
         ? previous.downloadDir
         : (downloadDirForRequest() ?? null),
   };
@@ -175,7 +175,7 @@ export async function requestStart(
   const originRoute = currentRoute();
   const originSelectionEpoch = currentStartToastSelectionEpoch();
   // Fire-and-forget, never a gate; the check throttles itself.
-  void checkDiskSpace();
+  (checkDiskSpace()).catch(() => { /* noop */ });
   return await runWithPendingStartGuard(req, async () => {
     const preferred: TransportMode = await resolveTransportMode();
     let mode: TransportMode = preferred;
@@ -291,24 +291,24 @@ export function resumeConflict(conflictKey: string): void {
   const entry = getState().conflicts[conflictKey];
   if (!entry) return;
   setConflict(conflictKey, null);
-  void runWithPendingStartGuard(entry.pending, async () => {
+  (runWithPendingStartGuard(entry.pending, async () => {
     await startJob(entry.pending, {
       useXet: entry.info.previous === TRANSPORT.XET,
     });
     return "started";
-  });
+  })).catch(() => { /* noop */ });
 }
 
 export function restartConflict(conflictKey: string): void {
   const entry = getState().conflicts[conflictKey];
   if (!entry) return;
   setConflict(conflictKey, null);
-  void runWithPendingStartGuard(entry.pending, async () => {
+  (runWithPendingStartGuard(entry.pending, async () => {
     await startJob(entry.pending, {
       useXet: entry.info.next === TRANSPORT.XET,
     });
     return "started";
-  });
+  })).catch(() => { /* noop */ });
 }
 
 export function cancelConflict(conflictKey: string): void {

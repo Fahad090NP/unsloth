@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useEngines } from "@/features/model-picker/hooks/use-engines";
+import { useEngines } from "@/features/model-picker";
 import {
   audioCppDisplayName,
   isAudioCppFolderId,
@@ -232,11 +232,13 @@ function DownloadRow({
               type="button"
               aria-label={active ? "Cancel download" : "Dismiss"}
               disabled={job.state === "cancelling" || starting}
-              onClick={() =>
-                { active
-                  ? void downloadManager.cancel(job.key)
-                  : downloadManager.dismiss(job.key); }
-              }
+              onClick={() => {
+                if (active) {
+                  downloadManager.cancel(job.key);
+                } else {
+                  downloadManager.dismiss(job.key);
+                }
+              }}
               className={cn(
                 "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors",
                 "hover:bg-[color-mix(in_oklab,var(--foreground)_calc(6%*var(--contrast-wash-gain,1)),transparent)] hover:text-foreground disabled:cursor-default disabled:opacity-50 dark:hover:bg-[rgb(255_255_255/calc(0.06*var(--contrast-wash-gain,1)))]",

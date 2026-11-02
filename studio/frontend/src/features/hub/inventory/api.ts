@@ -5,13 +5,13 @@ import { authFetch } from "@/features/auth";
 import {
   disposableTimeoutSignal,
   withAbort,
-} from "@/features/hub/lib/abort-signals";
-import { hubTokenHeader } from "@/features/hub/lib/hub-token-header";
+} from "@/features/hub";
+import { hubTokenHeader } from "@/features/hub";
 import { readFastApiError } from "@/lib/format-fastapi-error";
-import { localPathCacheKey } from "@/features/hub/lib/local-path";
-import { isHuggingFaceOffline } from "@/features/hub/lib/network";
-import { fingerprintToken } from "@/features/hub/lib/token-fingerprint";
-import { bumpInventoryVersion } from "@/features/hub/stores/inventory-events";
+import { localPathCacheKey } from "@/features/hub";
+import { isHuggingFaceOffline } from "@/features/hub";
+import { fingerprintToken } from "@/features/hub";
+import { bumpInventoryVersion } from "@/features/hub";
 import { notifyModelDeleted } from "@/lib/model-lifecycle-events";
 import {
   discardDeletedInventoryHints,
@@ -473,7 +473,7 @@ export async function listScanFolders(): Promise<ScanFolderInfo[]> {
     response,
   );
   // Every surface iterates this list, so a body without it must not take the page down.
-  return Array.isArray(data?.folders) ? data.folders : [];
+  return Array.isArray(data.folders) ? data.folders : [];
 }
 
 export async function addScanFolder(

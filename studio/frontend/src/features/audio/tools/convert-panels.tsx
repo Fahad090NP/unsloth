@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ParamSlider } from "@/features/chat";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
+import { PillTabs } from "@/features/model-picker";
 import { ChevronDownStandardIcon } from "@/lib/chevron-icons";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon } from "@hugeicons/react";

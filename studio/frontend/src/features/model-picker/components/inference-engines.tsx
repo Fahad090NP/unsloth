@@ -12,8 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useIsAccountOwner } from "@/features/auth";
-import { SettingsRow } from "@/features/settings/components/settings-row";
-import { SettingsSection } from "@/features/settings/components/settings-section";
+import { SettingsRow } from "@/features/settings";
+import { SettingsSection } from "@/features/settings";
 import { useT } from "@/i18n";
 import { isEngineGpuDevice, useGpuDevices } from "@/hooks/use-gpu-info";
 import { formatGiB } from "@/lib/memory/format";
@@ -132,7 +132,7 @@ export function EngineInstall({
             size="sm"
             variant="outline"
             disabled={busy || !isOwner}
-            onClick={() => void action("cancel")}
+            onClick={() => { (action("cancel")).catch(() => { /* noop */ }); }}
           >
             {t("managedEngines.cancelInstall")}
           </Button>
@@ -173,7 +173,7 @@ export function EngineInstall({
               size="sm"
               variant="destructive"
               disabled={busy || engine.in_use}
-              onClick={() => void action("remove")}
+              onClick={() => { (action("remove")).catch(() => { /* noop */ }); }}
             >
               {t("managedEngines.remove")}
             </Button>
@@ -183,7 +183,7 @@ export function EngineInstall({
               size="sm"
               variant="ghost"
               disabled={busy || engine.in_use}
-              onClick={() => void action("rollback")}
+              onClick={() => { (action("rollback")).catch(() => { /* noop */ }); }}
             >
               {t("managedEngines.rollback")}
             </Button>
@@ -223,7 +223,7 @@ export function EngineInstall({
               variant="dark"
               size={centered ? "default" : "sm"}
               disabled={busy}
-              onClick={() => void action("install")}
+              onClick={() => { (action("install")).catch(() => { /* noop */ }); }}
             >
               {onUse
                 ? t("managedEngines.installAndLoad")
@@ -331,11 +331,11 @@ export function InferenceEnginePicker({
 }) {
   const { engines, error } = useEngines();
   const t = useT();
-  const devices = useGpuDevices(true)?.filter(isEngineGpuDevice);
+  const devices = useGpuDevices(true).filter(isEngineGpuDevice);
   // The backend's default for an unpicked GPU, so a first pick cannot keep a hidden GPU 0.
   const selectedGpuIds = gpuIds?.length
     ? gpuIds
-    : devices?.length
+    : devices.length
       ? [devices[0].index]
       : [0];
   const selected = engines.find((engine) => engine.engine === value);
@@ -556,7 +556,7 @@ export function InferenceEnginePicker({
               <span>{t("managedEngines.gpuMemory")}</span>
               <Select
                 value={
-                  gpuMemoryUtilization == null
+                  (gpuMemoryUtilization === null || gpuMemoryUtilization === undefined)
                     ? "auto"
                     : String(gpuMemoryUtilization)
                 }
@@ -580,7 +580,7 @@ export function InferenceEnginePicker({
                   {[
                     ...new Set([
                       ...GPU_MEMORY_LIMITS,
-                      ...(gpuMemoryUtilization == null
+                      ...((gpuMemoryUtilization === null || gpuMemoryUtilization === undefined)
                         ? []
                         : [gpuMemoryUtilization]),
                     ]),

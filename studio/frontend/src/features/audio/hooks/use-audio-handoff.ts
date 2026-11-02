@@ -79,20 +79,20 @@ export function useAudioHandoff({
         if (!transitionWorkflow(action.workflow)) return;
         lastSyncedWorkflow.current = action.workflow;
         // Only the page stays: ?task= and other leftovers go with the request.
-        void navigateSelf({
+        (navigateSelf({
           to: "/audio",
           search: { workflow: action.workflow },
           replace: true,
-        });
+        })).catch(() => { /* noop */ });
         return;
       }
       lastSyncedWorkflow.current = action.workflow;
       pendingWrite.current = { from: urlWorkflow };
-      void navigateSelf({
+      (navigateSelf({
         to: "/audio",
         search: (prev) => ({ ...prev, workflow: action.workflow }),
         replace: true,
-      });
+      })).catch(() => { /* noop */ });
       return;
     }
     pendingWrite.current = null;
@@ -129,15 +129,15 @@ export function useAudioHandoff({
           ? false
           : undefined,
       pipelineTag: routeSearch.task ?? null,
-    });
+    }).catch(() => { /* noop */ });
     // The page stays in the URL, so a reload reopens it.
     const settledWorkflow = routedWorkflow ?? committedWorkflow;
     lastSyncedWorkflow.current = settledWorkflow;
-    void navigateSelf({
+    (navigateSelf({
       to: "/audio",
       search: { workflow: settledWorkflow },
       replace: true,
-    });
+    })).catch(() => { /* noop */ });
   }, [
     active,
     busy,
@@ -165,12 +165,12 @@ export function useAudioHandoff({
   useEffect(() => {
     if (!routedItem) return;
     const lookup = ++routedLookup.current;
-    void navigateSelf({
+    (navigateSelf({
       to: "/audio",
       search: (prev) => ({ ...prev, item: undefined }),
       replace: true,
-    });
-    void loadGalleryUntil({
+    })).catch(() => { /* noop */ });
+    loadGalleryUntil({
       has: () => galleryCache.clips.some((clip) => clip.id === routedItem),
       count: () => galleryCache.clips.length,
       hasMore: () => galleryCache.hasMore,
@@ -185,18 +185,18 @@ export function useAudioHandoff({
         const clip = galleryCache.clips.find((c) => c.id === routedItem);
         // Through ?workflow=, so a switch refused while busy stays in the URL and retries.
         if (clip) {
-          void navigateSelf({
+          navigateSelf({
             to: "/audio",
             search: (prev) => ({ ...prev, workflow: clipWorkflow(clip) }),
             replace: true,
-          });
+          }).catch(() => { /* noop */ });
         }
       } else {
         toast(translate("library.toast.clipNotFound"), {
           description: translate("library.toast.notFoundDescription"),
         });
       }
-    });
+    }).catch(() => { /* noop */ });
   }, [
     routedItem,
     navigateSelf,

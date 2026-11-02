@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { isModEnter } from "@/features/settings/lib/keyboard-shortcuts";
+import { isModEnter } from "@/features/settings";
 
 const EXAMPLE =
   "a sloth hiking, <lora:sloth-style:0.8>\nNegative prompt: blurry\nSteps: 28, Sampler: DPM++ 2M, Schedule type: Karras, CFG scale: 6, Seed: 12345, Size: 832x1216";
@@ -44,7 +44,7 @@ export function PasteParametersDialog({
           className="grid gap-5"
           onSubmit={(event) => {
             event.preventDefault();
-            void apply();
+            (apply()).catch(() => { /* noop */ });
           }}
         >
           <DialogHeader>
@@ -68,7 +68,7 @@ export function PasteParametersDialog({
             onKeyDown={(e) => {
               if (isModEnter(e)) {
                 e.preventDefault();
-                void apply();
+                (apply()).catch(() => { /* noop */ });
               }
             }}
             className="max-h-[50dvh] min-h-40 resize-y font-mono text-xs"

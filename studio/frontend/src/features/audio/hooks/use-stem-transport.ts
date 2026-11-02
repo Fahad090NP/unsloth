@@ -17,10 +17,10 @@ export interface StemTransport {
   playing: boolean;
   position: number;
   duration: number;
-  play(): void;
-  pause(): void;
-  toggle(): void;
-  seek(seconds: number): void;
+  play: () => void;
+  pause: () => void;
+  toggle: () => void;
+  seek: (seconds: number) => void;
 }
 
 interface StemVoice {
@@ -108,7 +108,7 @@ export function useStemTransport({
     voicesRef.current = voices;
     updatePosition(0);
     setMediaDuration(0);
-    const first = voices[0]?.element;
+    const first = voices[0].element;
     const onMetadata = () => {
       const lengths = voices
         .map((voice) => voice.element.duration)
@@ -125,12 +125,12 @@ export function useStemTransport({
     };
     for (const voice of voices)
       voice.element.addEventListener("loadedmetadata", onMetadata);
-    first?.addEventListener("ended", onEnded);
+    first.addEventListener("ended", onEnded);
     return () => {
       startToken.current += 1;
       playingRef.current = false;
       setPlaying(false);
-      first?.removeEventListener("ended", onEnded);
+      first.removeEventListener("ended", onEnded);
       for (const voice of voices) {
         voice.element.removeEventListener("loadedmetadata", onMetadata);
         voice.element.pause();
@@ -147,7 +147,7 @@ export function useStemTransport({
     () => () => {
       const context = contextRef.current;
       contextRef.current = null;
-      void context?.close().catch(() => {});
+      void context?.close().catch(() => { /* noop */ });
     },
     [],
   );
@@ -163,7 +163,7 @@ export function useStemTransport({
       if (voice.source) continue;
       voice.source = context.createMediaElementSource(voice.element);
       voice.gain = context.createGain();
-      voice.gain.gain.value = gainsRef.current[index] ?? 1;
+      voice.gain.gain.value = (gainsRef.current[index]);
       voice.source.connect(voice.gain).connect(context.destination);
     }
     return context;
@@ -175,7 +175,7 @@ export function useStemTransport({
     if (!context) return;
     const values = gainKey.split(",").map(Number);
     for (const [index, voice] of voicesRef.current.entries())
-      setGain(voice, values[index] ?? 1, context);
+      setGain(voice, (values[index]), context);
   }, [gainKey]);
 
   const start = useCallback(
@@ -207,12 +207,12 @@ export function useStemTransport({
       positionRef.current >= durationRef.current - 0.05
         ? 0
         : positionRef.current;
-    void start(from);
+    (start(from)).catch(() => { /* noop */ });
   }, [start]);
 
   const pause = useCallback(() => {
     if (!playingRef.current) return;
-    const current = voicesRef.current[0]?.element.currentTime;
+    const current = voicesRef.current[0].element.currentTime;
     stopAll();
     if (current !== undefined && Number.isFinite(current))
       updatePosition(current);
@@ -228,7 +228,7 @@ export function useStemTransport({
       const end = durationRef.current;
       const next = Math.min(end > 0 ? end : 0, Math.max(0, seconds));
       if (playingRef.current) {
-        void start(next);
+        (start(next)).catch(() => { /* noop */ });
         return;
       }
       startToken.current += 1;
@@ -242,7 +242,7 @@ export function useStemTransport({
     if (!playing) return;
     const timer = window.setInterval(() => {
       const voices = voicesRef.current;
-      const lead = voices[0]?.element;
+      const lead = voices[0].element;
       if (!lead || lead.paused || lead.seeking) return;
       const now = lead.currentTime;
       updatePosition(now);

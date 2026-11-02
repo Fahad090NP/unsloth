@@ -342,7 +342,7 @@ export function curatedAudioInventoryMatches({
 }): boolean {
   // An active id with no seed artifact is a fetched catalog row the page already scoped (a
   // downloaded TF-GridNet reports audio-to-audio, which the Separate picker's tasks leave out).
-  if (isActiveCatalogArtifact && catalogScope == null && pickerTask?.length) return true;
+  if (isActiveCatalogArtifact && (catalogScope === null || catalogScope === undefined) && pickerTask?.length) return true;
   if (
     !isActiveCatalogArtifact ||
     catalogScope !== "audio" ||

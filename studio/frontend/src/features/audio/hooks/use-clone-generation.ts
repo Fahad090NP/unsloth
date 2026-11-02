@@ -104,7 +104,7 @@ export async function showRunResult({
         saved: true,
         workflow,
       });
-    } catch {}
+    } catch { /* noop */ }
     selectClip(clip.id, true);
     return;
   }
@@ -310,7 +310,7 @@ export function useCloneGeneration({
     )
       return;
     autoTranscribed.current = reference.id;
-    void transcribeOnce(reference);
+    (transcribeOnce(reference)).catch(() => { /* noop */ });
   }, [
     onClonePage,
     reference,
@@ -355,7 +355,7 @@ export function useCloneGeneration({
     "reference-text": [
       {
         label: "Transcribe it",
-        onClick: () => void transcriber.transcribe(reference),
+        onClick: () => { (transcriber.transcribe(reference)).catch(() => { /* noop */ }); },
       },
       { label: "type it", onClick: focusField(CLONE_REFERENCE_TEXT_FIELD_ID) },
     ],

@@ -129,25 +129,32 @@ export function DecisionApiSection({
   const mlxAvailable = settings?.mlxAvailable ?? false;
   // llama.cpp serves a GGUF, MLX and PyTorch the safetensors: the download follows the runtime.
   const plan =
-    planState?.model === model && planState?.backend === backend
+    planState?.model === model && planState.backend === backend
       ? planState.plan
       : null;
 
   useEffect(() => {
     let live = true;
     loadSystemOneSettings().then(
-      (next) => live && setSettings(next),
-      (err) =>
-        live &&
+      (next) => {
+        if (live) setSettings(next);
+      },
+      (err) => {
+        if (!live) return;
         setError(
           errorMessage(err) ??
             translate("settings.apiKeys.decisionApi.loadError"),
-        ),
-    );
+        );
+      },
+    ).catch(() => { /* noop */ });
     loadSystemOneConnections().then(
-      (next) => live && setConnections(next),
-      () => live && setConnections([]),
-    );
+      (next) => {
+        if (live) setConnections(next);
+      },
+      () => {
+        if (live) setConnections([]);
+      },
+    ).catch(() => { /* noop */ });
     return () => {
       live = false;
     };
@@ -170,7 +177,7 @@ export function DecisionApiSection({
     if (!enabled) return;
     const timer = window.setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      loadSystemOneSettings().then(setSettings, () => undefined);
+      loadSystemOneSettings().then(setSettings, () => undefined).catch(() => { /* noop */ });
     }, POLL_MS);
     return () => { window.clearInterval(timer); };
   }, [enabled]);
@@ -189,9 +196,13 @@ export function DecisionApiSection({
     if (!enabled || !model) return;
     let live = true;
     resolveSystemOneDownload(model, backend).then(
-      (next) => live && setPlanState({ model, backend, plan: next }),
-      (err) => live && setError(errorMessage(err)),
-    );
+      (next) => {
+        if (live) setPlanState({ model, backend, plan: next });
+      },
+      (err) => {
+        if (live) setError(errorMessage(err));
+      },
+    ).catch(() => { /* noop */ });
     return () => {
       live = false;
     };
@@ -237,7 +248,7 @@ export function DecisionApiSection({
       });
       if (outcome === "started") {
         const acceptedState =
-          useDownloadManagerStore.getState().jobs[downloadKey]?.state;
+          useDownloadManagerStore.getState().jobs[downloadKey].state;
         if (acceptedState === "running" || acceptedState === "complete") {
           return true;
         }
@@ -528,7 +539,7 @@ export function DecisionApiSection({
             <Switch
               checked={enabled}
               disabled={busy || settings.enabledLocked}
-              onCheckedChange={(on) => void apply({ enabled: on }, on)}
+              onCheckedChange={(on) => { (apply({ enabled: on }, on)).catch(() => { /* noop */ }); }}
               aria-label={t("settings.apiKeys.decisionApi.enable")}
             />
           </SettingsRow>
@@ -588,7 +599,7 @@ export function DecisionApiSection({
                   size="sm"
                   className="shrink-0 text-xs"
                   disabled={busy}
-                  onClick={() => void unload()}
+                  onClick={() => { (unload()).catch(() => { /* noop */ }); }}
                 >
                   {t("settings.apiKeys.decisionApi.unload")}
                 </Button>
@@ -597,7 +608,7 @@ export function DecisionApiSection({
                 <Select
                   value={settings.model}
                   disabled={busy || settings.modelLocked}
-                  onValueChange={(name) => void apply({ model: name }, true)}
+                  onValueChange={(name) => { (apply({ model: name }, true)).catch(() => { /* noop */ }); }}
                 >
                   <SelectTrigger
                     className={cn(
@@ -675,7 +686,7 @@ export function DecisionApiSection({
                   value={backend}
                   disabled={busy}
                   onValueChange={(value) =>
-                    void apply({ backend: value as SystemOneBackend }, true)
+                    { (apply({ backend: value as SystemOneBackend }, true)).catch(() => { /* noop */ }); }
                   }
                 >
                   <SelectTrigger
@@ -735,7 +746,7 @@ export function DecisionApiSection({
                 value={settings.device}
                 disabled={busy || settings.deviceLocked}
                 onValueChange={(device) =>
-                  void apply({ device: device as SystemOneDevice }, false)
+                  { (apply({ device: device as SystemOneDevice }, false)).catch(() => { /* noop */ }); }
                 }
               >
                 <SelectTrigger
@@ -782,7 +793,7 @@ export function DecisionApiSection({
         settings={settings}
         connections={connections ?? []}
         onRun={() => {
-          loadSystemOneSettings().then(setSettings, () => undefined);
+          loadSystemOneSettings().then(setSettings, () => undefined).catch(() => { /* noop */ });
         }}
       />
 
@@ -823,7 +834,7 @@ export function DecisionApiSection({
                 event.preventDefault();
                 const accepted = confirm;
                 setConfirm(null);
-                if (accepted) void acceptDownload(accepted);
+                if (accepted) (acceptDownload(accepted)).catch(() => { /* noop */ });
               }}
             >
               {t("settings.apiKeys.decisionApi.download")}

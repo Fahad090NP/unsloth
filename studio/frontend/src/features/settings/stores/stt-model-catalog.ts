@@ -144,8 +144,7 @@ export const STT_MODEL_SIZES: Record<DefaultSttModel, string> = {
 
 export function sttModelName(model: SttModel): string {
   return (
-    STT_MODEL_NAMES[model as DefaultSttModel] ??
-    (isAudioCppFolderId(model) ? audioCppDisplayName(model) : model)
+    (STT_MODEL_NAMES[model as DefaultSttModel])
   );
 }
 
@@ -203,5 +202,5 @@ export function sttListedQuantDownloaded(
 }
 
 export function sttModelSize(model: SttModel): string {
-  return STT_MODEL_SIZES[model as DefaultSttModel] ?? "";
+  return (STT_MODEL_SIZES[model as DefaultSttModel]);
 }

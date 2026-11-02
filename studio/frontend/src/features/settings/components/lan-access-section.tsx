@@ -29,7 +29,7 @@ import {
   updateLanAccessAddresses,
   updateLanAccessAutoStart,
   updateLanAccessPort,
-} from "@/features/settings/api/lan-access";
+} from "@/features/settings";
 import {
   LAN_ACCESS_POLL_MS,
   type LanAccessStatus,
@@ -45,7 +45,7 @@ import {
   sameLanAccessAddresses,
   staleLanUrls,
   validLanAccessPort,
-} from "@/features/settings/api/lan-access-state";
+} from "@/features/settings";
 import { isTauri } from "@/lib/api-base";
 import { cn } from "@/lib/utils";
 import { QrCode01Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
@@ -263,7 +263,7 @@ export function LanAccessSection() {
 
   useEffect(() => {
     const configured = status?.configuredPort;
-    setPortMode(configured == null ? "automatic" : "custom");
+    setPortMode((configured === null || configured === undefined) ? "automatic" : "custom");
     setPortDraft(String(configured ?? 8888));
     setPortError(null);
   }, [status?.configuredPort]);
@@ -321,7 +321,7 @@ export function LanAccessSection() {
             return;
           }
           schedule();
-        });
+        }).catch(() => { /* noop */ });
     };
     poll();
     return () => {
@@ -382,7 +382,7 @@ export function LanAccessSection() {
   const savePort = () => {
     if (portInvalid || !portDirty) return;
     setPortError(null);
-    void perform("port", () => updateLanAccessPort(selectedPort));
+    (perform("port", () => updateLanAccessPort(selectedPort))).catch(() => { /* noop */ });
   };
 
   const addressesReadOnly = busy !== null || lanAccessAddressesReadOnly(status);
@@ -404,9 +404,9 @@ export function LanAccessSection() {
   const saveAddresses = () => {
     if (addressesEmpty || !addressesDirty) return;
     setAddressError(null);
-    void perform("addresses", () =>
+    (perform("addresses", () =>
       updateLanAccessAddresses(selectedAddresses),
-    );
+    )).catch(() => { /* noop */ });
   };
 
   const blockMessage = lanAccessBlockMessage(status, isTauri);
@@ -418,7 +418,7 @@ export function LanAccessSection() {
   // Start and auto-start bind the saved choice, never an unsaved one
   const actionDisabled =
     busy !== null ||
-    (stopAction ? !status?.canStop : !status?.canStart || addressesDirty);
+    (stopAction ? !status.canStop : !status?.canStart || addressesDirty);
   const actionLabel =
     busy === "start"
       ? "Starting…"
@@ -669,7 +669,7 @@ export function LanAccessSection() {
             disabled={
               busy !== null ||
               lanAccessAutoStartReadOnly(status) ||
-              (addressesDirty && !status?.autoStart)
+              (addressesDirty && !status.autoStart)
             }
             onCheckedChange={setAutoStart}
             aria-label="Start automatically"

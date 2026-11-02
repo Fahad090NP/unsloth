@@ -7,6 +7,7 @@ import { isGgufLike } from "../lib/model-identifiers";
 import { normalizeTimestamp } from "./inventory-timestamps";
 import type {
   BackendModelCapabilities,
+  LocalArtifactKind,
   LocalModelInfo,
   ModelInventoryFormat,
 } from "./api";
@@ -176,7 +177,7 @@ export function buildCachedInventoryRow(
     inventory_id?: string | null;
     load_id?: string | null;
     model_format?: ModelInventoryFormat | null;
-    artifact_kind?: import("./api").LocalArtifactKind | null;
+    artifact_kind?: LocalArtifactKind | null;
     format_variant?: string | null;
     capabilities?: BackendModelCapabilities | null;
     last_modified?: number | null;
@@ -332,7 +333,7 @@ export function buildLocalInventoryRows(
       };
     })
     .sort((a, b) => {
-      if (Boolean(a.partial) !== Boolean(b.partial)) return a.partial ? 1 : -1;
+      if ((a.partial) !== (b.partial)) return a.partial ? 1 : -1;
       const sourceWeight = sourceSortWeight(a.source) - sourceSortWeight(b.source);
       if (sourceWeight !== 0) return sourceWeight;
       if (a.updatedAt && b.updatedAt && a.updatedAt !== b.updatedAt) {

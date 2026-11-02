@@ -161,7 +161,7 @@ export function promptUpsamplerCapability(
   external = false,
 ): PromptUpsamplerCapability {
   const supported = !external && status?.loaded === true && status.supports_prompt_upsampler === true;
-  return { supported, defaultOn: supported && status?.prompt_upsampler_default === true };
+  return { supported, defaultOn: supported && status.prompt_upsampler_default === true };
 }
 
 /** Whether to start the upsampler ahead of the first enhanced run: Enhance on, its files downloaded, no download
@@ -235,7 +235,7 @@ export function withEnhanceChoice(
 ): Record<string, boolean> {
   if (!familyKey) return choices;
   const next = { ...choices };
-  if (on === defaultOn) delete next[familyKey];
+  if (on === defaultOn) Reflect.deleteProperty(next, familyKey);
   else next[familyKey] = on;
   try {
     localStorage.setItem(KEY, JSON.stringify(next));

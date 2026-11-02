@@ -268,14 +268,14 @@ async function walkEntry(entry: FileSystemEntry, out: File[], prefix = ""): Prom
 export async function filesFromDataTransfer(transfer: DataTransfer): Promise<File[]> {
   const entries: FileSystemEntry[] = [];
   let fileItems = 0;
-  for (const item of Array.from(transfer.items ?? [])) {
+  for (const item of Array.from((transfer.items))) {
     if (item.kind !== "file") continue;
     fileItems += 1;
-    const entry = item.webkitGetAsEntry?.();
+    const entry = item.webkitGetAsEntry();
     if (entry) entries.push(entry);
   }
   // Must run synchronously: the drag data store is protected once drop yields.
-  if (entries.length === 0) return Array.from(transfer.files ?? []);
+  if (entries.length === 0) return Array.from((transfer.files));
   if (entries.length < fileItems) {
     throw new Error("Some dropped items could not be read.");
   }

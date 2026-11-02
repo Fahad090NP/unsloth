@@ -41,7 +41,7 @@ function readEfforts(storage: EffortStorage | null): Record<string, string> {
       const effort = storage.getItem(key);
       if (!modelId || effort === null) continue;
       if (effort) Object.assign(efforts, { [modelId]: effort });
-      else delete efforts[modelId];
+      else Reflect.deleteProperty(efforts, modelId);
     }
   } catch {
     // Keep entries already read when storage becomes unavailable.
@@ -63,7 +63,7 @@ export function createModelReasoningEffortStore(storage: EffortStorage | null) {
         if (!modelId) return state;
         const next = { ...state.effortByModel };
         if (effort) Object.assign(next, { [modelId]: effort });
-        else delete next[modelId];
+        else Reflect.deleteProperty(next, modelId);
         try {
           // Per-model keys so writes cannot erase another pin; empty entries stop a legacy pin returning.
           storage?.setItem(`${MODEL_KEY_PREFIX}${modelId}`, effort ?? "");

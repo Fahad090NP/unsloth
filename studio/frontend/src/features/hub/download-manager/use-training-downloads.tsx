@@ -117,7 +117,7 @@ export function useTrainingDownloads(enabled: boolean): void {
     });
     const poll = async () => {
       if ((await discovery.poll()) && !disposed)
-        timer = setTimeout(() => void poll(), 1500);
+        timer = setTimeout(() => { (poll()).catch(() => { /* noop */ }); }, 1500);
     };
     const reset = () => {
       discovery.reset();
@@ -126,7 +126,7 @@ export function useTrainingDownloads(enabled: boolean): void {
         if (isTrainingDownloadVariant(job.variant)) removeJob(job.key);
       }
       clearNotices();
-      void poll();
+      (poll()).catch(() => { /* noop */ });
     };
     const storage = (event: StorageEvent) => {
       if (event.key === AUTH_SESSION_MARK_KEY) reset();
@@ -135,7 +135,7 @@ export function useTrainingDownloads(enabled: boolean): void {
     window.addEventListener(AUTH_SESSION_STORED_EVENT, reset);
     window.addEventListener("storage", storage);
     render();
-    void poll();
+    (poll()).catch(() => { /* noop */ });
     return () => {
       disposed = true;
       discovery.dispose();

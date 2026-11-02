@@ -24,9 +24,9 @@ export interface StemMixerProps {
   subtitle?: string;
   stems: readonly StemMixerStem[];
   autoFocus?: boolean;
-  onDownloadStem(clipId: string): void;
-  onDownloadAll(): void;
+  onDownloadStem: (clipId: string) => void;
+  onDownloadAll: () => void;
   sendTargets: readonly SendTarget[];
-  onSend(target: SendTarget, clipId: string): void;
+  onSend: (target: SendTarget, clipId: string) => void;
   active: boolean;
 }

@@ -85,9 +85,9 @@ export function DesktopUpdateControl(): ReactElement | null {
           aria-busy={busy}
           onClick={() => {
             if (available) {
-              void update.installUpdate();
+              (update.installUpdate()).catch(() => { /* noop */ });
             } else {
-              void update.checkForUpdate();
+              (update.checkForUpdate()).catch(() => { /* noop */ });
             }
           }}
         >

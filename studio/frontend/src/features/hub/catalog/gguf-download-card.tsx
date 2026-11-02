@@ -479,13 +479,13 @@ export function QuantOptionsMenu({
           <DropdownMenuItem
             onSelect={(e) => {
               e.stopPropagation();
-              revealCachedModel(repoId, quant).catch((err) => {
+              revealCachedModel(repoId, quant).catch((err: unknown) => {
                 toast.error(
                   err instanceof Error
                     ? err.message
                     : "Failed to open file manager",
                 );
-              });
+              }).catch(() => { /* noop */ });
             }}
           >
             <HugeiconsIcon
@@ -499,7 +499,7 @@ export function QuantOptionsMenu({
         <DropdownMenuItem
           onSelect={(e) => {
             e.stopPropagation();
-            void handleCopyId();
+            (handleCopyId()).catch(() => { /* noop */ });
           }}
         >
           <HugeiconsIcon
@@ -513,7 +513,7 @@ export function QuantOptionsMenu({
           <DropdownMenuItem
             onSelect={(e) => {
               e.stopPropagation();
-              void handleCopyPath();
+              (handleCopyPath()).catch(() => { /* noop */ });
             }}
           >
             <HugeiconsIcon
@@ -654,9 +654,11 @@ const GgufVariantMenuRow = memo(function GgufVariantMenuRow({
             repoId={repoId}
             quant={item.quant}
             label={item.label}
-            downloaded={Boolean(item.downloaded)}
+            downloaded={(item.downloaded)}
             canDelete={canDelete}
-            onDelete={(q) => q && onDelete(q)}
+            onDelete={(q) => {
+              if (q) onDelete(q);
+            }}
           />
         ) : (
           <span aria-hidden={true} className="size-6 shrink-0" />
@@ -849,7 +851,7 @@ export function GgufDownloadCard({
       setCompletedVariantKeys((prev) =>
         prev.has(key) ? prev : new Set(prev).add(key),
       );
-      void refresh();
+      (refresh()).catch(() => { /* noop */ });
     },
   });
   const progress = job.progress;
@@ -858,7 +860,7 @@ export function GgufDownloadCard({
   const setExpectedBytes = job.setExpectedBytes;
   useEffect(() => {
     const controller = new AbortController();
-    void downloadManager.probeAndAdopt("model", repoId, controller.signal, {
+    (downloadManager.probeAndAdopt("model", repoId, controller.signal, {
       includeVariants: true,
       fresh: true,
       onModelAdopt: (active) => {
@@ -871,7 +873,7 @@ export function GgufDownloadCard({
           );
         }
       },
-    });
+    })).catch(() => { /* noop */ });
     return () => {
       controller.abort();
     };
@@ -884,7 +886,7 @@ export function GgufDownloadCard({
     );
     if (!knownVariant) return;
     const expectedBytes =
-      knownVariant.download_size_bytes ?? knownVariant.size_bytes ?? 0;
+      (knownVariant.download_size_bytes ?? knownVariant.size_bytes);
     if (expectedBytes > progress.expectedBytes) {
       setExpectedBytes(expectedBytes, progress.variant);
     }
@@ -1041,13 +1043,13 @@ export function GgufDownloadCard({
       0;
     const presentation = pendingDrafterPresentation(updateTargetVariant);
     setUpdateTarget(null);
-    void downloadManager.requestStart({
+    (downloadManager.requestStart({
       kind: "model",
       repoId,
       variant,
       expectedBytes,
       ...(presentation ? { presentation } : {}),
-    });
+    })).catch(() => { /* noop */ });
   }, [updateTarget, updateTargetVariant, repoId]);
   const hubPlan = useHubDownloadPlan(repoId, selected?.filename);
   const variantListUnavailable = !sortedVariants || sortedVariants.length === 0;
@@ -1106,7 +1108,7 @@ export function GgufDownloadCard({
           partial={true}
           message="Partial download present. Couldn't load quantizations."
           actionLabel="Reload"
-          onAction={() => void refresh()}
+          onAction={() => { (refresh()).catch(() => { /* noop */ }); }}
         />
       );
     }
@@ -1135,7 +1137,7 @@ export function GgufDownloadCard({
               title="Delete quantization?"
               deleting={deleting}
               blocked={(deleteImpact?.blocked_by.length ?? 0) > 0}
-              onConfirm={() => void runDelete()}
+              onConfirm={() => { (runDelete()).catch(() => { /* noop */ }); }}
               description={
                 <>
                   This will remove{" "}
@@ -1191,7 +1193,7 @@ export function GgufDownloadCard({
                     fit={selectedFit ?? "oom"}
                     lookupTableBytes={ggufVariantLookupTableBytes(selected)}
                     showFit={showFitInfo}
-                    unifiedBudget={unifiedLoadBudgetGb != null}
+                    unifiedBudget={(unifiedLoadBudgetGb !== null && unifiedLoadBudgetGb !== undefined)}
                   />
                 ) : (
                   <span className="text-ui-12p5 text-muted-foreground">
@@ -1278,7 +1280,7 @@ export function GgufDownloadCard({
                     }
                     liveActive={liveActive}
                     showFitInfo={showFitInfo}
-                    unifiedBudget={unifiedLoadBudgetGb != null}
+                    unifiedBudget={(unifiedLoadBudgetGb !== null && unifiedLoadBudgetGb !== undefined)}
                     onSelect={handleSelectVariant}
                     onDelete={handleDeleteVariant}
                   />
@@ -1305,7 +1307,9 @@ export function GgufDownloadCard({
                 !isLoadingThisModel &&
                 !runPending
               }
-              onDelete={(q) => q && handleDeleteVariant(q)}
+              onDelete={(q) => {
+                if (q) handleDeleteVariant(q);
+              }}
               showPin={false}
               buttonClassName="ml-0.5 size-7"
               iconClassName="size-4"
@@ -1320,7 +1324,7 @@ export function GgufDownloadCard({
         {showUpdateAction && (
           <button
             type="button"
-            onClick={() => { selected && setUpdateTarget(selected.quant); }}
+            onClick={() => { if (selected) setUpdateTarget(selected.quant); }}
             aria-label={`Update ${repoId}`}
             className="hub-action-btn ml-1 text-amber-700 dark:text-amber-300"
           >
@@ -1343,7 +1347,7 @@ export function GgufDownloadCard({
               }
               // The default follows live free memory; pin it so the card keeps this transfer.
               if (selectedQuant) handleSelectVariant(selectedQuant);
-              void assets.request(downloadAction.onClick);
+              (assets.request(downloadAction.onClick)).catch(() => { /* noop */ });
             }}
             aria-label={
               selectedScopedLive ? "Downloading" : downloadAction.ariaLabel
@@ -1368,7 +1372,7 @@ export function GgufDownloadCard({
             ) : downloadingThisVariant ? (
               <span className="inline-flex items-center gap-2">
                 <DownloadStopIndicator mode={downloadAction.stopMode} />
-                {downloadAction.progressPercent != null
+                {(downloadAction.progressPercent !== null && downloadAction.progressPercent !== undefined)
                   ? `${downloadAction.progressPercent}%`
                   : null}
               </span>
@@ -1424,7 +1428,7 @@ export function GgufDownloadCard({
       {refreshError && (
         <button
           type="button"
-          onClick={() => void refresh()}
+          onClick={() => { (refresh()).catch(() => { /* noop */ }); }}
           className="self-start px-1 text-ui-11 text-status-warning underline-offset-2 transition-colors hover:underline"
         >
           Couldn't refresh quantizations. Retry

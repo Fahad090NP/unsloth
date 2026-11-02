@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
+import { PillTabs } from "@/features/model-picker";
 import type { AudioOptionSpec } from "../audio-options";
 import { AudioOptionFields } from "../audio-options-fields";
 import { formatVibeVoiceScript } from "../clone-policy";

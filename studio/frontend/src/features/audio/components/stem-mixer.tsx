@@ -290,7 +290,7 @@ export function StemMixer({
                     { dispatch({
                       type: "setVolume",
                       role: stem.role,
-                      volume: (value ?? percent) / 100,
+                      volume: ((value)) / 100,
                     }); }
                   }
                 />

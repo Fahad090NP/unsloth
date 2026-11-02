@@ -221,7 +221,7 @@ export function useHubPaginatedSearch<T>(
           queryKey,
         });
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (versionRef.current !== v || isAbortError(err)) return;
         setState({
           results: [],
@@ -338,7 +338,7 @@ export function useHubPaginatedSearch<T>(
           error: null,
         }));
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (versionRef.current !== v || isAbortError(err)) return;
         shouldScheduleFollowUp = false;
         // Keep rows and hasMore so the footer survives; continuing needs a restart.

@@ -146,7 +146,7 @@ export function useStagedDownload({
         generation.current += 1;
         inFlight.current = null;
         setQueue(null);
-        onResetRef.current?.();
+        onResetRef.current();
       }),
     [],
   );
@@ -158,7 +158,7 @@ export function useStagedDownload({
     inFlight.current = started;
     const laterEntry = noticedGeneration.current === generation.current;
     noticedGeneration.current = generation.current;
-    void (async () => {
+    ((async () => {
       const outcome = await downloadManager.requestStart(
         current.ggufVariant
           ? {
@@ -203,7 +203,7 @@ export function useStagedDownload({
       }
       setQueue(null);
       onCancelledRef.current?.();
-    })();
+    })()).catch(() => { /* noop */ });
     return () => {
       active = false;
     };

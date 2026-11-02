@@ -144,10 +144,10 @@ const FONT = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-
 
 /** Draw the grid; `images[i]` null = a cell that did not run (stopped or failed), drawn as a grey placeholder. */
 export function drawGrid(
-  ctx: CanvasRenderingContext2D,
+  ctxParam: CanvasRenderingContext2D,
   layout: GridLayout,
   images: readonly (CanvasImageSource | null)[],
-): void {
+): void { const ctx = ctxParam;
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, layout.width, layout.height);
   layout.cells.forEach((cell, i) => {

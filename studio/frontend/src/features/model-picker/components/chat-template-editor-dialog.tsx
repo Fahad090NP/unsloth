@@ -49,7 +49,7 @@ export function ChatTemplateEditorDialog({
   const byteLength = chatTemplateByteLength(renderedDraft);
   const overLimit = !isChatTemplateWithinLimit(renderedDraft);
   const matchesDefault =
-    defaultTemplate != null && renderedDraft === defaultTemplate;
+    (defaultTemplate !== null && defaultTemplate !== undefined) && renderedDraft === defaultTemplate;
 
   const handleClose = () => {
     validationToken.current += 1;

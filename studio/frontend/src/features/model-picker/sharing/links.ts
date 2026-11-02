@@ -76,10 +76,10 @@ function linkQuery(raw: string, url: URL, native: boolean): string {
 }
 
 function readParameter(
-  result: SharedRunConfig,
+  resultParam: SharedRunConfig,
   key: string,
   value: string,
-): void {
+): void { const result = resultParam;
   if (key === "v") {
     if (value !== "1") {
       throw new Error(

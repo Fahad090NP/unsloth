@@ -79,7 +79,7 @@ function SaveVoiceForm({
   // Voices are picked by name, so names must be unique; the list may not be loaded yet.
   useEffect(() => {
     const voices = useAudioVoicesStore.getState();
-    if (!voices.loaded) void voices.refresh();
+    if (!voices.loaded) (voices.refresh()).catch(() => { /* noop */ });
   }, []);
   const taken = useAudioVoicesStore((state) =>
     state.voices.some(
@@ -108,7 +108,7 @@ function SaveVoiceForm({
       className="grid gap-5"
       onSubmit={(event) => {
         event.preventDefault();
-        void submit();
+        (submit()).catch(() => { /* noop */ });
       }}
     >
       <DialogHeader>

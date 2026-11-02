@@ -25,13 +25,13 @@ export function ManagedProviderUrlsSection() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadManagedProviderUrls()
+    (loadManagedProviderUrls()
       .then((loaded) => {
         if (cancelled) return;
         setSettings(loaded);
         setError(null);
       })
-      .catch((loadError) => {
+      .catch((loadError: unknown) => {
         if (cancelled) return;
         if (isSettingsRouteAbsent(loadError)) {
           setAbsent(true);
@@ -42,7 +42,7 @@ export function ManagedProviderUrlsSection() {
             ? loadError.message
             : t("settings.general.managedProviderUrls.loadError"),
         );
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -97,7 +97,7 @@ export function ManagedProviderUrlsSection() {
         <Switch
           checked={settings?.allowed ?? false}
           disabled={!settings || saving || settings.lockedByEnvironment}
-          onCheckedChange={(allowed) => void save(allowed)}
+          onCheckedChange={(allowed) => { (save(allowed)).catch(() => { /* noop */ }); }}
         />
       </SettingsRow>
     </SettingsSection>

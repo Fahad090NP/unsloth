@@ -115,21 +115,21 @@ export function MediaIdleUnloadSetting({
   // biome-ignore lint/correctness/useExhaustiveDependencies: residencyKey only triggers the re-read
   useEffect(() => {
     let cancelled = false;
-    void loadOpenAIAutoSwitchSettings()
+    (loadOpenAIAutoSwitchSettings()
       .then((loaded) => {
         if (cancelled) return;
         setSettings(loaded);
         setDraft(String(loaded.mediaAutoUnloadIdleSeconds));
         setError(null);
       })
-      .catch((loadError) => {
+      .catch((loadError: unknown) => {
         if (cancelled) return;
         setError(
           loadError instanceof Error
             ? loadError.message
             : t("settings.general.modelAutoSwitch.loadError"),
         );
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -164,7 +164,7 @@ export function MediaIdleUnloadSetting({
     <MediaIdleUnloadRow
       draftSeconds={draft}
       onDraftChange={setDraft}
-      onSave={() => void handleSave()}
+      onSave={() => { (handleSave()).catch(() => { /* noop */ }); }}
       settings={settings}
       isSaving={isSaving}
       error={error}
@@ -186,11 +186,11 @@ export function MediaAutoSwitchRow() {
   useEffect(() => {
     let cancelled = false;
     const load = () =>
-      void loadOpenAIAutoSwitchSettings()
+      { (loadOpenAIAutoSwitchSettings()
         .then((loaded) => {
           if (!cancelled) setSettings(loaded);
         })
-        .catch(() => undefined);
+        .catch(() => undefined)).catch(() => { /* noop */ }); };
     load();
     window.addEventListener(AUTO_SWITCH_UPDATED_EVENT, load);
     return () => {
@@ -235,7 +235,7 @@ export function MediaAutoSwitchRow() {
       <Switch
         checked={settings?.mediaAutoSwitchModel ?? false}
         disabled={!settings || isSaving}
-        onCheckedChange={(on) => void toggle(on)}
+        onCheckedChange={(on) => { (toggle(on)).catch(() => { /* noop */ }); }}
         aria-label={t("settings.general.modelAutoSwitch.mediaEnable")}
       />
     </SettingsRow>
@@ -253,27 +253,27 @@ export function ModelAutoSwitchSection() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadOpenAIAutoSwitchSettings()
+    (loadOpenAIAutoSwitchSettings()
       .then((loaded) => {
         if (cancelled) return;
         setSettings(loaded);
         setDraftIdleSeconds(String(loaded.autoUnloadIdleSeconds));
         setError(null);
       })
-      .catch((loadError) => {
+      .catch((loadError: unknown) => {
         if (cancelled) return;
         setError(
           loadError instanceof Error
             ? loadError.message
             : t("settings.general.modelAutoSwitch.loadError"),
         );
-      });
+      })).catch(() => { /* noop */ });
     const reload = () =>
-      void loadOpenAIAutoSwitchSettings()
+      { (loadOpenAIAutoSwitchSettings()
         .then((loaded) => {
           if (!cancelled) setSettings(loaded);
         })
-        .catch(() => undefined);
+        .catch(() => undefined)).catch(() => { /* noop */ }); };
     window.addEventListener(AUTO_SWITCH_UPDATED_EVENT, reload);
     return () => {
       cancelled = true;
@@ -311,17 +311,17 @@ export function ModelAutoSwitchSection() {
   const handleToggle = (enabled: boolean) => {
     const savedIdleSeconds = settings?.autoUnloadIdleSeconds ?? 0;
     if (!enabled) {
-      void persist({ enabled: false, autoUnloadIdleSeconds: savedIdleSeconds });
+      (persist({ enabled: false, autoUnloadIdleSeconds: savedIdleSeconds })).catch(() => { /* noop */ });
       return;
     }
-    void persist(
+    (persist(
       {
         enabled: true,
         autoUnloadIdleSeconds:
           parseIdleSeconds(draftIdleSeconds) ?? savedIdleSeconds,
       },
       { syncDraft: true },
-    );
+    )).catch(() => { /* noop */ });
   };
 
   const handleSaveIdle = () => {
@@ -330,36 +330,36 @@ export function ModelAutoSwitchSection() {
       setError(t("settings.general.modelAutoSwitch.idleError"));
       return;
     }
-    void persist(
+    (persist(
       { enabled: true, autoUnloadIdleSeconds: idleSeconds },
       { syncDraft: true },
-    );
+    )).catch(() => { /* noop */ });
   };
 
   const handleKeepKvToggle = (keepKv: boolean) => {
     if (!settings) return;
-    void persist({ enabled: settings.enabled, autoUnloadKeepKv: keepKv });
+    (persist({ enabled: settings.enabled, autoUnloadKeepKv: keepKv })).catch(() => { /* noop */ });
   };
 
   const handleAutoDownloadToggle = (autoDownload: boolean) => {
     if (!settings) return;
-    void persist({
+    (persist({
       enabled: settings.enabled,
       autoDownloadModel: autoDownload,
-    });
+    })).catch(() => { /* noop */ });
   };
 
   const handleMediaAutoSwitchToggle = (mediaAutoSwitch: boolean) => {
     if (!settings) return;
-    void persist({
+    (persist({
       enabled: settings.enabled,
       mediaAutoSwitchModel: mediaAutoSwitch,
-    });
+    })).catch(() => { /* noop */ });
   };
 
   const handleApiOnlyToggle = (apiOnly: boolean) => {
     if (!settings) return;
-    void persist({ enabled: settings.enabled, autoUnloadApiOnly: apiOnly });
+    (persist({ enabled: settings.enabled, autoUnloadApiOnly: apiOnly })).catch(() => { /* noop */ });
   };
 
   return (

@@ -437,7 +437,7 @@ function useExampleModelName(keylessOnly: boolean): string | null {
 
     const update = () => {
       // null on failure: a transient error is no evidence the server holds nothing.
-      void Promise.all([
+      (Promise.all([
         listOpenAIModels().catch(() => null),
         loadOpenAIAutoSwitchSettings()
           .then((s) => s.enabled)
@@ -450,7 +450,7 @@ function useExampleModelName(keylessOnly: boolean): string | null {
             setAutoSwitch(settings);
           }
           // biome-ignore lint/complexity/useOptionalChain: keep the explicit failed-refresh branch
-          return models !== null && models.some((m) => m.loaded);
+          return models?.some((m) => m.loaded) ?? false;
         })
         .then((resolved) => {
           if (cancelled) return;
@@ -458,7 +458,7 @@ function useExampleModelName(keylessOnly: boolean): string | null {
             update,
             resolved ? CATALOG_IDLE_MS : CATALOG_RETRY_MS,
           );
-        });
+        })).catch(() => { /* noop */ });
     };
 
     update();
@@ -481,7 +481,7 @@ function useExampleModelName(keylessOnly: boolean): string | null {
         : pick.id;
     };
     // The store keeps a checkpoint across unload and delete, so require the catalog to list it.
-    const entry = catalog?.find((m) => sameBaseModelId(m.id, checkpoint ?? ""));
+    const entry = catalog?.find((m) => sameBaseModelId(m.id, (checkpoint)));
     const backed =
       (!keylessOnly && catalog === null) ||
       (entry !== undefined && (entry.loaded || (!keylessOnly && autoSwitch)));
@@ -594,7 +594,7 @@ export function UsageExamples({
   // set on answer, so a restored agent never validates against the defaults.
   const [agentsLoaded, setAgentsLoaded] = useState(false);
   // Guards the detection effect from clobbering a pick the user made first.
-  const agentPickedByUserRef = useRef(storedPrefs.apiExampleAgent != null);
+  const agentPickedByUserRef = useRef((storedPrefs.apiExampleAgent !== null && storedPrefs.apiExampleAgent !== undefined));
   // A manual pick is kept only until the model's GGUF-ness changes under it.
   const clickedUnderGgufRef = useRef<boolean | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -655,7 +655,7 @@ export function UsageExamples({
     let timeoutId: number | null = null;
 
     const update = () => {
-      void getInferenceStatus()
+      (getInferenceStatus()
         .then((status) => {
           if (cancelled) return false;
           // Both unknown, as the CLI gate reads them: no field, or is_gguf False with no model.
@@ -675,7 +675,7 @@ export function UsageExamples({
             update,
             resolved ? CATALOG_IDLE_MS : CATALOG_RETRY_MS,
           );
-        });
+        })).catch(() => { /* noop */ });
     };
 
     update();
@@ -702,7 +702,7 @@ export function UsageExamples({
   );
 
   useEffect(() => {
-    void fetchDeviceType({ force: true });
+    (fetchDeviceType({ force: true })).catch(() => { /* noop */ });
   }, []);
 
   // Fetch only; the auto-pick is derived below so it also reacts to model changes.
@@ -719,7 +719,7 @@ export function UsageExamples({
     }
 
     let cancelled = false;
-    void loadCodingAgents()
+    (loadCodingAgents()
       .then((info) => {
         if (cancelled) return;
         setAvailableAgents(info.agents);
@@ -730,7 +730,7 @@ export function UsageExamples({
       })
       .finally(() => {
         if (!cancelled) setAgentsLoaded(true);
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };

@@ -121,6 +121,6 @@ export function isConfiguredHiddenModelId(
   ...values: (string | null | undefined)[]
 ): boolean {
   return values.some(
-    (value) => value != null && configuredIds.has(value.trim().toLowerCase()),
+    (value) => (value !== null && value !== undefined) && configuredIds.has(value.trim().toLowerCase()),
   );
 }

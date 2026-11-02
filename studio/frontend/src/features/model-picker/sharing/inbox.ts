@@ -74,7 +74,7 @@ export function createRunConfigInbox() {
             request &&
             pending === request &&
             !editors.has(draftKey) &&
-            pending?.draftKey === draftKey
+            pending.draftKey === draftKey
           ) {
             publish(null);
             if (Object.keys(request.value.config).length > 0) {

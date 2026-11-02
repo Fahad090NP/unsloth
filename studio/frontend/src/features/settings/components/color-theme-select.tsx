@@ -69,9 +69,13 @@ export function ColorThemeSelect() {
   const renderItem = (id: ColorThemeId) => (
     <DropdownMenuItem
       key={id}
-      onSelect={() =>
-        { isHalloweenThemeId(id) ? pickHalloweenTheme(id) : setPalette(id); }
-      }
+      onSelect={() => {
+        if (isHalloweenThemeId(id)) {
+          pickHalloweenTheme(id);
+        } else {
+          setPalette(id);
+        }
+      }}
       data-palette-value={id}
       aria-checked={palette === id}
       role="menuitemradio"

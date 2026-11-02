@@ -114,11 +114,13 @@ export function ApiExampleTabNav({
           data-settings-label={
             entry.searchLabel ? t(entry.searchLabel) : undefined
           }
-          onClick={() =>
-            { entry.id === "agents"
-              ? useSettingsDialogStore.getState().openDialog("agents")
-              : onChange(entry.id); }
-          }
+          onClick={() => {
+            if (entry.id === "agents") {
+              useSettingsDialogStore.getState().openDialog("agents");
+            } else {
+              onChange(entry.id);
+            }
+          }}
           className={cn(
             "flex h-9 shrink-0 items-center gap-2 rounded-full px-3.5 font-heading text-ui-15 text-foreground/80 transition-colors hover:text-foreground",
             entry.id === kind &&

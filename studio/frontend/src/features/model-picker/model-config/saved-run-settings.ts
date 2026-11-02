@@ -70,18 +70,18 @@ function sameName(a: string, b: string): boolean {
   return a.localeCompare(b, undefined, { sensitivity: "accent" }) === 0;
 }
 
-function readJson<T extends object>(key: string): T {
+function readJson<T extends object>(key: string, fallback: T = {} as T): T {
   const raw = storage()?.getItem(key);
   if (!raw) {
-    return {} as T;
+    return fallback;
   }
   try {
     const parsed: unknown = JSON.parse(raw);
     return parsed && typeof parsed === "object" && !Array.isArray(parsed)
       ? (parsed as T)
-      : ({} as T);
+      : fallback;
   } catch {
-    return {} as T;
+    return fallback;
   }
 }
 
@@ -97,7 +97,7 @@ function writeJson(key: string, value: object): boolean {
   }
   cache.clear();
   // Best-effort: the write already landed.
-  if (typeof window?.dispatchEvent === "function") {
+  if (typeof window.dispatchEvent === "function") {
     window.dispatchEvent(new Event(SAVED_RUN_SETTINGS_UPDATED_EVENT));
   }
   return true;
@@ -134,7 +134,7 @@ function decode(entries: unknown): SavedRunSettings[] {
     // Future-schema records stay stored but are not offered.
     const config = name ? fromStoredPerModelConfig(entry.config) : null;
     if (config) {
-      out.push({ name, savedAt: Number(entry.savedAt) || 0, config });
+      out.push({ name, savedAt: (entry.savedAt) || 0, config });
     }
   }
   return out.sort((a, b) => a.name.localeCompare(b.name));
@@ -255,7 +255,7 @@ export function renameSavedRunSettings(
   );
   const prefix = selectionPrefix(modelId);
   const renamedOnce = Object.keys(loadedOnce).filter((once) => {
-    const onceName = loadedOnce[once]?.name;
+    const onceName = loadedOnce[once].name;
     return (
       once.startsWith(prefix) &&
       typeof onceName === "string" &&
@@ -286,7 +286,7 @@ export function deleteSavedRunSettings(modelId: string, name: string): boolean {
     if (kept.length > 0) {
       map[key] = kept;
     } else {
-      delete map[key];
+      Reflect.deleteProperty(map, key);
     }
     if (!writeMap(map)) {
       return false;
@@ -295,7 +295,7 @@ export function deleteSavedRunSettings(modelId: string, name: string): boolean {
   const pins = readPins();
   const unpinned = selectionsNaming(pins, modelId, name);
   for (const pinned of unpinned) {
-    delete pins[pinned];
+    Reflect.deleteProperty(pins, pinned);
   }
   if (unpinned.length > 0) {
     writePins(pins);
@@ -380,7 +380,7 @@ export function forgetPerModelConfigsForOverrideKeys(
       changed = true;
     }
     if (key in pins) {
-      delete pins[key];
+      Reflect.deleteProperty(pins, key);
       unpinned = true;
     }
   }
@@ -408,7 +408,7 @@ export function noteRunSettingsLoadedOnce(
   if (entry) {
     map[key] = { name: entry.name, sent: toStoredPerModelConfig(entry.sent) };
   } else {
-    delete map[key];
+    Reflect.deleteProperty(map, key);
   }
   writeJson(LOADED_ONCE_RUN_SETTINGS_STORAGE_KEY, map);
 }
@@ -446,11 +446,11 @@ export function setPinnedRunSettings(
 ): boolean {
   const pins = readPins();
   const key = selectionKey(modelId, ggufVariant);
-  if ((pins[key] ?? null) === name) {
+  if (((pins[key])) === name) {
     return true;
   }
   if (name === null) {
-    delete pins[key];
+    Reflect.deleteProperty(pins, key);
   } else {
     pins[key] = name;
   }

@@ -217,16 +217,18 @@ export async function fetchLoadModelOverride(
   }
   // After queued writes: a read racing Forget re-saved the old row.
   await Promise.all(
-    [loadId, aliasId].map((id) =>
-      writesByKey
-        .get(
-          modelOverrideKey(
-            normalizeModelIdentity(id),
-            normalizeGgufVariantIdentity(ggufVariant),
-          ),
-        )
-        ?.catch(() => {}),
-    ),
+    [loadId, aliasId]
+      .map((id) =>
+        writesByKey
+          .get(
+            modelOverrideKey(
+              normalizeModelIdentity(id),
+              normalizeGgufVariantIdentity(ggufVariant),
+            ),
+          )
+          ?.catch(() => { /* noop */ }),
+      )
+      .filter((pending): pending is NonNullable<typeof pending> => pending !== undefined),
   );
   const res = await authFetch(`${OVERRIDES_URL}?${query.toString()}`);
   if (!res.ok) {
@@ -314,7 +316,7 @@ export function fromApiOverride(
   // two lengths, since the picker reads customContextLength first and the API's
   // auto-switch max_seq_length first. So a row stating either field owns both.
   const serverStatesPin =
-    override.custom_context_length != null || override.max_seq_length != null;
+    (override.custom_context_length !== null && override.custom_context_length !== undefined) || (override.max_seq_length !== null && override.max_seq_length !== undefined);
   const serverStatesKvQuant =
     "mlx_kv_quant" in override || "mlx_kv_bits" in override;
   const normalized = normalizePerModelConfig({
@@ -444,10 +446,10 @@ export function toApiOverride(config: PerModelConfig | null): ApiModelOverride {
   if (config.specDraftCacheDtype) {
     payload.spec_draft_cache_type = config.specDraftCacheDtype;
   }
-  if (config.ctxCheckpoints != null && config.ctxCheckpoints >= 0) {
+  if ((config.ctxCheckpoints !== null && config.ctxCheckpoints !== undefined) && config.ctxCheckpoints >= 0) {
     payload.ctx_checkpoints = config.ctxCheckpoints;
   }
-  if (config.cacheRam != null) {
+  if ((config.cacheRam !== null && config.cacheRam !== undefined)) {
     payload.cache_ram = config.cacheRam;
   }
   if (config.tensorParallel) {
@@ -528,7 +530,7 @@ export async function putModelOverride(
   // Chain on the settled tail: a failed write must not cancel the next one.
   const previous = writesByKey.get(key) ?? Promise.resolve();
   const write = previous
-    .catch(() => {})
+    .catch(() => { /* noop */ })
     .then(() => sendModelOverride(modelId, ggufVariant, config, options));
   writesByKey.set(key, write);
   try {

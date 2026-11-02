@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import type { InferenceStatusResponse } from "@/features/chat";
-import type { ModelSelectorChangeMeta } from "@/features/model-picker/components/model-selector/types";
+import type { ModelSelectorChangeMeta } from "@/features/model-picker";
 import { nativeAudioCheckpointIsLoadable } from "../model-picker/components/model-selector/audio-picker-policy.ts";
 import {
   AUDIO_CPP_MUSIC_AUDIO_TYPE,
@@ -538,8 +538,7 @@ export function expectedGgufDownloadBytes(variant: AutoGgufVariant): number {
 }
 
 export async function fetchGalleryWindow<
-  C extends { id: string },
-  P extends { audio: C[]; has_more: boolean },
+  P extends { audio: { id: string }[]; has_more: boolean },
   K,
 >(
   fetchPage: (limit: number, cursor: K | null) => Promise<P>,

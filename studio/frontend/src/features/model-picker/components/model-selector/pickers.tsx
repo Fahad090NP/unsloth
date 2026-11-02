@@ -91,8 +91,8 @@ import {
   removeScanFolderFromStore,
   useScanFolders,
 } from "@/features/hub";
-import type { HfTaskFilter } from "@/features/hub/hooks/use-hub-model-search";
-import { INVENTORY_FRESHNESS_WINDOW_MS } from "@/features/hub/inventory";
+import type { HfTaskFilter } from "@/features/hub";
+import { INVENTORY_FRESHNESS_WINDOW_MS } from "@/features/hub";
 import { pickNativeModelFolder } from "@/features/native-intents";
 import {
   type NpuModel,
@@ -275,7 +275,7 @@ import {
   isHfCacheSnapshotPath,
   isStandaloneGgufPath,
   publicModelId,
-} from "@/features/hub/lib/model-identity";
+} from "@/features/hub";
 import { cachedRepoConfigId } from "../../model-config/model-identity";
 import {
   type FormatTone,
@@ -450,7 +450,7 @@ function useRovingModelList({
   const preferredOptionKey =
     selectedOptionKey && optionIndexByKey.has(selectedOptionKey)
       ? selectedOptionKey
-      : (optionKeys[0] ?? null);
+      : ((optionKeys[0]));
   const activeOptionKey =
     rovingOptionKey && optionIndexByKey.has(rovingOptionKey)
       ? rovingOptionKey
@@ -1292,7 +1292,7 @@ function ModelRow({
   // With no GPU every load runs from RAM: `ram` keeps its warning but is not an overage to dim.
   const dimmed = exceeds && !(vramStatus === "ram" && !(gpuGb && gpuGb > 0));
   const showVramTooltip =
-    vramEst != null && vramEst > 0 && gpuGb != null && gpuGb > 0;
+    (vramEst !== null && vramEst !== undefined) && vramEst > 0 && (gpuGb !== null && gpuGb !== undefined) && gpuGb > 0;
   const vramTooltipText =
     showVramTooltip && vramStatus
       ? exceeds
@@ -2544,7 +2544,7 @@ function useSoleDownloadedQuants(
         });
         if (!quant) return;
         // A later Hub answer may still send the row back to its expander.
-        void hubProbeLimitRef.current(() =>
+        (hubProbeLimitRef.current(() =>
           soleQuantNeedsExpander(
             target,
             quant.variant.quant,
@@ -2558,7 +2558,7 @@ function useSoleDownloadedQuants(
             next.set(target.repoId, { key: target.key, quant: null });
             return next;
           });
-        });
+        })).catch(() => { /* noop */ });
       },
     });
   }
@@ -2704,7 +2704,7 @@ function GgufVariantExpander({
       }
       setNativeContext(normalized.contextLength);
       setResolvedLocally(normalized.resolvedLocally);
-      setVariantsAreGguf(res?.variant_format !== "mlx");
+      setVariantsAreGguf(res.variant_format !== "mlx");
     };
 
     loadPickerGgufVariants(
@@ -2729,13 +2729,13 @@ function GgufVariantExpander({
       .then((res) => {
         if (res !== cachedResponse) applyResponse(res);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (canceled) return;
         setError(describeVariantListingError(err));
       })
       .finally(() => {
         if (!canceled) setLoading(false);
-      });
+      }).catch(() => { /* noop */ });
 
     return () => {
       canceled = true;
@@ -2961,7 +2961,7 @@ function GgufVariantExpander({
     for (const footprintVariant of footprintVariants) {
       const dependencyKey = footprintVariant.dependency_key ?? "";
       const expectedBytes = ggufVariantExpectedBytes(footprintVariant);
-      void resolveDownloadFootprint(repoId, {
+      (resolveDownloadFootprint(repoId, {
         source: sourceOverride ?? (isLocalPath ? "local" : "hub"),
         isLora: false,
         ggufVariant: footprintVariant.quant,
@@ -2990,7 +2990,7 @@ function GgufVariantExpander({
         })
         .catch(() => {
           // Keep the checkpoint size when the companion footprint is unavailable.
-        });
+        })).catch(() => { /* noop */ });
     }
     return () => {
       cancelled = true;
@@ -3097,10 +3097,10 @@ function GgufVariantExpander({
           candidate.variants.some((variant) => variant.filename === v.filename),
         );
         const showGroupHeading =
-          group?.title != null && group.variants[0]?.filename === v.filename;
+          (group?.title !== null && group?.title !== undefined) && group.variants[0].filename === v.filename;
         // Matching on quant alone works only because an H3 key is unique per file.
         const isRecommended =
-          group != null &&
+          (group !== null && group !== undefined) &&
           effectiveRecommendedByGroup.get(group.key) === v.quant;
         const fit = getVariantFit(v);
         const oom = fit === "oom";
@@ -3137,7 +3137,7 @@ function GgufVariantExpander({
             <span className="min-w-0 flex-1 truncate font-mono text-xs">
               <span className={cn(oom && "text-gray-500! dark:text-gray-400!")}>
                 {ggufVariantPickerLabel(v, {
-                  h3Grouped: group?.title != null,
+                  h3Grouped: (group?.title !== null && group?.title !== undefined),
                   hideH3PrunedBuild,
                 })}
               </span>
@@ -3190,7 +3190,7 @@ function GgufVariantExpander({
           </button>
         );
         return [
-          showGroupHeading && group?.title ? (
+          showGroupHeading && group.title ? (
             <div key={`${v.filename}:group`} className="px-2 pb-1 pt-2">
               <div className="text-xs font-semibold text-foreground">
                 {group.title}
@@ -3343,7 +3343,7 @@ function taskMatchesFilter(
 ): boolean {
   if (!filter) return true;
   const wanted = Array.isArray(filter) ? filter : [filter];
-  return repoTask != null && (wanted as readonly string[]).includes(repoTask);
+  return (repoTask !== null && repoTask !== undefined) && (wanted as readonly string[]).includes(repoTask);
 }
 
 // Owned by the Images page, never chat-loadable.
@@ -3589,7 +3589,7 @@ function sortLocalModels(
   key: LocalSortKey,
   loadTimes: ModelLoadTimes,
 ): LocalModelInfo[] {
-  const name = (m: LocalModelInfo) => m.model_id ?? m.display_name ?? m.id;
+  const name = (m: LocalModelInfo) => (m.model_id ?? m.display_name);
   const byDate = (a: LocalModelInfo, b: LocalModelInfo) =>
     (b.updated_at ?? -1) - (a.updated_at ?? -1) ||
     name(a).localeCompare(name(b));
@@ -3669,7 +3669,7 @@ function localModelMatchesFormat(
   filter: FormatFilter,
 ): boolean {
   return matchesFormatFilter(
-    m.model_id ?? m.display_name ?? m.id,
+    (m.model_id ?? m.display_name),
     localModelIsGguf(m),
     filter,
   );
@@ -4149,9 +4149,7 @@ export function HubModelPicker({
     null,
   );
   const updateTransportConflict = useDownloadManagerStore((state) =>
-    updateConflictKey
-      ? (state.conflicts[updateConflictKey]?.info ?? null)
-      : null,
+    updateConflictKey ? state.conflicts[updateConflictKey]?.info : null,
   );
   const cancelUpdateConflict = useCallback(() => {
     if (updateConflictKey) downloadManager.cancelConflict(updateConflictKey);
@@ -4177,7 +4175,7 @@ export function HubModelPicker({
   const [recommendedFolders, setRecommendedFolders] = useState<string[]>([]);
 
   const refreshLocalModelsList = useCallback(() => {
-    void pickerInventory.refreshInventory();
+    (pickerInventory.refreshInventory()).catch(() => { /* noop */ });
   }, [pickerInventory.refreshInventory]);
 
   // The store's mutations bump the inventory version, which refetches every inventory reader
@@ -4223,7 +4221,7 @@ export function HubModelPicker({
     } else if (picked) {
       setFolderInput(picked);
       setFolderError(null);
-      void handleAddFolder(picked);
+      (handleAddFolder(picked)).catch(() => { /* noop */ });
     }
   }, [handleAddFolder, isOwner]);
 
@@ -4239,11 +4237,11 @@ export function HubModelPicker({
             onClick: () => {
               addScanFolderToStore(folder.path, Boolean(folder.recursive))
                 .then(() => onFoldersChange?.())
-                .catch((e) =>
+                .catch((e: unknown) =>
                   toast.error("Couldn't restore folder", {
                     description: e instanceof Error ? e.message : undefined,
                   }),
-                );
+                ).catch(() => { /* noop */ });
             },
           },
         });
@@ -4255,7 +4253,7 @@ export function HubModelPicker({
   );
 
   const refreshCachedLists = useCallback(() => {
-    void pickerInventory.refreshInventory();
+    (pickerInventory.refreshInventory()).catch(() => { /* noop */ });
   }, [pickerInventory.refreshInventory]);
 
   // Managed downloads pull only changed blobs, so the cached copy stays usable.
@@ -4293,14 +4291,14 @@ export function HubModelPicker({
   useEffect(() => {
     listRecommendedFolders()
       .then(setRecommendedFolders)
-      .catch(() => {});
+      .catch(() => { /* noop */ }).catch(() => { /* noop */ });
   }, []);
 
   useEffect(() => {
     if (!shouldRefreshPickerInventoryOnMount(cachedReadyAtMount.current)) {
       return;
     }
-    void refreshInventoryIfOlderThan(INVENTORY_FRESHNESS_WINDOW_MS);
+    (refreshInventoryIfOlderThan(INVENTORY_FRESHNESS_WINDOW_MS)).catch(() => { /* noop */ });
   }, [refreshInventoryIfOlderThan]);
 
   // Case-insensitive (the HF cache lowercases ids); complete downloads only, since this set means
@@ -4791,7 +4789,7 @@ export function HubModelPicker({
       const anyBudget =
         budget.memoryTotalGb > 0 || budget.systemRamAvailableGb > 0;
       if (!budget.budgetKnown && !anyBudget) return null;
-      if (sizeBytes == null) return null;
+      if ((sizeBytes === null || sizeBytes === undefined)) return null;
       // Probed and genuinely zero (e.g. Vulkan reporting nothing) means nothing fits.
       if (!anyBudget) return "oom";
       // Same diffusion rule as its quant rows, so parent and children agree.
@@ -5416,14 +5414,14 @@ export function HubModelPicker({
           return;
         }
         if (page) {
-          void navigateToPage({
+          (navigateToPage({
             to: `/${page}`,
             // pickedTask, not meta.pipelineTag: a cached row carries no tag to forward.
             search:
               page === "audio"
                 ? audioPickSearch(id, { ...meta, task: pickedTask })
                 : diffusionRouteSearch(id, meta),
-          });
+          })).catch(() => { /* noop */ });
           return;
         }
       }
@@ -5728,7 +5726,7 @@ export function HubModelPicker({
     );
     if (repoIds.length === 0) return;
 
-    void Promise.all(
+    (Promise.all(
       repoIds.map(async (repoId) => {
         try {
           const response = await listGgufVariantsCached(
@@ -5792,7 +5790,7 @@ export function HubModelPicker({
           ),
         });
       }
-    });
+    })).catch(() => { /* noop */ });
 
     return () => {
       cancelled = true;
@@ -6623,7 +6621,7 @@ export function HubModelPicker({
         select();
         return;
       }
-      void listGgufVariants(id, hfToken || undefined)
+      (listGgufVariants(id, hfToken || undefined)
         .then((res) => {
           if (res.variant_format === "mlx" && res.variants.length > 0) {
             setMlxVariantRepoIds((prev) => new Set(prev).add(key));
@@ -6632,7 +6630,7 @@ export function HubModelPicker({
             select();
           }
         })
-        .catch(select);
+        .catch(select)).catch(() => { /* noop */ });
     },
     [
       onSelect,
@@ -6966,13 +6964,15 @@ export function HubModelPicker({
               selected={isSelected}
               loaded={true}
               optionProps={hubModelList.getOptionProps(optionKey, isSelected)}
-              onClick={() =>
-                { expandable
-                  ? setExpandedGguf((prev) =>
-                      prev === entry.id ? null : entry.id,
-                    )
-                  : onSelect(checkpoint, selectMeta); }
-              }
+              onClick={() => {
+                if (expandable) {
+                  setExpandedGguf((prev) =>
+                    prev === entry.id ? null : entry.id,
+                  );
+                } else {
+                  onSelect(checkpoint, selectMeta);
+                }
+              }}
               onArrowDownIntoChildren={
                 expanded ? () => focusFirstChildOption(optionKey) : undefined
               }
@@ -7173,7 +7173,7 @@ export function HubModelPicker({
                     className="size-icon"
                   />
                 ),
-                onSelect: () => void copyConnectedModelId(providerModelId),
+                onSelect: () => { (copyConnectedModelId(providerModelId)).catch(() => { /* noop */ }); },
               },
             ]}
           />
@@ -7575,13 +7575,13 @@ export function HubModelPicker({
           }
           const before = useChatRuntimeStore.getState();
           const chosen = before.params.checkpoint;
-          void npuCatalog.download(model).then((done) => {
+          (npuCatalog.download(model).then((done) => {
             const now = useChatRuntimeStore.getState();
             // A model picked while this downloaded is the user's newer choice; keep it.
             if (done && now.params.checkpoint === chosen && !now.loadingModelPick) {
               pick();
             }
-          });
+          })).catch(() => { /* noop */ });
         }}
         vramStatus={null}
         className={onDevice ? downloadedRowButtonClassName : undefined}
@@ -8105,7 +8105,7 @@ export function HubModelPicker({
                     >
                       <button
                         type="button"
-                        onClick={() => void browseForFolder()}
+                        onClick={() => { (browseForFolder()).catch(() => { /* noop */ }); }}
                         title="Browse folders on the server"
                         className="flex items-center gap-1.5 text-ui-10 font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
                       >
@@ -8146,7 +8146,7 @@ export function HubModelPicker({
                           type="button"
                           aria-label="Browse for a folder on the server"
                           title="Browse folders on the server"
-                          onClick={() => void browseForFolder()}
+                          onClick={() => { (browseForFolder()).catch(() => { /* noop */ }); }}
                           className="shrink-0 rounded-sm p-0.5 text-muted-foreground/80 transition-colors hover:text-foreground"
                         >
                           <HugeiconsIcon
@@ -8206,7 +8206,7 @@ export function HubModelPicker({
                             </div>
                             <button
                               type="button"
-                              onClick={() => void handleRemoveFolder(f)}
+                              onClick={() => { (handleRemoveFolder(f)).catch(() => { /* noop */ }); }}
                               aria-label={`Remove folder ${f.path}`}
                               className="shrink-0 rounded-sm p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:bg-destructive/10 focus-visible:text-destructive"
                             >
@@ -8234,7 +8234,7 @@ export function HubModelPicker({
                               <button
                                 key={p}
                                 type="button"
-                                onClick={() => void handleAddFolder(p)}
+                                onClick={() => { (handleAddFolder(p)).catch(() => { /* noop */ }); }}
                                 disabled={folderLoading}
                                 title={`Add ${p}`}
                                 className="rounded-full border border-dashed border-border px-2 py-0.5 font-mono text-ui-10 text-muted-foreground/80 transition-colors hover:border-[color-mix(in_oklab,var(--foreground)_calc(30%*var(--contrast-edge-gain,1)),transparent)] hover:bg-accent hover:text-foreground disabled:opacity-40"
@@ -8265,7 +8265,7 @@ export function HubModelPicker({
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();
-                                handleAddFolder();
+                                handleAddFolder().catch(() => { /* noop */ });
                               }
                               if (e.key === "Escape") {
                                 e.preventDefault();
@@ -8282,7 +8282,7 @@ export function HubModelPicker({
                           />
                           <button
                             type="button"
-                            onClick={() => void browseForFolder()}
+                            onClick={() => { (browseForFolder()).catch(() => { /* noop */ }); }}
                             disabled={folderLoading}
                             aria-label="Browse for folder"
                             title="Browse folders on the server"
@@ -8296,7 +8296,7 @@ export function HubModelPicker({
                           <button
                             type="button"
                             onClick={() => {
-                              void handleAddFolder();
+                              (handleAddFolder()).catch(() => { /* noop */ });
                             }}
                             disabled={folderLoading || !folderInput.trim()}
                             className="h-6 shrink-0 rounded-sm border border-border px-1.5 text-ui-10 text-muted-foreground transition-colors hover:bg-accent disabled:opacity-40"
@@ -8320,7 +8320,7 @@ export function HubModelPicker({
                         setFolderInput(picked);
                         setFolderError(null);
                         // Pass the path explicitly: `folderInput` state has not flushed yet.
-                        void handleAddFolder(picked);
+                        (handleAddFolder(picked)).catch(() => { /* noop */ });
                       }}
                     />
 
@@ -8843,7 +8843,7 @@ export function HubModelPicker({
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-end pr-3.5 pb-[calc(19px*var(--ui-space-scale,1))]">
             <button
               type="button"
-              onClick={() => { ejectsAll ? onEjectAll?.() : onEject(); }}
+              onClick={() => { if (ejectsAll) onEjectAll?.(); else onEject(); }}
               className="pointer-events-auto inline-flex items-center justify-center gap-2 rounded-full bg-popover px-3 py-2 text-ui-13 font-medium text-destructive shadow-[0_2px_8px_-2px_rgba(0,0,0,0.16)] transition-colors hover:bg-[color-mix(in_srgb,var(--foreground)_8%,var(--popover))] dark:bg-sidebar-accent dark:shadow-none dark:hover:bg-[color-mix(in_srgb,var(--foreground)_8%,var(--sidebar-accent))]"
               title={ejectsAll ? "Eject all models" : "Eject model"}
             >

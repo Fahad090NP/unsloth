@@ -184,20 +184,20 @@ function ToolResultLimitRow() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadToolResultLimit(t("settings.chat.toolResultLimitLoadError"))
+    (loadToolResultLimit(t("settings.chat.toolResultLimitLoadError"))
       .then((loaded) => {
         if (cancelled) return;
         setSettings(loaded);
         setError(null);
       })
-      .catch((loadError) => {
+      .catch((loadError: unknown) => {
         if (cancelled) return;
         setError(
           loadError instanceof Error
             ? loadError.message
             : t("settings.chat.toolResultLimitLoadError"),
         );
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -257,7 +257,7 @@ function ToolResultLimitRow() {
         disabled={!settings || saving || settings.lockedByEnvironment}
         onValueChange={(value) => {
           const next = Number(value);
-          if (settings && next !== settings.maxChars) void save(next);
+          if (settings && next !== settings.maxChars) (save(next)).catch(() => { /* noop */ });
         }}
       >
         <SelectTrigger
@@ -418,25 +418,25 @@ export function ChatTab() {
   );
 
   useEffect(() => {
-    void hydratePersistedSettings();
+    (hydratePersistedSettings()).catch(() => { /* noop */ });
   }, [hydratePersistedSettings]);
 
   useEffect(() => {
     let cancelled = false;
-    void loadCurrentDatePrompt(t("settings.chat.currentDate.loadError"))
+    (loadCurrentDatePrompt(t("settings.chat.currentDate.loadError"))
       .then((settings) => {
         if (cancelled) return;
         setCurrentDatePrompt(settings);
         setCurrentDatePromptError(null);
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (cancelled) return;
         setCurrentDatePromptError(
           error instanceof Error
             ? error.message
             : t("settings.chat.currentDate.loadError"),
         );
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -451,7 +451,7 @@ export function ChatTab() {
         t("settings.chat.currentDate.saveError"),
       );
       setCurrentDatePrompt(settings);
-      void refreshContextUsage({ invalidate: true });
+      (refreshContextUsage({ invalidate: true })).catch(() => { /* noop */ });
     } catch (error) {
       setCurrentDatePromptError(
         error instanceof Error
@@ -480,7 +480,7 @@ export function ChatTab() {
             variant="outline"
             onClick={() => {
               useSettingsDialogStore.getState().closeDialog();
-              void navigate({ to: "/library", search: { show: "chats" } });
+              (navigate({ to: "/library", search: { show: "chats" } })).catch(() => { /* noop */ });
             }}
           >
             <HugeiconsIcon icon={LibrariesIcon} strokeWidth={1.75} className="size-4" />
@@ -593,11 +593,11 @@ export function ChatTab() {
             onCheckedChange={(checked) => {
               setNotifyWhenReplyFinishes(checked);
               if (!checked) return;
-              void requestReplyFinishedPermission().then((granted) => {
+              (requestReplyFinishedPermission().then((granted) => {
                 if (granted) return;
                 setNotifyWhenReplyFinishes(false);
                 toast.error(t("settings.chat.replyNotificationBlocked"));
-              });
+              })).catch(() => { /* noop */ });
             }}
           />
         </SettingsRow>
@@ -633,7 +633,7 @@ export function ChatTab() {
             aria-label={t("settings.chat.currentDate.label")}
             checked={currentDatePrompt?.enabled ?? false}
             disabled={!currentDatePrompt || isSavingCurrentDatePrompt}
-            onCheckedChange={(enabled) => void saveCurrentDatePrompt(enabled)}
+            onCheckedChange={(enabled) => { (saveCurrentDatePrompt(enabled)).catch(() => { /* noop */ }); }}
           />
         </SettingsRow>
         <SettingsRow

@@ -462,7 +462,12 @@ export function SettingsDialog() {
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(o) => !o && closeDialog()}>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) closeDialog();
+        }}
+      >
         <DialogContent
           data-settings-dialog
           showCloseButton={false}

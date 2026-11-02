@@ -477,7 +477,7 @@ export function isMacPlatform(): boolean {
   if (macPlatform !== null) return macPlatform;
   if (typeof navigator === "undefined") return false;
   // `platform` is deprecated but still the only synchronous signal in Safari.
-  const source = `${navigator.platform ?? ""} ${navigator.userAgent ?? ""}`;
+  const source = `${(navigator.platform)} ${(navigator.userAgent)}`;
   macPlatform = /mac|iphone|ipad|ipod/i.test(source);
   return macPlatform;
 }
@@ -618,7 +618,7 @@ function keyToCode(key: string): string {
     "=": "Equal",
     "`": "Backquote",
   };
-  return punctuation[key] ?? key;
+  return (punctuation[key]);
 }
 
 function typedPunctuation(
@@ -713,7 +713,7 @@ export function formatCode(code: string, mac = isMacPlatform()): string {
   if (code.startsWith("Digit") && code.length === 6) return code.slice(5);
   if (code.startsWith("Numpad")) {
     const rest = code.slice(6);
-    return `Num ${NUMPAD_NAMES[rest] ?? rest}`;
+    return `Num ${(NUMPAD_NAMES[rest])}`;
   }
   const named: Record<string, string> = {
     Comma: ",",
@@ -747,7 +747,7 @@ export function formatCode(code: string, mac = isMacPlatform()): string {
     ArrowLeft: "←",
     ArrowRight: "→",
   };
-  return named[code] ?? code;
+  return (named[code]);
 }
 
 export function formatBindingLabel(

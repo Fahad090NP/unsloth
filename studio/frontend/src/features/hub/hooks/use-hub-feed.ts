@@ -138,7 +138,7 @@ export function useHubFeed(opts: {
         }
         timerRefs.current[id] = setTimeout(() => {
           timerRefs.current[id] = null;
-          void attemptFetch(attempt + 1);
+          (attemptFetch(attempt + 1)).catch(() => { /* noop */ });
         }, backoffDelay(attempt));
       };
 
@@ -187,7 +187,7 @@ export function useHubFeed(opts: {
         }
       };
 
-      queueMicrotask(() => void attemptFetch(0));
+      queueMicrotask(() => { (attemptFetch(0)).catch(() => { /* noop */ }); });
     },
     [
       accessToken,

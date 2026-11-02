@@ -455,7 +455,7 @@ for (const [label, catalog] of [
       // Word boundary: `qualify` skips the bracket when the variant name already says Fast.
       const claims = /\bFast\b/.test(row?.name ?? "");
       assert.equal(
-        Boolean(claims),
+        (claims),
         label === "image" && artifact.denseQuantable === true,
         `${label}: ${artifact.repoId} reads "${row?.name}" ${JSON.stringify(row?.tags)}`,
       );

@@ -107,7 +107,7 @@ export function FolderBrowser({
         setData(res);
         setPath(res.current);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (ctrl.signal.aborted) return;
         // If the first request fails, fall back to HOME so the modal stays navigable.
         const message = err instanceof Error ? err.message : String(err);

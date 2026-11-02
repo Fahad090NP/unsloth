@@ -93,7 +93,7 @@ export function useRepoDownload(config: RepoDownloadConfig): DownloadJob {
   useEffect(() => {
     if (!autoAdopt) return;
     const controller = new AbortController();
-    void downloadManager.probeAndAdopt(kind, repoId, controller.signal);
+    (downloadManager.probeAndAdopt(kind, repoId, controller.signal)).catch(() => { /* noop */ });
     return () => { controller.abort(); };
   }, [autoAdopt, kind, repoId]);
 
@@ -186,9 +186,9 @@ export function useRepoDownload(config: RepoDownloadConfig): DownloadJob {
     (variant: string | null) => {
       const state = useDownloadManagerStore.getState();
       const activeJob = selectActiveJob(state, kind, repoId, variant);
-      void downloadManager.cancel(
+      (downloadManager.cancel(
         activeJob?.key ?? jobKeyOf(kind, repoId, variant),
-      );
+      )).catch(() => { /* noop */ });
     },
     [kind, repoId],
   );

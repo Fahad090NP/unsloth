@@ -95,7 +95,7 @@ function GpuRenderingRow() {
                     size="sm"
                     disabled={busy || !status}
                     onClick={() => {
-                      if (status) void gpu.update(status.setting);
+                      if (status) (gpu.update(status.setting)).catch(() => { /* noop */ });
                     }}
                   >
                     {t("settings.appearance.gpuRendering.tryAgain")}
@@ -129,7 +129,7 @@ function GpuRenderingRow() {
                     variant="outline"
                     size="sm"
                     disabled={busy}
-                    onClick={() => void gpu.relaunch()}
+                    onClick={() => { (gpu.relaunch()).catch(() => { /* noop */ }); }}
                   >
                     {t("settings.appearance.gpuRendering.restartNow")}
                   </Button>
@@ -150,7 +150,7 @@ function GpuRenderingRow() {
     >
       <GpuRenderingSegmented
         value={status?.setting ?? null}
-        onChange={(next) => void gpu.update(next)}
+        onChange={(next) => { (gpu.update(next)).catch(() => { /* noop */ }); }}
         disabled={!status || !status.configurable || busy}
       />
     </SettingsRow>

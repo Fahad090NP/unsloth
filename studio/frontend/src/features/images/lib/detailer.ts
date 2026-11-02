@@ -152,7 +152,7 @@ export function detailerRequestField(
   if (isGuideSizeFor(options.guideSizeFor) && options.guideSizeFor !== DETAILER_DEFAULTS.guideSizeFor)
     out.guide_size_for = options.guideSizeFor;
   if (options.steps !== null && Number.isFinite(options.steps)) out.steps = clamp(Math.round(options.steps), 1, 200);
-  const negative = (options.negativePrompt ?? "").trim();
+  const negative = ((options.negativePrompt)).trim();
   if (negative) out.negative_prompt = negative;
   if (options.guidance !== null && options.guidance !== undefined && Number.isFinite(options.guidance))
     out.guidance = clamp(options.guidance, 0, 100);
@@ -299,7 +299,7 @@ export function detailerInfotextNotApplied(fields: Record<string, string>): stri
   return Object.keys(fields).filter((key) => {
     if (key === "adetailer version" || !fields[key]) return false;
     if (key === "adetailer model") return !restored && fields[key] !== "None";
-    if (key === "adetailer inpaint only masked") return !(restored && /^true$/i.test(fields[key] ?? ""));
+    if (key === "adetailer inpaint only masked") return !(restored && /^true$/i.test((fields[key])));
     return !(restored && INFOTEXT_RESTORED.has(key));
   });
 }

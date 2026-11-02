@@ -69,7 +69,7 @@ export function ShiftField({
         <NumberBox
           ariaLabel="Shift"
           value={value.shift}
-          placeholder={control.shift != null ? `Model default (${roundShift(control.shift)})` : "Model default"}
+          placeholder={(control.shift !== null && control.shift !== undefined) ? `Model default (${roundShift(control.shift)})` : "Model default"}
           exclusiveMin
           onChange={(shift) => { onChange({ ...value, shift }); }}
         />

@@ -13,7 +13,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatRelativeShort } from "@/features/hub/lib/format";
+import { formatRelativeShort } from "@/features/hub";
 import { audioModelLabel, formatClipDuration } from "../audio-workspace-utils";
 import { AUDIO_WORKFLOWS, type AudioWorkflowId } from "../workflows";
 import { Waveform } from "./waveform";

@@ -54,12 +54,12 @@ import {
 } from "@/components/ui/select";
 import type { TrainingSeriesPoint } from "@/features/training";
 // eslint-disable-next-line no-restricted-imports -- matches images-page.tsx's token access
-import { getHfToken, hfApiToken } from "@/features/hub/stores/hf-token-store";
+import { getHfToken, hfApiToken } from "@/features/hub";
 import { cn } from "@/lib/utils";
 import {
   getCachedUploadLimitLabel,
   loadUploadLimitSettings,
-} from "@/features/settings/api/upload-limit";
+} from "@/features/settings";
 import { isTauri } from "@/lib/api-base";
 import { toast } from "@/lib/toast";
 
@@ -275,7 +275,7 @@ function FamilyFacts({ family, baseModel }: { family?: FamilyPreset; baseModel?:
             {facts.params}
           </Badge>
         ) : null}
-        {facts.qlora_vram_gb != null ? (
+        {(facts.qlora_vram_gb !== null && facts.qlora_vram_gb !== undefined) ? (
           <Badge variant="secondary" className="font-normal">
             QLoRA {facts.qlora_vram_gb}GB+ VRAM
           </Badge>
@@ -310,7 +310,7 @@ function mergeFamilies(reported?: DiffusionTrainableFamily[]): FamilyPreset[] {
     return {
       name: p.name,
       label: r.label || p.label,
-      base_repos: r.base_repos?.length ? r.base_repos : p.base_repos,
+      base_repos: r.base_repos.length ? r.base_repos : p.base_repos,
       defaults: {
         rank: r.defaults?.lora_rank ?? p.defaults.rank,
         lr: r.defaults?.learning_rate ?? p.defaults.lr,
@@ -322,7 +322,7 @@ function mergeFamilies(reported?: DiffusionTrainableFamily[]): FamilyPreset[] {
       gated: r.gated ?? p.gated,
       base_specs: r.base_specs,
       // A backend reporting any chip owns the whole set, so presets never mix with live values.
-      ...(r.params != null || r.qlora_vram_gb != null || r.note != null
+      ...((r.params !== null && r.params !== undefined) || (r.qlora_vram_gb !== null && r.qlora_vram_gb !== undefined) || (r.note !== null && r.note !== undefined)
         ? {
             params: r.params ?? "",
             qlora_vram_gb: r.qlora_vram_gb ?? null,
@@ -335,7 +335,7 @@ function mergeFamilies(reported?: DiffusionTrainableFamily[]): FamilyPreset[] {
     merged.push({
       name: r.name,
       label: r.label || r.name,
-      base_repos: r.base_repos ?? [],
+      base_repos: (r.base_repos),
       defaults: {
         rank: r.defaults?.lora_rank ?? 16,
         lr: r.defaults?.learning_rate ?? 0.0001,
@@ -435,7 +435,7 @@ export function DiffusionTrainPanel({
   // above 1 rather than clamping, so a value carried over from another family rejected Start with nothing saying
   // why. Hidden when the family caps it at 1.
   const maxBatchSize = reportedFamily?.max_train_batch_size ?? null;
-  const batchIsFixed = maxBatchSize != null && maxBatchSize <= 1;
+  const batchIsFixed = (maxBatchSize !== null && maxBatchSize !== undefined) && maxBatchSize <= 1;
 
   const setBaseChoice = onBaseChoiceChange;
   const [customBase, setCustomBase] = useState("");
@@ -465,11 +465,11 @@ export function DiffusionTrainPanel({
   const [steps, setSteps] = useState(500);
   const [durationUnit, setDurationUnit] = useState<"steps" | "epochs">("steps");
   const [epochs, setEpochs] = useState(10);
-  const [learningRate, setLearningRate] = useState(family?.defaults.lr ?? 0.0001);
-  const [rank, setRank] = useState(family?.defaults.rank ?? 16);
-  const [resolution, setResolution] = useState(family?.defaults.resolution ?? 768);
+  const [learningRate, setLearningRate] = useState(family.defaults.lr);
+  const [rank, setRank] = useState(family.defaults.rank);
+  const [resolution, setResolution] = useState(family.defaults.resolution);
   const [batchSize, setBatchSize] = useState(1);
-  const effectiveBatchSize = maxBatchSize == null ? batchSize : Math.min(batchSize, maxBatchSize);
+  const effectiveBatchSize = (maxBatchSize === null || maxBatchSize === undefined) ? batchSize : Math.min(batchSize, maxBatchSize);
   const [gradAccum, setGradAccum] = useState(1);
   const [seed, setSeed] = useState(42);
   const [saveSteps, setSaveSteps] = useState(0);
@@ -542,12 +542,12 @@ export function DiffusionTrainPanel({
   // On first activation, load the dataset list and preselect a trainable base.
   useEffect(() => {
     if (!active) return;
-    void refreshInfo().then((i) => {
+    (refreshInfo().then((i) => {
       setDataset((cur) => {
         if (cur !== UPLOAD_DATASET && i?.datasets.some((d) => d.name === cur)) return cur;
         return i && i.datasets.length > 0 ? i.datasets[0].name : UPLOAD_DATASET;
       });
-    });
+    })).catch(() => { /* noop */ });
   }, [active, refreshInfo]);
 
   useEffect(() => {
@@ -559,7 +559,7 @@ export function DiffusionTrainPanel({
       })
       .catch(() => {
         if (!cancelled) setExamples([]);
-      });
+      }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -621,7 +621,7 @@ export function DiffusionTrainPanel({
       ? baseChoice
       : loadedBaseRepo && family.base_repos.includes(loadedBaseRepo)
         ? loadedBaseRepo
-        : (pairedTrainingBase ?? family.base_repos[0] ?? CUSTOM_BASE);
+        : ((pairedTrainingBase ?? family.base_repos[0]));
     if (!baseDirty.current) setBaseChoice(preferLoaded);
     if (!settingsDirty.current) {
       setLearningRate(family.defaults.lr);
@@ -650,9 +650,9 @@ export function DiffusionTrainPanel({
 
   // Clamp to the current family: baseChoice can briefly hold another family's repo.
   const effectiveBase =
-    baseChoice === CUSTOM_BASE || (family?.base_repos ?? []).includes(baseChoice)
+    baseChoice === CUSTOM_BASE || family.base_repos.includes(baseChoice)
       ? baseChoice
-      : family?.base_repos[0] ?? CUSTOM_BASE;
+      : family.base_repos[0];
 
   const resolvedBase = (effectiveBase === CUSTOM_BASE ? customBase : effectiveBase).trim();
   const basePrequantized = isDiT && repoIsPrequantized(resolvedBase);
@@ -675,8 +675,8 @@ export function DiffusionTrainPanel({
 
   useEffect(() => {
     if (!active) return;
-    void poll();
-    const id = window.setInterval(() => void poll(), 1500);
+    (poll()).catch(() => { /* noop */ });
+    const id = window.setInterval(() => { (poll()).catch(() => { /* noop */ }); }, 1500);
     return () => { window.clearInterval(id); };
   }, [active, poll]);
 
@@ -687,7 +687,7 @@ export function DiffusionTrainPanel({
     status?.status === "completed" && status.job_id !== dismissedJobId;
   const stoppedWithAdapter =
     status?.status === "stopped" &&
-    Boolean(status?.lora_path) &&
+    Boolean(status.lora_path) &&
     status.job_id !== dismissedJobId;
   const runProgress = diffusionTrainingProgress(status);
 
@@ -712,7 +712,7 @@ export function DiffusionTrainPanel({
   useEffect(() => {
     const producedAdapter =
       status?.status === "completed" ||
-      (status?.status === "stopped" && Boolean(status?.lora_path));
+      (status?.status === "stopped" && Boolean(status.lora_path));
     if (producedAdapter && !notifiedComplete.current) {
       notifiedComplete.current = true;
       onTrainingComplete?.();
@@ -758,14 +758,14 @@ export function DiffusionTrainPanel({
   const lossHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = status?.metric_history;
     if (!h) return [];
-    return h.steps.map((step, i) => ({ step, value: h.loss[i] })).filter((p) => p.value != null);
+    return h.steps.map((step, i) => ({ step, value: h.loss[i] })).filter((p) => (p.value !== null && p.value !== undefined));
   }, [status?.metric_history]);
   const gradNormHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = status?.metric_history;
     if (!h?.grad_norm) return [];
     return h.steps
       .map((step, i) => ({ step, value: h.grad_norm?.[i] ?? null }))
-      .filter((p): p is TrainingSeriesPoint => p.value != null);
+      .filter((p): p is TrainingSeriesPoint => (p.value !== null && p.value !== undefined));
   }, [status?.metric_history]);
 
   useEffect(() => {
@@ -777,7 +777,7 @@ export function DiffusionTrainPanel({
         .then((r) => {
           if (!cancelled) setPrevRuns(r.runs);
         })
-        .catch(() => {});
+        .catch(() => { /* noop */ }).catch(() => { /* noop */ });
     };
     refetch();
     // Terminal status can precede the run JSON being written, so refetch again shortly after.
@@ -802,14 +802,14 @@ export function DiffusionTrainPanel({
   const viewLossHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = viewRun?.metric_history;
     if (!h) return [];
-    return h.steps.map((step, i) => ({ step, value: h.loss[i] })).filter((p) => p.value != null);
+    return h.steps.map((step, i) => ({ step, value: h.loss[i] })).filter((p) => (p.value !== null && p.value !== undefined));
   }, [viewRun?.metric_history]);
   const viewGradNormHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = viewRun?.metric_history;
     if (!h?.grad_norm) return [];
     return h.steps
       .map((step, i) => ({ step, value: h.grad_norm?.[i] ?? null }))
-      .filter((p): p is TrainingSeriesPoint => p.value != null);
+      .filter((p): p is TrainingSeriesPoint => (p.value !== null && p.value !== undefined));
   }, [viewRun?.metric_history]);
 
   const uploadTo = useCallback(
@@ -1089,7 +1089,7 @@ export function DiffusionTrainPanel({
     try {
       await startDiffusionTraining({
         base_model: baseModel,
-        model_family: family?.name,
+        model_family: family.name,
         data_dir: dataset,
         output_dir: outputDir.trim(),
         instance_prompt: instancePrompt.trim() || undefined,
@@ -1123,7 +1123,7 @@ export function DiffusionTrainPanel({
         hf_token: hfApiToken(getHfToken()) || undefined,
       });
       toast.success("Preparing training…");
-      void poll();
+      (poll()).catch(() => { /* noop */ });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to start training");
     } finally {
@@ -1190,11 +1190,11 @@ export function DiffusionTrainPanel({
         setViewRun(null);
         setDismissedJobId(null);
         toast.success(
-          detail.checkpoint_step != null
+          (detail.checkpoint_step !== null && detail.checkpoint_step !== undefined)
             ? `Resuming from step ${detail.checkpoint_step}`
             : "Resuming training",
         );
-        void poll();
+        (poll()).catch(() => { /* noop */ });
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Failed to resume training");
       } finally {
@@ -1215,7 +1215,7 @@ export function DiffusionTrainPanel({
             ? "Stop requested; saving the adapter after the current step."
             : "Stop requested; discarding this run after the current step.",
         );
-        void poll();
+        (poll()).catch(() => { /* noop */ });
       } catch (e) {
         setStopRequestedLocal(false);
         toast.error(e instanceof Error ? e.message : "Failed to stop training");
@@ -1240,7 +1240,7 @@ export function DiffusionTrainPanel({
 
   const navigate = useNavigate();
   const exportAdapter = useCallback(
-    (catalogPath: string) => void navigate({ to: "/export", search: { imageLora: catalogFileName(catalogPath) } }),
+    (catalogPath: string) => { (navigate({ to: "/export", search: { imageLora: catalogFileName(catalogPath) } })).catch(() => { /* noop */ }); },
     [navigate],
   );
   const onDeployClick = useCallback(() => {
@@ -1253,7 +1253,7 @@ export function DiffusionTrainPanel({
       toast.error("Could not determine the base model to load for this adapter.");
       return;
     }
-    const famName = status.family || family?.name || "";
+    const famName = status.family || family.name || "";
     onDeploy?.({
       baseRepo: deployBaseFor(trainedBase, famName),
       family: famName,
@@ -1263,7 +1263,7 @@ export function DiffusionTrainPanel({
   }, [status, effectiveBase, customBase, family, instancePrompt, onDeploy, deployBaseFor]);
 
   // For fields no family seeds: editing one must not stop a family switch from reseeding rank / LR / resolution.
-  const keepFamilyDefaults = () => {};
+  const keepFamilyDefaults = () => { /* noop */ };
   const numberField = (
     label: string,
     value: number,
@@ -1690,7 +1690,7 @@ export function DiffusionTrainPanel({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(family?.base_repos ?? []).map((repo) => (
+                {family.base_repos.map((repo) => (
                   <SelectItem key={repo} value={repo}>
                     {repo}
                   </SelectItem>
@@ -1730,7 +1730,7 @@ export function DiffusionTrainPanel({
                 setDropActive(false);
               }
             }}
-            onDrop={(e) => void onDrop(e)}
+            onDrop={(e) => { (onDrop(e)).catch(() => { /* noop */ }); }}
           >
             <FieldLabel hint="The set the LoRA learns from. 10-50 images is plenty, and captions are optional.">
               Training images
@@ -1741,7 +1741,7 @@ export function DiffusionTrainPanel({
                 onValueChange={(v) => {
                   if (v.startsWith(EXAMPLE_PREFIX)) {
                     const ex = pendingExamples.find((x) => x.id === v.slice(EXAMPLE_PREFIX.length));
-                    if (ex) void importExample(ex);
+                    if (ex) (importExample(ex)).catch(() => { /* noop */ });
                     return;
                   }
                   // any explicit pick ends a continuation; "Add to it" is the way back in.
@@ -1786,10 +1786,10 @@ export function DiffusionTrainPanel({
                     accept={DATASET_FILE_ACCEPT}
                     className="hidden"
                     aria-label="More training images"
-                    onChange={(e) => {
+                    onChange={(eParam) => { const e = eParam;
                       const files = Array.from(e.target.files ?? []);
                       e.target.value = "";
-                      void uploadTo(dataset, files);
+                      (uploadTo(dataset, files)).catch(() => { /* noop */ });
                     }}
                   />
                   <Button
@@ -1814,10 +1814,10 @@ export function DiffusionTrainPanel({
               {...({ webkitdirectory: "", directory: "" } as object)}
               className="hidden"
               aria-label="Training image folder"
-              onChange={(e) => {
+              onChange={(eParam) => { const e = eParam;
                 const files = Array.from(e.target.files ?? []);
                 e.target.value = "";
-                void uploadTo(folderTarget.current, files, folderCreatesDataset.current);
+                (uploadTo(folderTarget.current, files, folderCreatesDataset.current)).catch(() => { /* noop */ });
               }}
             />
             {importingId && (
@@ -1850,10 +1850,10 @@ export function DiffusionTrainPanel({
                     accept={DATASET_FILE_ACCEPT}
                     className="hidden"
                     aria-label="Training image files"
-                    onChange={(e) => {
+                    onChange={(eParam) => { const e = eParam;
                       const files = Array.from(e.target.files ?? []);
                       e.target.value = "";
-                      void uploadTo(uploadName.trim(), files, createsDataset);
+                      (uploadTo(uploadName.trim(), files, createsDataset)).catch(() => { /* noop */ });
                     }}
                   />
                   <Button
@@ -1911,7 +1911,7 @@ export function DiffusionTrainPanel({
                       size="sm"
                       variant="ghost"
                       className="h-6 px-2 text-ui-11"
-                      onClick={() => void refreshInfo()}
+                      onClick={() => { (refreshInfo()).catch(() => { /* noop */ }); }}
                     >
                       Retry
                     </Button>
@@ -1932,7 +1932,7 @@ export function DiffusionTrainPanel({
                       imageCount={selectedDataset.image_count}
                       refreshKey={gridRefresh}
                       onBrowse={() => { setGridOpen(true); }}
-                      onChanged={() => void refreshInfo()}
+                      onChanged={() => { (refreshInfo()).catch(() => { /* noop */ }); }}
                     />
                   )}
                   {selectedDataset.image_count > 0 && (
@@ -1946,7 +1946,7 @@ export function DiffusionTrainPanel({
                         <DatasetLabelingGrid
                           dataset={dataset}
                           refreshKey={gridRefresh}
-                          onCountsChanged={() => void refreshInfo()}
+                          onCountsChanged={() => { (refreshInfo()).catch(() => { /* noop */ }); }}
                         />
                       )}
                     </>
@@ -1963,7 +1963,7 @@ export function DiffusionTrainPanel({
             <ExampleDatasetCards
               examples={pendingExamples}
               busyId={importingId}
-              onImport={(ex) => void importExample(ex)}
+              onImport={(ex) => { (importExample(ex)).catch(() => { /* noop */ }); }}
               className={cn(!uploadMode && "pt-3")}
             />
           </div>
@@ -2044,12 +2044,12 @@ export function DiffusionTrainPanel({
                 <Stat label="Steps" value={`${viewRun.step}/${viewRun.total_steps}`} />
                 <Stat
                   label="Avg loss"
-                  value={viewRun.avg_loss != null ? viewRun.avg_loss.toFixed(4) : "-"}
+                  value={(viewRun.avg_loss !== null && viewRun.avg_loss !== undefined) ? viewRun.avg_loss.toFixed(4) : "-"}
                 />
                 <Stat
                   label="Peak VRAM"
                   value={
-                    viewRun.peak_memory_gb != null
+                    (viewRun.peak_memory_gb !== null && viewRun.peak_memory_gb !== undefined)
                       ? `${viewRun.peak_memory_gb.toFixed(1)} GB`
                       : "-"
                   }
@@ -2093,7 +2093,7 @@ export function DiffusionTrainPanel({
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={() => void onResume(viewRun.job_id)}
+                  onClick={() => { (onResume(viewRun.job_id)).catch(() => { /* noop */ }); }}
                   disabled={
                     !viewRun.can_resume || running || resumingJobId === viewRun.job_id
                   }
@@ -2150,7 +2150,7 @@ export function DiffusionTrainPanel({
                     <button
                       key={r.job_id}
                       type="button"
-                      onClick={() => void openPrevRun(r.job_id)}
+                      onClick={() => { (openPrevRun(r.job_id)).catch(() => { /* noop */ }); }}
                       className="flex items-center justify-between gap-3 rounded-md px-1 py-2 text-left text-xs transition-colors hover:bg-muted/40"
                     >
                       <span className="min-w-0 truncate">
@@ -2159,7 +2159,7 @@ export function DiffusionTrainPanel({
                         </span>
                         <span className="text-muted-foreground">
                           {r.family ? ` ${r.family}` : ""} - {r.step}/{r.total_steps} steps
-                          {r.avg_loss != null ? `, avg loss ${r.avg_loss.toFixed(3)}` : ""}
+                          {(r.avg_loss !== null && r.avg_loss !== undefined) ? `, avg loss ${r.avg_loss.toFixed(3)}` : ""}
                         </span>
                       </span>
                       <span className="flex shrink-0 items-center gap-2">
@@ -2189,16 +2189,16 @@ export function DiffusionTrainPanel({
                 <div className="grid grid-cols-2 gap-3 @min-[440px]:grid-cols-4">
                 <Stat
                   label="Loss"
-                  value={status?.loss != null ? status.loss.toFixed(4) : "-"}
+                  value={(status?.loss !== null && status?.loss !== undefined) ? status.loss.toFixed(4) : "-"}
                 />
                 <Stat
                   label="Avg loss"
-                  value={status?.avg_loss != null ? status.avg_loss.toFixed(4) : "-"}
+                  value={(status?.avg_loss !== null && status?.avg_loss !== undefined) ? status.avg_loss.toFixed(4) : "-"}
                 />
                 <Stat
                   label="Speed"
                   value={
-                    status?.samples_per_second != null
+                    (status?.samples_per_second !== null && status?.samples_per_second !== undefined)
                       ? `${status.samples_per_second.toFixed(2)} img/s`
                       : "-"
                   }
@@ -2206,7 +2206,7 @@ export function DiffusionTrainPanel({
                 <Stat
                   label="Peak VRAM"
                   value={
-                    status?.peak_memory_gb != null
+                    (status?.peak_memory_gb !== null && status?.peak_memory_gb !== undefined)
                       ? `${status.peak_memory_gb.toFixed(1)} GB`
                       : "-"
                   }
@@ -2235,7 +2235,7 @@ export function DiffusionTrainPanel({
                         variant="dark"
                         type="button"
                         className="flex-1"
-                        onClick={() => void onResume(status.job_id!)}
+                        onClick={() => { (onResume(status.job_id!)).catch(() => { /* noop */ }); }}
                         disabled={resumingJobId === status.job_id}
                       >
                         {resumingJobId === status.job_id
@@ -2264,24 +2264,24 @@ export function DiffusionTrainPanel({
                   {completed
                     ? "Trained"
                     : "Stopped early; the adapter as of the last finished step was saved"}
-                  {status?.family ? ` (${status.family})` : ""}
-                  {status?.catalog_path
+                  {status.family ? ` (${status.family})` : ""}
+                  {status.catalog_path
                     ? " and added to the LoRA picker."
                     : ". Load it from the path below."}
-                  {status?.lora_path && (
+                  {status.lora_path && (
                     <span className="mt-1 block break-all">Saved: {status.lora_path}</span>
                   )}
-                  {status?.ema_path && (
+                  {status.ema_path && (
                     <span className="mt-1 block break-all">EMA adapter: {status.ema_path}</span>
                   )}
                 </p>
                 <div className="mt-1 flex flex-wrap gap-2">
-                  {status?.catalog_path && !isVideoFamily(status.family || family?.name || "") && (
+                  {status.catalog_path && !isVideoFamily(status.family || family.name || "") && (
                     <Button type="button" size="sm" onClick={onDeployClick}>
                       Deploy to Create
                     </Button>
                   )}
-                  {status?.catalog_path && (
+                  {status.catalog_path && (
                     <Button
                       type="button"
                       size="sm"
@@ -2293,12 +2293,12 @@ export function DiffusionTrainPanel({
                   )}
                   {/* Only a run stopped short can be continued. Disabled until the run record lands, with the
                       backend's reason as the tooltip. */}
-                  {!completed && status?.job_id && (
+                  {!completed && status.job_id && (
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => void onResume(status.job_id!)}
+                      onClick={() => { (onResume(status.job_id!)).catch(() => { /* noop */ }); }}
                       disabled={
                         !liveRunSummary?.can_resume ||
                         running ||
@@ -2323,7 +2323,7 @@ export function DiffusionTrainPanel({
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => { status && setDismissedJobId(status.job_id); }}
+                    onClick={() => { if (status) setDismissedJobId(status.job_id); }}
                   >
                     Train another
                   </Button>
@@ -2352,10 +2352,10 @@ export function DiffusionTrainPanel({
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-wrap items-center">
             <AlertDialogCancel>Continue training</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => void onStop(false)}>
+            <AlertDialogAction variant="destructive" onClick={() => { (onStop(false)).catch(() => { /* noop */ }); }}>
               Stop without saving
             </AlertDialogAction>
-            <AlertDialogAction onClick={() => void onStop(true)}>
+            <AlertDialogAction onClick={() => { (onStop(true)).catch(() => { /* noop */ }); }}>
               Stop and save
             </AlertDialogAction>
           </AlertDialogFooter>

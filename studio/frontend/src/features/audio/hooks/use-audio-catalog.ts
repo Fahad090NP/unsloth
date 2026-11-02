@@ -11,14 +11,17 @@ import {
 const store = createAudioCatalogStore(fetchAudioCatalog);
 const CATALOG_POLL_MS = 30_000;
 
+const subscribe = (listener: () => void) => store.subscribe(listener);
+const getSnapshot = () => store.getSnapshot();
+
 /** The backend's audio.cpp catalog, shared by every Audio page; the static seed until it lands. */
 export function useAudioCatalog(enabled: boolean): AudioCatalogSnapshot {
-  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot);
   useEffect(() => {
     if (!enabled) return;
-    void store.refresh();
+    (store.refresh()).catch(() => { /* noop */ });
     // The page stays mounted, so retries and TTL refreshes need a timer; refresh is a no-op until due.
-    const timer = setInterval(() => void store.refresh(), CATALOG_POLL_MS);
+    const timer = setInterval(() => { (store.refresh()).catch(() => { /* noop */ }); }, CATALOG_POLL_MS);
     return () => { clearInterval(timer); };
   }, [enabled]);
   return snapshot;

@@ -97,7 +97,7 @@ export function ApiKeysTab() {
           });
         }
       })
-      .catch(() => undefined);
+      .catch(() => undefined).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -137,7 +137,7 @@ export function ApiKeysTab() {
       }
     }
 
-    void loadInitialApiKeys();
+    (loadInitialApiKeys()).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -171,7 +171,7 @@ export function ApiKeysTab() {
           cause,
         ),
       );
-      void load();
+      (load()).catch(() => { /* noop */ });
       setRevokeTarget(null);
     } finally {
       setRevoking(false);
@@ -227,7 +227,7 @@ export function ApiKeysTab() {
               <CreateKeyForm
                 onCreated={(raw) => {
                   reveal(raw);
-                  void load();
+                  (load()).catch(() => { /* noop */ });
                 }}
                 onError={setActionError}
                 existingNames={keys.map((k) => k.name)}
@@ -311,7 +311,9 @@ export function ApiKeysTab() {
 
       <Dialog
         open={revokeTarget !== null}
-        onOpenChange={(o) => !o && setRevokeTarget(null)}
+        onOpenChange={(o) => {
+          if (!o) setRevokeTarget(null);
+        }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>

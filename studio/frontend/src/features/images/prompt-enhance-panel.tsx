@@ -54,7 +54,7 @@ function usePromptUpsamplerStatus(active: boolean) {
     const controller = new AbortController();
     getPromptUpsamplerStatus(controller.signal)
       .then(setStatus)
-      .catch(() => {});
+      .catch(() => { /* noop */ }).catch(() => { /* noop */ });
     return () => { controller.abort(); };
   }, [active, tick]);
   useEffect(() => {
@@ -74,9 +74,9 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       className="h-7 gap-1 px-2 text-xs"
       aria-label={label}
       onClick={() => {
-        void copyToClipboard(text).then((ok) =>
+        (copyToClipboard(text).then((ok) =>
           ok ? toast.success("Copied") : toast.error("Could not copy"),
-        );
+        )).catch(() => { /* noop */ });
       }}
     >
       <HugeiconsIcon icon={Copy01Icon} className="size-3.5" />
@@ -139,7 +139,7 @@ function UpsamplerDownloadNotice({
               size="sm"
               variant="ghost"
               className={cn("h-6 gap-1 px-1.5 text-xs", !owner && "hidden")}
-              onClick={() => void cancel()}
+              onClick={() => { (cancel()).catch(() => { /* noop */ }); }}
             >
               <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
               Cancel
@@ -170,7 +170,7 @@ function UpsamplerDownloadNotice({
               variant="secondary"
               className="gap-1.5 self-start text-xs"
               disabled={busy}
-              onClick={() => void start()}
+              onClick={() => { (start()).catch(() => { /* noop */ }); }}
             >
               {busy ? <Spinner className="size-3.5" /> : <HugeiconsIcon icon={Download01Icon} className="size-3.5" />}
               {size ? `Download (${size})` : "Download"}
@@ -227,7 +227,7 @@ export function EnhancePromptControls({
           if (++attempts >= WARM_RETRY_LIMIT) return;
           timer = window.setTimeout(attempt, WARM_RETRY_DELAY_MS);
         })
-        .catch(() => {});
+        .catch(() => { /* noop */ }).catch(() => { /* noop */ });
     };
     attempt();
     return () => {
@@ -239,7 +239,7 @@ export function EnhancePromptControls({
   // Turning Enhance off stops what the warm start brought up instead of holding it for the keep-alive.
   const wasEnabled = useRef(enabled);
   useEffect(() => {
-    if (wasEnabled.current && !enabled) releasePromptUpsampler().catch(() => {});
+    if (wasEnabled.current && !enabled) releasePromptUpsampler().catch(() => { /* noop */ }).catch(() => { /* noop */ });
     wasEnabled.current = enabled;
   }, [enabled]);
 
@@ -295,7 +295,7 @@ export function EnhancePromptControls({
             className="h-7 gap-1 px-2 text-xs"
             disabled={previewing || !canPreview || !prompt.trim()}
             title={canPreview ? "Rewrite the prompt now and show the caption" : "Download the prompt upsampler first"}
-            onClick={() => void runPreview()}
+            onClick={() => { (runPreview()).catch(() => { /* noop */ }); }}
           >
             {previewing ? <Spinner className="size-3.5" /> : <HugeiconsIcon icon={SparklesIcon} className="size-3.5" />}
             {previewing ? "Enhancing..." : "Preview"}

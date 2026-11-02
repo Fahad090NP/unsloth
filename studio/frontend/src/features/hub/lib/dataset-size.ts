@@ -144,9 +144,9 @@ function fetchCachedSize<T>(
 }
 
 function attachInflight<T>(
-  entry: InflightSizeEntry<T>,
+  entryParam: InflightSizeEntry<T>,
   signal?: AbortSignal,
-): Promise<T | null> {
+): Promise<T | null> { const entry = entryParam;
   entry.consumers += 1;
   let released = false;
   const release = () => {
@@ -311,7 +311,7 @@ function redundantTorchBinFiles(names: string[]): Set<string> {
     } else {
       const index = BIN_INDEX_RE.exec(name);
       if (!index) continue;
-      variant = index[1] ?? index[2];
+      variant = (index[1]);
     }
     if (variantShipsAsSafetensors(names, variant)) out.add(name);
   }

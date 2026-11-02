@@ -72,7 +72,7 @@ export function DesktopInstallTypeControl(): ReactElement | null {
       <FullInstallDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        onConfirm={() => void controller.repairInstall()}
+        onConfirm={() => { (controller.repairInstall()).catch(() => { /* noop */ }); }}
       />
     </>
   );

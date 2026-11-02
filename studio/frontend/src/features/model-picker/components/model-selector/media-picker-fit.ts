@@ -27,7 +27,7 @@ export function curatedPickerFit(
   // Measured tiers carry a minimum resident GPU footprint that host RAM cannot replace.
   const tiered = Boolean(hit?.artifact.offloadFitTiers?.length);
   // No GPU: the load runs from RAM, there is nothing to offload from.
-  if (!media || fit.sizeGb == null || budget.gpuGb <= 0) {
+  if (!media || (fit.sizeGb === null || fit.sizeGb === undefined) || budget.gpuGb <= 0) {
     return { ...fit, status: fit.fits ? null : ("exceeds" as const) };
   }
   const ramGb = budget.hostPooledMemory ? 0 : Math.max(0, budget.systemRamGb);

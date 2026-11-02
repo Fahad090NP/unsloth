@@ -29,7 +29,7 @@ export function publishStagedQueue(owner: string, queue: StagedQueue | null) {
     if (queue?.entries.length) return { queues: { ...queues, [owner]: queue } };
     if (!(owner in queues)) return { queues };
     const next = { ...queues };
-    delete next[owner];
+    Reflect.deleteProperty(next, owner);
     return { queues: next };
   });
 }

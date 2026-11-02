@@ -15,7 +15,7 @@ export function ReembedDocumentsRow(): ReactElement | null {
   const [stoppingJobId, setStoppingJobId] = useState<string | null>(null);
 
   useEffect(() => {
-    void useReembedStore.getState().load();
+    (useReembedStore.getState().load()).catch(() => { /* noop */ });
   }, []);
 
   const job = status?.job ?? null;
@@ -50,13 +50,15 @@ export function ReembedDocumentsRow(): ReactElement | null {
         <Button
           variant="outline"
           size="sm"
-          disabled={stoppingJobId === job?.id}
+          disabled={stoppingJobId === job.id}
           onClick={() => {
             setStoppingJobId(job?.id ?? null);
-            void useReembedStore
+            (useReembedStore
               .getState()
               .cancel()
-              .then((sent) => sent || setStoppingJobId(null));
+              .then((sent) => {
+                if (sent) setStoppingJobId(null);
+              })).catch(() => { /* noop */ });
           }}
         >
           {t("settings.general.rag.reembed.stop")}
@@ -65,7 +67,7 @@ export function ReembedDocumentsRow(): ReactElement | null {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => void useReembedStore.getState().start()}
+          onClick={() => { (useReembedStore.getState().start()).catch(() => { /* noop */ }); }}
         >
           {t("settings.general.rag.reembed.action")}
         </Button>

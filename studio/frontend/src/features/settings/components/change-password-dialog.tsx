@@ -208,7 +208,13 @@ export function ChangePasswordDialog({
   const [ownOpen, setOwnOpen] = useState(false);
   const controlled = controlledOpen !== undefined;
   const open = controlled ? controlledOpen : ownOpen;
-  const setOpen = (next: boolean) => { controlled ? onOpenChange?.(next) : setOwnOpen(next); };
+  const setOpen = (next: boolean) => {
+    if (controlled) {
+      onOpenChange?.(next);
+    } else {
+      setOwnOpen(next);
+    }
+  };
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");

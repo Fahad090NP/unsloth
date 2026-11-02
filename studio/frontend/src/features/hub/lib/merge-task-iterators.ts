@@ -48,7 +48,10 @@ function createTaskCursor<T>(iterator: AsyncGenerator<T>): TaskCursor<T> {
   };
 }
 
-function isDuplicateNamedValue<T>(seen: Set<string>, value: T): boolean {
+function isDuplicateNamedValue<T>(
+  seen: Set<string>,
+  value: T,
+): value is T & { name: string } {
   const name = (value as { name?: string }).name;
   if (!name) {
     return false;

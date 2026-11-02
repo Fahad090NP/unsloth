@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
+import { PillTabs } from "@/features/model-picker";
 import { type Ref, useCallback, useRef } from "react";
 import { type ABPlayback, nextPlayback } from "./convert-ab-compare-state";
 

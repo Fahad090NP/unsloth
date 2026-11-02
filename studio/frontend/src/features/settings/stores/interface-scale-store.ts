@@ -165,13 +165,13 @@ export function applyInterfaceScale(scale: number): Promise<void> {
     if (nextScale !== requestedInterfaceScale) {
       // a timed-out command can overwrite a newer native zoom when it finishes.
       appliedInterfaceScale = null;
-      void applyInterfaceScale(requestedInterfaceScale).catch(() => undefined);
+      (applyInterfaceScale(requestedInterfaceScale).catch(() => undefined)).catch(() => { /* noop */ });
       return;
     }
     appliedInterfaceScale = nextScale;
     setAppliedInterfaceZoom(zoom);
   });
-  interfaceScaleApplicationQueue = application.catch(() => undefined);
+  interfaceScaleApplicationQueue = application.catch(() => undefined).catch(() => { /* noop */ });
   return application;
 }
 
@@ -187,13 +187,13 @@ export function applyInterfaceScaleBeforeFirstPaint(
   return new Promise((resolve) => {
     const timer = setTimeout(() => {
       // Cut the queue loose from the hung call, or every later scale change is dead until restart.
-      interfaceScaleApplicationQueue = Promise.resolve();
+      interfaceScaleApplicationQueue = Promise.resolve().catch(() => { /* noop */ });
       releaseContainmentAfterZoom();
       resolve();
     }, timeoutMs);
-    void applied.finally(() => {
+    (applied.finally(() => {
       clearTimeout(timer);
       resolve();
-    });
+    })).catch(() => { /* noop */ });
   });
 }

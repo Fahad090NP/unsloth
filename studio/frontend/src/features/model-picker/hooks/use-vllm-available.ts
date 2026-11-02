@@ -23,7 +23,7 @@ function publish(next: boolean, nextPlatform: string | null) {
 function retry() {
   if (retries >= 24) return;
   retries += 1;
-  setTimeout(() => void refresh(), 5000);
+  setTimeout(() => { (refresh()).catch(() => { /* noop */ }); }, 5000);
 }
 
 async function refresh() {
@@ -46,13 +46,13 @@ function subscribe(listener: () => void) {
     started = true;
     window.addEventListener("studio-engines-changed", () => {
       retries = 0;
-      void refresh();
+      (refresh()).catch(() => { /* noop */ });
     });
   }
   // Re-read whenever the hub opens again.
   if (first) {
     retries = 0;
-    void refresh();
+    (refresh()).catch(() => { /* noop */ });
   }
   return () => {
     listeners.delete(listener);

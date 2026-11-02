@@ -20,5 +20,5 @@ export async function listDiffusionEmbeddings(
   const data = await parseJson<{ embeddings: DiffusionEmbeddingInfo[]; embeddings_dir?: string }>(
     await authFetch(`/api/models/diffusion-embeddings?family=${encodeURIComponent(family)}`),
   );
-  return { embeddings: data.embeddings ?? [], embeddings_dir: data.embeddings_dir };
+  return { embeddings: (data.embeddings), embeddings_dir: data.embeddings_dir };
 }

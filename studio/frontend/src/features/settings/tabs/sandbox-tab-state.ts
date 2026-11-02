@@ -166,7 +166,8 @@ export function isOlderJob(
   loaded: JobStamp,
   current: JobStamp | null,
 ): boolean {
-  if (!current || current.id === null || loaded.id === current.id) return false;
+  if (current === null) return false;
+  if (current.id === null || loaded.id === current.id) return false;
   return (loaded.startedAt ?? 0) <= (current.startedAt ?? 0);
 }
 

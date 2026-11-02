@@ -28,21 +28,21 @@ export function ChatMemorySection() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadChatMemory(t("settings.chat.memory.loadError"))
+    (loadChatMemory(t("settings.chat.memory.loadError"))
       .then((loaded) => {
         if (cancelled) return;
         setSettings(loaded);
         setDraft(loaded.text);
         setError(null);
       })
-      .catch((loadError) => {
+      .catch((loadError: unknown) => {
         if (cancelled) return;
         setError(
           loadError instanceof Error
             ? loadError.message
             : t("settings.chat.memory.loadError"),
         );
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -68,7 +68,7 @@ export function ChatMemorySection() {
         toast.success(t("settings.chat.memory.saved"));
       }
       forgetAgentsMd();
-      void refreshContextUsage({ invalidate: true });
+      (refreshContextUsage({ invalidate: true })).catch(() => { /* noop */ });
     } catch (saveError) {
       setError(
         saveError instanceof Error
@@ -106,7 +106,7 @@ export function ChatMemorySection() {
             (settings?.enabled ?? false) && !settings?.lockedByEnvironment
           }
           disabled={!settings || saving || settings.lockedByEnvironment}
-          onCheckedChange={(enabled) => void save({ enabled })}
+          onCheckedChange={(enabled) => { (save({ enabled })).catch(() => { /* noop */ }); }}
         />
       </SettingsRow>
       <div className="flex flex-col gap-2 pb-3">
@@ -147,7 +147,7 @@ export function ChatMemorySection() {
             <Button
               variant="outline"
               disabled={!dirty || tooLarge || saving}
-              onClick={() => void save({ text: draft })}
+              onClick={() => { (save({ text: draft })).catch(() => { /* noop */ }); }}
             >
               {t("settings.chat.memory.save")}
             </Button>

@@ -43,7 +43,7 @@ const HUB_ORGS: Readonly<Record<string, readonly string[]>> = {
 
 /** Hub orgs the maker uploads under, so "alibaba" reaches Qwen's own repos. */
 export function providerHubOrgs(provider: ProviderLogo): readonly string[] {
-  return provider.owners ?? HUB_ORGS[provider.id] ?? [];
+  return (provider.owners ?? HUB_ORGS[provider.id]);
 }
 
 const normalize = (value: string) => value.toLowerCase().replace(/[\s._-]+/g, "");
@@ -59,7 +59,7 @@ export function matchProviderByQuery(query: string): ProviderLogo | null {
       provider.id,
       provider.name,
       ...(provider.owners ?? []),
-      ...(QUERY_ALIASES[provider.id] ?? []),
+      ...((QUERY_ALIASES[provider.id])),
     ];
     if (names.some((name) => normalize(name) === needle)) {
       return provider;

@@ -5,7 +5,9 @@ import { AUTH_SESSION_CLEARED_EVENT } from "../../auth/session-events.ts";
 import { reconcileLegacyHfToken } from "../../credentials/reconciliation.ts";
 
 import { create } from "zustand";
-type HfTokenApi = typeof import("../api/hf-token-api");
+import type * as HfTokenApiModule from "../api/hf-token-api";
+
+type HfTokenApi = typeof HfTokenApiModule;
 
 async function loadHfTokenApi(): Promise<HfTokenApi> {
   return await import("../api/hf-token-api");
@@ -40,7 +42,7 @@ function loadLegacyToken(): string {
     const legacy = window.localStorage.getItem(LEGACY_TRAINING_KEY);
     if (!legacy) return stagedLegacyToken;
     const parsed = JSON.parse(legacy) as { state?: Record<string, unknown> };
-    const token = parsed?.state?.hfToken;
+    const token = parsed.state?.hfToken;
     return typeof token === "string"
       ? normalizeHfToken(token)
       : stagedLegacyToken;

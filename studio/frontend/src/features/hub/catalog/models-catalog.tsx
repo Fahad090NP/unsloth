@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { usePlatformStore } from "@/config/env";
-import type { HubFailure } from "@/features/hub/lib/network";
+import type { HubFailure } from "@/features/hub";
 import { cn } from "@/lib/utils";
 import {
   type ReactNode,

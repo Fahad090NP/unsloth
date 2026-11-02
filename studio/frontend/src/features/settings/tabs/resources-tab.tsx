@@ -48,7 +48,7 @@ import {
   loadHuggingFaceCacheSettings,
   updateHuggingFaceCacheSettings,
 } from "../api/hugging-face-cache";
-import { InferenceEnginesSection } from "@/features/model-picker/components/inference-engines";
+import { InferenceEnginesSection } from "@/features/model-picker";
 import { useSettingsDialogStore } from "../stores/settings-dialog-store";
 import { useIsAccountOwner } from "@/features/auth";
 import {
@@ -312,11 +312,11 @@ export function ResourcesTab() {
   const [cacheBrowserOpen, setCacheBrowserOpen] = useState(false);
   const [cacheSaving, setCacheSaving] = useState(false);
   const cache = useCacheStorage();
-  const displayedGpu = systemInfo.gpu?.available
+  const displayedGpu = systemInfo.gpu.available
     ? systemInfo.gpu
     : (systemInfo.inference_gpu ?? systemInfo.gpu);
   const separateInferenceGpu =
-    systemInfo.gpu?.available &&
+    systemInfo.gpu.available &&
     systemInfo.inference_gpu &&
     systemInfo.inference_gpu.backend !== systemInfo.gpu.backend
       ? systemInfo.inference_gpu
@@ -327,7 +327,7 @@ export function ResourcesTab() {
     ? aggregateGpuMemoryTotalGb(inferenceDisplay.usageDevices)
     : 0;
   const telemetryByOrdinal = new Map(
-    displayedGpu?.available
+    displayedGpu.available
       ? gpuTelemetryRows(
           displayedGpu.devices,
           new Set(MONITOR_DETAIL_METRICS),
@@ -337,7 +337,7 @@ export function ResourcesTab() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadHuggingFaceCacheSettings()
+    (loadHuggingFaceCacheSettings()
       .then((settings) => {
         if (cancelled) return;
         setHfCache(settings);
@@ -346,7 +346,7 @@ export function ResourcesTab() {
       .catch(() => {
         if (cancelled) return;
         setHfCacheLoaded(true);
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -486,13 +486,13 @@ export function ResourcesTab() {
   };
 
   const cpuCoresLabel =
-    systemInfo.cpu?.logical_count && systemInfo.cpu?.physical_count
+    systemInfo.cpu.logical_count && systemInfo.cpu.physical_count
       ? t("settings.resources.liveMonitor.cpuCores", {
           logical: systemInfo.cpu.logical_count,
           physical: systemInfo.cpu.physical_count,
         })
       : t("settings.resources.environment.unknown");
-  const cpuFrequencyLabel = formatFrequency(systemInfo.cpu?.frequency_mhz);
+  const cpuFrequencyLabel = formatFrequency(systemInfo.cpu.frequency_mhz);
   const hasGpu =
     (displayedGpu?.available ?? false) && metrics.devices.length > 0;
   // The placeholder reads as CPU-only, so say checking or empty until the host is read.
@@ -688,7 +688,7 @@ export function ResourcesTab() {
               hostUnread
                 ? hostUnreadDetail
                 : t("settings.resources.liveMonitor.free", {
-                    value: formatGiB(systemInfo.memory?.available_gb),
+                    value: formatGiB(systemInfo.memory.available_gb),
                   })
             }
             percent={hostUnread ? null : (systemInfo.memory?.percent_used ?? 0)}
@@ -987,13 +987,13 @@ export function ResourcesTab() {
                     index: ordinal,
                   })}, ${backendLabel}`;
             const telemetryParts = [
-              telemetry?.loadPct != null
+              (telemetry?.loadPct !== null && telemetry?.loadPct !== undefined)
                 ? `${t("settings.resources.liveMonitor.gpuLoad")} ${formatPercent(telemetry.loadPct)}`
                 : null,
-              telemetry?.temperatureC != null
+              (telemetry?.temperatureC !== null && telemetry?.temperatureC !== undefined)
                 ? formatTemperature(telemetry.temperatureC)
                 : null,
-              telemetry?.powerDrawW != null
+              (telemetry?.powerDrawW !== null && telemetry?.powerDrawW !== undefined)
                 ? formatPower(telemetry.powerDrawW, telemetry.powerLimitW)
                 : null,
             ].filter((part): part is string => Boolean(part));
@@ -1169,7 +1169,7 @@ export function ResourcesTab() {
               variant="outline"
               size="sm"
               disabled={cache.loading || cache.clearing}
-              onClick={() => void cache.refresh({ refresh: true })}
+              onClick={() => { (cache.refresh({ refresh: true })).catch(() => { /* noop */ }); }}
             >
               {t("settings.resources.storage.refreshAction")}
             </Button>
@@ -1209,7 +1209,7 @@ export function ResourcesTab() {
                 variant="ghost"
                 size="sm"
                 disabled={cacheSaving}
-                onClick={() => void saveCacheFolder(null)}
+                onClick={() => { (saveCacheFolder(null)).catch(() => { /* noop */ }); }}
               >
                 {t("settings.resources.storage.resetAction")}
               </Button>
@@ -1218,7 +1218,7 @@ export function ResourcesTab() {
               variant="outline"
               size="sm"
               disabled={!hfCache}
-              onClick={() => void handleCacheFolder()}
+              onClick={() => { (handleCacheFolder()).catch(() => { /* noop */ }); }}
             >
               {isTauri
                 ? t("settings.resources.storage.openAction")
@@ -1228,7 +1228,7 @@ export function ResourcesTab() {
               variant="outline"
               size="sm"
               disabled={!hfCache?.editable || cacheSaving}
-              onClick={() => void changeCacheFolder()}
+              onClick={() => { (changeCacheFolder()).catch(() => { /* noop */ }); }}
             >
               {t("settings.resources.storage.changeAction")}
             </Button>
@@ -1240,7 +1240,7 @@ export function ResourcesTab() {
       <FolderBrowser
         open={!isTauri && cacheBrowserOpen}
         onOpenChange={setCacheBrowserOpen}
-        onSelect={(path) => void saveCacheFolder(path)}
+        onSelect={(path) => { (saveCacheFolder(path)).catch(() => { /* noop */ }); }}
         initialPath={hfCache?.cacheHome}
         title={t("settings.resources.storage.chooseTitle")}
         confirmLabel={t("settings.resources.storage.chooseAction")}
@@ -1308,7 +1308,7 @@ export function EnvironmentSection({
       />
       <InfoRow
         label={t("settings.resources.environment.processMemory")}
-        value={hostReading(formatMb(systemInfo.memory?.process_used_mb))}
+        value={hostReading(formatMb(systemInfo.memory.process_used_mb))}
       />
     </SettingsSection>
   );
@@ -1319,7 +1319,7 @@ export function StandaloneEnvironmentSection() {
   return (
     <EnvironmentSection
       systemInfo={systemInfo}
-      backendLabel={(systemInfo.device_backend ?? "cpu").toUpperCase()}
+      backendLabel={((systemInfo.device_backend)).toUpperCase()}
     />
   );
 }

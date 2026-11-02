@@ -41,7 +41,7 @@ export function useLowDiskNotice(): void {
       );
     });
     // force: a disk already full before Studio started is exactly who this is for.
-    void checkDiskSpace({ force: true });
+    (checkDiskSpace({ force: true })).catch(() => { /* noop */ });
     return () => { setLowDiskNotifier(null); };
   }, [isOwner, openDialog, t]);
 }

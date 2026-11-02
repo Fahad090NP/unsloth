@@ -69,7 +69,7 @@ export function DesktopRepairControl(): ReactElement | null {
               onClick={() => {
                 // Close first, or the dialog would sit on top of the repairing screen.
                 setConfirmOpen(false);
-                void repair.repairInstall();
+                (repair.repairInstall()).catch(() => { /* noop */ });
               }}
               variant="destructive"
             >

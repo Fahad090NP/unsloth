@@ -319,7 +319,7 @@ export function useConvertGeneration({
         return [
           {
             label: "Transcribe it",
-            onClick: () => void transcriber.transcribe(source),
+            onClick: () => { (transcriber.transcribe(source)).catch(() => { /* noop */ }); },
           },
           {
             label: "type it",

@@ -5,8 +5,8 @@ import {
   type InventoryResourceFormatHint,
   findCompleteHfCacheLocalRow,
   resolveInventoryResource,
-} from "@/features/hub/inventory";
-import type { HfModelResult } from "@/features/hub/hooks/use-hub-model-search";
+} from "@/features/hub";
+import type { HfModelResult } from "@/features/hub";
 import {
   useCallback,
   useDeferredValue,
@@ -17,7 +17,7 @@ import {
   resolveDiscoverSelection,
   resolveDownloadedSelection,
 } from "../lib/selection-resolution";
-import { ownerOf, repoOf } from "@/features/hub/lib/format";
+import { ownerOf, repoOf } from "@/features/hub";
 import { buildDiscoverRows, isGgufLike } from "../lib/view-models";
 import type {
   CachedInventoryRow,
@@ -54,10 +54,9 @@ function preferredLocalRow(
   rows: readonly LocalInventoryRow[],
 ): LocalInventoryRow | null {
   return (
-    rows.find((row) => !row.partial && row.source !== "hf_cache") ??
+    (rows.find((row) => !row.partial && row.source !== "hf_cache") ??
     rows.find((row) => !row.partial) ??
-    rows[0] ??
-    null
+    rows[0])
   );
 }
 
@@ -298,8 +297,7 @@ export function useModelsSelection({
       selectedHfResult?.id.toLowerCase() === selectedDiscoverRow.id.toLowerCase()
     ) {
       return (
-        buildDiscoverRows([selectedHfResult], cachedRows, localRows)[0] ??
-        selectedDiscoverRow
+        (buildDiscoverRows([selectedHfResult], cachedRows, localRows)[0])
       );
     }
     return selectedDiscoverRow;

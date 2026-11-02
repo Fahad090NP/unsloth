@@ -124,7 +124,7 @@ export function OnDeviceFoldersDialog({
   const scannedAt = localModels.refreshedAt;
   useEffect(() => {
     if (open && scannedAt !== null) {
-      void refreshScanFolders().catch(() => undefined);
+      (refreshScanFolders().catch(() => undefined)).catch(() => { /* noop */ });
     }
   }, [open, scannedAt]);
 
@@ -141,7 +141,7 @@ export function OnDeviceFoldersDialog({
         if (cancelled) return;
         setDownloadCache(settings);
         setDownloadCacheLoaded(true);
-      });
+      }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -264,11 +264,11 @@ export function OnDeviceFoldersDialog({
             onClick: () => {
               addScanFolderToStore(folder.path, Boolean(folder.recursive))
                 .then(() => onInventoryChange?.())
-                .catch((err) =>
+                .catch((err: unknown) =>
                   toast.error("Couldn't restore folder", {
                     description: formatError(err),
                   }),
-                );
+                ).catch(() => { /* noop */ });
             },
           },
         });
@@ -336,7 +336,7 @@ export function OnDeviceFoldersDialog({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => void changeDownloadLocation()}
+                    onClick={() => { (changeDownloadLocation()).catch(() => { /* noop */ }); }}
                     disabled={!downloadCache?.editable || downloadSaving}
                   >
                     {downloadSaving ? (
@@ -357,7 +357,7 @@ export function OnDeviceFoldersDialog({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => void saveDownloadLocation(null)}
+                      onClick={() => { (saveDownloadLocation(null)).catch(() => { /* noop */ }); }}
                       disabled={downloadSaving}
                       className="h-9 rounded-full px-3 text-ui-12p5 text-muted-foreground"
                     >
@@ -448,7 +448,7 @@ export function OnDeviceFoldersDialog({
                       type="button"
                       aria-label="Refresh folders"
                       onClick={() =>
-                        void refreshScanFolders().catch(() => undefined)
+                        { (refreshScanFolders().catch(() => undefined)).catch(() => { /* noop */ }); }
                       }
                       disabled={loading}
                       className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
@@ -471,7 +471,7 @@ export function OnDeviceFoldersDialog({
                   className="flex flex-col gap-2 sm:flex-row sm:items-center"
                   onSubmit={(event) => {
                     event.preventDefault();
-                    void handleAdd(path, "input");
+                    (handleAdd(path, "input")).catch(() => { /* noop */ });
                   }}
                 >
                   <Input
@@ -495,7 +495,7 @@ export function OnDeviceFoldersDialog({
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => void browseLocations()}
+                      onClick={() => { (browseLocations()).catch(() => { /* noop */ }); }}
                       disabled={pending !== null}
                     >
                       <HugeiconsIcon
@@ -585,13 +585,13 @@ export function OnDeviceFoldersDialog({
       <FolderBrowser
         open={browserOpen}
         onOpenChange={setBrowserOpen}
-        onSelect={(selectedPath) => void handleAdd(selectedPath, "browse")}
+        onSelect={(selectedPath) => { (handleAdd(selectedPath, "browse")).catch(() => { /* noop */ }); }}
       />
 
       <FolderBrowser
         open={!isTauri && downloadBrowserOpen}
         onOpenChange={setDownloadBrowserOpen}
-        onSelect={(selectedPath) => void saveDownloadLocation(selectedPath)}
+        onSelect={(selectedPath) => { (saveDownloadLocation(selectedPath)).catch(() => { /* noop */ }); }}
         initialPath={downloadCache?.cacheHome}
         title="Choose the Models folder"
         confirmLabel="Use for new downloads"

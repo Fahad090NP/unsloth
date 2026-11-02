@@ -170,7 +170,7 @@ function StorageSection() {
     setView("list");
     // Already on that tab, the view would keep its filters and show less than counted.
     restartLibrary();
-    void navigate({ to: "/library", search: link });
+    (navigate({ to: "/library", search: link })).catch(() => { /* noop */ });
   };
 
   return (
@@ -265,9 +265,11 @@ function LocationsSection() {
   const [resettingAway, setResettingAway] = useState<LibraryLocation | null>(null);
   useEffect(() => {
     let cancelled = false;
-    void getLibraryLocations()
+    (getLibraryLocations()
       .catch((): LibraryLocation[] => [])
-      .then((next) => !cancelled && setLocations(next));
+      .then((next) => {
+        if (!cancelled) setLocations(next);
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -286,10 +288,14 @@ function LocationsSection() {
       if (location.key === "images" || location.key === "videos" || location.key === "audio") {
         notifyGalleryChanged(location.key);
       }
-      void import("@/features/library/store").then(({ useLibraryStore }) => {
-        const library = useLibraryStore.getState();
-        if (library.status !== "idle") void library.refresh();
-      });
+      import("@/features/library/store")
+        .then(({ useLibraryStore }) => {
+          const library = useLibraryStore.getState();
+          if (library.status !== "idle") {
+            library.refresh().catch(() => { /* noop */ });
+          }
+        })
+        .catch(() => { /* noop */ });
       toast.success(t("settings.library.locationMoved", { name }), {
         id,
         description: result.leftBehind
@@ -343,11 +349,13 @@ function LocationsSection() {
                   variant="outline"
                   size="sm"
                   disabled={moving}
-                  onClick={() =>
-                    { location.available === false
-                      ? setResettingAway(location)
-                      : void move(location, null); }
-                  }
+                  onClick={() => {
+                    if (location.available === false) {
+                      setResettingAway(location);
+                    } else {
+                      move(location, null).catch(() => { /* noop */ });
+                    }
+                  }}
                 >
                   {t("settings.library.locationReset")}
                 </Button>
@@ -367,9 +375,9 @@ function LocationsSection() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    void revealLibraryLocation(location.key).catch((error: unknown) =>
+                    { (revealLibraryLocation(location.key).catch((error: unknown) =>
                       toast.error(t("settings.library.revealFailed"), { description: errorMessage(error) }),
-                    )
+                    )).catch(() => { /* noop */ }); }
                   }
                 >
                   {revealLabel}
@@ -381,9 +389,11 @@ function LocationsSection() {
       )}
       <FolderBrowser
         open={picking !== null}
-        onOpenChange={(next) => !next && setPicking(null)}
+        onOpenChange={(next) => {
+          if (!next) setPicking(null);
+        }}
         onSelect={(path) => {
-          if (picking) void move(picking, path);
+          if (picking) (move(picking, path)).catch(() => { /* noop */ });
         }}
         initialPath={picking ? parentFolder(picking.path) : undefined}
         title={picking ? t("settings.library.locationMoveTitle", { name: nameOf(picking) }) : ""}
@@ -393,7 +403,9 @@ function LocationsSection() {
       />
       <AlertDialog
         open={resettingAway !== null}
-        onOpenChange={(open) => !open && setResettingAway(null)}
+        onOpenChange={(open) => {
+          if (!open) setResettingAway(null);
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -412,7 +424,7 @@ function LocationsSection() {
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (resettingAway) void move(resettingAway, null);
+                if (resettingAway) (move(resettingAway, null)).catch(() => { /* noop */ });
                 setResettingAway(null);
               }}
             >
@@ -429,12 +441,17 @@ export function LibraryTab() {
   const t = useT();
   const settings = useLibrarySettingsStore();
 
-  const choice = <K extends keyof typeof CHOICES>(key: K, labelKey: TranslationKey, descriptionKey: TranslationKey) => (
+  const choice = <K extends keyof typeof CHOICES>(
+    key: K,
+    labelKey: TranslationKey,
+    descriptionKey: TranslationKey,
+    options: (typeof CHOICES)[K] = CHOICES[key],
+  ) => (
     <SettingsRow label={t(labelKey)} description={t(descriptionKey)}>
       <ChoiceSelect
         label={t(labelKey)}
         value={settings[key]}
-        options={CHOICES[key].map(([option, text]) => [option, t(text)])}
+        options={options.map(([option, text]) => [option, t(text)])}
         onChange={(value) => { settings.set({ [key]: value }); }}
       />
     </SettingsRow>
@@ -490,7 +507,7 @@ export function LibraryTab() {
       >
         {LIBRARY_TABS.map((tab) => {
           const label = t(TAB_LABELS[tab]);
-          const visibility = settings.tabs[tab] ?? "always";
+          const visibility = (settings.tabs[tab]);
           const setVisibility = (next: LibraryTabVisibility) =>
             { settings.set({ tabs: { ...settings.tabs, [tab]: next } }); };
           return (

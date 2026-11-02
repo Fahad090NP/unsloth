@@ -64,7 +64,7 @@ function LabelTile({
       })
       .catch(() => {
         /* a missing thumbnail just leaves the placeholder */
-      });
+      }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
       if (url) URL.revokeObjectURL(url);
@@ -137,7 +137,7 @@ function LabelTile({
         <Textarea
           value={caption}
           onChange={(e) => { setCaption(e.target.value); }}
-          onBlur={() => void save()}
+          onBlur={() => { (save()).catch(() => { /* noop */ }); }}
           rows={2}
           spellCheck={false}
           placeholder="Describe this image..."
@@ -187,9 +187,9 @@ export function DatasetLabelingGrid({
       .then((r) => {
         if (!cancelled) setRecords(imageRecordsOnly(r.images));
       })
-      .catch((e) => {
+      .catch((e: unknown) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to list images");
-      });
+      }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };

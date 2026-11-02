@@ -54,7 +54,7 @@ export function normalizeSttModel(value: unknown): SttModel {
 }
 
 export function getSttModelRepo(model: SttModel): string {
-  return STT_MODEL_REPOS[model as DefaultSttModel] ?? normalizeSttModel(model);
+  return (STT_MODEL_REPOS[model as DefaultSttModel]);
 }
 
 // Custom `.en` checkpoints are treated as English-only.
@@ -282,7 +282,7 @@ export const useVoiceSettingsStore = create<VoiceSettingsState>()(
         set((state) => {
           const dictionary = [...state.dictionary];
           if (index < 0 || index >= dictionary.length) return state;
-          const trimmed = dictionary[index]?.trim() ?? "";
+          const trimmed = (dictionary[index]?.trim())
           if (trimmed) {
             dictionary[index] = trimmed;
           } else {

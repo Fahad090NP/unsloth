@@ -12,15 +12,15 @@ import { usePlatformStore } from "@/config/env";
 import {
   type UnslothSupport,
   classifyUnslothSupport,
-} from "@/features/hub/hooks/use-hub-model-search";
-import { useOnlineStatus } from "@/features/hub/hooks/use-online-status";
+} from "@/features/hub";
+import { useOnlineStatus } from "@/features/hub";
 import {
   formatBytes,
   formatRelativeShort,
   formatShortDate,
-} from "@/features/hub/lib/format";
-import { useHfTokenStore } from "@/features/hub/stores/hf-token-store";
-import { taskForMediaPick } from "@/features/model-picker/components/model-selector/audio-picker-policy";
+} from "@/features/hub";
+import { useHfTokenStore } from "@/features/hub";
+import { taskForMediaPick } from "@/features/model-picker";
 import { Tick02Icon } from "@/lib/tick-icon";
 import { cn, formatCompact } from "@/lib/utils";
 import {
@@ -567,7 +567,7 @@ export const ModelInspector = memo(function ModelInspector({
   const libraryLabel = isDataset ? null : formatLibrary(model.libraryName);
   const gatedAccess = model.gated !== false && model.gated !== undefined;
   const downloadsTooltip =
-    model.downloadsAllTime != null ? (
+    (model.downloadsAllTime !== null && model.downloadsAllTime !== undefined) ? (
       <>
         Downloads (30 days)
         <span className="mt-1 block text-ui-10p5 font-normal text-(--tooltip-muted)">
@@ -835,14 +835,14 @@ export const ModelInspector = memo(function ModelInspector({
               icon={LibrariesIcon}
             />
           )}
-          {isDataset && datasetSize?.numRows != null && (
+          {isDataset && (datasetSize?.numRows !== null && datasetSize?.numRows !== undefined) && (
             <StatRow
               label="Rows"
               value={formatCompact(datasetSize.numRows)}
               icon={Database02Icon}
             />
           )}
-          {isDataset && datasetSizeBytes != null && (
+          {isDataset && (datasetSizeBytes !== null && datasetSizeBytes !== undefined) && (
             <StatRow
               label="Size"
               value={formatBytes(datasetSizeBytes)}
@@ -850,7 +850,7 @@ export const ModelInspector = memo(function ModelInspector({
             />
           )}
           {isDataset &&
-            datasetSize?.numSplits != null &&
+            (datasetSize?.numSplits !== null && datasetSize?.numSplits !== undefined) &&
             datasetSize.numSplits > 0 && (
               <StatRow
                 label="Splits"

@@ -269,12 +269,12 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
         if (cancelled) return;
         retryTimer = window.setTimeout(() => {
           retryDelayMs = Math.min(retryDelayMs * 2, 30_000);
-          void probeAvailability();
+          (probeAvailability()).catch(() => { /* noop */ });
         }, retryDelayMs);
       }
     };
 
-    void probeAvailability();
+    (probeAvailability()).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
       if (retryTimer !== undefined) window.clearTimeout(retryTimer);
@@ -307,7 +307,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
   useEffect(() => {
     if (subpage !== "main") return;
     let cancelled = false;
-    void countAllChats().then(
+    (countAllChats().then(
       (next) => {
         if (!cancelled) setCount(next);
       },
@@ -317,7 +317,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
           description: error instanceof Error ? error.message : String(error),
         });
       },
-    );
+    )).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -335,7 +335,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
 
   useEffect(() => {
     for (const source of EXTERNAL_IMPORT_SOURCES) {
-      void refreshExternalStatus(source);
+      (refreshExternalStatus(source)).catch(() => { /* noop */ });
     }
   }, []);
 
@@ -490,7 +490,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
     setArchiving(true);
     try {
       const archived = await archiveAllChatItems(openChatId, (view) => {
-        navigate({ to: "/chat", search: { new: view.newThreadNonce } });
+        navigate({ to: "/chat", search: { new: view.newThreadNonce } }).catch(() => { /* noop */ });
       });
       setArchiveConfirmOpen(false);
       toast.success(
@@ -533,7 +533,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
       const recipeId = await createFineTuneRecipeFromChats(fineTuneFormat);
       if (!recipeId) return;
       useSettingsDialogStore.getState().closeDialog();
-      void navigate({ to: "/data-recipes/$recipeId", params: { recipeId } });
+      (navigate({ to: "/data-recipes/$recipeId", params: { recipeId } })).catch(() => { /* noop */ });
     } catch (error) {
       toast.error(t("settings.data.fineTuneRecipeFailed"), {
         description: error instanceof Error ? error.message : undefined,
@@ -553,7 +553,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
       const loaded = await loadFineTuneDatasetInTrainTab(fineTuneFormat);
       if (!loaded) return;
       useSettingsDialogStore.getState().closeDialog();
-      void navigate({ to: "/studio" });
+      (navigate({ to: "/studio" })).catch(() => { /* noop */ });
     } catch (error) {
       toast.error(t("settings.data.fineTuneTrainFailed"), {
         description: error instanceof Error ? error.message : undefined,
@@ -572,9 +572,9 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
   const runFineTuneAction = () => {
     if (fineTuneAction === "train") {
       if (chatOnly) return;
-      void handleUseInTraining();
-    } else if (fineTuneAction === "recipes") void handleOpenInRecipes();
-    else void handleFineTuneExport();
+      (handleUseInTraining()).catch(() => { /* noop */ });
+    } else if (fineTuneAction === "recipes") (handleOpenInRecipes()).catch(() => { /* noop */ });
+    else (handleFineTuneExport()).catch(() => { /* noop */ });
   };
 
   const openClearConfirmation = (deleteFiles?: boolean) => {
@@ -796,7 +796,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
               useSettingsDialogStore.getState().closeDialog();
               // Already on All, the view would keep its search and filters.
               useLibraryVisitStore.getState().restart();
-              void navigate({ to: "/library", search: { show: "all" } });
+              (navigate({ to: "/library", search: { show: "all" } })).catch(() => { /* noop */ });
             }}
           >
             <HugeiconsIcon icon={LibrariesIcon} strokeWidth={1.75} className="size-4" />
@@ -884,7 +884,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => void handleImportClick()}
+            onClick={() => { (handleImportClick()).catch(() => { /* noop */ }); }}
             // A second import would interleave streams and, on desktop, retire the running handle.
             disabled={importing}
           >
@@ -896,10 +896,10 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
             type="file"
             accept=".json,.jsonl,.ndjson,.csv,.md,.markdown"
             className="hidden"
-            onChange={(e) => {
+            onChange={(eParam) => { const e = eParam;
               const file = e.target.files?.[0];
               e.target.value = "";
-              if (file) void handleImport(fileImportSource(file));
+              if (file) (handleImport(fileImportSource(file))).catch(() => { /* noop */ });
             }}
           />
         </SettingsRow>
@@ -917,7 +917,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => void handleExternalImport(source)}
+                onClick={() => { (handleExternalImport(source)).catch(() => { /* noop */ }); }}
                 disabled={externalImporting !== null}
               >
                 {externalImporting === source && (
@@ -976,7 +976,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
                       <DropdownMenuItem
                         key={`${scope}-m-${fmt}`}
                         onSelect={() =>
-                          void bulkExportConversationsByScope(scope, fmt, true)
+                          { (bulkExportConversationsByScope(scope, fmt, true)).catch(() => { /* noop */ }); }
                         }
                       >
                         {fmtLabel} {t("settings.chat.exportCombinedSuffix")}
@@ -987,7 +987,7 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
                       <DropdownMenuItem
                         key={`${scope}-s-${fmt}`}
                         onSelect={() =>
-                          void bulkExportConversationsByScope(scope, fmt, false)
+                          { (bulkExportConversationsByScope(scope, fmt, false)).catch(() => { /* noop */ }); }
                         }
                       >
                         {fmtLabel} {t("settings.chat.exportPerChatSuffix")}

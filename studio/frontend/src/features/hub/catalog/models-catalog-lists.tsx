@@ -15,7 +15,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { Ref } from "react";
-import type { HubFailure } from "@/features/hub/lib/network";
+import type { HubFailure } from "@/features/hub";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   inventoryRowMatches,
@@ -506,8 +506,8 @@ export function DownloadedList({
                     height: pinnedCellHeightPx,
                     opacity: dragRowKey === rowKey ? 0.4 : undefined,
                   }}
-                  draggable={itemPinKey != null}
-                  onDragStart={(event) => {
+                  draggable={(itemPinKey !== null && itemPinKey !== undefined)}
+                  onDragStart={(eventParam) => { const event = eventParam;
                     if (!itemPinKey) return;
                     event.dataTransfer.effectAllowed = "move";
                     // Firefox will not start a drag without data.

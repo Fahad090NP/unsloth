@@ -225,7 +225,7 @@ export const EDIT_ADAPTERS: Readonly<Record<string, EditAdapter>> = {
       if (mode === "delivery") {
         const part: AudioRunEditPart = { mode: "delivery" };
         if (!isUnchangedSpeed(delivery?.speed))
-          part.speed = Math.round((delivery?.speed!) * 100) / 100;
+          part.speed = Math.round((delivery?.speed ?? 0) * 100) / 100;
         if (delivery && delivery.pitchSteps > 0)
           part.pitch_steps = Math.round(delivery.pitchSteps);
         return part;

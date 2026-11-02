@@ -199,9 +199,9 @@ function serverRowSatisfiesHint(
     return false;
   }
   const hintTimestamp = normalizeTimestamp(hint.startedAt ?? hint.createdAt);
-  if (hintTimestamp != null) {
+  if ((hintTimestamp !== null && hintTimestamp !== undefined)) {
     const rowTimestamp = normalizeTimestamp(row.last_modified);
-    if (rowTimestamp != null && rowTimestamp >= hintTimestamp) {
+    if ((rowTimestamp !== null && rowTimestamp !== undefined) && rowTimestamp >= hintTimestamp) {
       return true;
     }
     return Boolean(
@@ -211,7 +211,7 @@ function serverRowSatisfiesHint(
   return !hint.bytes || rowSizeBytes(row) >= hint.bytes;
 }
 
-export function reconcileInventoryHints<T extends InventoryHintRow>({
+export function reconcileInventoryHints({
   pending,
   kind,
   rows,
@@ -220,7 +220,7 @@ export function reconcileInventoryHints<T extends InventoryHintRow>({
 }: {
   pending: PendingInventoryHints;
   kind: InventoryHint["kind"];
-  rows: T[];
+  rows: InventoryHintRow[];
   previouslyObserved: ReadonlySet<string>;
   refreshStartedAt?: number | null;
 }): InventoryHintReconciliation {

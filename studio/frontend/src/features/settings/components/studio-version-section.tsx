@@ -82,7 +82,7 @@ export function StudioVersionSection({
       if (canceled) return;
       if (next.packageVersion) setPackageVersion(next.packageVersion);
       if (next.studioVersion) setStudioVersion(next.studioVersion);
-    });
+    }).catch(() => { /* noop */ });
     return () => {
       canceled = true;
     };

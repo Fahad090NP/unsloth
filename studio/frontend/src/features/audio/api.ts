@@ -9,6 +9,7 @@ import {
   readFastApiError,
 } from "@/lib/format-fastapi-error";
 import type { AudioCatalogResponse } from "./audio-catalog-rows";
+import type { TranscriptRecord } from "./transcript-stream";
 import {
   type AudioRunRequest,
   type AudioSourceRef,
@@ -300,7 +301,7 @@ export async function listTranscripts(
   archived = false,
   before?: string | null,
 ): Promise<{
-  transcripts: import("./transcript-stream").TranscriptRecord[];
+  transcripts: TranscriptRecord[];
   next_cursor: string | null;
 }> {
   const params = new URLSearchParams({

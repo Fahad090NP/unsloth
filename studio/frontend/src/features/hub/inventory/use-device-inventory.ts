@@ -157,7 +157,7 @@ function logInventorySourceFailure(
   source: DeviceInventorySource,
   error: unknown,
 ): void {
-  if (!import.meta.env?.DEV) {
+  if (!import.meta.env.DEV) {
     return;
   }
   console.warn(`Inventory source "${source}" failed to refresh:`, error);
@@ -311,7 +311,7 @@ export function fetchInventorySource<K extends DeviceInventorySource>(
       }
       return rows;
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       if (useDeviceInventoryStore.getState()[source].key === key) {
         updateSourceState(source, {
           loading: false,
@@ -449,7 +449,7 @@ export function useDeviceInventorySources<
       );
       for (const [index, result] of results.entries()) {
         if (result.status === "rejected") {
-          const source = requests[index]?.source;
+          const source = requests[index].source;
           if (source) logInventorySourceFailure(source, result.reason);
         }
       }
@@ -466,7 +466,7 @@ export function useDeviceInventorySources<
         hfToken,
         tokenFingerprint,
         inventoryVersion,
-      }).catch((error) => { logInventorySourceFailure(source, error); });
+      }).catch((error: unknown) => { logInventorySourceFailure(source, error); });
     }
   }, [enabled, sourceList, hfToken, tokenFingerprint, inventoryVersion]);
 

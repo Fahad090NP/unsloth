@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { useEffect, useState } from "react";
-import { formatBytes } from "@/features/hub/lib/format";
+import { formatBytes } from "@/features/hub";
 import { fetchDeleteImpact, type DeleteImpact } from "../inventory";
 import { useHfTokenStore } from "../stores/hf-token-store";
 
@@ -21,14 +21,14 @@ export function useDeleteImpact(
       return;
     }
     let cancelled = false;
-    void fetchDeleteImpact(
+    (fetchDeleteImpact(
       repoId,
       variant ?? undefined,
       cachePath ?? undefined,
       hfToken || undefined,
     ).then((result) => {
       if (!cancelled) setImpact(result);
-    });
+    })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };

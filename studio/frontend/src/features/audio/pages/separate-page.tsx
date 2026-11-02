@@ -6,7 +6,7 @@ import {
   GalleryPinBadge,
 } from "@/components/gallery-item-menu";
 import { Button } from "@/components/ui/button";
-import type { ModelOption } from "@/features/model-picker/components/model-selector/types";
+import type { ModelOption } from "@/features/model-picker";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Download01Icon } from "@hugeicons/core-free-icons";
@@ -155,7 +155,7 @@ export function SeparateRail({
       {...props}
       musicGeneration={false}
       prompt=""
-      setPrompt={() => {}}
+      setPrompt={() => { /* noop */ }}
       samplingControls={false}
       audioOptionSpecs={[]}
       inputs={
@@ -296,13 +296,13 @@ function SelectedSeparation({
           const clip = group.stems.find((item) => item.id === clipId);
           const src = sources.srcById[clipId];
           if (!clip || !src) return;
-          void saveAudio(
+          (saveAudio(
             stemFileName(group.title, stemLabel(clip.role ?? "")),
             src,
             () => fetchAudioBlob(clip.url),
-          );
+          )).catch(() => { /* noop */ });
         }}
-        onDownloadAll={() => void downloadGroup(group)}
+        onDownloadAll={() => { (downloadGroup(group)).catch(() => { /* noop */ }); }}
         onSend={(target, clipId) => {
           const clip = group.stems.find((item) => item.id === clipId);
           if (!clip) return;
@@ -387,7 +387,7 @@ export function SeparateOutput({
   );
   // biome-ignore lint/correctness/useExhaustiveDependencies: each loaded page re-checks, in case the run is still cut.
   useEffect(() => {
-    if (tailHidden) void loadMore();
+    if (tailHidden) (loadMore()).catch(() => { /* noop */ });
   }, [tailHidden, clips, loadMore]);
   const selected =
     groups.find((group) =>
@@ -408,7 +408,7 @@ export function SeparateOutput({
   const picks = modelReady || !onPickModel ? [] : recommendedModels.slice(0, 3);
 
   const pinGroup = (group: SeparationGroup, pinned: boolean) => {
-    for (const clip of group.stems) void handleTogglePin(clip.id, pinned);
+    for (const clip of group.stems) (handleTogglePin(clip.id, pinned)).catch(() => { /* noop */ });
   };
   const archiveGroup = async (group: SeparationGroup) => {
     const [last, ...rest] = [...group.stems].reverse();
@@ -531,7 +531,7 @@ export function SeparateOutput({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => void handleClearGallery()}
+              onClick={() => { (handleClearGallery()).catch(() => { /* noop */ }); }}
             >
               Clear all
             </Button>
@@ -544,7 +544,7 @@ export function SeparateOutput({
                 hasMore &&
                 el.scrollTop + el.clientHeight >= el.scrollHeight - 40
               ) {
-                void loadMore();
+                (loadMore()).catch(() => { /* noop */ });
               }
             }}
           >
@@ -604,9 +604,9 @@ export function SeparateOutput({
                     pinned={group.pinned}
                     archived={false}
                     onTogglePin={() => { pinGroup(group, !group.pinned); }}
-                    onToggleArchive={() => void archiveGroup(group)}
-                    onDelete={() => void deleteGroup(group)}
-                    onDownload={() => void downloadGroup(group)}
+                    onToggleArchive={() => { (archiveGroup(group)).catch(() => { /* noop */ }); }}
+                    onDelete={() => { (deleteGroup(group)).catch(() => { /* noop */ }); }}
+                    onDownload={() => { (downloadGroup(group)).catch(() => { /* noop */ }); }}
                     onAddToProject={async (projectId) => {
                       let already = true;
                       for (const clip of group.stems) {

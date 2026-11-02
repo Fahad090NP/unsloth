@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { isAudioCppFolderId } from "@/features/audio/audio-cpp-catalog";
+import { isAudioCppFolderId } from "@/features/audio";
 import {
   type SttEngine,
   cancelSttDownload,
@@ -119,7 +119,7 @@ function settle(
     // An adopted download's quant is unknown; it can only be what an unpinned row runs.
     (tracked === undefined ? variant === null : tracked === variant)
   ) {
-    void loadAndAnnounce(model, engine, variant);
+    (loadAndAnnounce(model, engine, variant)).catch(() => { /* noop */ });
   }
 }
 
@@ -276,10 +276,10 @@ function trackSttDownloadNow(
   if (wasTracking) return;
   const startedAt = Date.now();
   const timer = window.setInterval(() => {
-    void poll(model, startedAt, resolvedEngine);
+    (poll(model, startedAt, resolvedEngine)).catch(() => { /* noop */ });
   }, POLL_MS);
   trackers.start(key, () => { window.clearInterval(timer); });
-  void poll(model, startedAt, resolvedEngine);
+  (poll(model, startedAt, resolvedEngine)).catch(() => { /* noop */ });
 }
 
 async function confirmSttDownloadReplacement(
@@ -327,13 +327,13 @@ async function confirmSttDownloadReplacement(
       if (
         shouldRecheckSttReplacement(trackedDownloadIds.get(key), candidate)
       ) {
-        void confirmSttDownloadReplacement(
+        (confirmSttDownloadReplacement(
           model,
           options,
           resolvedEngine,
           key,
           previousDownloadId,
-        );
+        )).catch(() => { /* noop */ });
       }
     }, POLL_MS);
   }
@@ -352,13 +352,13 @@ export function trackSttDownload(
     options.downloadId &&
     previousDownloadId !== options.downloadId
   ) {
-    void confirmSttDownloadReplacement(
+    (confirmSttDownloadReplacement(
       model,
       options,
       resolvedEngine,
       key,
       previousDownloadId,
-    );
+    )).catch(() => { /* noop */ });
     return;
   }
   trackSttDownloadNow(model, options);

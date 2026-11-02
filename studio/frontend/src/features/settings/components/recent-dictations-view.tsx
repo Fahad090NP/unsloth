@@ -106,7 +106,7 @@ export function RecentDictationsView({
 
   function openChat(chatId: string) {
     closeSettings();
-    void navigate({ to: "/chat", search: { thread: chatId } });
+    (navigate({ to: "/chat", search: { thread: chatId } })).catch(() => { /* noop */ });
   }
 
   const visible = useMemo(() => {
@@ -168,10 +168,10 @@ export function RecentDictationsView({
           item,
           useChatRuntimeStore.getState().activeThreadId ?? undefined,
           () => {
-            void navigate({
+            (navigate({
               to: "/chat",
               search: { new: crypto.randomUUID() },
-            });
+            })).catch(() => { /* noop */ });
           },
           { deleteFiles },
         );
@@ -193,7 +193,7 @@ export function RecentDictationsView({
       <header className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => { selected ? onSelect(null) : onBack(); }}
+          onClick={() => { if (selected) onSelect(null); else onBack(); }}
           aria-label={
             selected
               ? t("settings.voice.recents.backToRecents")
@@ -349,11 +349,13 @@ export function RecentDictationsView({
                 >
                   <button
                     type="button"
-                    onClick={() =>
-                      { dictation.chatId
-                        ? openChat(dictation.chatId)
-                        : onSelect(dictation.id); }
-                    }
+                    onClick={() => {
+                      if (dictation.chatId) {
+                        openChat(dictation.chatId);
+                      } else {
+                        onSelect(dictation.id);
+                      }
+                    }}
                     aria-label={
                       dictation.chatId
                         ? t("settings.voice.recents.openChat")
@@ -505,7 +507,7 @@ export function RecentDictationsView({
                 onClick={(event) => {
                   // Close only through state so dismissal cannot race a click underneath.
                   event.preventDefault();
-                  void confirmDeleteWithChat(deleteFilesOnDelete);
+                  (confirmDeleteWithChat(deleteFilesOnDelete)).catch(() => { /* noop */ });
                 }}
               >
                 {t("settings.voice.recents.deleteWithChat")}

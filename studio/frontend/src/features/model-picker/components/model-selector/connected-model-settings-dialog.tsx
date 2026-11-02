@@ -120,7 +120,7 @@ export function ConnectedModelSettingsDialog({
   const [promptDraft, setPromptDraft] = useState<string | null>(null);
   const [capDraft, setCapDraft] = useState<string | null>(null);
   const [effortDraft, setEffortDraft] = useState<string | null>(null);
-  const systemPrompt = promptDraft ?? remembered?.systemPrompt ?? "";
+  const systemPrompt = promptDraft ?? remembered.systemPrompt ?? "";
   // A level the ladder dropped reverts to stored / reads as Follow chat, so Save never writes it.
   const offered = (level: string): boolean =>
     (efforts as readonly string[]).includes(level);
@@ -133,7 +133,7 @@ export function ConnectedModelSettingsDialog({
     (pinnedEffort && offered(pinnedEffort) ? pinnedEffort : FOLLOW_CHAT);
   // Always a real number: per-key merges cannot express clearing the cap.
   const maxTokens =
-    capDraft ?? String(clampCap(remembered?.maxTokens ?? chatMaxTokens));
+    capDraft ?? String(clampCap(remembered.maxTokens ?? chatMaxTokens));
 
   function save() {
     // Number, not parseInt: parseInt reads 1e5 as 1.

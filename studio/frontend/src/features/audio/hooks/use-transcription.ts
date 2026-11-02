@@ -42,7 +42,7 @@ function withName(
 ): Record<string, string> {
   const next = { ...names };
   if (name) next[id] = name;
-  else delete next[id];
+  else Reflect.deleteProperty(next, id);
   return next;
 }
 
@@ -146,7 +146,7 @@ export function useTranscription({
       toast.error("Could not update transcript recovery. Download unsaved text before leaving.");
     }
     if (isTauri) {
-      void import("@tauri-apps/api/core")
+      (import("@tauri-apps/api/core")
         .then(({ invoke }) =>
           invoke("set_renderer_activity", {
             kind: "unsaved_transcript",
@@ -155,10 +155,10 @@ export function useTranscription({
         )
         .catch(() =>
           toast.error("Could not update transcript close protection."),
-        );
+        )).catch(() => { /* noop */ });
     }
     if (!unsaved) return;
-    const warn = (event: BeforeUnloadEvent) => {
+    const warn = (eventParam: BeforeUnloadEvent) => { const event = eventParam;
       event.preventDefault();
       event.returnValue = "";
     };
@@ -318,7 +318,7 @@ export function useTranscription({
           transcriptionAbort.current = null;
           if (started) setTranscriptionFinishedAt(Date.now());
           setBusy(null);
-          if (activeRef.current) void refreshSttStatus();
+          if (activeRef.current) (refreshSttStatus()).catch(() => { /* noop */ });
         }
       }
     },
@@ -353,7 +353,7 @@ export function useTranscription({
       .catch((error: unknown) => {
         if (transcriptVersion.current === version)
           toastFailure("Could not load this transcript's timing", error);
-      });
+      }).catch(() => { /* noop */ });
   }, []);
 
   const renameSpeaker = useCallback(
@@ -371,17 +371,17 @@ export function useTranscription({
           (current[id] ?? "") === name ? withName(current, id, previous) : current,
         );
         toastFailure("Could not rename the speaker", error);
-      });
+      }).catch(() => { /* noop */ });
     },
     [speakerNames, transcriptRecord],
   );
 
   const handleCopyTranscript = useCallback(() => {
-    void copyToClipboard(transcript).then((ok) =>
+    (copyToClipboard(transcript).then((ok) =>
       ok
         ? toast.success("Transcript copied")
         : toast.error("Could not copy the transcript."),
-    );
+    )).catch(() => { /* noop */ });
   }, [transcript]);
 
   const handleDownloadTranscript = useCallback(

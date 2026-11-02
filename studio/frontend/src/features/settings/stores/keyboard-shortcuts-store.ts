@@ -92,7 +92,7 @@ function withSlot(
   value: string | null | undefined,
 ): ShortcutOverrides {
   const entry: ShortcutOverrideEntry = { ...overrides[id] };
-  if (value === undefined) delete entry[slot];
+  if (value === undefined) Reflect.deleteProperty(entry, slot);
   else entry[slot] = value;
   return withEntry(overrides, id, entry);
 }
@@ -103,7 +103,7 @@ function withEntry(
   entry: ShortcutOverrideEntry,
 ): ShortcutOverrides {
   const next = { ...overrides };
-  if (Object.keys(entry).length === 0) delete next[id];
+  if (Object.keys(entry).length === 0) Reflect.deleteProperty(next, id);
   else next[id] = entry;
   return next;
 }
@@ -269,7 +269,7 @@ export const useKeyboardShortcutsStore = create<KeyboardShortcutsState>(
       { set((state) => {
         if (!Object.hasOwn(state.overrides, id)) return state;
         const overrides = { ...state.overrides };
-        delete overrides[id];
+        Reflect.deleteProperty(overrides, id);
         persist(overrides);
         return { overrides };
       }); },

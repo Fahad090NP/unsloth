@@ -39,6 +39,6 @@ export function idleProbeVerdict(
   if (targetPresent === false) return "gone";
   if (downloadedBytes > 0) return "active";
   // The GGUF route excludes None, so a measured-empty answer omits cache_path: treat as gone.
-  if (cacheMeasured === true) return cachePath == null ? "gone" : "active";
+  if (cacheMeasured === true) return (cachePath === null || cachePath === undefined) ? "gone" : "active";
   return cachePath === null ? "gone" : "active";
 }

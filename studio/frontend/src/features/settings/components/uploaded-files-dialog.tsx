@@ -127,7 +127,7 @@ function ChatImageThumb({
       })
       .catch(() => {
         // Keep the file icon on failure.
-      });
+      }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
       if (url) URL.revokeObjectURL(url);
@@ -364,15 +364,15 @@ export function UploadedFilesView() {
     if (!row.threadId) return;
     useSettingsDialogStore.getState().closeDialog();
     if (row.pairId) {
-      void navigate({ to: "/chat", search: { compare: row.pairId } });
+      (navigate({ to: "/chat", search: { compare: row.pairId } })).catch(() => { /* noop */ });
     } else {
-      void navigate({ to: "/chat", search: { thread: row.threadId } });
+      (navigate({ to: "/chat", search: { thread: row.threadId } })).catch(() => { /* noop */ });
     }
   }
 
   useEffect(() => {
     let cancelled = false;
-    void listAllDocuments().then(
+    (listAllDocuments().then(
       (data) => {
         if (!cancelled) setRagFiles({ status: "ready", data, error: null });
       },
@@ -385,8 +385,8 @@ export function UploadedFilesView() {
           });
         }
       },
-    );
-    void listChatAttachments().then(
+    )).catch(() => { /* noop */ });
+    (listChatAttachments().then(
       (page) => {
         if (!cancelled) {
           setChatFiles({
@@ -406,7 +406,7 @@ export function UploadedFilesView() {
           });
         }
       },
-    );
+    )).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -414,7 +414,7 @@ export function UploadedFilesView() {
 
   function retryRagFiles() {
     setRagFiles((current) => ({ ...current, status: "loading", error: null }));
-    void listAllDocuments().then(
+    (listAllDocuments().then(
       (data) => { setRagFiles({ status: "ready", data, error: null }); },
       (error: unknown) =>
         { setRagFiles((current) => ({
@@ -422,7 +422,7 @@ export function UploadedFilesView() {
           status: "error",
           error: errorMessage(error, "Failed to load RAG documents"),
         })); },
-    );
+    )).catch(() => { /* noop */ });
   }
 
   async function loadChatPage(offset: number, append: boolean) {
@@ -461,7 +461,7 @@ export function UploadedFilesView() {
 
   function retryChatFiles() {
     const append = chatFiles.data.length > 0 && chatNextOffset !== null;
-    void loadChatPage(append ? chatNextOffset : 0, append);
+    (loadChatPage(append ? chatNextOffset : 0, append)).catch(() => { /* noop */ });
   }
 
   async function handleOpen(row: UploadedFileRow) {
@@ -560,9 +560,13 @@ export function UploadedFilesView() {
                 open directly. */}
               <button
                 type="button"
-                onClick={() =>
-                  { row.threadId ? goToChat(row) : void handleOpen(row); }
-                }
+                onClick={() => {
+                  if (row.threadId) {
+                    goToChat(row);
+                  } else {
+                    handleOpen(row).catch(() => { /* noop */ });
+                  }
+                }}
                 title={
                   row.threadId ? `Go to ${row.location}` : `Open ${row.name}`
                 }
@@ -617,7 +621,7 @@ export function UploadedFilesView() {
               <span className="flex w-16 shrink-0 items-center justify-end gap-1">
                 <button
                   type="button"
-                  onClick={() => void handleOpen(row)}
+                  onClick={() => { (handleOpen(row)).catch(() => { /* noop */ }); }}
                   aria-label={`Open ${row.name}`}
                   title="Open"
                   className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -652,7 +656,7 @@ export function UploadedFilesView() {
               <button
                 type="button"
                 disabled={loadingMore}
-                onClick={() => void loadChatPage(chatNextOffset, true)}
+                onClick={() => { (loadChatPage(chatNextOffset, true)).catch(() => { /* noop */ }); }}
                 className="btn-fill rounded-full px-3 py-1.5 text-sm font-medium disabled:cursor-wait disabled:opacity-60"
               >
                 {loadingMore ? "Loading..." : "Load more chat attachments"}
@@ -686,7 +690,7 @@ export function UploadedFilesView() {
               onClick={() => {
                 const row = confirmingDelete;
                 setConfirmingDelete(null);
-                if (row) void handleDelete(row);
+                if (row) (handleDelete(row)).catch(() => { /* noop */ });
               }}
             >
               Delete

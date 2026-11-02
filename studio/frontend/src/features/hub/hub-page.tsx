@@ -14,9 +14,9 @@ import {
   resolveInferenceCheckpointId,
   useChatRuntimeStore,
 } from "@/features/chat";
-import { audioPickSearch } from "@/features/audio/route-search";
+import { audioPickSearch } from "@/features/audio";
 import { useHubInfiniteScroll } from "@/features/hub";
-import { useOnlineStatus } from "@/features/hub/hooks/use-online-status";
+import { useOnlineStatus } from "@/features/hub";
 import {
   type ModelConfigHandoffRequest,
   clearModelConfigHandoff,
@@ -25,7 +25,7 @@ import {
   loadScopedGpu,
   requestModelConfigHandoff,
 } from "@/features/model-picker";
-import { taskForMediaPick } from "@/features/model-picker/components/model-selector/audio-picker-policy";
+import { taskForMediaPick } from "@/features/model-picker";
 import { type NpuModel, type NpuPickerSource, useNpuStatus } from "@/features/npu";
 import { loadOpenAIAutoSwitchSettings } from "@/features/settings";
 import { GuidedTour, useGuidedTourController } from "@/features/tour";
@@ -199,7 +199,7 @@ function matchesDiscoverFormat(
     (!browsing ||
       ((resolveOwnerProviderLogo(ownerOf(result.id), repoOf(result.id)) !==
         null ||
-        (result.likes ?? 0) >= MIN_ICONLESS_MODEL_LIKES) &&
+        ((result.likes)) >= MIN_ICONLESS_MODEL_LIKES) &&
         hasRecommendedCheckpointLikes(result))) &&
     matchesRecommended(result, quantFormats)
   );
@@ -319,7 +319,7 @@ function writeInventorySortPreference(sort: InventorySort): void {
     window.localStorage.setItem(INVENTORY_SORT_STORAGE_KEY, sort);
   } catch {
     
-  }
+   /* noop */ }
 }
 
 function writeAllModelsViewPreference(view: AllModelsView): void {
@@ -330,7 +330,7 @@ function writeAllModelsViewPreference(view: AllModelsView): void {
     window.localStorage.setItem(ALL_MODELS_VIEW_STORAGE_KEY, view);
   } catch {
     
-  }
+   /* noop */ }
 }
 
 function useModelsTabState(): {
@@ -345,16 +345,16 @@ function useModelsTabState(): {
 
   useEffect(() => {
     if (urlTab !== null) return;
-    void navigate({
+    (navigate({
       to: "/hub",
       search: (prev) => ({ ...prev, tab }),
       replace: true,
-    });
+    })).catch(() => { /* noop */ });
   }, [urlTab, tab, navigate]);
 
   const setTab = useCallback(
     (next: ModelsTab) => {
-      void navigate({
+      (navigate({
         to: "/hub",
         search: (prev) => ({
           ...prev,
@@ -363,7 +363,7 @@ function useModelsTabState(): {
           model: undefined,
         }),
         replace: true,
-      });
+      })).catch(() => { /* noop */ });
     },
     [navigate],
   );
@@ -537,9 +537,9 @@ export function ModelsPage() {
 
   useEffect(() => {
     let active = true;
-    void refreshResidentModelStatus().finally(() => {
+    (refreshResidentModelStatus().finally(() => {
       if (active) setInitialResidentStatusSettled(true);
-    });
+    })).catch(() => { /* noop */ });
     const unsubscribe = subscribeResidentStatusRefresh(
       refreshResidentModelStatus,
     );
@@ -554,7 +554,7 @@ export function ModelsPage() {
     () =>
       subscribeModelLifecycle(({ runtime }) => {
         if (runtime === "chat" || runtime === "stt") return;
-        void refreshResidentModelStatus({ preserveIdleUnloaded: false });
+        (refreshResidentModelStatus({ preserveIdleUnloaded: false })).catch(() => { /* noop */ });
       }),
     [refreshResidentModelStatus],
   );
@@ -649,10 +649,10 @@ export function ModelsPage() {
         setDiscoverFormat(next);
         if (urlSection) {
           // Exit the section so its preset does not re-impose its own format.
-          void navigate({
+          (navigate({
             to: "/hub",
             search: (prev) => ({ ...prev, section: undefined }),
-          });
+          })).catch(() => { /* noop */ });
         }
       } else {
         setDownloadedFormat(next);
@@ -686,10 +686,10 @@ export function ModelsPage() {
       writeAllModelsViewPreference(view);
       if (view !== "split") {
         autoPreviewIdRef.current = null;
-        void navigate({
+        (navigate({
           to: "/hub",
           search: (prev) => ({ ...prev, model: undefined }),
-        });
+        })).catch(() => { /* noop */ });
       }
     },
     [navigate],
@@ -747,7 +747,7 @@ export function ModelsPage() {
         setSortBy(preset?.sort ?? "trendingScore");
         setDirection("desc");
       }
-      void navigate({
+      (navigate({
         to: "/hub",
         search: (prev) => ({
           ...prev,
@@ -756,7 +756,7 @@ export function ModelsPage() {
           model: undefined,
         }),
         replace: true,
-      });
+      })).catch(() => { /* noop */ });
     },
     [resourceType, navigate],
   );
@@ -778,10 +778,10 @@ export function ModelsPage() {
       setSortBrowseActive(false);
       // An active query outranks the section in `mode`, hiding the curated list.
       setQuery("");
-      void navigate({
+      (navigate({
         to: "/hub",
         search: (prev) => ({ ...prev, section, model: undefined }),
-      });
+      })).catch(() => { /* noop */ });
     },
     [urlSection, navigate],
   );
@@ -796,10 +796,10 @@ export function ModelsPage() {
     setUploaderPick(null);
     setFirstPickArmed(true);
     setSortBrowseActive(false);
-    void navigate({
+    (navigate({
       to: "/hub",
       search: (prev) => ({ ...prev, section: undefined }),
-    });
+    })).catch(() => { /* noop */ });
   }, [navigate]);
   const handleResetToDiscover = useCallback(() => {
     const preset = findChannel(DEFAULT_DISCOVER_CHANNEL);
@@ -816,7 +816,7 @@ export function ModelsPage() {
     setSortBy(preset?.sort ?? "trendingScore");
     setDirection("desc");
     setSortBrowseActive(false);
-    void navigate({
+    (navigate({
       to: "/hub",
       // Set the tab explicitly: spreading prev would restore the old tab.
       search: (prev) => ({
@@ -826,7 +826,7 @@ export function ModelsPage() {
         model: undefined,
         kind: undefined,
       }),
-    });
+    })).catch(() => { /* noop */ });
   }, [navigate, setModelsTab]);
 
   // A capability link opens the sorted Discover list with that filter on (the feed ignores it).
@@ -848,7 +848,7 @@ export function ModelsPage() {
     // The media pages run curated Unsloth uploads, so start there.
     setUploaderPick([...UNSLOTH_UPLOADER]);
     setFirstPickArmed(false);
-    void navigate({
+    (navigate({
       to: "/hub",
       search: (prev) => ({
         ...prev,
@@ -860,7 +860,7 @@ export function ModelsPage() {
         model: undefined,
       }),
       replace: true,
-    });
+    })).catch(() => { /* noop */ });
   }, [urlCapability, urlTaskKey, navigate]);
   // Picking another filter drops the link's tasks, so returning to Audio shows every audio model.
   if (!capabilityFilters.includes("audio") && linkedAudioTask !== null) {
@@ -873,11 +873,11 @@ export function ModelsPage() {
       if (next === "trendingScore") setDirection("desc");
       setSortBrowseActive(true);
       if (urlSection) {
-        void navigate({
+        (navigate({
           to: "/hub",
           search: (prev) => ({ ...prev, section: undefined }),
           replace: true,
-        });
+        })).catch(() => { /* noop */ });
       }
     },
     [urlSection, navigate],
@@ -915,7 +915,7 @@ export function ModelsPage() {
   const mode: DiscoverMode = isModelDiscover
     ? hasQuery
       ? "search"
-      : urlSection != null
+      : (urlSection !== null && urlSection !== undefined)
         ? "channel-list"
         : sortBrowseActive || hasSearchFilters || uploaderPick !== null
           ? "search"
@@ -924,7 +924,7 @@ export function ModelsPage() {
   const isFeedMode = mode === "feed";
   const isChannelListMode = mode === "channel-list";
   const isSortBrowseMode =
-    sortBrowseActive && isModelDiscover && !hasQuery && urlSection == null;
+    sortBrowseActive && isModelDiscover && !hasQuery && (urlSection === null || urlSection === undefined);
 
   const liveListChannel = useMemo<ChannelPreset | null>(() => {
     if (isChannelListMode) return activeChannel;
@@ -1376,11 +1376,11 @@ export function ModelsPage() {
     if (isDiscoverTab) {
       setDiscoverFormat("all");
       if (urlSection) {
-        void navigate({
+        (navigate({
           to: "/hub",
           search: (prev) => ({ ...prev, section: undefined }),
           replace: true,
-        });
+        })).catch(() => { /* noop */ });
       }
     } else {
       setDownloadedFormat("all");
@@ -1466,10 +1466,10 @@ export function ModelsPage() {
       autoPreviewIdRef.current = null;
       runConfigOpenCoordinator.cancel();
       setRunConfigOpening(null);
-      void navigate({
+      (navigate({
         to: "/hub",
         search: (prev) => ({ ...prev, model: id, file: undefined }),
-      });
+      })).catch(() => { /* noop */ });
     },
     [navigate, runConfigOpenCoordinator],
   );
@@ -1494,16 +1494,16 @@ export function ModelsPage() {
       setFirstPickArmed(true);
       setSortBrowseActive(false);
       setQuery("");
-      void navigate({
+      (navigate({
         to: "/hub",
         search: (prev) => ({ ...prev, model: undefined, section: undefined }),
-      });
+      })).catch(() => { /* noop */ });
       return;
     }
-    void navigate({
+    (navigate({
       to: "/hub",
       search: (prev) => ({ ...prev, model: undefined }),
-    });
+    })).catch(() => { /* noop */ });
   }, [navigate, allModelsView, isCompactViewport, runConfigOpenCoordinator]);
   const handleQueryChange = useCallback(
     (next: string) => {
@@ -1527,7 +1527,7 @@ export function ModelsPage() {
       // Clearing the split view's auto-picked preview only re-picks it: 2 navigations per key (#15221).
       const openedModel = Boolean(urlModel) && urlModel !== autoPreviewIdRef.current;
       if (openedModel || urlSection) {
-        void navigate({
+        (navigate({
           to: "/hub",
           search: (prev) => ({
             ...prev,
@@ -1535,7 +1535,7 @@ export function ModelsPage() {
             section: undefined,
           }),
           replace: true,
-        });
+        })).catch(() => { /* noop */ });
       }
       setQuery(next);
     },
@@ -1553,7 +1553,7 @@ export function ModelsPage() {
     if (sync?.action === "select") {
       setSelected(sync.selectedId);
     } else if (sync?.action === "replace") {
-      void navigate({
+      (navigate({
         to: "/hub",
         search: (prev) => ({
           ...prev,
@@ -1561,7 +1561,7 @@ export function ModelsPage() {
           file: sync.preserveGgufFile ? prev.file : undefined,
         }),
         replace: true,
-      });
+      })).catch(() => { /* noop */ });
     }
   }, [
     isDiscoverTab,
@@ -1584,11 +1584,11 @@ export function ModelsPage() {
     if (!isCompactViewport || allModelsView !== "split") return;
     if (!urlModel || urlModel !== autoPreviewIdRef.current) return;
     autoPreviewIdRef.current = null;
-    void navigate({
+    (navigate({
       to: "/hub",
       search: (prev) => ({ ...prev, model: undefined, file: undefined }),
       replace: true,
-    });
+    })).catch(() => { /* noop */ });
   }, [isCompactViewport, allModelsView, urlModel, navigate]);
 
   // Split view previews the first row so the detail pane isn't empty. Feed mode included: split
@@ -1597,15 +1597,15 @@ export function ModelsPage() {
     if (allModelsView !== "split" || urlModel || isCompactViewport) return;
     // Use the filtered rows the master pane renders so the preview never lands on a filtered-out row.
     const firstId = isDiscoverTab
-      ? listRows[0]?.id
-      : (filteredCachedRows[0]?.id ?? filteredLocalRows[0]?.id);
+      ? listRows[0].id
+      : filteredCachedRows.at(0)?.id;
     if (!firstId) return;
     autoPreviewIdRef.current = firstId;
-    void navigate({
+    (navigate({
       to: "/hub",
       search: (prev) => ({ ...prev, model: firstId, file: undefined }),
       replace: true,
-    });
+    })).catch(() => { /* noop */ });
   }, [
     allModelsView,
     urlModel,
@@ -1696,7 +1696,7 @@ export function ModelsPage() {
       setUploaderPick(null);
       setFirstPickArmed(true);
       setQuery(trimmed);
-      void navigate({
+      (navigate({
         to: "/hub",
         search: (prev) => ({
           ...prev,
@@ -1705,7 +1705,7 @@ export function ModelsPage() {
           model: undefined,
           kind: undefined,
         }),
-      });
+      })).catch(() => { /* noop */ });
     },
     [navigate, setModelsTab],
   );
@@ -1717,9 +1717,9 @@ export function ModelsPage() {
       chatRuntime.setIncognito(false);
       requestModelConfigHandoff(request);
       const { requestId } = request;
-      void navigate({ to: "/chat", search: { new: requestId } }).catch(() => {
+      (navigate({ to: "/chat", search: { new: requestId } }).catch(() => {
         clearModelConfigHandoff(requestId);
-      });
+      })).catch(() => { /* noop */ });
     },
     [navigate],
   );
@@ -1756,7 +1756,7 @@ export function ModelsPage() {
         ) {
           return;
         }
-        void navigate({
+        (navigate({
           to: `/${mediaPage}`,
           search:
             mediaPage === "audio"
@@ -1774,7 +1774,7 @@ export function ModelsPage() {
                   loadId: selectedModel.loadId,
                 })
               : diffusionRouteSearch(selectedModel.hubRepoId, selection),
-        });
+        })).catch(() => { /* noop */ });
         return;
       }
       if (

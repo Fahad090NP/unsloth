@@ -103,7 +103,7 @@ export function groupSeparationClips(
     );
     return {
       groupId: key,
-      title: first?.prompt || "Separated track",
+      title: first.prompt || "Separated track",
       model: first?.model ?? "",
       durationS: Math.max(0, ...ordered.map((clip) => clip.duration_s || 0)),
       createdAt: first?.created_at ?? "",

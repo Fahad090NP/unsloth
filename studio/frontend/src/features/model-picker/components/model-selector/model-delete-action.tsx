@@ -84,7 +84,7 @@ export function ModelDeleteAction({
         title={title}
         description={description}
         deleting={deleting}
-        onConfirm={() => void handleConfirm()}
+        onConfirm={() => { (handleConfirm()).catch(() => { /* noop */ }); }}
       />
     </>
   );

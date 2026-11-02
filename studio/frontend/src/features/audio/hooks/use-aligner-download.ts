@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-import { useStagedDownload } from "@/features/hub/download-manager";
+import { useStagedDownload } from "@/features/hub";
 import { toast } from "@/lib/toast";
 
 import {

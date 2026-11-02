@@ -10,7 +10,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { HfSortKey } from "@/features/hub/hooks/use-hub-model-search";
+import type { HfSortKey } from "@/features/hub";
 import { useHubSource } from "@/lib/hf-endpoint";
 import { cn } from "@/lib/utils";
 import {

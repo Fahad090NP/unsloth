@@ -152,11 +152,11 @@ export function availableAxes(ctx: CompareContext): AxisDef[] {
     placeholder: "",
     cost: 0,
     resolve: ok,
-    apply: () => {},
+    apply: () => { /* noop */ },
     format: () => "",
   });
   axes.push(
-    numberAxis("seed", "Seed", "int", -1, SEED_MAX, "-1, 11, 12 or 100-103", (c, v) => {
+    numberAxis("seed", "Seed", "int", -1, SEED_MAX, "-1, 11, 12 or 100-103", (cParam, v) => { const c = cParam;
       c.seed = v < 0 ? "random" : v;
     }),
   );

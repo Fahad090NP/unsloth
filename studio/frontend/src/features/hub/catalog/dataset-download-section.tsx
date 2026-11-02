@@ -108,7 +108,7 @@ export function DatasetDownloadSection({
           }}
           title="Delete cached dataset?"
           deleting={deleting}
-          onConfirm={() => void runDelete()}
+          onConfirm={() => { (runDelete()).catch(() => { /* noop */ }); }}
           description={
             <>
               This will remove{" "}

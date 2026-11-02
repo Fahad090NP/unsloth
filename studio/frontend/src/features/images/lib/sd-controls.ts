@@ -200,7 +200,7 @@ export function sdControlsNotRestored(
   }
   if (image.variation_strength && !capability?.variation_seed) {
     out.push(
-      image.variation_seed != null
+      (image.variation_seed !== null && image.variation_seed !== undefined)
         ? `variation seed ${image.variation_seed} (strength ${image.variation_strength})`
         : `variation strength ${image.variation_strength}`,
     );
@@ -226,7 +226,7 @@ export function sdControlsFromRecipe(image: {
     clipSkip: image.clip_skip ?? 1,
     cfgRescale: image.cfg_rescale ?? 0,
     variationSeed:
-      image.variation_seed != null && image.variation_strength
+      (image.variation_seed !== null && image.variation_seed !== undefined) && image.variation_strength
         ? String(Math.max(0, image.variation_seed - offset))
         : "",
     variationStrength: image.variation_strength ?? 0,
@@ -242,7 +242,7 @@ export function sdControlsRecipeRows(image: {
   const rows: [string, string][] = [];
   if (image.clip_skip) rows.push(["CLIP skip", String(image.clip_skip)]);
   if (image.cfg_rescale) rows.push(["CFG rescale", String(image.cfg_rescale)]);
-  if (image.variation_strength && image.variation_seed != null) {
+  if (image.variation_strength && (image.variation_seed !== null && image.variation_seed !== undefined)) {
     rows.push([
       "Variation",
       `${image.variation_seed} @ ${image.variation_strength}`,

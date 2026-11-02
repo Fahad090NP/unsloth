@@ -39,20 +39,20 @@ export function DeveloperModeSection() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadDeveloperModeSettings()
+    (loadDeveloperModeSettings()
       .then((next) => {
         if (cancelled) return;
         setSettings(next);
         setError(null);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (cancelled) return;
         setError(
           err instanceof Error
             ? err.message
             : t("settings.general.developerMode.loadError"),
         );
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -67,7 +67,7 @@ export function DeveloperModeSection() {
       // Both gates are cached: the sidebar's Video row reads the /api/health verdict and the Video
       // page /api/system/hardware. Update the one and re-read the other, so neither needs a reload.
       usePlatformStore.setState({ videoCpuOptIn: next.videoCpu });
-      void refreshHardwareInfo();
+      (refreshHardwareInfo()).catch(() => { /* noop */ });
     } catch (err) {
       setError(
         err instanceof Error
@@ -84,7 +84,7 @@ export function DeveloperModeSection() {
       setConfirmOpen(true);
       return;
     }
-    void save(false);
+    (save(false)).catch(() => { /* noop */ });
   };
 
   const ram = settings
@@ -179,7 +179,7 @@ export function DeveloperModeSection() {
               disabled={saving}
               onClick={() => {
                 setConfirmOpen(false);
-                void save(true);
+                (save(true)).catch(() => { /* noop */ });
               }}
               variant="destructive"
             >

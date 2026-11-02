@@ -11,7 +11,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ParamSlider } from "@/features/chat";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
+import { PillTabs } from "@/features/model-picker";
 import type { ReactNode } from "react";
 import { INDEX_TTS2_EMOTIONS } from "../clone-policy";
 import { AudioSourceInput } from "../components/audio-source-input";

@@ -187,7 +187,7 @@ function isEmbeddingHubModel(
   model: Pick<HfModelResult, "pipelineTag" | "tags">,
 ): boolean {
   return [model.pipelineTag, ...(model.tags ?? [])].some(
-    (tag) => tag != null && EMBEDDING_TAGS.has(tag.toLowerCase()),
+    (tag) => (tag !== null && tag !== undefined) && EMBEDDING_TAGS.has(tag.toLowerCase()),
   );
 }
 
@@ -510,7 +510,7 @@ export function AgentsTab() {
     storedPrefs.agentsAgent ?? FALLBACK_AGENT.id,
   );
   // a restored pick counts as explicit, or detection would overwrite it.
-  const agentSelectionChanged = useRef(storedPrefs.agentsAgent != null);
+  const agentSelectionChanged = useRef((storedPrefs.agentsAgent !== null && storedPrefs.agentsAgent !== undefined));
   const [detectedAgents, setDetectedAgents] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
   // list the restored model until the discovery scan confirms or retires it.
@@ -533,7 +533,7 @@ export function AgentsTab() {
   });
   const initialModel = storedPrefs.agentsModel ?? EXAMPLE_MODEL_REPO;
   const [selectedModel, setSelectedModel] = useState(initialModel);
-  const modelSelectionChanged = useRef(storedPrefs.agentsModel != null);
+  const modelSelectionChanged = useRef((storedPrefs.agentsModel !== null && storedPrefs.agentsModel !== undefined));
   const restoredModel = useRef<string | null>(storedPrefs.agentsModel);
   const [discoveredKeys, setDiscoveredKeys] = useState<Set<string> | null>(
     null,
@@ -568,7 +568,7 @@ export function AgentsTab() {
   const [variantsLoading, setVariantsLoading] = useState(true);
   const [variantsFailed, setVariantsFailed] = useState(false);
 
-  const labelFor = (model: string) => modelLabels[model] ?? model;
+  const labelFor = (model: string) => (modelLabels[model]);
   const trendingModels = useMemo(
     () =>
       trendingGgufs
@@ -598,7 +598,7 @@ export function AgentsTab() {
         ? orderedModels
         : orderedModels.filter((model) => {
             const haystack =
-              `${model} ${modelLabels[model] ?? ""}`.toLowerCase();
+              `${model} ${(modelLabels[model])}`.toLowerCase();
             return tokens.every((token) => haystack.includes(token));
           });
 
@@ -618,12 +618,12 @@ export function AgentsTab() {
   }, [modelLabels, modelSearch, orderedModels, selectedModel]);
 
   const visibleModels = matchingModels.slice(0, MODEL_RESULT_LIMIT);
-  const preferredVariant = knownVariants[selectedModel] ?? null;
+  const preferredVariant = (knownVariants[selectedModel]);
   const selectedAgentDetails = detailsFor(selectedAgent);
   // Name the snapshot path for a GGUF outside the active cache; the resident model is exempt since
   // the largest-copy snapshot could switch cache or quant under it.
   const selectedModelIsActive =
-    activeStatusModel != null &&
+    (activeStatusModel !== null && activeStatusModel !== undefined) &&
     modelKey(selectedModel) === modelKey(activeStatusModel);
   const cachedLoadId = selectedModelIsActive
     ? null
@@ -665,7 +665,7 @@ export function AgentsTab() {
   } = useCopyButton(command);
 
   useEffect(() => {
-    void fetchDeviceType({ force: true });
+    (fetchDeviceType({ force: true })).catch(() => { /* noop */ });
   }, []);
 
   // A remote backend's PATH says nothing about the machine running the command.
@@ -705,7 +705,7 @@ export function AgentsTab() {
         if (!cancelled) {
           setLoaded(true);
         }
-      });
+      }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -718,12 +718,11 @@ export function AgentsTab() {
     agentSelectionChanged.current = false;
     setStoredAgent(null);
     setSelectedAgent(
-      agents.find(
+      (agents.find(
         (agent) =>
           detectedAgents.has(agent) && !NOT_AUTO_PICKED_AGENTS.has(agent),
       ) ??
-        agents[0] ??
-        FALLBACK_AGENT.id,
+        agents[0]),
     );
   }, [
     agents,
@@ -790,7 +789,7 @@ export function AgentsTab() {
         }));
       })
       .catch(() => {
-      });
+       /* noop */ }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -902,7 +901,7 @@ export function AgentsTab() {
         .catch(() => {
           // Not settled: a request that never answered proves nothing about
           // what is resident, so the retire below must keep waiting.
-        });
+        }).catch(() => { /* noop */ });
     };
     sync();
     const timer = window.setInterval(sync, STATUS_POLL_MS);
@@ -971,7 +970,7 @@ export function AgentsTab() {
     setVariantsLoading(true);
     // Offer quants from where the command loads, not remote-only ones.
     listGgufVariants(selectedModel, hfToken || undefined, {
-      preferLocalCache: localDir != null,
+      preferLocalCache: (localDir !== null && localDir !== undefined),
       localPath: localDir,
     })
       .then((info) => {
@@ -998,13 +997,12 @@ export function AgentsTab() {
           chosenVariant.current = null;
         }
         const nextVariant =
-          pickVariant(available, [
+          (pickVariant(available, [
             rememberedVariant(selectedModel),
             preferredVariant,
             info.default_variant,
           ]) ??
-          uniqueVariants[0]?.quant ??
-          null;
+          uniqueVariants[0]?.quant)
         setSelectedVariant(nextVariant);
       })
       .catch(() => {
@@ -1029,7 +1027,7 @@ export function AgentsTab() {
         if (!cancelled) {
           setVariantsLoading(false);
         }
-      });
+      }).catch(() => { /* noop */ });
 
     return () => {
       cancelled = true;
@@ -1304,7 +1302,7 @@ export function AgentsTab() {
                             modelSelectionChanged.current = true;
                             restoredModel.current = null;
                             const variant =
-                              rememberedVariant(model) ?? knownVariants[model] ?? null;
+                              (rememberedVariant(model) ?? knownVariants[model]);
                             setSelectedModel(model);
                             setSelectedVariant(variant);
                             setStoredModel(

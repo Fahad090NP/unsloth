@@ -347,7 +347,9 @@ export const useDownloadManagerStore = create<DownloadManagerState>()(
   }),
 );
 
-export const setState = useDownloadManagerStore.setState;
+export const setState = useDownloadManagerStore.setState.bind(
+  useDownloadManagerStore,
+);
 export const getState = useDownloadManagerStore.getState;
 
 export function hasActiveDownloadJob(
@@ -526,7 +528,7 @@ export function patchJob(key: string, patch: Partial<ManagedDownload>): void {
   if (
     previousJob &&
     previousJob.state !== "complete" &&
-    completedJob?.state === "complete"
+    completedJob.state === "complete"
   ) {
     rememberCompletedInventoryHints(
       collectCompletedInventoryHints({ [key]: completedJob }),
@@ -561,7 +563,7 @@ export function putJob(job: ManagedDownload): void {
     };
     if (
       !suppressionChanged &&
-      existing?.state !== "complete" &&
+      existing.state !== "complete" &&
       job.state !== "complete"
     ) {
       return nextState;
@@ -577,9 +579,9 @@ export function removeJob(key: string): void {
   setState((state) => {
     if (!(key in state.jobs)) return state;
     const next = { ...state.jobs };
-    delete next[key];
+    Reflect.deleteProperty(next, key);
     const nextState = { ...state, jobs: next };
-    if (job?.state !== "complete") return nextState;
+    if (job.state !== "complete") return nextState;
     return withCompletedHintSignature(nextState);
   });
 }
@@ -591,7 +593,7 @@ export function setConflict(
   setState((state) => {
     const next = { ...state.conflicts };
     if (entry) next[key] = entry;
-    else delete next[key];
+    else Reflect.deleteProperty(next, key);
     return { ...state, conflicts: next };
   });
 }
@@ -603,11 +605,11 @@ export function isCurrent(key: string, epoch: number): boolean {
 
 export function scheduleRemoval(key: string, delayMs: number): void {
   const existing = runtimeRegistry.removalTimers.get(key);
-  if (existing != null) clearRuntimeTimer(existing);
-  const startedAt = getState().jobs[key]?.startedAt;
+  if ((existing !== null && existing !== undefined)) clearRuntimeTimer(existing);
+  const startedAt = getState().jobs[key].startedAt;
   const timer = window.setTimeout(() => {
     runtimeRegistry.removalTimers.delete(key);
-    if (getState().jobs[key]?.startedAt === startedAt) removeJob(key);
+    if (getState().jobs[key].startedAt === startedAt) removeJob(key);
   }, delayMs);
   runtimeRegistry.removalTimers.set(key, timer);
 }
@@ -668,11 +670,11 @@ export function discardDeletedModelInventoryHints(
   const kind = downloadInventoryHintKind(
     DOWNLOAD_KIND.MODEL,
     variant,
-    job?.inventoryKind,
+    job.inventoryKind,
   );
   discardPendingInventoryHint(kind, repoId);
   clearCompletedInventoryHint({ kind, repoId });
-  if (job?.state === "complete") {
+  if (job.state === "complete") {
     removeJob(job.key);
   }
 }

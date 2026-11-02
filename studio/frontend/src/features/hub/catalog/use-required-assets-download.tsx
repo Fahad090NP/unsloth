@@ -5,9 +5,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getDiffusionDownloadPlan,
   type DiffusionDownloadPlan,
-} from "@/features/images/api";
+} from "@/features/images";
 import { getVideoDownloadPlan } from "@/features/video/api";
-import { getAudioDownloadPlan } from "@/features/audio/api";
+import { getAudioDownloadPlan } from "@/features/audio";
 import { toast } from "@/lib/toast";
 import { useInventoryVersion } from "../stores/inventory-events";
 import { useHfTokenStore } from "../stores/hf-token-store";
@@ -88,7 +88,7 @@ export function useRequiredAssetsDownload({
   useEffect(() => {
     if (!runtime) return;
     const timer = window.setTimeout(() => {
-      void resolvePlan().catch(() => {});
+      void resolvePlan().catch(() => { /* noop */ });
     }, 200);
     return () => { window.clearTimeout(timer); };
   }, [resolvePlan, runtime]);

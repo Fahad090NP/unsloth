@@ -617,7 +617,7 @@ function AnswerPreview({
             key={key}
             index={key}
             label={criterionText(answer.legend[key]) ?? key}
-            value={answer.probabilities[key] ?? 0}
+            value={(answer.probabilities[key])}
             top={key === top}
             percent={percent}
           />
@@ -1005,12 +1005,12 @@ export function DecisionTryDialog({
       return;
     }
     event.preventDefault();
-    void run();
+    (run()).catch(() => { /* noop */ });
   };
 
   const answers =
     outcome?.kind === "ok"
-      ? Object.entries(outcome.response.answers ?? {})
+      ? Object.entries((outcome.response.answers))
       : [];
   const questions = outcome?.kind === "ok" ? sentQuestions(outcome.sent) : {};
 
@@ -1230,7 +1230,7 @@ export function DecisionTryDialog({
               <Button
                 variant="dark"
                 type="button"
-                onClick={() => void run()}
+                onClick={() => { (run()).catch(() => { /* noop */ }); }}
                 aria-busy={running}
                 className="gap-2"
               >

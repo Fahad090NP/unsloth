@@ -7,7 +7,7 @@ import {
 } from "@/features/chat/adapters/pcm-recorder";
 import { isMissingDeviceError } from "@/features/chat/adapters/studio-web-speech-dictation-adapter";
 import { loadUploadLimitSettings } from "@/features/settings";
-import { useVoiceSettingsStore } from "@/features/settings/stores/voice-settings-store";
+import { useVoiceSettingsStore } from "@/features/settings";
 import { isTauri } from "@/lib/api-base";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { AudioApiError, fetchAudioBlob, uploadAudioInput } from "../api";
@@ -77,7 +77,7 @@ async function openMicrophone(deviceId: string): Promise<MediaStream> {
 export function recordingSupported(): boolean {
   return (
     typeof navigator !== "undefined" &&
-    typeof navigator.mediaDevices?.getUserMedia === "function"
+    typeof navigator.mediaDevices.getUserMedia === "function"
   );
 }
 
@@ -180,7 +180,7 @@ export function useAudioSource({
         }
         // The audio could not be drawn, but the server still has it; the run can go ahead.
         dispatch({ type: "load-done" });
-      });
+      }).catch(() => { /* noop */ });
   }, [value, valueKey, previewKey, phase, drawBlob]);
   useEffect(() => () => loadAbort.current?.abort(), [valueKey]);
 
@@ -227,7 +227,7 @@ export function useAudioSource({
       dispatch({ type: "upload-start", name: fileName, key: localKey });
       // The card now shows the new file: a run must not quietly use the one it replaced.
       onChangeRef.current(null);
-      void drawBlob(localKey, file);
+      (drawBlob(localKey, file)).catch(() => { /* noop */ });
       try {
         const record = await uploadAudioInput(file, fileName, {
           signal: controller.signal,
@@ -322,7 +322,7 @@ export function useAudioSource({
           : type.includes("ogg")
             ? "ogg"
             : "webm";
-      if (blob.size > 0) void pickFile(blob, `Recording.${extension}`);
+      if (blob.size > 0) (pickFile(blob, `Recording.${extension}`)).catch(() => { /* noop */ });
     });
     recorderRef.current = recorder;
     discardRecording.current = false;

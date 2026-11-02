@@ -33,7 +33,7 @@ export function useDesktopBooleanSetting({
         setSupported(loaded !== null);
         setError(null);
       })
-      .catch((cause) => {
+      .catch((cause: unknown) => {
         if (cancelled) return;
         setError(cause instanceof Error ? cause.message : loadError);
       });

@@ -431,7 +431,7 @@ export function useHubDatasetSearch(
   const createIter = useCallback(
     (signal: AbortSignal) => {
       if (useCuratedOnly) {
-        return (async function* empty() {})() as AsyncGenerator;
+        return (async function* empty() { /* noop */ })() as AsyncGenerator;
       }
       return listDatasets({
         search: hasQuery ? { query } : {},

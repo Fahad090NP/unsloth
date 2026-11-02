@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { TransportConflictInfo } from "@/features/hub/download-manager";
+import type { TransportConflictInfo } from "@/features/hub";
 
 export type { TransportConflictInfo } from "@/features/hub/download-manager";
 

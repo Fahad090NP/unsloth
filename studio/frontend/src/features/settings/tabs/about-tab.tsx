@@ -19,7 +19,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
-import { InferenceEnginesSection } from "@/features/model-picker/components/inference-engines";
+import { InferenceEnginesSection } from "@/features/model-picker";
 import { EngineVersionsSection } from "../components/engine-versions-section";
 import { StandaloneEnvironmentSection } from "./resources-tab";
 import { SettingsRow } from "../components/settings-row";
@@ -132,13 +132,13 @@ export function AboutTab() {
       if (!canceled) {
         setInstallSource(nextInstallSource);
       }
-    });
+    }).catch(() => { /* noop */ });
     if (isTauri) {
       loadDesktopAppVersion().then((version) => {
         if (!canceled) {
           setDesktopAppVersion(version);
         }
-      });
+      }).catch(() => { /* noop */ });
     }
 
     return () => {

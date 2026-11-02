@@ -60,10 +60,10 @@ export function compareInventoryItemsByRecent(
   if (aUpdatedAt === bUpdatedAt) {
     return 0;
   }
-  if (aUpdatedAt == null) {
+  if ((aUpdatedAt === null || aUpdatedAt === undefined)) {
     return 1;
   }
-  if (bUpdatedAt == null) {
+  if ((bUpdatedAt === null || bUpdatedAt === undefined)) {
     return -1;
   }
   return bUpdatedAt - aUpdatedAt;

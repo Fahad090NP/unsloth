@@ -102,7 +102,7 @@ export function useAvatarImageUrl(
   const isUnsloth = isUnslothOwner(owner);
   const remoteUrl = useHfOwnerAvatar(
     owner.trim() || "?",
-    provider == null && !isUnsloth,
+    (provider === null || provider === undefined) && !isUnsloth,
   );
   if (provider) {
     return provider.treatment === "original" ? provider.logoPath : null;
@@ -188,7 +188,7 @@ function DefaultAvatar({
   remote?: boolean;
 }) {
   const owned = owner.trim() || "?";
-  const initial = owned[0]?.toUpperCase() ?? "?";
+  const initial = (owned[0]?.toUpperCase())
   const color = ownerPaletteColor(owned);
   const remoteUrl = useHfOwnerAvatar(owned, remote);
   const [failedImage, setFailedImage] = useState<FailedAvatarImage | null>(

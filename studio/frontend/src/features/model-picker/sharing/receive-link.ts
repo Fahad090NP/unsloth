@@ -46,7 +46,7 @@ function saveHandledNativeUrl(): void {
     }
   } catch {
     
-  }
+   /* noop */ }
 }
 
 export function subscribeRunConfigSession(onChange: () => void): () => void {
@@ -208,7 +208,7 @@ export function receiveSharedRunConfigUrls(
     if (acceptNativeIntent(url) === null) {
       return true;
     }
-    void receiveRunConfigUrl(url);
+    (receiveRunConfigUrl(url)).catch(() => { /* noop */ });
     return true;
   }
   return false;

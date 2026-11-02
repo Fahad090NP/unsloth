@@ -2,8 +2,8 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { useHfDatasetsServer, useHubSource } from "@/lib/hf-endpoint";
-import { useOnlineStatus } from "@/features/hub/hooks/use-online-status";
-import { fingerprintToken } from "@/features/hub/lib/token-fingerprint";
+import { useOnlineStatus } from "@/features/hub";
+import { fingerprintToken } from "@/features/hub";
 import { useEffect, useState } from "react";
 import {
   type DatasetSizeInfo,
@@ -31,11 +31,11 @@ export function useDatasetSize(
   useEffect(() => {
     if (!repoKey || !enabled || !online) return;
     const controller = new AbortController();
-    void fetchDatasetSize(repoKey, token, controller.signal).then((value) => {
+    (fetchDatasetSize(repoKey, token, controller.signal).then((value) => {
       if (!controller.signal.aborted) {
         setState({ key, value });
       }
-    });
+    })).catch(() => { /* noop */ });
     return () => {
       controller.abort();
     };

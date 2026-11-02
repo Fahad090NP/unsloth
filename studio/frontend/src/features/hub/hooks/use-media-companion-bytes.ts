@@ -42,7 +42,7 @@ export function companionPlanRequests(
   for (const variant of variants) {
     const key = companionKey(variant);
     if (
-      variant.dependency_key == null &&
+      (variant.dependency_key === null || variant.dependency_key === undefined) &&
       variant.filename !== selectedFilename
     ) {
       continue;

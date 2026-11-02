@@ -84,13 +84,16 @@ export function McpAccessSection({
   useEffect(() => {
     let live = true;
     loadMcpAccess().then(
-      (next) => live && setSettings(next),
-      (err) =>
-        live &&
+      (next) => {
+        if (live) setSettings(next);
+      },
+      (err) => {
+        if (!live) return;
         setError(
           errorMessage(err) ?? translate("settings.apiKeys.mcp.loadError"),
-        ),
-    );
+        );
+      },
+    ).catch(() => { /* noop */ });
     return () => {
       live = false;
     };
@@ -172,7 +175,7 @@ export function McpAccessSection({
             <Switch
               checked={settings.enabled}
               disabled={busy || settings.forcedByEnv}
-              onCheckedChange={(on) => void apply(on)}
+              onCheckedChange={(on) => { (apply(on)).catch(() => { /* noop */ }); }}
               aria-label={t("settings.apiKeys.mcp.enable")}
             />
           </SettingsRow>

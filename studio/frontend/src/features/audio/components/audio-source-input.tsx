@@ -215,10 +215,10 @@ export function AudioSourceInput({
         );
         return;
       }
-      void registerNativeAttachmentPath(path)
+      (registerNativeAttachmentPath(path)
         .then(nativeAttachmentIntentToFile)
         .then((file) => source.pickFile(file))
-        .catch(() => { source.fail("Could not read the dropped file."); });
+        .catch(() => { source.fail("Could not read the dropped file."); })).catch(() => { /* noop */ });
     },
   });
 
@@ -258,8 +258,8 @@ export function AudioSourceInput({
         if (disabled) return;
         event.preventDefault();
         setDragging(false);
-        const file = event.dataTransfer.files?.[0];
-        if (file) void source.pickFile(file);
+        const file = event.dataTransfer.files[0];
+        if (file) (source.pickFile(file)).catch(() => { /* noop */ });
       }}
       className="grid gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
@@ -294,10 +294,10 @@ export function AudioSourceInput({
         type="file"
         accept={AUDIO_ACCEPT}
         className="hidden"
-        onChange={(event) => {
+        onChange={(eventParam) => { const event = eventParam;
           const file = event.target.files?.[0];
           event.target.value = "";
-          if (file) void source.pickFile(file);
+          if (file) (source.pickFile(file)).catch(() => { /* noop */ });
         }}
       />
 
@@ -447,11 +447,13 @@ export function AudioSourceInput({
                 type="button"
                 variant={recording ? "destructive" : "outline"}
                 disabled={disabled}
-                onClick={() =>
-                  { recording
-                    ? source.stopRecording()
-                    : void source.startRecording(); }
-                }
+                onClick={() => {
+                  if (recording) {
+                    source.stopRecording();
+                  } else {
+                    source.startRecording().catch(() => { /* noop */ });
+                  }
+                }}
               >
                 {recording ? (
                   <HugeiconsIcon icon={StopIcon} className="size-4" />

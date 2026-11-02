@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { ModelOption } from "@/features/model-picker/components/model-selector/types";
+import type { ModelOption } from "@/features/model-picker";
 import { toast } from "@/lib/toast";
 import { ClosedCaptionIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -97,7 +97,7 @@ function CloneInputs({
               disabled={
                 !referenceUsable || transcriber.transcribing || disabled
               }
-              onClick={() => void transcriber.transcribe(reference)}
+              onClick={() => { (transcriber.transcribe(reference)).catch(() => { /* noop */ }); }}
             >
               <HugeiconsIcon icon={ClosedCaptionIcon} className="size-[1em]" />
               {transcriber.transcribing ? "Transcribing…" : "Transcribe"}
@@ -122,7 +122,7 @@ function CloneInputs({
                 type="button"
                 variant="link"
                 className="h-auto p-0 text-ui-11p5 font-medium text-foreground"
-                onClick={() => void transcriber.transcribe(reference)}
+                onClick={() => { (transcriber.transcribe(reference)).catch(() => { /* noop */ }); }}
               >
                 Try again
               </Button>

@@ -38,7 +38,7 @@ export function MlxPrecisionCard({
         }
       })
       .catch(() => {
-      });
+       /* noop */ });
     return () => { controller.abort(); };
   }, [repoId, hfToken]);
 

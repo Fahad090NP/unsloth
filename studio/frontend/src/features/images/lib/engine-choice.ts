@@ -47,7 +47,7 @@ export function withEngineChoice(
   if (!modelKey) return choices;
   const next = { ...choices };
   if (isPick(choice)) next[modelKey] = choice;
-  else delete next[modelKey];
+  else Reflect.deleteProperty(next, modelKey);
   try {
     localStorage.setItem(KEY, JSON.stringify(next));
   } catch {

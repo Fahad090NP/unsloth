@@ -29,7 +29,7 @@ export function HubPlanProgress({ plan }: { plan: Plan }) {
   const job = useDownloadManagerStore((s) =>
     Object.values(s.jobs).find(
       (j) =>
-        j.repoId === entry?.repoId &&
+        j.repoId === entry.repoId &&
         j.variant === "@hub-assets" &&
         (j.state === "running" || j.state === "cancelling") &&
         entry.files.length === j.scopedFiles?.length &&
@@ -44,7 +44,7 @@ export function HubPlanProgress({ plan }: { plan: Plan }) {
           <button
             type="button"
             disabled={job.state === "cancelling"}
-            onClick={() => void downloadManager.cancel(job.key)}
+            onClick={() => { (downloadManager.cancel(job.key)).catch(() => { /* noop */ }); }}
           >
             Cancel download
           </button>

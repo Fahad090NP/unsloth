@@ -53,7 +53,7 @@ export function buildDiffusionResumePayload(
 export function resumeActionLabel(
   run: Pick<DiffusionTrainingRunSummary, "checkpoint_step">,
 ): string {
-  return run.checkpoint_step != null
+  return (run.checkpoint_step !== null && run.checkpoint_step !== undefined)
     ? `Resume from step ${run.checkpoint_step}`
     : "Resume training";
 }

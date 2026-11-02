@@ -12,9 +12,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApiProviderLogo } from "@/features/chat/api-provider-logo";
 
 import type { HubCapabilityFilter } from "@/features/hub";
-import type { HfTaskFilter } from "@/features/hub/hooks/use-hub-model-search";
+import type { HfTaskFilter } from "@/features/hub";
 // eslint-disable-next-line no-restricted-imports -- The settings barrel imports this feature back.
-import { useSettingsDialogStore } from "@/features/settings/stores/settings-dialog-store";
+import { useSettingsDialogStore } from "@/features/settings";
 import { isNpuModelId, NPU_MODEL_PREFIX, useNpuStatus } from "@/features/npu";
 import { useT } from "@/i18n";
 import { ChevronDownStandardIcon } from "@/lib/chevron-icons";
@@ -947,7 +947,7 @@ export function ModelSelector({
   function handleBrowseHub() {
     setOpen(false);
     const linkedTask = hubTask ?? task;
-    void navigate({
+    (navigate({
       to: "/hub",
       search: {
         tab: "discover",
@@ -955,7 +955,7 @@ export function ModelSelector({
         audioTask:
           hubCapability === "audio" && linkedTask ? [linkedTask].flat() : undefined,
       },
-    });
+    })).catch(() => { /* noop */ });
   }
 
   // Remote model settings live on its connection, not ModelConfigPage's local load settings.

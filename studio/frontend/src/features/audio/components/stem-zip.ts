@@ -27,7 +27,7 @@ export function sanitizeFileNamePart(part: string, fallback: string): string {
 
 function shortTitle(title: string, max: number, fallback: string): string {
   const bare = title.replace(/\.(wav|mp3|flac|ogg|m4a|aac|opus|webm)$/i, "");
-  const safe = [...sanitizeFileNamePart(bare, fallback)]
+  const safe = Array.from(sanitizeFileNamePart(bare, fallback))
     .slice(0, max)
     .join("")
     .trim();

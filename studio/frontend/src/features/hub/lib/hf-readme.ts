@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { LruMap } from "@/features/hub/lib/lru-map";
-import { fetchWithTimeout } from "@/features/hub/lib/network";
-import { fingerprintToken } from "@/features/hub/lib/token-fingerprint";
+import { LruMap } from "@/features/hub";
+import { fetchWithTimeout } from "@/features/hub";
+import { fingerprintToken } from "@/features/hub";
 import { getHfEndpoint } from "@/lib/hf-endpoint";
 import { defaultUrlTransform, type UrlTransform } from "streamdown";
 
@@ -92,7 +92,7 @@ export function fetchReadme(
       if (result === null) entry.staleAt = Date.now() + README_NEGATIVE_TTL_MS;
       return result;
     })
-    .catch((err) => {
+    .catch((err: unknown) => {
       entry.staleAt = Date.now() + README_TRANSIENT_TTL_MS;
       throw err;
     });

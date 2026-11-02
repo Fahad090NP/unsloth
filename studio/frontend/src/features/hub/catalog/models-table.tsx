@@ -9,15 +9,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { classifyUnslothSupport } from "@/features/hub/hooks/use-hub-model-search";
+import { classifyUnslothSupport } from "@/features/hub";
 import {
   formatRelativeLong,
   formatRelativeShort,
-} from "@/features/hub/lib/format";
+} from "@/features/hub";
 import {
   formatModelParamLabel,
   formatPipelineTag,
-} from "@/features/hub/lib/view-models";
+} from "@/features/hub";
 import { cn, formatCompact } from "@/lib/utils";
 import {
   Download01Icon,
@@ -313,7 +313,7 @@ function useResultRowModel(
   const taskLabel = isDataset
     ? null
     : formatPipelineTag(row.result.pipelineTag);
-  const unsupported = support?.status === "unsupported" && !support?.supportedIn;
+  const unsupported = support?.status === "unsupported" && !support.supportedIn;
   return {
     support,
     unsupported,

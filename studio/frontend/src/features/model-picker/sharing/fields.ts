@@ -171,7 +171,7 @@ export function formatSharedConfigValue(
     return formatExtraArgs(config.llamaExtraArgs) || "No extra arguments";
   }
   const value = config[key];
-  return value == null
+  return (value === null || value === undefined)
     ? "Default"
     : typeof value === "string" && value !== ""
       ? value

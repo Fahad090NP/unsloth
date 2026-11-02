@@ -219,7 +219,7 @@ export function useEditGeneration({
     if (transcriptFor === source.id || transcript.trim()) return;
     if (autoTranscribed.current === source.id) return;
     autoTranscribed.current = source.id;
-    void transcribe(source);
+    (transcribe(source)).catch(() => { /* noop */ });
   }, [
     source,
     sourceBusy,
@@ -254,7 +254,7 @@ export function useEditGeneration({
           sourceHandle.current?.browse();
           return;
         case "transcribe":
-          void transcribe(useAudioEditStore.getState().source);
+          (transcribe(useAudioEditStore.getState().source)).catch(() => { /* noop */ });
           return;
         case "type-transcript":
           document.getElementById(EDIT_TRANSCRIPT_FIELD_ID)?.focus();

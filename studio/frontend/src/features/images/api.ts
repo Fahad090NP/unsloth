@@ -545,7 +545,7 @@ export async function listDiffusionLoras(family?: string): Promise<DiffusionLora
   const data = await parseJson<{ loras: DiffusionLoraInfo[] }>(
     await authFetch(`/api/models/diffusion-loras${qs}`),
   );
-  return data.loras ?? [];
+  return (data.loras);
 }
 
 export interface GalleryPage {

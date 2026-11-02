@@ -12,7 +12,7 @@ export async function listDiffusionControlNets(
   const data = await parseJson<{ controlnets: DiffusionControlNetInfo[] }>(
     await authFetch(`/api/models/diffusion-controlnets${qs}`),
   );
-  return data.controlnets ?? [];
+  return (data.controlnets);
 }
 
 /** Move one image to just after `afterId` (null = front). The server also decides the pin. */

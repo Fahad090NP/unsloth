@@ -112,7 +112,9 @@ export function MediaApiExamples({
   useEffect(() => {
     let cancelled = false;
     loadOpenAIAutoSwitchSettings().then(
-      (settings) => !cancelled && setAutoSwitch(settings.mediaAutoSwitchModel),
+      (settings) => {
+        if (!cancelled) setAutoSwitch(settings.mediaAutoSwitchModel);
+      },
       () => undefined,
     );
     const unsubscribe = subscribeOpenAIAutoSwitchSettings((settings) =>
@@ -193,9 +195,9 @@ export function MediaApiExamples({
         }))}
         onChange={setKind}
       />
-      {pageModel == null || autoSwitch === false ? (
+      {(pageModel === null || pageModel === undefined) || autoSwitch === false ? (
         <div className="flex min-w-0 flex-col gap-1 text-ui-11/relaxed text-muted-foreground">
-          {pageModel == null ? (
+          {(pageModel === null || pageModel === undefined) ? (
             <p>{t("settings.apiKeys.mediaApi.placeholderModel")}</p>
           ) : null}
           {autoSwitch === false ? (

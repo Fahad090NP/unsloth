@@ -4,8 +4,8 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ParamSlider } from "@/features/chat";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
-import type { ModelOption } from "@/features/model-picker/components/model-selector/types";
+import { PillTabs } from "@/features/model-picker";
+import type { ModelOption } from "@/features/model-picker";
 import { ClosedCaptionIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { type ComponentProps, useEffect, useState } from "react";
@@ -100,7 +100,7 @@ function EditInputs({
             size="sm"
             className="h-auto px-2 py-1 text-ui-11p5"
             disabled={!sourceUsable || transcriber.transcribing || disabled}
-            onClick={() => void transcriber.transcribe(source)}
+            onClick={() => { (transcriber.transcribe(source)).catch(() => { /* noop */ }); }}
           >
             <HugeiconsIcon icon={ClosedCaptionIcon} className="size-[1em]" />
             {transcriber.transcribing ? "Transcribing…" : "Transcribe"}
@@ -131,7 +131,7 @@ function EditInputs({
               type="button"
               variant="link"
               className="h-auto p-0 text-ui-11p5 font-medium text-foreground"
-              onClick={() => void transcriber.transcribe(source)}
+              onClick={() => { (transcriber.transcribe(source)).catch(() => { /* noop */ }); }}
             >
               Try again
             </Button>
@@ -316,7 +316,7 @@ function EditComparePlayer({
       })
       .catch(() => {
         // Original deleted: the compare still plays the edit.
-      });
+      }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
       if (url) URL.revokeObjectURL(url);
@@ -334,7 +334,7 @@ function EditComparePlayer({
         src,
         fileUrl: galleryFileUrl(clip.id),
         label: "Edited",
-        durationS: clip.duration_s ?? null,
+        durationS: (clip.duration_s),
       }}
       autoFocusRef={focusRef}
     />

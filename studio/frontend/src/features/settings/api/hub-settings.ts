@@ -4,7 +4,7 @@
 import { fetchDeviceType } from "@/config/env";
 import { authFetch } from "@/features/auth";
 import { clearDownloadTransportCapabilitiesCache } from "@/features/hub";
-import { markRemoteNetworkOnline } from "@/features/hub/lib/network";
+import { markRemoteNetworkOnline } from "@/features/hub";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 import type { HubSource } from "@/lib/hf-endpoint";
 import { loadDownloadTransportSettings } from "./download-transport";

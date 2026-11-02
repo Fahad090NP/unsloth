@@ -83,10 +83,10 @@ export function audioOptionSpecsFor(
 export function audioOptionUsesSlider(spec: AudioOptionSpec): boolean {
   return (
     (spec.type === "int" || spec.type === "float") &&
-    spec.min != null &&
-    spec.max != null &&
+    (spec.min !== null && spec.min !== undefined) &&
+    (spec.max !== null && spec.max !== undefined) &&
     spec.max > spec.min &&
-    spec.default != null
+    (spec.default !== null && spec.default !== undefined)
   );
 }
 
@@ -105,8 +105,8 @@ export function coerceAudioOptionValue(
         typeof value === "string" && value.trim() !== "" ? Number(value) : value;
       if (typeof number !== "number" || !Number.isFinite(number)) return undefined;
       let clamped = number;
-      if (spec.min != null) clamped = Math.max(spec.min, clamped);
-      if (spec.max != null) clamped = Math.min(spec.max, clamped);
+      if ((spec.min !== null && spec.min !== undefined)) clamped = Math.max(spec.min, clamped);
+      if ((spec.max !== null && spec.max !== undefined)) clamped = Math.min(spec.max, clamped);
       return spec.type === "int" ? Math.round(clamped) : clamped;
     }
     case "enum":
@@ -225,7 +225,7 @@ const storageKey = (modelId: string) => modelId.trim().replace(/\/+$/, "").toLow
 
 function readAll(): StoredAudioOptions {
   try {
-    const raw = globalThis.localStorage?.getItem(AUDIO_OPTIONS_STORAGE_KEY);
+    const raw = globalThis.localStorage.getItem(AUDIO_OPTIONS_STORAGE_KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : null;
     return parsed && typeof parsed === "object" && !Array.isArray(parsed)
       ? (parsed as StoredAudioOptions)
@@ -257,9 +257,9 @@ export function saveAudioOptionValues(
   try {
     const all = readAll();
     const key = storageKey(modelId);
-    if (Object.keys(values).length === 0) delete all[key];
+    if (Object.keys(values).length === 0) Reflect.deleteProperty(all, key);
     else all[key] = values;
-    globalThis.localStorage?.setItem(AUDIO_OPTIONS_STORAGE_KEY, JSON.stringify(all));
+    globalThis.localStorage.setItem(AUDIO_OPTIONS_STORAGE_KEY, JSON.stringify(all));
   } catch {
     // Storage is best effort: a full or blocked store keeps the values for this session only.
   }

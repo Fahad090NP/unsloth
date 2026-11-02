@@ -30,7 +30,7 @@ export function isUnslothSiteUrl(url: string): boolean {
 }
 
 export function confirmExternalLink(url: string): boolean {
-  const trimmed = url?.trim() ?? "";
+  const trimmed = (url?.trim())
   if (!trimmed || trimmed.startsWith("#")) return false;
   const lower = trimmed.toLowerCase();
   if (

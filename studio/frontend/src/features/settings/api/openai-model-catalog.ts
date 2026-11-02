@@ -45,7 +45,7 @@ export function chatModelsFromCatalog(body: unknown): OpenAIModel[] {
     return [];
   }
   return data.flatMap((entry) =>
-    typeof entry?.id === "string" &&
+    typeof entry.id === "string" &&
     entry.id &&
     (typeof entry.task !== "string" || CHAT_TASKS.has(entry.task))
       ? [
@@ -65,7 +65,7 @@ export function audioModelsFromCatalog(body: unknown): AudioApiModel[] {
     return [];
   }
   return data.flatMap((entry) =>
-    typeof entry?.id === "string" &&
+    typeof entry.id === "string" &&
     entry.id &&
     typeof entry.task === "string" &&
     AUDIO_TASKS.has(entry.task)
@@ -126,7 +126,7 @@ export function watchAudioModels(
           update,
           resident ? AUDIO_CATALOG_IDLE_MS : AUDIO_CATALOG_RETRY_MS,
         );
-      });
+      }).catch(() => { /* noop */ });
   };
   update();
   return () => {

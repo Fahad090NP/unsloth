@@ -4,7 +4,7 @@
 import { authFetch } from "@/features/auth";
 import { bumpInventoryVersion } from "@/features/hub";
 // Leaf module, not the barrel: tests stub the barrel down to the cache bump.
-import { hubTokenHeader } from "@/features/hub/lib/hub-token-header";
+import { hubTokenHeader } from "@/features/hub";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
 export interface EmbeddingModelSettings {

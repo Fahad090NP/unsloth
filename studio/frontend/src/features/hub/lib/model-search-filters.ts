@@ -115,12 +115,12 @@ interface ListingModel {
 }
 
 export async function* filterModelListing(
-  iterator: AsyncGenerator<unknown>,
+  iterator: AsyncGenerator,
   filters: ModelSearchFilters,
   fetchJson: JsonFetch,
   pinnedModel?: Promise<unknown | null>,
   keep?: (raw: unknown) => boolean,
-): AsyncGenerator<unknown> {
+): AsyncGenerator {
   const owners = new Map<string, Promise<boolean>>();
   async function filter(raw: unknown): Promise<ListingModel | null> {
     if (raw === null) {
@@ -199,7 +199,7 @@ export async function* filterModelListing(
       for (const model of await Promise.all(
         batch.map((raw) =>
           pinnedName && (raw as ListingModel | null)?.name === pinnedName
-            ? null
+            ? Promise.resolve(null)
             : filter(raw),
         ),
       )) {

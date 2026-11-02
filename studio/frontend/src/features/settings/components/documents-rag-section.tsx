@@ -23,7 +23,7 @@ import {
   jobKeyOf,
   scopedVariant,
   useDownloadManagerStore,
-} from "@/features/hub/download-manager";
+} from "@/features/hub";
 import { useT } from "@/i18n";
 import { toast } from "@/lib/toast";
 import { type ReactElement, useCallback, useEffect, useRef, useState } from "react";
@@ -94,14 +94,14 @@ export function DocumentsRagSection(): ReactElement {
   }, [consumeScrollTarget, scrollTarget]);
 
   useEffect(() => {
-    void useEmbeddingModelStore.getState().load();
+    (useEmbeddingModelStore.getState().load()).catch(() => { /* noop */ });
   }, []);
 
   // Residency changes with no event to subscribe to, so re-read while visible.
   useEffect(() => {
     const refresh = () => {
       if (document.hidden) return;
-      void useEmbeddingModelStore.getState().load();
+      (useEmbeddingModelStore.getState().load()).catch(() => { /* noop */ });
     };
     const timer = window.setInterval(refresh, RESIDENCY_POLL_MS);
     document.addEventListener("visibilitychange", refresh);
@@ -125,11 +125,11 @@ export function DocumentsRagSection(): ReactElement {
         ),
       );
     } catch {
-    }
+     /* noop */ }
   }, [hfToken]);
 
   useEffect(() => {
-    void refreshCachedRepos();
+    (refreshCachedRepos()).catch(() => { /* noop */ });
   }, [refreshCachedRepos]);
 
   const savedModel = embeddingModel?.embeddingModel;
@@ -139,12 +139,12 @@ export function DocumentsRagSection(): ReactElement {
     setSaveError(null);
     if (!savedModel) return;
     let live = true;
-    void resolveEmbeddingModel(savedModel, { hfToken: hfToken || undefined })
+    (resolveEmbeddingModel(savedModel, { hfToken: hfToken || undefined })
       .then((next) => {
         if (live && next.embeddingModel === savedModel) setResolution(next);
       })
       .catch(() => {
-      });
+       /* noop */ })).catch(() => { /* noop */ });
     return () => {
       live = false;
     };
@@ -172,10 +172,10 @@ export function DocumentsRagSection(): ReactElement {
       if (!stood) return false;
       setForceCandidate(null);
       // Unresolved or still to download: Re-embed would fail until the files are on disk.
-      void toastEmbeddingModelSaved(
+      (toastEmbeddingModelSaved(
         t("settings.general.rag.saved"),
         Boolean(plan && (plan.cached || !plan.downloadRepo)),
-      );
+      )).catch(() => { /* noop */ });
       return true;
     } catch (error) {
       // A hard security block cannot be forced; keep "Save anyway" hidden.
@@ -296,7 +296,9 @@ export function DocumentsRagSection(): ReactElement {
     downloadJobKey ? (state.jobs[downloadJobKey]?.state ?? null) : null,
   );
   const fullSnapshotDownloadState = useDownloadManagerStore((state) =>
-    fullSnapshotJobKey ? (state.jobs[fullSnapshotJobKey]?.state ?? null) : null,
+    fullSnapshotJobKey
+      ? (state.jobs[fullSnapshotJobKey]?.state ?? null)
+      : null,
   );
   const downloading =
     downloadState === "running" ||
@@ -312,7 +314,7 @@ export function DocumentsRagSection(): ReactElement {
     )
       return;
     let live = true;
-    void Promise.all([
+    (Promise.all([
       resolveEmbeddingModel(savedModel, { hfToken: hfToken || undefined }),
       refreshCachedRepos(),
     ])
@@ -320,7 +322,7 @@ export function DocumentsRagSection(): ReactElement {
         if (live && next.embeddingModel === savedModel) setResolution(next);
       })
       .catch(() => {
-      });
+       /* noop */ })).catch(() => { /* noop */ });
     return () => {
       live = false;
     };
@@ -454,7 +456,7 @@ export function DocumentsRagSection(): ReactElement {
               size="sm"
               className="shrink-0"
               disabled={isSavingEmbeddingModel}
-              onClick={() => void applyEmbeddingModel(forceCandidate, true)}
+              onClick={() => { (applyEmbeddingModel(forceCandidate, true)).catch(() => { /* noop */ }); }}
             >
               {t("settings.general.rag.saveAnyway")}
             </Button>
@@ -474,7 +476,7 @@ export function DocumentsRagSection(): ReactElement {
           <div className="flex max-w-full flex-col gap-1 max-[360px]:w-full">
             <EmbeddingModelPicker
               value={embeddingModel?.embeddingModel ?? ""}
-              onSelect={(model) => void applyEmbeddingModel(model, false)}
+              onSelect={(model) => { (applyEmbeddingModel(model, false)).catch(() => { /* noop */ }); }}
               defaultModel={embeddingModel?.defaultEmbeddingModel}
               cachedModels={cachedRepos}
               pinnedModels={pinnedModels}
@@ -484,7 +486,7 @@ export function DocumentsRagSection(): ReactElement {
               busy={isSavingEmbeddingModel}
               loaded={embeddingModel?.loaded}
               // Any resident embedder, not just this one: switching does not release the old one.
-              onEject={embeddingModel?.backendLoaded ? () => void unload() : undefined}
+              onEject={embeddingModel?.backendLoaded ? () => { (unload()).catch(() => { /* noop */ }); } : undefined}
               className="w-[calc(260px*var(--ui-space-scale,1))] max-w-full max-[360px]:w-full"
             />
             {notLoaded ? (
@@ -513,7 +515,7 @@ export function DocumentsRagSection(): ReactElement {
             embeddingModel.embeddingDeviceLocked ||
             isSavingEmbeddingModel
           }
-          onValueChange={(device) => void changeDevice(device as EmbeddingDevice)}
+          onValueChange={(device) => { (changeDevice(device as EmbeddingDevice)).catch(() => { /* noop */ }); }}
         >
           <SelectTrigger className="w-36" aria-label={t("settings.general.rag.device")}>
             <SelectValue />

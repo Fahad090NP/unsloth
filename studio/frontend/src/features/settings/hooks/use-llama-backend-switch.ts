@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { invalidateLlamaFlagCatalog } from "@/features/model-picker/api/llama-flags";
+import { invalidateLlamaFlagCatalog } from "@/features/model-picker";
 import { useT } from "@/i18n";
 import {
   signalLlamaJobStarted,
@@ -55,7 +55,7 @@ export function useLlamaBackendSwitch() {
     mounted.current = true;
     // Opening the picker rechecks host capability; during an install the poll repeats it.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void refresh(true);
+    (refresh(true)).catch(() => { /* noop */ });
     return () => {
       mounted.current = false;
       if (pollTimer.current) {
@@ -140,11 +140,11 @@ export function useLlamaBackendSwitch() {
   useEffect(
     () =>
       subscribeToLlamaJobStarted(() => {
-        void refresh().then((next) => {
+        (refresh().then((next) => {
           if (next?.job.state === "running") {
             startPolling();
           }
-        });
+        })).catch(() => { /* noop */ });
       }),
     [refresh, startPolling],
   );
@@ -155,7 +155,7 @@ export function useLlamaBackendSwitch() {
       return;
     }
     setApplying(true);
-    void (async () => {
+    ((async () => {
       try {
         const started = await switchLlamaBackend(requested);
         if (!started.started) {
@@ -188,7 +188,7 @@ export function useLlamaBackendSwitch() {
         ownedJob.current = null;
         toast.error(error instanceof Error ? error.message : String(error));
       }
-    })();
+    })()).catch(() => { /* noop */ });
   }, [selected, status?.backendRequest, refresh, startPolling, t]);
 
   const running = applying || status?.job.state === "running";
@@ -203,7 +203,7 @@ export function useLlamaBackendSwitch() {
     status,
     selected,
     setSelected,
-    running: Boolean(running),
+    running: (running),
     apply,
     refresh,
     loadError,

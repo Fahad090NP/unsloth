@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import type { HfModelResult } from "@/features/hub/hooks/use-hub-model-search";
-import { resolveInventoryResource } from "@/features/hub/inventory/resource-resolver";
+import type { HfModelResult } from "@/features/hub";
+import { resolveInventoryResource } from "@/features/hub";
 import type {
   CachedInventoryRow,
   LocalInventoryRow,
-} from "@/features/hub/inventory/types";
-import { ownerOf, repoOf } from "@/features/hub/lib/format";
+} from "@/features/hub";
+import { ownerOf, repoOf } from "@/features/hub";
 import type {
   CapabilityFilter,
   DiscoverRow,
@@ -253,9 +253,7 @@ export function buildDiscoverRows(
         resource.localRow?.companionPrefetch) === true;
     const partial =
       !companionPrefetch &&
-      Boolean(
-        resource.cachedRow?.partial ?? resource.localRow?.partial ?? false,
-      );
+      (resource.cachedRow?.partial ?? resource.localRow?.partial ?? false);
     const downloading =
       partial &&
       Boolean(

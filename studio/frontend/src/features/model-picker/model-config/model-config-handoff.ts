@@ -47,7 +47,7 @@ function fallbackRequestId(): string {
 }
 
 export function createModelConfigHandoffRequestId(
-  cryptoSource: RandomUuidSource | null = globalThis.crypto ?? null,
+  cryptoSource: RandomUuidSource | null = (globalThis.crypto),
 ): string {
   if (typeof cryptoSource?.randomUUID !== "function") {
     return fallbackRequestId();
@@ -161,7 +161,7 @@ export function modelConfigTargetIsResident({
   }
   if (
     target.isGguf &&
-    target.ggufVariant == null &&
+    (target.ggufVariant === null || target.ggufVariant === undefined) &&
     (isStandaloneGgufPath(target.id) || isOllamaModelId(target.id))
   ) {
     return true;

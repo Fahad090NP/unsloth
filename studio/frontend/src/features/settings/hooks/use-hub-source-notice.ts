@@ -16,7 +16,7 @@ export function useHubSourceNotice(): void {
   useEffect(() => {
     if (!isOwner) return;
     // Not cancelled on cleanup: the grant is spent once claimed.
-    void claimHubSourceNotice().then((granted) => {
+    (claimHubSourceNotice().then((granted) => {
       if (!granted) return;
       toast.info(t("settings.general.hub.autoSourceTitle"), {
         description: t("settings.general.hub.autoSourceDescription"),
@@ -26,6 +26,6 @@ export function useHubSourceNotice(): void {
           onClick: () => { openDialog("general", { scrollTarget: "general-hub" }); },
         },
       });
-    });
+    })).catch(() => { /* noop */ });
   }, [isOwner, openDialog, t]);
 }

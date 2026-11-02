@@ -30,12 +30,12 @@ type ResidentState = Pick<
 export function selectResidentEstimateSettings(state: ResidentState) {
   if (
     state.modelLoading ||
-    state.loadedGpuMemoryMode == null ||
-    state.loadedSpeculativeType == null ||
-    state.loadedTensorParallel == null ||
-    state.loadedDisableVision == null ||
+    (state.loadedGpuMemoryMode === null || state.loadedGpuMemoryMode === undefined) ||
+    (state.loadedSpeculativeType === null || state.loadedSpeculativeType === undefined) ||
+    (state.loadedTensorParallel === null || state.loadedTensorParallel === undefined) ||
+    (state.loadedDisableVision === null || state.loadedDisableVision === undefined) ||
     (state.loadedGpuMemoryMode === "manual" &&
-      (state.loadedGpuLayers == null || state.loadedNCpuMoe == null)) ||
+      ((state.loadedGpuLayers === null || state.loadedGpuLayers === undefined) || (state.loadedNCpuMoe === null || state.loadedNCpuMoe === undefined))) ||
     state.loadedCpuFallback ||
     state.specFallbackReason ||
     state.mmprojFallbackReason
@@ -55,7 +55,7 @@ export function selectResidentEstimateSettings(state: ResidentState) {
     disableVision: state.loadedDisableVision,
     gpuMemoryMode: state.loadedGpuMemoryMode,
     gpuLayers:
-      state.loadedGpuLayers != null && state.loadedGpuLayers >= 0
+      (state.loadedGpuLayers !== null && state.loadedGpuLayers !== undefined) && state.loadedGpuLayers >= 0
         ? state.loadedGpuLayers
         : null,
     nCpuMoe: state.loadedNCpuMoe,
@@ -80,7 +80,7 @@ export function resolveResidentEstimateRequest(
   if (
     !source ||
     (!settings && !mlx) ||
-    context == null ||
+    (context === null || context === undefined) ||
     !Number.isFinite(context) ||
     context <= 0
   )

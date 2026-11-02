@@ -12,8 +12,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ParamSlider } from "@/features/chat";
-import type { ModelOption } from "@/features/model-picker/components/model-selector/types";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
+import type { ModelOption } from "@/features/model-picker";
+import { PillTabs } from "@/features/model-picker";
 import { ClosedCaptionIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { type ComponentProps, useEffect, useState } from "react";
@@ -223,7 +223,7 @@ function SourceTextField({
           size="sm"
           className="h-auto px-2 py-1 text-ui-11p5"
           disabled={!sourceUsable || transcriber.transcribing || disabled}
-          onClick={() => void transcriber.transcribe(source)}
+          onClick={() => { (transcriber.transcribe(source)).catch(() => { /* noop */ }); }}
         >
           <HugeiconsIcon icon={ClosedCaptionIcon} className="size-[1em]" />
           {transcriber.transcribing ? "Transcribing…" : "Transcribe"}
@@ -245,7 +245,7 @@ function SourceTextField({
             type="button"
             variant="link"
             className="h-auto p-0 text-ui-11p5 font-medium text-foreground"
-            onClick={() => void transcriber.transcribe(source)}
+            onClick={() => { (transcriber.transcribe(source)).catch(() => { /* noop */ }); }}
           >
             Try again
           </Button>
@@ -274,7 +274,7 @@ export function ConvertRail({
       {...props}
       musicGeneration={false}
       prompt=""
-      setPrompt={() => {}}
+      setPrompt={() => { /* noop */ }}
       audioOptionSpecs={convert.advancedOptionSpecs}
       claimedOptions={convert.claimedOptions}
       inputs={
@@ -364,7 +364,7 @@ function useSourceSide(clip: AudioGalleryClip | null): {
       : null;
     const fetchSide = (): Promise<Blob> =>
       original
-        ? fetchAudioBlob(original).catch((error) => {
+        ? fetchAudioBlob(original).catch((error: unknown) => {
             if (savedUrl) return fetchAudioBlob(savedUrl);
             throw error;
           })
@@ -380,7 +380,7 @@ function useSourceSide(clip: AudioGalleryClip | null): {
           setSide({
             unavailable: "The source recording is no longer available.",
           });
-      });
+      }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
       if (url) URL.revokeObjectURL(url);

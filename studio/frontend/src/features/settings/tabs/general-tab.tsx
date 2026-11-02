@@ -229,7 +229,7 @@ export function GeneralTab() {
   const showLoadedModels = useShowLoadedModels();
   const spellCheck = useSpellCheck();
 
-  const [draftToken, setDraftToken] = useState(hfToken ?? "");
+  const [draftToken, setDraftToken] = useState((hfToken));
   const [showToken, setShowToken] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [uploadLimit, setUploadLimit] = useState<UploadLimitSettings | null>(
@@ -306,7 +306,7 @@ export function GeneralTab() {
   }, []);
 
   useEffect(() => {
-    const current = hfToken ?? "";
+    const current = (hfToken);
     if (tokenEditedRef.current) {
       if (hfTokenIsPersisting) return;
       if (hfTokenPersistenceError) {
@@ -352,27 +352,27 @@ export function GeneralTab() {
 
   // Only after the validation endpoint confirms the token: a saved one may be expired or revoked.
   const tokenIsCurrent =
-    draftToken.trim().length > 0 && draftToken.trim() === (hfToken ?? "");
-  const tokenValidation = useHfTokenValidation(hfToken ?? "");
+    draftToken.trim().length > 0 && draftToken.trim() === ((hfToken));
+  const tokenValidation = useHfTokenValidation((hfToken));
   const tokenValidated = tokenIsCurrent && tokenValidation.isValid === true;
 
   useEffect(() => {
     if (!isOwner) return;
     let cancelled = false;
-    void loadUploadLimitSettings()
+    (loadUploadLimitSettings()
       .then((settings) => {
         if (cancelled) return;
         setUploadLimit(settings);
         setDraftUploadLimit(String(settings.maxUploadSizeMb));
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (cancelled) return;
         setUploadLimitError(
           error instanceof Error
             ? error.message
             : "Failed to load upload limit.",
         );
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -381,20 +381,20 @@ export function GeneralTab() {
   useEffect(() => {
     if (!isOwner) return;
     let cancelled = false;
-    void loadHelperPrecacheSettings()
+    (loadHelperPrecacheSettings()
       .then((settings) => {
         if (cancelled) return;
         setHelperPrecache(settings);
         setHelperPrecacheError(null);
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (cancelled) return;
         setHelperPrecacheError(
           error instanceof Error
             ? error.message
             : t("settings.general.helperLlm.loadError"),
         );
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -403,20 +403,20 @@ export function GeneralTab() {
   useEffect(() => {
     if (!isOwner) return;
     let cancelled = false;
-    void loadPreviewSharing()
+    (loadPreviewSharing()
       .then((settings) => {
         if (cancelled) return;
         setPreviewSharing(settings);
         setPreviewSharingError(null);
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (cancelled) return;
         setPreviewSharingError(
           error instanceof Error
             ? error.message
             : t("settings.general.previewSharing.loadError"),
         );
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -558,7 +558,7 @@ export function GeneralTab() {
                 onChange={(e) => {
                   const value = e.target.value;
                   tokenEditRevisionRef.current += 1;
-                  tokenEditedRef.current = value.trim() !== (hfToken ?? "");
+                  tokenEditedRef.current = value.trim() !== ((hfToken));
                   submittedTokenRevisionRef.current = null;
                   draftRef.current = value;
                   setDraftToken(value);
@@ -700,7 +700,7 @@ export function GeneralTab() {
           <Switch
             checked={previewSharing?.enabled ?? false}
             disabled={!previewSharing || isSavingPreviewSharing}
-            onCheckedChange={(enabled) => void savePreviewSharing(enabled)}
+            onCheckedChange={(enabled) => { (savePreviewSharing(enabled)).catch(() => { /* noop */ }); }}
           />
         </SettingsRow>
         <SettingsRow
@@ -760,7 +760,7 @@ export function GeneralTab() {
               variant="outline"
               size="sm"
               disabled={isSavingUploadLimit}
-              onClick={() => void saveUploadLimit()}
+              onClick={() => { (saveUploadLimit()).catch(() => { /* noop */ }); }}
             >
               {isSavingUploadLimit ? t("common.saving") : t("common.save")}
             </Button>
@@ -794,7 +794,7 @@ export function GeneralTab() {
               isSavingHelperPrecache ||
               helperPrecache.disabledByEnv
             }
-            onCheckedChange={(enabled) => void saveHelperPrecache(enabled)}
+            onCheckedChange={(enabled) => { (saveHelperPrecache(enabled)).catch(() => { /* noop */ }); }}
           />
         </SettingsRow>
       </SettingsSection>
@@ -820,7 +820,7 @@ export function GeneralTab() {
               disabled={
                 launchAtLoginSetting.value === null || launchAtLoginSetting.saving
               }
-              onCheckedChange={(enabled) => void launchAtLoginSetting.update(enabled)}
+              onCheckedChange={(enabled) => { (launchAtLoginSetting.update(enabled)).catch(() => { /* noop */ }); }}
             />
           </SettingsRow>
 
@@ -841,7 +841,7 @@ export function GeneralTab() {
                 disabled={
                   closeToTraySetting.value === null || closeToTraySetting.saving
                 }
-                onCheckedChange={(enabled) => void closeToTraySetting.update(enabled)}
+                onCheckedChange={(enabled) => { (closeToTraySetting.update(enabled)).catch(() => { /* noop */ }); }}
               />
             </SettingsRow>
           ) : null}
@@ -857,7 +857,7 @@ export function GeneralTab() {
                   disabled={
                     trayIconSetting.value === null || trayIconSetting.saving
                   }
-                  onCheckedChange={(enabled) => void trayIconSetting.update(enabled)}
+                  onCheckedChange={(enabled) => { (trayIconSetting.update(enabled)).catch(() => { /* noop */ }); }}
                 />
                 {trayIconSetting.error ? (
                   <span className="max-w-[calc(260px*var(--ui-space-scale,1))] text-right text-xs text-destructive">
@@ -936,7 +936,7 @@ export function GeneralTab() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => void revokePreviewLinks()}
+              onClick={() => { (revokePreviewLinks()).catch(() => { /* noop */ }); }}
               disabled={isRevokingPreview}
             >
               {isRevokingPreview

@@ -107,7 +107,7 @@ export function useStemSources(
       publish();
     };
 
-    void (async () => {
+    ((async () => {
       const loads = new Map(
         group.map((stem) => [stem.clipId, loadSrc(stem)] as const),
       );
@@ -127,7 +127,7 @@ export function useStemSources(
           // Undecodable: the row keeps its flat placeholder and still plays.
         }
       }
-    })();
+    })()).catch(() => { /* noop */ });
 
     return () => {
       cancelled = true;

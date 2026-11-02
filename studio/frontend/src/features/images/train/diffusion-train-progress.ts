@@ -42,12 +42,12 @@ export function diffusionTrainingProgress(status: Status | null) {
   const preparing =
     running &&
     !terminal &&
-    (status?.in_model_load || (status?.step ?? 0) <= 0);
+    ((status?.in_model_load ?? false) || (status?.step ?? 0) <= 0);
   if (preparing) {
-    const note = backendNote(status?.message);
-    const legacy = LEGACY_PREPARING.exec(status?.message);
+    const note = backendNote(status.message);
+    const legacy = LEGACY_PREPARING.exec(status.message);
     const prep =
-      status?.preparation ??
+      status.preparation ??
       (legacy
         ? {
             stage: legacy[1].replaceAll(" ", "_"),
@@ -83,14 +83,14 @@ export function diffusionTrainingProgress(status: Status | null) {
           : null,
       };
     }
-    const load = status?.model_load_progress;
-    const stage = status?.model_load_stage;
+    const load = status.model_load_progress;
+    const stage = status.model_load_stage;
     // A retained tensor count is stale while the download manager shows a transfer.
-    const downloading = status?.download_progress != null;
-    const measured = status?.in_model_load && !downloading && load &&
+    const downloading = (status.download_progress !== null && status.download_progress !== undefined);
+    const measured = status.in_model_load && !downloading && load &&
       Number.isFinite(load.done) && Number.isFinite(load.total) &&
       load.done >= 0 && load.total > 0 && load.done <= load.total;
-    if (status?.in_model_load && !downloading && (measured || stage)) {
+    if (status.in_model_load && !downloading && (measured || stage)) {
       return {
         preparing: true,
         title: stage === "quantizing" ? "Loading model and converting to 4-bit"
@@ -109,12 +109,12 @@ export function diffusionTrainingProgress(status: Status | null) {
     }
     return {
       preparing: true,
-      title: status?.in_model_load
+      title: status.in_model_load
         ? "Loading training model"
         : "Starting training",
       detail:
         note ??
-        (status?.in_model_load
+        (status.in_model_load
           ? "Getting the model ready before training starts."
           : "Preparing the first training step. Compilation can take longer on the first run."),
       count: null,

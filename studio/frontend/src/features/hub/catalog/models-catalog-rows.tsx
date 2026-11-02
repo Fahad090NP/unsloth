@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { useVllmAvailable, useVllmPlatform } from "@/features/model-picker";
-import { isChatGgufTask, reconcileGgufPinsAfterDelete } from "@/features/model-picker/components/model-selector/reconcile-gguf-pins";
+import { isChatGgufTask, reconcileGgufPinsAfterDelete } from "@/features/model-picker";
 
 import {
   Tooltip,
@@ -472,7 +472,7 @@ export const DiscoverModelRow = memo(function DiscoverModelRow({
           }),
     [isDataset, row.id, row.result, deviceType, vllmAvailable, vllmPlatform],
   );
-  const unsupported = support?.status === "unsupported" && !support?.supportedIn;
+  const unsupported = support?.status === "unsupported" && !support.supportedIn;
   const handleClick = useCallback(() => { onSelect(row.id); }, [onSelect, row.id]);
   const partialRepoId =
     row.isAvailableOnDevice && row.isPartialOnDevice
@@ -732,13 +732,13 @@ export const InventoryRow = memo(function InventoryRow({
   const pinnedKeys = usePinnedModelsStore((s) => s.pinned);
   const togglePinned = usePinnedModelsStore((s) => s.togglePinned);
   const rowPinned =
-    cacheDeletableRepoId != null &&
+    (cacheDeletableRepoId !== null && cacheDeletableRepoId !== undefined) &&
     pinnedKeys.includes(pinKey(cacheDeletableRepoId));
   const deletableRepoId = canDelete ? cacheDeletableRepoId : null;
   const deleteAction =
     deletableRepoId ? (
       <ModelRowMenu
-        ariaLabel={`More options for ${deletableRepoId ?? rowModelId}`}
+        ariaLabel={`More options for ${(deletableRepoId)}`}
         buttonClassName="pointer-events-auto hub-modal-pe-guard size-6 rounded-full opacity-0 transition-opacity group-hover/row:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 [@media(pointer:coarse)]:opacity-100"
         pin={
           isDataset || !deletableRepoId

@@ -7,7 +7,7 @@ import {
   isDecisionConnection,
   useExternalProvidersStore,
 } from "@/features/chat";
-import type { ExternalModelOption } from "@/features/model-picker/components/model-selector/types";
+import type { ExternalModelOption } from "@/features/model-picker";
 import { connectionSpeechModels } from "../speak-connection-models";
 
 export interface SpeakConnection {

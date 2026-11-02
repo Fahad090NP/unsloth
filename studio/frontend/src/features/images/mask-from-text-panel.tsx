@@ -45,7 +45,7 @@ function useSegmenterStatus() {
       .then((next) => {
         if (mounted.current) setStatus(next);
       })
-      .catch(() => {});
+      .catch(() => { /* noop */ }).catch(() => { /* noop */ });
   }, []);
   const downloading = status?.download.downloading === true;
   useEffect(() => {
@@ -124,7 +124,7 @@ function SegmenterDownloadNotice({
               size="sm"
               variant="ghost"
               className={cn("h-6 gap-1 px-1.5 text-xs", !owner && "hidden")}
-              onClick={() => void cancel()}
+              onClick={() => { (cancel()).catch(() => { /* noop */ }); }}
             >
               <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
               Cancel
@@ -170,7 +170,7 @@ function SegmenterDownloadNotice({
               variant="secondary"
               className="gap-1.5 self-start text-xs"
               disabled={busy}
-              onClick={() => void start()}
+              onClick={() => { (start()).catch(() => { /* noop */ }); }}
             >
               {busy ? <Spinner className="size-3.5" /> : <HugeiconsIcon icon={Download01Icon} className="size-3.5" />}
               {size ? `Download (${size})` : "Download"}
@@ -215,7 +215,7 @@ export function MaskFromTextPanel({
   useEffect(
     () => () => {
       controllerRef.current?.abort();
-      releaseSegmenter().catch(() => {});
+      releaseSegmenter().catch(() => { /* noop */ }).catch(() => { /* noop */ });
     },
     [],
   );
@@ -283,7 +283,7 @@ export function MaskFromTextPanel({
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              void run();
+              (run()).catch(() => { /* noop */ });
             }
           }}
           className="h-8 flex-1 text-xs"
@@ -294,7 +294,7 @@ export function MaskFromTextPanel({
           variant="secondary"
           className="gap-1.5 text-xs"
           disabled={!canRun}
-          onClick={() => void run()}
+          onClick={() => { (run()).catch(() => { /* noop */ }); }}
         >
           {running ? <Spinner className="size-3.5" /> : <HugeiconsIcon icon={Search01Icon} className="size-3.5" />}
           {running ? "Finding" : "Find"}

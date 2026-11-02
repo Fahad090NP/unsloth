@@ -10,7 +10,7 @@ import {
 import {
   useDownloadTransportCapabilities,
   useTransportMode,
-} from "@/features/hub/download-manager";
+} from "@/features/hub";
 import { cn } from "@/lib/utils";
 import { useEffect, useId } from "react";
 

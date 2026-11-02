@@ -45,7 +45,7 @@ const VIDEO_GEN_TAGS = new Set([
 export function isDiffusionTask(task: string | null | undefined): boolean {
   return (
     task === "image-diffusion-unsupported" ||
-    (task != null && (IMAGE_GEN_TAGS.has(task) || VIDEO_GEN_TAGS.has(task)))
+    ((task !== null && task !== undefined) && (IMAGE_GEN_TAGS.has(task) || VIDEO_GEN_TAGS.has(task)))
   );
 }
 

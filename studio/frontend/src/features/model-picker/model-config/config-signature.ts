@@ -9,7 +9,7 @@ import type { PerModelConfig } from "./per-model-config";
 // Uses the store's "absent == default" coalescing.
 export function gpuFieldsSignature(config: PerModelConfig): string {
   const gpuSelection =
-    config.selectedGpuIds == null
+    (config.selectedGpuIds === null || config.selectedGpuIds === undefined)
       ? "automatic"
       : [
           // Order-preserving: list order is device order, so a reorder must count as a change.
@@ -20,7 +20,7 @@ export function gpuFieldsSignature(config: PerModelConfig): string {
         ].join("@");
   return [
     config.gpuMemoryMode ?? "auto",
-    config.gpuLayers == null || config.gpuLayers < 0 ? -1 : config.gpuLayers,
+    (config.gpuLayers === null || config.gpuLayers === undefined) || config.gpuLayers < 0 ? -1 : config.gpuLayers,
     config.nCpuMoe ?? 0,
     gpuSelection,
     (config.tensorSplit ?? []).join(","),
@@ -63,8 +63,8 @@ export function loadedConfigSignature(
     config.specDraftCacheDtype ?? "",
     config.specDraftModel ?? "",
     config.nParallel ?? "",
-    config.reasoningBudget ?? "",
-    `${(config.reasoningBudgetMessage ?? "").length}:${hashString(config.reasoningBudgetMessage ?? "")}`,
+    (config.reasoningBudget),
+    `${((config.reasoningBudgetMessage)).length}:${hashString((config.reasoningBudgetMessage))}`,
     config.nBatch ?? "",
     config.nUbatch ?? "",
     config.loadMode ?? "",
@@ -72,10 +72,10 @@ export function loadedConfigSignature(
     config.cacheRam ?? "",
     config.tensorParallel ? "1" : "0",
     config.disableVision ? "1" : "0",
-    config.chatTemplateOverride == null
+    (config.chatTemplateOverride === null || config.chatTemplateOverride === undefined)
       ? ""
       : `${config.chatTemplateOverride.length}:${hashString(config.chatTemplateOverride)}`,
-    config.llamaExtraArgs == null
+    (config.llamaExtraArgs === null || config.llamaExtraArgs === undefined)
       ? ""
       : `${config.llamaExtraArgs.length}:${hashString(config.llamaExtraArgs.join("\u0000"))}`,
     gpuFieldsSignature(config),

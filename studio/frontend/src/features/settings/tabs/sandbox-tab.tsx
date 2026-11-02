@@ -328,7 +328,7 @@ function SandboxLevelSection() {
                 disabled={disabled && !selected}
                 onClick={() => {
                   if (selected || level === "off") return;
-                  void pickSandboxLevel(level, setSandboxLevel, () => { setSetupOpen(true); });
+                  (pickSandboxLevel(level, setSandboxLevel, () => { setSetupOpen(true); })).catch(() => { /* noop */ });
                 }}
                 className={cn(
                   "relative inline-flex h-8 cursor-pointer items-center rounded-full px-3.5 text-ui-12 font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
@@ -444,7 +444,7 @@ function OsSandboxSections() {
           setStatus(loaded);
           setError(null);
         })
-        .catch((loadError) => {
+        .catch((loadError: unknown) => {
           if (!current()) return;
           if (isSettingsRouteAbsent(loadError)) {
             setAbsent(true);
@@ -464,36 +464,36 @@ function OsSandboxSections() {
   );
 
   useEffect(() => {
-    void refresh(false);
+    (refresh(false)).catch(() => { /* noop */ });
     // A job started elsewhere keeps reporting here.
-    void loadHostPreparation(t("settings.sandbox.prepareError"))
+    (loadHostPreparation(t("settings.sandbox.prepareError"))
       .then((current) => {
         if (!mounted.current || current.state === "idle") return;
         setJob((shown) => (isOlderJob(current, shown) ? shown : current));
       })
-      .catch(() => undefined);
-    void loadSandboxSetup(t("sandboxSetup.startError"))
+      .catch(() => undefined)).catch(() => { /* noop */ });
+    (loadSandboxSetup(t("sandboxSetup.startError"))
       .then((current) => {
         if (!mounted.current || current.state === "idle") return;
         setSetupJob((shown) => (isOlderJob(current, shown) ? shown : current));
       })
-      .catch(() => undefined);
+      .catch(() => undefined)).catch(() => { /* noop */ });
   }, [refresh, t]);
 
   useEffect(() => {
     if (!shouldPollJob(setupJob)) return;
     const timer = window.setTimeout(() => {
-      void loadSandboxSetup(t("sandboxSetup.startError"))
+      loadSandboxSetup(t("sandboxSetup.startError"))
         .then((next) => {
           if (!mounted.current) return;
           setSetupJob(next);
           if (!shouldPollJob(next)) {
             forgetSandboxCapability();
             setLoading(true);
-            void refresh(true);
+            refresh(true).catch(() => { /* noop */ });
           }
         })
-        .catch((pollError) => {
+        .catch((pollError: unknown) => {
           if (!mounted.current) return;
           setSetupError(
             pollError instanceof Error
@@ -509,17 +509,17 @@ function OsSandboxSections() {
   useEffect(() => {
     if (!shouldPollJob(job)) return;
     const timer = window.setTimeout(() => {
-      void loadHostPreparation(t("settings.sandbox.prepareError"))
+      loadHostPreparation(t("settings.sandbox.prepareError"))
         .then((next) => {
           if (!shouldPollJob(next)) forgetSandboxCapability();
           if (!mounted.current) return;
           setJob(next);
           if (!shouldPollJob(next)) {
             setLoading(true);
-            void refresh(true);
+            refresh(true).catch(() => { /* noop */ });
           }
         })
-        .catch((pollError) => {
+        .catch((pollError: unknown) => {
           if (!mounted.current) return;
           setActionError(
             pollError instanceof Error
@@ -570,7 +570,7 @@ function OsSandboxSections() {
       setJob(started);
       if (!shouldPollJob(started)) {
         setLoading(true);
-        void refresh(true);
+        (refresh(true)).catch(() => { /* noop */ });
       }
     } catch (prepareError) {
       if (!mounted.current) return;
@@ -598,7 +598,7 @@ function OsSandboxSections() {
       if (!shouldPollJob(started)) {
         forgetSandboxCapability();
         setLoading(true);
-        void refresh(true);
+        (refresh(true)).catch(() => { /* noop */ });
       }
     } catch (startError) {
       if (!mounted.current) return;
@@ -659,7 +659,7 @@ function OsSandboxSections() {
                 disabled={loading || saving}
                 onClick={() => {
                   setLoading(true);
-                  void refresh(true);
+                  (refresh(true)).catch(() => { /* noop */ });
                 }}
               >
                 {loading ? (
@@ -712,7 +712,7 @@ function OsSandboxSections() {
                           size="sm"
                           variant="outline"
                           disabled={setupRow.installDisabled}
-                          onClick={() => void runSetup("linux-install", false)}
+                          onClick={() => { (runSetup("linux-install", false)).catch(() => { /* noop */ }); }}
                         >
                           {setupRunning ? <Spinner /> : null}
                           {t("sandboxSetup.install")}
@@ -761,7 +761,7 @@ function OsSandboxSections() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => void copyCommand(setupRow.command)}
+                            onClick={() => { (copyCommand(setupRow.command)).catch(() => { /* noop */ }); }}
                           >
                             {t("sandboxSetup.copyCommand")}
                           </Button>
@@ -782,7 +782,7 @@ function OsSandboxSections() {
                     memory={status.memory}
                     saving={saving}
                     error={actionError}
-                    onSave={(memoryLimitGb) => void save({ memoryLimitGb })}
+                    onSave={(memoryLimitGb) => { (save({ memoryLimitGb })).catch(() => { /* noop */ }); }}
                   />
                 ) : null}
               </>
@@ -814,7 +814,7 @@ function OsSandboxSections() {
                         size="sm"
                         variant="outline"
                         disabled={setupRunning}
-                        onClick={() => void runSetup("windows-runtime", false)}
+                        onClick={() => { (runSetup("windows-runtime", false)).catch(() => { /* noop */ }); }}
                       >
                         {runtimeRunning ? <Spinner /> : null}
                         {runtimeRunning
@@ -870,7 +870,7 @@ function OsSandboxSections() {
                         checked={view.optInChecked}
                         disabled={view.optInDisabled}
                         onCheckedChange={(allowDaclFallback) =>
-                          void save({ allowDaclFallback })
+                          { (save({ allowDaclFallback })).catch(() => { /* noop */ }); }
                         }
                       />
                       {view.optInLocked ? (
@@ -899,7 +899,7 @@ function OsSandboxSections() {
                           checked={view.grantsChecked}
                           disabled={view.grantsDisabled}
                           onCheckedChange={(persistentReadGrants) =>
-                            void save({ persistentReadGrants })
+                            { (save({ persistentReadGrants })).catch(() => { /* noop */ }); }
                           }
                         />
                         {view.grantsLocked ? (
@@ -923,7 +923,7 @@ function OsSandboxSections() {
                             size="sm"
                             variant="outline"
                             disabled={view.prepareDisabled}
-                            onClick={() => void prepare()}
+                            onClick={() => { (prepare()).catch(() => { /* noop */ }); }}
                           >
                             {job?.state === "running" ? <Spinner /> : null}
                             {t("settings.sandbox.prepareButton")}

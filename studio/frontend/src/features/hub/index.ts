@@ -169,3 +169,24 @@ export {
   isInventoryStampFresh,
 } from "./inventory/inventory-freshness";
 export { withAbort } from "./lib/abort-signals";
+
+export { formatEta, formatShortDate, formatRelativeLong } from "./lib/format";
+export { OnDeviceFoldersDialog } from "./catalog/on-device-folders-dialog";
+export { useStagedDownload, clearCompletedInventoryHint, downloadInventoryHintKind, useDownloadTransportCapabilities } from "./download-manager";
+export type { StagedDownloadEntry, ManagedDownload, TransportConflictInfo } from "./download-manager";
+export type { HfTaskFilter, UnslothSupport } from "./hooks/use-hub-model-search";
+export { isHfCacheSnapshotPath, isStandaloneGgufPath } from "./lib/model-identity";
+export { useCopyFeedback } from "./hooks/use-copy-feedback";
+export { getInventoryVersion } from "./stores/inventory-events";
+export { LruMap } from "./lib/lru-map";
+export { fingerprintToken } from "./lib/token-fingerprint";
+export { fetchWithTimeout, markRemoteNetworkOnline, getBrowserOfflineRetryDelayMs, getHubPhase, getLastHubFailure, subscribeNetworkStatus } from "./lib/network";
+export { disposableTimeoutSignal } from "./lib/abort-signals";
+export { ownerPaletteColor } from "./lib/avatar-theme";
+export { buildAdaptiveCardAccentStyle } from "./lib/card-accent";
+export { useDominantColor } from "./lib/use-dominant-color";
+export { formatModelParamLabel, formatPipelineTag } from "./lib/view-models";
+export { isExternalJob, updateExternalActivity } from "./download-manager/external-jobs";
+export type { HubFailure, HubPhase } from "./lib/network";
+export { fetchCachedGgufInventory, fetchCachedModelsInventory } from "./inventory/api";
+export { normalizeForSearch } from "./lib/search-text";

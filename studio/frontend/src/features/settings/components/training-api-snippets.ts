@@ -134,7 +134,7 @@ function trainingExtras(payload: TrainingStartRequest): Record<string, unknown> 
   const extras: Record<string, unknown> = {
     "learning_rate": payload.learning_rate,
   };
-  if (payload.max_steps != null && payload.max_steps > 0) {
+  if ((payload.max_steps !== null && payload.max_steps !== undefined) && payload.max_steps > 0) {
     extras.max_steps = payload.max_steps;
   }
   const lora = payload.training_type === LORA;
@@ -142,9 +142,9 @@ function trainingExtras(payload: TrainingStartRequest): Record<string, unknown> 
   extras.load_in_4bit = payload.load_in_4bit;
   extras.max_seq_length = payload.max_seq_length;
   extras.gradient_accumulation_steps = payload.gradient_accumulation_steps;
-  if (payload.warmup_steps != null) {
+  if ((payload.warmup_steps !== null && payload.warmup_steps !== undefined)) {
     extras.warmup_steps = payload.warmup_steps;
-  } else if (payload.warmup_ratio != null) {
+  } else if ((payload.warmup_ratio !== null && payload.warmup_ratio !== undefined)) {
     extras.warmup_ratio = payload.warmup_ratio;
   }
   extras.weight_decay = payload.weight_decay;
@@ -164,7 +164,7 @@ function trainingExtras(payload: TrainingStartRequest): Record<string, unknown> 
   }
   for (const [key, fallback] of Object.entries(EXTRA_DEFAULTS)) {
     const value = payload[key as keyof typeof EXTRA_DEFAULTS];
-    if (value != null && value !== "" && value !== fallback) extras[key] = value;
+    if ((value !== null && value !== undefined) && value !== "" && value !== fallback) extras[key] = value;
   }
   extras.train_on_completions = payload.train_on_completions;
   if (payload.format_type && payload.format_type !== "auto") {
@@ -188,7 +188,7 @@ export function trainingApiRequestFromPayload(
     model: payload.model_name || null,
     datasetName: payload.local_datasets.length > 0 ? datasetName : null,
     datasetFromHub:
-      payload.local_datasets.length === 0 && (Boolean(payload.hf_dataset) || payload.s3_config != null),
+      payload.local_datasets.length === 0 && (Boolean(payload.hf_dataset) || (payload.s3_config !== null && payload.s3_config !== undefined)),
     nEpochs: payload.num_epochs,
     batchSize: payload.batch_size,
     seed: payload.random_seed,

@@ -184,7 +184,7 @@ export function statusGgufVerdict(
   resident: string | null | undefined,
   isGguf: boolean | null | undefined,
 ): boolean | null {
-  if (resident == null) return null;
+  if ((resident === null || resident === undefined)) return null;
   return isGguf ?? null;
 }
 
@@ -200,7 +200,7 @@ export function verdictDescribesModel(
   resident: string | null | undefined,
   named: string | null | undefined,
 ): boolean {
-  if (resident == null || named == null) return true;
+  if ((resident === null || resident === undefined) || (named === null || named === undefined)) return true;
   return sameBaseModelId(resident, named);
 }
 

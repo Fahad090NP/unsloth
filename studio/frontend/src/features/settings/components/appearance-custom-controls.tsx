@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { NumericValueInput } from "@/features/model-picker/components/numeric-value-input";
+import { NumericValueInput } from "@/features/model-picker";
 import { type TranslationKey, useT } from "@/i18n";
 import { ChevronDownStandardIcon } from "@/lib/chevron-icons";
 import { toast } from "@/lib/toast";
@@ -271,7 +271,7 @@ function FontSelect({
     setOpen(next);
     // Start inside the click: queryLocalFonts may need transient user activation.
     if (next && deviceFonts === null) {
-      void loadDeviceFonts().then(setDeviceFonts);
+      (loadDeviceFonts().then(setDeviceFonts)).catch(() => { /* noop */ });
     }
   };
 
@@ -688,7 +688,7 @@ function useFontImport(onImported: (name: string) => void) {
         })
         .catch(() => {
           toast.error(t("settings.appearance.custom.importFont.errorFailed"));
-        });
+        }).catch(() => { /* noop */ });
     };
     reader.readAsDataURL(file);
   };
@@ -723,7 +723,7 @@ function useFontImport(onImported: (name: string) => void) {
         type="file"
         accept=".woff2,.woff,.ttf,.otf"
         className="hidden"
-        onChange={(e) => {
+        onChange={(eParam) => { const e = eParam;
           const file = e.target.files?.[0];
           if (file) importFile(file);
           e.target.value = "";
@@ -734,7 +734,7 @@ function useFontImport(onImported: (name: string) => void) {
         type="file"
         className="hidden"
         {...({ webkitdirectory: "", directory: "" } as object)}
-        onChange={(e) => {
+        onChange={(eParam) => { const e = eParam;
           if (e.target.files) scanFolder(e.target.files);
           e.target.value = "";
         }}
@@ -1057,7 +1057,7 @@ export function ResetCustomizationButton() {
       size="sm"
       disabled={pristine}
       onClick={() => {
-        void resetChatBackground();
+        (resetChatBackground()).catch(() => { /* noop */ });
         resetAll();
         resetInterfaceScale();
       }}

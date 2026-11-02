@@ -178,7 +178,7 @@ export function markRemoteNetworkOffline(
   const records =
     failure !== undefined && (takesWindow || !lastFailureByOrigin.has(origin));
   const failureChanged =
-    records && lastFailureByOrigin.get(origin)?.kind !== failure?.kind;
+    records && lastFailureByOrigin.get(origin)?.kind !== failure.kind;
   if (records && failure !== undefined) {
     lastFailureByOrigin.set(origin, failure);
   }
@@ -313,7 +313,7 @@ export function hubAuthFailure(
 ): HubFailure | null {
   const rejected =
     error.status === 401 ||
-    (error.status == null && HUB_TOKEN_REJECTED_RE.test(error.message ?? ""));
+    ((error.status === null || error.status === undefined) && HUB_TOKEN_REJECTED_RE.test(error.message ?? ""));
   if (!rejected) {
     return null;
   }

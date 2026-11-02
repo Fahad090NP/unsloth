@@ -776,7 +776,7 @@ function legibleAccent(accent: string, backgrounds: readonly string[]): string {
       minimumPlainTextContrast(b, backgrounds) -
       minimumPlainTextContrast(a, backgrounds),
   );
-  return targets[0] ?? FOREGROUND_DARK_FALLBACK;
+  return (targets[0]);
 }
 
 /** dataUrl is tracked so a same-name re-import replaces the face. */
@@ -1047,6 +1047,6 @@ export function prefersReducedMotion(): boolean {
   if (setting === "off") return false;
   return (
     typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 }

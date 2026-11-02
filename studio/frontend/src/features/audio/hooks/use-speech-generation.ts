@@ -214,7 +214,7 @@ export function useSpeechGeneration({
     (name: string, value: AudioOptionValue | undefined) => {
       setAudioOptionValues((current) => {
         const next = { ...current };
-        if (value === undefined) delete next[name];
+        if (value === undefined) Reflect.deleteProperty(next, name);
         else next[name] = value;
         saveAudioOptionValues(audioOptionsModel, next);
         return next;

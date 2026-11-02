@@ -75,7 +75,7 @@ export const useEmbeddingModelStore = create<EmbeddingModelState>(
         savesInFlight -= 1;
         if (savesInFlight === 0 && saveWasSuperseded) {
           saveWasSuperseded = false;
-          void get().load();
+          (get().load()).catch(() => { /* noop */ });
         }
       }
     },
@@ -93,7 +93,7 @@ export const useEmbeddingModelStore = create<EmbeddingModelState>(
         savesInFlight -= 1;
         if (savesInFlight === 0 && saveWasSuperseded) {
           saveWasSuperseded = false;
-          void get().load();
+          (get().load()).catch(() => { /* noop */ });
         }
       }
     },

@@ -31,11 +31,11 @@ export function MonitorLink({
 
   useEffect(() => {
     let cancelled = false;
-    void getApiMonitor()
+    (getApiMonitor()
       .then((next) => {
         if (!cancelled) setData(next);
       })
-      .catch(() => undefined);
+      .catch(() => undefined)).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -62,7 +62,7 @@ export function MonitorLink({
           type="button"
           onClick={() => {
             useSettingsDialogStore.getState().closeDialog();
-            void navigate({ to: "/api-monitor" });
+            (navigate({ to: "/api-monitor" })).catch(() => { /* noop */ });
           }}
           className="flex w-full min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-background px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
@@ -81,7 +81,7 @@ export function MonitorLink({
               {t("settings.resources.liveMonitor.summary")}
             </span>
             <span className="min-h-lh truncate text-xs text-muted-foreground">
-              {data == null
+              {(data === null || data === undefined)
                 ? null
                 : t("settings.resources.liveMonitor.status", {
                     active: active.toLocaleString(locale),

@@ -18,7 +18,7 @@ import {
   startRemoteAccess,
   stopRemoteAccess,
   updateRemoteAccessAutoStart,
-} from "@/features/settings/api/remote-access";
+} from "@/features/settings";
 import {
   type RemoteAccessStatus,
   remoteAccessAutoStartReadOnly,
@@ -27,7 +27,7 @@ import {
   remoteAccessPollDelay,
   remoteAccessSelfStopPoll,
   remoteAccessStopDisconnectsOrigin,
-} from "@/features/settings/api/remote-access-state";
+} from "@/features/settings";
 import { isTauri } from "@/lib/api-base";
 import { cn } from "@/lib/utils";
 import { HomeWifiIcon, QrCode01Icon } from "@hugeicons/core-free-icons";
@@ -310,7 +310,7 @@ export function RemoteAccessSection() {
     status?.state === "online" ||
     status?.state === "stopping";
   const actionDisabled =
-    busy !== null || (stopAction ? !status?.canStop : !status?.canStart);
+    busy !== null || (stopAction ? !status.canStop : !status?.canStart);
   const actionLabel =
     busy === "start"
       ? "Starting…"

@@ -120,7 +120,7 @@ export function useAudioGallery({
   const ensureClipSrc = useCallback(async (clip: AudioGalleryClip) => {
     const cached = galleryCache.srcById.get(clip.id);
     if (cached) {
-      void ensureClipPeaks(clip);
+      (ensureClipPeaks(clip)).catch(() => { /* noop */ });
       return;
     }
     const pending = clipSrcLoads.current.get(clip.id);
@@ -131,7 +131,7 @@ export function useAudioGallery({
         if (!galleryCache.clips.some((candidate) => candidate.id === clip.id)) return;
         galleryCache.srcById.set(clip.id, url);
         setSrcById(galleryCache.srcById.toRecord());
-        void ensureClipPeaks(clip);
+        (ensureClipPeaks(clip)).catch(() => { /* noop */ });
       } catch {
         toast.error("Could not load this audio clip. Try selecting it again.");
       }
@@ -151,7 +151,7 @@ export function useAudioGallery({
       if (!galleryCache.srcById.retry(clip.id, failedUrl)) return;
       // Unmount first: a same-second remint returns the same URL, which would not reload.
       setSrcById(galleryCache.srcById.toRecord());
-      void ensureClipSrc(clip);
+      (ensureClipSrc(clip)).catch(() => { /* noop */ });
     },
     [ensureClipSrc],
   );
@@ -218,7 +218,7 @@ export function useAudioGallery({
         const selected = merged.find(
           (clip) => clip.id === galleryCache.selectedId,
         );
-        if (selected) void ensureClipSrc(selected);
+        if (selected) (ensureClipSrc(selected)).catch(() => { /* noop */ });
         return merged;
       } catch {
         return galleryCache.clips;
@@ -250,7 +250,7 @@ export function useAudioGallery({
       setClips(galleryCache.clips);
       setHasMore(page.has_more);
     } catch {
-    } finally {
+     /* noop */ } finally {
       loadingMoreRef.current = false;
     }
   }, []);
@@ -260,7 +260,7 @@ export function useAudioGallery({
     if (!active) return;
     const refreshWhenVisible = () => {
       if (document.hidden) return;
-      void refreshGallery(undefined, galleryCache.clips.length);
+      (refreshGallery(undefined, galleryCache.clips.length)).catch(() => { /* noop */ });
     };
     window.addEventListener("focus", refreshWhenVisible);
     document.addEventListener("visibilitychange", refreshWhenVisible);
@@ -272,7 +272,7 @@ export function useAudioGallery({
 
   useEffect(() => {
     const clip = clips.find((c) => c.id === selectedId);
-    if (clip) void ensureClipSrc(clip);
+    if (clip) (ensureClipSrc(clip)).catch(() => { /* noop */ });
   }, [clips, selectedId, ensureClipSrc]);
 
   const selectClip = useCallback(
@@ -291,7 +291,7 @@ export function useAudioGallery({
         fallbackClipRef.current !== null &&
         clipWorkflow(clip) !== fallbackClipRef.current.workflow;
       if (!keepFallback && !otherPage) setFallbackClip(null);
-      if (clip) void ensureClipSrc(clip);
+      if (clip) (ensureClipSrc(clip)).catch(() => { /* noop */ });
     },
     [ensureClipSrc],
   );
@@ -384,7 +384,7 @@ export function useAudioGallery({
     writes.epoch += 1;
     if (writes.inFlight === 0 && writes.deferred) {
       writes.deferred = false;
-      void refreshGallery(undefined, galleryCache.clips.length);
+      (refreshGallery(undefined, galleryCache.clips.length)).catch(() => { /* noop */ });
     }
   }, [refreshGallery]);
 
@@ -465,7 +465,7 @@ export function useAudioGallery({
     [beginOrderWrite, endOrderWrite],
   );
   const historyReorder = useStripReorder(
-    (id, afterId) => void handleMoveClip(id, afterId),
+    (id, afterId) => { (handleMoveClip(id, afterId)).catch(() => { /* noop */ }); },
     { axis: "y" },
   );
 
@@ -473,7 +473,7 @@ export function useAudioGallery({
   useEffect(
     () =>
       subscribeGalleryChanged("audio", () => {
-        void refreshGallery(undefined, galleryCache.clips.length);
+        (refreshGallery(undefined, galleryCache.clips.length)).catch(() => { /* noop */ });
       }),
     [refreshGallery],
   );
@@ -524,7 +524,7 @@ export function useAudioGallery({
   const handleDownloadClip = useCallback(
     (clip: AudioGalleryClip) => {
       // Saving must keep working after a playback link expires.
-      void saveAudio(clipFileName(clip), null, () => fetchClipBlob(clip.url));
+      (saveAudio(clipFileName(clip), null, () => fetchClipBlob(clip.url))).catch(() => { /* noop */ });
     },
     [],
   );
@@ -532,11 +532,11 @@ export function useAudioGallery({
   const handleDownloadFallbackClip = useCallback(() => {
     if (!fallbackClip) return;
     const { blob } = fallbackClip;
-    void saveAudio(
+    (saveAudio(
       clipFileName(fallbackClip),
       fallbackClip.url,
       blob ? () => Promise.resolve(blob) : null,
-    );
+    )).catch(() => { /* noop */ });
   }, [fallbackClip]);
 
   const handleDownloadClipById = useCallback(
@@ -641,7 +641,7 @@ export function useWorkflowHistory({
       loadingMoreRef.current
     )
       return;
-    void loadMore();
+    (loadMore()).catch(() => { /* noop */ });
   }, [enabled, visibleClips, hasMore, loadMore, loadingMoreRef]);
 
   // Load until this page gains a row: an all-other-page batch adds no height, so no scroll fires again.
@@ -662,7 +662,7 @@ export function useWorkflowHistory({
         has: () => countVisible() > before,
         count: () => galleryCache.clips.length,
         hasMore: () => galleryCache.hasMore,
-        refresh: async () => {},
+        refresh: async () => { /* noop */ },
         loadMore,
         busy: () => loadingMoreRef.current,
         cancelled: () =>

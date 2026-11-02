@@ -5,7 +5,7 @@ import { listGgufVariants } from "@/features/chat/api/chat-api";
 import {
   fetchCachedGgufInventory,
   fetchCachedModelsInventory,
-} from "@/features/hub/inventory/api";
+} from "@/features/hub";
 import { pinnedQuantEntries, usePinnedModelsStore } from "./pinned-models";
 import {
   ggufVariantsMatchForPicker,

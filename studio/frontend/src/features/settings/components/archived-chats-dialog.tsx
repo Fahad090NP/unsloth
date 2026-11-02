@@ -60,16 +60,16 @@ export function ArchivedChatsView() {
   const [projects, setProjects] = useState<ProjectRecord[]>(activeProjects);
   useEffect(() => {
     let cancelled = false;
-    void listStoredChatProjects({ includeArchived: true })
+    (listStoredChatProjects({ includeArchived: true })
       .then((all) => {
         if (!cancelled) setProjects(all);
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (!cancelled)
           toast.error(translate("settings.data.library.projectsFailed"), {
             description: error instanceof Error ? error.message : undefined,
           });
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -130,7 +130,7 @@ export function ArchivedChatsView() {
         item.type === "single"
           ? { thread: item.id, ...project }
           : { compare: item.id, ...project },
-    });
+    }).catch(() => { /* noop */ });
     closeSettings();
   }
 
@@ -144,7 +144,7 @@ export function ArchivedChatsView() {
           search: item.projectId
             ? { project: item.projectId }
             : { new: view.newThreadNonce },
-        });
+        }).catch(() => { /* noop */ });
       },
       { deleteFiles },
     );
@@ -196,7 +196,7 @@ export function ArchivedChatsView() {
     if (bulk || confirmDeleteChats) {
       setDeleteFilesOnDelete(alwaysDeleteChatFiles);
       setConfirmingDelete([...items]);
-    } else void run(items, "delete", alwaysDeleteChatFiles);
+    } else (run(items, "delete", alwaysDeleteChatFiles)).catch(() => { /* noop */ });
   }
 
   return (
@@ -221,7 +221,7 @@ export function ArchivedChatsView() {
           variant="ghost"
           size="sm"
           disabled={busy || filtered.length === 0}
-          onClick={() => void run([...filtered], "restore")}
+          onClick={() => { (run([...filtered], "restore")).catch(() => { /* noop */ }); }}
         >
           {narrowed
             ? t("settings.data.library.unarchiveResults")
@@ -272,7 +272,7 @@ export function ArchivedChatsView() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
-                    onSelect={() => void run(groupItems, "restore")}
+                    onSelect={() => { (run(groupItems, "restore")).catch(() => { /* noop */ }); }}
                   >
                     {group.id
                       ? t("settings.data.library.unarchiveAllInProject")
@@ -318,7 +318,7 @@ export function ArchivedChatsView() {
                     variant="ghost"
                     size="sm"
                     disabled={busy}
-                    onClick={() => void run([item], "restore")}
+                    onClick={() => { (run([item], "restore")).catch(() => { /* noop */ }); }}
                     aria-label={t("settings.data.library.unarchiveItem", {
                       title: item.title,
                     })}
@@ -391,9 +391,9 @@ export function ArchivedChatsView() {
               disabled={busy}
               onClick={(event) => {
                 event.preventDefault();
-                void run(confirmingDelete, "delete", deleteFilesOnDelete).then(
+                (run(confirmingDelete, "delete", deleteFilesOnDelete).then(
                   () => { setConfirmingDelete([]); },
-                );
+                )).catch(() => { /* noop */ });
               }}
             >
               {busy ? t("settings.data.library.deleting") : t("common.delete")}

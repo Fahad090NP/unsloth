@@ -100,7 +100,7 @@ function OwnerAccountsTab() {
 
   useEffect(() => {
     let canceled = false;
-    void fetchAccounts()
+    (fetchAccounts()
       .then((result) => {
         if (canceled) return;
         setAccounts(result);
@@ -118,7 +118,7 @@ function OwnerAccountsTab() {
       })
       .finally(() => {
         if (!canceled) setLoading(false);
-      });
+      })).catch(() => { /* noop */ });
     return () => {
       canceled = true;
     };
@@ -153,18 +153,18 @@ function OwnerAccountsTab() {
   function create(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || !username.trim()) return;
-    void perform(async () => {
+    (perform(async () => {
       showSetup(await createAccount(username));
       setUsername("");
       setQuery("");
-    });
+    })).catch(() => { /* noop */ });
   }
 
   function saveSignInName() {
     if (busy) return;
-    void perform(async () => {
+    (perform(async () => {
       setAliasDraft((await setOwnerLoginAlias(aliasDraft)) ?? "");
-    });
+    })).catch(() => { /* noop */ });
   }
 
   const confirming = resetting ?? retiring;
@@ -260,7 +260,7 @@ function OwnerAccountsTab() {
             variant="outline"
             size="sm"
             disabled={busy}
-            onClick={() => void perform(async () => {})}
+            onClick={() => { (perform(async () => { /* noop */ })).catch(() => { /* noop */ }); }}
           >
             {t("settings.accounts.retry")}
           </Button>
@@ -481,14 +481,14 @@ function OwnerAccountsTab() {
                           <DropdownMenuItem
                             disabled={busy}
                             onSelect={() =>
-                              void perform(async () => {
+                              { (perform(async () => {
                                 await setAccountActive(
                                   account.account_id,
                                   !account.is_active,
                                 );
                                 if (setup?.account_id === account.account_id)
                                   setSetup(null);
-                              })
+                              })).catch(() => { /* noop */ }); }
                             }
                           >
                             <HugeiconsIcon
@@ -633,10 +633,10 @@ function OwnerAccountsTab() {
                   ref={copyButton}
                   variant="outline"
                   onClick={() => {
-                    void copyToClipboard(setup.setup_code).then((ok) => {
+                    (copyToClipboard(setup.setup_code).then((ok) => {
                       setCopied(ok);
                       if (!ok) setError(t("settings.accounts.copyFailed"));
-                    });
+                    })).catch(() => { /* noop */ });
                   }}
                 >
                   <HugeiconsIcon
@@ -741,13 +741,13 @@ function OwnerAccountsTab() {
                 .split(/[\s,]+/)
                 .map((entry) => entry.trim())
                 .filter(Boolean);
-              void perform(async () => {
+              (perform(async () => {
                 await setAccountModelAllowlist(
                   target.account_id,
                   entries.length ? entries : null,
                 );
                 setModelAccess(null);
-              });
+              })).catch(() => { /* noop */ });
             }}
           >
             <div className="space-y-2">
@@ -850,18 +850,18 @@ function OwnerAccountsTab() {
                 event.preventDefault();
                 if (busy) return;
                 if (resetting) {
-                  void perform(async () => {
+                  (perform(async () => {
                     showSetup(await regenerateSetupCode(resetting.account_id));
                     setResetting(null);
-                  });
+                  })).catch(() => { /* noop */ });
                   return;
                 }
                 if (!retiring) return;
-                void perform(async () => {
+                (perform(async () => {
                   await deleteAccount(retiring.account_id);
                   if (setup?.account_id === retiring.account_id) setSetup(null);
                   setRetiring(null);
-                });
+                })).catch(() => { /* noop */ });
               }}
             >
               {busy && <Spinner label={t("common.loading")} />}

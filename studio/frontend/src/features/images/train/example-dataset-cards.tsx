@@ -74,9 +74,9 @@ function ExamplePreviews({ repo }: { repo: string }) {
   const hubSource = useHubSource();
   useEffect(() => {
     let cancelled = false;
-    void fetchPreviews(repo).then((u) => {
+    (fetchPreviews(repo).then((u) => {
       if (!cancelled) setUrls(u);
-    });
+    })).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };

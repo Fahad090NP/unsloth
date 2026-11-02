@@ -9,7 +9,7 @@ import {
   type HubPhase,
   isHuggingFaceOffline,
   subscribeNetworkStatus,
-} from "@/features/hub/lib/network";
+} from "@/features/hub";
 import { useSyncExternalStore } from "react";
 
 function getOnlineSnapshot(): boolean {

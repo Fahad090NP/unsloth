@@ -341,7 +341,7 @@ export function TranscribeOutput({
                       timed={transcriptDetails.segments.length > 0}
                       label={(format) => <span>{FORMAT_LABELS[format]}</span>}
                       onExport={(format) =>
-                        void handleDownloadTranscript(format)
+                        { (handleDownloadTranscript(format)).catch(() => { /* noop */ }); }
                       }
                     />
                   </DropdownMenuContent>

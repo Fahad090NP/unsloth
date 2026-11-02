@@ -161,7 +161,9 @@ export function AudioApiExamples({
   useEffect(() => {
     let cancelled = false;
     loadOpenAIAutoSwitchSettings().then(
-      (settings) => !cancelled && setAutoSwitch(settings.enabled),
+      (settings) => {
+        if (!cancelled) setAutoSwitch(settings.enabled);
+      },
       () => undefined,
     );
     // The Model auto-switch switch sits in this same tab.

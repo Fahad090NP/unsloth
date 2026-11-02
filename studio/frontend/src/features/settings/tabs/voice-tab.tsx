@@ -22,8 +22,8 @@ import { Switch } from "@/components/ui/switch";
 import {
   audioCppSizeLabel,
   isAudioCppFolderId,
-} from "@/features/audio/audio-cpp-catalog";
-import { useAudioVoicesStore } from "@/features/audio/stores/audio-voices-store";
+} from "@/features/audio";
+import { useAudioVoicesStore } from "@/features/audio";
 import { useIsAccountOwner } from "@/features/auth";
 import { audioModelLabel } from "../../audio/audio-workspace-utils";
 import {
@@ -191,7 +191,7 @@ function SttModelPicker({
             sizes.get(id) === size ? sizes : new Map(sizes).set(id, size),
           );
         })
-        .catch(() => {});
+        .catch(() => { /* noop */ }).catch(() => { /* noop */ });
     }
     return () => {
       cancelled = true;
@@ -313,7 +313,7 @@ function SttModelPicker({
             onKeyDown={(event) => {
               if (event.key === "Enter" && items.length > 0) {
                 event.preventDefault();
-                void selectModel(items[0]);
+                (selectModel(items[0])).catch(() => { /* noop */ });
               }
             }}
           />
@@ -345,7 +345,7 @@ function SttModelPicker({
                 <button
                   key={model}
                   type="button"
-                  onClick={() => void selectModel(model)}
+                  onClick={() => { (selectModel(model)).catch(() => { /* noop */ }); }}
                   aria-selected={model === value}
                   className={`flex w-full items-center justify-between gap-3 px-2.5 py-1.5 text-left transition-colors hover:bg-muted ${
                     twoLines ? "rounded-md" : "rounded-full"
@@ -397,7 +397,7 @@ function useAudioInputDevices() {
   const [hasLabels, setHasLabels] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (!navigator.mediaDevices?.enumerateDevices) return;
+    if (!navigator.mediaDevices.enumerateDevices) return;
     try {
       const all = await navigator.mediaDevices.enumerateDevices();
       const inputs = all.filter((d) => d.kind === "audioinput");
@@ -410,7 +410,7 @@ function useAudioInputDevices() {
 
   useEffect(() => {
     const media = navigator.mediaDevices;
-    if (!media?.addEventListener) {
+    if (!media.addEventListener) {
       return;
     }
     let cancelled = false;
@@ -426,7 +426,7 @@ function useAudioInputDevices() {
       })
       .catch(() => {
         // Enumeration can fail in insecure contexts.
-      });
+      }).catch(() => { /* noop */ });
     media.addEventListener("devicechange", refresh);
     return () => {
       cancelled = true;
@@ -437,7 +437,7 @@ function useAudioInputDevices() {
   // Labels are hidden until mic permission; a short stream unlocks them.
   const requestAccess = useCallback(async () => {
     // Insecure contexts (plain http on a LAN address) have no mediaDevices.
-    if (!navigator.mediaDevices?.getUserMedia) {
+    if (!navigator.mediaDevices.getUserMedia) {
       toast.error(t("settings.voice.dictation.micAccessUnsupported"));
       return;
     }
@@ -474,8 +474,8 @@ function useSystemVoices() {
     const synth = window.speechSynthesis;
     const load = () => { setVoices(synth.getVoices()); };
     load();
-    synth.addEventListener?.("voiceschanged", load);
-    return () => { synth.removeEventListener?.("voiceschanged", load); };
+    synth.addEventListener("voiceschanged", load);
+    return () => { synth.removeEventListener("voiceschanged", load); };
   }, []);
 
   return voices;
@@ -595,7 +595,7 @@ export function VoiceTab() {
   // Voices saved on the Audio page since the last visit show up without a reload.
   useEffect(() => {
     if (effectiveTtsEngine === "studio") {
-      void useAudioVoicesStore.getState().refresh();
+      (useAudioVoicesStore.getState().refresh()).catch(() => { /* noop */ });
     }
   }, [effectiveTtsEngine]);
 
@@ -612,8 +612,8 @@ export function VoiceTab() {
       (mode) => {
         if (!stale) setMultiModelMode(mode);
       },
-      () => {},
-    );
+      () => { /* noop */ },
+    ).catch(() => { /* noop */ });
     const stop = watchAudioModels(listOpenAIAudioModels, setAudioModels);
     return () => {
       stale = true;
@@ -727,7 +727,7 @@ export function VoiceTab() {
       .then((listing) => {
         if (!cancelled) setSttVariantListing({ model: sttModel, listing });
       })
-      .catch(() => {});
+      .catch(() => { /* noop */ }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -771,7 +771,7 @@ export function VoiceTab() {
       return;
     }
     let cancelled = false;
-    void (async () => {
+    (async () => {
       // Only the first poll shows "checking" so polling does not flicker.
       setSttPhase((phase) => (phase === "idle" ? "checking" : phase));
       try {
@@ -891,7 +891,7 @@ export function VoiceTab() {
       } catch {
         if (!cancelled) setSttPhase("error");
       }
-    })();
+    })().catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -1045,7 +1045,7 @@ export function VoiceTab() {
   const stopPreview = useCallback(() => {
     if (!previewingRef.current) return;
     if (ownsSystemPreviewRef.current) {
-      window.speechSynthesis?.cancel();
+      window.speechSynthesis.cancel();
       ownsSystemPreviewRef.current = false;
     }
     previewAbortRef.current?.abort();
@@ -1180,7 +1180,7 @@ export function VoiceTab() {
                     : "browser";
               if (next !== dictationEngine) {
                 if (dictationEngine === "model") {
-                  void unloadSttModel().catch(() => {});
+                  (unloadSttModel().catch(() => { /* noop */ })).catch(() => { /* noop */ });
                 }
                 if (next === "model") {
                   setSttPhase("checking");
@@ -1311,7 +1311,7 @@ export function VoiceTab() {
                       className="h-7 px-2 text-xs"
                       disabled={downloadingThisModel || sttDownloadStarting}
                       // The sidecar error is sticky until a new start().
-                      onClick={() => void beginSttDownload()}
+                      onClick={() => { (beginSttDownload()).catch(() => { /* noop */ }); }}
                     >
                       {t("settings.voice.dictation.sttRetry")}
                     </Button>
@@ -1321,7 +1321,7 @@ export function VoiceTab() {
                       size="sm"
                       className="text-xs"
                       disabled={downloadingThisModel || sttDownloadStarting}
-                      onClick={() => void beginSttDownload()}
+                      onClick={() => { (beginSttDownload()).catch(() => { /* noop */ }); }}
                     >
                       {downloadingThisModel || sttDownloadStarting ? (
                         <Spinner className="mr-1.5" />
@@ -1377,8 +1377,8 @@ export function VoiceTab() {
                   downloadedModels={downloadedSttModels}
                   onChange={(next) => {
                     if (next !== sttModel) {
-                      void unloadSttModel().catch(() => {});
-                      void autoLoadSttModel(next);
+                      (unloadSttModel().catch(() => { /* noop */ })).catch(() => { /* noop */ });
+                      (autoLoadSttModel(next)).catch(() => { /* noop */ });
                     }
                     setSttModel(next);
                   }}
@@ -1392,8 +1392,8 @@ export function VoiceTab() {
                     onValueChange={(next) => {
                       setSttGgufVariant(next);
                       if (next === shownSttVariant) return;
-                      void unloadSttModel().catch(() => {});
-                      void autoLoadSttModel(sttModel, next);
+                      (unloadSttModel().catch(() => { /* noop */ })).catch(() => { /* noop */ });
+                      (autoLoadSttModel(sttModel, next)).catch(() => { /* noop */ });
                     }}
                   >
                     <SelectTrigger
@@ -1464,9 +1464,9 @@ export function VoiceTab() {
                 if (next === sttDevicePreference) return;
                 // Scoped so another surface's model is not evicted; wait:false spares a decoding
                 // dictation.
-                void unloadSttModel(sttEngineFor(sttModel), sttModel, {
+                (unloadSttModel(sttEngineFor(sttModel), sttModel, {
                   wait: false,
-                }).catch(() => {});
+                }).catch(() => { /* noop */ })).catch(() => { /* noop */ });
                 setSttPhase("on-demand");
                 setSttDevice(null);
                 setSttDevicePreference(next);
@@ -1740,10 +1740,10 @@ export function VoiceTab() {
                     onClick={() => {
                       useSettingsDialogStore.getState().closeDialog();
                       // Audio keeps the mode it was left in, so name the TTS task.
-                      void navigate({
+                      (navigate({
                         to: "/audio",
                         search: { task: "text-to-speech" },
-                      });
+                      })).catch(() => { /* noop */ });
                     }}
                   >
                     <HugeiconsIcon
@@ -1765,7 +1765,7 @@ export function VoiceTab() {
                       variant="outline"
                       size="sm"
                       disabled={savingMultiModel}
-                      onClick={() => void keepBothLoaded()}
+                      onClick={() => { (keepBothLoaded()).catch(() => { /* noop */ }); }}
                     >
                       {t("settings.voice.readAloud.keepBothAction")}
                     </Button>
@@ -1846,7 +1846,9 @@ export function VoiceTab() {
                 min={0.5}
                 max={2}
                 step={0.05}
-                onValueChange={([v]) => v !== undefined && setTtsRate(v)}
+                onValueChange={([v]) => {
+                  if (v !== undefined) setTtsRate(v);
+                }}
                 className="w-48"
                 aria-label={t("settings.voice.readAloud.speedLabel")}
               />
@@ -1862,7 +1864,9 @@ export function VoiceTab() {
                   min={0}
                   max={2}
                   step={0.05}
-                  onValueChange={([v]) => v !== undefined && setTtsPitch(v)}
+                  onValueChange={([v]) => {
+                    if (v !== undefined) setTtsPitch(v);
+                  }}
                   className="w-48"
                   aria-label={t("settings.voice.readAloud.pitchLabel")}
                 />
@@ -1878,7 +1882,9 @@ export function VoiceTab() {
                 min={0}
                 max={1}
                 step={0.05}
-                onValueChange={([v]) => v !== undefined && setTtsVolume(v)}
+                onValueChange={([v]) => {
+                    if (v !== undefined) setTtsVolume(v);
+                  }}
                 className="w-48"
                 aria-label={t("settings.voice.readAloud.volumeLabel")}
               />
@@ -1891,7 +1897,7 @@ export function VoiceTab() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => void previewTts()}
+                onClick={() => { (previewTts()).catch(() => { /* noop */ }); }}
               >
                 {preparingPreview ? (
                   <>

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import type { GgufVariantDetail } from "@/features/hub/inventory";
-import { formatBytes } from "@/features/hub/lib/format";
-import { ggufVariantsMatch } from "@/features/hub/lib/model-identity";
+import type { GgufVariantDetail } from "@/features/hub";
+import { formatBytes } from "@/features/hub";
+import { ggufVariantsMatch } from "@/features/hub";
 import { type GgufFitInput, classifyGgufVariantFit } from "@/lib/gguf-fit";
 
 export function ggufVariantDisplayLabel(

@@ -3,10 +3,10 @@
 
 import { useHfEndpoint } from "@/lib/hf-endpoint";
 import { Spinner } from "@/components/ui/spinner";
-import { useOnlineStatus } from "@/features/hub/hooks/use-online-status";
-import { LruMap } from "@/features/hub/lib/lru-map";
-import { isHuggingFaceOffline } from "@/features/hub/lib/network";
-import { fingerprintToken } from "@/features/hub/lib/token-fingerprint";
+import { useOnlineStatus } from "@/features/hub";
+import { LruMap } from "@/features/hub";
+import { isHuggingFaceOffline } from "@/features/hub";
+import { fingerprintToken } from "@/features/hub";
 import { withLiteralUnknownTags } from "@/lib/markdown-data-images";
 import {
   type MarkdownPluginNeeds,
@@ -15,7 +15,7 @@ import {
 import { scheduleIdleTask } from "@/lib/schedule-idle-task";
 import { cn } from "@/lib/utils";
 import { confirmExternalLink } from "../stores/external-link-confirm";
-import { useHfTokenStore } from "@/features/hub/stores/hf-token-store";
+import { useHfTokenStore } from "@/features/hub";
 import {
   MARKDOWN_TABLE_ICONS,
   MarkdownTable,
@@ -125,7 +125,7 @@ function readmeStateFromEntry(
 }
 
 function hasReadmeContent(state: Pick<ReadmeState, "body" | "error">): boolean {
-  return state.error == null && state.body != null;
+  return (state.error === null || state.error === undefined) && (state.body !== null && state.body !== undefined);
 }
 
 function prepareReadmeBody(markdown: string): string {
@@ -163,7 +163,9 @@ function ReadmeLink({
   children,
   ...props
 }: ComponentProps<"a"> & { node?: unknown }) {
-  node;
+  if (node) {
+    // `node` is react-markdown's AST node; it must not reach the DOM.
+  }
   const online = useContext(ReadmeOnlineContext);
   const rawHref = typeof href === "string" ? href.trim() : "";
   const disabledExternal =
@@ -208,7 +210,9 @@ function ReadmeImage({
   decoding,
   ...props
 }: ComponentProps<"img"> & { node?: unknown }) {
-  node;
+  if (node) {
+    // `node` is react-markdown's AST node; it must not reach the DOM.
+  }
   return (
     <img
       {...props}
@@ -308,7 +312,7 @@ async function loadReadmeFromCache({
   }
 
   const promise = fetchReadme(repoId, kind, hfToken || null).then((fetched) => {
-    if (fetched == null) {
+    if ((fetched === null || fetched === undefined)) {
       return {
         body: null,
         baseUrl: null,
@@ -325,7 +329,7 @@ async function loadReadmeFromCache({
   readmeCache.set(cacheKey, promise);
   try {
     const entry = await promise;
-    if (entry.error == null) {
+    if ((entry.error === null || entry.error === undefined)) {
       readmeCache.set(cacheKey, {
         entry,
         expiresAt: Date.now() + README_CACHE_TTL_MS,
@@ -443,7 +447,7 @@ export function ModelReadme({
           });
         });
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (canceled) return;
         startTransition(() => {
           setState({

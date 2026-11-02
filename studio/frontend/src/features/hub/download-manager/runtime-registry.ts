@@ -54,8 +54,8 @@ export function clearRuntimeTimer(timer: number | null): void {
   }
 }
 
-export function clearWatchdog(rt: JobRuntime | undefined): void {
-  if (rt?.watchdog == null) return;
+export function clearWatchdog(rtParam: JobRuntime | undefined): void { const rt = rtParam;
+  if ((rt?.watchdog === null || rt?.watchdog === undefined)) return;
   clearRuntimeTimer(rt.watchdog);
   rt.watchdog = null;
 }
@@ -64,7 +64,7 @@ export function teardownRuntime(key: string): void {
   const rt = runtimeRegistry.runtimes.get(key);
   if (!rt) return;
   clearRuntimeTimer(rt.pollTimer);
-  if (rt.visibilityListener != null && typeof document !== "undefined") {
+  if ((rt.visibilityListener !== null && rt.visibilityListener !== undefined) && typeof document !== "undefined") {
     document.removeEventListener("visibilitychange", rt.visibilityListener);
   }
   rt.abort?.abort();

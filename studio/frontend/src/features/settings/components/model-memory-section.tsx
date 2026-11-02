@@ -13,7 +13,7 @@ import {
   resyncInferenceStatusAfterKeptModelsUnload,
   useChatRuntimeStore,
 } from "@/features/chat";
-import { formatBytes } from "@/features/hub/lib/format";
+import { formatBytes } from "@/features/hub";
 import { ChevronRightStandardIcon } from "@/lib/chevron-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { usePersistedToggle } from "@/hooks/use-persisted-toggle";
@@ -126,7 +126,7 @@ export function ModelMemorySection({
           );
         }
       },
-    );
+    ).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -146,7 +146,7 @@ export function ModelMemorySection({
         .getState()
         .setKeepModelsLoaded(keepsModelsLoaded(saved));
       if (wasKeeping && !keepsModelsLoaded(saved)) {
-        void resyncInferenceStatusAfterKeptModelsUnload();
+        (resyncInferenceStatusAfterKeptModelsUnload()).catch(() => { /* noop */ });
       }
     } catch (saveError) {
       setError(
@@ -168,7 +168,7 @@ export function ModelMemorySection({
         setSettings,
         setError,
         t("settings.resources.modelMemory.loadError"),
-      );
+      ).catch(() => { /* noop */ });
     };
     refresh();
     const unsubscribe = subscribeModelLifecycle(({ loading }) => {
@@ -242,7 +242,7 @@ export function ModelMemorySection({
           aria-label={t("settings.resources.modelMemory.keepResident")}
           checked={settings?.keepResident ?? false}
           disabled={!settings || isSaving}
-          onCheckedChange={(keepResident) => void persist({ keepResident })}
+          onCheckedChange={(keepResident) => { (persist({ keepResident })).catch(() => { /* noop */ }); }}
         />
       </SettingsRow>
       {full ? (
@@ -257,7 +257,7 @@ export function ModelMemorySection({
             aria-label={t("settings.resources.modelMemory.noRamReserve")}
             checked={settings?.noRamReserve ?? false}
             disabled={!settings || isSaving}
-            onCheckedChange={(noRamReserve) => void persist({ noRamReserve })}
+            onCheckedChange={(noRamReserve) => { (persist({ noRamReserve })).catch(() => { /* noop */ }); }}
           />
         </SettingsRow>
       ) : null}
@@ -271,7 +271,7 @@ export function ModelMemorySection({
           disabled={!multiModelRead || isSavingMultiModel}
           onValueChange={(next) => {
             if (isMultiModelMode(next)) {
-              void persistMultiModel(next);
+              (persistMultiModel(next)).catch(() => { /* noop */ });
             }
           }}
         >

@@ -10,10 +10,10 @@ import {
   SttModelNotDownloadedError,
   unloadSttModel,
 } from "@/features/chat/adapters/studio-model-dictation-adapter";
-import { getHfToken, hfApiToken } from "@/features/hub/stores/hf-token-store";
+import { getHfToken, hfApiToken } from "@/features/hub";
 import {
   trackSttDownload,
-} from "@/features/settings/lib/stt-download-mirror";
+} from "@/features/settings";
 import { usePersistedChoice } from "@/hooks/use-persisted-choice";
 import { toast } from "@/lib/toast";
 import type { AudioCppRuntimeStatus } from "../audio-cpp-catalog";
@@ -125,11 +125,9 @@ export function useSttSidecar({
         ? (sttEngineStatusFor(stt, selectedKey, selectedEngine ?? undefined) ??
           (selectedEngine === "transformers" ? stt : undefined))
         : undefined;
-      const preservePending = Boolean(
-        selectedBlock?.loading ||
+      const preservePending = (selectedBlock?.loading ||
           sttLoadingGeneration.current !== null ||
-          deferredSttLoad.current !== null,
-      );
+          deferredSttLoad.current !== null);
       const residency = resolveSttResidency(
         stt,
         selectedEngine,

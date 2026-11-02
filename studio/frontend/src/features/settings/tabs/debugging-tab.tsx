@@ -22,7 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useCopyFeedback } from "@/features/hub/hooks/use-copy-feedback";
+import { useCopyFeedback } from "@/features/hub";
 import { formatBytes } from "@/features/hub";
 import { useT } from "@/i18n";
 import { isTauri } from "@/lib/api-base";
@@ -272,7 +272,7 @@ export function DebuggingTab() {
 
   useEffect(() => {
     const controller = new AbortController();
-    void refreshSources({ signal: controller.signal });
+    (refreshSources({ signal: controller.signal })).catch(() => { /* noop */ });
     return () => { controller.abort(); };
   }, [refreshSources]);
 
@@ -280,7 +280,7 @@ export function DebuggingTab() {
   useEffect(() => {
     if (pendingLogRequest === NO_PENDING_LOG_REQUEST) return;
     const controller = new AbortController();
-    void refreshSources({ signal: controller.signal });
+    (refreshSources({ signal: controller.signal })).catch(() => { /* noop */ });
     return () => { controller.abort(); };
   }, [pendingLogRequest, refreshSources]);
 
@@ -400,7 +400,7 @@ export function DebuggingTab() {
       if (delay !== null) timer = window.setTimeout(tick, delay);
     };
 
-    void tick();
+    (tick()).catch(() => { /* noop */ });
     return () => {
       stopped = true;
       controller.abort();
@@ -539,11 +539,11 @@ export function DebuggingTab() {
               label: t("settings.debugging.showInFolder"),
               // The archive's folder, not the logs' folder.
               onClick: () => {
-                void revealSavedArchive(savedPath).catch((error: unknown) => {
+                (revealSavedArchive(savedPath).catch((error: unknown) => {
                   toast.error(t("settings.debugging.openLogsFolderFailed"), {
                     description: (error as Error).message,
                   });
-                });
+                })).catch(() => { /* noop */ });
               },
             },
           },
@@ -675,8 +675,8 @@ export function DebuggingTab() {
               variant="outline"
               disabled={mode !== "manual"}
               onClick={() => {
-                void refreshSources();
-                void poll();
+                (refreshSources()).catch(() => { /* noop */ });
+                (poll()).catch(() => { /* noop */ });
               }}
             >
               <HugeiconsIcon strokeWidth={1.75} icon={Refresh01Icon} />
@@ -903,7 +903,7 @@ export function DebuggingTab() {
               data-testid="debug-log-download-all"
               aria-busy={exporting}
               disabled={exporting}
-              onClick={() => void downloadAllLogs()}
+              onClick={() => { (downloadAllLogs()).catch(() => { /* noop */ }); }}
             >
               <HugeiconsIcon strokeWidth={1.75} icon={Download01Icon} />
               {exporting
@@ -936,7 +936,7 @@ export function DebuggingTab() {
                 data-testid="debug-log-open-folder"
                 aria-busy={revealing}
                 disabled={revealing}
-                onClick={() => void revealLogsFolder()}
+                onClick={() => { (revealLogsFolder()).catch(() => { /* noop */ }); }}
               >
                 <HugeiconsIcon strokeWidth={1.75} icon={FolderOpenIcon} />
                 {t("settings.debugging.openLogsFolder")}

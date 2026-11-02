@@ -65,11 +65,11 @@ export function EngineVersionsSection() {
   // whisper.cpp only reports once the backend knows it, MLX only where installed; an empty row reads as missing.
   const visibleRows = rows.filter(
     (row) =>
-      (row.key !== "whisper" || row.offer != null) &&
-      (row.key !== "mlx" || row.installed != null),
+      (row.key !== "whisper" || (row.offer !== null && row.offer !== undefined)) &&
+      (row.key !== "mlx" || (row.installed !== null && row.installed !== undefined)),
   );
   const job = status?.job;
-  const offered = status != null && llamaUpdateOffered(status);
+  const offered = (status !== null && status !== undefined) && llamaUpdateOffered(status);
   // `supported` is llama.cpp's alone: an audio.cpp update still installs beside a self-managed llama.cpp.
   const unmanaged = status?.supported === false && !offered;
 
@@ -77,7 +77,7 @@ export function EngineVersionsSection() {
     setChecking(true);
     const next = await refresh();
     setChecking(false);
-    setCheckFailed(next == null);
+    setCheckFailed((next === null || next === undefined));
   }
 
   async function handleUpdate() {
@@ -151,7 +151,7 @@ export function EngineVersionsSection() {
             variant="outline"
             size="sm"
             disabled={checking || applying}
-            onClick={() => void handleCheck()}
+            onClick={() => { (handleCheck()).catch(() => { /* noop */ }); }}
             data-testid="engine-check-updates"
           >
             {t("settings.about.engines.checkForUpdates")}
@@ -161,7 +161,7 @@ export function EngineVersionsSection() {
             <Button
               size="sm"
               disabled={!offered || applying || checking}
-              onClick={() => void handleUpdate()}
+              onClick={() => { (handleUpdate()).catch(() => { /* noop */ }); }}
               data-testid="engine-update"
             >
               {applying

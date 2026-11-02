@@ -55,7 +55,7 @@ export function VoicePicker({
   const [editing, setEditing] = useState<AudioVoice | null>(null);
 
   useEffect(() => {
-    if (!(loaded || loading)) void refresh();
+    if (!(loaded || loading)) (refresh()).catch(() => { /* noop */ });
   }, [loaded, loading, refresh]);
 
   useEffect(
@@ -133,7 +133,7 @@ export function VoicePicker({
                 type="button"
                 variant="link"
                 className="h-auto p-0 text-ui-12 font-medium text-foreground"
-                onClick={() => void refresh()}
+                onClick={() => { (refresh()).catch(() => { /* noop */ }); }}
               >
                 Try again
               </Button>
@@ -165,7 +165,7 @@ export function VoicePicker({
                   aria-label={
                     playing ? `Pause ${voice.name}` : `Play ${voice.name}`
                   }
-                  onClick={() => void togglePlay(voice)}
+                  onClick={() => { (togglePlay(voice)).catch(() => { /* noop */ }); }}
                 >
                   {playing ? (
                     <HugeiconsIcon icon={PauseIcon} className="size-3.5" />
@@ -183,7 +183,7 @@ export function VoicePicker({
                     // Space plays, as on every clip; Enter picks.
                     if (event.key === " ") {
                       event.preventDefault();
-                      void togglePlay(voice);
+                      (togglePlay(voice)).catch(() => { /* noop */ });
                     }
                   }}
                   onKeyUp={(event) => {
@@ -234,7 +234,7 @@ export function VoicePicker({
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
-                      onClick={() => void handleDelete(voice)}
+                      onClick={() => { (handleDelete(voice)).catch(() => { /* noop */ }); }}
                     >
                       <HugeiconsIcon
                         icon={Delete02Icon}

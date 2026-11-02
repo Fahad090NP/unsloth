@@ -56,7 +56,7 @@ export async function createFineTuneRecipeFromChats(
   payload.ui.nodes = [{ id: "seed", x: 0, y: 0, width: 400 }];
   payload.ui.seed_source_type = "local";
   payload.ui.seed_columns = inspected.columns;
-  payload.ui.seed_preview_rows = inspected.preview_rows ?? [];
+  payload.ui.seed_preview_rows = (inspected.preview_rows);
   payload.ui.local_file_name = filename;
 
   const record = await saveRecipe({

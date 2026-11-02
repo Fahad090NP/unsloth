@@ -25,17 +25,17 @@ import {
   useExternalProvidersStore,
 } from "@/features/chat";
 import { useHubInventory } from "@/features/hub";
-import { useInventoryVersion } from "@/features/hub/stores/inventory-events";
-import { ModelSelector } from "@/features/model-picker/components/model-selector";
-import { ggufQuantLabel } from "@/features/model-picker/model-config/model-identity";
-import { AUDIO_CATALOG } from "@/features/model-picker/components/model-selector/model-catalog";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
+import { useInventoryVersion } from "@/features/hub";
+import { ModelSelector } from "@/features/model-picker";
+import { ggufQuantLabel } from "@/features/model-picker";
+import { AUDIO_CATALOG } from "@/features/model-picker";
+import { PillTabs } from "@/features/model-picker";
 import type {
   ExternalModelOption,
   ModelOption,
-} from "@/features/model-picker/components/model-selector/types";
+} from "@/features/model-picker";
 import { useVoiceSettingsStore } from "@/features/settings";
-import { sttModelSize } from "@/features/settings/stores/stt-model-catalog";
+import { sttModelSize } from "@/features/settings";
 import { usePersistedChoice } from "@/hooks/use-persisted-choice";
 import { usePersistedToggle } from "@/hooks/use-persisted-toggle";
 import { useScrollFades } from "@/hooks/use-scroll-fades";
@@ -207,7 +207,7 @@ function reuseConvertInputs(clip: AudioGalleryClip) {
     const seq = reuseSeq;
     const untouched = () => seq === reuseSeq && useAudioConvertStore.getState().source === null;
     store.setSource(null);
-    void fetchAudioBlob(
+    fetchAudioBlob(
       `/api/inference/audio/gallery/${encodeURIComponent(clip.id)}/source/file`,
     )
       .then((blob) => uploadAudioInput(blob, name))
@@ -225,12 +225,13 @@ function reuseConvertInputs(clip: AudioGalleryClip) {
         () => {
           // The re-upload can fail for a transient reason: the kept id is expired only on a 404.
           if (!untouched() || !kept) return;
-          void audioInputAlive(kept.id).then((alive) => {
+          audioInputAlive(kept.id).then((alive) => {
             if (untouched())
               store.setSource(alive ? kept : { ...kept, expiresAt: EXPIRED_AT });
-          });
+          }).catch(() => { /* noop */ });
         },
-      );
+      )
+      .catch(() => { /* noop */ });
   } else if (kept) {
     store.setSource(kept);
   }
@@ -246,10 +247,10 @@ function reuseConvertInputs(clip: AudioGalleryClip) {
     const seq = reuseSeq;
     const named = { ...target, name: clip.reference_name ?? "Target voice", durationS: null };
     store.setTarget(null);
-    void audioInputAlive(target.id).then((alive) => {
+    (audioInputAlive(target.id).then((alive) => {
       if (seq !== reuseSeq || useAudioConvertStore.getState().target !== null) return;
       store.setTarget(alive ? named : { ...named, expiresAt: EXPIRED_AT });
-    });
+    })).catch(() => { /* noop */ });
   } else if (target) {
     store.setTarget({
       ...target,
@@ -458,7 +459,7 @@ export function AudioPage({
   // A Clone run, even a stopped one, can restart audio.cpp under another task: re-read it on arriving.
   useEffect(() => {
     if (active && ttsWorkflow === "convert" && initialReadySent.current) {
-      void refreshStatus();
+      (refreshStatus()).catch(() => { /* noop */ });
     }
   }, [active, ttsWorkflow, refreshStatus]);
 
@@ -466,13 +467,13 @@ export function AudioPage({
   useEffect(() => {
     if (!active) return;
     if (initialReadySent.current) {
-      void refreshStatus();
-      void refreshSttStatus();
-      void refreshGallery(undefined, galleryCache.clips.length);
+      (refreshStatus()).catch(() => { /* noop */ });
+      (refreshSttStatus()).catch(() => { /* noop */ });
+      (refreshGallery(undefined, galleryCache.clips.length)).catch(() => { /* noop */ });
       return;
     }
     let cancelled = false;
-    void (async () => {
+    ((async () => {
       const [initialClips] = await Promise.all([
         refreshGallery(),
         refreshStatus(),
@@ -485,7 +486,7 @@ export function AudioPage({
       if (cancelled || initialReadySent.current) return;
       initialReadySent.current = true;
       onInitialReady?.();
-    })();
+    })()).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
@@ -503,8 +504,8 @@ export function AudioPage({
     if (!active) return;
     return subscribeModelLifecycle(({ runtime, loading }) => {
       if (loading) return;
-      if (runtime === "chat") void refreshStatus();
-      if (runtime === "stt") void refreshSttStatus();
+      if (runtime === "chat") (refreshStatus()).catch(() => { /* noop */ });
+      if (runtime === "stt") (refreshSttStatus()).catch(() => { /* noop */ });
     });
   }, [active, refreshStatus, refreshSttStatus]);
 
@@ -514,7 +515,7 @@ export function AudioPage({
   useEffect(() => {
     if (!active || seenInventoryVersion.current === inventoryVersion) return;
     seenInventoryVersion.current = inventoryVersion;
-    void refreshSttStatus();
+    (refreshSttStatus()).catch(() => { /* noop */ });
   }, [active, inventoryVersion, refreshSttStatus]);
 
   const {
@@ -575,7 +576,9 @@ export function AudioPage({
     },
     [selectClip],
   );
-  const clearFreshClip = useCallback(() => setFreshClipId(null), []);
+  const clearFreshClip = useCallback(() => {
+    setFreshClipId(null);
+  }, []);
   useEffect(() => {
     if (busy === "generating") setAnnouncement("");
   }, [busy]);
@@ -679,11 +682,10 @@ export function AudioPage({
       (artifact) => artifact.repoId.toLowerCase() === lastSttRepo.toLowerCase(),
     );
   const cloneSttRepo =
-    selectedSttRepo ??
-    (lastSttDownloaded ? lastSttRepo : null) ??
-    downloadedSttArtifacts[0]?.repoId ??
-    lastSttRepo ??
-    null;
+    (selectedSttRepo ??
+      (lastSttDownloaded ? lastSttRepo : null) ??
+      downloadedSttArtifacts.at(0)?.repoId ??
+      null);
   const cloneSttReady =
     cloneSttRepo !== null &&
     downloadedSttArtifacts.some(
@@ -860,7 +862,7 @@ export function AudioPage({
         kind: "clip",
         id: clip.id,
         name,
-        durationS: clip.duration_s ?? null,
+        durationS: (clip.duration_s),
       });
     },
     [transitionWorkflow],
@@ -876,7 +878,9 @@ export function AudioPage({
         edit: () => {
           if (transitionWorkflow("edit")) adoptEditSource(reference());
         },
-        convert: () => handleSendToConvert(clip),
+        convert: () => {
+          handleSendToConvert(clip);
+        },
         separate: () => {
           if (!transitionWorkflow("separate")) return;
           useAudioSeparateStore.getState().setSource({
@@ -993,7 +997,9 @@ export function AudioPage({
   const [savingVoice, setSavingVoice] = useState(false);
   useEffect(() => {
     if (!active) return;
-    return () => setSavingVoice(false);
+    return () => {
+      setSavingVoice(false);
+    };
   }, [active]);
   const handleSaveVoice = useCallback((clip: AudioGalleryClip) => {
     setVoiceClip({
@@ -1132,7 +1138,9 @@ export function AudioPage({
     label: `open ${loadedModelHome === "speak" ? "Speak" : audioWorkflowTab(loadedModelHome).label}`,
     onClick: () => transitionWorkflow(loadedModelHome),
   };
-  const openSelector = useCallback(() => setSelectorOpen(true), []);
+  const openSelector = useCallback(() => {
+    setSelectorOpen(true);
+  }, []);
   const audioFailure = useAudioWorkspaceStore((state) => state.failure);
   const setAudioFailure = useAudioWorkspaceStore((state) => state.setFailure);
   const { status: runtimeUpdate, apply: applyRuntimeUpdate } =
@@ -1152,25 +1160,29 @@ export function AudioPage({
     if (!reloadOnCpu()) openSelector();
   }, [setAudioDeviceState, reloadOnCpu, openSelector]);
   const canUpdateRuntime = runtimeUpdate?.audio?.update_available === true;
-  const onUpdateRuntime = () => void handleUpdateRuntime();
+  const onUpdateRuntime = () => { (handleUpdateRuntime()).catch(() => { /* noop */ }); };
   useEffect(() => {
     setLoadFailureHandlers({
       canUpdateRuntime,
       onUpdateRuntime,
       onChooseModel: openSelector,
-      selectCpuDevice: () => setAudioDeviceState("cpu"),
+      selectCpuDevice: () => {
+        setAudioDeviceState("cpu");
+      },
     });
   });
   const chooseModelAction = { label: "Choose a model", onClick: openSelector };
   const handlePickRecommended = useCallback(
-    (id: string) => void pickRecommendedModel(id),
+    (id: string) => { (pickRecommendedModel(id)).catch(() => { /* noop */ }); },
     [pickRecommendedModel],
   );
   const recommendedActions = (page: AudioWorkflowId) =>
     recommendedPageModels(page, MODELS_BY_MODE.speak, pagePrefs).map(
       (model) => ({
         label: `use ${model.name}`,
-        onClick: () => handlePickRecommended(model.id),
+        onClick: () => {
+          handlePickRecommended(model.id);
+        },
       }),
     );
   const recommendedMusicActions = recommendedActions("music");
@@ -1365,7 +1377,7 @@ export function AudioPage({
             cpuUnsupported: musicGenerationRequiresCuda(activeModel, status?.audio_type),
             onUseCpu: handleUseCpu,
             onUseVariant: (variant) => {
-              if (activeModel) void pickModelVariant(activeModel, variant);
+              if (activeModel) (pickModelVariant(activeModel, variant)).catch(() => { /* noop */ });
             },
           },
         ),
@@ -1421,10 +1433,14 @@ export function AudioPage({
     const startedAt = Date.now();
     setElapsedSeconds(0);
     const timer = window.setInterval(
-      () => setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)),
+      () => {
+        setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
+      },
       1000,
     );
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+    };
   }, [busy]);
   const transcribeSource = useAudioTranscribeStore((state) => state.source);
   const transcribePrefs = useAudioTranscribeStore(
@@ -1519,7 +1535,7 @@ export function AudioPage({
     { id: SPEAKERS_MODEL_REPO, name: SPEAKERS_MODEL_NAME },
   ].map((model) => ({
     label: `use ${model.name}`,
-    onClick: () => void pickRecommendedModel(model.id),
+    onClick: () => { (pickRecommendedModel(model.id)).catch(() => { /* noop */ }); },
   }));
   const alignerDownload = useAlignerDownload(
     transcribeCaps.caps,
@@ -1583,7 +1599,7 @@ export function AudioPage({
         modelId: transcribeConnection.name,
       },
     };
-    void runTranscription(
+    (runTranscription(
       source,
       { language: transcribeLanguage, ...request },
       () => {
@@ -1592,7 +1608,7 @@ export function AudioPage({
       },
     ).then(() => {
       if (request.timestamps) transcribeCaps.refresh();
-    });
+    })).catch(() => { /* noop */ });
   };
   const startTranscriptionRef = useRef(startTranscription);
   const transcribeTarget = transcribeConnection?.id ?? transcribeRepo;
@@ -1662,7 +1678,7 @@ export function AudioPage({
     generateBlocker === null;
   const shortcutLabel = isMac ? "⌘ Enter" : "Ctrl+Enter";
   const pageRootRef = useRef<HTMLDivElement | null>(null);
-  const generateShortcut = useRef<() => void>(() => {});
+  const generateShortcut = useRef<() => void>(() => { /* noop */ });
   const handlePageGenerate =
     ttsWorkflow === "separate" ? separate.handleGenerate :
     ttsWorkflow === "clone" ? clone.handleGenerate :
@@ -1670,7 +1686,7 @@ export function AudioPage({
     ttsWorkflow === "convert" ? convert.handleGenerate : handleGenerate;
   generateShortcut.current = () => {
     if (canTranscribe) handleTranscribe();
-    else if (canGenerate) void handlePageGenerate();
+    else if (canGenerate) (handlePageGenerate()).catch(() => { /* noop */ });
   };
   useEffect(() => {
     if (!active) return;
@@ -1687,7 +1703,9 @@ export function AudioPage({
       generateShortcut.current();
     };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [active]);
   // Transcribe lists its seed unfiltered; Edit has no spec task, so it gets no catalog rows.
   const selectorModels =
@@ -1947,7 +1965,9 @@ export function AudioPage({
               hubCapability="audio"
               placeholder="Select audio model"
               open={active && selectorOpen}
-              onOpenChange={(o) => setSelectorOpen(active && o)}
+              onOpenChange={(o) => {
+                setSelectorOpen(active && o);
+              }}
             />
           </div>
         </div>
@@ -1964,7 +1984,7 @@ export function AudioPage({
                     "Audio fine-tuning lives on the Train page. Unsloth trains TTS and STT models there. Pick an audio model and appropriate dataset.",
                     { duration: 8000 },
                   );
-                  void navigateSelf({ to: "/studio" });
+                  (navigateSelf({ to: "/studio" })).catch(() => { /* noop */ });
                 }}
                 fit={true}
                 className="h-[calc(34px*var(--ui-space-scale,1))] [&>button]:h-[calc(34px*var(--ui-space-scale,1))] [&>button]:px-3 @[68rem]:[&>button]:px-11 [[data-media-header-tight]_&]:[&>button]:px-3 @max-[30rem]:[&>button]:px-2.5 @max-[30rem]:[&>button>[data-pill-tab-label]]:sr-only"
@@ -2152,7 +2172,7 @@ export function AudioPage({
                     switches={transcribeOptions}
                     languages={transcribeLanguages}
                     onUseSpeakersModel={() =>
-                      void pickRecommendedModel(SPEAKERS_MODEL_REPO)
+                      { (pickRecommendedModel(SPEAKERS_MODEL_REPO)).catch(() => { /* noop */ }); }
                     }
                   />
                 </AudioActiveProvider>

@@ -61,7 +61,7 @@ export const useAudioWorkspaceStore = create<AudioWorkspaceState>()(
           const key = id.toLowerCase();
           const kept = Object.fromEntries(
             Object.entries(state.lastModelByWorkflow).filter(
-              ([, model]) => model?.toLowerCase() !== key,
+              ([, model]) => model.toLowerCase() !== key,
             ),
           );
           return Object.keys(kept).length ===

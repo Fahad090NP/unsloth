@@ -123,7 +123,7 @@ export function createSoleQuantReader<T>({
       }
       while (active < workers && queue.length > 0) {
         active += 1;
-        void drain();
+        (drain()).catch(() => { /* noop */ });
       }
     },
   };

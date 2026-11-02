@@ -3,7 +3,7 @@
 
 import { Textarea } from "@/components/ui/textarea";
 import { ParamSlider } from "@/features/chat";
-import { PillTabs } from "@/features/model-picker/components/model-selector/pill-tabs";
+import { PillTabs } from "@/features/model-picker";
 import { type JSX, type Ref, useEffect, useState } from "react";
 import type { AudioSourceStatus } from "../hooks/audio-source-state";
 import {
