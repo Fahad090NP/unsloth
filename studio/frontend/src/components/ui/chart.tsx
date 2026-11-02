@@ -203,13 +203,24 @@ function ChartTooltipContent({
     labelKey?: string;
   }) {
   const { config } = useChart();
+  // Recharts types its content payload as `ReadonlyArray<any>`; narrow it once to
+  // the documented entry shape so the rendering code stays type-safe.
+  type TooltipValue = number | string | readonly (number | string)[];
+  type TooltipItems = NonNullable<
+    Parameters<
+      NonNullable<
+        RechartsPrimitive.TooltipContentProps<TooltipValue, string>["formatter"]
+      >
+    >[4]
+  >;
+  const items = payload as TooltipItems | undefined;
 
   const tooltipLabel = React.useMemo(() => {
-    if (hideLabel || !payload?.length) {
+    if (hideLabel || !items?.length) {
       return null;
     }
 
-    const [item] = payload;
+    const [item] = items;
     const key = String(labelKey ?? item.dataKey ?? item.name ?? "value");
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
     // The config is sparse at runtime, so index it as possibly missing.
@@ -223,7 +234,7 @@ function ChartTooltipContent({
     if (labelFormatter) {
       return (
         <div className={cn("font-medium", labelClassName)}>
-          {labelFormatter(value, payload)}
+          {labelFormatter(value, items)}
         </div>
       );
     }
@@ -236,18 +247,18 @@ function ChartTooltipContent({
   }, [
     label,
     labelFormatter,
-    payload,
+    items,
     hideLabel,
     labelClassName,
     config,
     labelKey,
   ]);
 
-  if (!active || !payload?.length) {
+  if (!active || !items?.length) {
     return null;
   }
 
-  const nestLabel = payload.length === 1 && indicator !== "dot";
+  const nestLabel = items.length === 1 && indicator !== "dot";
 
   return (
     <div
@@ -259,7 +270,7 @@ function ChartTooltipContent({
     >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
-        {payload
+        {items
           .filter((item) => item.type !== "none")
           .map((item, index) => {
             const key = String(nameKey ?? item.name ?? item.dataKey ?? "value");
@@ -281,7 +292,7 @@ function ChartTooltipContent({
                 item.name,
                 item,
                 index,
-                payload,
+                items,
               );
 
               if (Array.isArray(result)) {

@@ -4,11 +4,11 @@
 import {
   UI_FONT_SIZE_RANGE,
   useAppearanceCustomStore,
-} from "@/features/settings/stores/appearance-custom-store";
+} from "@/features/settings";
 import {
   useInterfaceScaleStore,
   webInterfaceScaleFactor,
-} from "@/features/settings/stores/interface-scale-store";
+} from "@/features/settings";
 
 /** JS twin of --ui-space-scale for virtualizer geometry; includes the browser interface scale. */
 export function useUiSpaceScale(): number {

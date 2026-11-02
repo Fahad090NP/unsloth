@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 
-import { loadLlamaBackendStatus } from "@/features/settings/api/llama-backend";
+import { loadLlamaBackendStatus } from "@/features/settings";
 
 /** null until known or when the status call fails. */
 export function useLlamaCppBackend(): string | null {

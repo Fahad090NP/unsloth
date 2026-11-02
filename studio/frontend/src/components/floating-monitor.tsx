@@ -9,7 +9,7 @@ import { useChatRuntimeStore } from "@/features/chat";
 import { FIND_PORTAL_ATTRIBUTE } from "@/features/find-in-page";
 
 import { useMonitorOverlayStore } from "@/features/settings";
-import { useCornerCardFrameStore } from "@/features/settings/stores/monitor-frame-store";
+import { useCornerCardFrameStore } from "@/features/settings";
 import { gpuMemoryDisplay } from "@/hooks/gpu-memory-display";
 import { gpuMemoryTotalsGb, resolveGpuVramUsedGb } from "@/hooks/gpu-vram";
 import { useChatSettingsWidth } from "@/hooks/use-chat-settings-width";

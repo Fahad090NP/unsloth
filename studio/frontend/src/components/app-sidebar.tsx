@@ -54,9 +54,9 @@ import {
   returnToChatThreadId,
   useApprovalWaitingStore,
   watchApprovalWaiting,
-} from "@/features/chat/utils/approval-waiting";
-import { keepOpenedChats, touchOpenedChat } from "@/features/chat/utils/opened-chats";
-import { isAssistantLocalThreadId } from "@/features/chat/utils/thread-ids";
+} from "@/features/chat";
+import { keepOpenedChats, touchOpenedChat } from "@/features/chat";
+import { isAssistantLocalThreadId } from "@/features/chat";
 import {
   HELP_GROUPS,
   HELP_ITEMS,
@@ -100,8 +100,8 @@ import {
   hideTrickOrTreatRow,
   useHalloweenSeasonEnd,
   useTrickOrTreatVisible,
-} from "@/features/halloween/halloween-store";
-import { TrickOrTreatDialog } from "@/features/halloween/trick-or-treat-dialog";
+} from "@/features/halloween";
+import { TrickOrTreatDialog } from "@/features/halloween";
 import { createNavigationNonce } from "@/lib/navigation-nonce";
 import { copyToClipboardFrom } from "@/lib/copy-to-clipboard";
 import { isTauri } from "@/lib/api-base";
@@ -204,6 +204,7 @@ import {
   fetchSidebarThreadRows,
   readAllSidebarRowIds,
   readAllSidebarRows,
+  type SidebarRowPages,
   type SidebarRowSlot,
   sidebarRowQuery,
   holdRowsPastLoadedChats,
@@ -256,7 +257,7 @@ import {
   inputImeHandlers,
   newInputImeState,
   resetInputIme,
-} from "@/features/chat/utils/composer-preferences";
+} from "@/features/chat";
 import { sandboxSessionIdFor } from "@/components/assistant-ui/sandbox-files";
 import {
   sidebarNavRowPinned,
@@ -328,8 +329,8 @@ import {
   type SidebarSection,
 } from "@/features/chat";
 import { ShutdownDialog } from "@/components/shutdown-dialog";
-import { buildChatItemMarkdown } from "@/features/chat/prompt-storage/prompt-storage-dialog";
-import { useActiveChatMenuStore } from "@/features/chat/stores/active-chat-menu-store";
+import { buildChatItemMarkdown } from "@/features/chat";
+import { useActiveChatMenuStore } from "@/features/chat";
 import { type PinnedPage, PinnedPageRow, usePinnedPages } from "@/features/browser";
 import { useUnseenScheduledRuns } from "@/features/scheduled-tasks";
 import { translate, useT, type TranslationKey } from "@/i18n";
@@ -640,6 +641,15 @@ function formatRelativeShort(iso: string): string {
 
 function preloadSilently(request: Promise<unknown>): void {
   void request.catch(() => undefined);
+}
+
+function withoutKey<T>(
+  record: Record<string, T>,
+  key: string,
+): Record<string, T> {
+  return Object.fromEntries(
+    Object.entries(record).filter(([entryKey]) => entryKey !== key),
+  );
 }
 
 function NavItem({
@@ -1868,7 +1878,8 @@ export function AppSidebar() {
   // a failed first read is not an empty history: "No chats yet" waits for a read that worked
   const chatItemsLoaded = recentsPages.loaded && !recentsPages.error;
   const folderPages = useCallback(
-    (projectId: string) => chatRowLists[`folder:${projectId}`],
+    (projectId: string) =>
+      chatRowLists[`folder:${projectId}`] as SidebarRowPages | undefined,
     [chatRowLists],
   );
   // "No chats yet" also needs no archived chat and none in an unloaded folder
@@ -2193,7 +2204,7 @@ export function AppSidebar() {
     (item: SidebarItem) => {
       const ids = getSidebarItemThreadIds(item);
       if (ids.some((id) => runningByThreadId[id])) return 0;
-      if (ids.some((id) => queueByThreadId[id])) return 1;
+      if (ids.some((id) => Object.hasOwn(queueByThreadId, id))) return 1;
       if (ids.some((id) => unreadThreadIds.has(id))) return 2;
       return 3;
     },
@@ -2731,26 +2742,28 @@ export function AppSidebar() {
     if (anchor && !renderedChatIds.has(anchor.id)) {
       selectionAnchorRef.current = null;
     }
-    setSelectedChatIds((prev) => {
-      if (prev.size === 0) return prev;
-      const kept = new Set<string>();
-      for (const id of prev) {
-        if (renderedChatIds.has(id)) kept.add(id);
+    queueMicrotask(() => {
+      setSelectedChatIds((prev) => {
+        if (prev.size === 0) return prev;
+        const kept = new Set<string>();
+        for (const id of prev) {
+          if (renderedChatIds.has(id)) kept.add(id);
+        }
+        return kept.size === prev.size ? prev : kept;
+      });
+      // A stale folder selection would make Escape clear it instead of declining a tool call.
+      const projectAnchor = projectAnchorRef.current;
+      if (projectAnchor && !renderedProjectIds.has(projectAnchor)) {
+        projectAnchorRef.current = null;
       }
-      return kept.size === prev.size ? prev : kept;
-    });
-    // A stale folder selection would make Escape clear it instead of declining a tool call.
-    const projectAnchor = projectAnchorRef.current;
-    if (projectAnchor && !renderedProjectIds.has(projectAnchor)) {
-      projectAnchorRef.current = null;
-    }
-    setSelectedProjectIds((prev) => {
-      if (prev.size === 0) return prev;
-      const kept = new Set<string>();
-      for (const id of prev) {
-        if (renderedProjectIds.has(id)) kept.add(id);
-      }
-      return kept.size === prev.size ? prev : kept;
+      setSelectedProjectIds((prev) => {
+        if (prev.size === 0) return prev;
+        const kept = new Set<string>();
+        for (const id of prev) {
+          if (renderedProjectIds.has(id)) kept.add(id);
+        }
+        return kept.size === prev.size ? prev : kept;
+      });
     });
   }, [chatRowsOnScreen, clearSelection, renderedChatIds, renderedProjectIds]);
 
@@ -2820,11 +2833,7 @@ export function AppSidebar() {
         : undefined;
       if (!slot || !query || !slotRows?.hasMore) {
         setManualOrder(scope, ids);
-        setPendingManualOrder((pending) => {
-          const next = { ...pending };
-          delete next[scope];
-          return next;
-        });
+        setPendingManualOrder((pending) => withoutKey(pending, scope));
         return;
       }
       const saved = useSidebarOrganizationStore.getState().manualOrder[scope] ?? [];
@@ -2833,11 +2842,7 @@ export function AppSidebar() {
       const settle = (order: string[]) => {
         if (writes.get(scope) !== generation) return;
         setManualOrder(scope, order);
-        setPendingManualOrder((pending) => {
-          const next = { ...pending };
-          delete next[scope];
-          return next;
-        });
+        setPendingManualOrder((pending) => withoutKey(pending, scope));
       };
       // a partial order would rank every unloaded row ahead of the ones just arranged, so it is never
       // saved: a read that keeps failing leaves the saved order as it was
@@ -2858,11 +2863,7 @@ export function AppSidebar() {
         })
         .catch(() => {
           if (writes.get(scope) !== generation) return;
-          setPendingManualOrder((pending) => {
-            const next = { ...pending };
-            delete next[scope];
-            return next;
-          });
+          setPendingManualOrder((pending) => withoutKey(pending, scope));
           toast.error("Couldn't save the new order");
         });
     },
@@ -2906,7 +2907,7 @@ export function AppSidebar() {
     const anchor = selectionAnchorRef.current;
     const sameList = anchor?.scope === list.scope;
     if (!sameList) selectionAnchorRef.current = { scope: list.scope, id: item.id };
-    const anchorId = sameList ? anchor?.id : undefined;
+    const anchorId = sameList ? anchor.id : undefined;
     setSelectedChatIds(
       new Set(
         anchorId
@@ -3032,6 +3033,8 @@ export function AppSidebar() {
             search: item.projectId
               ? { project: item.projectId }
               : { new: view.newThreadNonce },
+          }).catch((error: unknown) => {
+            console.error("Failed to navigate after archiving chat", error);
           });
         });
         archived += 1;
@@ -3061,7 +3064,9 @@ export function AppSidebar() {
           deleteFiles: alwaysDeleteChatFiles,
         });
       }
-    })();
+    })().catch((error: unknown) => {
+      console.error("Failed to delete selected chats", error);
+    });
   }
 
   // lib/sidebar-drag.ts plans each drop; read at event time so a plan sees the lists as drawn.
@@ -3609,17 +3614,19 @@ export function AppSidebar() {
   const audioWorkflowsListed = sidebarRowsLabelled;
   const pickImagesWorkflow = (workflowId: WorkflowId) => {
     useImageWorkflowStore.getState().setWorkflow(workflowId);
-    navigate({ to: "/images" });
+    navigate({ to: "/images" }).catch((error: unknown) => {
+      console.error("Failed to navigate to Images", error);
+    });
     closeMobileIfOpen();
   };
   // Sidebar and More-flyout picks only ask; the Audio page switches once it is free to.
   const pickAudioWorkflow = (workflowId: AudioWorkflowId) => {
     useAudioWorkspaceStore.getState().requestWorkflow(workflowId);
-    navigate({ to: "/audio" });
+    navigate({ to: "/audio" }).catch((error: unknown) => {
+      console.error("Failed to navigate to Audio", error);
+    });
     closeMobileIfOpen();
   };
-
-  const showSidebarBrand = true;
 
   function chatSearchForProject(projectId: string | null) {
     if (projectId) {
@@ -3634,7 +3641,11 @@ export function AppSidebar() {
     setActiveThreadId(null);
     useChatRuntimeStore.getState().setActiveProjectId(projectId);
     useChatRuntimeStore.getState().setIncognito(false);
-    navigate({ to: "/chat", search: chatSearchForProject(projectId) });
+    navigate({ to: "/chat", search: chatSearchForProject(projectId) }).catch(
+      (error: unknown) => {
+        console.error("Failed to open chat", error);
+      },
+    );
     closeMobileIfOpen();
   }
 
@@ -3646,16 +3657,24 @@ export function AppSidebar() {
     useChatRuntimeStore.getState().setActiveProjectId(null);
     useChatRuntimeStore.getState().setIncognito(false);
     setPendingNewChatSection(null);
-    void navigate({ to: "/chat", search: { new: nonce } }).then(() =>
-      { setPendingNewChatSection({ sectionId, nonce }); },
-    );
+    void navigate({ to: "/chat", search: { new: nonce } })
+      .then(() => {
+        setPendingNewChatSection({ sectionId, nonce });
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to open chat in section", error);
+      });
     closeMobileIfOpen();
   }
 
   function openProject(projectId: string) {
     setActiveThreadId(null);
     useChatRuntimeStore.getState().setActiveProjectId(projectId);
-    navigate({ to: "/chat", search: { project: projectId } });
+    navigate({ to: "/chat", search: { project: projectId } }).catch(
+      (error: unknown) => {
+        console.error("Failed to open project", error);
+      },
+    );
     closeMobileIfOpen();
   }
 
@@ -3672,6 +3691,8 @@ export function AppSidebar() {
           search: item.projectId
             ? { project: item.projectId }
             : { new: view.newThreadNonce },
+        }).catch((error: unknown) => {
+          console.error("Failed to navigate after deleting chat", error);
         });
       },
       args,
@@ -3716,6 +3737,8 @@ export function AppSidebar() {
           search: item.projectId
             ? { project: item.projectId }
             : { new: view.newThreadNonce },
+        }).catch((error: unknown) => {
+          console.error("Failed to navigate after archiving chat", error);
         });
       });
       showArchivedChatsToast();
@@ -3734,7 +3757,11 @@ export function AppSidebar() {
     try {
       const result = await forkChatRow(item);
       setActiveThreadId(result.thread.id);
-      navigate({ to: "/chat", search: { thread: result.thread.id } });
+      navigate({ to: "/chat", search: { thread: result.thread.id } }).catch(
+        (error: unknown) => {
+          console.error("Failed to open forked chat", error);
+        },
+      );
       showForkCreatedToast(result.containerSnapshotWarning, result.thread.title);
     } catch (error) {
       showForkFailedToast(error);
@@ -3898,7 +3925,11 @@ export function AppSidebar() {
           (runtimeProjectId !== null && deletedIds.has(runtimeProjectId)))
       ) {
         useChatRuntimeStore.getState().setActiveProjectId(null);
-        navigate({ to: "/chat", search: { new: createNavigationNonce() } });
+        navigate({ to: "/chat", search: { new: createNavigationNonce() } }).catch(
+          (error: unknown) => {
+            console.error("Failed to leave deleted project", error);
+          },
+        );
       }
       return;
     }
@@ -3917,7 +3948,11 @@ export function AppSidebar() {
             runtimeProjectId === target.project.id)
         ) {
           useChatRuntimeStore.getState().setActiveProjectId(null);
-          navigate({ to: "/chat", search: { new: createNavigationNonce() } });
+          navigate({ to: "/chat", search: { new: createNavigationNonce() } }).catch(
+            (error: unknown) => {
+              console.error("Failed to leave deleted project", error);
+            },
+          );
         }
       } catch (err) {
         toast.error("Failed to delete project", {
@@ -3963,12 +3998,13 @@ export function AppSidebar() {
    *  draws it. */
   async function moveChatToProjectFromMenu(item: SidebarItem, projectId: string) {
     const store = useSidebarOrganizationStore;
-    let filedSince = false;
+    const filedSince = { current: false };
     const stopWatching = store.subscribe((now, before) => {
-      filedSince ||= now.sectionByChatId[item.id] !== before.sectionByChatId[item.id];
+      filedSince.current ||=
+        now.sectionByChatId[item.id] !== before.sectionByChatId[item.id];
     });
     try {
-      if (!(await moveChatToProject(item, projectId)) || filedSince) return;
+      if (!(await moveChatToProject(item, projectId)) || filedSince.current) return;
       const now = store.getState();
       if (
         now.sectionByChatId[item.id] &&
@@ -4173,11 +4209,19 @@ export function AppSidebar() {
     () => {
       if (projectsOnlySelected()) return;
       if (selectionCount > 0) {
-        actOnSelection("archiveChat", () => void archiveSelected());
+        actOnSelection("archiveChat", () => {
+          archiveSelected().catch((error: unknown) => {
+            console.error("Failed to archive selected chats", error);
+          });
+        });
         return;
       }
       if (followsSelectionAction("archiveChat")) return;
-      withActiveChat((item) => void handleArchiveThread(item));
+      withActiveChat((item) => {
+        handleArchiveThread(item).catch((error: unknown) => {
+          console.error("Failed to archive chat", error);
+        });
+      });
     },
     { claims: sidebarUncovered },
   );
@@ -4234,12 +4278,24 @@ export function AppSidebar() {
   // dialog is not something the user can take back by closing the dialog.
   useShortcut(
     "copyChatAsMarkdown",
-    () => { withActiveChat((item) => void copyChatItemAsMarkdown(item)); },
+    () => {
+      withActiveChat((item) => {
+        copyChatItemAsMarkdown(item).catch((error: unknown) => {
+          console.error("Failed to copy chat as Markdown", error);
+        });
+      });
+    },
     { claims: sidebarUncovered },
   );
   useShortcut(
     "copySessionId",
-    () => { withActiveChat((item) => void copyChatSessionId(item)); },
+    () => {
+      withActiveChat((item) => {
+        copyChatSessionId(item).catch((error: unknown) => {
+          console.error("Failed to copy chat session id", error);
+        });
+      });
+    },
     { claims: sidebarUncovered },
   );
 
@@ -4253,7 +4309,7 @@ export function AppSidebar() {
     const threadIds = getSidebarItemThreadIds(item);
     const pinned = pinnedIdSet.has(item.id);
     const unread = threadIds.some((threadId) => unreadThreadIds.has(threadId));
-    const generating = threadIds.some((threadId) => Boolean(runningByThreadId[threadId]));
+    const generating = threadIds.some((threadId) => runningByThreadId[threadId]);
     const project = item.projectId ? projects.find((entry) => entry.id === item.projectId) : undefined;
     const sectionId = pinned ? null : (sectionByChatId[item.id] ?? null);
     const section = sectionId ? customSections.find((entry) => entry.id === sectionId) : undefined;
@@ -4277,28 +4333,57 @@ export function AppSidebar() {
         section: section ? { id: section.id, name: section.name } : null,
         rename: () => { openRenameChat(item); },
         togglePin: () => { togglePinnedChat(item.id); },
-        toggleUnread: () =>
-          { unread
-            ? clearThreadsUnread(threadIds)
-            : markThreadsUnread(threadIds, rowIdByThreadId); },
-        fork: () => void forkChatFromRow(item),
+        toggleUnread: () => {
+          if (unread) clearThreadsUnread(threadIds);
+          else markThreadsUnread(threadIds, rowIdByThreadId);
+        },
+        fork: () => {
+          forkChatFromRow(item).catch((error: unknown) => {
+            console.error("Failed to fork chat", error);
+          });
+        },
         moveToProject: (projectId) =>
           projectId === null
-            ? void moveChatToProject(item, null)
-            : void moveChatToProjectFromMenu(item, projectId),
+            ? moveChatToProject(item, null).catch((error: unknown) => {
+                console.error("Failed to move chat", error);
+              })
+            : moveChatToProjectFromMenu(item, projectId).catch(
+                (error: unknown) => {
+                  console.error("Failed to move chat", error);
+                },
+              ),
         newProject: () => {
           setProjectCreateMoveTarget(item);
           setCreatingProject(true);
         },
         moveToSection: (id) => { fileSectionTarget({ chatIds: [item.id] }, id); },
         newSection: () => { setSectionDialog({ mode: "create", chatIds: [item.id] }); },
-        copyMarkdown: () => void copyChatItemAsMarkdown(item),
-        copySessionId: () => void copyChatSessionId(item),
-        archive: () => void handleArchiveThread(item),
-        remove: () =>
-          { confirmDeleteChats
-            ? openDeleteDialog({ kind: "chat", item })
-            : void deleteChatWithCleanup(item, { deleteFiles: alwaysDeleteChatFiles }); },
+        copyMarkdown: () => {
+          copyChatItemAsMarkdown(item).catch((error: unknown) => {
+            console.error("Failed to copy chat as Markdown", error);
+          });
+        },
+        copySessionId: () => {
+          copyChatSessionId(item).catch((error: unknown) => {
+            console.error("Failed to copy chat session id", error);
+          });
+        },
+        archive: () => {
+          handleArchiveThread(item).catch((error: unknown) => {
+            console.error("Failed to archive chat", error);
+          });
+        },
+        remove: () => {
+          if (confirmDeleteChats) {
+            openDeleteDialog({ kind: "chat", item });
+          } else {
+            deleteChatWithCleanup(item, {
+              deleteFiles: alwaysDeleteChatFiles,
+            }).catch((error: unknown) => {
+              console.error("Failed to delete chat", error);
+            });
+          }
+        },
       },
     });
   });
@@ -4396,10 +4481,16 @@ export function AppSidebar() {
     } catch {
       clearAuthTokens();
     }
-    void navigate({ to: "/login" });
+    navigate({ to: "/login" }).catch((error: unknown) => {
+      console.error("Failed to navigate to login", error);
+    });
   }
 
-  useShortcut("logOut", () => void signOut());
+  useShortcut("logOut", () => {
+    signOut().catch((error: unknown) => {
+      console.error("Failed to sign out", error);
+    });
+  });
 
   /** Filing a pinned chat takes its pin, else Pinned keeps drawing it. */
   function fileChatsInSection(chatIds: string[], sectionId: string | null) {
@@ -4575,7 +4666,8 @@ export function AppSidebar() {
           </DropdownMenuItem>
         </>
       );
-    } else if (options.kind === "section") {
+    } else {
+      if (options.kind !== "section") return null;
       const { section } = options;
       const chats = (customSectionRows.get(section.id) ?? []).flatMap((row) =>
         row.kind === "chat" ? [row.item] : [],
@@ -4586,7 +4678,9 @@ export function AppSidebar() {
       const unreadInSection = [...unreadThreadIds].filter((threadId) =>
         inSection(unreadRowIds[threadId] ?? threadId),
       );
-      const sectionPages = chatRowLists[`section:${section.id}`];
+      const sectionPages = chatRowLists[`section:${section.id}`] as
+        | SidebarRowPages
+        | undefined;
       const sectionQuery = chatRowSlots[`section:${section.id}`]?.query;
       const archiveSection = async () => {
         const all =
@@ -4681,7 +4775,7 @@ export function AppSidebar() {
   function renderPinnedSection(): ReactNode {
     // Kept while pages are filed elsewhere, so they can be dragged back.
     if (isStudioRoute || showTrainingRecents || (pinnedRows.length === 0 && pinnedPages.length === 0)) return null;
-    const firstPinnedRow = pinnedRows[0];
+    const firstPinnedRow = pinnedRows.at(0);
     return (
       <Collapsible open={pinnedOpen} onOpenChange={setPinnedOpen} asChild>
         {/* While open, the next section rides up over the tail strip below, so the strip adds
@@ -4728,8 +4822,8 @@ export function AppSidebar() {
                   items={pinnedRows}
                   pageSize={SIDEBAR_PAGE_SIZE}
                   mountAll
-                  hasMore={chatRowLists.pinned?.hasMore}
-                  onReachEnd={chatRowLists.pinned?.loadMore}
+                  hasMore={chatRowLists.pinned.hasMore}
+                  onReachEnd={chatRowLists.pinned.loadMore}
                   renderItem={(row) =>
                   row.kind === "project"
                     ? renderProjectFolderRow(row.project, {
@@ -4801,6 +4895,9 @@ export function AppSidebar() {
       folders: [],
     };
     const open = !collapsedSectionIds.has(section.id);
+    const sectionPages = chatRowLists[`section:${section.id}`] as
+      | SidebarRowPages
+      | undefined;
     const sort: RowSort = {
       value: section.sort,
       set: (next) => { setCustomSectionSort(section.id, next); },
@@ -4872,8 +4969,8 @@ export function AppSidebar() {
                   items={rows}
                   pageSize={SIDEBAR_PAGE_SIZE}
                   mountAll
-                  hasMore={chatRowLists[`section:${section.id}`]?.hasMore}
-                  onReachEnd={chatRowLists[`section:${section.id}`]?.loadMore}
+                  hasMore={sectionPages?.hasMore}
+                  onReachEnd={sectionPages?.loadMore}
                   renderItem={(row) =>
                   row.kind === "project"
                     ? renderProjectFolderRow(row.project, {
@@ -5225,14 +5322,21 @@ export function AppSidebar() {
           "chat",
           selectedChatItems.map((selected) => selected.id),
         )}
-        <ContextMenuItem onSelect={() => void archiveSelected()}>
+        <ContextMenuItem
+          onSelect={() => {
+            archiveSelected().catch((error: unknown) => {
+              console.error("Failed to archive selected chats", error);
+            });
+          }}
+        >
           <HugeiconsIcon icon={Archive03Icon} strokeWidth={1.75} className="size-icon" />
           <span>{t("shell.selection.archiveChats")}</span>
         </ContextMenuItem>
         <ContextMenuItem
-          onSelect={() =>
-            { allSelectedUnread ? markSelectedRead() : markSelectedUnread(); }
-          }
+          onSelect={() => {
+            if (allSelectedUnread) markSelectedRead();
+            else markSelectedUnread();
+          }}
         >
           <HugeiconsIcon icon={allSelectedUnread ? ViewIcon : ViewOffSlashIcon} strokeWidth={1.75} className="size-icon" />
           <span>
@@ -5258,19 +5362,14 @@ export function AppSidebar() {
     const moveProjects = recentProjects
       .filter((project) => project.id !== item.projectId)
       .slice(0, MOVE_TO_MAX);
-    // A compare row outside a project spans two sandboxes: no single folder to offer.
-    const sandboxSessionId =
-      item.type === "single" || item.projectId
-        ? sandboxSessionIdFor(threadIds[0] ?? item.id, item.projectId)
-        : undefined;
     const alreadyUnread = threadIds.some((threadId) =>
       unreadThreadIds.has(threadId),
     );
     // A compare row's id is the pair id while runningByThreadId is per pane thread; aggregate.
     const isGenerating =
       item.type === "compare"
-        ? (item.threadIds ?? []).some((id) => Boolean(runningByThreadId[id]))
-        : Boolean(runningByThreadId[item.id]);
+        ? (item.threadIds ?? []).some((id) => runningByThreadId[id])
+        : runningByThreadId[item.id];
     return (
       <>
             <P.Item
@@ -5284,11 +5383,10 @@ export function AppSidebar() {
               <span>{isPinned ? "Unpin" : "Pin"}</span>
             </P.Item>
             <P.Item
-              onSelect={() =>
-                { alreadyUnread
-                  ? clearThreadsUnread(threadIds)
-                  : markThreadsUnread(threadIds, rowIdByThreadId); }
-              }
+              onSelect={() => {
+                if (alreadyUnread) clearThreadsUnread(threadIds);
+                else markThreadsUnread(threadIds, rowIdByThreadId);
+              }}
             >
               <HugeiconsIcon icon={alreadyUnread ? ViewIcon : ViewOffSlashIcon} strokeWidth={1.75} className="size-icon" />
               <span>
@@ -5302,7 +5400,11 @@ export function AppSidebar() {
             <P.Item
               disabled={!canForkChatRow(item) || isGenerating || forkInFlight}
               title="Copy this chat into a new one, from its last message"
-              onSelect={() => void forkChatFromRow(item)}
+              onSelect={() => {
+                forkChatFromRow(item).catch((error: unknown) => {
+                  console.error("Failed to fork chat", error);
+                });
+              }}
             >
               <HugeiconsIcon icon={ForkIcon} strokeWidth={1.75} className="size-icon" />
               <span>{t("library.chats.menu.fork")}</span>
@@ -5332,7 +5434,13 @@ export function AppSidebar() {
                     {moveProjects.map((project) => (
                       <P.Item
                         key={project.id}
-                        onSelect={() => void moveChatToProjectFromMenu(item, project.id)}
+                        onSelect={() => {
+                          moveChatToProjectFromMenu(item, project.id).catch(
+                            (error: unknown) => {
+                              console.error("Failed to move chat", error);
+                            },
+                          );
+                        }}
                       >
                         <HugeiconsIcon icon={ProjectIcon} strokeWidth={1.75} className="size-icon" />
                         <span className="truncate">{project.name}</span>
@@ -5343,7 +5451,13 @@ export function AppSidebar() {
                 {/* An action, as the section's Remove is: only where there is a project to leave,
                     and named after it. */}
                 {item.projectId && (
-                  <P.Item onSelect={() => void moveChatToProject(item, null)}>
+                  <P.Item
+                    onSelect={() => {
+                      moveChatToProject(item, null).catch((error: unknown) => {
+                        console.error("Failed to move chat", error);
+                      });
+                    }}
+                  >
                     <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.75} className="size-icon" />
                     <span className="truncate">
                       {(() => {
@@ -5365,19 +5479,29 @@ export function AppSidebar() {
               </P.SubContent>
             </P.Sub>
             <P.Separator />
-            <P.Item onSelect={() => void handleArchiveThread(item)}>
+            <P.Item
+              onSelect={() => {
+                handleArchiveThread(item).catch((error: unknown) => {
+                  console.error("Failed to archive chat", error);
+                });
+              }}
+            >
               <HugeiconsIcon icon={Archive03Icon} strokeWidth={1.75} className="size-icon" />
               <span>Archive</span>
             </P.Item>
             <P.Item
               variant="destructive"
-              onSelect={() =>
-                { confirmDeleteChats
-                  ? openDeleteDialog({ kind: "chat", item })
-                  : void deleteChatWithCleanup(item, {
-                      deleteFiles: alwaysDeleteChatFiles,
-                    }); }
-              }
+              onSelect={() => {
+                if (confirmDeleteChats) {
+                  openDeleteDialog({ kind: "chat", item });
+                } else {
+                  deleteChatWithCleanup(item, {
+                    deleteFiles: alwaysDeleteChatFiles,
+                  }).catch((error: unknown) => {
+                    console.error("Failed to delete chat", error);
+                  });
+                }
+              }}
             >
               <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.75} className="size-icon" />
               <span>Delete</span>
@@ -5422,16 +5546,11 @@ export function AppSidebar() {
   ) {
     const threadIds = getSidebarItemThreadIds(item);
     const isPinned = pinnedIdSet.has(item.id);
-    // A compare row outside a project spans two sandboxes: no single folder to offer.
-    const sandboxSessionId =
-      item.type === "single" || item.projectId
-        ? sandboxSessionIdFor(threadIds[0] ?? item.id, item.projectId)
-        : undefined;
     // A compare row's id is the pair id while runningByThreadId is per pane thread; aggregate.
     const isGenerating =
       item.type === "compare"
-        ? (item.threadIds ?? []).some((id) => Boolean(runningByThreadId[id]))
-        : Boolean(runningByThreadId[item.id]);
+        ? (item.threadIds ?? []).some((id) => runningByThreadId[id])
+        : runningByThreadId[item.id];
     // A paused queue is not activity: its entry outlives Stop, so the row would spin on.
     const hasQueuedActivity = threadIds.some((threadId) => {
       const entry = queueByThreadId[threadId];
@@ -5731,7 +5850,13 @@ export function AppSidebar() {
             current: pinnedProjectIdSet.has(project.id) ? null : sectionByProjectId[project.id] ?? null,
             anyFiled: !pinnedProjectIdSet.has(project.id) && Boolean(sectionByProjectId[project.id]),
           })}
-          <P.Item onSelect={() => void archiveProjectChats()}>
+          <P.Item
+            onSelect={() => {
+              archiveProjectChats().catch((error: unknown) => {
+                console.error("Failed to archive project chats", error);
+              });
+            }}
+          >
             <HugeiconsIcon icon={Archive03Icon} strokeWidth={1.75} className="size-icon" />
             <span>Archive chats</span>
           </P.Item>
@@ -5766,9 +5891,6 @@ export function AppSidebar() {
       expanded && !showAll
         ? projectChats.slice(0, PROJECT_CHAT_LIMIT)
         : projectChats;
-    const isProjectPinned = pinnedProjectIdSet.has(
-      project.id,
-    );
     const blockEnd =
       expanded && visibleChats.length > 0
         ? {
@@ -5919,7 +6041,13 @@ export function AppSidebar() {
         >
           <SidebarMenuButton
             onClick={() => {
-              if (!showAll) void folderPages(project.id)?.loadMore();
+              if (!showAll) {
+                folderPages(project.id)
+                  ?.loadMore()
+                  .catch((error: unknown) => {
+                    console.error("Failed to load more project chats", error);
+                  });
+              }
               toggleProjectShowAll(project.id);
             }}
             // Force the muted token: .sidebar-nav-btn's own color rule outweighs a plain text utility,
@@ -5964,8 +6092,7 @@ export function AppSidebar() {
               : "px-3 pt-[calc(14px*var(--ui-space-scale,1))] pb-[calc(8px*var(--ui-space-scale,1))] group-data-[collapsible=icon]:px-0",
         )}
       >
-        {showSidebarBrand && (
-          <>
+        <>
             {usesNativeMacTitlebar && !isMobile && (
               <div
                 data-tauri-drag-region
@@ -6014,7 +6141,7 @@ export function AppSidebar() {
                   <span className="relative -top-px truncate font-heading text-[calc(13px+0.5rem*var(--ui-font-scale,1))] font-semibold tracking-[0em] leading-tight text-black dark:text-foreground dark:tracking-[0.02em]">
                     unsloth
                   </span>
-                  <span className="nav-badge ml-0.5 inline-flex shrink-0 items-center justify-center rounded-full border border-nav-beta-border px-[calc(5px*var(--ui-space-scale,1))] pt-[calc(3px*var(--ui-space-scale,1))] pb-[calc(2px*var(--ui-space-scale,1))] text-[calc(0.5rem*var(--ui-font-scale,1))] font-medium leading-none tracking-[0.04em] text-nav-fg-muted antialiased subpixel-antialiased shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_2px_var(--background)]">
+                  <span className="nav-badge ml-0.5 inline-flex shrink-0 items-center justify-center rounded-full border border-nav-beta-border px-[calc(5px*var(--ui-space-scale,1))] pt-[calc(3px*var(--ui-space-scale,1))] pb-[calc(2px*var(--ui-space-scale,1))] text-[calc(0.5rem*var(--ui-font-scale,1))] font-medium leading-none tracking-[0.04em] text-nav-fg-muted antialiased shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_2px_var(--background)]">
                     {t("shell.beta")}
                   </span>
                 </Link>
@@ -6095,7 +6222,6 @@ export function AppSidebar() {
               </div>
             )}
           </>
-        )}
       </SidebarHeader>
 
       <SidebarGroup
@@ -6138,9 +6264,13 @@ export function AppSidebar() {
                       search: runningTarget.compare
                         ? { compare: runningTarget.id }
                         : { thread: runningTarget.id },
+                    }).catch((error: unknown) => {
+                      console.error("Failed to return to chat", error);
                     });
                   } else {
-                    navigate({ to: "/chat" });
+                    navigate({ to: "/chat" }).catch((error: unknown) => {
+                      console.error("Failed to open chat", error);
+                    });
                   }
                   closeMobileIfOpen();
                   return;
@@ -6155,11 +6285,7 @@ export function AppSidebar() {
               icon={Search01Icon}
               label={t("shell.navigation.search")}
               active={false}
-              className={
-                showSidebarBrand
-                  ? "hidden group-data-[collapsible=icon]:block"
-                  : undefined
-              }
+              className="hidden group-data-[collapsible=icon]:block"
               onClick={() => {
                 useChatSearchStore.getState().open();
                 closeMobileIfOpen();
@@ -6441,7 +6567,9 @@ export function AppSidebar() {
                             dimmed={row.dimmed}
                             // A menu item holds no button, but selecting it runs the same action.
                             tooltip={
-                              row.tooltipAction && !rowState.pending
+                              row.tooltipAction &&
+                              !rowState.pending &&
+                              rowState.tooltip
                                 ? `${rowState.tooltip} Click to install it.`
                                 : rowState.tooltip
                             }
@@ -6548,8 +6676,8 @@ export function AppSidebar() {
                     <ProgressiveRows
                       items={sortedRecentChatItems}
                       pageSize={RECENTS_PAGE_SIZE}
-                      hasMore={recentsPages?.hasMore}
-                      onReachEnd={recentsPages?.loadMore}
+                      hasMore={recentsPages.hasMore}
+                      onReachEnd={recentsPages.loadMore}
                       renderItem={(item) =>
                         renderChatSidebarItem(item, "recent", {
                           scope: RECENTS_ORDER_SCOPE,
@@ -6623,7 +6751,16 @@ export function AppSidebar() {
                           className="sidebar-nav-btn h-auto flex-col items-start gap-0.5 py-[calc(5px*var(--ui-space-scale,1))] rounded-[14px] pl-3 pr-7 text-ui-14p5 tracking-nav font-medium"
                           onClick={() => {
                             setSelectedHistoryRunId(run.id);
-                            if (!isStudioRoute) navigate({ to: "/studio" });
+                            if (!isStudioRoute) {
+                              navigate({ to: "/studio" }).catch(
+                                (error: unknown) => {
+                                  console.error(
+                                    "Failed to open the training run",
+                                    error,
+                                  );
+                                },
+                              );
+                            }
                             closeMobileIfOpen();
                           }}
                         >
@@ -6668,7 +6805,14 @@ export function AppSidebar() {
                           <DropdownMenuItem
                             disabled={duplicateTrainingRunDisabled}
                             onSelect={() => {
-                              void duplicateTrainingRun(run.id);
+                              duplicateTrainingRun(run.id).catch(
+                                (error: unknown) => {
+                                  console.error(
+                                    "Failed to duplicate training run",
+                                    error,
+                                  );
+                                },
+                              );
                               closeMobileIfOpen();
                             }}
                           >
@@ -6846,7 +6990,12 @@ export function AppSidebar() {
                       <DropdownMenuItem
                         key={item.id}
                         ref={anchorRef as React.Ref<HTMLDivElement>}
-                        onSelect={(e) => { e.preventDefault(); toggleTheme(); }}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          toggleTheme().catch((error: unknown) => {
+                            console.error("Failed to toggle theme", error);
+                          });
+                        }}
                       >
                         {isDark ? <HugeiconsIcon icon={Sun03Icon} strokeWidth={1.75} className="size-icon" /> : <HugeiconsIcon icon={Moon02Icon} strokeWidth={1.75} className="size-icon" />}
                         <span>
@@ -6945,7 +7094,13 @@ export function AppSidebar() {
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-              <DropdownMenuItem onSelect={() => void signOut()}>
+              <DropdownMenuItem
+                onSelect={() => {
+                  signOut().catch((error: unknown) => {
+                    console.error("Failed to sign out", error);
+                  });
+                }}
+              >
                 <HugeiconsIcon icon={Logout05Icon} strokeWidth={1.75} className="size-icon" />
                 <span>{t("shell.navigation.logOut")}</span>
               </DropdownMenuItem>
@@ -6980,7 +7135,11 @@ export function AppSidebar() {
       <FullInstallDialog
         open={fullInstallOpen}
         onOpenChange={setFullInstallOpen}
-        onConfirm={() => void fullInstall.repairInstall()}
+        onConfirm={() => {
+          fullInstall.repairInstall().catch((error: unknown) => {
+            console.error("Failed to start the full install repair", error);
+          });
+        }}
       />
     )}
     {!isTauri && (
@@ -7081,7 +7240,11 @@ export function AppSidebar() {
           <Button
             type="button"
             variant="destructive"
-            onClick={() => void commitDelete()}
+            onClick={() => {
+              commitDelete().catch((error: unknown) => {
+                console.error("Failed to delete", error);
+              });
+            }}
           >
             {deleteTargetHasFiles(confirmingDelete) && deleteFilesOnDelete
               ? "Delete all"
@@ -7123,7 +7286,9 @@ export function AppSidebar() {
             if (imeOwnsInputKeydown(event, renameImeRef.current)) return;
             if (event.key === "Enter") {
               event.preventDefault();
-              void commitRename();
+              commitRename().catch((error: unknown) => {
+                console.error("Failed to rename", error);
+              });
             }
           }}
           autoFocus
@@ -7151,7 +7316,11 @@ export function AppSidebar() {
           <Button
             type="button"
             variant="dark"
-            onClick={() => void commitRename()}
+            onClick={() => {
+              commitRename().catch((error: unknown) => {
+                console.error("Failed to rename", error);
+              });
+            }}
             disabled={!renameDirty}
           >
             {t("common.save")}

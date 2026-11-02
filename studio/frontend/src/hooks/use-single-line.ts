@@ -26,7 +26,7 @@ export function useSingleLine<T extends HTMLElement>(): [
   const [single, setSingle] = useState(true);
   const observer = useRef<ResizeObserver | null>(null);
 
-  const ref = useCallback((node: T | null) => {
+  const ref: (node: T | null) => void = useCallback((node: T | null) => {
     observer.current?.disconnect();
     observer.current = null;
     if (!node || typeof ResizeObserver === "undefined") {

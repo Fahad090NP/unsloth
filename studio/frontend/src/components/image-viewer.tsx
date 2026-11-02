@@ -185,7 +185,7 @@ function ViewerBody() {
   const images = useImageViewerStore((state) => state.images);
   const index = useImageViewerStore((state) => state.index);
   const { close, step } = useImageViewerStore.getState();
-  const image: ViewerImage | undefined = images[index];
+  const image = images.at(index);
   const loaded = useImageBlob(image);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [natural, setNatural] = useState<{
@@ -214,7 +214,7 @@ function ViewerBody() {
     observer.observe(stage);
     return () => { observer.disconnect(); };
   }, [fitted, fitZoom]);
-  const scale = zoom?.key === image?.key ? zoom.value : null;
+  const scale = zoom && image && zoom.key === image.key ? zoom.value : null;
   const setScale = (value: number, fit = false) => {
     if (image) setZoom({ key: image.key, value, fit });
   };

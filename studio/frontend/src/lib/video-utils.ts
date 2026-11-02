@@ -105,8 +105,8 @@ function tracksInMoov(moov: Uint8Array, found: BmffTracks): void {
           hdlr[10],
           hdlr[11],
         );
-        if (handler === "soun") found.audio = true;
-        else if (handler === "vide") found.video = true;
+        if (handler === "soun") Object.assign(found, { audio: true });
+        else if (handler === "vide") Object.assign(found, { video: true });
       }
     }
   }

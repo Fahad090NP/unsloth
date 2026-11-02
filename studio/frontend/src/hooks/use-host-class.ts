@@ -5,7 +5,7 @@ import { usePlatformStore } from "@/config/env";
 import {
   type HostClass,
   classifyHost,
-} from "@/features/model-picker/components/model-selector/host-artifact-policy";
+} from "@/features/model-picker";
 import { useMemo } from "react";
 import { useGpuInfo } from "./use-gpu-info";
 

@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 
 import { ModelLoadDescription } from "@/features/chat";
-import { MODEL_LOAD_TOAST_CLASSNAMES } from "@/features/chat/components/model-load-status";
+import { MODEL_LOAD_TOAST_CLASSNAMES } from "@/features/chat";
 import { formatBytes, type StagedDownloadProgress } from "@/features/hub";
 import {
   createPickToast,

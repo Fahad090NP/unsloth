@@ -3,8 +3,10 @@
 
 import { useCallback, useRef } from "react";
 
+type WheelScrollRefCallback<T extends HTMLElement> = (node: T | null) => void;
+
 /** The modal scroll lock may cancel native wheel scrolling, so apply the delta here. */
-export function useWheelScrollRef<T extends HTMLElement>() {
+export function useWheelScrollRef<T extends HTMLElement>(): WheelScrollRefCallback<T> {
   const detachRef = useRef<(() => void) | null>(null);
 
   return useCallback((node: T | null) => {
