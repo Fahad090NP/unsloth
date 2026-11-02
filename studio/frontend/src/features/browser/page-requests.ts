@@ -35,7 +35,8 @@ export function pageRequests(
   /** Starts this page's next request; whether more are waiting. */
   const startOne = () => {
     while (queue.length) {
-      const job = queue.shift()!;
+      const job = queue.shift();
+      if (!job) break;
       if (job.controller.signal.aborted) continue;
       const page = pageUrl();
       if (!page) {
@@ -51,7 +52,8 @@ export function pageRequests(
           if (open.get(job.id) === job.controller) open.delete(job.id);
           if (!job.controller.signal.aborted) reply(job.id, answer);
           schedule();
-        });
+        })
+        .catch(() => undefined);
       break;
     }
     return queue.length > 0;

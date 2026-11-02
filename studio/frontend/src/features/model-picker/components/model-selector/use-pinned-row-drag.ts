@@ -250,7 +250,7 @@ export function usePinnedRowDrag(
       onPointerDown: (event: React.PointerEvent) => {
         if (event.button !== 0 || event.pointerType === "touch") return;
         if (!event.isPrimary) return;
-        if ((event.target as Element | null)?.closest?.(NO_DRAG_SELECTOR)) {
+        if ((event.target as Element | null)?.closest(NO_DRAG_SELECTOR)) {
           return;
         }
         // Drop a stale gesture whose release was missed, or it blocks every later drag.

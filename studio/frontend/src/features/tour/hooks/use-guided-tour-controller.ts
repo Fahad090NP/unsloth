@@ -78,7 +78,7 @@ export function useGuidedTourController({
     if (steps.length === 0) return;
     function onOpen(e: Event) {
       const ce = e as CustomEvent<TourOpenDetail>;
-      if (ce.detail?.id && ce.detail.id !== id) return;
+      if (ce.detail.id && ce.detail.id !== id) return;
       setOpen(true);
     }
     window.addEventListener(TOUR_OPEN_EVENT, onOpen);

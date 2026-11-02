@@ -171,7 +171,9 @@ export async function setSkillEnabled(
     error: null,
   });
   channel?.postMessage("changed");
-  void refreshContextUsage({ invalidate: true });
+  refreshContextUsage({ invalidate: true }).catch((error: unknown) => {
+    console.error("Background chat operation failed", error);
+  });
   if (updated.enabled) {
     useSkillsSwitchStore.getState().setOn(true);
   }
@@ -196,7 +198,9 @@ export async function setAllSkillsEnabled(
   lastFetchedAt = Date.now();
   publish({ skills, loading: false, initialized: true, error: null });
   channel?.postMessage("changed");
-  void refreshContextUsage({ invalidate: true });
+  refreshContextUsage({ invalidate: true }).catch((error: unknown) => {
+    console.error("Background chat operation failed", error);
+  });
   // Reset to defaults (null) unsets it again.
   if (enabled !== false) {
     useSkillsSwitchStore.getState().setOn(enabled);
@@ -212,7 +216,9 @@ export function isValidSkillName(name: string): boolean {
 
 async function skillsMutated(): Promise<void> {
   channel?.postMessage("changed");
-  void refreshContextUsage({ invalidate: true });
+  refreshContextUsage({ invalidate: true }).catch((error: unknown) => {
+    console.error("Background chat operation failed", error);
+  });
   await listSkills(true).catch(() => undefined);
 }
 
@@ -336,5 +342,7 @@ if (typeof window !== "undefined") {
 
 channel?.addEventListener("message", () => {
   void listSkills(true).catch(() => undefined);
-  void refreshContextUsage({ invalidate: true });
+  refreshContextUsage({ invalidate: true }).catch((error: unknown) => {
+    console.error("Background chat operation failed", error);
+  });
 });

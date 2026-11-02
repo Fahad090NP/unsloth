@@ -5,8 +5,8 @@ import { type FineTuneFormat, buildFineTuneJsonl } from "@/features/chat";
 import { saveRecipe } from "@/features/data-recipes/data/recipes-db";
 import { createEmptyRecipePayload } from "@/features/recipe-studio";
 import { inspectSeedUpload } from "@/features/recipe-studio/api";
-import { uploadTrainingDataset } from "@/features/training/api/datasets-api";
-import { useTrainingConfigStore } from "@/features/training/stores/training-config-store";
+import { uploadTrainingDataset } from "@/features/training";
+import { useTrainingConfigStore } from "@/features/training";
 import { toast } from "@/lib/toast";
 
 /** btoa cannot handle code points above latin-1, so encode UTF-8 bytes. */

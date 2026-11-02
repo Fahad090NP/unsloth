@@ -27,16 +27,16 @@ export function enqueueHubDownload(
   origin?: { repoId: string; filename?: string },
 ) {
   if (!entries.length) return;
-  entries = checkpointFirst(entries);
+  const ordered = checkpointFirst(entries);
   const key = (rows: StagedDownloadEntry[]) =>
     JSON.stringify(rows.map((e) => [e.repoId, [...e.files].sort()]));
   useHubQueue.setState((state) =>
-    state.plans.some((p) => key(p.entries) === key(entries))
+    state.plans.some((p) => key(p.entries) === key(ordered))
       ? state
       : {
           plans: [
             ...state.plans,
-            { id: ++nextId, origin, entries, remaining: entries },
+            { id: ++nextId, origin, entries: ordered, remaining: ordered },
           ],
         },
   );

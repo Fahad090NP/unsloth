@@ -91,5 +91,5 @@ export async function fetchTokenPreview({
   if (!res.ok) {
     throw new Error(await readFastApiError(res));
   }
-  return await res.json();
+  return (await res.json()) as TokenPreviewResponse;
 }

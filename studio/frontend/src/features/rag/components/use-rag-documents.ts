@@ -227,7 +227,7 @@ export function useRagDocuments(
             } else if (ev.type === "complete") {
               finish("completed", null, ev.num_chunks);
               return;
-            } else if (ev.type === "error") {
+            } else {
               finish(
                 ev.stage === "cancelled" ? "cancelled" : "failed",
                 ev.error ?? "Indexing failed",
@@ -274,7 +274,7 @@ export function useRagDocuments(
         } finally {
           forget();
         }
-      })();
+      })().catch(() => undefined);
     },
     [patchDoc],
   );
@@ -396,9 +396,9 @@ export function useRagDocuments(
       setDocuments([]);
       if (scope) {
          
-        void (scope.type === "project"
+        (scope.type === "project"
           ? loadProjectSources(scope.projectId)
-          : refresh());
+          : refresh()).catch(() => undefined);
       } else {
         // Left set, the composer reads the list as unknown and holds every send.
         refreshInFlight.current = false;
@@ -406,9 +406,9 @@ export function useRagDocuments(
         setLoading(false);
       }
     } else if (prev === null && scope && !uploadInFlightRef.current) {
-      void (scope.type === "project"
+      (scope.type === "project"
         ? loadProjectSources(scope.projectId)
-        : refresh());
+        : refresh()).catch(() => undefined);
     }
     return () => {
       // Keep in-flight tracking across the materialization flip (React can commit the new id after the
@@ -433,10 +433,10 @@ export function useRagDocuments(
     read();
     // Before the reconcile below, or an event fired ahead of this listener would be missed.
     window.addEventListener(PROJECT_WORK_CHANGED_EVENT, read);
-    void reconcileProjectFolderJobs(workScopeId);
+    reconcileProjectFolderJobs(workScopeId).catch(() => undefined);
     // The backend also enqueues per-folder jobs on its own timer with no announcement.
     const reconcile = setInterval(() => {
-      void reconcileProjectFolderJobs(workScopeId);
+      reconcileProjectFolderJobs(workScopeId).catch(() => undefined);
     }, FOLDER_RECONCILE_INTERVAL_MS);
     subscribeProjectSourcesBroadcast();
     return () => {
@@ -453,7 +453,7 @@ export function useRagDocuments(
     // Skip a tick while one is out, or a list slower than the interval would never publish.
     const id = setInterval(() => {
       if (!refreshInFlight.current) {
-        void refresh({ quiet: true });
+        refresh({ quiet: true }).catch(() => undefined);
       }
     }, 4000);
     return () => { clearInterval(id); };
@@ -465,10 +465,10 @@ export function useRagDocuments(
     if (!projectScopeId) return;
     const onChanged = (event: Event) => {
       const changed = (event as CustomEvent<{ projectId?: string }>).detail
-        ?.projectId;
+        .projectId;
       if (changed !== projectScopeId) return;
       // Counted as work while it runs, or nothing gates the send between mutation and refresh.
-      void loadProjectSources(projectScopeId, { quiet: true });
+      loadProjectSources(projectScopeId, { quiet: true }).catch(() => undefined);
     };
     subscribeProjectSourcesBroadcast();
     window.addEventListener(PROJECT_SOURCES_CHANGED_EVENT, onChanged);

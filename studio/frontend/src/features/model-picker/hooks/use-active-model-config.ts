@@ -160,7 +160,7 @@ export function useActiveModelConfig(): ActiveModelConfigState {
       selectedGpuIndexKind,
       tensorSplit: splitRatio,
       // Undefined until the runtime reports a list, so the editor can hydrate the stored row.
-      ...((loadedLlamaExtraArgs !== null && loadedLlamaExtraArgs !== undefined)
+      ...(loadedLlamaExtraArgs != null
         ? { llamaExtraArgs: [...loadedLlamaExtraArgs] }
         : {}),
     };

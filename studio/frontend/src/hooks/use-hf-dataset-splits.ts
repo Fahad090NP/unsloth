@@ -109,7 +109,9 @@ async function fetchRemoteSplits({
   }
   const response = await hubFetch(url, { headers, signal });
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
+    const body = (await response.json().catch(() => null)) as {
+      error?: string;
+    } | null;
     throw new Error(
       body?.error ?? `Failed to fetch splits (${response.status})`,
     );
@@ -133,7 +135,9 @@ async function fetchHubSplits({
     signal,
   });
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
+    const body = (await response.json().catch(() => null)) as {
+      detail?: unknown;
+    } | null;
     throw new Error(
       typeof body?.detail === "string"
         ? body.detail
@@ -193,9 +197,11 @@ export function useHfDatasetSplits(
 
   useEffect(() => {
     if (!datasetName) {
-      setEntries([]);
-      setError(null);
-      setIsLoading(false);
+      queueMicrotask(() => {
+        setEntries([]);
+        setError(null);
+        setIsLoading(false);
+      });
       return;
     }
 
@@ -220,7 +226,7 @@ export function useHfDatasetSplits(
           setError(result.error);
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (!controller.signal.aborted) {
           const rawErrorMessage =
             err instanceof Error

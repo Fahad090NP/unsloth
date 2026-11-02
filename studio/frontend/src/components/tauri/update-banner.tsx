@@ -78,7 +78,7 @@ export function UpdateBanner({
   const currentVersion = formatVersion(info?.currentVersion);
   const latestVersion = formatVersion(info?.version);
   const icon = showFailure ? AlertCircleIcon : Download01Icon;
-  const notesTargetVersion = info?.version?.replace(LEADING_V, "") ?? null;
+  const notesTargetVersion = info?.version.replace(LEADING_V, "") ?? null;
   const notesOpen =
     notesTargetVersion !== null && notesVersion === notesTargetVersion;
 

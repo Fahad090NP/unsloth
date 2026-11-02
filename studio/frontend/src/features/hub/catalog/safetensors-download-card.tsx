@@ -141,7 +141,7 @@ export function SafetensorsDownloadCard({
       })
       .catch((err: unknown) => {
         if (!signal.aborted && import.meta.env.DEV) {
-          console.debug("Model size lookup failed", err);
+          console.warn("Model size lookup failed", err);
         }
       })).catch(() => { /* noop */ });
     return () => {

@@ -299,7 +299,9 @@ export function useSidebarRowPages(
       const key = sidebarRowQueryKey(slot.query);
       const existing = pagers.get(name);
       if (existing) {
-        void existing.setQuery(slot.query, key);
+        existing.setQuery(slot.query, key).catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
         continue;
       }
       const pager: SidebarPager = new RowPager(
@@ -313,7 +315,9 @@ export function useSidebarRowPages(
       );
       pagers.set(name, pager);
       registerPager(pager);
-      void pager.start();
+      pager.start().catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
     }
     // one sidebar render per 16 ms however many lists answer; a timer, as a page drawing no frames never runs rAF
     let timer: ReturnType<typeof setTimeout> | null = null;

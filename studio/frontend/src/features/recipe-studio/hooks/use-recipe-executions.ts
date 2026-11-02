@@ -679,7 +679,7 @@ export function useRecipeExecutions({
     (record: RecipeExecutionRecord): void => {
       const normalizedRecord = withExecutionDefaults(record);
       upsertExecution(normalizedRecord);
-      saveRecipeExecution(normalizedRecord).catch((error) => {
+      saveRecipeExecution(normalizedRecord).catch((error: unknown) => {
         // biome-ignore lint/suspicious/noConsole: background persistence failures should not interrupt the UI
         console.error("Save recipe execution failed:", error);
       });

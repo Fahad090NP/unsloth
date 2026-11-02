@@ -22,7 +22,7 @@ function doneKey(): string {
 
 export function importLegacyRecipes(): Promise<void> {
   if (localStorage.getItem(doneKey())) return Promise.resolve();
-  pending ??= runImport().catch((error) => {
+  pending ??= runImport().catch((error: unknown) => {
     pending = null;
     // biome-ignore lint/suspicious/noConsole: retried on the next load
     console.error("Legacy Data Recipe import failed:", error);

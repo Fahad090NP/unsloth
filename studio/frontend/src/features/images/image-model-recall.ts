@@ -84,12 +84,15 @@ export function redirectRetiredImagePick<
 
 export function readImageModel(): RememberedImageModel | null {
   try {
-    const value = JSON.parse(localStorage.getItem(KEY) ?? "null");
-    if (!value || typeof value.repoId !== "string" || !value.repoId.trim())
+    const parsed: unknown = JSON.parse(localStorage.getItem(KEY) ?? "null");
+    if (!parsed || typeof parsed !== "object") return null;
+    const value = parsed as Record<string, unknown>;
+    if (typeof value.repoId !== "string" || !value.repoId.trim()) return null;
+    const kind = value.kind;
+    if (kind !== "gguf" && kind !== "single_file" && kind !== "pipeline")
       return null;
-    if (!["gguf", "single_file", "pipeline"].includes(value.kind)) return null;
     if (
-      value.kind !== "pipeline" &&
+      kind !== "pipeline" &&
       (typeof value.filename !== "string" || !value.filename)
     )
       return null;
@@ -101,7 +104,7 @@ export function readImageModel(): RememberedImageModel | null {
       : [];
     return {
       repoId: value.repoId,
-      kind: value.kind,
+      kind,
       ...(typeof value.filename === "string"
         ? { filename: value.filename }
         : {}),
@@ -150,10 +153,16 @@ function cleanComponentFiles(value: unknown): ImageComponentFiles {
 
 function readComponentEntries(): ComponentEntry[] {
   try {
-    const value = JSON.parse(localStorage.getItem(COMPONENTS_KEY) ?? "[]");
-    return Array.isArray(value)
-      ? value.filter((e): e is ComponentEntry => Boolean(e) && typeof e.key === "string")
-      : [];
+    const value: unknown = JSON.parse(
+      localStorage.getItem(COMPONENTS_KEY) ?? "[]",
+    );
+    if (!Array.isArray(value)) return [];
+    return value.filter(
+      (e): e is ComponentEntry =>
+        typeof e === "object" &&
+        e !== null &&
+        typeof (e as { key?: unknown }).key === "string",
+    );
   } catch {
     return [];
   }
@@ -409,10 +418,17 @@ export function clearPendingImageLoad(): void {
 
 function readPendingImageLoad(): PendingImageLoad | null {
   try {
-    const value = JSON.parse(localStorage.getItem(PENDING_KEY) ?? "null");
-    if (!value || typeof value.repoId !== "string" || !value.repoId) return null;
-    if (!["gguf", "single_file", "pipeline"].includes(value.kind)) return null;
-    return { ...value, fieldFiles: cleanComponentFiles(value.fieldFiles) };
+    const parsed: unknown = JSON.parse(localStorage.getItem(PENDING_KEY) ?? "null");
+    if (!parsed || typeof parsed !== "object") return null;
+    const value = parsed as Record<string, unknown>;
+    if (typeof value.repoId !== "string" || !value.repoId) return null;
+    const kind = value.kind;
+    if (kind !== "gguf" && kind !== "single_file" && kind !== "pipeline")
+      return null;
+    return {
+      ...(parsed as unknown as PendingImageLoad),
+      fieldFiles: cleanComponentFiles(value.fieldFiles),
+    };
   } catch {
     return null;
   }

@@ -181,7 +181,8 @@ export function useRecipeEditorGraph({
       return;
     }
     event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
+    const transfer = event.dataTransfer;
+    transfer.dropEffect = "copy";
   }, []);
 
   const handleDrop = useCallback(

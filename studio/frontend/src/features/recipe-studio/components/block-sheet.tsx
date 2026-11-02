@@ -372,7 +372,8 @@ export function BlockSheet({
       const serialized = JSON.stringify(payload);
       event.dataTransfer.setData(RECIPE_BLOCK_DND_MIME, serialized);
       event.dataTransfer.setData("text/plain", serialized);
-      event.dataTransfer.effectAllowed = "copy";
+      const transfer = event.dataTransfer;
+      transfer.effectAllowed = "copy";
     };
   const getTrailing = (): "drag" => "drag";
   const onBlockClick = (kind: SheetKind, type: BlockType) => {

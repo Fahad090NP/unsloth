@@ -225,7 +225,8 @@ export function useNativeFileDrop(
       if (!isFileDrag(event)) return;
       event.preventDefault();
       if (isTauri || latest.current.disabled) return;
-      event.dataTransfer.dropEffect = "copy";
+      const transfer = event.dataTransfer;
+      transfer.dropEffect = "copy";
     },
     onDragLeave: (event: React.DragEvent) => {
       if (isTauri || !isFileDrag(event)) return;
@@ -284,7 +285,7 @@ export function useNativeFileDrop(
             });
           }
         },
-        (reason) => { toastReadFailures(1, reason); },
+        (reason: unknown) => { toastReadFailures(1, reason); },
       );
     },
   };

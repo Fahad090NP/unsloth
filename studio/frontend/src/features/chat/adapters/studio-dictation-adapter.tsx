@@ -145,7 +145,9 @@ export function notifyStudioDictationUnavailable(
     return;
   }
   // Firefox lacks Web Speech, so offer local dictation.
-  void offerLocalDictation();
+  offerLocalDictation().catch((error: unknown) => {
+    console.error("Background chat operation failed", error);
+  });
 }
 
 /** offers local dictation when Web Speech is missing, prompting before a needed download. */

@@ -32,7 +32,7 @@ export function createThrottledStorage(
     getItem: (name) => base.getItem(name),
     setItem: (name, value) => {
       pending.set(name, value);
-      if (timer === null) timer = setTimeout(flush, delayMs);
+      timer ??= setTimeout(flush, delayMs);
     },
     removeItem: (name) => {
       pending.delete(name);

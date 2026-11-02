@@ -697,7 +697,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
               });
             }
           })
-          .catch((error) => {
+          .catch((error: unknown) => {
             if (controller.signal.aborted) return;
             if (!requestMatchesSelection()) return;
 
@@ -837,7 +837,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
               recheckSelectedDatasetForStreamingMode(false);
             }
           })
-          .catch((error) => {
+          .catch((error: unknown) => {
             if (controller.signal.aborted) return;
             if (
               requestedCacheIdentity &&
@@ -1817,6 +1817,8 @@ export function clearDeletedDataset(datasetName: string): boolean {
     uploadedFile: state.uploadedFile,
   });
   switch (selection) {
+    case null:
+      return false;
     case "upload":
       state.selectLocalDataset(null);
       return true;

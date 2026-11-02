@@ -161,11 +161,11 @@ export function adoptAgentChat(from: string, to: string): void {
   activeActions.delete(from);
   if (action && !activeActions.has(to)) activeActions.set(to, action);
   useBrowserAgentStore.setState((state) => {
-    const moved = state.chats[from];
+    const moved = state.chats[from] as (typeof state.chats)[string] | undefined;
     if (!moved) return state;
     const chats = { ...state.chats };
     Reflect.deleteProperty(chats, from);
-    return { chats: chats[to] ? chats : { ...chats, [to]: moved } };
+    return { chats: Object.hasOwn(chats, to) ? chats : { ...chats, [to]: moved } };
   });
 }
 

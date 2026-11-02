@@ -146,7 +146,7 @@ export const useBrowserHistoryStore = create<BrowserHistoryState>()(
           const [latest, ...rest] = kept;
           // A reload or title update of the same page is one visit.
           const history =
-            latest?.url === url
+            latest.url === url
               ? [{ ...latest, title: title || latest.title, visitedAt: Date.now() }, ...rest]
               : [{ id: newId(), url, title, visitedAt: Date.now() }, ...kept].slice(0, MAX_HISTORY);
           // Pruned against the new visit too: its icon was recorded just before it.

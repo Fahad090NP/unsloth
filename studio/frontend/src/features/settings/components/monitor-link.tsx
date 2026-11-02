@@ -3,7 +3,7 @@
 
 import { Switch } from "@/components/ui/switch";
 // Direct path, not the barrel: the barrel re-exports the page, defeating its lazy route.
-import { useApiMonitorOverlayStore } from "@/features/api-monitor/overlay-store";
+import { useApiMonitorOverlayStore } from "@/features/api-monitor";
 import { getApiMonitor } from "@/features/chat/api/chat-api";
 import type { ApiMonitorResponse } from "@/features/chat/types/api";
 import { useLocale, useT } from "@/i18n";
@@ -81,7 +81,7 @@ export function MonitorLink({
               {t("settings.resources.liveMonitor.summary")}
             </span>
             <span className="min-h-lh truncate text-xs text-muted-foreground">
-              {(data === null || data === undefined)
+              {data == null
                 ? null
                 : t("settings.resources.liveMonitor.status", {
                     active: active.toLocaleString(locale),

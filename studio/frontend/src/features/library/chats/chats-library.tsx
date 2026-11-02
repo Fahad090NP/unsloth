@@ -587,7 +587,7 @@ export function ChatsLibrary({
     const runtime = useChatRuntimeStore.getState();
     runtime.setActiveThreadId(null);
     runtime.setActiveProjectId(id);
-    void navigate({ to: "/chat", search: { project: id } });
+    navigate({ to: "/chat", search: { project: id } }).catch(() => undefined);
   };
 
   const openChat = (chat: SidebarItem) => {
@@ -596,10 +596,10 @@ export function ChatsLibrary({
     const project = chat.projectId ? { project: chat.projectId } : {};
     if (chat.type === "compare") {
       runtime.setActiveThreadId(null);
-      void navigate({ to: "/chat", search: { compare: chat.id, ...project } });
+      navigate({ to: "/chat", search: { compare: chat.id, ...project } }).catch(() => undefined);
     } else {
       runtime.setActiveThreadId(chat.id);
-      void navigate({ to: "/chat", search: { thread: chat.id, ...project } });
+      navigate({ to: "/chat", search: { thread: chat.id, ...project } }).catch(() => undefined);
     }
   };
 

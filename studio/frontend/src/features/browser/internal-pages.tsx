@@ -504,7 +504,7 @@ function useDays<Item>(
       shown += 1;
       const key = startOfDay(time);
       const last = days[days.length - 1];
-      if (last?.key === key) last.items.push(item);
+      if (last.key === key) last.items.push(item);
       else days.push({ key, label: dateFormat.format(key), items: [item] });
     }
     return { groups: days, more: false };
@@ -646,7 +646,7 @@ function useMissingDownloads(downloads: DownloadItem[]) {
         (found) => live && setMissing(new Set(ids.filter((_, index) => !found[index]))),
         () => undefined,
       );
-    void check();
+    check().catch(() => undefined);
     window.addEventListener("focus", check);
     return () => {
       live = false;

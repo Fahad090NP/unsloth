@@ -128,7 +128,9 @@ export function useRepoDownload(config: RepoDownloadConfig): DownloadJob {
   );
   const visibleConflict = useDownloadManagerStore(
     useShallow((state) => {
-      const exact = state.conflicts[conflictKey];
+      const exact = state.conflicts[conflictKey] as
+        | (typeof state.conflicts)[string]
+        | undefined;
       if (exact) return { key: conflictKey, info: exact.info };
       const scoped = Object.entries(state.conflicts).find(([key]) =>
         key.startsWith(`${repoConflictKey}#`),
@@ -144,7 +146,9 @@ export function useRepoDownload(config: RepoDownloadConfig): DownloadJob {
   // Chat/Video park this hook on an idle repo id; remember the key so a later real repo clears it.
   const repoIdRef = useRef(repoId);
   const preservedConflictKeyRef = useRef<string | null>(null);
-  repoIdRef.current = repoId;
+  useEffect(() => {
+    repoIdRef.current = repoId;
+  }, [repoId]);
   useEffect(
     () => () => {
       const parked = repoIdRef.current;

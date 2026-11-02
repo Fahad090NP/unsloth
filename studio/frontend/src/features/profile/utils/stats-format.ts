@@ -410,7 +410,7 @@ export function buildActivityColumns<Day extends { date: string }>(
   const capacity = columns * DAYS_PER_WEEK - trailing;
   const start = Math.max(0, daily.length - capacity);
   const visible = daily.slice(start);
-  const firstVisible = visible[0];
+  const firstVisible = visible.at(0);
   if (!firstVisible) return [];
   const baseline = windowBaseline([...values], start, mode);
 
@@ -464,8 +464,11 @@ export function toLocalDayKey(date: Date): string {
 
 /** Parse as a local date; UTC would shift a day. */
 export function parseDayKey(key: string): Date {
-  const [year, month, day] = key.split("-").map(Number);
-  return new Date(year, (month ?? 1) - 1, day ?? 1);
+  const parts = key.split("-").map(Number);
+  const year = parts.at(0) ?? 1970;
+  const month = parts.at(1) ?? 1;
+  const day = parts.at(2) ?? 1;
+  return new Date(year, month - 1, day);
 }
 
 export type ActivityMode = "daily" | "weekly" | "cumulative";

@@ -107,7 +107,9 @@ export function OpenAICodeExecSection({
         setActiveContainerId(thread?.openaiCodeExecContainerId ?? null);
       }
     }
-    void loadActiveContainer();
+    loadActiveContainer().catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
     window.addEventListener(CHAT_HISTORY_UPDATED_EVENT, loadActiveContainer);
     return () => {
       cancelled = true;
@@ -182,15 +184,21 @@ export function OpenAICodeExecSection({
   }, [apiKey, hasCredential, provider.baseUrl, provider.id]);
 
   useEffect(() => {
-    void refresh();
+    refresh().catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") {
-        void refresh();
+        refresh().catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
       }
     }, REFRESH_POLL_MS);
     const onVisibility = () => {
       if (document.visibilityState === "visible") {
-        void refresh();
+        refresh().catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
       }
     };
     document.addEventListener("visibilitychange", onVisibility);
@@ -291,7 +299,9 @@ export function OpenAICodeExecSection({
       }
       pendingRetryRef.current = window.setTimeout(() => {
         pendingRetryRef.current = null;
-        void refresh();
+        refresh().catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
       }, 5000);
       if (activeThreadId) {
         try {
@@ -431,7 +441,9 @@ export function OpenAICodeExecSection({
                     if (!canActivate) return;
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      void onPick(c.id);
+                      onPick(c.id).catch((error: unknown) => {
+                        console.error("Background chat operation failed", error);
+                      });
                     }
                   }}
                   tabIndex={canActivate ? 0 : undefined}
@@ -506,7 +518,9 @@ export function OpenAICodeExecSection({
               if (e.key === "Enter") {
                 e.preventDefault();
                 if (createName.trim() && !creating && hasCredential) {
-                  void onCreate();
+                  onCreate().catch((error: unknown) => {
+                    console.error("Background chat operation failed", error);
+                  });
                 }
               } else if (e.key === "Escape") {
                 e.preventDefault();
@@ -577,7 +591,9 @@ export function OpenAICodeExecSection({
               disabled={deleting}
               onClick={(e) => {
                 e.preventDefault();
-                void confirmDelete();
+                confirmDelete().catch((error: unknown) => {
+                  console.error("Background chat operation failed", error);
+                });
               }}
             >
               {deleting ? "Deleting…" : "Delete"}

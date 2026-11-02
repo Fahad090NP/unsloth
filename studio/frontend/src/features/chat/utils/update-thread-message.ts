@@ -22,7 +22,8 @@ function withoutServerOwnership(record: MessageRecord): MessageRecord {
       ([key]) => !SERVER_OWNED_METADATA_KEYS.includes(key),
     ),
   );
-  const { metadata: _owned, ...rest } = record;
+  const rest = { ...record };
+  Reflect.deleteProperty(rest, "metadata");
   return Object.keys(kept).length > 0 ? { ...rest, metadata: kept } : rest;
 }
 
@@ -39,7 +40,8 @@ function withoutGeminiContinuationReplay<T>(metadata: T): T {
   if (!("geminiContinuationReplay" in customRecord)) {
     return metadata;
   }
-  const { geminiContinuationReplay: _stale, ...keptCustom } = customRecord;
+  const keptCustom = { ...customRecord };
+  Reflect.deleteProperty(keptCustom, "geminiContinuationReplay");
   return { ...record, custom: keptCustom } as T;
 }
 
@@ -51,13 +53,21 @@ interface ThreadImportExport {
 interface ContentPart { type: "text" | "reasoning" | "tool"; text: string; slot?: number }
 
 // Raw strings are prose without a marker; they must count as editable or slots misalign.
-function isEditablePart(part: any): boolean {
-  return typeof part === 'string' || part?.type === 'text' || part?.type === 'reasoning';
+function isEditablePart(part: unknown): boolean {
+  if (typeof part === "string") return true;
+  if (!part || typeof part !== "object") return false;
+  const record = part as { type?: unknown };
+  return record.type === "text" || record.type === "reasoning";
 }
 
-function toolLabel(part: any): string {
-  const name = typeof part?.toolName === 'string' && part.toolName ? part.toolName : part?.type;
-  const label = typeof name === 'string' ? name.replace(/[<>\n]+/g, ' ').trim() : "";
+function toolLabel(part: unknown): string {
+  if (!part || typeof part !== "object") return "tool";
+  const record = part as { toolName?: unknown; type?: unknown };
+  const name =
+    typeof record.toolName === "string" && record.toolName
+      ? record.toolName
+      : record.type;
+  const label = typeof name === "string" ? name.replace(/[<>\n]+/g, ' ').trim() : "";
   return label || "tool";
 }
 
@@ -74,7 +84,7 @@ function unescapeMarkers(text: string): string {
  * Extracts the editable text and reasoning from a message, with a numbered placeholder
  * marker recording where each non-editable part sat among the prose.
  */
-export function extractTaggedText(content: any): string {
+export function extractTaggedText(content: unknown): string {
   if (typeof content === 'string') return escapeMarkers(content);
   if (!Array.isArray(content)) return "";
 
@@ -82,8 +92,8 @@ export function extractTaggedText(content: any): string {
   const close = "\u003E";
   let slot = 0;
 
-  return content
-    .map((part: any) => {
+  return (content as unknown[])
+    .map((part: unknown) => {
       if (typeof part === 'string') return escapeMarkers(part);
       if (!part) return "";
 
@@ -92,11 +102,17 @@ export function extractTaggedText(content: any): string {
         return `${open}TOOL ${slot}: ${toolLabel(part)}${close}`;
       }
 
-      const text = part.text || part.content || "";
+      const record = part as { type?: unknown; text?: unknown; content?: unknown };
+      const text =
+        typeof record.text === "string"
+          ? record.text
+          : typeof record.content === "string"
+            ? record.content
+            : "";
       if (!text) return "";
 
       // Trim first so newlines do not accumulate around the tags on every save.
-      if (part.type === 'reasoning') {
+      if (record.type === 'reasoning') {
         return `${open}THINK${close}\n${escapeMarkers(text.trim())}\n${open}/THINK${close}`;
       }
       return escapeMarkers(text);
@@ -172,21 +188,24 @@ export async function updateThreadMessage(args: {
     if (m.message.id !== messageId) return m;
 
     const originalContent = m.message.content;
-    const finalContent: any[] = [];
+    const finalContent: unknown[] = [];
 
     // Append to the previous text part so a save never multiplies parts.
     const pushText = (text: string) => {
       const last = finalContent[finalContent.length - 1];
-      if (last?.type === 'text') {
-        last.text = `${last.text}\n\n${text}`;
-        return;
+      if (last && typeof last === "object") {
+        const textPart = last as { type?: unknown; text?: unknown };
+        if (textPart.type === "text" && typeof textPart.text === "string") {
+          textPart.text = `${textPart.text}\n\n${text}`;
+          return;
+        }
       }
       finalContent.push({ type: 'text', text });
     };
 
     if (Array.isArray(originalContent)) {
-      const nonEditableParts = originalContent.filter(
-        (part: any) => !isEditablePart(part)
+      const nonEditableParts = (originalContent as unknown[]).filter(
+        (part: unknown) => !isEditablePart(part)
       );
       const restored = new Set<number>();
 
@@ -227,7 +246,7 @@ export async function updateThreadMessage(args: {
       ...m,
       message: {
         ...m.message,
-        content: finalContent,
+        content: finalContent as typeof m.message.content,
         metadata:
           unchanged
             ? withoutGeminiContinuationReplay(m.message.metadata)
@@ -256,5 +275,5 @@ export async function updateThreadMessage(args: {
     }
   }
 
-  return (updatedMessages.find(m => m.message.id === messageId)?.message.content) || [];
+  return (updatedMessages.find(m => m.message.id === messageId)?.message.content) ?? [];
 }

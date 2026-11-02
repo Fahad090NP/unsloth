@@ -3,7 +3,7 @@
 
 import { authFetch } from "@/features/auth";
 import { useEffect, useMemo, useState } from "react";
-import { disposableTimeoutSignal } from "../features/hub/lib/abort-signals";
+import { disposableTimeoutSignal } from "@/features/hub";
 import {
   isReadingStale,
   nextFailedPolls,
@@ -169,7 +169,9 @@ function cancelDeferredVulkanRetry(): void {
 function retryVulkanWhenVisible(): void {
   if (document.hidden) return;
   cancelDeferredVulkanRetry();
-  void fetchSystemInfo({ force: true });
+  fetchSystemInfo({ force: true }).catch((error: unknown) => {
+    console.error("Failed to retry Vulkan discovery", error);
+  });
 }
 
 function scheduleVulkanRetry(): void {
@@ -200,7 +202,9 @@ function scheduleVulkanRetry(): void {
         document.addEventListener("visibilitychange", retryVulkanWhenVisible);
         return;
       }
-      void fetchSystemInfo({ force: true });
+      fetchSystemInfo({ force: true }).catch((error: unknown) => {
+        console.error("Failed to retry Vulkan discovery", error);
+      });
     },
     vulkanRetryDelayMs(vulkanRetryAttempt++),
   );
@@ -226,11 +230,12 @@ export async function fetchSystemInfo({
         { signal: timeout.signal },
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = (await res.json()) as SystemInfoResponse;
 
-      cachedSystem = { ...(data as SystemInfoResponse), status: "ready" };
-      systemSubscribers.forEach((subscriber) => { subscriber(cachedSystem!); });
-      return cachedSystem;
+      const snapshot: SystemInfoResponse = { ...data, status: "ready" };
+      cachedSystem = snapshot;
+      systemSubscribers.forEach((subscriber) => { subscriber(snapshot); });
+      return snapshot;
     } catch {
       return null;
     } finally {
@@ -270,7 +275,7 @@ export function useSystemInfo({
 
     const update = (force: boolean) => {
       inFlight = true;
-      void fetchSystemInfo({ force })
+      fetchSystemInfo({ force })
         .then((info) => {
           if (cancelled) return;
           setFailedPolls((previous) => nextFailedPolls(previous, info !== null));
@@ -292,6 +297,9 @@ export function useSystemInfo({
             timeoutId = null;
             if (!document.hidden) update(true);
           }, pollMs);
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to poll system info", error);
         });
     };
 

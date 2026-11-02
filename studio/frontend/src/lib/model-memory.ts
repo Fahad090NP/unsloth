@@ -316,8 +316,8 @@ export function extraArgsShapeKvCache(
 }
 
 /** Mirrors the backend's `_flag_name`: strip `=value` and fold underscores to dashes in long options. */
-function flagName(arg: unknown): string {
-  const token = String(arg ?? "").trim();
+function flagName(arg: string): string {
+  const token = arg.trim();
   if (!token.startsWith("-")) return "";
   const name = token.split("=")[0];
   return name.startsWith("--") ? name.replace(/_/g, "-") : name;

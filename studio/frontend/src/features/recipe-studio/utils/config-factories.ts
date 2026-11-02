@@ -21,10 +21,10 @@ import type {
 import { nextName } from "./naming";
 
 export function makeUnstructuredUploadUid(): string {
-  if (typeof globalThis.crypto?.randomUUID === "function") {
+  if (typeof globalThis.crypto.randomUUID === "function") {
     return globalThis.crypto.randomUUID().replace(/-/g, "").toLowerCase();
   }
-  if (typeof globalThis.crypto?.getRandomValues === "function") {
+  if (typeof globalThis.crypto.getRandomValues === "function") {
     const bytes = new Uint8Array(16);
     globalThis.crypto.getRandomValues(bytes);
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
@@ -173,24 +173,6 @@ export function makeSamplerConfig(
       drop: false,
       // biome-ignore lint/style/useNamingConvention: api schema
       uuid_format: "",
-    };
-  }
-  if (samplerType === "person" || samplerType === "person_from_faker") {
-    return {
-      id,
-      kind: "sampler",
-      // biome-ignore lint/style/useNamingConvention: api schema
-      sampler_type: "person_from_faker",
-      name,
-      drop: false,
-      // biome-ignore lint/style/useNamingConvention: api schema
-      person_locale: "",
-      // biome-ignore lint/style/useNamingConvention: api schema
-      person_sex: "",
-      // biome-ignore lint/style/useNamingConvention: api schema
-      person_age_range: "",
-      // biome-ignore lint/style/useNamingConvention: api schema
-      person_city: "",
     };
   }
   return {

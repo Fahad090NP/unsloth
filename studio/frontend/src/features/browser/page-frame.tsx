@@ -145,7 +145,7 @@ export function sendFrameCommand(tabId: string, command: FrameCommand): boolean 
 /** Recent user activation in the focused frame; without the API, focus opens a tab but never the system browser. */
 function userActive(frame: HTMLIFrameElement, message: FrameMessage): boolean {
   if (document.activeElement !== frame) return false;
-  const active = navigator.userActivation?.isActive;
+  const active = navigator.userActivation.isActive;
   return active ?? message.type !== "external";
 }
 

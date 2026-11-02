@@ -372,7 +372,8 @@ export async function runDecision(
     onWaiting(message);
     const retryAfter = Number(res.headers.get("Retry-After")) || 5;
     await wait(Math.min(retryAfter * 1000, deadline - Date.now()), signal);
-    if (signal.aborted || Date.now() >= deadline) {
+    const aborted: boolean = signal.aborted;
+    if (aborted || Date.now() >= deadline) {
       throw new DecisionError(message, res.status);
     }
   }

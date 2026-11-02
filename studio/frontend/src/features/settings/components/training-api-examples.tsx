@@ -107,13 +107,13 @@ export function TrainingApiExamples({
   };
 
   const notes = [
-    (request?.model === null || request?.model === undefined)
+    request?.model == null
       ? t("settings.apiKeys.trainingApi.placeholder")
       : null,
     request?.datasetFromHub ? t("settings.apiKeys.trainingApi.hubDataset") : null,
     t("settings.apiKeys.trainingApi.batching"),
     t("settings.apiKeys.trainingApi.chatNote"),
-  ].filter((note): note is string => (note !== null && note !== undefined));
+  ];
 
   return (
     <section

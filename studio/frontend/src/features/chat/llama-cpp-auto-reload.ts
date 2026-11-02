@@ -113,7 +113,9 @@ export function startLlamaCppAutoReload(intervalMs = 10_000): () => void {
     }
     for (const p of connections) {
       if (inFlight.has(p.id) || (onlyNew && online.has(p.id))) continue;
-      void probe(p);
+      probe(p).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
     }
   }
 

@@ -319,7 +319,8 @@ export function ProjectSourceDropzone({
         onDragOver={(e) => {
           e.preventDefault();
           if (disabled) return;
-          e.dataTransfer.dropEffect = "copy";
+          const transfer = e.dataTransfer;
+          transfer.dropEffect = "copy";
         }}
         onDragLeave={() => {
           dragDepth.current = Math.max(0, dragDepth.current - 1);
@@ -346,7 +347,8 @@ export function ProjectSourceDropzone({
           className="hidden"
           onChange={(e) => {
             const files = Array.from(e.target.files ?? []);
-            e.target.value = "";
+            const target = e.target;
+            target.value = "";
             addFiles(files);
           }}
         />

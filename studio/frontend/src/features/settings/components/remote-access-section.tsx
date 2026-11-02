@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { usePlatformStore } from "@/config/env";
-import { useLoginMode } from "@/features/auth/account-session";
+import { useLoginMode } from "@/features/auth";
 import {
   loadRemoteAccess,
   startRemoteAccess,
@@ -352,7 +352,10 @@ export function RemoteAccessSection() {
           variant={stopAction ? "outline" : "dark"}
           // Top edge on the h2's cap top (text-base at leading 1.5; Hellix: 0.372em).
           className="mt-[calc(var(--text-base)*0.372)] shrink-0"
-          onClick={stopAction ? stop : start}
+          onClick={() => {
+            const action = stopAction ? stop : start;
+            action().catch(() => undefined);
+          }}
           disabled={actionDisabled}
         >
           {actionLabel}
@@ -376,7 +379,9 @@ export function RemoteAccessSection() {
           <Switch
             checked={status?.autoStart ?? false}
             disabled={busy !== null || remoteAccessAutoStartReadOnly(status)}
-            onCheckedChange={setAutoStart}
+            onCheckedChange={(checked) => {
+              setAutoStart(checked).catch(() => undefined);
+            }}
             aria-label="Start automatically"
           />
         </SettingsRow>

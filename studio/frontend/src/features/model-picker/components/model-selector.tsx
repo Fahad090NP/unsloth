@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ApiProviderLogo } from "@/features/chat/api-provider-logo";
+import { ApiProviderLogo } from "@/features/chat";
 
 import type { HubCapabilityFilter } from "@/features/hub";
 import type { HfTaskFilter } from "@/features/hub";

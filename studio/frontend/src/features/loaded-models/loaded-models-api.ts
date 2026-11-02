@@ -14,7 +14,7 @@ import {
   unloadModel,
   useChatRuntimeStore,
 } from "@/features/chat";
-import { disposableTimeoutSignal } from "@/features/hub/lib/abort-signals";
+import { disposableTimeoutSignal } from "@/features/hub";
 import { modelIdsMatch } from "@/features/hub/lib/model-identity";
 import {
   getDiffusionStatus,
@@ -211,7 +211,7 @@ async function ejectServingRow(entry: LoadedModelEntry): Promise<EjectOutcome> {
     (await bounded(getInferenceStatus)).serving_checkpoints ?? [];
   const { unloadedAliases, stillResident } = await ejectChatModel(checkpoint, {
     // Never the active model: that row has no servingCheckpoint.
-    readResident: async () => null,
+    readResident: () => Promise.resolve(null),
     unload: (modelPath) => {
       requestScopedLocalPromptQueueStop(decision.promptQueueThreadIds);
       return unloadModel({

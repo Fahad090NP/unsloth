@@ -778,7 +778,7 @@ function OsSandboxSections() {
                 {status.memory ? (
                   <MemoryLimitRow
                     // A saved or reloaded value resets the draft.
-                    key={`${status.memory.savedGb}:${status.memory.limitGb}`}
+                    key={`${status.memory.savedGb}:${String(status.memory.limitGb)}`}
                     memory={status.memory}
                     saving={saving}
                     error={actionError}

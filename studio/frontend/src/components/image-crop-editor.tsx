@@ -317,7 +317,7 @@ export function ReferenceImageEditor({
               <div className="relative inline-block max-h-full max-w-full shrink-0">
                 <img
                   src={picture.originalDataUrl}
-                  alt={subject ? `Crop source for ${lowerName}` : `Crop source ${pictureNumber}`}
+                  alt={subject ? `Crop source for ${lowerName}` : `Crop source ${pictureNumber ?? 1}`}
                   draggable={false}
                   className="block max-h-[48vh] max-w-full select-none object-contain"
                 />
@@ -406,7 +406,9 @@ export function ReferenceImageEditor({
           <Button
             type="button"
             variant="outline"
-            onClick={editorActions.cancel}
+            onClick={() => {
+              editorActions.cancel();
+            }}
           >
             Cancel
           </Button>

@@ -178,7 +178,7 @@ export function useLinkedFolders(
         } catch {
           releaseController();
         }
-      })();
+      })().catch(() => undefined);
     },
     [notifySourcesChanged, scopeType, scopeId],
   );
@@ -252,12 +252,14 @@ export function useLinkedFolders(
     currentScopeKey.current = scopeKey;
     folderSnapshot.current = null;
     notifiedJobs.current.clear();
-    const initialRefresh = window.setTimeout(() => void refresh(), 0);
+    const initialRefresh = window.setTimeout(() => {
+      refresh().catch(() => undefined);
+    }, 0);
     // Fast only while a sync runs; idle folders only need to notice the backend's scan timer.
     let lastPoll = Date.now();
     const poll = () => {
       lastPoll = Date.now();
-      void refresh({ quiet: true });
+      refresh({ quiet: true }).catch(() => undefined);
     };
     const interval = window.setInterval(() => {
       if (document.hidden) return;
@@ -355,11 +357,12 @@ export function useLinkedFolders(
     async (folderId: string, removeIndex: boolean) => {
       const operationScopeKey = scopeKey;
       const previous = folders;
+      const jobForFolder: FolderSyncJob | undefined = jobs[folderId];
       const activeJobId =
         folders.find((folder) => folder.id === folderId)?.activeJobId ??
-        jobs[folderId]?.id;
+        jobForFolder?.id;
       const activeJob =
-        jobs[folderId]?.id === activeJobId ? jobs[folderId] : undefined;
+        jobForFolder?.id === activeJobId ? jobForFolder : undefined;
       if (activeJobId) {
         controllers.current.get(activeJobId)?.abort();
         controllers.current.delete(activeJobId);
@@ -388,7 +391,7 @@ export function useLinkedFolders(
         ) {
           trackJob(activeJob);
         } else {
-          void refresh({ quiet: true });
+          refresh({ quiet: true }).catch(() => undefined);
         }
         toast.error("Could not unlink folder", {
           description: error instanceof Error ? error.message : String(error),

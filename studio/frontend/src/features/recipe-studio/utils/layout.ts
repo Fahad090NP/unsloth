@@ -32,6 +32,11 @@ function getPipelineRank(config: NodeConfig | undefined): number {
       return 3;
     case "validator":
       return 4;
+    case "markdown_note":
+    case "model_config":
+    case "model_provider":
+    case "tool_config":
+      return 2;
     default:
       return 2;
   }

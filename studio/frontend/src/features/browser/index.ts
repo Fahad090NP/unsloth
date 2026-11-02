@@ -114,6 +114,6 @@ export function useShownHtmlView(key: string): FileViewMode | null {
     if (!state.open) return null;
     const tab = state.tabs.find((candidate) => candidate.id === state.activeTabId);
     if (tab?.openKey !== htmlOpenKey(key)) return null;
-    return state.fileViews[tab.id]?.mode ?? "preview";
+    return state.fileViews[tab.id].mode;
   });
 }

@@ -117,7 +117,7 @@ export function ModelMemorySection({
           setMultiModelRead(true);
         }
       },
-      (loadError) => {
+      (loadError: unknown) => {
         if (!cancelled) {
           setError(
             loadError instanceof Error

@@ -177,8 +177,7 @@ async function fetchOnce(): Promise<HardwareInfo> {
                 return info;
             }
             // Superseded, so it must not become the cache, but it is still a real 200 for its callers.
-            const settled: HardwareInfo | null = cached;
-            return settled ?? info;
+            return info;
         } catch {
             // Reset so later calls retry (e.g. backend wasn't ready).
             if (generation === cacheGeneration) fetchPromise = null;

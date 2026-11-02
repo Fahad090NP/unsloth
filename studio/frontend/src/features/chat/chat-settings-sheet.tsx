@@ -686,7 +686,7 @@ export function ChatSettingsPanel({
   const systemPromptBoxRef = useRef<HTMLTextAreaElement>(null);
   const [systemPromptOverflows, setSystemPromptOverflows] = useState(false);
   const promptObserverRef = useRef<ResizeObserver | null>(null);
-  const measurePromptRef = useRef<() => void>(() => {});
+  const measurePromptRef = useRef<() => void>(() => undefined);
   // Callback ref: the textarea remounts when the section reopens.
   const attachPromptBox = useCallback((node: HTMLTextAreaElement | null) => {
     systemPromptBoxRef.current = node;

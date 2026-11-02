@@ -107,7 +107,9 @@ export function classifyPreparation(
   const ambiguous = datasetHit && modelHit && datasetName === modelName;
   // The longer id wins, since `org/foo-base` also contains dataset `org/foo`.
   if (!ambiguous) {
-    if (datasetHit && (!modelHit || datasetName!.length >= modelName!.length)) {
+    const datasetLength = datasetName?.length ?? 0;
+    const modelLength = modelName?.length ?? 0;
+    if (datasetHit && (!modelHit || datasetLength >= modelLength)) {
       return "dataset";
     }
     if (modelHit) return "model";

@@ -49,10 +49,10 @@ export function scheduleIdleTask(
     };
   }
 
-  const idleWindow = window as Window & {
+  const idleWindow: {
     requestIdleCallback?: Window["requestIdleCallback"];
     cancelIdleCallback?: Window["cancelIdleCallback"];
-  };
+  } = window;
 
   if (idleWindow.requestIdleCallback && idleWindow.cancelIdleCallback) {
     const handle = idleWindow.requestIdleCallback(run, { timeout });

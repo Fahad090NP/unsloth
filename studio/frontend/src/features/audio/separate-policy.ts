@@ -70,7 +70,7 @@ export function separateBlocker({
 }
 
 // GPU seconds per second of audio, measured on the pinned runtime (180 s track).
-const GPU_SECONDS_PER_SECOND: Record<string, number> = {
+const GPU_SECONDS_PER_SECOND: Record<string, number | undefined> = {
   htdemucs: 0.032,
   htdemucs_6stems: 0.036,
   bs_roformer: 0.056,
@@ -88,7 +88,7 @@ export function estimateSeparateSeconds(
     ROFORMER_FAMILIES.has(family) && !overlap
       ? ROFORMER_NO_OVERLAP_SECONDS_PER_SECOND
       : GPU_SECONDS_PER_SECOND[family];
-  if (rate === undefined) return null;
+  if (rate == null) return null;
   return Math.max(1, Math.round(rate * durationS + durationS / 60));
 }
 
@@ -140,6 +140,8 @@ export function separatePresentation(
       return { ...presentation, status: "Saving stems…" };
     case "stopping":
       return { ...presentation, status: "Stopping…" };
+    case null:
+    case undefined:
     default:
       return presentation;
   }

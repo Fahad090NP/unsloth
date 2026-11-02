@@ -72,7 +72,7 @@ export async function loadEmbeddingModelSettings(): Promise<EmbeddingModelSettin
       await readFastApiError(res, "Failed to load embedding model setting"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export async function updateEmbeddingModelSettings(
@@ -113,7 +113,7 @@ export async function updateEmbeddingModelSettings(
       await readFastApiError(res, "Failed to save embedding model"),
     );
   }
-  const settings = fromApi(await res.json());
+  const settings = fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
   bumpInventoryVersion();
   return settings;
 }
@@ -132,7 +132,7 @@ export async function updateEmbeddingDevice(
       await readFastApiError(res, "Failed to save the embedding device"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 /** What saving a model would need fetched, and whether it is already on disk. */
@@ -195,7 +195,7 @@ export async function unloadEmbeddingModel(): Promise<EmbeddingModelSettings> {
       await readFastApiError(res, "Failed to unload the embedding model"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export async function resetEmbeddingModelSettings(): Promise<EmbeddingModelSettings> {
@@ -207,7 +207,7 @@ export async function resetEmbeddingModelSettings(): Promise<EmbeddingModelSetti
       await readFastApiError(res, "Failed to reset embedding model"),
     );
   }
-  const settings = fromApi(await res.json());
+  const settings = fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
   bumpInventoryVersion();
   return settings;
 }

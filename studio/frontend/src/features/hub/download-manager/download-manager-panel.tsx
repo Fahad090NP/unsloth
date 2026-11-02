@@ -12,7 +12,7 @@ import {
   audioCppDisplayName,
   isAudioCppFolderId,
 } from "../../audio/audio-cpp-catalog";
-import { hasAuthToken, mustChangePassword } from "@/features/auth/session";
+import { hasAuthToken, mustChangePassword } from "@/features/auth";
 import { isTauri } from "@/lib/api-base";
 import { ChevronDownStandardIcon } from "@/lib/chevron-icons";
 import { cn } from "@/lib/utils";

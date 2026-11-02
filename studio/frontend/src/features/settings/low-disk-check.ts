@@ -85,16 +85,14 @@ export function checkDiskSpace(options: { force?: boolean } = {}): Promise<void>
   }
   if (inFlight) {
     if (!options.force) return inFlight;
-    if (!queued) {
-      queued = inFlight
-        .then(() => {
-          queued = null;
-          return runCheck();
-        })
-        .catch(() => {
-          queued = null;
-        });
-    }
+    queued ??= inFlight
+      .then(() => {
+        queued = null;
+        return runCheck();
+      })
+      .catch(() => {
+        queued = null;
+      });
     return queued;
   }
   return runCheck();

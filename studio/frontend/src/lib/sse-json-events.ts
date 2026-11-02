@@ -45,7 +45,7 @@ export async function* readSseJsonEvents<T>(
   };
   let buffer = "";
   try {
-    while (true) {
+    for (;;) {
       const chunk = await readWithStall(reader, cancel, stallMs);
       if (chunk.done) break;
       const { payloads, rest } = drainFrames(

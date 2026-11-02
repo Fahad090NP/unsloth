@@ -319,7 +319,7 @@ export function McpAppFrame(props: McpAppFrameProps) {
               .finally(() => {
                 inFlight -= 1;
               })
-              .catch(() => {});
+              .catch(() => undefined);
           }
         }
         run.then(

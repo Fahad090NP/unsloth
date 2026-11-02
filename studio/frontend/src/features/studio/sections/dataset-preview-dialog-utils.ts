@@ -27,7 +27,11 @@ export function formatCell(value: unknown): string {
     return value;
   }
   if (typeof value === "number" || typeof value === "boolean") {
-    return String(value);
+    return typeof value === "string"
+    ? value
+    : typeof value === "number" || typeof value === "boolean"
+      ? String(value)
+      : "";
   }
   if (Array.isArray(value) || typeof value === "object") {
     return JSON.stringify(value).slice(0, 500);

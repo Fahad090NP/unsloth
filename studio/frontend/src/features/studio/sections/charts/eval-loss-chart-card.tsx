@@ -88,15 +88,23 @@ export function EvalLossChartCard({
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    labelFormatter={(_value, payload) =>
-                      t("studio.charts.step", {
-                        step: payload?.[0]?.payload?.step ?? "",
-                      })
-                    }
-                    formatter={(_value, _name, item) => [
-                      formatMetric(Number(item?.payload?.loss)),
-                      t("studio.charts.evalLoss"),
-                    ]}
+                    labelFormatter={(_value, payload) => {
+                      const first = (payload as
+                        | { payload?: { step?: number } }[]
+                        | undefined)?.[0];
+                      return t("studio.charts.step", {
+                        step: first?.payload?.step ?? "",
+                      });
+                    }}
+                    formatter={(_value, _name, item) => {
+                      const data = (item as
+                        | { payload?: { loss?: number } }
+                        | undefined)?.payload;
+                      return [
+                        formatMetric(Number(data?.loss)),
+                        t("studio.charts.evalLoss"),
+                      ];
+                    }}
                   />
                 }
               />

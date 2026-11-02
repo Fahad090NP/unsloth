@@ -211,7 +211,7 @@ function resolveCurrentSelection(
   if (formats.size !== 1) {
     return null;
   }
-  const cached = cachedRows[0];
+  const cached = cachedRows.at(0);
   if (cached) {
     return resolveCachedSelection(
       cached,
@@ -220,7 +220,7 @@ function resolveCurrentSelection(
       allLocalRows,
     );
   }
-  const local = localRows[0];
+  const local = localRows.at(0);
   return local
     ? {
         selectedId: local.id,

@@ -102,7 +102,7 @@ export function setTabMuted(tab: BrowserTab, muted: boolean): void {
   useBrowserStore.getState().setMuted(tab.id, muted);
   // The desktop app keeps it for the tab's native view, open now or later.
   if (useNativeBrowser.getState().enabled) {
-    void callNative("browser_view_mute", { tabId: tab.id, muted }).catch(() => undefined);
+    callNative("browser_view_mute", { tabId: tab.id, muted }).catch(() => undefined).catch(() => undefined);
   }
 }
 

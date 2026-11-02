@@ -100,6 +100,7 @@ export function useTrainingHistorySidebarItems(enabled: boolean) {
       });
       setTotal(result.total);
     } catch {
+      // Aborted or failed fetch; the finally below still releases the request.
     } finally {
       if (controllerRef.current === controller) {
         controllerRef.current = null;
@@ -131,7 +132,7 @@ export function useTrainingHistorySidebarItems(enabled: boolean) {
         action: {
           label: "Retry",
           onClick: () => {
-            void (async () => {
+            (async () => {
               try {
                 await fetchRuns();
               } catch (retryErr) {
@@ -140,7 +141,7 @@ export function useTrainingHistorySidebarItems(enabled: boolean) {
                 }
                 showFailureToast(retryErr);
               }
-            })();
+            })().catch(() => undefined);
           },
         },
       });
@@ -153,12 +154,14 @@ export function useTrainingHistorySidebarItems(enabled: boolean) {
       try {
         await fetchRuns();
       } catch (err) {
-        if (cancelled || isAbortError(err)) {
+        if (isAbortError(err)) {
           return;
         }
         if (index < INITIAL_RETRY_DELAYS_MS.length) {
           timer = setTimeout(
-            () => void attempt(index + 1),
+            () => {
+              attempt(index + 1).catch(() => undefined);
+            },
             INITIAL_RETRY_DELAYS_MS[index],
           );
           return;
@@ -167,7 +170,7 @@ export function useTrainingHistorySidebarItems(enabled: boolean) {
       }
     };
 
-    void attempt(0);
+    attempt(0).catch(() => undefined);
 
     return () => {
       cancelled = true;
@@ -190,7 +193,9 @@ export function useTrainingHistorySidebarItems(enabled: boolean) {
       if (timer !== null) {
         return;
       }
-      timer = setInterval(() => void refresh(), RUNNING_POLL_MS);
+      timer = setInterval(() => {
+        refresh().catch(() => undefined);
+      }, RUNNING_POLL_MS);
     };
     const stop = () => {
       if (timer === null) {
@@ -202,7 +207,7 @@ export function useTrainingHistorySidebarItems(enabled: boolean) {
 
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        void refresh();
+        refresh().catch(() => undefined);
         start();
       } else {
         stop();
@@ -235,7 +240,7 @@ export function useTrainingHistorySidebarItems(enabled: boolean) {
     });
     const offChanged = onTrainingRunsChanged(() => {
       controllerRef.current?.abort();
-      void refresh();
+      refresh().catch(() => undefined);
     });
     return () => {
       offUpdated();

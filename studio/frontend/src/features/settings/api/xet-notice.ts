@@ -3,7 +3,7 @@
 
 // The notice count lives on the backend: per-origin localStorage reset whenever the port moved.
 
-import { authFetch } from "@/features/auth/api";
+import { authFetch } from "@/features/auth";
 
 const LEGACY_COUNT_KEY = "unsloth.studio.xetNoticeCount";
 const LEGACY_MIGRATED_KEY = "unsloth.studio.xetNoticeMigrated";

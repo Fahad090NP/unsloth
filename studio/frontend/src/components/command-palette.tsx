@@ -296,20 +296,32 @@ function PaletteContent() {
             />
           ))}
           <PaletteItem
-            onSelect={runAndClose(() => void navigate({ to: "/library" }))}
+            onSelect={runAndClose(() => {
+              navigate({ to: "/library" }).catch((error: unknown) => {
+                console.error("Failed to navigate", error);
+              });
+            })}
           >
             <HugeiconsIcon icon={LibrariesIcon} strokeWidth={1.75} />
             <span>{t("shell.navigation.library")}</span>
           </PaletteItem>
           <PaletteItem
-            onSelect={runAndClose(() => void navigate({ to: "/tasks" }))}
+            onSelect={runAndClose(() => {
+              navigate({ to: "/tasks" }).catch((error: unknown) => {
+                console.error("Failed to navigate", error);
+              });
+            })}
             keywords={["scheduled", "schedule", "tasks", "reminders"]}
           >
             <HugeiconsIcon icon={Clock01Icon} strokeWidth={1.75} />
             <span>{t("shell.navigation.tasks")}</span>
           </PaletteItem>
           <PaletteItem
-            onSelect={runAndClose(() => void navigate({ to: "/api-monitor" }))}
+            onSelect={runAndClose(() => {
+              navigate({ to: "/api-monitor" }).catch((error: unknown) => {
+                console.error("Failed to navigate", error);
+              });
+            })}
             keywords={["api", "monitor", "requests"]}
           >
             <HugeiconsIcon icon={ApiIcon} strokeWidth={1.75} />
@@ -352,7 +364,11 @@ function PaletteContent() {
           </PaletteItem>
           <PaletteItem
             ref={anchorRef as React.Ref<HTMLDivElement>}
-            onSelect={runAndClose(() => void toggleTheme())}
+            onSelect={runAndClose(() => {
+              toggleTheme().catch((error: unknown) => {
+                console.error("Failed to toggle the theme", error);
+              });
+            })}
             keywords={["theme"]}
           >
             {isDark ? (

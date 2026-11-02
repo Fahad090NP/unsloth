@@ -213,6 +213,25 @@ export function useTauriBackend() {
     clearTauriAuthFailure();
   }
 
+  const markStarting = useCallback((value: boolean): void => {
+    startingRef.current = value;
+  }, []);
+
+  const markStopping = useCallback((value: boolean): void => {
+    stoppingRef.current = value;
+  }, []);
+
+  const markAllowHeldRuntimeRepair = useCallback((value: boolean): void => {
+    allowHeldRuntimeRepairRef.current = value;
+  }, []);
+
+  const markElevationResume = useCallback(
+    (value: "install" | "repair" | null): void => {
+      elevationResumeRef.current = value;
+    },
+    [],
+  );
+
   function stopExternalServerPoll() {
     externalPollAbortedRef.current = true;
     if (externalPollRef.current) {
@@ -225,19 +244,20 @@ export function useTauriBackend() {
     stopExternalServerPoll();
     externalPollAbortedRef.current = false;
     let failures = 0;
-    externalPollRef.current = setInterval(async () => {
-      if (externalPollAbortedRef.current) return;
+    const isAborted = () => externalPollAbortedRef.current;
+    const pollHealth = async () => {
+      if (isAborted()) return;
       try {
         const { invoke } = await import("@tauri-apps/api/core");
         const healthy = await invoke<boolean>("check_health", { port });
-        if (externalPollAbortedRef.current) return;
+        if (isAborted()) return;
         if (healthy) {
           failures = 0;
         } else {
           failures++;
         }
       } catch {
-        if (externalPollAbortedRef.current) return;
+        if (isAborted()) return;
         failures++;
       }
       if (failures >= 3) {
@@ -245,6 +265,11 @@ export function useTauriBackend() {
         setIsExternalServer(false);
         setBackendError("External server is no longer responding");
       }
+    };
+    externalPollRef.current = setInterval(() => {
+      pollHealth().catch((error: unknown) => {
+        console.error("Failed to poll the external server", error);
+      });
     }, 15_000);
   }
 
@@ -276,7 +301,9 @@ export function useTauriBackend() {
     environmentWaitPollsRef.current = polls;
     environmentWaitRef.current = setTimeout(() => {
       environmentWaitRef.current = null;
-      void checkInstallAndStart();
+      checkInstallAndStart().catch((error: unknown) => {
+        console.error("Failed to check the managed install", error);
+      });
     }, MANAGED_ENVIRONMENT_POLL_MS);
   }
 
@@ -343,7 +370,7 @@ export function useTauriBackend() {
             preflight.reason === MANAGED_ENVIRONMENT_BUSY ||
             preflight.reason === MANAGED_ENVIRONMENT_UPDATING
           ) {
-            allowHeldRuntimeRepairRef.current = allowHeldRuntimeRepair;
+            markAllowHeldRuntimeRepair(allowHeldRuntimeRepair);
             waitForManagedEnvironment(preflight.reason === MANAGED_ENVIRONMENT_BUSY);
             return;
           }
@@ -401,18 +428,15 @@ export function useTauriBackend() {
       if (startupResult.status === "ready") {
         setApiBase(startupResult.port);
         setRunningStatus();
-        startingRef.current = false;
+        markStarting(false);
         return;
       }
 
-      if (startupResult.status === "aborted") {
-        return;
-      }
-
+      return;
     } catch (e) {
       const msg = String(e);
       if (msg.includes("already running")) {
-        startingRef.current = false;
+        markStarting(false);
         setBackendError(
           "Managed server is already running but did not report a port. Restart Unsloth and try again.",
         );
@@ -420,7 +444,7 @@ export function useTauriBackend() {
       }
       setBackendError(msg);
     }
-    startingRef.current = false;
+    markStarting(false);
   }
 
   // `forceInstaller` skips `studio update`, which would keep a CPU-only PyTorch; only manual repair
@@ -497,7 +521,7 @@ export function useTauriBackend() {
     try {
       await runStopServer();
     } finally {
-      stoppingRef.current = false;
+      markStopping(false);
     }
   }
 
@@ -580,12 +604,16 @@ export function useTauriBackend() {
     stopManagedEnvironmentWait();
     seenStepsRef.current.clear();
     if (resumeForcedRepair) {
-      void startRepair({ forceInstaller: true });
+      startRepair({ forceInstaller: true }).catch((error: unknown) => {
+        console.error("Failed to start the forced repair", error);
+      });
       return;
     }
     allowHeldRuntimeRepairRef.current = true;
-    checkInstallAndStart();
-  }, []);
+    checkInstallAndStart().catch((error: unknown) => {
+      console.error("Failed to check the managed install", error);
+    });
+  }, [checkInstallAndStart, startRepair]);
 
   const retryInstall = useCallback(async () => {
     const resume = elevationResumeRef.current;
@@ -597,7 +625,7 @@ export function useTauriBackend() {
         console.warn("Failed to record elevation cancellation", error);
       }
     }
-    elevationResumeRef.current = null;
+    markElevationResume(null);
     clearBackendError();
     setLogs([]);
     setElevationPackages([]);
@@ -606,7 +634,7 @@ export function useTauriBackend() {
       return;
     }
     setBackendStatus("not-installed");
-  }, []);
+  }, [setBackendError, setBackendStatus, markElevationResume]);
 
   const approveElevation = useCallback(async () => {
     const resume = elevationResumeRef.current ?? "install";
@@ -615,7 +643,7 @@ export function useTauriBackend() {
       await invoke("install_system_packages", { packages: elevationPackages });
       setCurrentStepIndex(-1);
       setProgressDetail(null);
-      elevationResumeRef.current = null;
+      markElevationResume(null);
       if (resume === "repair") {
         await startRepair({
           forceInstaller: forcedRepairRef.current,
@@ -627,7 +655,7 @@ export function useTauriBackend() {
     } catch (e) {
       setBackendError(String(e), resume === "repair" ? "repair-error" : "install-error");
     }
-  }, [elevationPackages]);
+  }, [elevationPackages, setBackendError, startInstall, startRepair, markElevationResume]);
 
   const copyDiagnostics = useCallback((): Promise<CopySupportDiagnosticsResult> => {
     const currentStatus = statusRef.current;
@@ -663,8 +691,10 @@ export function useTauriBackend() {
       setRunningStatus();
       return;
     }
-    checkInstallAndStart();
-  }, [tauriEventsReady]);
+    checkInstallAndStart().catch((error: unknown) => {
+      console.error("Failed to check the managed install", error);
+    });
+  }, [tauriEventsReady, checkInstallAndStart, setRunningStatus]);
 
   useEffect(() => {
     if (!isTauri) return;
@@ -693,7 +723,7 @@ export function useTauriBackend() {
       });
 
       // Informational only; start_install's success path starts the server, to avoid races.
-      register<void>("install-complete", () => {
+      register<unknown>("install-complete", () => {
         setCurrentStepIndex(999);
       });
 
@@ -729,7 +759,7 @@ export function useTauriBackend() {
         setBackendStatus("needs-elevation");
       });
 
-      register<void>("repair-complete", () => {
+      register<unknown>("repair-complete", () => {
         if (statusRef.current !== "repairing") return;
         setProgressDetail("Repair complete");
       });
@@ -752,7 +782,7 @@ export function useTauriBackend() {
         portWakeRef.current.notify();
       });
 
-      register<void>("server-crashed", () => {
+      register<unknown>("server-crashed", () => {
         startingRef.current = false;
         // The timeout message with the backend's output is more actionable than this one.
         if (startTimedOutRef.current) return;
@@ -772,17 +802,19 @@ export function useTauriBackend() {
       });
 
       // Reaping blocks Rust's quit thread up to ~15s; cover it or it looks frozen.
-      register<void>(APP_CLOSING_EVENT, () => {
+      register<unknown>(APP_CLOSING_EVENT, () => {
         markAppClosing();
       });
 
-      register<void>(APP_CLOSING_CANCELLED_EVENT, () => {
+      register<unknown>(APP_CLOSING_CANCELLED_EVENT, () => {
         clearAppClosing();
       });
 
-      register<void>("tray-toggle-server", () => {
+      register<unknown>("tray-toggle-server", () => {
         if (statusRef.current === "running") {
-          stopServer();
+          stopServer().catch((error: unknown) => {
+            console.error("Failed to stop the server", error);
+          });
         } else if (
           statusRef.current === "stopped" ||
           statusRef.current === "error"
@@ -795,10 +827,10 @@ export function useTauriBackend() {
         .then(() => {
           if (!disposed) setTauriEventsReady(true);
         })
-        .catch((error) => {
+        .catch((error: unknown) => {
           if (!disposed) setBackendError(String(error));
         });
-    }).catch((error) => {
+    }).catch((error: unknown) => {
       if (!disposed) setBackendError(String(error));
     });
 
@@ -811,7 +843,11 @@ export function useTauriBackend() {
     };
     window.addEventListener("tauri-auth-failed", onAuthFailed);
     const authFailure = getTauriAuthFailure();
-    if (authFailure) setAuthFailure(authFailure);
+    if (authFailure) {
+      queueMicrotask(() => {
+        setAuthFailure(authFailure);
+      });
+    }
     cleanup.push(() =>
       { window.removeEventListener("tauri-auth-failed", onAuthFailed); },
     );
@@ -822,7 +858,7 @@ export function useTauriBackend() {
       stopExternalServerPoll();
       stopManagedEnvironmentWait();
     };
-  }, []);
+  }, [retry, setBackendError, setBackendStatus, stopServer]);
 
   return {
     status, logs, error, installDiskFull, isExternalServer, closing,

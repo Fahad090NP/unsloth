@@ -234,8 +234,8 @@ export const PROVIDER_LOGOS: readonly ProviderLogo[] = [
 
 function stemMatchesAtBoundary(haystack: string, stem: string): boolean {
 	for (let at = haystack.indexOf(stem); at !== -1; at = haystack.indexOf(stem, at + 1)) {
-		const next = haystack[at + stem.length];
-		if (next === undefined || next < "a" || next > "z") return true;
+		const next = haystack.at(at + stem.length);
+		if (next == null || next < "a" || next > "z") return true;
 	}
 	return false;
 }

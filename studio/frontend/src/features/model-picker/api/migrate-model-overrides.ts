@@ -62,7 +62,7 @@ function absentFields(
   config: Parameters<typeof toApiOverride>[0],
 ): string[] {
   const fields = Object.keys(toApiOverride(config));
-  if (typeof stored !== "object" || stored === null) {
+  if (typeof stored !== "object" || stored == null) {
     return fields;
   }
   return fields.filter((field) => !(field in stored));

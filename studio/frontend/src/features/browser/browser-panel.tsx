@@ -2098,11 +2098,11 @@ function OpenSplit({ entry, blob }: { entry: FileEntry; blob: Blob | undefined }
   };
   const openWith = (app?: string) => {
     if (!blob) return;
-    void withLocalCopy(blob, entry.name, (copy) => openLocalCopy(copy.id, app)).catch(failed);
+    withLocalCopy(blob, entry.name, (copy) => openLocalCopy(copy.id, app)).catch(failed).catch(() => undefined);
   };
   const reveal = () => {
     if (!blob) return;
-    void withLocalCopy(blob, entry.name, (copy) => revealLocalCopy(copy.id)).catch(failed);
+    withLocalCopy(blob, entry.name, (copy) => revealLocalCopy(copy.id)).catch(failed).catch(() => undefined);
   };
   const openInNewChat = () => {
     if (!blob) return;
@@ -2308,7 +2308,7 @@ export const BrowserPanel = memo(function BrowserPanel({ active = true }: { acti
   const activeTabId = useBrowserStore((state) => state.activeTabId);
   const device = useBrowserStore((state) => state.device);
   const annotateTabId = useBrowserStore((state) => state.annotateTabId);
-  const fileMode = useBrowserStore((state) => state.fileViews[state.activeTabId ?? ""]?.mode) ?? DEFAULT_FILE_VIEW.mode;
+  const fileMode = useBrowserStore((state) => state.fileViews[state.activeTabId ?? ""].mode) ?? DEFAULT_FILE_VIEW.mode;
   const tabTitle = useTabTitle();
   const [pageElement, setPageElement] = useState<HTMLDivElement | null>(null);
   const sectionRef = useRef<HTMLElement>(null);

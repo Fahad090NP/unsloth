@@ -20,21 +20,29 @@ export function watchSavingPhase(
   let timer: ReturnType<typeof setTimeout> | null = null;
   let inFlight: AbortController | null = null;
 
+  const schedule = (delay: number) => {
+    timer = setTimeout(() => {
+      tick().catch((error: unknown) => {
+        console.error("Failed to poll the chat-context save phase", error);
+      });
+    }, delay);
+  };
+
   const tick = async () => {
     if (stopped) return;
     const controller = new AbortController();
     inFlight = controller;
     try {
       const progress = await read(controller.signal);
-      if (!stopped && progress?.phase === SAVING_CHAT_CONTEXT) onSaving();
+      if (!stopped && progress.phase === SAVING_CHAT_CONTEXT) onSaving();
     } catch {
       // A failed read says nothing about the save; try again next tick.
     }
     if (inFlight === controller) inFlight = null;
-    if (!stopped) timer = setTimeout(() => void tick(), intervalMs);
+    if (!stopped) schedule(intervalMs);
   };
 
-  timer = setTimeout(() => void tick(), opts.firstDelayMs ?? intervalMs);
+  schedule(opts.firstDelayMs ?? intervalMs);
   return {
     stop() {
       if (stopped) return;

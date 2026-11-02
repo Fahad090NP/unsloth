@@ -226,11 +226,11 @@ export function MediaViewer({
       )
     : "flex size-9 shrink-0 items-center justify-center rounded-full outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring aria-expanded:bg-muted";
   const hasMenu = Boolean(
-    actions.copy ||
-      actions.viewOriginal ||
-      actions.reveal ||
-      actions.onToggleFavorite ||
-      actions.onAddToProject ||
+    actions.copy ??
+      actions.viewOriginal ??
+      actions.reveal ??
+      actions.onToggleFavorite ??
+      actions.onAddToProject ??
       actions.onDelete,
   );
 
@@ -307,7 +307,7 @@ export function MediaViewer({
                 {actions.reveal.label}
               </DropdownMenuItem>
             )}
-            {(actions.viewOriginal || actions.reveal) && <DropdownMenuSeparator />}
+            {(actions.viewOriginal ?? actions.reveal) && <DropdownMenuSeparator />}
             {actions.onToggleFavorite && (
               <DropdownMenuItem onClick={actions.onToggleFavorite}>
                 <HugeiconsIcon

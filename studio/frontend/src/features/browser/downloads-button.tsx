@@ -57,7 +57,7 @@ function useMissing(downloads: DownloadItem[], enabled: boolean) {
         (found) => live && setMissing(new Set(list.filter((_, index) => !found[index]))),
         () => undefined,
       );
-    void check();
+    check().catch(() => undefined);
     window.addEventListener("focus", check);
     return () => {
       live = false;

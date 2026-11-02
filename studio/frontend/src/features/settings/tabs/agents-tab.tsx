@@ -187,7 +187,7 @@ function isEmbeddingHubModel(
   model: Pick<HfModelResult, "pipelineTag" | "tags">,
 ): boolean {
   return [model.pipelineTag, ...(model.tags ?? [])].some(
-    (tag) => (tag !== null && tag !== undefined) && EMBEDDING_TAGS.has(tag.toLowerCase()),
+    (tag) => tag != null && EMBEDDING_TAGS.has(tag.toLowerCase()),
   );
 }
 
@@ -510,7 +510,7 @@ export function AgentsTab() {
     storedPrefs.agentsAgent ?? FALLBACK_AGENT.id,
   );
   // a restored pick counts as explicit, or detection would overwrite it.
-  const agentSelectionChanged = useRef((storedPrefs.agentsAgent !== null && storedPrefs.agentsAgent !== undefined));
+  const agentSelectionChanged = useRef(storedPrefs.agentsAgent != null);
   const [detectedAgents, setDetectedAgents] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
   // list the restored model until the discovery scan confirms or retires it.
@@ -533,7 +533,7 @@ export function AgentsTab() {
   });
   const initialModel = storedPrefs.agentsModel ?? EXAMPLE_MODEL_REPO;
   const [selectedModel, setSelectedModel] = useState(initialModel);
-  const modelSelectionChanged = useRef((storedPrefs.agentsModel !== null && storedPrefs.agentsModel !== undefined));
+  const modelSelectionChanged = useRef(storedPrefs.agentsModel != null);
   const restoredModel = useRef<string | null>(storedPrefs.agentsModel);
   const [discoveredKeys, setDiscoveredKeys] = useState<Set<string> | null>(
     null,
@@ -623,7 +623,7 @@ export function AgentsTab() {
   // Name the snapshot path for a GGUF outside the active cache; the resident model is exempt since
   // the largest-copy snapshot could switch cache or quant under it.
   const selectedModelIsActive =
-    (activeStatusModel !== null && activeStatusModel !== undefined) &&
+    activeStatusModel != null &&
     modelKey(selectedModel) === modelKey(activeStatusModel);
   const cachedLoadId = selectedModelIsActive
     ? null
@@ -970,7 +970,7 @@ export function AgentsTab() {
     setVariantsLoading(true);
     // Offer quants from where the command loads, not remote-only ones.
     listGgufVariants(selectedModel, hfToken || undefined, {
-      preferLocalCache: (localDir !== null && localDir !== undefined),
+      preferLocalCache: localDir != null,
       localPath: localDir,
     })
       .then((info) => {

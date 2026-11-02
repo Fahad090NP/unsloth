@@ -133,7 +133,7 @@ function maskInline(
     while (cursor < spans.length && (spans[cursor]?.end ?? 0) <= start) {
       cursor += 1;
     }
-    const span = spans[cursor];
+    const span = spans.at(cursor);
     if (span !== undefined && span.start <= start) {
       out += line.slice(index, span.end);
       index = span.end;
@@ -177,7 +177,7 @@ function leavesContainer(
 
 function opensHtmlBlock(line: string, afterParagraph: boolean): boolean {
   const named = HTML_BLOCK_OPEN.exec(line);
-  if (named && HTML_BLOCK_TAGS.has((named[1] ?? "").toLowerCase())) {
+  if (named && HTML_BLOCK_TAGS.has((named.at(1) ?? "").toLowerCase())) {
     return true;
   }
   return !afterParagraph && HTML_TAG_ONLY_LINE.test(line);
@@ -244,17 +244,17 @@ function rewriteLine(
 ): string {
   const reference = isDefinition ? REFERENCE_TARGET.exec(line) : null;
   if (reference) {
-    const target = reference[3] ?? "";
+    const target = reference.at(3) ?? "";
     const resolved = absolute(
       unwrap(target),
-      imageLabels.has(label(reference[2] ?? "")),
+      imageLabels.has(label(reference.at(2) ?? "")),
     );
     const rest = line.slice(reference[0].length);
     return `${reference[1]}${wrap(resolved, target)}${rest}`;
   }
 
   INLINE_TARGET.lastIndex = 0;
-  return line.replace(INLINE_TARGET, (match, bang, text, target, offset) => {
+  return line.replace(INLINE_TARGET, (match: string, bang: string, text: string, target: string, offset: number) => {
     const opener = offset + (bang ? 1 : 0);
     if (insideSpan(spans, base + offset) || isEscaped(line, opener)) {
       return match;
@@ -372,11 +372,11 @@ function classify(lines: string[]): Classified {
     const fence = fenceSource;
     if (fence) {
       track(original, above);
-      const marker = fence[1] ?? "";
+      const marker = fence.at(1) ?? "";
       if (openFence === null) {
         // A backtick fence's info string may not contain a backtick.
         openFence =
-          !marker.startsWith("`") || !(fence[2] ?? "").includes("`") ? marker : null;
+          !marker.startsWith("`") || !(fence.at(2) ?? "").includes("`") ? marker : null;
         if (openFence === null) {
           text.push(index);
           masked.push(original);
@@ -385,9 +385,9 @@ function classify(lines: string[]): Classified {
         }
         startBlock(quotes);
       } else if (
-        marker[0] === openFence[0] &&
+        marker.startsWith(openFence.slice(0, 1)) &&
         marker.length >= openFence.length &&
-        !NON_SPACE.test(fence[2] ?? "")
+        !NON_SPACE.test(fence.at(2) ?? "")
       ) {
         openFence = null;
         endBlock();
@@ -526,8 +526,8 @@ export function resolveReleaseBodyLinks(markdown: string): string {
       ) {
         continue;
       }
-      const explicit = match[2] ?? "";
-      imageLabels.add(label(explicit.trim() ? explicit : (match[1] ?? "")));
+      const explicit = match.at(2) ?? "";
+      imageLabels.add(label(explicit.trim() ? explicit : (match.at(1) ?? "")));
     }
   }
 

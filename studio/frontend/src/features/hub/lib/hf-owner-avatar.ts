@@ -180,7 +180,7 @@ export function useHfOwnerAvatar(
       (loadAvatar(key).then((next) => {
         if (cancelled) return;
         setState({ key, url: next });
-        if ((next === null || next === undefined)) {
+        if (next == null) {
           const post = readCache(key);
           if (post?.kind === "miss-transient") {
             scheduleRetry(post.until);
@@ -216,8 +216,8 @@ export function useHfOwnerAvatar(
 
     return () => {
       cancelled = true;
-      if ((retryTimer !== null && retryTimer !== undefined)) clearTimeout(retryTimer);
-      if ((fetchTimer !== null && fetchTimer !== undefined)) clearTimeout(fetchTimer);
+      if (retryTimer != null) clearTimeout(retryTimer);
+      if (fetchTimer != null) clearTimeout(fetchTimer);
     };
   }, [key, online, enabled, hfEndpoint]);
 

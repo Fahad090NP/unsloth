@@ -101,7 +101,12 @@ export function catalogRetryUrl(
   error: unknown,
   previousUrl: string | null = null,
 ): string | null {
-  const message = error instanceof Error ? error.message : String(error ?? "");
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
   const found = (CHUNK_URL_PATTERN.exec(message))?.[0] ?? previousUrl;
   if (found === null) return null;
   let url: URL;
@@ -202,7 +207,7 @@ function interpolate(
 
 function warnMissingEnglishMessage(key: string): void {
   // Optional chain so translate() also works outside Vite (Node tooling).
-  if (import.meta.env?.DEV) {
+  if (import.meta.env.DEV) {
     console.warn(`[i18n] Missing English translation for key "${key}".`);
   }
 }

@@ -8,9 +8,9 @@ import {
   readPersistedSpeculativeType,
   reconcilePersistedGpuSelection,
   useChatRuntimeStore,
-} from "@/features/chat/stores/chat-runtime-store";
+} from "@/features/chat";
 import { reconcileTensorSplit } from "@/hooks/gpu-tensor-split";
-import { defaultInferenceParams } from "@/features/chat/presets/preset-policy";
+import { defaultInferenceParams } from "@/features/chat";
 // Separate module so hosts needing only the signature skip the chat runtime store.
 import { gpuFieldsSignature } from "./config-signature";
 import {
@@ -128,7 +128,7 @@ export function applyModelLoadConfigToRuntime(
   config: PerModelConfig | null | undefined,
   options: { isDiffusion?: boolean } = {},
 ): boolean {
-  const hasConfig = (config !== null && config !== undefined);
+  const hasConfig = config != null;
   applyPerModelConfigToRuntime(config ?? DEFAULT_PER_MODEL_CONFIG, options);
   return hasConfig;
 }

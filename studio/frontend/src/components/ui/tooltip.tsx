@@ -33,7 +33,8 @@ function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null): void {
   if (typeof ref === "function") {
     ref(value);
   } else if (ref) {
-    ref.current = value;
+    const target = ref;
+    target.current = value;
   }
 }
 
@@ -138,18 +139,26 @@ function Tooltip({
   // since their state (a `hovered` flag) never sees the pointerleave either.
   // Latch only a tooltip its owner held open: one already shut never sends another false.
   const controlledOpenRef = useRef(controlledOpen);
-  controlledOpenRef.current = controlledOpen;
+  useEffect(() => {
+    controlledOpenRef.current = controlledOpen;
+  }, [controlledOpen]);
   useEffect(() => {
     if (!blocked) return;
-    setHoverOpen(false);
-    setClickOpen(false);
-    if (controlledOpenRef.current) setDismissedUntilOwnerResets(true);
-    controlledOnOpenChange?.(false);
+    queueMicrotask(() => {
+      setHoverOpen(false);
+      setClickOpen(false);
+      if (controlledOpenRef.current) setDismissedUntilOwnerResets(true);
+      controlledOnOpenChange?.(false);
+    });
   }, [blocked, controlledOnOpenChange]);
 
   // `panel-resize-handle.tsx` passes `open` with no onOpenChange, so its say-so alone is not enough.
   useEffect(() => {
-    if (controlledOpen === false) setDismissedUntilOwnerResets(false);
+    if (controlledOpen === false) {
+      queueMicrotask(() => {
+        setDismissedUntilOwnerResets(false);
+      });
+    }
   }, [controlledOpen]);
 
   // A pin must not outlive its interaction: under a dialog Radix can no longer close it.
@@ -162,7 +171,7 @@ function Tooltip({
         return;
       }
       if (
-        (target as Element | null)?.closest?.('[data-slot="tooltip-content"]')
+        (target as Element | null)?.closest('[data-slot="tooltip-content"]')
       ) {
         return;
       }

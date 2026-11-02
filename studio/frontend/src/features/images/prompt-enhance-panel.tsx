@@ -12,7 +12,7 @@ import { InfoHint } from "@/components/ui/info-hint";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import { useIsAccountOwner } from "@/features/auth/account-session";
+import { useIsAccountOwner } from "@/features/auth";
 import { formatBytes, getHfToken, hfApiToken } from "@/features/hub";
 import { copyToClipboard } from "@/lib/copy-to-clipboard";
 import { toast } from "@/lib/toast";
@@ -303,7 +303,7 @@ export function EnhancePromptControls({
           <Switch checked={enabled} onCheckedChange={onEnabledChange} aria-label={ENHANCE_PROMPT_LABEL} />
         </div>
       </div>
-      {needsDownload && status ? <UpsamplerDownloadNotice status={status} onChanged={refresh} /> : null}
+      {needsDownload ? <UpsamplerDownloadNotice status={status} onChanged={refresh} /> : null}
       {preview ? (
         <div
           data-testid="enhanced-prompt-preview"

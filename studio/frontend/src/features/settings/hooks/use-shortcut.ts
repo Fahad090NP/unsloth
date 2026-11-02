@@ -180,7 +180,9 @@ export function useShortcut(
     return out;
   }, [values, ownedFlags]);
   const latestRef = useRef({ handler, claims });
-  latestRef.current = { handler, claims };
+  useEffect(() => {
+    latestRef.current = { handler, claims };
+  }, [handler, claims]);
 
   // Registered even with no chord bound: the menu still reaches the action.
   useEffect(() => {

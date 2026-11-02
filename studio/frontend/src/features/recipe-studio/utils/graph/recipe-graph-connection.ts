@@ -51,7 +51,8 @@ function syncSubcategoryMapping(
     ...(subcategory.subcategory_mapping ?? {}),
   };
   for (const value of parent.values ?? []) {
-    if (!nextMapping[value]) {
+    const existing: string[] | undefined = nextMapping[value];
+    if (!existing) {
       nextMapping[value] = [];
     }
   }
@@ -144,7 +145,7 @@ function isCompetingIncomingEdge(
   if (edge.target !== targetId) {
     return false;
   }
-  const source = configs[edge.source];
+  const source: (typeof configs)[string] | undefined = configs[edge.source];
   if (!source) {
     return false;
   }
@@ -161,7 +162,7 @@ function isCompetingIncomingEdge(
     return isCategoryConfig(source);
   }
   if (relation === "validator_target_columns") {
-    const target = configs[targetId];
+    const target: (typeof configs)[string] | undefined = configs[targetId];
     if (target && isTextFormatValidator(target)) {
       return isTextFormatValidatorTarget(source);
     }
@@ -328,8 +329,10 @@ export function isValidRecipeConnection(
   if (connection.source === connection.target) {
     return false;
   }
-  const source = configs[connection.source];
-  const target = configs[connection.target];
+  const source: (typeof configs)[string] | undefined =
+    configs[connection.source];
+  const target: (typeof configs)[string] | undefined =
+    configs[connection.target];
   if (!(source && target)) {
     return false;
   }
@@ -495,7 +498,7 @@ export function applyRecipeConnection(
     const ref = `{{ ${source.name} }}`;
     const next = {
       ...target,
-      expr: buildTemplateWithRef(target.expr ?? "", ref),
+      expr: buildTemplateWithRef(target.expr, ref),
     };
     return { edges: nextEdges, configs: { ...configs, [target.id]: next } };
   }

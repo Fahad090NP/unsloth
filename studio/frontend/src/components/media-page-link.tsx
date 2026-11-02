@@ -52,9 +52,15 @@ export function MediaPageLink({
   const go = () => {
     onNavigate?.();
     if (to === "/library") {
-      void navigate({ to, search: libraryTab ? { show: libraryTab } : {} });
+      navigate({ to, search: libraryTab ? { show: libraryTab } : {} }).catch(
+        (error: unknown) => {
+          console.error("Failed to navigate", error);
+        },
+      );
     } else {
-      void navigate({ to });
+      navigate({ to }).catch((error: unknown) => {
+        console.error("Failed to navigate", error);
+      });
     }
   };
   if (iconOnly) {

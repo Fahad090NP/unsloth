@@ -232,7 +232,8 @@ export const useKeyboardShortcutsStore = create<KeyboardShortcutsState>(
     overrides: loadOverrides(),
     setBinding: (id, slot, value) =>
       { set((state) => {
-        const { disabled: _, ...entry } = state.overrides[id] ?? {};
+        const entry = { ...(state.overrides[id] ?? {}) };
+        Reflect.deleteProperty(entry, "disabled");
         const overrides = withEntry(state.overrides, id, {
           ...entry,
           [slot]: value,
@@ -243,7 +244,8 @@ export const useKeyboardShortcutsStore = create<KeyboardShortcutsState>(
     setEnabled: (id, enabled) =>
       { set((state) => {
         if (isShortcutEnabled(state.overrides, id) === enabled) return state;
-        const { disabled: _, ...entry } = state.overrides[id] ?? {};
+        const entry = { ...(state.overrides[id] ?? {}) };
+        Reflect.deleteProperty(entry, "disabled");
         const overrides = withEntry(
           state.overrides,
           id,

@@ -181,7 +181,7 @@ export function preferredGgufVariantByGroup<T extends PresentableGgufVariant>(
           Math.abs(left.size_bytes - defaultDetail.size_bytes) -
           Math.abs(right.size_bytes - defaultDetail.size_bytes),
       )[0];
-      return [group.key, nearestSize ?? null];
+      return [group.key, nearestSize];
     }),
   );
 }

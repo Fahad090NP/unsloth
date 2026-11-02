@@ -175,7 +175,7 @@ export function conditionedRequestFields(opts: {
         ? extras
         : undefined,
     reference_resolution:
-      (opts.referenceResolution !== null && opts.referenceResolution !== undefined) &&
+      opts.referenceResolution != null &&
       allowed.includes(opts.referenceResolution)
         ? opts.referenceResolution
         : undefined,

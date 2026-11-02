@@ -78,10 +78,11 @@ function desiredPanelHeight(
 
 // Lift the maxWidth cap for one measurement so an anchored panel can widen again.
 function naturalWidth(monitor: HTMLDivElement): number {
-  const capped = monitor.style.maxWidth;
-  monitor.style.maxWidth = "none";
+  const style = monitor.style;
+  const capped = style.maxWidth;
+  style.maxWidth = "none";
   const width = monitor.getBoundingClientRect().width;
-  monitor.style.maxWidth = capped;
+  style.maxWidth = capped;
   return width;
 }
 
@@ -304,7 +305,6 @@ export function useFloatingPanelLayout(
 
   // Position-only changes fire no ResizeObserver, so republish per committed layout.
   useLayoutEffect(() => {
-    layout;
     const monitor = monitorRef.current;
     if (!(monitor && constraintsElement) || hiddenRef.current) {
       return;

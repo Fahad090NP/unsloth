@@ -851,7 +851,9 @@ export function ChatSkillsDialog({
               variant="destructive"
               onClick={() => {
                 setConfirmingReset(false);
-                void toggleAll(null);
+                toggleAll(null).catch((error: unknown) => {
+                  console.error("Background chat operation failed", error);
+                });
               }}
             >
               {t("skills.reset")}

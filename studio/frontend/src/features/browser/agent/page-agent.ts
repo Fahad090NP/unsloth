@@ -454,7 +454,7 @@ export function installPageAgent(): PageAgent {
 
   const position = (): string => {
     const page = scroller();
-    const height = Math.max(page.scrollHeight, document.body?.scrollHeight ?? 0);
+    const height = Math.max(page.scrollHeight, document.body.scrollHeight ?? 0);
     if (height <= window.innerHeight + 4) return "";
     const top = Math.round(page.scrollTop || window.scrollY);
     const bottom = Math.min(height, top + window.innerHeight);
@@ -870,7 +870,7 @@ export function installPageAgent(): PageAgent {
       throw new AgentError("the page changed under that point; take a screenshot to see it again.");
     }
     mouse(el, "pointerdown", at, 1);
-    if (mouse(el, "mousedown", at, 1)) (el.closest(FOCUSABLE) as HTMLElement | null)?.focus?.({ preventScroll: true });
+    if (mouse(el, "mousedown", at, 1)) (el.closest(FOCUSABLE) as HTMLElement | null)?.focus({ preventScroll: true });
   };
 
   const clickAt = (at: Point, directLinks: boolean, expect: unknown, sig: unknown): Record<string, unknown> => {
@@ -990,7 +990,7 @@ export function installPageAgent(): PageAgent {
       const json = JSON.stringify(value, (_key, item) =>
         item instanceof Element ? `<${item.tagName.toLowerCase()}>` : typeof item === "bigint" ? String(item) : item,
       );
-      if (json !== undefined) return json;
+      if (json != null) return json;
     } catch {
     }
     try {
@@ -1053,7 +1053,7 @@ export function installPageAgent(): PageAgent {
     mouse(el, "pointerover");
     mouse(el, "pointerdown");
     mouse(el, "mousedown");
-    (el as HTMLElement).focus?.({ preventScroll: true });
+    (el as HTMLElement).focus({ preventScroll: true });
     mouse(el, "pointerup");
     mouse(el, "mouseup");
     if (el instanceof HTMLElement) el.click();
@@ -1149,7 +1149,7 @@ export function installPageAgent(): PageAgent {
         const end = area.selectionEnd ?? area.value.length;
         const start = area.selectionStart ?? end;
         setValue(area, `${area.value.slice(0, start)}\n${area.value.slice(end)}`);
-        area.setSelectionRange?.(start + 1, start + 1);
+        area.setSelectionRange(start + 1, start + 1);
       } else if ((target as HTMLElement).isContentEditable) {
         if (!document.execCommand("insertParagraph")) document.execCommand("insertText", false, "\n");
       }
@@ -1162,7 +1162,7 @@ export function installPageAgent(): PageAgent {
       // A selection goes either way; otherwise one character before (Backspace) or after (Delete).
       const [from, to] = start !== end ? [start, end] : name === "Backspace" ? [Math.max(0, start - 1), end] : [start, Math.min(field.value.length, end + 1)];
       setValue(field, field.value.slice(0, from) + field.value.slice(to));
-      field.setSelectionRange?.(from, from);
+      field.setSelectionRange(from, from);
     } else if ((name === "Backspace" || name === "Delete") && (target as HTMLElement).isContentEditable) {
       document.execCommand(name === "Backspace" ? "delete" : "forwardDelete");
     } else if (CARET_KEYS.has(name) && (tag === "input" || tag === "textarea")) {
@@ -1183,7 +1183,7 @@ export function installPageAgent(): PageAgent {
         document.querySelectorAll<HTMLElement>("a[href], button, input, select, textarea, [tabindex]:not([tabindex='-1'])"),
       ).filter((el) => !(el as HTMLButtonElement).disabled && el.getClientRects().length > 0);
       const next = focusable[(focusable.indexOf(target as HTMLElement) + 1) % Math.max(1, focusable.length)];
-      next?.focus();
+      next.focus();
     } else if (!active) {
       const page = scroller();
       const step = window.innerHeight * 0.85;
@@ -1200,7 +1200,7 @@ export function installPageAgent(): PageAgent {
   const type = (ref: string, text: string, submit: boolean): Record<string, unknown> => {
     const el = lookup(ref);
     el.scrollIntoView({ block: "center" });
-    (el as HTMLElement).focus?.({ preventScroll: true });
+    (el as HTMLElement).focus({ preventScroll: true });
     const tag = el.tagName.toLowerCase();
     const field = el as HTMLInputElement;
     if ((tag === "textarea" || tag === "input") && (field.matches(":disabled") || field.readOnly)) {

@@ -442,7 +442,7 @@ function reducedMotion(): boolean {
   const html = document.documentElement.classList;
   if (html.contains("force-reduced-motion")) return true;
   if (html.contains("force-motion")) return false;
-  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 async function pageCall(tab: BrowserTab, request: Record<string, unknown>): Promise<AgentAnswer> {
@@ -801,7 +801,7 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
         ? before
         : nativeMove
           ? (session.trail[session.at] === before && session.trail[session.at + step]) || ""
-          : entry?.kind === "web"
+          : entry.kind === "web"
             ? entry.url
             : "";
     // A router's pushState / hash history lives in the page and comes first, as the toolbar's Back does.
@@ -1161,7 +1161,7 @@ async function dragBetween(tab: BrowserTab, action: BrowserAction, context: Run,
   const target = await pageCall(tab, { op: "describe", ref: "", ...end }).catch(() => null);
   if (target?.doc !== doc) return await left(target?.doc);
   if (at.x !== end.x || at.y !== end.y) return await cancel("the drag stopped short; take a snapshot to see where things are.");
-  if (!target?.ok || !target.info) return await cancel(target?.error ?? "nothing is at the drag's end.");
+  if (!target.ok || !target.info) return await cancel(target.error ?? "nothing is at the drag's end.");
   if (target.hit !== hits[1] || JSON.stringify(target.info) !== infos[1]) {
     for (const gate of [gateElement("click", target.info, before, action.policy, permissions(context)), opaqueGate(target.info, before, context)]) {
       if (!gate) continue;
@@ -1171,7 +1171,7 @@ async function dragBetween(tab: BrowserTab, action: BrowserAction, context: Run,
     }
     const again = await pageCall(tab, { op: "describe", ref: "", ...end }).catch(() => null);
     if (!sameTab() || again?.doc !== doc) return await left(again?.doc);
-    if (!again?.ok || again.hit !== target.hit || JSON.stringify(again.info) !== JSON.stringify(target.info)) return await cancel(CHANGED_UNDER_POINT);
+    if (!again.ok || again.hit !== target.hit || JSON.stringify(again.info) !== JSON.stringify(target.info)) return await cancel(CHANGED_UNDER_POINT);
   }
   if (signal?.aborted) return await cancel(STOPPED);
   const up = await pageCall(tab, { op: "pointer", phase: "up", ...end, expect: target.hit ?? "", sig: target.sig ?? "" });

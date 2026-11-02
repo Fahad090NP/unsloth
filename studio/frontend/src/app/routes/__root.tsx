@@ -264,7 +264,9 @@ function ChatSettingsHydrationMount() {
     (state) => state.hydratePersistedSettings,
   );
   useEffect(() => {
-    void hydratePersistedSettings();
+    hydratePersistedSettings().catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
   }, [hydratePersistedSettings]);
   return null;
 }
@@ -517,8 +519,12 @@ function RootLayout() {
     if (isAuthFlowRoute || !desktopShellReady) {
       return;
     }
-    void backfillModelOverrides();
-    void hydratePins();
+    backfillModelOverrides().catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
+    hydratePins().catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
   }, [isAuthFlowRoute, desktopShellReady]);
 
   useEffect(() => {
@@ -612,7 +618,9 @@ function RootLayout() {
               const chatRuntime = useChatRuntimeStore.getState();
               chatRuntime.setActiveThreadId(null);
               chatRuntime.setActiveProjectId(project.id);
-              void navigate({ to: "/chat", search: { project: project.id } });
+              navigate({ to: "/chat", search: { project: project.id } }).catch((error: unknown) => {
+                console.error("Background chat operation failed", error);
+              });
             })
         : null,
     "toggle-sidebar": viaShortcut("toggleSidebar", sidebarMounted),

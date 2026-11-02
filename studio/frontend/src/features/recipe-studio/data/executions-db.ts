@@ -69,12 +69,13 @@ const queues = new Map<string, Queue>();
 
 async function drain(id: string, queue: Queue): Promise<void> {
   let carried: Waiter[] = [];
+  const state = queue;
   let attempt = 0;
-  while (queue.record) {
-    const { record, epoch } = queue;
-    const waiters = [...carried, ...queue.waiters];
-    queue.record = null;
-    queue.waiters = [];
+  while (state.record) {
+    const { record, epoch } = state;
+    const waiters = [...carried, ...state.waiters];
+    state.record = null;
+    state.waiters = [];
     carried = [];
     try {
       await putExecution(record, epoch);
@@ -85,9 +86,9 @@ async function drain(id: string, queue: Queue): Promise<void> {
       if (isTransient(error) && attempt < RETRY_DELAYS_MS.length) {
         await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
         attempt += 1;
-        if (!queue.record) {
-          queue.record = record;
-          queue.epoch = epoch;
+        if (!state.record) {
+          state.record = record;
+          state.epoch = epoch;
         }
         carried = waiters;
         continue;

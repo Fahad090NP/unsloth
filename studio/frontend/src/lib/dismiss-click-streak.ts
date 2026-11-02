@@ -39,7 +39,7 @@ function caretRangeAt(x: number, y: number): Range | null {
   if (typeof doc.caretRangeFromPoint === "function") {
     return doc.caretRangeFromPoint(x, y);
   }
-  const position = doc.caretPositionFromPoint?.(x, y);
+  const position = doc.caretPositionFromPoint(x, y);
   if (!position) return null;
   const range = doc.createRange();
   range.setStart(position.offsetNode, position.offset);

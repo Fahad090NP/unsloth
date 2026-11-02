@@ -117,11 +117,11 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
           }
 
           if (mode === "login" && requiresChange) {
-            navigate({ to: "/change-password" });
+            await navigate({ to: "/change-password" });
             return;
           }
           if (mode === "change-password" && !requiresChange) {
-            navigate({ to: "/login" });
+            await navigate({ to: "/login" });
             return;
           }
 
@@ -129,14 +129,14 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
             if (hasRefreshToken()) {
               const refreshed = await refreshSession();
               if (refreshed) {
-                if (!canceled) setStatusLoading(false);
-                navigate({ to: getPostAuthRoute() });
+                setStatusLoading(false);
+                await navigate({ to: getPostAuthRoute() });
                 return;
               }
             }
             if (hasAuthToken()) {
-              if (!canceled) setStatusLoading(false);
-              navigate({ to: getPostAuthRoute() });
+              setStatusLoading(false);
+              await navigate({ to: getPostAuthRoute() });
               
             }
           }
@@ -150,12 +150,12 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
       }
     }
 
-    void initializeAuthForm();
+    initializeAuthForm().catch(() => undefined);
 
     return () => {
       canceled = true;
     };
-  }, [navigate]);
+  }, [isLoginMode, mode, navigate, t]);
 
   useEffect(() => {
     if (statusLoading || reloadReadySent.current) return;
@@ -171,7 +171,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
       }
     }
     loadBootstrap();
-  }, []);
+  }, [isLoginMode, password]);
 
   const blockedByState =
     initialized === false ||
@@ -193,7 +193,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
   const switchText = t("auth.alreadySetUp");
   const switchLinkTo = "/login";
   const switchLinkText = t("auth.backToLogin");
-  const currentPassword = password ?? window.__UNSLOTH_BOOTSTRAP__?.password ?? "";
+  const currentPassword = password;
   // First boot reuses the injected bootstrap password; the Current password field is only for the
   // admin-forced change path.
   const hasBootstrapPassword = Boolean(window.__UNSLOTH_BOOTSTRAP__?.password);
@@ -202,7 +202,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
   const passwordManagerUsername =
     isLoginMode && loginMode === "multi"
       ? null
-      : sessionAccount(getAuthToken())?.username ?? username ?? null;
+      : sessionAccount(getAuthToken())?.username ?? username;
   const invalidChangePasswordForm =
     !isLoginMode &&
     (currentPassword.length < 8 ||
@@ -352,7 +352,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
     setLoading(true);
     try {
       if (await continueAsDesktopOwner()) {
-        navigate({ to: getPostAuthRoute() });
+        await navigate({ to: getPostAuthRoute() });
       } else {
         setError(t("auth.signInWithUsername"));
       }
@@ -388,7 +388,12 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
           )}
         </p>
       )}
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      <form
+        className="space-y-5"
+        onSubmit={(event) => {
+          handleSubmit(event).catch(() => undefined);
+        }}
+      >
         {passwordManagerUsername && (
           <input
             type="text"
@@ -585,7 +590,9 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
             variant="ghost"
             className="mx-auto flex w-fit"
             disabled={loading || statusLoading}
-            onClick={() => void handleContinueAsOwner()}
+            onClick={() => {
+              handleContinueAsOwner().catch(() => undefined);
+            }}
           >
             {t("auth.continueAsOwner")}
           </Button>

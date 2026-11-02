@@ -65,7 +65,7 @@ export async function loadToolResultLimit(
   if (!res.ok) {
     throw new Error(await readFastApiError(res, fallbackMessage));
   }
-  return toolResultLimitFromApi(await res.json());
+  return toolResultLimitFromApi((await res.json()) as Parameters<typeof toolResultLimitFromApi>[0]);
 }
 
 export async function updateToolResultLimit(
@@ -81,5 +81,5 @@ export async function updateToolResultLimit(
   if (!res.ok) {
     throw new Error(await readFastApiError(res, fallbackMessage));
   }
-  return toolResultLimitFromApi(await res.json());
+  return toolResultLimitFromApi((await res.json()) as Parameters<typeof toolResultLimitFromApi>[0]);
 }

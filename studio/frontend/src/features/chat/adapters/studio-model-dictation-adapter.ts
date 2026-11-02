@@ -286,8 +286,8 @@ export interface SttStatus {
 let sttLifecycle: Promise<void> = Promise.resolve();
 
 function queueSttLifecycle<T>(operation: () => Promise<T>): Promise<T> {
-  const result = sttLifecycle.catch(() => {}).then(operation);
-  sttLifecycle = result.then(() => {}, () => {});
+  const result = sttLifecycle.catch(() => undefined).then(operation);
+  sttLifecycle = result.then(() => undefined, () => undefined);
   return result;
 }
 
@@ -556,7 +556,7 @@ export class StudioModelDictationAdapter implements DictationAdapter {
     let stopLevelMeter = () => {
       // Replaced after microphone access succeeds.
     };
-    let onAudioFrame: (rawRms: number, now: number) => void = () => {};
+    let onAudioFrame: (rawRms: number, now: number) => void = () => undefined;
 
     let resolveEnded: (() => void) | null = null;
     const endedPromise = new Promise<void>((resolve) => {

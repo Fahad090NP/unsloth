@@ -96,7 +96,7 @@ export function useDownloadCardState({
     }
   }, [cancelling, disabled, downloading]);
   const progressPercent =
-    (job.progress !== null && job.progress !== undefined)
+    job.progress != null
       ? Math.round(Math.min(job.progress.fraction, 1) * 100)
       : null;
   const effectiveDisabled = disabled || starting;

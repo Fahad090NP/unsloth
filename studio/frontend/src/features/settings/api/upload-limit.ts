@@ -89,7 +89,7 @@ async function fetchUploadLimitSettings(): Promise<UploadLimitSettings> {
   if (!res.ok) {
     throw new Error(await readFastApiError(res, "Failed to load upload limit"));
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 /** `force` refetches: the limit can change from another tab or process. */
@@ -119,5 +119,5 @@ export async function updateUploadLimitSettings(
       await readFastApiError(res, "Failed to update upload limit"),
     );
   }
-  return cacheUploadLimit(fromApi(await res.json()));
+  return cacheUploadLimit(fromApi((await res.json()) as Parameters<typeof fromApi>[0]));
 }

@@ -63,7 +63,7 @@ function readVariantsResponse(value: unknown): CachedVariantsResponse {
           typeof variant.downloaded === "boolean") &&
         (variant.partial === undefined || typeof variant.partial === "boolean"),
     ) ||
-    ((response.default_variant !== null && response.default_variant !== undefined) &&
+    (response.default_variant != null &&
       typeof response.default_variant !== "string") ||
     (response.resolved_locally !== undefined &&
       typeof response.resolved_locally !== "boolean") ||

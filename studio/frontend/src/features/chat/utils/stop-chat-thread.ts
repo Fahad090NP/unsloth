@@ -13,7 +13,7 @@ function stopServerRunsForThread(threadId: string): void {
   void getActiveChatGenerationRuns(threadId)
     .then((runs) => {
       for (const run of runs) {
-        void cancelChatGenerationRun(run.id).catch(() => {});
+        void cancelChatGenerationRun(run.id).catch(() => undefined);
       }
     })
     .catch(() => {

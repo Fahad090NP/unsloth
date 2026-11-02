@@ -69,7 +69,9 @@ export function KeyRevealCard({
           type="button"
           variant="ghost"
           size="icon-xs"
-          onClick={handleCopy}
+          onClick={() => {
+            handleCopy().catch(() => undefined);
+          }}
           className={cn(
             "shrink-0",
             copied &&

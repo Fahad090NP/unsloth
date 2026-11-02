@@ -309,7 +309,9 @@ const RewindChoices: FC<{
     if (skipped > 0) {
       toast.warning(t("rewind.filesNotRestored", { count: skipped }));
     }
-    void rewind("conversation");
+    rewind("conversation").catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
   }, [conversationOnly]);
 
   if (!hasChanges || result === null) return null;

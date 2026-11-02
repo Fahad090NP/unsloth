@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { MAX_DOCUMENT_PREVIEW_BYTES } from "@/components/file-viewer";
-import { decodePeaks } from "@/features/audio/components/waveform-decode";
+import { decodePeaks } from "@/features/audio";
 import { translate } from "@/i18n";
 import { subscribeLayoutScale } from "@/lib/layout-scale";
 import { type RefObject, useEffect, useState } from "react";
@@ -62,7 +62,7 @@ export function useLibraryPreviewUrl(
     );
     return () => {
       cancelled = true;
-      void next.then(({ url, streamed }) => !streamed && URL.revokeObjectURL(url), () => { /* no-op */ });
+      next.then(({ url, streamed }) => !streamed && URL.revokeObjectURL(url), () => { /* no-op */ }).catch(() => undefined);
     };
     // `key` carries the item's identity and version; the object changes on every refresh.
     // eslint-disable-next-line react-hooks/exhaustive-deps

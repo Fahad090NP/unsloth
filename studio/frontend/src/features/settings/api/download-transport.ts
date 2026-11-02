@@ -80,7 +80,7 @@ async function fetchDownloadTransportSettings(): Promise<DownloadTransportSettin
       await readFastApiError(res, "Failed to load download transport settings"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 /** `refresh` skips the cache; refreshing callers never share a plain hydration GET. */
@@ -131,7 +131,7 @@ async function putDownloadTransport(
   }
   // Any GET issued before this write is now stale.
   latestRequest += 1;
-  return cacheTransport(fromApi(await res.json()));
+  return cacheTransport(fromApi((await res.json()) as Parameters<typeof fromApi>[0]));
 }
 
 export function updateDownloadTransportSettings(

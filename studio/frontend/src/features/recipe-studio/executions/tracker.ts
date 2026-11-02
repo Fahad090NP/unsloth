@@ -212,7 +212,7 @@ export async function trackRecipeExecution({
   try {
     while (!done) {
       const status = await getRecipeJobStatus(jobId);
-      if (done && isTerminalStatus(lastStatus)) {
+      if (isTerminalStatus(lastStatus)) {
         break;
       }
       const mappedStatus = mapJobStatus(status.status);
@@ -224,9 +224,9 @@ export async function trackRecipeExecution({
       if (!done && Date.now() - lastDatasetPollAt >= 2500) {
         lastDatasetPollAt = Date.now();
         try {
-          const datasetPage = Math.max(1, latestExecution.datasetPage ?? 1);
+          const datasetPage = Math.max(1, latestExecution.datasetPage);
           const datasetPageSize =
-            latestExecution.datasetPageSize ?? DATASET_PAGE_SIZE;
+            latestExecution.datasetPageSize;
           const datasetResponse = await getRecipeJobDataset(jobId, {
             limit: datasetPageSize,
             offset: (datasetPage - 1) * datasetPageSize,
@@ -304,7 +304,6 @@ export async function trackRecipeExecution({
     const shouldFetchPreviewDataset =
       kind === "preview" && !Array.isArray(eventDataset);
     const shouldFetchAnalysis =
-      !completedEventPayload ||
       typeof eventAnalysis !== "object" ||
       eventAnalysis === null ||
       kind === "full";

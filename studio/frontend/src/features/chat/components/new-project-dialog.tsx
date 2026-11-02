@@ -235,7 +235,9 @@ export function NewProjectDialog({
                 return;
               if (e.key === "Enter") {
                 e.preventDefault();
-                void commitCreate();
+                commitCreate().catch((error: unknown) => {
+                  console.error("Background chat operation failed", error);
+                });
               }
             }}
             autoFocus={true}

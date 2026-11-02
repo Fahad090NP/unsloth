@@ -71,7 +71,6 @@ export type MetaToken =
   | { kind: "text"; label: string };
 
 const META_SIZE_RE = /(?:KB|MB|GB|TB)\b/i;
-const META_APPROX_RE = /^~/;
 const META_PARAM_RE = /^\d+(?:\.\d+)?[MB]$/i;
 const META_WHITESPACE_RE = /\s+/;
 
@@ -87,7 +86,7 @@ export function classifyMetaToken(raw: string): MetaToken | null {
     return { kind: "param", label: t.toUpperCase() };
   }
   const lower = t.toLowerCase();
-  const tone =
+  const tone: FormatTone | undefined =
     FORMAT_TONE[lower] ?? FORMAT_TONE[lower.split(META_WHITESPACE_RE)[0]];
   if (tone) {
     return { kind: "format", label: t, tone };

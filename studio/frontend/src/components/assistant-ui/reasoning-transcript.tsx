@@ -651,14 +651,14 @@ export function ReasoningTranscript({
   }, []);
   const islandsRef = useRef<readonly Island[]>(NO_ISLANDS);
   const mountedIslands = useRef<readonly Island[]>(NO_ISLANDS);
-  const recapture = useRef<(fresh?: boolean) => void>(() => {});
+  const recapture = useRef<(fresh?: boolean) => void>(() => undefined);
   const carry = useRef<(previous: readonly ReasoningFragment[]) => boolean>(
     () => false,
   );
-  const demandNow = useRef<() => void>(() => {});
+  const demandNow = useRef<() => void>(() => undefined);
   const requestedAt = useRef(0);
   const reserves = useRef(new Map<string, Reserve>());
-  const commitEdge = useRef({ before: () => {}, after: () => {} });
+  const commitEdge = useRef({ before: () => undefined, after: () => undefined });
   const beforeCommit = useCallback(() => {
     commitStartedAt = performance.now();
     commitEdge.current.before();
@@ -1124,7 +1124,7 @@ export function ReasoningTranscript({
           );
     proximity?.observe(element);
     return () => {
-      commitEdge.current = { before: () => {}, after: () => {} };
+      commitEdge.current = { before: () => undefined, after: () => undefined };
       observer.disconnect();
       proximity?.disconnect();
       stopJumpWatch?.();

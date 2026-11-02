@@ -3,7 +3,7 @@
 
 import { readFastApiError } from "@/lib/format-fastapi-error";
 import { authFetch } from "@/features/auth";
-import { fetchAuthStatus } from "@/features/auth/login-client";
+import { fetchAuthStatus } from "@/features/auth";
 import { normalizeAccountUsername } from "@/lib/account-transition";
 
 export interface StudioAccount {

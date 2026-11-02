@@ -1072,10 +1072,10 @@ const unwatchHighlighting = (): void => {
 export function queueFenceWork(work: () => void): () => void {
   if (typeof window === "undefined" || printing || findBarOpen()) {
     work();
-    return () => {};
+    return () => undefined;
   }
   watchHighlighting();
-  let cancel = () => {};
+  let cancel = () => undefined;
   const finish = (): void => {
     cancel();
     work();
@@ -1421,7 +1421,7 @@ function useLineWindow(
   lines.current = lineCount;
   const hasBody = lineCount > 0;
   const overCap = lineCount > WINDOW_CAP_LINES;
-  const measure = useRef<() => void>(() => {});
+  const measure = useRef<() => void>(() => undefined);
 
   measure.current = () => {
     const node = code.current;

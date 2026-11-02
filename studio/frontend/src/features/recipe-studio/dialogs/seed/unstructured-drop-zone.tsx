@@ -229,7 +229,8 @@ export function UnstructuredDropZone({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const selected = Array.from(e.target.files ?? []);
       handleFiles(selected);
-      e.target.value = "";
+      const target = e.target;
+      target.value = "";
     },
     [handleFiles],
   );

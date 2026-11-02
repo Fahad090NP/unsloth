@@ -37,7 +37,7 @@ export function getConfigErrors(config: NodeConfig | null): string[] {
           errors.push("Category conditional rule needs condition text.");
           continue;
         }
-        const conditionalValues = (params.values ?? [])
+        const conditionalValues = (params.values)
           .map((value) => value.trim())
           .filter(Boolean);
         if (conditionalValues.length === 0) {
@@ -168,7 +168,7 @@ export function getConfigErrors(config: NodeConfig | null): string[] {
         if (!score.description.trim()) {
           errors.push("Each scoring rule needs a description.");
         }
-        const options = score.options ?? [];
+        const options = score.options;
         if (options.length === 0) {
           errors.push(`Scoring rule ${score.name || "Untitled"} needs options.`);
         }
@@ -238,7 +238,7 @@ export function getConfigErrors(config: NodeConfig | null): string[] {
     }
   }
   if (config.kind === "validator") {
-    const targets = (config.target_columns ?? [])
+    const targets = (config.target_columns)
       .map((value) => value.trim())
       .filter(Boolean);
     if (targets.length === 0) {
@@ -271,7 +271,7 @@ export function getConfigErrors(config: NodeConfig | null): string[] {
     }
   }
   if (config.kind === "seed") {
-    const seedSourceType = config.seed_source_type ?? "hf";
+    const seedSourceType = config.seed_source_type;
     if (seedSourceType === "github_repo") {
       const repos = (config.github_repo_slug ?? "")
         .split(/[\n,]/)

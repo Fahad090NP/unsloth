@@ -127,7 +127,7 @@ export function useLibraryFavorites() {
   const load = useLibraryFavoritesStore((s) => s.load);
   const setFavorite = useLibraryFavoritesStore((s) => s.setFavorite);
   useEffect(() => {
-    void load();
+    load().catch(() => undefined);
   }, [load]);
   return {
     isFavorite: (id: string) => ids.has(id),

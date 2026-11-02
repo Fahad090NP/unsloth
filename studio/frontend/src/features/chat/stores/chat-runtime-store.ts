@@ -593,7 +593,9 @@ function scheduleSettingsFlush(): void {
   if (pendingTimer !== null) clearTimeout(pendingTimer);
   pendingTimer = setTimeout(() => {
     pendingTimer = null;
-    void enqueueSettingsFlush();
+    enqueueSettingsFlush().catch((error: unknown) => {
+      console.error("Failed to enqueue settings flush", error);
+    });
   }, SETTINGS_DEBOUNCE_MS);
 }
 
@@ -614,7 +616,9 @@ export async function flushPendingChatSettings(): Promise<void> {
     clearTimeout(pendingTimer);
     pendingTimer = null;
   }
-  if (queued) void enqueueSettingsFlush();
+  if (queued) enqueueSettingsFlush().catch((error: unknown) => {
+      console.error("Failed to enqueue settings flush", error);
+    });
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     await Promise.race([
@@ -639,7 +643,9 @@ function flushSettingsOnPageHidden(terminal: boolean): void {
   // Effect cleanup is not guaranteed during unload, so send held edits from here.
   if (terminal) {
     const heldThreadId = pendingPairingThreadId;
-    void commitHeldThreadScopedEditsToTheirThread(true);
+    commitHeldThreadScopedEditsToTheirThread(true).catch((error: unknown) => {
+      console.error("Failed to commit held thread settings", error);
+    });
     if (heldThreadId !== null) sentNewest.add(heldThreadId);
     beaconUnsettledThreadSettingsWrites(sentNewest);
   }
@@ -971,17 +977,17 @@ const explicitlyEditedThreadFields = new Set<string>();
 /** Fields a provider constraint moved without persisting; no snapshot may save them. */
 const constraintSuppressedThreadFields = new Set<string>();
 
-const CONSTRAINT_SUPPRESSIBLE_KEYS = ["reasoningEnabled", "toolsEnabled"] as const;
+type ConstraintSuppressibleKey = "reasoningEnabled" | "toolsEnabled";
 
 function noteConstraintSuppressedThreadField(
-  field: (typeof CONSTRAINT_SUPPRESSIBLE_KEYS)[number],
+  field: ConstraintSuppressibleKey,
 ): void {
   if (useChatRuntimeStore.getState().activeThreadId === null) return;
   constraintSuppressedThreadFields.add(field);
 }
 
 function keepsStoredValueUnderConstraint(
-  key: (typeof CONSTRAINT_SUPPRESSIBLE_KEYS)[number],
+  key: ConstraintSuppressibleKey,
   threadId: string,
   settings: ThreadScopedSettings,
 ): boolean {
@@ -1564,11 +1570,15 @@ function trackUnsettledThreadSettingsWrite(
   // Identity, not value: two edits can both carry a null snapshot.
   const entry: UnsettledThreadSettingsWrite = { snapshot };
   unsettledThreadSettingsWrites.set(threadId, entry);
-  void writeThreadScopedSettings(threadId, snapshot).then((landed) => {
-    if (landed && unsettledThreadSettingsWrites.get(threadId) === entry) {
-      unsettledThreadSettingsWrites.delete(threadId);
-    }
-  });
+  writeThreadScopedSettings(threadId, snapshot)
+    .then((landed) => {
+      if (landed && unsettledThreadSettingsWrites.get(threadId) === entry) {
+        unsettledThreadSettingsWrites.delete(threadId);
+      }
+    })
+    .catch((error: unknown) => {
+      console.error("Failed to write thread settings", error);
+    });
 }
 
 type UnsettledThreadSettingsWrite = { snapshot: ThreadScopedSettings | null };
@@ -3230,10 +3240,10 @@ function persistParamEdit(
 }
 
 function getHydratedCustomPresets(
-  settings: PersistedChatSettings,
+  incomingSettings: PersistedChatSettings,
   state: ChatRuntimeStore,
 ): Preset[] {
-  settings = normalizeSavedChatSettings(settings);
+  const settings = normalizeSavedChatSettings(incomingSettings);
   return (
     settings.customPresets?.map((preset) => {
       const loadConfig = normalizePresetLoadConfig(preset.loadConfig);
@@ -3394,12 +3404,12 @@ function isKimiCheckpoint(checkpoint: string | null | undefined): boolean {
 }
 
 function getHydratedSettingsState(
-  settings: PersistedChatSettings,
+  incomingSettings: PersistedChatSettings,
   state: ChatRuntimeStore,
   versions: SettingsHydrationVersions,
 ): Partial<ChatRuntimeStore> {
   // A migration's confirming read stays raw for CAS; normalize only on hydration.
-  settings = normalizeSavedChatSettings(settings);
+  const settings = normalizeSavedChatSettings(incomingSettings);
   const nextState: Partial<ChatRuntimeStore> = {};
   const checkpoint = state.params.checkpoint;
   const loadedBeforeHydration = sameCheckpointIdentity(
@@ -3941,12 +3951,17 @@ async function retryLegacyQwenDefaultsAfterPresetChange(
       // Bounded: a refused patch is reflushed each pass, so unbounded rearm loops offline.
       if (qwenMigrationRearmsWhileBlocked < QWEN_MIGRATION_MAX_REARMS) {
         qwenMigrationRearmsWhileBlocked += 1;
-        void inflightFlush.catch(() => undefined).then(() => {
-          scheduleLegacyQwenDefaultsRetry(
-            ownedGlobalCheckpoint,
-            migrateOwnedGlobalAlongsideModelMemory,
-          );
-        });
+        inflightFlush
+          .catch(() => undefined)
+          .then(() => {
+            scheduleLegacyQwenDefaultsRetry(
+              ownedGlobalCheckpoint,
+              migrateOwnedGlobalAlongsideModelMemory,
+            );
+          })
+          .catch((error: unknown) => {
+            console.error("Failed to retry legacy Qwen defaults", error);
+          });
       }
       return;
     }
@@ -4131,10 +4146,14 @@ function scheduleLegacyQwenDefaultsRetry(
       settleMigration();
       return;
     }
-    void retryLegacyQwenDefaultsAfterPresetChange(
+    retryLegacyQwenDefaultsAfterPresetChange(
       scheduledOwnedGlobalCheckpoint,
       migrateScheduledOwnedGlobalAlongsideModelMemory,
-    ).finally(settleMigration);
+    )
+      .finally(settleMigration)
+      .catch((error: unknown) => {
+        console.error("Failed to retry legacy Qwen defaults after preset change", error);
+      });
   });
 }
 
@@ -4947,8 +4966,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           own?.modelId && own.modelId !== state.params.checkpoint ? null : own,
       };
     }); },
-  applyThreadScopedSettings: (threadId, settings) => { set((state) => {
-      settings = normalizeSavedThreadScopedSettings(settings);
+  applyThreadScopedSettings: (threadId, incomingSettings) => { set((state) => {
+      const settings = normalizeSavedThreadScopedSettings(incomingSettings);
       flushThreadScopedSettingsWrite();
       // Edits made while this chat's snapshot was in flight are kept and stored on the chat.
       const heldFields = new Set<string>();
@@ -5570,11 +5589,14 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
     }); },
-  grantChatFullAccess: (grant) => { set((state) => {
-      if (!grant.runId || !grant.sessionId) return state;
-      grant = {
-        ...grant,
-        threadId: grant.threadId || state.chatFullAccessThreadByRunId[grant.runId] || "",
+  grantChatFullAccess: (incomingGrant) => { set((state) => {
+      if (!incomingGrant.runId || !incomingGrant.sessionId) return state;
+      const grant = {
+        ...incomingGrant,
+        threadId:
+          incomingGrant.threadId ||
+          state.chatFullAccessThreadByRunId[incomingGrant.runId] ||
+          "",
         choiceVersion: state.chatPermissionChoiceVersion,
       };
       const grants = { ...state.chatFullAccessGrants, [grant.runId]: grant };

@@ -85,9 +85,7 @@ function getOutboundChannel(): BroadcastChannel | null {
   if (typeof BroadcastChannel === "undefined") {
     return null;
   }
-  if (!outboundChannel) {
-    outboundChannel = new BroadcastChannel(CHANNEL_NAME);
-  }
+  outboundChannel ??= new BroadcastChannel(CHANNEL_NAME);
   if (outboundCloseTimer !== null) {
     clearTimeout(outboundCloseTimer);
   }

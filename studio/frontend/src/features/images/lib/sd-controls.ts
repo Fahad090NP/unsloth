@@ -83,7 +83,7 @@ export function sdControlsRequestFields(
   if (variation && capability.variation_seed && choice.variationStrength > 0) {
     out.variation_strength = Math.min(choice.variationStrength, 1);
     const seed = variationSeed ?? parseVariationSeed(choice.variationSeed);
-    if (seed !== null && seed !== undefined) out.variation_seed = seed;
+    if (seed != null) out.variation_seed = seed;
   }
   return out;
 }
@@ -167,7 +167,7 @@ export function varyBlockedReason(
   const missing: string[] = [];
   if (image.loras?.length && !loraCapable) missing.push("its LoRAs");
   if (image.prompt_weighting === false && !capability?.prompt_weighting) missing.push("prompt weighting off");
-  if ((image.clip_skip ?? 1) > (capability?.clip_skip?.max ?? 1)) missing.push(`CLIP skip ${image.clip_skip}`);
+  if ((image.clip_skip ?? 1) > (capability?.clip_skip?.max ?? 1)) missing.push(`CLIP skip ${image.clip_skip ?? 1}`);
   if (image.cfg_rescale && !capability?.cfg_rescale) missing.push(`CFG rescale ${image.cfg_rescale}`);
   return missing.length
     ? `The current load cannot apply ${missing.join(", ")} from this image's recipe, so Vary would not match it.`
@@ -200,7 +200,7 @@ export function sdControlsNotRestored(
   }
   if (image.variation_strength && !capability?.variation_seed) {
     out.push(
-      (image.variation_seed !== null && image.variation_seed !== undefined)
+      image.variation_seed != null
         ? `variation seed ${image.variation_seed} (strength ${image.variation_strength})`
         : `variation strength ${image.variation_strength}`,
     );
@@ -226,7 +226,7 @@ export function sdControlsFromRecipe(image: {
     clipSkip: image.clip_skip ?? 1,
     cfgRescale: image.cfg_rescale ?? 0,
     variationSeed:
-      (image.variation_seed !== null && image.variation_seed !== undefined) && image.variation_strength
+      image.variation_seed != null && image.variation_strength
         ? String(Math.max(0, image.variation_seed - offset))
         : "",
     variationStrength: image.variation_strength ?? 0,
@@ -242,7 +242,7 @@ export function sdControlsRecipeRows(image: {
   const rows: [string, string][] = [];
   if (image.clip_skip) rows.push(["CLIP skip", String(image.clip_skip)]);
   if (image.cfg_rescale) rows.push(["CFG rescale", String(image.cfg_rescale)]);
-  if (image.variation_strength && (image.variation_seed !== null && image.variation_seed !== undefined)) {
+  if (image.variation_strength && image.variation_seed != null) {
     rows.push([
       "Variation",
       `${image.variation_seed} @ ${image.variation_strength}`,

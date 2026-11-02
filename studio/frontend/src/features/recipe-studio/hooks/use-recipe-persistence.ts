@@ -209,7 +209,7 @@ function drainQueuedUploadCleanups(
           ),
         }));
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         console.warn("Failed to clean up uploaded documents:", error);
       });
   }

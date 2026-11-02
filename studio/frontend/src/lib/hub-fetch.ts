@@ -133,7 +133,7 @@ export function hubRejectionScope(url?: string): string {
 
 function urlOrigin(url: string): string {
   try {
-    return new URL(url, globalThis.location?.href).origin;
+    return new URL(url, globalThis.location.href).origin;
   } catch {
     return url;
   }
@@ -174,7 +174,9 @@ export async function fetchHub(
     const withToken = await probe(input, init, url);
     if (withToken) {
       // Keep the token's answer: an anonymous 404 would be cached as a missing repo.
-      void response.body?.cancel().catch(() => undefined);
+      if (response.body) {
+        response.body.cancel().catch(() => undefined);
+      }
       if (tokenAccepted(withToken, url)) clearHfTokenRejected(scope);
       response = withToken;
     }
@@ -184,11 +186,13 @@ export async function fetchHub(
     // A valid token gets 404 for a hidden repo, so this 401 is a refused token.
     const anonymous = await probe(input, withoutHfToken(input, init), url);
     if (anonymous?.ok) {
-      void response.body?.cancel().catch(() => undefined);
+      if (response.body) {
+        response.body.cancel().catch(() => undefined);
+      }
       noteHfTokenRejected(hfToken, scope, started);
       response = anonymous;
-    } else {
-      void anonymous?.body?.cancel().catch(() => undefined);
+    } else if (anonymous?.body) {
+      anonymous.body.cancel().catch(() => undefined);
     }
   }
   // The relay's own 502 means it could not reach the endpoint.

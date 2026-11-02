@@ -33,6 +33,10 @@ import { toast } from "@/lib/toast";
 type GalleryImageSource = (id: string) => Promise<Blob | null>;
 let gallerySource: GalleryImageSource | null = null;
 
+function isRefTrue(ref: React.RefObject<boolean>): boolean {
+  return ref.current;
+}
+
 /** Lets every ImageDropzone on the page accept a tile dragged from this page's gallery strip. */
 export function useGalleryImageDropSource(source: GalleryImageSource) {
   useEffect(() => {
@@ -106,7 +110,7 @@ export function ImageDropzone({
           return;
         }
         const dataUrl = maxSide ? await fitImageDataUrl(reader.result, maxSide) : reader.result;
-        if (!mounted.current || claimed !== selection.current) return;
+        if (!isRefTrue(mounted) || claimed !== selection.current) return;
         onChange(dataUrl);
       };
       reader.onerror = () => toast.error("Could not read the image");
@@ -123,7 +127,7 @@ export function ImageDropzone({
       const claimed = selection.current;
       try {
         const blob = await source(id);
-        if (!blob || !mounted.current || claimed !== selection.current) return;
+        if (!blob || !isRefTrue(mounted) || claimed !== selection.current) return;
         readFile(blob);
       } catch (error) {
         toast.error("Could not read the image", {
@@ -163,10 +167,10 @@ export function ImageDropzone({
       try {
         const intent = await registerNativeAttachmentPath(path);
         const file = await readNativeAttachmentFile(intent.path.token);
-        if (!mounted.current || claimed !== selection.current) return;
+        if (!isRefTrue(mounted) || claimed !== selection.current) return;
         const raw = `data:${file.mimeType};base64,${file.base64}`;
         const dataUrl = maxSide ? await fitImageDataUrl(raw, maxSide) : raw;
-        if (!mounted.current || claimed !== selection.current) return;
+        if (!isRefTrue(mounted) || claimed !== selection.current) return;
         onChange(dataUrl);
       } catch (error) {
         toast.error("Could not read the image", {
@@ -187,7 +191,11 @@ export function ImageDropzone({
   const { openCrop, cropDialog } = useImageCrop(value, applyCrop, cropSubject ?? "");
 
   const nativeDropRef = useNativeDropTarget({
-    onDrop: (paths) => void readNativePath(paths[0]),
+    onDrop: (paths) => {
+      readNativePath(paths[0]).catch((error: unknown) => {
+        console.error("Failed to read the dropped image", error);
+      });
+    },
     onDragOver: setDragging,
   });
 
@@ -199,8 +207,9 @@ export function ImageDropzone({
         onDragStart={(e) => {
           if (!e.currentTarget.contains(e.target as Node)) return;
           startImageSlotDrag(value);
-          e.dataTransfer.effectAllowed = "copy";
-          e.dataTransfer.setData(IMAGE_SLOT_DRAG_TYPE, "");
+          const dataTransfer = e.dataTransfer;
+          dataTransfer.effectAllowed = "copy";
+          dataTransfer.setData(IMAGE_SLOT_DRAG_TYPE, "");
         }}
         onDragEnd={() => { endImageSlotDrag(); }}
         className={cn("relative overflow-hidden rounded-lg border border-border", className)}
@@ -269,7 +278,10 @@ export function ImageDropzone({
       onDragOver={(e) => {
         e.preventDefault();
         // The strip offers copy or move; without this the cursor reads as a move.
-        if (isGalleryDrag(e) || isSlotDrag(e)) e.dataTransfer.dropEffect = "copy";
+        if (isGalleryDrag(e) || isSlotDrag(e)) {
+          const dataTransfer = e.dataTransfer;
+          dataTransfer.dropEffect = "copy";
+        }
         setDragging(true);
       }}
       onDragLeave={() => { setDragging(false); }}
@@ -283,8 +295,13 @@ export function ImageDropzone({
           return;
         }
         const galleryId = isGalleryDrag(e) ? e.dataTransfer.getData(GALLERY_ITEM_DRAG_TYPE) : "";
-        if (galleryId) void readGalleryItem(galleryId);
-        else readFile(e.dataTransfer.files?.[0]);
+        if (galleryId) {
+          readGalleryItem(galleryId).catch((error: unknown) => {
+            console.error("Failed to read the gallery image", error);
+          });
+        } else {
+          readFile(e.dataTransfer.files.item(0));
+        }
       }}
       className={cn(
         "flex h-28 w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed text-xs transition-colors",

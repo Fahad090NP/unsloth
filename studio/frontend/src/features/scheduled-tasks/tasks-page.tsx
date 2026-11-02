@@ -246,7 +246,7 @@ function TaskRow({
                   type="button"
                   onClick={() => {
                     clearUnseen(task.id);
-                    void navigate({ to: "/chat", search: { thread: run.threadId ?? undefined } });
+                    navigate({ to: "/chat", search: { thread: run.threadId ?? undefined } }).catch(() => undefined);
                   }}
                   className="cursor-pointer font-medium text-foreground underline-offset-2 hover:underline"
                 >
@@ -279,7 +279,7 @@ function TaskRow({
           disabled={busy || running}
           onClick={() => {
             clearUnseen(task.id);
-            void act(() => runNow(task.id), "runFailed");
+            act(() => runNow(task.id), "runFailed").catch(() => undefined);
           }}
           className={cn(
             ROW_BUTTON,
@@ -306,7 +306,7 @@ function TaskRow({
               <DropdownMenuItem
                 disabled={busy}
                 onSelect={() =>
-                  void act(() => update(task.id, { enabled: !task.enabled }), "updateFailed")
+                  act(() => update(task.id, { enabled: !task.enabled }), "updateFailed").catch(() => undefined)
                 }
               >
                 {task.enabled ? (
@@ -373,7 +373,7 @@ export function TasksPage() {
     if (!create) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the URL asks for the dialog once, then is cleared.
     setEditing(null);
-    void navigate({ to: "/tasks", search: {}, replace: true });
+    navigate({ to: "/tasks", search: {}, replace: true }).catch(() => undefined);
   }, [create, navigate]);
   useEffect(() => {
     // Only this visit's list: one kept from an earlier visit can lack the task or hold old instructions.
@@ -382,7 +382,7 @@ export function TasksPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- as above, once the list has the task.
     if (target) setEditing(target);
     else toast.info(t("scheduledTasks.taskMissing"));
-    void navigate({ to: "/tasks", search: {}, replace: true });
+    navigate({ to: "/tasks", search: {}, replace: true }).catch(() => undefined);
   }, [editId, listed, status, tasks, navigate, t]);
 
   function toggleStatus(status: TaskStatus, on: boolean) {
@@ -392,17 +392,23 @@ export function TasksPage() {
   }
 
   useEffect(() => {
-    void refresh().finally(() => { setListed(true); });
+    refresh()
+      .finally(() => {
+        setListed(true);
+      })
+      .catch(() => undefined);
     // Other tabs/devices send no event: re-read on storage marks, show and focus.
     const onStorage = (event: StorageEvent) => {
-      if (event.key === SCHEDULED_TASKS_WRITTEN_KEY) void refresh();
+      if (event.key === SCHEDULED_TASKS_WRITTEN_KEY) {
+        refresh().catch(() => undefined);
+      }
     };
     let lookedAt = 0;
     const lookAgain = () => {
       const now = Date.now();
       if (now - lookedAt < REFOCUS_DEDUPE_MS) return;
       lookedAt = now;
-      void refresh();
+      refresh().catch(() => undefined);
     };
     const onVisible = () => {
       if (document.visibilityState === "visible") lookAgain();
@@ -473,7 +479,12 @@ export function TasksPage() {
         <div className="mt-16 flex flex-col items-center gap-3 text-center">
           <p className="text-sm text-muted-foreground">{t("scheduledTasks.loadFailed")}</p>
           {error && <p className="max-w-md text-ui-13 text-muted-foreground">{error}</p>}
-          <Button variant="outline" onClick={() => void refresh()}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              refresh().catch(() => undefined);
+            }}
+          >
             {t("scheduledTasks.retry")}
           </Button>
         </div>
@@ -563,7 +574,9 @@ export function TasksPage() {
           onDelete={(task) => { setDeleting(task); }}
         />
       )}
-      <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
+      <AlertDialog open={deleting !== null} onOpenChange={(open) => {
+          if (!open) setDeleting(null);
+        }}>
         <AlertDialogContent onOverlayClick={() => { setDeleting(null); }}>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("scheduledTasks.deleteDialog.title")}</AlertDialogTitle>
@@ -573,7 +586,12 @@ export function TasksPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => void confirmDelete()}>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                confirmDelete().catch(() => undefined);
+              }}
+            >
               {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -23,7 +23,7 @@ export function openTarget(target: Target, onFailed: (name: string) => void): ((
   const kept = keptDownloadFile(target.keptId);
   if (kept) {
     return () =>
-      { useBrowserStore.getState().openFile({ ...kept, key: `download:${target.keptId}` }); };
+      { useBrowserStore.getState().openFile({ ...kept, key: `download:${target.keptId ?? ""}` }); };
   }
   const url = target.url;
   return url ? () => { useBrowserStore.getState().openUrl(url, { newTab: true }); } : undefined;

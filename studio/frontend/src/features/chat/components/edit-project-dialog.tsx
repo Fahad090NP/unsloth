@@ -165,7 +165,9 @@ export function EditProjectDialog({
             return;
           if (isModEnter(e)) {
             e.preventDefault();
-            void save();
+            save().catch((error: unknown) => {
+              console.error("Background chat operation failed", error);
+            });
           }
         }}
       >
@@ -201,7 +203,9 @@ export function EditProjectDialog({
                 e.preventDefault();
                 // The chord would reach the dialog's handler too and save twice.
                 e.stopPropagation();
-                void save();
+                save().catch((error: unknown) => {
+                  console.error("Background chat operation failed", error);
+                });
               }
             }}
             autoFocus={true}

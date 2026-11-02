@@ -307,7 +307,11 @@ export function ChangePasswordDialog({
           }
         }}
       >
-        <form onSubmit={submit}>
+        <form
+          onSubmit={(event) => {
+            submit(event).catch(() => undefined);
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{copy.title}</DialogTitle>
             <DialogDescription>{copy.description}</DialogDescription>

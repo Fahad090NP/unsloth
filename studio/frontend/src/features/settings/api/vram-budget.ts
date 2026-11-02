@@ -129,7 +129,7 @@ async function fetchVramBudgetSettings(): Promise<VramBudgetSettings> {
   if (!res.ok) {
     throw new Error(await readFastApiError(res, "Failed to load VRAM budget"));
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 /** Always refetches with shared concurrent calls; null when the endpoint is absent. */
@@ -190,7 +190,7 @@ async function putVramBudget(
       await readFastApiError(res, "Failed to update VRAM budget"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 // Chain writes and let only the newest generation publish, so an older edit cannot win.

@@ -100,7 +100,7 @@ export function resolveInventoryResource({
     compatibleCachedRows.find((row) => row.partial) ?? null;
   if (partialCached) return { cachedRow: partialCached, localRow: null };
 
-  const compatibleLocal = compatibleLocalRows[0] ?? null;
+  const compatibleLocal = compatibleLocalRows.at(0) ?? null;
   if (compatibleLocal) return { cachedRow: null, localRow: compatibleLocal };
 
   if (hasExplicitFormatHint(formatHint)) {

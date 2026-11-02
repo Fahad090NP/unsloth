@@ -16,7 +16,7 @@ const objectUrls = new Map<string, Entry>();
 let cachedBytes = 0;
 
 function revoke(entry: Entry): void {
-  void entry.url.then((url) => { URL.revokeObjectURL(url); }, () => { /* no-op */ });
+  entry.url.then((url) => { URL.revokeObjectURL(url); }, () => { /* no-op */ }).catch(() => undefined);
 }
 
 export function clearCachedObjectUrls(): void {
@@ -56,7 +56,9 @@ export function acquireObjectUrl(
       }
       return URL.createObjectURL(blob);
     });
-    created.url.then(trim, () => objectUrls.get(key) === created && evict(key));
+    created.url.then(trim, () => {
+      if (objectUrls.get(key) === created) evict(key);
+    });
     entry = created;
   }
   objectUrls.set(key, entry);

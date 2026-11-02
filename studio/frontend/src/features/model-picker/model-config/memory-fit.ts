@@ -124,9 +124,9 @@ export function resolveReclaimableMemoryCredit(
 	const files = Math.min(estimate.weightsBytes, total);
 	const includesResidentPool =
 		!requestedPool.ids?.length ||
-		((residentPool.ids !== null && residentPool.ids !== undefined) &&
+		(residentPool.ids != null &&
 			residentPool.ids.length > 0 &&
-			(residentPool.indexKind !== null && residentPool.indexKind !== undefined) &&
+			residentPool.indexKind != null &&
 			residentPool.indexKind === requestedPool.indexKind &&
 			residentPool.ids.every((id) => requestedPool.ids!.includes(id)));
 	const residentDevices = residentPool.ids?.length
@@ -139,13 +139,13 @@ export function resolveReclaimableMemoryCredit(
 	const topologyKnown =
 		residentDevices.length > 0 &&
 		(!residentPool.ids?.length ||
-			((residentPool.indexKind !== null && residentPool.indexKind !== undefined) &&
+			(residentPool.indexKind != null &&
 				residentPool.ids.every((id) =>
 					residentDevices.some((device) => device.index === id),
 				))) &&
 		residentDevices.every(
 			(device) =>
-				(sharesHostMemory(device) && (device.sharedMemoryHostBackedGb === null || device.sharedMemoryHostBackedGb === undefined)) ||
+				(sharesHostMemory(device) && device.sharedMemoryHostBackedGb == null) ||
 				(Number.isFinite(device.memoryTotalGb) && device.memoryTotalGb > 0),
 		);
 	const independentGb = appleUnifiedMemory
@@ -360,7 +360,7 @@ function classifyAvailableMemory(
 function contextShrinksAdvisory(estimate: MemoryFitEstimate): MemoryAdvisory {
   const nCtx = estimate.nCtx;
   const priced =
-    (nCtx !== null && nCtx !== undefined) && Number.isFinite(nCtx) && nCtx > 0
+    nCtx != null && Number.isFinite(nCtx) && nCtx > 0
       ? `the full ${nCtx.toLocaleString()}-token context`
       : "the model's full context";
   return {
@@ -511,7 +511,7 @@ export function mlxOffloadModePatch(
 export const MLX_OFFLOAD_SLIDER_AUTO = -5;
 
 export function mlxOffloadSliderValue(value: MlxOffload | undefined): number {
-  if ((value === null || value === undefined)) return MLX_OFFLOAD_SLIDER_AUTO;
+  if (value == null) return MLX_OFFLOAD_SLIDER_AUTO;
   return value === "off" ? 0 : Math.round(value * 100);
 }
 

@@ -79,8 +79,6 @@ export function stemMixerReducer(
       return Object.keys(state.byStem).length === 0
         ? state
         : INITIAL_STEM_MIXER_STATE;
-    default:
-      return state;
   }
 }
 

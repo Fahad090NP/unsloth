@@ -7,7 +7,7 @@
  */
 export function isBlockedByActiveModal(element: HTMLElement): boolean {
   for (let node = element.parentElement; node; node = node.parentElement) {
-    const pointerEvents = node.style?.pointerEvents;
+    const pointerEvents = node.style.pointerEvents;
     if (pointerEvents === "auto") return false;
     if (pointerEvents === "none") return true;
   }
@@ -36,7 +36,7 @@ function readStackedLayerMutations(records: MutationRecord[]): void {
   for (const record of records) {
     const previous = record.oldValue;
     // Live property, not getAttribute, which serialises the whole (often animated) style.
-    const current = (record.target as HTMLElement).style?.pointerEvents ?? "";
+    const current = (record.target as HTMLElement).style.pointerEvents;
     // Styles that never named pointer-events are skipped (every animation frame and resize drag).
     if (
       current === "" &&

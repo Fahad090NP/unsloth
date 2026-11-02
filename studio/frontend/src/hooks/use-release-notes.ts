@@ -115,7 +115,9 @@ export function useReleaseNotes({
       return;
     }
     if (hasAuthToken()) {
-      load(version);
+      queueMicrotask(() => {
+        load(version);
+      });
       return;
     }
     let attempts = 0;

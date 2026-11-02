@@ -482,7 +482,8 @@ async function confirmSelectedModelTransformersUpgrade(
     // Same pin as the custom-code gate: a cached snapshot's architecture can differ from the repo's.
     modelCachePin: freshModelCachePin(attempt),
   });
-  verdict.requiresTrustRemoteCode = outcome.requiresTrustRemoteCode;
+  const targetVerdict = verdict;
+  targetVerdict.requiresTrustRemoteCode = outcome.requiresTrustRemoteCode;
   if (attempt.abortIfInputsChanged()) {
     return false;
   }

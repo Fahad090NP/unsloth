@@ -46,7 +46,7 @@ export async function loadLlamaCppPathSettings(): Promise<LlamaCppPathSettings> 
       await readFastApiError(response, "Failed to load the llama.cpp folder"),
     );
   }
-  return fromApi(await response.json());
+  return fromApi((await response.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export async function updateLlamaCppPathSettings(
@@ -62,5 +62,5 @@ export async function updateLlamaCppPathSettings(
       await readFastApiError(response, "Failed to update the llama.cpp folder"),
     );
   }
-  return fromApi(await response.json());
+  return fromApi((await response.json()) as Parameters<typeof fromApi>[0]);
 }

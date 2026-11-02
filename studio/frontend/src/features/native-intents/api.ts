@@ -99,14 +99,14 @@ export async function consumeNativePathToken(
 }
 
 export async function revealPathToken(token: string): Promise<void> {
-  await invokeNative<void>("reveal_path_token", { token });
+  await invokeNative<unknown>("reveal_path_token", { token });
 }
 
 export async function openPathToken(token: string): Promise<void> {
-  await invokeNative<void>("open_path_token", { token });
+  await invokeNative<unknown>("open_path_token", { token });
 }
 
 // Tauri validates that the path is a real directory.
 export async function openModelsDir(path: string): Promise<void> {
-  await invokeNative<void>("open_models_dir", { path });
+  await invokeNative<unknown>("open_models_dir", { path });
 }

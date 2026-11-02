@@ -8,7 +8,12 @@ let active = 0;
 const waiting: (() => void)[] = [];
 
 function next(): void {
-  while (active < MAX_QUEUED_PARSES && waiting.length > 0) waiting.shift()!();
+  while (waiting.length > 0) {
+    if (active >= MAX_QUEUED_PARSES) return;
+    const task = waiting.shift();
+    if (!task) return;
+    task();
+  }
 }
 
 /** Runs `task` once a slot is free. Resolves null, without running it, if cancelled while waiting. */

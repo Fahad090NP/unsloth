@@ -420,18 +420,24 @@ export function ProjectsPage({
     runtime.setActiveProjectId(projectId);
     if (item.type === "compare") {
       runtime.setActiveThreadId(null);
-      navigate({ to: "/chat", search: { compare: item.id, project: projectId } });
+      navigate({ to: "/chat", search: { compare: item.id, project: projectId } }).catch((error: unknown) => {
+      console.error("Failed to open comparison", error);
+    });
       return;
     }
     runtime.setActiveThreadId(item.id);
-    navigate({ to: "/chat", search: { thread: item.id, project: projectId } });
+    navigate({ to: "/chat", search: { thread: item.id, project: projectId } }).catch((error: unknown) => {
+      console.error("Failed to open chat", error);
+    });
   }
 
   function openProject(projectId: string) {
     const runtime = useChatRuntimeStore.getState();
     runtime.setActiveThreadId(null);
     runtime.setActiveProjectId(projectId);
-    navigate({ to: "/chat", search: { project: projectId } });
+    navigate({ to: "/chat", search: { project: projectId } }).catch((error: unknown) => {
+      console.error("Failed to open project", error);
+    });
   }
 
   // A saved chat, as the sidebar's New chat.
@@ -489,7 +495,7 @@ export function ProjectsPage({
 
   async function archiveChat(chat: SidebarItem) {
     try {
-      await archiveChatItem(chat, activeThreadId(), () => {});
+      await archiveChatItem(chat, activeThreadId(), () => undefined);
     } catch (err) {
       toast.error(t("projectsPage.archiveChatFailed"), {
         description: err instanceof Error ? err.message : undefined,
@@ -499,7 +505,7 @@ export function ProjectsPage({
 
   async function deleteChat(chat: SidebarItem, deleteFiles: boolean) {
     try {
-      await deleteChatItem(chat, activeThreadId(), () => {}, { deleteFiles });
+      await deleteChatItem(chat, activeThreadId(), () => undefined, { deleteFiles });
       // Pins are stored apart from chats, so remove the id explicitly.
       unpinChat(chat.id);
     } catch (err) {
@@ -588,7 +594,8 @@ export function ProjectsPage({
             setImportTargetId(null);
             setImportFile(fileImportSource(file));
           }
-          e.target.value = "";
+          const target = e.target;
+      target.value = "";
         }}
       />
       {!embedded && (
@@ -628,7 +635,11 @@ export function ProjectsPage({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onSelect={() => void selectGlobalImportFile()}>
+              <DropdownMenuItem onSelect={() => {
+                          selectGlobalImportFile().catch((error: unknown) => {
+                            console.error("Failed to select import file", error);
+                          });
+                        }}>
                 <HugeiconsIcon icon={Upload01Icon} strokeWidth={1.75} className="size-icon" />
                 {t("projectsPage.importChatsAction")}
               </DropdownMenuItem>
@@ -641,7 +652,11 @@ export function ProjectsPage({
                       {t("projectsPage.combined")}
                     </DropdownMenuLabel>
                     {COMBINED_EXPORT_FORMATS_LIST.map(({ fmt, label }) => (
-                      <DropdownMenuItem key={`ap-m-${fmt}`} onSelect={() => void handleBulkProjectExport("projects", fmt, true)}>
+                      <DropdownMenuItem key={`ap-m-${fmt}`} onSelect={() => {
+                            handleBulkProjectExport("projects", fmt, true).catch((error: unknown) => {
+                              console.error("Failed to export projects", error);
+                            });
+                          }}>
                         {label}
                       </DropdownMenuItem>
                     ))}
@@ -652,7 +667,11 @@ export function ProjectsPage({
                       {t("projectsPage.perChat")}
                     </DropdownMenuLabel>
                     {EXPORT_FORMATS_LIST.map(({ fmt, label }) => (
-                      <DropdownMenuItem key={`ap-s-${fmt}`} onSelect={() => void handleBulkProjectExport("projects", fmt, false)}>
+                      <DropdownMenuItem key={`ap-s-${fmt}`} onSelect={() => {
+                            handleBulkProjectExport("projects", fmt, false).catch((error: unknown) => {
+                              console.error("Failed to export projects", error);
+                            });
+                          }}>
                         {label}
                       </DropdownMenuItem>
                     ))}
@@ -667,7 +686,11 @@ export function ProjectsPage({
                       {t("projectsPage.combined")}
                     </DropdownMenuLabel>
                     {COMBINED_EXPORT_FORMATS_LIST.map(({ fmt, label }) => (
-                      <DropdownMenuItem key={`all-m-${fmt}`} onSelect={() => void handleBulkProjectExport("all", fmt, true)}>
+                      <DropdownMenuItem key={`all-m-${fmt}`} onSelect={() => {
+                            handleBulkProjectExport("all", fmt, true).catch((error: unknown) => {
+                              console.error("Failed to export projects", error);
+                            });
+                          }}>
                         {label}
                       </DropdownMenuItem>
                     ))}
@@ -678,7 +701,11 @@ export function ProjectsPage({
                       {t("projectsPage.perChat")}
                     </DropdownMenuLabel>
                     {EXPORT_FORMATS_LIST.map(({ fmt, label }) => (
-                      <DropdownMenuItem key={`all-s-${fmt}`} onSelect={() => void handleBulkProjectExport("all", fmt, false)}>
+                      <DropdownMenuItem key={`all-s-${fmt}`} onSelect={() => {
+                            handleBulkProjectExport("all", fmt, false).catch((error: unknown) => {
+                              console.error("Failed to export projects", error);
+                            });
+                          }}>
                         {label}
                       </DropdownMenuItem>
                     ))}
@@ -750,7 +777,10 @@ export function ProjectsPage({
             <button
               type="button"
               onClick={() =>
-                { onToggleOrder ? onToggleOrder() : setSortDir((dir) => (dir === "desc" ? "asc" : "desc")); }
+                {
+                  if (onToggleOrder) onToggleOrder();
+                  else setSortDir((dir) => (dir === "desc" ? "asc" : "desc"));
+                }
               }
               title={t((orderedDesc ?? sortDir === "desc") ? "projectsPage.newestFirst" : "projectsPage.oldestFirst")}
               className="flex shrink-0 cursor-pointer items-center gap-1 text-left transition-colors hover:text-foreground sm:w-40"
@@ -986,16 +1016,18 @@ export function ProjectsPage({
                                 <span>{t("common.rename")}</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onSelect={() =>
-                                  { chatUnread
-                                    ? clearThreadsUnread(chatThreadIds)
-                                    : markThreadsUnread(
-                                        chatThreadIds,
-                                        Object.fromEntries(
-                                          chatThreadIds.map((id) => [id, chat.id]),
-                                        ),
-                                      ); }
-                                }
+                                onSelect={() => {
+                                  if (chatUnread) {
+                                    clearThreadsUnread(chatThreadIds);
+                                  } else {
+                                    markThreadsUnread(
+                                      chatThreadIds,
+                                      Object.fromEntries(
+                                        chatThreadIds.map((id) => [id, chat.id]),
+                                      ),
+                                    );
+                                  }
+                                }}
                               >
                                 <HugeiconsIcon icon={chatUnread ? ViewIcon : ViewOffSlashIcon} strokeWidth={1.75} className="size-icon" />
                                 <span>
@@ -1013,7 +1045,9 @@ export function ProjectsPage({
                                       key={`${chat.id}-${label}`}
                                       onSelect={(e) => {
                                         e.stopPropagation();
-                                        void handleChatExport(chat, format);
+                                        handleChatExport(chat, format).catch((error: unknown) => {
+                            console.error("Failed to export chat", error);
+                          });
                                       }}
                                     >
                                       {label}
@@ -1033,17 +1067,25 @@ export function ProjectsPage({
                               </DropdownMenuSub>
                               <OpenChatFolderItem item={chat} />
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onSelect={() => void archiveChat(chat)}>
+                              <DropdownMenuItem onSelect={() => {
+                                archiveChat(chat).catch((error: unknown) => {
+                                  console.error("Failed to archive chat", error);
+                                });
+                              }}>
                                 <HugeiconsIcon icon={Archive03Icon} strokeWidth={1.75} className="size-icon" />
                                 <span>{t("projectsPage.archive")}</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 variant="destructive"
-                                onSelect={() =>
-                                  { confirmDeleteChats
-                                    ? openChatDelete(chat)
-                                    : void deleteChat(chat, alwaysDeleteChatFiles); }
-                                }
+                                onSelect={() => {
+                                  if (confirmDeleteChats) {
+                                    openChatDelete(chat);
+                                  } else {
+                                    deleteChat(chat, alwaysDeleteChatFiles).catch((error: unknown) => {
+                                      console.error("Failed to delete chat", error);
+                                    });
+                                  }
+                                }}
                               >
                                 <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.75} className="size-icon" />
                                 <span>{t("common.delete")}</span>
@@ -1081,7 +1123,9 @@ export function ProjectsPage({
       <SectionNameDialog
         open={sectionFor !== null}
         mode="create"
-        onOpenChange={(open) => !open && setSectionFor(null)}
+        onOpenChange={(open) => {
+          if (!open) setSectionFor(null);
+        }}
         onSubmit={(name) => {
           const sectionId = createCustomSection(name);
           if (sectionId && sectionFor) {
@@ -1114,7 +1158,9 @@ export function ProjectsPage({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                void commitChatRename();
+                commitChatRename().catch((error: unknown) => {
+      console.error("Failed to rename chat", error);
+    });
               }
             }}
             autoFocus
@@ -1130,7 +1176,11 @@ export function ProjectsPage({
             <Button
               type="button"
               variant="dark"
-              onClick={() => void commitChatRename()}
+              onClick={() => {
+                      commitChatRename().catch((error: unknown) => {
+                        console.error("Failed to rename chat", error);
+                      });
+                    }}
               disabled={
                 !chatNameDraft.trim() ||
                 chatNameDraft.trim() === renamingChat?.title
@@ -1169,7 +1219,11 @@ export function ProjectsPage({
             <Button
               type="button"
               variant="destructive"
-              onClick={() => void commitChatDelete()}
+              onClick={() => {
+                      commitChatDelete().catch((error: unknown) => {
+                        console.error("Failed to delete chat", error);
+                      });
+                    }}
             >
               {deleteFilesOnDelete ? t("projectsPage.deleteAll") : t("common.delete")}
             </Button>
@@ -1208,7 +1262,11 @@ export function ProjectsPage({
           </Select>
           <DialogFooter className="flex-wrap gap-2 sm:justify-end">
             <Button type="button" variant="ghost" onClick={() => { setImportFile(null); }}>{t("common.cancel")}</Button>
-            <Button type="button" onClick={() => void commitImport()}>{t("projectsPage.import")}</Button>
+            <Button type="button" onClick={() => {
+                            commitImport().catch((error: unknown) => {
+                              console.error("Failed to import", error);
+                            });
+                          }}>{t("projectsPage.import")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1241,7 +1299,11 @@ export function ProjectsPage({
             <Button type="button" variant="ghost" onClick={() => { setDeleting(null); }}>
               {t("common.cancel")}
             </Button>
-            <Button type="button" variant="destructive" onClick={() => void commitDelete()}>
+            <Button type="button" variant="destructive" onClick={() => {
+                  commitDelete().catch((error: unknown) => {
+                    console.error("Failed to delete project", error);
+                  });
+                }}>
               {deleteFilesOnDelete ? t("projectsPage.deleteAll") : t("common.delete")}
             </Button>
           </DialogFooter>

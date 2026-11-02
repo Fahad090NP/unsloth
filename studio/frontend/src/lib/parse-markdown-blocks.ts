@@ -120,7 +120,7 @@ const mergeTokensIntoBlocks = (tokens: Token[]): string[] => {
       mergedBlocks[mergedBlocksLen - 1] += currentBlock;
       appendDollarPairs(lastBlockDollars, currentBlock);
 
-      const trackedTag = htmlStack.at(-1)!;
+      const trackedTag = htmlStack[htmlStack.length - 1];
       const newOpenTags = countNonSelfClosingOpenTags(currentBlock, trackedTag);
       const newCloseTags = countClosingTags(currentBlock, trackedTag);
 
@@ -189,7 +189,7 @@ const collectReferenceProse = (
     } else if (token.type === "blockquote") {
       collectReferenceProse(token.tokens ?? [], out);
     } else if (token.type === "list") {
-      for (const item of token.items) {
+      for (const item of token.items as { tokens: Token[] }[]) {
         collectReferenceProse(item.tokens, out);
       }
     } else {

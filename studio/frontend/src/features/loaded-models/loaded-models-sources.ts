@@ -121,6 +121,8 @@ export function loadedModelTarget(
       return { open: "settings", tab: "voice", label: "Voice settings" };
     case "embedding":
       return { open: "settings", tab: "data", label: "Data settings" };
+    case "chat":
+      return { open: "route", to: "/chat", label: "Chat" };
     default:
       return { open: "route", to: "/chat", label: "Chat" };
   }

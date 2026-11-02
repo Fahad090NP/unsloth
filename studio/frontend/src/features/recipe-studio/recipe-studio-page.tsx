@@ -196,9 +196,9 @@ export function RecipeStudioPage({
   );
   const flowContainerRef = useRef<HTMLDivElement | null>(null);
   const supportsEasyMode =
-    initialPayload?.ui?.seed_source_type === "github_repo" ||
-    (initialPayload?.recipe?.seed_config as { source?: { seed_type?: string } } | undefined)
-      ?.source?.seed_type === "github_repo";
+    initialPayload.ui.seed_source_type === "github_repo" ||
+    (initialPayload.recipe.seed_config as { source?: { seed_type?: string } })
+      .source?.seed_type === "github_repo";
   const viewModeStorageKey = `recipe-studio:view-mode:${recipeId}`;
   const [activeView, setActiveViewState] = useState<RecipeStudioView>(() => {
     if (typeof window !== "undefined") {
@@ -465,7 +465,8 @@ export function RecipeStudioPage({
   const openProcessorsFromSheet = useCallback(() => {
     if (
       !processors.some(
-        (processor) => processor.processor_type === "schema_transform",
+        (processor) =>
+          (processor.processor_type as string) === "schema_transform",
       )
     ) {
       setProcessors([...processors, buildDefaultSchemaTransform()]);
@@ -501,7 +502,9 @@ export function RecipeStudioPage({
       const allTargetsMeasured = (targets: Node[]): boolean =>
         targets.length > 0 &&
         targets.every(
-          (n) => n.measured?.width !== null && n.measured?.height !== null,
+          (n) =>
+            n.measured?.width !== undefined &&
+            n.measured?.height !== undefined,
         );
 
       const doFit = () => {
@@ -515,7 +518,7 @@ export function RecipeStudioPage({
           maxZoom: FIT_VIEW_MAX_ZOOM,
           padding: FIT_VIEW_PADDING,
           nodes: targets.map((n) => ({ id: n.id })),
-        });
+        }).catch(() => undefined);
       };
 
       let retries = 0;
@@ -735,7 +738,9 @@ export function RecipeStudioPage({
             onAddMarkdownNote={handleAddMarkdownNoteFromSheet}
             onOpenProcessors={openProcessorsFromSheet}
             copied={copied}
-            onCopy={copyRecipe}
+            onCopy={() => {
+              copyRecipe().catch(() => undefined);
+            }}
             onImport={() => { setImportOpen(true); }}
           />
         </Panel>
@@ -767,7 +772,7 @@ export function RecipeStudioPage({
           onOpenRunDialog={openRunDialog}
           onValidate={() => {
             openRunDialog(runDialogKind);
-            void validateFromDialog();
+            validateFromDialog().catch(() => undefined);
           }}
         />
       </ReactFlow>
@@ -818,7 +823,7 @@ export function RecipeStudioPage({
             onWorkflowNameChange={setWorkflowName}
             onViewChange={setActiveView}
             onSaveRecipe={() => {
-              void persistRecipe();
+              persistRecipe().catch(() => undefined);
             }}
           />
           <div
@@ -833,7 +838,7 @@ export function RecipeStudioPage({
                 setRows={setFullRows}
                 updateConfig={updateConfig}
                 onRun={() => {
-                  void runFull();
+                  runFull().catch(() => undefined);
                 }}
                 runLoading={fullLoading || executionLocked}
                 runErrors={runErrors}
@@ -848,10 +853,10 @@ export function RecipeStudioPage({
                 currentSignature={currentSignature}
                 onSelectExecution={setSelectedExecutionId}
                 onCancelExecution={(executionId) => {
-                  void cancelExecution(executionId);
+                  cancelExecution(executionId).catch(() => undefined);
                 }}
                 onLoadDatasetPage={(executionId, page) => {
-                  void loadExecutionDatasetPage(executionId, page);
+                  loadExecutionDatasetPage(executionId, page).catch(() => undefined);
                 }}
               />
             )}
@@ -907,10 +912,10 @@ export function RecipeStudioPage({
         validateResult={validateResult}
         errors={runErrors}
         onValidate={() => {
-          void validateFromDialog();
+          validateFromDialog().catch(() => undefined);
         }}
         onRun={() => {
-          void runFromDialog();
+          runFromDialog().catch(() => undefined);
         }}
         container={sheetContainer}
       />

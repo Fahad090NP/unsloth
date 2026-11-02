@@ -117,17 +117,21 @@ async function checkNativePermission(allowRequest: boolean): Promise<boolean> {
   }
 }
 
+function permissionKnown(): boolean {
+  return permissionState !== "unknown";
+}
+
 async function ensurePermission(allowRequest: boolean): Promise<boolean> {
   if (!isTauri) {
     return false;
   }
-  if (permissionState !== "unknown") {
+  if (permissionKnown()) {
     return hasGrantedPermission();
   }
 
   if (permissionPrimeInFlight) {
     await permissionPrimeInFlight;
-    if (permissionState !== "unknown" || !allowRequest) {
+    if (permissionKnown() || !allowRequest) {
       return hasGrantedPermission();
     }
   }
@@ -143,13 +147,11 @@ export async function primeNativeNotificationPermission(): Promise<boolean> {
     return hasGrantedPermission();
   }
 
-  if (!permissionPrimeInFlight) {
-    permissionPrimeInFlight = checkNativePermission(true)
-      .then(() => undefined)
-      .finally(() => {
-        permissionPrimeInFlight = null;
-      });
-  }
+  permissionPrimeInFlight ??= checkNativePermission(true)
+    .then(() => undefined)
+    .finally(() => {
+      permissionPrimeInFlight = null;
+    });
 
   await permissionPrimeInFlight;
   return hasGrantedPermission();

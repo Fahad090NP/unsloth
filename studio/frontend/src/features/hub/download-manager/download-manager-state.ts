@@ -605,7 +605,7 @@ export function isCurrent(key: string, epoch: number): boolean {
 
 export function scheduleRemoval(key: string, delayMs: number): void {
   const existing = runtimeRegistry.removalTimers.get(key);
-  if ((existing !== null && existing !== undefined)) clearRuntimeTimer(existing);
+  if (existing != null) clearRuntimeTimer(existing);
   const startedAt = getState().jobs[key].startedAt;
   const timer = window.setTimeout(() => {
     runtimeRegistry.removalTimers.delete(key);

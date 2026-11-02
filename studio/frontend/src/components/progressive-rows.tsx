@@ -71,10 +71,12 @@ export function ProgressiveRows<T extends { id: string }>({
       fetchingRef.current = true;
       fetchFromRef.current = items.length;
       setLimit((count) => Math.max(count, items.length) + pageSize);
-      void Promise.resolve(onReachEnd?.()).finally(() => {
+      Promise.resolve(onReachEnd?.()).finally(() => {
         setTimeout(() => {
           if (itemCountRef.current <= fetchFromRef.current) fetchingRef.current = false;
         }, FETCH_SETTLE_MS);
+      }).catch((error: unknown) => {
+        console.error("Failed to fetch the next page of rows", error);
       });
     },
     [items.length, limit, pageSize, fetchMore, onReachEnd],
@@ -107,7 +109,7 @@ export function ProgressiveRows<T extends { id: string }>({
     let touchY: number | null = null;
     const onArm = (event: Event) => {
       if (event.type === "touchstart") {
-        touchY = (event as TouchEvent).touches[0]?.clientY ?? null;
+        touchY = (event as TouchEvent).touches.item(0)?.clientY ?? null;
         return;
       }
       // only a scroll down asks for more: a click's focus nudge or a scroll up does not
@@ -120,7 +122,7 @@ export function ProgressiveRows<T extends { id: string }>({
         return;
       } else if (event.type === "touchmove") {
         // a finger moving up scrolls the list down; a swipe up the list or sideways does not
-        const y = (event as TouchEvent).touches[0]?.clientY;
+        const y = (event as TouchEvent).touches.item(0)?.clientY;
         const down = touchY !== null && y !== undefined && y < touchY;
         if (y !== undefined) touchY = y;
         if (!down) return;

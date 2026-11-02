@@ -102,12 +102,12 @@ export function startNativeAnnotate(
     const start = failed.get("start");
     if (install) {
       failed.delete("install");
-      void run(install);
+      run(install).catch(() => undefined);
     }
     // Start only behind its install or once the code is in, so a navigating page can't loop it.
     if (start && (install || installed)) {
       failed.delete("start");
-      void run(start);
+      run(start).catch(() => undefined);
     }
   };
 
@@ -125,11 +125,11 @@ export function startNativeAnnotate(
       const native = nativeCommand(command);
       if (!native) return;
       if (native.command === "stop") failed.delete("start");
-      void run(native);
+      run(native).catch(() => undefined);
     },
     stop: () => {
       window.clearInterval(timer);
-      void run({ command: "stop" });
+      run({ command: "stop" }).catch(() => undefined);
       live = false;
     },
   };

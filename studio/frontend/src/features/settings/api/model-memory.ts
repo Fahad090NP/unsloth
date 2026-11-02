@@ -88,7 +88,7 @@ async function fetchModelMemorySettings(): Promise<ModelMemorySettings> {
       await readFastApiError(res, "Failed to load model memory settings"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 /** Always refetches; concurrent calls share one request unless `force`, which a caller deciding
@@ -139,5 +139,5 @@ export async function updateModelMemorySettings(
   }
   // Residency vetoes the idle-unload TTL, so the auto-switch cache's idleUnloadActive is stale.
   invalidateOpenAIAutoSwitchSettings();
-  return publishModelMemory(fromApi(await res.json()));
+  return publishModelMemory(fromApi((await res.json()) as Parameters<typeof fromApi>[0]));
 }

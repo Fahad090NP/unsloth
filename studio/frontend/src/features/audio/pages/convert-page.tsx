@@ -362,13 +362,16 @@ function useSourceSide(clip: AudioGalleryClip | null): {
     const original = sourceId
       ? sourceFileUrl({ kind, id: sourceId, name: "", durationS: null })
       : null;
-    const fetchSide = (): Promise<Blob> =>
-      original
-        ? fetchAudioBlob(original).catch((error: unknown) => {
-            if (savedUrl) return fetchAudioBlob(savedUrl);
-            throw error;
-          })
-        : fetchAudioBlob(savedUrl!);
+    const fetchSide = (): Promise<Blob> => {
+      if (original) {
+        return fetchAudioBlob(original).catch((error: unknown) => {
+          if (savedUrl) return fetchAudioBlob(savedUrl);
+          throw error;
+        });
+      }
+      if (!savedUrl) throw new Error("The source is not saved with this clip.");
+      return fetchAudioBlob(savedUrl);
+    };
     fetchSide()
       .then((blob) => {
         if (cancelled) return;

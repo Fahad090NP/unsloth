@@ -103,7 +103,9 @@ function CopyableCommand({
       />
       <button
         type="button"
-        onClick={handleCopy}
+        onClick={() => {
+          handleCopy().catch(() => undefined);
+        }}
         className="flex shrink-0 items-center justify-center border-l border-border px-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         title={
           copied

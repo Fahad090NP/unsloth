@@ -476,10 +476,10 @@ export function useAudioModelSlot({
             deviceIsCpu: deviceOverride === "cpu" || audioDevice === "cpu",
             cpuUnsupported: musicGenerationRequiresCuda(repoId, audioType),
             onUseVariant: (variant) =>
-              void pickModelVariantRef.current(repoId, variant),
+              pickModelVariantRef.current(repoId, variant).catch(() => undefined),
             onUseCpu: () => {
               handlers.selectCpuDevice();
-              void retryLoad("cpu");
+              retryLoad("cpu").catch(() => undefined);
             },
           });
           toast.error((error as Error).message, {
@@ -496,7 +496,7 @@ export function useAudioModelSlot({
           toast.dismiss(toastId);
         }
       } finally {
-        if (pendingTtsLoad.current?.generation === generation)
+        if (pendingTtsLoad.current.generation === generation)
           pendingTtsLoad.current = null;
         if (activeRef.current) await refreshStatus();
         ttsLoadInFlight.current = false;
@@ -514,7 +514,7 @@ export function useAudioModelSlot({
   loadTtsModelRef.current = loadTtsModel;
   /** Repeat the last load into CPU RAM; false when there is none to repeat. */
   const reloadOnCpu = useCallback(() => {
-    void lastTtsLoad.current?.("cpu");
+    lastTtsLoad.current?.("cpu").catch(() => undefined);
     return lastTtsLoad.current !== null;
   }, []);
   /** Start a pick that lost the race with a load still settling. Visible pages only: a load started
@@ -950,7 +950,7 @@ export function useAudioModelSlot({
         useAudioTranscribeStore.setState({ connectionModel: null });
         selectedSttRepoRef.current = id;
         setSelectedSttRepo(id);
-        void ensureSttLoaded(id, sidecarKey, engine);
+        ensureSttLoaded(id, sidecarKey, engine).catch(() => undefined);
         return;
       }
       if (!transitionMode("speak")) return;
@@ -1077,7 +1077,7 @@ export function useAudioModelSlot({
       if (!selectedSttRepo) return;
       if (!sttReady) {
         sttStatusRefreshGeneration.current += 1;
-        void releaseTranscribeSelection();
+        releaseTranscribeSelection().catch(() => undefined);
         return;
       }
 

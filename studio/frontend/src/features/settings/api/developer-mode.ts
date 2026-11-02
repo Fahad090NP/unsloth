@@ -55,7 +55,7 @@ export async function loadDeveloperModeSettings(): Promise<DeveloperModeSettings
       await readFastApiError(res, "Failed to load Developer mode settings"),
     );
   }
-  return developerModeFromApi(await res.json());
+  return developerModeFromApi((await res.json()) as Parameters<typeof developerModeFromApi>[0]);
 }
 
 export async function updateDeveloperModeSettings(
@@ -72,5 +72,5 @@ export async function updateDeveloperModeSettings(
       await readFastApiError(res, "Failed to update Developer mode settings"),
     );
   }
-  return developerModeFromApi(await res.json());
+  return developerModeFromApi((await res.json()) as Parameters<typeof developerModeFromApi>[0]);
 }

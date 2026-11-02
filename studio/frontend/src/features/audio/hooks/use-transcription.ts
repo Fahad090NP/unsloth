@@ -204,8 +204,8 @@ export function useTranscription({
     // status refresh that cleared the selection (nothing resident yet) does not.
     if (sttLoadGeneration.current !== generation || !activeRef.current) return null;
     const current = selectedSttRepoRef.current;
-    if (current !== null && current !== repo) return null;
-    if (current === null) {
+    if (current != null && current !== repo) return null;
+    if (current == null) {
       selectedSttRepoRef.current = repo;
       setSelectedSttRepo(repo);
     }

@@ -71,7 +71,7 @@ export function AudioOptionFields({
             </div>
           );
         }
-        if (audioOptionUsesSlider(spec) && (spec.min !== null && spec.min !== undefined) && (spec.max !== null && spec.max !== undefined)) {
+        if (audioOptionUsesSlider(spec) && spec.min != null && spec.max != null) {
           const step = spec.type === "int" ? 1 : audioOptionFloatStep(spec.min, spec.max);
           return (
             <ParamSlider
@@ -130,10 +130,10 @@ export function AudioOptionFields({
               max={spec.max ?? undefined}
               // As typed: clamping mid-entry breaks multi-digit input. The request clamps.
               value={
-                values[spec.name] === undefined ? "" : String(values[spec.name])
+                values[spec.name] == null ? "" : String(values[spec.name])
               }
               placeholder={
-                (spec.default !== null && spec.default !== undefined) ? String(spec.default) : "Model default"
+                spec.default != null ? String(spec.default) : "Model default"
               }
               disabled={disabled}
               onChange={(event) => {

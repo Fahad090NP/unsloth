@@ -18,12 +18,16 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchDeviceType, usePlatformStore } from "@/config/env";
 import { useIsMobileShell } from "@/hooks/use-mobile";
-import { getInferenceStatus, unloadModel } from "@/features/chat/api/chat-api";
-import { resolveInferenceCheckpointId } from "@/features/chat/lib/apply-inference-status-to-store";
-import { useChatRuntimeStore } from "@/features/chat/stores/chat-runtime-store";
-import { type ApiMonitorEntry, useChatModelRuntime } from "@/features/chat";
+import {
+  type ApiMonitorEntry,
+  getInferenceStatus,
+  isExternalModelId,
+  resolveInferenceCheckpointId,
+  unloadModel,
+  useChatModelRuntime,
+  useChatRuntimeStore,
+} from "@/features/chat";
 import type { ApiMonitorResponse } from "@/features/chat/types/api";
-import { isExternalModelId } from "@/features/chat/external-providers";
 import { modelIdsMatch } from "@/features/hub/lib/model-identity";
 import {
   type ModelConfigHandoffRequest,
@@ -237,6 +241,8 @@ function statusDotClass(status: ApiMonitorEntry["status"]): string {
       return "bg-red-500";
     case "cancelled":
       return "bg-amber-500";
+    case "completed":
+      return "bg-emerald-500";
     default:
       return "bg-emerald-500";
   }
@@ -250,6 +256,8 @@ function statusTextClass(status: ApiMonitorEntry["status"]): string {
       return "text-red-600 dark:text-red-400";
     case "cancelled":
       return "text-amber-600 dark:text-amber-500";
+    case "completed":
+      return "text-emerald-600 dark:text-emerald-500";
     default:
       return "text-emerald-600 dark:text-emerald-500";
   }
@@ -1057,7 +1065,7 @@ export function ApiMonitorPage(): ReactElement {
 
   useEffect(() => {
     const refreshRemoteBase = () => {
-      void fetchDeviceType({ force: true });
+      fetchDeviceType({ force: true }).catch(() => undefined);
       loadLanAccess()
         .then(publishLanUrls)
         .catch(() => undefined);
@@ -1329,7 +1337,9 @@ export function ApiMonitorPage(): ReactElement {
         variant="ghost"
         size="sm"
         aria-label={`Reload ${model.name}`}
-        onClick={() => void reload.reloadServed(model)}
+        onClick={() => {
+          reload.reloadServed(model).catch(() => undefined);
+        }}
         disabled={reloadBusy || !reload.canReload(model)}
         className="size-7 shrink-0 rounded-full p-0 text-muted-foreground hover:text-foreground dark:hover:bg-chat-icon-bg-hover"
       >
@@ -1353,7 +1363,9 @@ export function ApiMonitorPage(): ReactElement {
         variant="ghost"
         size="sm"
         aria-label={`Eject ${model.name}`}
-        onClick={() => void ejectServed(model)}
+        onClick={() => {
+          ejectServed(model).catch(() => undefined);
+        }}
         disabled={ejecting || modelLoading}
         className="size-7 shrink-0 rounded-full p-0 text-muted-foreground hover:text-foreground dark:hover:bg-chat-icon-bg-hover"
       >
@@ -1496,11 +1508,15 @@ export function ApiMonitorPage(): ReactElement {
             activeModel={data?.active_model}
             residencyKey={residencyKey}
             onSettled={refresh}
-            onUnloadActive={unloadActiveModel}
+            onUnloadActive={() => {
+              unloadActiveModel().catch(() => undefined);
+            }}
             unloading={ejecting}
             configRequest={configRequest}
             onConfigRequestAdopted={() => { setConfigRequest(null); }}
-            onEjectAll={() => void ejectAll()}
+            onEjectAll={() => {
+              ejectAll().catch(() => undefined);
+            }}
             onLastLoadChanged={reload.refreshLastLoad}
           />
         </div>
@@ -1599,7 +1615,9 @@ export function ApiMonitorPage(): ReactElement {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => void reload.reloadAll(served)}
+                  onClick={() => {
+                    reload.reloadAll(served).catch(() => undefined);
+                  }}
                   disabled={
                     reloadBusy ||
                     (served.length === 0 && reload.lastLoadLabel == null) ||
@@ -1628,11 +1646,14 @@ export function ApiMonitorPage(): ReactElement {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    void (served.length > 1
-                      ? ejectAll()
-                      : ejectServed(served[0]))
-                  }
+                  onClick={() => {
+                    const first = served.at(0);
+                    const action =
+                      served.length > 1 || !first
+                        ? ejectAll()
+                        : ejectServed(first);
+                    action.catch(() => undefined);
+                  }}
                   disabled={ejecting || modelLoading || served.length === 0}
                   className="gap-1.5 rounded-full"
                 >
@@ -1900,7 +1921,7 @@ export function ApiMonitorPage(): ReactElement {
                   disabled={entries.length === 0}
                   onClick={() => {
                     setSelectedId(null);
-                    void clear();
+                    clear().catch(() => undefined);
                   }}
                   aria-label="Clear log"
                   className="rounded-full text-red-500/80 hover:text-red-500 dark:text-red-400/80 dark:hover:text-red-400"

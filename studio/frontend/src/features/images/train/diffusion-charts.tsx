@@ -95,7 +95,7 @@ export function DiffusionCharts({
   );
   const avgRaw =
     lossItems.length > 0
-      ? +(lossItems.reduce((s, p) => s + p.loss, 0) / lossItems.length).toFixed(4)
+      ? Number((lossItems.reduce((s, p) => s + p.loss, 0) / lossItems.length).toFixed(4))
       : 0;
 
   return (

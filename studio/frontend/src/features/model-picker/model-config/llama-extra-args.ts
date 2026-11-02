@@ -161,7 +161,7 @@ export function sanitizeStoredExtraArgs(
     if (
       flag !== null &&
       takesNextToken(token, flag, next) &&
-      next !== undefined &&
+      next != null &&
       isUnusableInArgv(next)
     ) {
       continue;
@@ -180,9 +180,9 @@ export function sanitizeStoredExtraArgs(
   while (bounded.length > 0 && overBounds()) {
     bounded.pop();
     const last = bounded[bounded.length - 1];
-    const lastFlag = last === undefined ? null : extraArgFlagName(last);
+    const lastFlag = last == null ? null : extraArgFlagName(last);
     // extraArgFlagName folds underscores, so check attachment rather than the normalized spelling.
-    if (last !== undefined && lastFlag !== null && !valueIsAttached(last, lastFlag)) {
+    if (last != null && lastFlag != null && !valueIsAttached(last, lastFlag)) {
       bounded.pop();
     }
     // Re-applied after every cut, as the backend re-validates.
@@ -212,7 +212,7 @@ function dropUnusableValues(tokens: readonly string[]): string[] {
     const next = tokens[index + 1];
     const value = attached ? token.split("=")[1] : next;
     const missing =
-      value === undefined ||
+      value == null ||
       value === "" ||
       (!attached && extraArgFlagName(value) !== null);
     const minimum = INTEGER_VALUE_MINIMUM[flag];
@@ -223,7 +223,7 @@ function dropUnusableValues(tokens: readonly string[]): string[] {
         ratioValueProblem(flag, value, false) !== null) ||
       (INTEGER_VALUE_FLAGS.has(flag) &&
         (!INTEGER.test(value.trim()) ||
-          (minimum !== undefined && Number(value.trim()) < minimum)));
+          (minimum != null && Number(value.trim()) < minimum)));
     if (!unusable) {
       out.push(token);
       continue;
@@ -401,7 +401,7 @@ export function parseExtraArgs(input: string): ExtraArgsParse {
 export function formatExtraArgs(
   tokens: readonly string[] | null | undefined,
 ): string {
-  if (tokens === null || tokens === undefined || tokens.length === 0) {
+  if (tokens == null || tokens.length === 0) {
     return "";
   }
   return tokens
@@ -604,7 +604,7 @@ function lastIntegerFlagValue(
     }
     const attached = valueIsAttached(token, flag);
     const raw = attached ? token.split("=")[1] : tokens[index + 1];
-    if (raw !== undefined && INTEGER.test(raw.trim())) {
+    if (raw != null && INTEGER.test(raw.trim())) {
       found = Number(raw.trim());
     }
   }
@@ -873,7 +873,7 @@ export function diagnoseExtraArgs(
       const value = attached ? token.split("=")[1] : tokens[index + 1];
       // `--ctx-size --numa` reads as a missing value, as the backend parser does.
       const missing =
-        value === undefined ||
+        value == null ||
         value === "" ||
         (!attached &&
           !valueIndices.has(index + 1) &&
@@ -891,7 +891,7 @@ export function diagnoseExtraArgs(
         message = null;
       } else if (!INTEGER.test(value.trim())) {
         message = `${flag} takes a number, and "${value}" is not one.`;
-      } else if (minimum !== undefined && Number(value.trim()) < minimum) {
+      } else if (minimum != null && Number(value.trim()) < minimum) {
         message =
           minimum === 0
             ? `${flag} cannot be negative.`
@@ -918,7 +918,7 @@ export function diagnoseExtraArgs(
     seen.add(flag);
     const managedControl = MANAGED_CONTROL_FLAGS[flag];
     const isManaged =
-      managedControl !== undefined || Boolean(catalog?.managed.has(flag));
+      managedControl != null || Boolean(catalog?.managed.has(flag));
 
     if (token !== token.trim()) {
       // Padding is part of the looked-up token, so a quoted "--top-k " fails as an invalid argument.

@@ -17,9 +17,13 @@ export function NativeIntentDrain() {
       for (const intent of intents) addIntent(intent);
     }
 
-    void drain();
+    drain().catch(() => undefined);
     void import("@tauri-apps/api/event")
-      .then(({ listen }) => listen("native-intent-available", drain))
+      .then(({ listen }) =>
+        listen("native-intent-available", () => {
+          drain().catch(() => undefined);
+        }),
+      )
       .then((cleanup) => {
         if (disposed) {
           cleanup();

@@ -30,7 +30,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!res.ok) {
     throw new Error(await readFastApiError(res, "External import failed"));
   }
-  return await res.json();
+  const data: unknown = await res.json();
+  return data as T;
 }
 
 export function loadExternalImportStatus(

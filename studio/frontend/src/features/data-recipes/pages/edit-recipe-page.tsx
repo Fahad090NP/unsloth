@@ -77,7 +77,7 @@ export function EditRecipePage({ recipeId }: EditRecipePageProps): ReactElement 
         primeRecipeCache(record);
         setLoadState({ status: "ready", record });
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         // biome-ignore lint/suspicious/noConsole: the load state below is what the user sees
         console.error("Load recipe failed:", error);
         if (active) setLoadState({ status: "missing" });

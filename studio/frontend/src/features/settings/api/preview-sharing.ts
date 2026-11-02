@@ -29,7 +29,7 @@ export async function loadPreviewSharing(): Promise<PreviewSharingSettings> {
       await readFastApiError(res, "Failed to load preview sharing settings"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export async function updatePreviewSharing(
@@ -45,7 +45,7 @@ export async function updatePreviewSharing(
       await readFastApiError(res, "Failed to update preview sharing settings"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 // Rotating the signing secret invalidates every previously shared /p preview link.

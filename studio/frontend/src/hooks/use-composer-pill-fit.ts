@@ -88,6 +88,15 @@ export function useComposerPillFit(forceCompact: boolean) {
     [forceCompact],
   );
 
+  const pillRowRef = useCallback(
+    (el: HTMLElement | null) => {
+      setRow(el);
+      // Before paint, so the row never flashes wrapped.
+      if (el) measure(el);
+    },
+    [measure],
+  );
+
   useLayoutEffect(() => {
     if (!row) {
       return;
@@ -103,8 +112,6 @@ export function useComposerPillFit(forceCompact: boolean) {
         measure(row);
       });
     };
-    // Before paint, so the row never flashes wrapped.
-    measure(row);
     const resize = new ResizeObserver(schedule);
     resize.observe(row);
     if (row.parentElement) {
@@ -122,5 +129,5 @@ export function useComposerPillFit(forceCompact: boolean) {
     };
   }, [row, measure]);
 
-  return { pillRowRef: setRow, pillCompact: compact };
+  return { pillRowRef, pillCompact: compact };
 }

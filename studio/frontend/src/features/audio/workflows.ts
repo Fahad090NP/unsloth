@@ -128,6 +128,8 @@ export function audioWorkflowForTask(
       return "transcribe";
     case "text-to-audio":
       return "music";
+    case null:
+    case undefined:
     default:
       return null;
   }

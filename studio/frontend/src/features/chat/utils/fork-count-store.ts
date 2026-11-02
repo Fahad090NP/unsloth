@@ -79,7 +79,9 @@ export function subscribeForkCounts(
   if (!entry) {
     entry = { counts: EMPTY_COUNTS, subscribers: new Set(), seq: 0 };
     entries.set(threadId, entry);
-    void refresh(threadId);
+    refresh(threadId).catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
   }
   const owner = entry;
   owner.subscribers.add(onChange);

@@ -46,10 +46,10 @@ function collectTemplateRefs(config: NodeConfig | null): Set<string> {
   }
   const refs = new Set<string>();
   if (config.kind === "llm") {
-    for (const ref of extractRefs(config.prompt ?? "")) {
+    for (const ref of extractRefs(config.prompt)) {
       refs.add(ref.trim());
     }
-    for (const ref of extractRefs(config.system_prompt ?? "")) {
+    for (const ref of extractRefs(config.system_prompt)) {
       refs.add(ref.trim());
     }
     if (typeof config.output_format === "string") {
@@ -60,7 +60,7 @@ function collectTemplateRefs(config: NodeConfig | null): Set<string> {
     return refs;
   }
   if (config.kind === "expression") {
-    for (const ref of extractRefs(config.expr ?? "")) {
+    for (const ref of extractRefs(config.expr)) {
       refs.add(ref.trim());
     }
   }
@@ -77,7 +77,8 @@ function isReversedRuntimeReferenceEdge(input: {
   if (edge.source !== runningNodeId) {
     return false;
   }
-  const targetName = configs[edge.target]?.name?.trim() ?? "";
+  const target: (typeof configs)[string] | undefined = configs[edge.target];
+  const targetName = target?.name?.trim() ?? "";
   return Boolean(targetName && runningTemplateRefs.has(targetName));
 }
 
@@ -251,7 +252,7 @@ function collectUpstreamDoneNodeIds(input: {
       if (!visited.has(sourceId)) {
         queue.push(sourceId);
       }
-      const config = configs[sourceId];
+      const config: (typeof configs)[string] | undefined = configs[sourceId];
       if (config && DONE_UPSTREAM_KINDS.has(config.kind)) {
         doneNodeIds.add(sourceId);
       }

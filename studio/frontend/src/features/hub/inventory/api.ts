@@ -231,7 +231,7 @@ async function parseJsonOrThrow<T>(
   if (!response.ok) {
     throw new Error(await readFastApiError(response, fallback));
   }
-  return await response.json();
+  return (await response.json()) as T;
 }
 
 async function throwIfNotOk(
@@ -555,7 +555,7 @@ export async function listGgufVariants(
   const signal = options?.signal;
   const key = `${repoId}::${fingerprintToken(hfToken)}::${
     offline ? "offline" : preferLocalCache ? "local" : "remote"
-  }::${localPathCacheKey(localPath)}::${Boolean(options?.includeCacheLocations)}`;
+  }::${localPathCacheKey(localPath)}::${options?.includeCacheLocations ? "1" : "0"}`;
   const now = Date.now();
   const hit = ggufVariantsCache.get(key);
   if (hit && now < hit.expiresAt) {

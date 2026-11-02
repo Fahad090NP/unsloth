@@ -157,7 +157,7 @@ function slide(
   const r = h / 2;
   const inner = w - 2 * r + 2;
   const resize =
-    endCap && Math.abs(dw) >= 0.5 && Math.min(w, w + dw) > 2 * r + 1;
+    Math.abs(dw) >= 0.5 && Math.min(w, w + dw) > 2 * r + 1;
   // Held until the cleanup below, so the pieces never show their rest state
   // between the end of the slide and the cleanup.
   const timing = {

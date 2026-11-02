@@ -133,7 +133,9 @@ export function ToolConfirmationControls({
   useEffect(() => {
     if (showControls && (autoAllowed || chatFullAccess) && pending === null && !failed) {
       // A sibling loop in this chat needs its own backend policy upgrade.
-      void resolve("allow", false, Boolean(chatFullAccess));
+      resolve("allow", false, Boolean(chatFullAccess)).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
     }
   }, [showControls, autoAllowed, chatFullAccess, pending, failed, resolve]);
 
@@ -223,7 +225,9 @@ export function ToolConfirmationControls({
             <FullAccessConfirmContent
               onConfirm={() => {
                 setFullAccessOpen(false);
-                void resolve("allow", false, true);
+                resolve("allow", false, true).catch((error: unknown) => {
+                  console.error("Background chat operation failed", error);
+                });
               }}
               onClose={() => { setFullAccessOpen(false); }}
             />

@@ -135,7 +135,7 @@ function closeView(tabId: string): void {
   recency = recency.filter((id) => id !== tabId);
   if (parkedView === tabId) parkedView = null;
   background = background.filter((id) => id !== tabId);
-  void call("browser_view_close", { tabId, forgetLocal: !onLocalOrigin(tabId) }).catch(() => undefined);
+  call("browser_view_close", { tabId, forgetLocal: !onLocalOrigin(tabId) }).catch(() => undefined).catch(() => undefined);
 }
 
 setLocalViewCloser(closeView);
@@ -269,7 +269,7 @@ function onNativeEvent(event: NativeEvent): void {
       break;
     case "history": {
       const next = { back: event.canGoBack, forward: event.canGoForward };
-      if (tab.nativeHistory?.back !== next.back || tab.nativeHistory?.forward !== next.forward) {
+      if (tab.nativeHistory?.back !== next.back || tab.nativeHistory.forward !== next.forward) {
         store.updateTab(tab.id, { nativeHistory: next });
       }
       // Through the backend, so a page can't point Studio at a local address.
@@ -379,12 +379,12 @@ function currentEntryUrl(tab: BrowserTab): string {
 
 export function nativeAction(tabId: string, action: "back" | "forward" | "reload" | "stop"): void {
   if (!views.has(tabId)) return;
-  void call("browser_view_action", { tabId, action }).catch(() => undefined);
+  call("browser_view_action", { tabId, action }).catch(() => undefined).catch(() => undefined);
 }
 
 export function focusPage(tabId: string): void {
   if (!views.has(tabId)) return;
-  void call("browser_view_action", { tabId, action: "focus" }).catch(() => undefined);
+  call("browser_view_action", { tabId, action: "focus" }).catch(() => undefined).catch(() => undefined);
 }
 
 /** Gives key focus back to the panel's webview. */
@@ -526,7 +526,7 @@ function sendInput(input: Input): void {
   if (key === sentInput) return;
   const wasBlocked = sentInput !== "" && (JSON.parse(sentInput) as Input).blocked;
   sentInput = key;
-  void call("browser_view_input", input).catch(() => undefined);
+  call("browser_view_input", input).catch(() => undefined).catch(() => undefined);
   if (input.blocked !== wasBlocked) lendKeys(input.blocked);
 }
 
@@ -537,7 +537,7 @@ function lendKeys(blocked: boolean): void {
   if (blocked) {
     if (!shownView || document.hasFocus()) return;
     lentFrom = { tabId: shownView, active: document.activeElement };
-    void focusPanel(shownView);
+    focusPanel(shownView).catch(() => undefined);
     return;
   }
   const lent = lentFrom;
@@ -821,7 +821,7 @@ function syncBackground(): void {
     if (tabId === shownView || tabId === parkedView || entry.kind !== "web" || openingInBackground.has(tabId)) continue;
     const key = entryKey(entry);
     if (views.get(tabId) === key) continue;
-    void openInBackground(tabId, entry.url, key);
+    openInBackground(tabId, entry.url, key).catch(() => undefined);
   }
 }
 
@@ -1003,7 +1003,7 @@ async function applyView(desired: Desired): Promise<void> {
   const started = generation;
   const stale = () => {
     if (started === generation) return false;
-    void call("browser_view_close", { tabId, forgetLocal: !onLocalOrigin(tabId) }).catch(() => undefined);
+    call("browser_view_close", { tabId, forgetLocal: !onLocalOrigin(tabId) }).catch(() => undefined).catch(() => undefined);
     return true;
   };
   try {
@@ -1137,13 +1137,13 @@ export function startNativeViews(): () => void {
   window.addEventListener("resize", schedule);
   // Clickable overlays slide in without a body mutation: measure them every frame while they move.
   const moved = (event: Event) => {
-    if (!(event.target as Element | null)?.closest?.(CLICKABLE_SELECTOR)) return;
+    if (!(event.target as Element | null)?.closest(CLICKABLE_SELECTOR)) return;
     motionUntil = performance.now() + MOTION_MS;
     schedule();
   };
   for (const type of MOTION_EVENTS) document.addEventListener(type, moved, true);
   const reachedPage = (event: Event) => {
-    if (tooltipHold && (event.target as Element | null)?.closest?.("[data-native-page]")) {
+    if (tooltipHold && (event.target as Element | null)?.closest("[data-native-page]")) {
       tooltipHold = 0;
       schedule();
     }
@@ -1152,7 +1152,7 @@ export function startNativeViews(): () => void {
   // A dragged or resized panel ends where the pointer lets go.
   document.addEventListener("pointerup", schedule, true);
   const interval = window.setInterval(schedule, RECHECK_MS);
-  void askLayered().then(schedule);
+  askLayered().then(schedule).catch(() => undefined);
   schedule();
 
   return () => {

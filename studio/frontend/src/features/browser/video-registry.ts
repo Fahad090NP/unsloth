@@ -19,7 +19,7 @@ export function tabVideo(tabId: string): HTMLVideoElement | null {
 
 /** The desktop app can't write images to the clipboard. */
 export const canCopyVideoFrame = (): boolean =>
-  !isTauri && typeof ClipboardItem !== "undefined" && typeof navigator.clipboard?.write === "function";
+  !isTauri && typeof ClipboardItem !== "undefined" && typeof navigator.clipboard.write === "function";
 
 /** Copies the frame on screen as a PNG; false where the clipboard takes no images. */
 export async function copyVideoFrame(video: HTMLVideoElement): Promise<boolean> {
@@ -30,7 +30,15 @@ export async function copyVideoFrame(video: HTMLVideoElement): Promise<boolean> 
   canvas.height = video.videoHeight;
   canvas.getContext("2d")?.drawImage(video, 0, 0);
   const png = new Promise<Blob>((resolve, reject) =>
-    { canvas.toBlob((blob) => { blob ? resolve(blob) : reject(new Error("no frame")); }, "image/png"); },
+    {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("no frame"));
+        },
+        "image/png",
+      );
+    },
   );
   try {
     await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);

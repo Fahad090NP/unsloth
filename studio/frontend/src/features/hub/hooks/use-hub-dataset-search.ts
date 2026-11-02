@@ -441,7 +441,7 @@ export function useHubDatasetSearch(
         ...(accessToken ? { credentials: { accessToken } } : {}),
       }) as AsyncGenerator;
     },
-    [useCuratedOnly, hasQuery, query, accessToken, sortBy, sortDirection, hfEndpoint],
+    [useCuratedOnly, hasQuery, query, accessToken, sortBy, sortDirection],
   );
 
   const search = useHubPaginatedSearch(createIter, mapDataset, {
@@ -479,7 +479,7 @@ export function useHubDatasetSearch(
     }
 
     return [...boosted, ...neutral];
-  }, [enabled, search.results, modelType, query, pinnedIds]);
+  }, [enabled, search.results, modelType, query, pinnedIds, hasQuery]);
 
   return { ...search, results };
 }

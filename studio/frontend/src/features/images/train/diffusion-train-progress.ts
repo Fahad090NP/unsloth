@@ -42,7 +42,7 @@ export function diffusionTrainingProgress(status: Status | null) {
   const preparing =
     running &&
     !terminal &&
-    ((status?.in_model_load ?? false) || (status?.step ?? 0) <= 0);
+    ((status.in_model_load ?? false) || (status.step ?? 0) <= 0);
   if (preparing) {
     const note = backendNote(status.message);
     const legacy = LEGACY_PREPARING.exec(status.message);
@@ -86,7 +86,7 @@ export function diffusionTrainingProgress(status: Status | null) {
     const load = status.model_load_progress;
     const stage = status.model_load_stage;
     // A retained tensor count is stale while the download manager shows a transfer.
-    const downloading = (status.download_progress !== null && status.download_progress !== undefined);
+    const downloading = status.download_progress != null;
     const measured = status.in_model_load && !downloading && load &&
       Number.isFinite(load.done) && Number.isFinite(load.total) &&
       load.done >= 0 && load.total > 0 && load.done <= load.total;

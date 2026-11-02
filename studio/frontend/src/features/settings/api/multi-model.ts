@@ -11,7 +11,7 @@ export async function loadMultiModelEnabled(
   if (!res.ok) {
     throw new Error(await readFastApiError(res, fallbackMessage));
   }
-  return Boolean((await res.json()).enabled);
+  return Boolean(((await res.json()) as { enabled?: unknown }).enabled);
 }
 
 export async function updateMultiModelEnabled(
@@ -26,7 +26,7 @@ export async function updateMultiModelEnabled(
   if (!res.ok) {
     throw new Error(await readFastApiError(res, fallbackMessage));
   }
-  return Boolean((await res.json()).enabled);
+  return Boolean(((await res.json()) as { enabled?: unknown }).enabled);
 }
 
 export const MULTI_MODEL_MODES = ["off", "fit", "always"] as const;
@@ -56,7 +56,7 @@ export async function loadMultiModelMode(
   if (!res.ok) {
     throw new Error(await readFastApiError(res, fallbackMessage));
   }
-  return normaliseMultiModelMode(await res.json());
+  return normaliseMultiModelMode((await res.json()) as Parameters<typeof normaliseMultiModelMode>[0]);
 }
 
 export async function updateMultiModelMode(
@@ -71,5 +71,5 @@ export async function updateMultiModelMode(
   if (!res.ok) {
     throw new Error(await readFastApiError(res, fallbackMessage));
   }
-  return normaliseMultiModelMode(await res.json());
+  return normaliseMultiModelMode((await res.json()) as Parameters<typeof normaliseMultiModelMode>[0]);
 }

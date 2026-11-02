@@ -73,7 +73,9 @@ export function NativeModelChip({
       <span className="min-w-0 flex-1 truncate" title={label}>{label}</span>
       <button
         type="button"
-        onClick={handleReveal}
+        onClick={() => {
+          handleReveal().catch(() => undefined);
+        }}
         disabled={expired}
         title={expired ? "Selection expired, pick or drop the file again" : undefined}
         className="rounded-full px-2 py-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
@@ -82,7 +84,9 @@ export function NativeModelChip({
       </button>
       <button
         type="button"
-        onClick={handleLoad}
+        onClick={() => {
+          handleLoad().catch(() => undefined);
+        }}
         disabled={nativeReadsDisabled || expired || loading}
         title={
           nativeReadsDisabled

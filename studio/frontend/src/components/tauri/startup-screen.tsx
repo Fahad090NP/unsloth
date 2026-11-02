@@ -99,6 +99,9 @@ function NotInstalledContent({
 
   // Synchronous: a double click lands before the re-render that disables the buttons.
   const busy = useRef(false);
+  const releaseBusy = () => {
+    busy.current = false;
+  };
 
   async function getStarted() {
     if (busy.current) {
@@ -107,7 +110,7 @@ function NotInstalledContent({
     busy.current = true;
     setPhase("checking");
     if (await windowsLongPathsNeedPrompt()) {
-      busy.current = false;
+      releaseBusy();
       setPhase("explain");
     } else {
       onInstall({ chatOnly });
@@ -137,7 +140,11 @@ function NotInstalledContent({
     return (
       <LongPathsExplainer
         waiting={phase === "elevating"}
-        onContinue={allowLongPaths}
+        onContinue={() => {
+          allowLongPaths().catch((error: unknown) => {
+            console.error("Failed to enable long paths", error);
+          });
+        }}
         onSkip={skipLongPaths}
       />
     );
@@ -158,7 +165,11 @@ function NotInstalledContent({
         <Button
           variant="dark"
           size="hero"
-          onClick={getStarted}
+          onClick={() => {
+            getStarted().catch((error: unknown) => {
+              console.error("Failed to start installation", error);
+            });
+          }}
           disabled={phase === "checking"}
         >
           {t("desktopStartup.getStarted")}

@@ -81,5 +81,5 @@ export function decideNativeDownload(id: string, allow: boolean, ask: boolean): 
 /** Forget downloads taken off the history; the files stay. */
 export function forgetNativeDownloads(ids: string[]): void {
   if (!isTauri || ids.length === 0) return;
-  void invoke<void>("browser_download_forget", { ids }).catch(() => undefined);
+  invoke<void>("browser_download_forget", { ids }).catch(() => undefined).catch(() => undefined);
 }

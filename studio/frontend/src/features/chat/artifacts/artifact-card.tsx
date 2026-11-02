@@ -241,7 +241,9 @@ export function ArtifactCard({
       (ok) => ok && toast.success(isReact ? "Code copied" : "HTML copied"),
     );
   const openDefault = () =>
-    void openInDefaultBrowser(isReact ? reactPage(artifact.code, lang, pageTitle) : artifact.code);
+    openInDefaultBrowser(isReact ? reactPage(artifact.code, lang, pageTitle) : artifact.code).catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
 
   return (
     <div className={cn("my-2 w-full max-w-xl", className)}>

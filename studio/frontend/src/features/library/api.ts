@@ -318,7 +318,7 @@ export async function fetchLibraryBlob(
 ): Promise<Blob> {
   const response = await ensureOk(await authFetch(item.fileUrl));
   if (Number(response.headers.get("content-length")) > maxBytes) {
-    void response.body?.cancel();
+    response.body?.cancel().catch(() => undefined);
     throw new LibraryFileTooLarge(item.name);
   }
   const reader = maxBytes === Infinity ? undefined : response.body?.getReader();
@@ -334,7 +334,7 @@ export async function fetchLibraryBlob(
     if (done) break;
     read += value.length;
     if (read > maxBytes) {
-      void reader.cancel();
+      reader.cancel().catch(() => undefined);
       throw new LibraryFileTooLarge(item.name);
     }
     chunks.push(value);
@@ -376,7 +376,7 @@ export async function fetchLibraryText(
     if (read + value.length > maxBytes) {
       chunks.push(value.subarray(0, maxBytes - read));
       truncated = true;
-      void reader.cancel();
+      reader.cancel().catch(() => undefined);
       break;
     }
     chunks.push(value);

@@ -183,12 +183,13 @@ function purgeImportedFonts(storage: Storage): void {
     customization?: Record<string, unknown>;
   };
   try {
-    parsed = JSON.parse(raw);
+    parsed = JSON.parse(raw) as typeof parsed;
   } catch {
     storage.removeItem(APPEARANCE_KEY);
     return;
   }
-  const customization = parsed?.state?.customization ?? parsed?.customization;
+  const customization =
+    parsed.state?.customization ?? parsed.customization;
   const fonts = customization?.importedFonts;
   if (!customization || !Array.isArray(fonts) || fonts.length === 0) return;
   const names = new Set(
@@ -317,7 +318,7 @@ export function installAccountTransitionListener(
       if (isSameAccount(current, parseAccountMarker(event.newValue))) return;
       // Stop sending until the marker arrives; a switch that never finishes still reloads.
       transitionPending = true;
-      if (fenceTimer === null) fenceTimer = setTimeout(reload, ACCOUNT_FENCE_TIMEOUT_MS);
+      fenceTimer ??= setTimeout(reload, ACCOUNT_FENCE_TIMEOUT_MS);
       return;
     }
     if (event.key !== BROWSER_ACCOUNT_KEY) return;

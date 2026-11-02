@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { getApiMonitor } from "@/features/chat/api/chat-api";
-import { useChatRuntimeStore } from "@/features/chat/stores/chat-runtime-store";
+import { useChatRuntimeStore } from "@/features/chat";
 import type {
   ApiMonitorEntry,
   ApiMonitorResponse,
@@ -98,6 +98,8 @@ function statusDotClass(status: ApiMonitorEntry["status"]): string {
       return "bg-red-500";
     case "cancelled":
       return "bg-amber-500";
+    case "completed":
+      return "bg-emerald-500";
     default:
       return "bg-emerald-500";
   }

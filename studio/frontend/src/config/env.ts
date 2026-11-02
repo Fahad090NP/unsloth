@@ -24,7 +24,7 @@ export const env = {
   BASE_URL: import.meta.env.BASE_URL,
 } as const;
 
-export type DeviceType = "mac" | "windows" | "linux" | string;
+export type DeviceType = string;
 
 export type FileManager = "finder" | "explorer" | "files" | null;
 
@@ -104,6 +104,10 @@ const HARDWARE_DETECT_WAIT_MS = 5000;
 const HARDWARE_DETECT_POLL_MS = 200;
 // The bounded wait above is spent at most once per page load: see fetchDeviceType.
 let hardwareWaitSpent = false;
+
+function markHardwareWaitSpent(): void {
+  hardwareWaitSpent = true;
+}
 
 /** A repair or restart replaced the backend: its predecessor's verdict is no longer measured. Platform fields stay. */
 export function forgetMeasuredVerdict(): void {
@@ -218,7 +222,7 @@ async function readHealth(
       res = await fetch(apiUrl("/api/health"), { headers });
     }
     // Not spent on a rejected token, so a later sign-in in this page load still gets the wait.
-    if (spendWait && !tokenRejected) hardwareWaitSpent = true;
+    if (spendWait && !tokenRejected) markHardwareWaitSpent();
     if (res.ok) {
       const data = (await res.json()) as {
         device_type?: string;
@@ -288,10 +292,7 @@ async function readHealth(
         chatOnlyDetail,
         chatOnlyHint,
         // Rides with the verdict: a provisional reply carries neither, so it keeps the stored one.
-        videoCpuOptIn:
-          data.video_cpu_opt_in === undefined
-            ? previous.videoCpuOptIn
-            : data.video_cpu_opt_in,
+        videoCpuOptIn: data.video_cpu_opt_in ?? previous.videoCpuOptIn,
         cloudflareUrl: data.cloudflare_url ?? null,
         serverUrl: data.server_url ?? null,
         secure: data.secure ?? false,

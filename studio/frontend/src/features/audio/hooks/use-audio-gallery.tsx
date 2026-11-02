@@ -630,7 +630,7 @@ export function useWorkflowHistory({
     if (!enabled || selectedClip || pageFallbackClip) return;
     const first = visibleClips[0];
     // Keep another page's unsaved clip: it is the only copy.
-    if (first) selectClip(first.id, fallbackClip !== null);
+    if (first) selectClip(first.id, fallbackClip != null);
   }, [enabled, selectedClip, pageFallbackClip, fallbackClip, visibleClips, selectClip]);
 
   useEffect(() => {

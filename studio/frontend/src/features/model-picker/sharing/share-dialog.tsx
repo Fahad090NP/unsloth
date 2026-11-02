@@ -333,19 +333,21 @@ export function ShareRunConfigDialog({
               <Button
                 className="shrink-0"
                 disabled={!link || copying}
-                onClick={async () => {
-                  setCopying(true);
-                  try {
-                    if (await copyToClipboard(link)) {
-                      toast.success("Run settings link copied");
-                    } else {
-                      toast.error(
-                        "Could not copy the link. Select and copy it from the link field.",
-                      );
+                onClick={() => {
+                  (async () => {
+                    setCopying(true);
+                    try {
+                      if (await copyToClipboard(link)) {
+                        toast.success("Run settings link copied");
+                      } else {
+                        toast.error(
+                          "Could not copy the link. Select and copy it from the link field.",
+                        );
+                      }
+                    } finally {
+                      setCopying(false);
                     }
-                  } finally {
-                    setCopying(false);
-                  }
+                  })().catch(() => undefined);
                 }}
               >
                 Copy link

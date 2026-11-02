@@ -54,10 +54,10 @@ export function filesFromDrop(
   dataTransfer: DataTransfer,
   keep: (name: string) => boolean = () => true,
 ): Promise<FolderFiles> {
-  const entries = Array.from(dataTransfer.items ?? [])
+  const entries = Array.from(dataTransfer.items)
     .filter((item) => item.kind === "file")
-    .map((item) => item.webkitGetAsEntry?.() ?? null);
-  const plain = Array.from(dataTransfer.files ?? []);
+    .map((item) => item.webkitGetAsEntry() ?? null);
+  const plain = Array.from(dataTransfer.files);
   if (!entries.some((entry) => entry?.isDirectory)) {
     return Promise.resolve({ files: plain, truncated: 0, hadFolder: false });
   }
@@ -75,7 +75,8 @@ async function walkEntries(
   let truncated = 0;
   const pending = [...roots];
   while (pending.length > 0) {
-    const entry = pending.shift()!;
+    const entry = pending.shift();
+    if (!entry) break;
     if (entry.isFile) {
       const root = roots.includes(entry);
       if (!root && (skippedFile(entry.name) || !keep(entry.name))) continue;
@@ -87,6 +88,7 @@ async function walkEntries(
         const file = await entryFile(entry as FileSystemFileEntry);
         if (file.size > 0 || root) files.push(file);
       } catch {
+        // A file that vanished between listing and reading is skipped.
       }
       continue;
     }

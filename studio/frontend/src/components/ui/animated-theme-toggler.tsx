@@ -18,6 +18,9 @@ export function useAnimatedThemeToggle(duration = 400) {
   const [isDark, setIsDark] = useState(false)
   const anchorRef = useRef<HTMLElement | null>(null)
   const inFlightRef = useRef(false)
+  const clearInFlight = useCallback(() => {
+    inFlightRef.current = false
+  }, [])
 
   useEffect(() => {
     const updateTheme = () => {
@@ -49,7 +52,6 @@ export function useAnimatedThemeToggle(duration = 400) {
     // Reduced motion cannot reach the view transition's Web Animations clip-path, so skip it.
     // WebKitGTK skips it too: the call itself can crash the page.
     if (
-      !document.startViewTransition ||
       prefersReducedMotion() ||
       isWebKitGTK(navigator.platform, navigator.userAgent)
     ) {
@@ -88,9 +90,9 @@ export function useAnimatedThemeToggle(duration = 400) {
     } catch {
       // A skipped transition still applied the theme.
     } finally {
-      inFlightRef.current = false
+      clearInFlight()
     }
-  }, [duration])
+  }, [duration, clearInFlight])
 
   return { isDark, toggleTheme, anchorRef }
 }
@@ -107,7 +109,11 @@ export const AnimatedThemeToggler = ({
       ref={(node) => {
         anchorRef.current = node
       }}
-      onClick={toggleTheme}
+      onClick={() => {
+        toggleTheme().catch((error: unknown) => {
+          console.error("Failed to toggle the theme", error)
+        })
+      }}
       className={cn(className)}
       {...props}
     >

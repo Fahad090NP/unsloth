@@ -134,7 +134,9 @@ export function useChatProjects(): {
     const onProjectsUpdated = (event: Event) => {
       const followUpIfPending = event !== lastProjectsUpdateEvent;
       lastProjectsUpdateEvent = event;
-      void refresh(true, followUpIfPending);
+      refresh(true, followUpIfPending).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
     };
     // Cached rows render immediately, then one shared request reconciles changes made by another
     // browser tab or API client.

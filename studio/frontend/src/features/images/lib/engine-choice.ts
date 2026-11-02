@@ -28,7 +28,7 @@ function isPick(value: unknown): value is Exclude<EngineChoice, "auto"> {
 
 export function readEngineChoices(): Record<string, Exclude<EngineChoice, "auto">> {
   try {
-    const value = JSON.parse(localStorage.getItem(KEY) ?? "{}");
+    const value: unknown = JSON.parse(localStorage.getItem(KEY) ?? "{}");
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
     const out: Record<string, Exclude<EngineChoice, "auto">> = {};
     for (const [k, v] of Object.entries(value)) if (isPick(v)) out[k] = v;

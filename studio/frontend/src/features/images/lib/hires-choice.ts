@@ -121,7 +121,7 @@ export function hiresEngagesNegative(
   minGuidance: number | null,
 ): boolean {
   const req = hiresRequest(choice, cap, workflow);
-  if (!req || req.denoise <= 0 || req.guidance === null || req.guidance === undefined) return false;
+  if (!req || req.denoise <= 0 || req.guidance == null) return false;
   return minGuidance === null || req.guidance > minGuidance;
 }
 
@@ -267,7 +267,7 @@ export function parseHiresInfotext(
     };
     if (factor >= 1 && factor <= 4 && (reaches(2048) || reaches(Math.max(rw, rh)))) {
       scale = factor;
-      Reflect.deleteProperty(fields, resizeKey!);
+      if (resizeKey !== undefined) Reflect.deleteProperty(fields, resizeKey);
     }
   }
   // Without a factor or a usable size, Studio cannot size the pass: leave it all unapplied.

@@ -161,7 +161,8 @@ const UnmeasuredCollapsibleContent = React.forwardRef<
         if (typeof forwardedRef === "function") {
           forwardedRef(node);
         } else if (forwardedRef) {
-          forwardedRef.current = node;
+          const target = forwardedRef;
+          target.current = node;
         }
       },
       [forwardedRef],
@@ -170,7 +171,9 @@ const UnmeasuredCollapsibleContent = React.forwardRef<
     // Mount at 0fr, then flip to 1fr two frames later so a same-frame class change does not snap open
     React.useEffect(() => {
       if (open) {
-        setMounted(true);
+        queueMicrotask(() => {
+          setMounted(true);
+        });
         let inner = 0;
         const outer = requestAnimationFrame(() => {
           inner = requestAnimationFrame(() => { setExpanded(true); });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { isAudioWorkflowId } from "@/features/audio/workflows";
+import { isAudioWorkflowId } from "@/features/audio";
 import { useTrainingRuntimeStore } from "@/features/training";
 import type { TranslationKey } from "@/i18n";
 import { useNavigate } from "@tanstack/react-router";
@@ -39,7 +39,7 @@ export function useLibraryOrigin(): (item: LibraryItem) => LibraryOrigin | null 
         label: "library.preview.viewTrainingRun",
         open: () => {
           useTrainingRuntimeStore.getState().setSelectedHistoryRunId(runId);
-          void navigate({ to: "/studio" });
+          navigate({ to: "/studio" }).catch(() => undefined);
         },
       };
     }

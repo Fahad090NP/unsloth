@@ -12,10 +12,12 @@ import type {
 export class PresetWriteRefused extends Error {}
 
 async function parseResponse<Result>(response: Response) {
-  const body = await response.json().catch(() => null);
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const detail =
-      body && typeof body === "object" && "detail" in body ? body.detail : null;
+      body && typeof body === "object" && "detail" in body
+        ? (body as { detail?: unknown }).detail
+        : null;
     if (typeof detail === "string" && detail) {
       throw new PresetWriteRefused(detail);
     }

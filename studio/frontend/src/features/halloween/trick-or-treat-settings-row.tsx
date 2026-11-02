@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { Switch } from "@/components/ui/switch";
-import { SettingsRow } from "@/features/settings/components/settings-row";
+import { SettingsRow } from "@/features/settings";
 import { useT } from "@/i18n";
 import {
   hideTrickOrTreatRow,

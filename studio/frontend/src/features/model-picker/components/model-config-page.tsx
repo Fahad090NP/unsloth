@@ -322,7 +322,7 @@ function loadModeOverrideNotice(
   mode: string | null,
   settings: ModelMemorySettings | null,
 ): string | null {
-  if ((mode === null || mode === undefined) || (settings === null || settings === undefined)) {
+  if (mode == null || settings == null) {
     return null;
   }
   if (settings.keepResident && !settings.noRamReserve) {
@@ -352,28 +352,28 @@ function effectiveBatchFloor(
 
 function hasNonDefaultAdvanced(config: PerModelConfig): boolean {
   return (
-    (config.kvCacheDtype !== null && config.kvCacheDtype !== undefined) ||
+    config.kvCacheDtype != null ||
     (config.speculativeType ?? "auto") !== "auto" ||
-    (config.specDraftNMax !== null && config.specDraftNMax !== undefined) ||
-    (config.specDraftCacheDtype !== null && config.specDraftCacheDtype !== undefined) ||
-    (config.specDraftModel !== null && config.specDraftModel !== undefined) ||
-    (config.nParallel !== null && config.nParallel !== undefined) ||
+    config.specDraftNMax != null ||
+    config.specDraftCacheDtype != null ||
+    config.specDraftModel != null ||
+    config.nParallel != null ||
     config.reasoningBudget !== -1 ||
     config.reasoningBudgetMessage !== "" ||
-    (config.nBatch !== null && config.nBatch !== undefined) ||
-    (config.nUbatch !== null && config.nUbatch !== undefined) ||
-    (config.loadMode !== null && config.loadMode !== undefined) ||
-    (config.ctxCheckpoints !== null && config.ctxCheckpoints !== undefined) ||
-    (config.cacheRam !== null && config.cacheRam !== undefined) ||
+    config.nBatch != null ||
+    config.nUbatch != null ||
+    config.loadMode != null ||
+    config.ctxCheckpoints != null ||
+    config.cacheRam != null ||
     config.tensorParallel ||
     config.disableVision ||
-    (config.chatTemplateOverride !== null && config.chatTemplateOverride !== undefined) ||
+    config.chatTemplateOverride != null ||
     // Hidden flags change behaviour, so do not open collapsed claiming defaults.
-    ((config.llamaExtraArgs !== null && config.llamaExtraArgs !== undefined) && config.llamaExtraArgs.length > 0) ||
+    (config.llamaExtraArgs != null && config.llamaExtraArgs.length > 0) ||
     (config.gpuMemoryMode ?? "auto") !== "auto" ||
-    ((config.gpuLayers !== null && config.gpuLayers !== undefined) && config.gpuLayers >= 0) ||
+    (config.gpuLayers != null && config.gpuLayers >= 0) ||
     (config.nCpuMoe ?? 0) > 0 ||
-    (config.selectedGpuIds !== null && config.selectedGpuIds !== undefined)
+    config.selectedGpuIds != null
   );
 }
 
@@ -382,21 +382,21 @@ function withoutUnsupportedDiffusionSettings(
   currentGpuIndexKind: GpuIndexKind | null = null,
 ): PerModelConfig {
   const hasUnsupportedGpuPick =
-    (config.selectedGpuIds !== null && config.selectedGpuIds !== undefined) &&
+    config.selectedGpuIds != null &&
     (config.selectedGpuIndexKind === "vulkan" ||
       currentGpuIndexKind === "vulkan");
   if (
     (config.gpuMemoryMode ?? "auto") === "auto" &&
-    (config.gpuLayers === null || config.gpuLayers === undefined) &&
-    (config.nCpuMoe === null || config.nCpuMoe === undefined) &&
-    (config.tensorSplit === null || config.tensorSplit === undefined) &&
+    config.gpuLayers == null &&
+    config.nCpuMoe == null &&
+    config.tensorSplit == null &&
     config.reasoningBudget === -1 &&
     config.reasoningBudgetMessage === "" &&
     !config.tensorParallel &&
     !config.disableVision &&
-    (config.nBatch === null || config.nBatch === undefined) &&
-    (config.nUbatch === null || config.nUbatch === undefined) &&
-    ((config.llamaExtraArgs === null || config.llamaExtraArgs === undefined) || config.llamaExtraArgs.length === 0) &&
+    config.nBatch == null &&
+    config.nUbatch == null &&
+    (config.llamaExtraArgs == null || config.llamaExtraArgs.length === 0) &&
     !hasUnsupportedGpuPick
   ) {
     return config;
@@ -433,7 +433,7 @@ function reconcileConfigGpuSelection(
   const supported = isDiffusion
     ? withoutUnsupportedDiffusionSettings(config, context.indexKind ?? null)
     : config;
-  if ((supported.selectedGpuIds === null || supported.selectedGpuIds === undefined)) {
+  if (supported.selectedGpuIds == null) {
     return supported;
   }
   const reconciled = reconcileGpuSelection(
@@ -595,10 +595,10 @@ function GgufContextLengthSetting({
             Drag all the way left for Auto, which picks a context that
             fits while keeping GPU speed. Custom values request an exact
             context; higher ones use more memory.
-            {isAuto && (activeLoadedContext !== null && activeLoadedContext !== undefined)
+            {isAuto && activeLoadedContext != null
               ? ` Auto currently selected ${activeLoadedContext.toLocaleString()} tokens.`
               : ""}
-            {(nativeContextLength !== null && nativeContextLength !== undefined)
+            {nativeContextLength != null
               ? ` This model's native context is ${nativeContextLength.toLocaleString()} tokens.`
               : ""}
           </InfoHint>
@@ -619,7 +619,7 @@ function GgufContextLengthSetting({
       </div>
       {/* Grouped so the warning sits 4px under the slider, as advice does elsewhere. */}
       <div className="space-y-1">
-        {(nativeContextLength !== null && nativeContextLength !== undefined) ? (
+        {nativeContextLength != null ? (
           <div className="space-y-1">
             <Slider
               min={0}
@@ -630,7 +630,7 @@ function GgufContextLengthSetting({
               thumbValueText={(v) =>
                 v !== 0
                   ? `${v.toLocaleString()} tokens`
-                  : (activeLoadedContext !== null && activeLoadedContext !== undefined)
+                  : activeLoadedContext != null
                     ? `Auto, currently ${autoValue.toLocaleString()} tokens`
                     : "Auto"
               }
@@ -928,7 +928,7 @@ function GpuMemorySettings({
   // At Auto, llama.cpp --fit owns the layout, so MoE-offload does not apply.
   const autoLayers = isManual && gpuLayers < 0;
   // llama.cpp counts the output layer as offloadable, hence +1.
-  const gpuLayersMax = (layerCount !== null && layerCount !== undefined) ? layerCount + 1 : 256;
+  const gpuLayersMax = layerCount != null ? layerCount + 1 : 256;
   const nCpuMoe = config.nCpuMoe ?? 0;
   const moeLayersMax = moeLayerCount ?? 0;
   const showMoeSlider = isManual && !autoLayers && moeLayersMax > 0;
@@ -1237,10 +1237,10 @@ function MlxOffloadSettings({
   notes: Record<MlxOffloadablePart, string | null>;
 }) {
   const sliders = MLX_OFFLOAD_SLIDERS.filter(
-    ({ part, key }) => offloadable.includes(part) || (config[key] !== null && config[key] !== undefined),
+    ({ part, key }) => offloadable.includes(part) || config[key] != null,
   );
   if (sliders.length === 0) return null;
-  const isManual = sliders.some(({ key }) => (config[key] !== null && config[key] !== undefined));
+  const isManual = sliders.some(({ key }) => config[key] != null);
   const shownNotes = sliders.map(({ part }) => notes[part]).filter(Boolean);
   return (
     <>
@@ -1863,14 +1863,14 @@ function GgufAdvancedSettings({
   const llamaBackend = useLlamaCppBackend();
   // llama-server asserts batch >= 2 and >= slot count, so the loader raises it to max(slots, 2).
   const batchFloor = Math.max(2, config.nParallel ?? 2);
-  const batchBelowFloor = (config.nBatch !== null && config.nBatch !== undefined) && config.nBatch < batchFloor;
+  const batchBelowFloor = config.nBatch != null && config.nBatch < batchFloor;
   // llama.cpp runs at min(batch, ubatch) while /status echoes the request; judged on the emitted batch.
   const effectiveBatch =
-    (config.nBatch !== null && config.nBatch !== undefined)
+    config.nBatch != null
       ? Math.max(config.nBatch, batchFloor)
       : N_BATCH_LLAMA_DEFAULT;
   const ubatchExceedsBatch =
-    (config.nUbatch !== null && config.nUbatch !== undefined) && config.nUbatch > effectiveBatch;
+    config.nUbatch != null && config.nUbatch > effectiveBatch;
   return (
     <>
       <AdvancedGroup title="Memory">
@@ -2105,7 +2105,7 @@ function GgufAdvancedSettings({
           {batchBelowFloor && (
             <p id={batchAdviceId} className="text-ui-11 text-muted-foreground">
               Too small for llama-server, so the load will raise it to {batchFloor}.
-              {(config.nParallel !== null && config.nParallel !== undefined) && config.nParallel > 2
+              {config.nParallel != null && config.nParallel > 2
                 ? " It needs one output slot per parallel slot."
                 : " It cannot run a batch below 2."}
             </p>
@@ -2402,7 +2402,7 @@ function ExtraArgsRow({
   }, []);
 
   const diagnostics = diagnoseExtraArgs(text, catalog, {
-    gpuSelectionActive: (config.selectedGpuIds !== null && config.selectedGpuIds !== undefined),
+    gpuSelectionActive: config.selectedGpuIds != null,
     manualGpuMemory: config.gpuMemoryMode === "manual",
     // Only manual mode with layers >= 0 rewrites --tensor-split; at Auto the launcher drops it.
     gpuLayers: config.gpuLayers,
@@ -2553,7 +2553,7 @@ export function ModelConfigPage({
   const loadedMlxKvQuantRequested = useChatRuntimeStore(
     (s) => s.loadedMlxKvQuantRequested,
   );
-  const isActiveModel = (loadedConfig !== null && loadedConfig !== undefined);
+  const isActiveModel = loadedConfig != null;
   const sharedVariantUnresolved = isRunConfigVariantUnresolved(target);
   const hfToken = useChatRuntimeStore((s) => s.hfToken);
   const activeNativePathToken = useChatRuntimeStore(
@@ -2733,16 +2733,16 @@ export function ModelConfigPage({
     () => configState.mlxAnePrefill ?? false,
   );
   const [initialMlxOffload] = useState(
-    () => (configState.mlxPleOffload !== null && configState.mlxPleOffload !== undefined) || (configState.mlxExpertOffload !== null && configState.mlxExpertOffload !== undefined),
+    () => configState.mlxPleOffload != null || configState.mlxExpertOffload != null,
   );
   // Applicability stays live, unlike the snapshot above: MLX can become available after mount,
   // and a width that starts applying then has to surface.
-  const autoOpenForMlxKvQuant = servedByMlx && (initialMlxKvQuant !== null && initialMlxKvQuant !== undefined);
+  const autoOpenForMlxKvQuant = servedByMlx && initialMlxKvQuant != null;
   const autoOpenForMlxInt8Prefill = servedByMlx && initialMlxInt8Prefill;
   const autoOpenForMlxAnePrefill = servedByMlx && initialMlxAnePrefill;
   const autoOpenForMlxOffload = servedByMlx && initialMlxOffload;
   // Opened to change one field: show its section for this visit, leaving the saved switch alone.
-  const [revealForFocus, setRevealForFocus] = useState((focusField !== null && focusField !== undefined));
+  const [revealForFocus, setRevealForFocus] = useState(focusField != null);
   const showAdvanced =
     revealForFocus ||
     (advancedPreference ??
@@ -2773,7 +2773,7 @@ export function ModelConfigPage({
     !target.isGguf && !targetIsNpu,
   );
   const hasLoadedDefaultTemplate =
-    isActiveModel && (loadedDefaultChatTemplate !== null && loadedDefaultChatTemplate !== undefined);
+    isActiveModel && loadedDefaultChatTemplate != null;
   const resolvedDefaultTemplate = hasLoadedDefaultTemplate
     ? loadedDefaultChatTemplate
     : templateDefaults.template;
@@ -2793,7 +2793,7 @@ export function ModelConfigPage({
     diffusionUnknown?: boolean;
   } | null>(null);
   useEffect(() => {
-    if ((contextFetchKey === null || contextFetchKey === undefined)) {
+    if (contextFetchKey == null) {
       return;
     }
     let cancelled = false;
@@ -2866,7 +2866,7 @@ export function ModelConfigPage({
       return;
     }
     const args = configState.llamaExtraArgs;
-    if ((args === null || args === undefined) || args.length === 0) {
+    if (args == null || args.length === 0) {
       // Reset with Advanced collapsed must re-enable Load.
       setExtraArgsLoadable(true);
       return;
@@ -2878,7 +2878,7 @@ export function ModelConfigPage({
       }
       const loadable = extraArgsAreLoadable(
         diagnoseExtraArgs(formatExtraArgs(args), catalog, {
-          gpuSelectionActive: (configState.selectedGpuIds !== null && configState.selectedGpuIds !== undefined),
+          gpuSelectionActive: configState.selectedGpuIds != null,
           manualGpuMemory: configState.gpuMemoryMode === "manual",
           batchFloor: effectiveBatchFloor(configState.nParallel, catalog),
         }),
@@ -2967,7 +2967,7 @@ export function ModelConfigPage({
           : undefined;
         // Handing back a refused list would re-enable Load.
         let sanitizedLocal = localAtStart;
-        if ((local !== null && local !== undefined) && local.length > 0 && local === localAtStart) {
+        if (local != null && local.length > 0 && local === localAtStart) {
           const cleaned = sanitizeStoredExtraArgs(
             local,
             managed?.managed ?? new Set<string>(),
@@ -3147,12 +3147,12 @@ export function ModelConfigPage({
     [],
   );
   const stagedMetadataPending =
-    (contextFetchKey !== null && contextFetchKey !== undefined) &&
-    (stagedDims === null || stagedDims === undefined) &&
+    contextFetchKey != null &&
+    stagedDims == null &&
     (config.gpuMemoryMode === "manual" ||
-      (config.selectedGpuIds !== null && config.selectedGpuIds !== undefined) ||
-      (config.nBatch !== null && config.nBatch !== undefined) ||
-      (config.nUbatch !== null && config.nUbatch !== undefined));
+      config.selectedGpuIds != null ||
+      config.nBatch != null ||
+      config.nUbatch != null);
   const gpuIndexKind =
     pinnableGpuContext(gpuDevices, resolvedIsDiffusion).indexKind ?? null;
   const handleSharedConfigEdit = () => {
@@ -3170,11 +3170,11 @@ export function ModelConfigPage({
   };
 
   const showDraftTokens =
-    (config.speculativeType !== null && config.speculativeType !== undefined) &&
+    config.speculativeType != null &&
     DRAFT_N_MAX_SPEC_TYPES.has(config.speculativeType);
   // Only sidecar modes always load a second context; MTP may use heads in the target GGUF.
   const showSpecDraftCacheDtype =
-    (config.speculativeType !== null && config.speculativeType !== undefined) &&
+    config.speculativeType != null &&
     SEPARATE_DRAFT_MODEL_SPEC_TYPES.has(config.speculativeType);
   const nativeContextLength =
     target.meta.contextLength ?? stagedDims?.contextLength ?? null;
@@ -3201,7 +3201,7 @@ export function ModelConfigPage({
     ),
     maxContext,
   );
-  const contextIsAuto = (config.customContextLength === null || config.customContextLength === undefined);
+  const contextIsAuto = config.customContextLength == null;
   const rawBaseline = loadedConfig ?? DEFAULT_PER_MODEL_CONFIG;
   const baseline = resolvedIsDiffusion
     ? withoutUnsupportedDiffusionSettings(rawBaseline, gpuIndexKind)
@@ -3213,8 +3213,7 @@ export function ModelConfigPage({
   });
   // The fitted value is an outcome, not an override.
   const contextAtDefault = !target.isGguf
-    ? savedContextPin(config) === null || savedContextPin(config) === undefined
-    : (config.customContextLength === null || config.customContextLength === undefined);
+    ?savedContextPin(config) == null: config.customContextLength == null;
   const atDefault =
     contextAtDefault &&
     perModelConfigsEqual(
@@ -3237,7 +3236,7 @@ export function ModelConfigPage({
     : null;
   // The backend clamps auto-sized windows to the request ceiling.
   const mlxProspectiveWindow =
-    (mlxNativeWindow === null || mlxNativeWindow === undefined)
+    mlxNativeWindow == null
       ? null
       : Math.min(mlxNativeWindow, MAX_SEQ_LENGTH_MAX);
   // Pin the shown fitted context when layers are fixed, or a fresh load recreates the OOM.
@@ -3254,10 +3253,10 @@ export function ModelConfigPage({
   const pinFixedLayerContext =
     target.isGguf &&
     loadableConfig.gpuMemoryMode === "manual" &&
-    (loadableConfig.gpuLayers !== null && loadableConfig.gpuLayers !== undefined) &&
+    loadableConfig.gpuLayers != null &&
     loadableConfig.gpuLayers >= 0 &&
-    (loadableConfig.customContextLength === null || loadableConfig.customContextLength === undefined) &&
-    (activeLoadedContext !== null && activeLoadedContext !== undefined);
+    loadableConfig.customContextLength == null &&
+    activeLoadedContext != null;
   const runtimeConfig = target.isGguf
     ? pinFixedLayerContext
       ? { ...loadableConfig, customContextLength: activeLoadedContext }
@@ -3313,7 +3312,7 @@ export function ModelConfigPage({
           disableVision: runtimeConfig.disableVision,
           gpuMemoryMode: runtimeGpuMemoryMode,
           gpuLayers:
-            (runtimeConfig.gpuLayers !== null && runtimeConfig.gpuLayers !== undefined) &&
+            runtimeConfig.gpuLayers != null &&
             runtimeConfig.gpuLayers !== GPU_LAYERS_AUTO
               ? runtimeConfig.gpuLayers
               : null,
@@ -3400,7 +3399,7 @@ export function ModelConfigPage({
       devices: gpuDevices,
       gpuPlacementKnown:
         residentEstimateRequest?.gpuMemoryMode === "manual" &&
-        (residentEstimateRequest.gpuLayers !== null && residentEstimateRequest.gpuLayers !== undefined) &&
+        residentEstimateRequest.gpuLayers != null &&
         residentEstimateRequest.gpuLayers >= 0 &&
         !loadedLlamaExtraArgs?.length,
       appleUnifiedMemory: isAppleUnifiedMemory,
@@ -3564,7 +3563,7 @@ export function ModelConfigPage({
       : undefined;
   };
   const inferOnce =
-    pinnedEntry !== null && pickedSet === undefined && (loadedConfig !== null && loadedConfig !== undefined) && atBaseline;
+    pinnedEntry !== null && pickedSet === undefined && loadedConfig != null && atBaseline;
   // Record first, null (Default) included: a set holding the pin's values still names itself.
   const notedOnce = inferOnce ? loadedOnceNamed(loadedConfig) : undefined;
   const loadedOnce =
@@ -3646,23 +3645,23 @@ export function ModelConfigPage({
       : undefined;
 
     const pendingPatch: Partial<PerModelConfig> = {};
-    if ((committedContext !== null && committedContext !== undefined)) {
+    if (committedContext != null) {
       pendingPatch.customContextLength = committedContext;
     }
-    if ((committedMaxSeqLength !== null && committedMaxSeqLength !== undefined)) {
+    if (committedMaxSeqLength != null) {
       Object.assign(pendingPatch, contextPinPatch(committedMaxSeqLength, pinsContextLength));
     }
-    if ((committedGpuLayers !== null && committedGpuLayers !== undefined)) {
+    if (committedGpuLayers != null) {
       pendingPatch.gpuLayers = committedGpuLayers;
     }
-    if ((committedMoeLayers !== null && committedMoeLayers !== undefined)) {
+    if (committedMoeLayers != null) {
       pendingPatch.nCpuMoe = committedMoeLayers;
     }
     const hasPending =
-      (committedContext !== null && committedContext !== undefined) ||
-      (committedMaxSeqLength !== null && committedMaxSeqLength !== undefined) ||
-      (committedGpuLayers !== null && committedGpuLayers !== undefined) ||
-      (committedMoeLayers !== null && committedMoeLayers !== undefined);
+      committedContext != null ||
+      committedMaxSeqLength != null ||
+      committedGpuLayers != null ||
+      committedMoeLayers != null;
 
     // The peer's focused input commits into the shared draft during this click.
     const liveDraftConfig = readModelConfigDraft(draftKey)?.config;
@@ -3685,17 +3684,17 @@ export function ModelConfigPage({
     const effectivePinFixedLayerContext =
       target.isGguf &&
       effectiveConfig.gpuMemoryMode === "manual" &&
-      (effectiveConfig.gpuLayers !== null && effectiveConfig.gpuLayers !== undefined) &&
+      effectiveConfig.gpuLayers != null &&
       effectiveConfig.gpuLayers >= 0 &&
-      (effectiveConfig.customContextLength === null || effectiveConfig.customContextLength === undefined) &&
-      (activeLoadedContext !== null && activeLoadedContext !== undefined);
+      effectiveConfig.customContextLength == null &&
+      activeLoadedContext != null;
     const effectiveRuntimeConfig = (hasPending || peerChanged)
       ? effectivePinFixedLayerContext
         ? { ...effectiveConfig, customContextLength: activeLoadedContext }
         : effectiveConfig
       : runtimeConfig;
     const effectiveMaxSeqLengthValue =
-      (committedMaxSeqLength === null || committedMaxSeqLength === undefined) && !peerChanged
+      committedMaxSeqLength == null && !peerChanged
         ? maxSeqLengthValue
         : (normalizeMaxSeqLength(effectiveConfig.maxSeqLength) ??
           clampMaxSeqLength(DEFAULT_MAX_SEQ_LENGTH, nativeMaxSeqLength));
@@ -4166,7 +4165,7 @@ export function ModelConfigPage({
             once it is loaded.
           </p>
         ) : null}
-        {(memoryEstimateRequest !== null && memoryEstimateRequest !== undefined) && !audioRuntimeGguf && (
+        {memoryEstimateRequest != null && !audioRuntimeGguf && (
           <MemoryEstimateRow
             estimate={memoryEstimate.estimate}
             loading={memoryEstimate.loading}
@@ -4213,7 +4212,7 @@ export function ModelConfigPage({
               onChange={(v) => { update({ customContextLength: v === 0 ? null : v }); }}
               renderWarning={(v) =>
                 isActiveModel &&
-                (loadedMaxContextLength !== null && loadedMaxContextLength !== undefined) &&
+                loadedMaxContextLength != null &&
                 v > loadedMaxContextLength && (
                   <p className="text-ui-11 text-amber-500">
                     {isAppleUnifiedMemory ? (
@@ -4276,13 +4275,13 @@ export function ModelConfigPage({
               fittedToMemory={
                 (savedContextPin(config) === null ||
                   savedContextPin(config) === undefined) &&
-                (mlxFittedWindow !== null && mlxFittedWindow !== undefined)
+                mlxFittedWindow != null
               }
               windowUnknown={
                 (savedContextPin(config) === null ||
                   savedContextPin(config) === undefined) &&
-                (mlxServedWindow === null || mlxServedWindow === undefined) &&
-                (npuServedWindow === null || npuServedWindow === undefined)
+                mlxServedWindow == null &&
+                npuServedWindow == null
               }
               hint={
                 targetIsNpu

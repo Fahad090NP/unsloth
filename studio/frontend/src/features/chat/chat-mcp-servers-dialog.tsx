@@ -469,7 +469,9 @@ export function ChatMcpServersDialog({
       return;
     }
     const unsubscribe = subscribeToMcpServerMutationSettlements((epoch) => {
-      void refresh(false, epoch);
+      refresh(false, epoch).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
     });
     return () => {
       unsubscribe();
@@ -495,7 +497,9 @@ export function ChatMcpServersDialog({
       setTogglingIds(new Set(togglingIdsRef.current));
       setBusyIds(new Set(busyIdsRef.current));
       if (!open) return;
-      void refresh();
+      refresh().catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
       // Reset to the list on each open, else a stale create/edit view persists.
       setView({ kind: "list" });
       setForm(EMPTY_FORM);

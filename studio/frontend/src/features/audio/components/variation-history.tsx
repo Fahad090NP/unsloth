@@ -19,7 +19,7 @@ export function VariationGroupRow({
   selected: boolean;
   onToggle: () => void;
 }) {
-  const first = clips[0];
+  const first = clips.at(0);
   if (!first) return null;
   return (
     <button

@@ -72,7 +72,7 @@ async function fetchOpenAIAutoSwitchSettings(): Promise<OpenAIAutoSwitchSettings
       await readFastApiError(res, "Failed to load model auto-switch settings"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 // A response in flight across an invalidation must not refill the cache.
@@ -185,7 +185,7 @@ export async function updateOpenAIAutoSwitchSettings(
       ),
     );
   }
-  const settings = fromApi(await res.json());
+  const settings = fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
   if (generation !== cacheGeneration) {
     // A Model Memory write landed mid-PUT; caching this reply would pin a stale idleUnloadActive.
     return await loadOpenAIAutoSwitchSettings();

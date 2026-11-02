@@ -227,7 +227,9 @@ export function buildToolProfilePayload(
       // biome-ignore lint/style/useNamingConvention: api schema
       tool_alias: config.name,
       providers: mcpProviders
-        .map((provider) => String(provider.name ?? "").trim())
+        .map((provider) =>
+          (typeof provider.name === "string" ? provider.name : "").trim(),
+        )
         .filter(Boolean),
       // biome-ignore lint/style/useNamingConvention: api schema
       allow_tools: config.allow_tools,

@@ -31,8 +31,9 @@ export function playWithMutedFallback(video: Pick<HTMLMediaElement, "play" | "mu
   return video.play().catch((error: unknown) => {
     // An AbortError is a newer load or pause taking over, not a refusal.
     if (video.muted || (error as { name?: unknown } | null)?.name !== "NotAllowedError") return;
-    video.muted = true;
-    return video.play().catch(() => undefined);
+    const player = video;
+    player.muted = true;
+    return player.play().catch(() => undefined);
   });
 }
 

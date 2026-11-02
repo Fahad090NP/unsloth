@@ -139,7 +139,9 @@ export function SkillsComposerButton({
                   disabled={pending.has(skill.name)}
                   onSelect={(event) => {
                     event.preventDefault();
-                    void toggle(skill.name, !skill.enabled);
+                    toggle(skill.name, !skill.enabled).catch((error: unknown) => {
+                      console.error("Background chat operation failed", error);
+                    });
                   }}
                   aria-label={t(skill.enabled ? "skills.disable" : "skills.enable", {
                     name: skill.name,

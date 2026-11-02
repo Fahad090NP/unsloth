@@ -62,7 +62,7 @@ export function SiteFavicon({
     const observer = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
       observer.disconnect();
-      void (async () => {
+      (async () => {
         for (const candidate of list) {
           const loaded = await proxiedFavicon(candidate);
           if (!live) return;
@@ -71,7 +71,7 @@ export function SiteFavicon({
             return;
           }
         }
-      })();
+      })().catch(() => undefined);
     });
     observer.observe(node);
     return () => {

@@ -104,7 +104,9 @@ export function ChatBackgroundControls() {
 							variant="ghost"
 							size="sm"
 							disabled={busy}
-							onClick={() => void resetChatBackground()}
+							onClick={() => {
+							resetChatBackground().catch(() => undefined);
+						}}
 						>
 							<HugeiconsIcon
 								icon={Cancel01Icon}
@@ -145,9 +147,11 @@ export function ChatBackgroundControls() {
 				type="file"
 				accept="image/jpeg,image/png,image/webp"
 				disabled={!ready || busy}
-				onChange={async (event) => {
+				onChange={(event) => {
 					const file = event.target.files?.[0];
-					event.target.value = "";
+					const target = event.target;
+					target.value = "";
+					(async () => {
 					if (!file) return;
 					const ticket = beginBackgroundUpload();
 					if (!validUpload(file)) {
@@ -182,6 +186,7 @@ export function ChatBackgroundControls() {
 								: "decode",
 						);
 					}
+					})().catch(() => undefined);
 				}}
 			/>
 			{error && (
@@ -255,7 +260,7 @@ export function ChatBackgroundControls() {
 					</SettingsRow>
 					<SettingsRow label={t("chatBackground.effect")} className="items-start">
 						<Select
-							disabled={!value || busy}
+							disabled={busy}
 							value={adjustments.effect}
 							onValueChange={(effect) =>
 								{ patchBackground({ effect: effect as BackgroundEffect }); }
@@ -281,7 +286,7 @@ export function ChatBackgroundControls() {
 							<PopoverTrigger asChild={true}>
 								<Button
 									variant="picker"
-									disabled={!value || busy}
+									disabled={busy}
 									aria-label={t("chatBackground.sizingPosition")}
 									className="w-52 justify-between font-normal"
 								>
@@ -325,7 +330,9 @@ export function ChatBackgroundControls() {
 											aria-label={t("chatBackground.position")}
 										>
 											{POSITIONS.map((position) => {
-												const [x, y] = parsePosition(position)!;
+												const parsedPosition = parsePosition(position);
+											if (!parsedPosition) return null;
+											const [x, y] = parsedPosition;
 												return (
 													<button
 														key={position}
@@ -368,7 +375,7 @@ export function ChatBackgroundControls() {
 						<SettingsRow key={key} className="items-start" label={t(label)}>
 							<div className="flex w-52 items-center gap-3">
 								<Slider
-									disabled={!value || busy}
+									disabled={busy}
 									aria-label={t(label)}
 									min={min}
 									max={max}
@@ -387,7 +394,7 @@ export function ChatBackgroundControls() {
 						<Switch
 							aria-label={t("chatBackground.fade")}
 							checked={adjustments.fade}
-							disabled={!value || busy}
+							disabled={busy}
 							onCheckedChange={(fade) => { patchBackground({ fade }); }}
 						/>
 					</SettingsRow>

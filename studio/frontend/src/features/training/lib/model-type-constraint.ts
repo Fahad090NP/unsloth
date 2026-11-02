@@ -27,7 +27,5 @@ export function trainingModelMatchesTypeConstraint(
         capabilities.isAudio ||
         capabilities.isVision
       );
-    default:
-      return false;
   }
 }

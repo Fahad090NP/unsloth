@@ -58,7 +58,8 @@ export function ConfigActions() {
 
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    event.target.value = "";
+    const target = event.target;
+    target.value = "";
     if (!file) {
       return;
     }

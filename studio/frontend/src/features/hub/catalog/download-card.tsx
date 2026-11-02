@@ -265,7 +265,7 @@ export function DownloadActionButton({
       ) : downloading ? (
         <>
           <DownloadStopIndicator mode={stopMode} />
-          {(progressPercent !== null && progressPercent !== undefined) ? `${progressPercent}%` : null}
+          {progressPercent != null ? `${progressPercent}%` : null}
         </>
       ) : loading ? (
         <>

@@ -115,9 +115,7 @@ function nextPickerNavigationTarget(
     return (
       container.querySelector<HTMLInputElement>(
         '[data-picker-search="true"]',
-      ) ??
-      options[0] ??
-      undefined
+      ) ?? options.at(0)
     );
   }
   if (options.length === 0) {
@@ -246,8 +244,9 @@ export function PickerShell({
     setQueryStatus("");
     onTabChange(nextTab);
     window.requestAnimationFrame(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = 0;
+      const scroller = scrollRef.current;
+      if (scroller) {
+        scroller.scrollTop = 0;
       }
     });
   }

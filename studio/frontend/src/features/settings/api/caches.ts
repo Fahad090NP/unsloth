@@ -176,7 +176,7 @@ export async function loadCacheInventory(
       await readFastApiError(response, "Failed to measure the caches"),
     );
   }
-  return inventoryFromApi(await response.json());
+  return inventoryFromApi((await response.json()) as Parameters<typeof inventoryFromApi>[0]);
 }
 
 export interface CacheBreakdownEntry {
@@ -234,7 +234,7 @@ export async function purgeCaches(
       await readFastApiError(response, "Failed to clear the caches"),
     );
   }
-  return purgeOutcomeFromApi(await response.json());
+  return purgeOutcomeFromApi((await response.json()) as Parameters<typeof purgeOutcomeFromApi>[0]);
 }
 
 /** Present, allowed and free to rebuild; counted by entries since empty dirs measure zero. */

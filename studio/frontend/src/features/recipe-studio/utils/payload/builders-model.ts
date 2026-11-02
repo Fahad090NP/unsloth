@@ -65,7 +65,8 @@ function assignFiniteNumber(
 
   const parsed = Number(trimmed);
   if (Number.isFinite(parsed)) {
-    target[key] = transform(parsed);
+    const destination = target;
+    destination[key] = transform(parsed);
   }
 }
 

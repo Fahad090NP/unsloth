@@ -79,10 +79,18 @@ export function useLibraryStorage(): LibraryStorage {
   useEffect(() => {
     let cancelled = false;
     getLibrary().then(
-      ({ items, disk, unlistedBytes }) =>
-        !cancelled &&
-        setSnapshot({ status: "ready", items, disk: disk ?? null, unlisted: unlistedBytes ?? {} }),
-      () => !cancelled && setSnapshot((current) => ({ ...current, status: "error" })),
+      ({ items, disk, unlistedBytes }) => {
+        if (!cancelled)
+          setSnapshot({
+            status: "ready",
+            items,
+            disk: disk ?? null,
+            unlisted: unlistedBytes ?? {},
+          });
+      },
+      () => {
+        if (!cancelled) setSnapshot((current) => ({ ...current, status: "error" }));
+      },
     );
     return () => {
       cancelled = true;

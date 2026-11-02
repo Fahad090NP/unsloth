@@ -165,7 +165,7 @@ function NpuCatalogRow({
         </>
       ) : (
         <Button size="sm" variant="outline" onClick={onDownload}>
-          {(model.resume_percent === null || model.resume_percent === undefined) ? "Download" : "Resume"}
+          {model.resume_percent == null ? "Download" : "Resume"}
         </Button>
       )}
     </div>

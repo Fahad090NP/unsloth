@@ -45,7 +45,14 @@ export function DiagnosticsCopyActions({
         <Button
           variant="muted"
           size="hero"
-          onClick={() => void handleCopyDiagnostics()}
+          onClick={() => {
+            handleCopyDiagnostics().catch((error: unknown) => {
+              setManualReport(null);
+              setManualMessage(
+                t("desktopStartup.diagnostics.copyFailed", { error: String(error) }),
+              );
+            });
+          }}
         >
           {copying ? t("desktopStartup.diagnostics.copying") : t("desktopStartup.diagnostics.copy")}
         </Button>

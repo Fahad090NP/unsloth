@@ -147,7 +147,7 @@ export function useStemTransport({
     () => () => {
       const context = contextRef.current;
       contextRef.current = null;
-      void context?.close().catch(() => { /* noop */ });
+      context?.close().catch(() => { /* noop */ }).catch(() => undefined);
     },
     [],
   );
@@ -214,7 +214,7 @@ export function useStemTransport({
     if (!playingRef.current) return;
     const current = voicesRef.current[0].element.currentTime;
     stopAll();
-    if (current !== undefined && Number.isFinite(current))
+    if (current != null && Number.isFinite(current))
       updatePosition(current);
   }, [stopAll, updatePosition]);
 

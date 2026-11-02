@@ -556,7 +556,7 @@ export function InferenceEnginePicker({
               <span>{t("managedEngines.gpuMemory")}</span>
               <Select
                 value={
-                  (gpuMemoryUtilization === null || gpuMemoryUtilization === undefined)
+                  gpuMemoryUtilization == null
                     ? "auto"
                     : String(gpuMemoryUtilization)
                 }
@@ -580,7 +580,7 @@ export function InferenceEnginePicker({
                   {[
                     ...new Set([
                       ...GPU_MEMORY_LIMITS,
-                      ...((gpuMemoryUtilization === null || gpuMemoryUtilization === undefined)
+                      ...(gpuMemoryUtilization == null
                         ? []
                         : [gpuMemoryUtilization]),
                     ]),

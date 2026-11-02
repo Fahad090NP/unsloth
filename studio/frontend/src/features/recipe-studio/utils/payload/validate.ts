@@ -36,7 +36,7 @@ export function validateSubcategoryConfigs(
         : [];
     const mapping = config.subcategory_mapping ?? {};
     for (const value of parentValues) {
-      const list = mapping[value];
+      const list: (typeof mapping)[string] | undefined = mapping[value];
       if (!list || list.length === 0) {
         errors.push(
           `Subcategory ${config.name}: '${value}' needs at least 1 subcategory.`,

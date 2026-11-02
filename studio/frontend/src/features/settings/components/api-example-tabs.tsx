@@ -4,7 +4,7 @@
 import { useIsAccountOwner } from "@/features/auth";
 import { type TranslationKey, useT } from "@/i18n";
 // Not through the barrel: it pulls in chat, which every barrel importer would then load.
-import { RAISED_SURFACE } from "@/features/library/surface";
+import { RAISED_SURFACE } from "@/features/library";
 import {
   AiSpeechIcon,
   MessageCircleIcon,
@@ -19,7 +19,6 @@ import {
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import {
   type ReactElement,
-  type ReactNode,
   useEffect,
   useRef,
   useState,

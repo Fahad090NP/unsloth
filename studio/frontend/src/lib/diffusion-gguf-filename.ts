@@ -21,7 +21,7 @@ export async function resolveDiffusionGgufFilename(
       localPath: options?.localPath ?? null,
     });
     return pickGgufFilename(
-      Array.isArray(res?.variants) ? res.variants : [],
+      Array.isArray(res.variants) ? res.variants : [],
       quant,
     );
   } catch {

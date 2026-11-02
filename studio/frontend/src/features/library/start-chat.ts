@@ -92,7 +92,7 @@ export async function chatAboutMedia(
     if (!response.ok) throw new Error(translate(media.readFailed, { status: response.status }));
     // Before reading the body, so an oversized file is never buffered.
     if (Number(response.headers.get("content-length")) > media.bytes) {
-      void response.body?.cancel();
+      response.body?.cancel().catch(() => undefined);
       tooLarge();
       return;
     }
@@ -113,7 +113,7 @@ export async function chatAboutMedia(
     });
   } finally {
     clearTimeout(loadingTimer);
-    if (loadingToast !== null) toast.dismiss(loadingToast);
+    if (loadingToast != null) toast.dismiss(loadingToast);
     handoffInFlight = false;
   }
 }

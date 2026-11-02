@@ -144,7 +144,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => {
           stale = true;
           return;
         }
-        if (edits !== editsBefore) return get().refresh();
+        if (edits !== editsBefore) return await get().refresh();
         const favorites = useLibraryFavoritesStore.getState().adopt(
           favoritesStart,
           new Set(items.filter((item) => item.favorite).map((item) => item.id)),
@@ -211,7 +211,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => {
           // Another account's chats can hold an attachment of this id.
           if (getAuthSessionEpoch() !== epoch) return;
           const [kind, messageId, ...rest] = id.split(":");
-          const gallery = GALLERIES[kind];
+          const gallery = GALLERIES[kind] as GalleryKind | undefined;
           if (gallery) notifyGalleryChanged(gallery);
           if (kind === "attachment" && messageId && rest.length > 0) {
             emitChatAttachmentDeleted({
@@ -228,7 +228,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => {
       set((state) => ({
         items: state.items.map((item) => (item.id === id ? { ...item, openedAt } : item)),
       }));
-      void markLibraryItemOpened(id).catch(() => undefined);
+      markLibraryItemOpened(id).catch(() => undefined).catch(() => undefined);
     },
     upload: async (batch, folderId) => {
       try {

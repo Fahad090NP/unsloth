@@ -3,7 +3,7 @@
 
 import { useHfEndpoint } from "@/lib/hf-endpoint";
 import { revealCachedModel } from "@/features/chat";
-import { useRevealLabel } from "@/features/library/reveal";
+import { useRevealLabel } from "@/features/library";
 import { toast } from "@/lib/toast";
 import { ModelMemoryBarFor } from "@/components/model-memory-bar";
 import {
@@ -262,7 +262,7 @@ export function LocalOnDeviceCard({
     null,
   );
   const updateTransportConflict = useDownloadManagerStore((state) =>
-    updateConflictKey ? (state.conflicts[updateConflictKey]?.info ?? null) : null,
+    updateConflictKey ? (state.conflicts[updateConflictKey].info ?? null) : null,
   );
   const cancelUpdateConflict = useCallback(() => {
     if (updateConflictKey) downloadManager.cancelConflict(updateConflictKey);

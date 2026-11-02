@@ -97,10 +97,6 @@ function wasContinuedInVisibleRuns(
     (other) =>
       other.id !== run.id &&
       other.output_dir === run.output_dir &&
-      (other.status === "stopped" ||
-        other.status === "completed" ||
-        other.status === "error" ||
-        other.status === "running") &&
       new Date(other.started_at).getTime() > startedAt,
   );
 }
@@ -117,14 +113,14 @@ function sharesOutputDirInVisibleRuns(
 
 function catmullRomPath(points: { x: number; y: number }[]): string {
   if (points.length < 2) return "";
-  const firstPoint = points[0];
+  const firstPoint = points.at(0);
   if (!firstPoint) return "";
   const d = [`M${firstPoint.x.toFixed(1)},${firstPoint.y.toFixed(1)}`];
   for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[Math.max(i - 1, 0)];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[Math.min(i + 2, points.length - 1)];
+    const p0 = points.at(Math.max(i - 1, 0));
+    const p1 = points.at(i);
+    const p2 = points.at(i + 1);
+    const p3 = points.at(Math.min(i + 2, points.length - 1));
     if (!p0 || !p1 || !p2 || !p3) break;
     const cp1x = p1.x + (p2.x - p0.x) / 6;
     const cp1y = p1.y + (p2.y - p0.y) / 6;
@@ -146,13 +142,13 @@ function Sparkline({
   id: string;
   ariaLabel: string;
 }): ReactElement | null {
-  if (!values || values.length < 2) return null;
-  const firstValue = values[0];
+  if (values.length < 2) return null;
+  const firstValue = values.at(0);
   if (firstValue === undefined) return null;
   let min = firstValue;
   let max = firstValue;
   for (let i = 1; i < values.length; i++) {
-    const value = values[i];
+    const value = values.at(i);
     if (value === undefined) continue;
     if (value < min) min = value;
     if (value > max) max = value;
@@ -170,7 +166,7 @@ function Sparkline({
 
   const linePath = catmullRomPath(pts);
   const last = pts.at(-1);
-  const first = pts[0];
+  const first = pts.at(0);
   if (!last || !first) return null;
   const fillPath = `${linePath} L${last.x.toFixed(1)},${h} L${first.x.toFixed(1)},${h} Z`;
 
@@ -298,7 +294,7 @@ export function HistoryCardGrid({
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void fetchRuns(0);
+      fetchRuns(0).catch(() => undefined);
     }, 0);
     return () => {
       window.clearTimeout(timer);
@@ -318,7 +314,7 @@ export function HistoryCardGrid({
     });
     const offChanged = onTrainingRunsChanged(() => {
       const limit = Math.max(PAGE_SIZE, runsLengthRef.current);
-      void fetchRuns(0, false, limit);
+      fetchRuns(0, false, limit).catch(() => undefined);
     });
     return () => {
       offUpdated();
@@ -331,7 +327,8 @@ export function HistoryCardGrid({
   const visibleCount = runs.length;
   useEffect(() => {
     if (!hasRunningRun) return;
-    const timer = setInterval(async () => {
+    const timer = setInterval(() => {
+      (async () => {
       if (manualFetchInFlight) return;
       pollControllerRef.current?.abort();
       const controller = new AbortController();
@@ -346,6 +343,7 @@ export function HistoryCardGrid({
       } catch {
         // ignore; poll will retry
       }
+      })().catch(() => undefined);
     }, RUNNING_POLL_INTERVAL_MS);
     return () => {
       clearInterval(timer);
@@ -415,7 +413,7 @@ export function HistoryCardGrid({
         aria-label={t("studio.history.title")}
       >
         <p className="text-sm text-destructive">{error}</p>
-        <Button variant="outline" size="sm" onClick={() => void fetchRuns(0)}>
+        <Button variant="outline" size="sm" onClick={() => fetchRuns(0).catch(() => undefined)}>
           {t("studio.history.retry")}
         </Button>
       </div>
@@ -586,7 +584,7 @@ export function HistoryCardGrid({
                   variant="outline"
                   className="absolute bottom-3 left-4 z-10 h-6 rounded-full px-2.5 text-ui-11 leading-none shadow-sm"
                   disabled={startBlocked || isResuming}
-                  onClick={() => void handleResume(run.id)}
+                  onClick={() => handleResume(run.id).catch(() => undefined)}
                 >
                   {stopRequested
                     ? t("studio.training.stopping")
@@ -601,8 +599,9 @@ export function HistoryCardGrid({
                   size="xs"
                   variant="outline"
                   className="absolute bottom-3 right-4 z-10 h-6 rounded-full px-2.5 text-ui-11 leading-none shadow-sm"
-                  onClick={async (e) => {
+                  onClick={(e) => {
                     e.stopPropagation();
+                    (async () => {
                     try {
                       await fetchDeviceType({ force: true });
                     } catch {
@@ -629,6 +628,7 @@ export function HistoryCardGrid({
                           : "studio.history.previewLinkCopyFailed",
                       ),
                     );
+                    })().catch(() => undefined);
                   }}
                 >
                   {t("studio.history.copyPreviewLink")}
@@ -653,7 +653,7 @@ export function HistoryCardGrid({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => void fetchRuns(runs.length, true)}
+            onClick={() => fetchRuns(runs.length, true).catch(() => undefined)}
             disabled={loading}
           >
             {loading
@@ -725,7 +725,7 @@ export function HistoryCardGrid({
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => void handleDelete()}
+              onClick={() => handleDelete().catch(() => undefined)}
             >
               {t("common.delete")}
             </AlertDialogAction>

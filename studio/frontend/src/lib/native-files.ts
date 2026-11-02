@@ -145,13 +145,13 @@ export async function downloadBlobStreaming(
           .slice(offset, offset + NATIVE_FILE_CHUNK_BYTES)
           .arrayBuffer(),
       );
-      await invoke<void>("append_native_file_save_chunk", bytes, {
+      await invoke("append_native_file_save_chunk", bytes, {
         headers: { [NATIVE_FILE_SAVE_TOKEN_HEADER]: token },
       });
     }
     return await invoke<string>("finish_native_file_save", { token });
   } catch (error) {
-    await invoke<void>("cancel_native_file_save", { token }).catch(
+    await invoke("cancel_native_file_save", { token }).catch(
       () => undefined,
     );
     throw error;

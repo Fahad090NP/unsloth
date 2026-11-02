@@ -338,7 +338,9 @@ export function ApiKeysTab() {
               {t("common.cancel")}
             </Button>
             <Button
-              onClick={confirmRevoke}
+              onClick={() => {
+                confirmRevoke().catch(() => undefined);
+              }}
               disabled={revoking}
               variant={regenerate ? "dark" : "destructive"}
             >

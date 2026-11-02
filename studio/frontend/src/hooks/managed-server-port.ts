@@ -44,7 +44,7 @@ export async function waitForManagedServerPort(
   shouldContinue: () => boolean,
   wait: (ms: number) => Promise<void> = sleep,
 ): Promise<ManagedStartupResult> {
-  while (true) {
+  for (;;) {
     if (!shouldContinue()) {
       return { status: "aborted" };
     }

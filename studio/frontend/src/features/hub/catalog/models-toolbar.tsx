@@ -181,7 +181,9 @@ export const ModelsToolbar = memo(function ModelsToolbar({
     };
     measure();
     const observer = new ResizeObserver(measure);
-    observer.observe(toolbarRef.current!);
+    const toolbar = toolbarRef.current;
+    if (!toolbar) return;
+    observer.observe(toolbar);
     return () => { observer.disconnect(); };
   }, [showRecentSearches]);
 

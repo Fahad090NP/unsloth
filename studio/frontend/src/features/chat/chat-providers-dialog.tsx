@@ -569,10 +569,14 @@ export function ChatProvidersSettings({
       }
       return syncSucceeded;
     };
-    void syncFromBackend();
+    syncFromBackend().catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
     const handleVisibilityChange = () => {
       if (typeof document === "undefined" || document.hidden) return;
-      void syncFromBackend({ showSpinner: false });
+      syncFromBackend({ showSpinner: false }).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
     };
     if (typeof window !== "undefined") {
       window.addEventListener("focus", handleVisibilityChange);
@@ -853,7 +857,9 @@ export function ChatProvidersSettings({
       ];
       providersRef.current = nextProviders;
       onProvidersChange(nextProviders);
-      void refreshProviderModelCatalogs([provider]);
+      refreshProviderModelCatalogs([provider]).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
       setSelectedModelIds(models);
       setAvailableModels(available);
       setEditingProviderId(created.id);
@@ -991,7 +997,9 @@ export function ChatProvidersSettings({
         ...useExternalProvidersStore.getState().providers.filter((p) => p.id !== created.id),
         provider,
       ]);
-      void refreshProviderModelCatalogs([provider]);
+      refreshProviderModelCatalogs([provider]).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
       resetForm();
       autoOpenedAddFormRef.current = true;
       setPage("list");
@@ -1177,7 +1185,9 @@ export function ChatProvidersSettings({
           provider.id === editingProviderId ? editedProvider : provider,
         ),
       );
-      void refreshProviderModelCatalogs([editedProvider]);
+      refreshProviderModelCatalogs([editedProvider]).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
       toast.success("Connection updated.");
       resetForm();
       autoOpenedAddFormRef.current = true;
@@ -1374,7 +1384,9 @@ export function ChatProvidersSettings({
     );
     if (!provider) return;
     openedProviderRef.current = openProviderId;
-    void editProvider(provider);
+    editProvider(provider).catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
     onOpenProviderConsumed?.();
     // editProvider is redeclared each render; the latch above is what fires this once per id.
     // eslint-disable-next-line react-hooks/exhaustive-deps

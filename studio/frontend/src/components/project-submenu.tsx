@@ -82,7 +82,11 @@ export function useProjectSubmenu({
           projects.map((project) => (
             <DropdownMenuItem
               key={project.id}
-              onClick={() => void addToProject(project.id, project.name)}
+              onClick={() => {
+                addToProject(project.id, project.name).catch((error: unknown) => {
+                  console.error("Failed to add item to project", error);
+                });
+              }}
             >
               <HugeiconsIcon icon={ProjectIcon} strokeWidth={1.75} className="size-icon" />
               <span className="truncate">{project.name}</span>

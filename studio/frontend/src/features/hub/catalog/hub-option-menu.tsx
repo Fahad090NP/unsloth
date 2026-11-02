@@ -87,7 +87,7 @@ export function HubOptionMenu<T extends string>({
 
   const selectIndex = useCallback(
     (index: number) => {
-      const option = options[index];
+      const option = options.at(index);
       if (!option) return;
       onValueChange(option.value);
       closeAndRestoreFocus();

@@ -66,7 +66,7 @@ export function MusicEditInputs({
   // The tabs always show a choice, so a missing or stale action takes the first one.
   const firstAction = actions[0] ?? null;
   useEffect(() => {
-    if (action === null && firstAction !== null)
+    if (action == null && firstAction != null)
       onChange({ action: firstAction });
   }, [action, firstAction, onChange]);
 

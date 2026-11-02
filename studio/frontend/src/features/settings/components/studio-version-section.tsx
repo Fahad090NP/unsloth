@@ -56,7 +56,7 @@ async function fetchStudioVersions(): Promise<StudioVersions> {
     }
 
     if (await refreshSession()) {
-      return requestStudioVersions(getAuthToken());
+      return await requestStudioVersions(getAuthToken());
     }
     return versions;
   } catch {

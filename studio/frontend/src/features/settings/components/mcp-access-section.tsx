@@ -87,7 +87,7 @@ export function McpAccessSection({
       (next) => {
         if (live) setSettings(next);
       },
-      (err) => {
+      (err: unknown) => {
         if (!live) return;
         setError(
           errorMessage(err) ?? translate("settings.apiKeys.mcp.loadError"),

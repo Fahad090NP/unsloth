@@ -3,7 +3,7 @@
 
 import { authFetch } from "@/features/auth";
 import { hubTokenHeader } from "@/features/hub";
-import { consumeNativePathToken } from "@/features/native-intents/api";
+import { consumeNativePathToken } from "@/features/native-intents";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 
 export interface ValidateChatTemplateResult {
@@ -15,7 +15,7 @@ async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(await readFastApiError(response));
   }
-  return await response.json();
+  return (await response.json()) as T;
 }
 
 export async function validateChatTemplate(

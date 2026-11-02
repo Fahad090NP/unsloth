@@ -57,12 +57,10 @@ export async function refreshNpuModels(): Promise<boolean> {
 function setReconnecting(id: string, reconnecting: boolean): void {
   useNpuCatalogStore.setState((state) => {
     if (reconnecting === id in state.reconnecting) return state;
-    const next = { ...state.reconnecting };
-    if (reconnecting) {
-      next[id] = true;
-    } else {
-      delete next[id];
-    }
+    const next = Object.fromEntries(
+      Object.entries(state.reconnecting).filter(([key]) => key !== id),
+    );
+    if (reconnecting) next[id] = true;
     return { reconnecting: next };
   });
 }
@@ -112,7 +110,7 @@ export function followNpuDownload(
 
   const run = async (): Promise<boolean> => {
     let joined = follow;
-    let completed = false;
+    const flags = { completed: false, streamed: false };
     // A followed stream replays earlier events, so only a higher percent is progress.
     let best = percent ?? -1;
     const advance = (next: number | null | undefined): boolean => {
@@ -124,8 +122,8 @@ export function followNpuDownload(
     let streamed = false;
     const onProgress = (event: { event: string; percent?: number }) => {
       setReconnecting(id, false);
-      completed ||= event.event === "complete";
-      if (advance(event.percent)) streamed = true;
+      flags.completed ||= event.event === "complete";
+      if (advance(event.percent)) flags.streamed = true;
     };
     const fail = (description: string): false => {
       toast.error(`Could not download ${id}`, { description });
@@ -135,7 +133,7 @@ export function followNpuDownload(
     let reconnected = false;
     let wasUnreachable = false;
     for (;;) {
-      streamed = false;
+      flags.streamed = false;
       try {
         await (joined ? followNpuModelDownload : downloadNpuModel)(
           id,
@@ -143,7 +141,7 @@ export function followNpuDownload(
         );
         await refreshNpuModels();
         // A followed pull can end before its stream opens; the list says how.
-        if (completed || listedDownloaded(id)) return true;
+        if (flags.completed || listedDownloaded(id)) return true;
         if (reconnected) fail("The download ended without finishing.");
         return false;
       } catch (error) {
@@ -154,7 +152,7 @@ export function followNpuDownload(
             setReconnecting(id, unreachable);
             advance(running?.percent);
             stalledReconnects =
-              streamed || (wasUnreachable && !unreachable)
+              flags.streamed || (wasUnreachable && !unreachable)
                 ? 0
                 : stalledReconnects + 1;
             wasUnreachable = unreachable;
@@ -177,10 +175,12 @@ export function followNpuDownload(
   const job = run().finally(() => {
     following.delete(id);
     useNpuCatalogStore.setState((state) => {
-      const progress = { ...state.progress };
-      const reconnecting = { ...state.reconnecting };
-      delete progress[id];
-      delete reconnecting[id];
+      const progress = Object.fromEntries(
+        Object.entries(state.progress).filter(([key]) => key !== id),
+      );
+      const reconnecting = Object.fromEntries(
+        Object.entries(state.reconnecting).filter(([key]) => key !== id),
+      );
       return { progress, reconnecting };
     });
   });

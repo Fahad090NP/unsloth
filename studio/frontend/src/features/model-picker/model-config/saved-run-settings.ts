@@ -342,7 +342,7 @@ export function getSelectedRunSettings(
   ggufVariant: string | null | undefined,
 ): string | null | undefined {
   const value = readSelections()[selectionKey(modelId, ggufVariant)];
-  return typeof value === "string" || value === null ? value : undefined;
+  return typeof value === "string" || value == null ? value : undefined;
 }
 
 export function setSelectedRunSettings(

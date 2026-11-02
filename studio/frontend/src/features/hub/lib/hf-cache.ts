@@ -106,7 +106,10 @@ export async function cachedModelInfo(
 ): Promise<CachedResult> {
   const token = extractToken(params);
   const key = cacheKey(params.name, token, params.hubUrl);
-  if (!isStale(key)) return cache.get(key)!.data;
+  if (!isStale(key)) {
+    const cached = cache.get(key);
+    if (cached) return cached.data;
+  }
 
   const flying = inflight.get(key);
   if (flying) return await flying;

@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { MediaViewer, ScaleMenu } from "@/components/media-viewer";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { audioModelLabel } from "@/features/audio/audio-workspace-utils";
-import { Waveform } from "@/features/audio/components/waveform";
-import { formatSeconds } from "@/features/audio/components/waveform-peaks";
+import { audioModelLabel } from "@/features/audio";
+import { Waveform } from "@/features/audio";
+import { formatSeconds } from "@/features/audio";
 import { ArtifactHtmlFrame } from "@/features/chat";
 import { type TranslationKey, useLocale, useT } from "@/i18n";
 import { MessageCircleIcon } from "@/lib/hugeicons-derived";
@@ -658,7 +658,7 @@ export function LibraryPreview({
         const saveKey = event.code === "KeyS" || event.key.toLowerCase() === "s";
         if ((event.metaKey || event.ctrlKey) && saveKey) {
           event.preventDefault();
-          void save();
+          save().catch(() => undefined);
         }
       }}
       extra={
@@ -748,7 +748,7 @@ export function LibraryPreview({
         error={closeError}
         onRetry={() => {
           setCloseError(null);
-          void handleOpenChange(false);
+          handleOpenChange(false).catch(() => undefined);
         }}
         onDiscard={discardAndClose}
         onKeepEditing={() => { setCloseError(null); }}

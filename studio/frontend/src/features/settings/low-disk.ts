@@ -62,7 +62,7 @@ export function nextLowDiskNotice(
   if (RANK[pressure] < RANK[state.notified]) {
     const forgotten = forgetRearmedLevels(
       state.notified,
-      disk.free_gb!,
+      disk.free_gb ?? 0,
     );
     if (forgotten !== state.notified) {
       return { state: { notified: forgotten }, notify: null };

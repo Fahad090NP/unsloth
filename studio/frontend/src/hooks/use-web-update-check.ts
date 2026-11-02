@@ -131,7 +131,9 @@ export function useWebUpdateCheck({
 
   useEffect(() => {
     if (isTauri || !enabled || !getAuthToken()) {
-      setStatus(null);
+      queueMicrotask(() => {
+        setStatus(null);
+      });
       return;
     }
 

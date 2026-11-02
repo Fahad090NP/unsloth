@@ -147,7 +147,7 @@ export function LinkedFoldersManager({
   } | null>(null);
 
   function runningJob(folderId: string): FolderSyncJob | undefined {
-    const job = manager.jobs[folderId];
+    const job: FolderSyncJob | undefined = manager.jobs[folderId];
     return job?.status === "pending" || job?.status === "running"
       ? job
       : undefined;
@@ -174,19 +174,25 @@ export function LinkedFoldersManager({
         <DropdownMenuContent align="end">
           <DropdownMenuItem
             disabled={running}
-            onSelect={() => void manager.sync(folder.id)}
+            onSelect={() => {
+              manager.sync(folder.id).catch(() => undefined);
+            }}
           >
             <HugeiconsIcon icon={FolderSyncIcon} strokeWidth={1.75} className="size-3.5" /> Sync changes
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={running}
-            onSelect={() => void manager.rebuild(folder.id)}
+            onSelect={() => {
+              manager.rebuild(folder.id).catch(() => undefined);
+            }}
           >
             <RefreshGlyph className="size-3.5" /> Rebuild index
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onSelect={() => void manager.remove(folder.id, false)}
+            onSelect={() => {
+              manager.remove(folder.id, false).catch(() => undefined);
+            }}
           >
             Unlink and keep indexed files
           </DropdownMenuItem>
@@ -229,7 +235,7 @@ export function LinkedFoldersManager({
             onClick={() => {
               const folder = removeIndexFolder;
               setRemoveIndexFolder(null);
-              if (folder) void manager.remove(folder.id, true);
+              if (folder) manager.remove(folder.id, true).catch(() => undefined);
             }}
           >
             Unlink and remove
@@ -251,7 +257,7 @@ export function LinkedFoldersManager({
             </div>
           ) : (
             manager.folders.map((folder) => {
-              const job = manager.jobs[folder.id];
+              const job: FolderSyncJob | undefined = manager.jobs[folder.id];
               const running = runningJob(folder.id) !== undefined;
               const failed =
                 folder.status === "error" || job?.status === "failed";
@@ -312,7 +318,9 @@ export function LinkedFoldersManager({
             <button
               type="button"
               disabled={!manager.desktopSupported || manager.mutating}
-              onClick={() => void manager.link()}
+              onClick={() => {
+              manager.link().catch(() => undefined);
+            }}
               // The title is the tooltip saying why it is disabled, which would otherwise be read as the name.
               aria-label="Add folder"
               title={
@@ -369,7 +377,9 @@ export function LinkedFoldersManager({
             variant="outline"
             className="mt-(--ui-title-cap-inset) shrink-0"
             disabled={!manager.desktopSupported || manager.mutating}
-            onClick={() => void manager.link()}
+            onClick={() => {
+              manager.link().catch(() => undefined);
+            }}
             title={
               manager.desktopSupported
                 ? "Choose a local folder"
@@ -400,7 +410,7 @@ export function LinkedFoldersManager({
       ) : (
         <ul className="flex flex-col gap-1.5">
           {manager.folders.map((folder) => {
-            const job = manager.jobs[folder.id];
+            const job: FolderSyncJob | undefined = manager.jobs[folder.id];
             const running =
               job?.status === "pending" || job?.status === "running";
             const progress = percent(job?.progress);

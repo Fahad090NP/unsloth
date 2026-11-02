@@ -49,7 +49,7 @@ export default function ModelLoadPrompt({
   }
 
   return (
-    <AlertDialog open={true} onOpenChange={(open) => !open && onDone()}>
+    <AlertDialog open={true} onOpenChange={(open) => { !open && onDone(); }}>
       <AlertDialogContent onOverlayClick={onDone}>
         <AlertDialogHeader>
           <AlertDialogTitle>

@@ -26,12 +26,14 @@ export function usePdfWorker(enabled: boolean): PdfWorker | null {
     return () => {
       setState(null);
       // PDF.js frees a document's fonts only once the worker answers its Terminate.
-      void Promise.allSettled(
-        [...next.loaded].map((doc) => doc.destroy()),
-      ).then(() => {
-        next.worker.destroy();
-        port.terminate();
-      });
+      Promise.allSettled([...next.loaded].map((doc) => doc.destroy()))
+        .then(() => {
+          next.worker.destroy();
+          port.terminate();
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to destroy the PDF worker", error);
+        });
     };
   }, [enabled]);
   return state;

@@ -329,7 +329,9 @@ export async function syncExternalProvidersFromBackend(
   if (isCurrent && !isCurrent()) return existingProviders;
 
   await settleTasksIfCurrent(backfillTasks, isCurrent);
-  void refreshProviderModelCatalogs(syncedProviders, isCurrent);
+  refreshProviderModelCatalogs(syncedProviders, isCurrent).catch((error: unknown) => {
+    console.error("Background chat operation failed", error);
+  });
   return syncedProviders;
 }
 

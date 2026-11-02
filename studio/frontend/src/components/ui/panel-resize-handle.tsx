@@ -12,7 +12,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { getClientPlatform } from "@/components/tauri/window-titlebar"
-import { PANEL_RESIZE_SCOPED_VARS_ENABLED } from "@/components/ui/panel-resize-recalc-flags"
 import { acquireDragOverlay, releaseDragOverlay } from "@/components/ui/panel-drag-overlay"
 
 /** Pointer travel (px) below which a drag counts as a plain click. */
@@ -175,12 +174,10 @@ export function PanelResizeHandle({
     event.preventDefault()
     event.currentTarget.setPointerCapture(event.pointerId)
     targetRef.current =
-      (PANEL_RESIZE_SCOPED_VARS_ENABLED && scopedTarget?.()) || target()
+      scopedTarget?.() ?? target()
     rootTargetsRef.current = !rootVar
       ? []
-      : PANEL_RESIZE_SCOPED_VARS_ENABLED
-        ? (rootVarTargets?.() ?? [])
-        : [document.documentElement]
+      : (rootVarTargets?.() ?? [])
     // Collapsed: grow from the rendered size so the edge tracks the pointer.
     const start = open ? width : measure()
     dragRef.current = { startX: event.clientX, startWidth: start, moved: false }

@@ -7,7 +7,7 @@ import {
   AUTH_SESSION_MARK_KEY,
   AUTH_SESSION_STORED_EVENT,
   getAuthSessionEpoch,
-} from "@/features/auth/session";
+} from "@/features/auth";
 import {
   ModelLoadDescription,
   MODEL_LOAD_TOAST_CLASSNAMES,

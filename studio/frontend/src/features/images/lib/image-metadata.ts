@@ -127,7 +127,7 @@ export function pngRecipe(bytes: Uint8Array): EmbeddedRecipe {
     recipe: text[RECIPE_KEY],
     parameters: text[PARAMETERS_KEY],
   };
-  if (text.prompt?.trimStart().startsWith("{")) {
+  if (text.prompt.trimStart().startsWith("{")) {
     out.comfyPrompt = text.prompt;
   }
   return out;
@@ -810,7 +810,7 @@ export function parseA1111Parameters(text: string): ImportedRecipe | null {
     else if (key === "loras" && value) {
       // CSV items: an entry whose id holds a comma or quote is written "id: weight" with "" for a quote.
       const items = [...value.matchAll(/\s*(?:"((?:[^"]|"")*)"|([^,]+))\s*(?:,|$)/g)].map((m) =>
-        m[1] !== undefined ? m[1].replace(/""/g, '"') : (m[2] ?? "").trim(),
+        m[1] != null ? m[1].replace(/""/g, '"') : (m[2] ?? "").trim(),
       );
       const loras = items.flatMap((item) => {
         const at = item.lastIndexOf(":");
@@ -1534,7 +1534,7 @@ export function parseComfyPrompt(text: string): ImportedRecipe | null {
   };
   const sampler = Object.values(graph).find(
     (n) =>
-      typeof n?.class_type === "string" && COMFY_SAMPLERS.has(n.class_type),
+      typeof n.class_type === "string" && COMFY_SAMPLERS.has(n.class_type),
   );
   if (!sampler?.inputs) {
     return null;

@@ -45,7 +45,7 @@ function normalize(value: string | null | undefined): string | null {
 
 export function isChatGenerativeHubModel(model: HubModelTaskMetadata): boolean {
   const pipeline = normalize(model.pipelineTag);
-  return (pipeline === null || pipeline === undefined) || CHAT_GENERATION_TASKS.has(pipeline);
+  return pipeline == null || CHAT_GENERATION_TASKS.has(pipeline);
 }
 
 export function isSpeechOnlyHubModel(model: HubModelTaskMetadata): boolean {
@@ -55,7 +55,7 @@ export function isSpeechOnlyHubModel(model: HubModelTaskMetadata): boolean {
   }
   return (model.tags ?? []).some((tag) => {
     const normalized = normalize(tag);
-    return (normalized !== null && normalized !== undefined) && SPEECH_ONLY_TAGS.has(normalized);
+    return normalized != null && SPEECH_ONLY_TAGS.has(normalized);
   });
 }
 
@@ -78,7 +78,7 @@ export function isClassifierOrRerankerHubModel(
   return (model.tags ?? []).some((tag) => {
     const normalized = normalize(tag);
     return (
-      (normalized !== null && normalized !== undefined) &&
+      normalized != null &&
       (CLASSIFIER_TASKS.has(normalized) || RERANKER_TAGS.has(normalized))
     );
   });

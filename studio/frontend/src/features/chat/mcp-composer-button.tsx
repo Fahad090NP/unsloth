@@ -174,7 +174,9 @@ export function McpComposerButton({
 
   useEffect(() => {
     const unsubscribe = subscribeToMcpServerMutationSettlements((epoch) => {
-      void refresh(false, epoch);
+      refresh(false, epoch).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
     });
     return () => {
       unsubscribe();

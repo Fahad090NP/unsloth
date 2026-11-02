@@ -34,8 +34,9 @@ function refusalMessage(error: unknown, fallback: string) {
 }
 
 function claimForm(claim: { current: number }) {
-  claim.current += 1;
-  return claim.current;
+  const counter = claim;
+  counter.current += 1;
+  return counter.current;
 }
 
 export interface MediaGenerationPresetsOptions<Params extends object> {

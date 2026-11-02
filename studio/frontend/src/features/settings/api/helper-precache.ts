@@ -56,7 +56,7 @@ async function fetchHelperPrecacheSettings(): Promise<HelperPrecacheSettings> {
       await readFastApiError(res, "Failed to load Helper LLM settings"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export async function loadHelperPrecacheSettings() {
@@ -84,5 +84,5 @@ export async function updateHelperPrecacheSettings(
       await readFastApiError(res, "Failed to update Helper LLM settings"),
     );
   }
-  return cacheHelperPrecache(fromApi(await res.json()));
+  return cacheHelperPrecache(fromApi((await res.json()) as Parameters<typeof fromApi>[0]));
 }

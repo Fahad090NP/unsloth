@@ -126,7 +126,7 @@ function DialogContent({
           onInteractOutside={(event) => {
             onInteractOutside?.(event);
             // toasts render outside every dialog, so using one must not dismiss the dialog under it.
-            if ((event.target as Element | null)?.closest?.("[data-sonner-toaster]")) {
+            if ((event.target as Element | null)?.closest("[data-sonner-toaster]")) {
               event.preventDefault();
             }
           }}

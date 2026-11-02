@@ -38,20 +38,20 @@ function mapToViewData(
   const { run, metrics } = detail;
 
   const lossHistory = metrics.loss_step_history
-    .map((step, i) => ({ step, value: metrics.loss_history[i] }))
-    .filter((p): p is { step: number; value: number } => p.value !== null);
+    .map((step, i) => ({ step, value: metrics.loss_history.at(i) }))
+    .filter((p): p is { step: number; value: number } => p.value !== undefined);
 
   const lrHistory = metrics.lr_step_history
-    .map((step, i) => ({ step, value: metrics.lr_history[i] }))
-    .filter((p): p is { step: number; value: number } => p.value !== null);
+    .map((step, i) => ({ step, value: metrics.lr_history.at(i) }))
+    .filter((p): p is { step: number; value: number } => p.value !== undefined);
 
   const gradNormHistory = metrics.grad_norm_step_history
-    .map((step, i) => ({ step, value: metrics.grad_norm_history[i] }))
-    .filter((p): p is { step: number; value: number } => p.value !== null);
+    .map((step, i) => ({ step, value: metrics.grad_norm_history.at(i) }))
+    .filter((p): p is { step: number; value: number } => p.value !== undefined);
 
   const evalLossHistory = metrics.eval_step_history
-    .map((step, i) => ({ step, value: metrics.eval_loss_history[i] }))
-    .filter((p): p is { step: number; value: number } => p.value !== null);
+    .map((step, i) => ({ step, value: metrics.eval_loss_history.at(i) }))
+    .filter((p): p is { step: number; value: number } => p.value !== undefined);
 
   const phase =
     run.status === "completed"
@@ -60,9 +60,7 @@ function mapToViewData(
         ? "stopped"
         : run.status === "error"
           ? "error"
-          : run.status === "running"
-            ? "training"
-            : "idle";
+          : "training";
 
   return {
     phase,
@@ -74,7 +72,7 @@ function mapToViewData(
     currentEpoch: metrics.final_epoch,
     currentNumTokens: metrics.final_num_tokens ?? null,
     outputDir: run.output_dir ?? null,
-    resumedLater: run.resumed_later ?? false,
+    resumedLater: run.resumed_later,
     progressPercent:
       run.total_steps && run.final_step
         ? (run.final_step / run.total_steps) * 100
@@ -96,10 +94,10 @@ function mapToViewData(
     modelName: run.display_name ?? run.model_name,
     projectName: run.project_name,
     trainingMethod: parseBackendTrainingMethod(
-      detail.config?.training_type,
-      detail.config?.load_in_4bit,
+      detail.config.training_type,
+      detail.config.load_in_4bit,
     ),
-    isDecision: detail.config?.is_decision === true,
+    isDecision: detail.config.is_decision === true,
     lossHistory,
     lrHistory,
     gradNormHistory,
@@ -142,7 +140,7 @@ export function HistoricalTrainingView({
           error: null,
         });
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === "AbortError") return;
         setResult({
           runId,
@@ -205,7 +203,9 @@ export function HistoricalTrainingView({
             variant="outline"
             className="gap-1.5"
             disabled={startBlocked || resuming}
-            onClick={() => void handleResume()}
+            onClick={() => {
+              handleResume().catch(() => undefined);
+            }}
           >
             {resuming ? (
               <Spinner className="size-3.5" />

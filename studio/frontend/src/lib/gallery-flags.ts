@@ -19,7 +19,7 @@ export function subscribeGalleryChanged(kind: GalleryKind, onChanged: () => void
   if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
     const detail = (event as CustomEvent<{ kind?: string }>).detail;
-    if (detail?.kind === kind) onChanged();
+    if (detail.kind === kind) onChanged();
   };
   window.addEventListener(GALLERY_CHANGED_EVENT, handler);
   return () => { window.removeEventListener(GALLERY_CHANGED_EVENT, handler); };
@@ -39,7 +39,7 @@ export function subscribeArchiveChanged(kind: GalleryKind, onChanged: () => void
   if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
     const detail = (event as CustomEvent<{ kind?: string }>).detail;
-    if (detail?.kind === kind) onChanged();
+    if (detail.kind === kind) onChanged();
   };
   window.addEventListener(ARCHIVE_CHANGED_EVENT, handler);
   return () => { window.removeEventListener(ARCHIVE_CHANGED_EVENT, handler); };
@@ -99,8 +99,8 @@ export function moveGalleryItem<T extends FlaggableItem>(
   const at = afterId === null ? 0 : rest.findIndex((i) => i.id === afterId) + 1;
   if (afterId !== null && at === 0) return items;
   const moved = items[from];
-  const above = rest[at - 1];
-  const below = rest[at];
+  const above = rest.at(at - 1);
+  const below = rest.at(at);
   const pinned =
     above && below
       ? Boolean(above.pinned) === Boolean(below.pinned)
@@ -122,9 +122,9 @@ export function scopedMoveAfterId<T extends FlaggableItem>(
   const intended = moveGalleryItem(view, id, afterId);
   if (intended === view) return afterId;
   const at = intended.findIndex((i) => i.id === id);
-  const wantPinned = Boolean(intended[at]?.pinned);
-  const above = intended[at - 1];
-  const below = intended[at + 1];
+  const wantPinned = Boolean(intended.at(at)?.pinned);
+  const above = intended.at(at - 1);
+  const below = intended.at(at + 1);
   const rest = items.filter((i) => i.id !== id);
   const first = above ? rest.findIndex((i) => i.id === above.id) : -1;
   const last = below ? rest.findIndex((i) => i.id === below.id) : rest.length;
@@ -136,7 +136,7 @@ export function scopedMoveAfterId<T extends FlaggableItem>(
   return afterId;
 }
 
-export function pinnedOrder<T extends FlaggableItem>(items: T[]): string[] {
+export function pinnedOrder(items: FlaggableItem[]): string[] {
   return items.filter((i) => i.pinned).map((i) => i.id);
 }
 
@@ -173,17 +173,17 @@ export interface NewRecordProbeBaseline {
   canJudgeUnpinned: boolean;
 }
 
-export function newRecordProbeBaseline<T extends FlaggableItem>(
-  loaded: T[],
+export function newRecordProbeBaseline(
+  loaded: FlaggableItem[],
   hasMore: boolean,
   knownIds: ReadonlySet<string>,
 ): NewRecordProbeBaseline {
   return { knownIds, canJudgeUnpinned: loaded.some((i) => !i.pinned) || !hasMore };
 }
 
-export async function hasUnknownRecord<T extends FlaggableItem>(
+export async function hasUnknownRecord(
   baseline: NewRecordProbeBaseline,
-  fetchPage: (offset: number) => Promise<{ items: T[]; hasMore: boolean }>,
+  fetchPage: (offset: number) => Promise<{ items: FlaggableItem[]; hasMore: boolean }>,
   pageSize: number,
   maxPages: number = NEW_RECORD_PROBE_MAX_PAGES,
 ): Promise<boolean> {
@@ -213,9 +213,11 @@ export function serializeById<T>(key: string, task: () => Promise<T>): Promise<T
     () => { /* no-op */ },
   );
   queues.set(key, settled);
-  void settled.then(() => {
+  settled.then(() => {
     // Only the last link clears the key.
     if (queues.get(key) === settled) queues.delete(key);
+  }).catch((error: unknown) => {
+    console.error("Failed to settle the serialized gallery task", error);
   });
   return run;
 }
@@ -267,8 +269,8 @@ export async function fetchNextPage<T>(
 
 /** Falls to a neighbour so the preview never blanks with items on screen; `remaining` excludes
  * the removed item. */
-export function nextSelectedId<T extends FlaggableItem>(
-  remaining: T[],
+export function nextSelectedId(
+  remaining: FlaggableItem[],
   removedId: string,
   selectedId: string | null,
   removedIndex: number,

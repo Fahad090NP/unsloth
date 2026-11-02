@@ -38,7 +38,7 @@ async function request(
   if (!res.ok) {
     throw new Error(await readFastApiError(res, fallback));
   }
-  return mcpAccessFromApi(await res.json());
+  return mcpAccessFromApi((await res.json()) as ApiMcpAccessSettings);
 }
 
 export function loadMcpAccess(): Promise<McpAccessSettings> {

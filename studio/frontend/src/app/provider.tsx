@@ -348,7 +348,9 @@ async function showSetupWindow(isCurrent: WindowLayoutGuard): Promise<void> {
   if (await wasLaunchedHidden()) return;
   if (!isCurrent()) return;
   await win.show();
-  void notifyRendererReady();
+  notifyRendererReady().catch((error: unknown) => {
+    console.error("Background chat operation failed", error);
+  });
 }
 
 async function enforceWindowSizeBounds(
@@ -442,7 +444,9 @@ async function applyAppWindowLayout(
         if (hiddenAtLaunch) return false;
         if (!isCurrent()) return false;
         await win.show();
-        void notifyRendererReady();
+        notifyRendererReady().catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
         return true;
       },
       waitForSettled: hiddenAtLaunch
@@ -474,7 +478,9 @@ async function showWindowFallback(): Promise<void> {
   await win.setResizable(true);
   if (await wasLaunchedHidden()) return;
   await win.show();
-  void notifyRendererReady();
+  notifyRendererReady().catch((error: unknown) => {
+    console.error("Background chat operation failed", error);
+  });
 }
 
 function getTauriWindowMode(

@@ -15,10 +15,7 @@ const RESIZE_SETTLE_MS = 200;
 interface Measurement { gutter: number; classic: number; reliable: boolean }
 
 function measure(doc: Document): Measurement {
-  const body: HTMLElement | null = doc.body;
-  if (!body) {
-    return { gutter: 0, classic: 0, reliable: false };
-  }
+  const body = doc.body;
 
   const probe = doc.createElement("div");
   // Above dialogs; pointer-events:auto beats a Radix modal's body "none".

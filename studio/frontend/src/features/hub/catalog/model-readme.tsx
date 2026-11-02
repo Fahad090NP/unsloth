@@ -125,7 +125,7 @@ function readmeStateFromEntry(
 }
 
 function hasReadmeContent(state: Pick<ReadmeState, "body" | "error">): boolean {
-  return (state.error === null || state.error === undefined) && (state.body !== null && state.body !== undefined);
+  return state.error == null && state.body != null;
 }
 
 function prepareReadmeBody(markdown: string): string {
@@ -312,7 +312,7 @@ async function loadReadmeFromCache({
   }
 
   const promise = fetchReadme(repoId, kind, hfToken || null).then((fetched) => {
-    if ((fetched === null || fetched === undefined)) {
+    if (fetched == null) {
       return {
         body: null,
         baseUrl: null,
@@ -329,7 +329,7 @@ async function loadReadmeFromCache({
   readmeCache.set(cacheKey, promise);
   try {
     const entry = await promise;
-    if ((entry.error === null || entry.error === undefined)) {
+    if (entry.error == null) {
       readmeCache.set(cacheKey, {
         entry,
         expiresAt: Date.now() + README_CACHE_TTL_MS,

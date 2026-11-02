@@ -305,7 +305,7 @@ export async function loadSandboxStatus(
 ): Promise<SandboxStatus> {
   const res = await authFetch(refresh ? `${ROUTE}?refresh=1` : ROUTE);
   await checked(res, ROUTE, fallbackMessage);
-  return statusFromApi(await res.json());
+  return statusFromApi((await res.json()) as Parameters<typeof statusFromApi>[0]);
 }
 
 export async function updateSandboxSettings(
@@ -328,7 +328,7 @@ export async function updateSandboxSettings(
     body: JSON.stringify(body),
   });
   await checked(res, ROUTE, fallbackMessage);
-  return statusFromApi(await res.json());
+  return statusFromApi((await res.json()) as Parameters<typeof statusFromApi>[0]);
 }
 
 export async function startHostPreparation(
@@ -336,7 +336,7 @@ export async function startHostPreparation(
 ): Promise<HostPrepJob> {
   const res = await authFetch(PREPARE_ROUTE, { method: "POST" });
   await checked(res, PREPARE_ROUTE, fallbackMessage);
-  return jobFromApi(await res.json());
+  return jobFromApi((await res.json()) as Parameters<typeof jobFromApi>[0]);
 }
 
 export async function loadHostPreparation(
@@ -344,5 +344,5 @@ export async function loadHostPreparation(
 ): Promise<HostPrepJob> {
   const res = await authFetch(PREPARE_ROUTE);
   await checked(res, PREPARE_ROUTE, fallbackMessage);
-  return jobFromApi(await res.json());
+  return jobFromApi((await res.json()) as Parameters<typeof jobFromApi>[0]);
 }

@@ -88,7 +88,7 @@ function NameForm({
     <form
       onSubmit={(event) => {
         event.preventDefault();
-        void submit();
+        submit().catch(() => undefined);
       }}
     >
       <Input

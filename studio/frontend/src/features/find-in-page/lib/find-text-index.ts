@@ -622,9 +622,8 @@ function exactTail(before: string): string | null {
 }
 
 function firstPointOf(text: string): string {
-  return text.length === 0
-    ? ""
-    : String.fromCodePoint(text.codePointAt(0)!);
+  const point = text.codePointAt(0);
+  return point === undefined ? "" : String.fromCodePoint(point);
 }
 
 /** False without a segmenter, keeping the old behaviour. */
@@ -858,7 +857,7 @@ export function dropProbeFurthestFrom(
     matches.shift();
     return;
   }
-  matches.length = limit;
+  matches.splice(limit);
 }
 
 function touchesPreserved(

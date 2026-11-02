@@ -45,7 +45,6 @@ import {
   ChevronDownStandardIcon,
   ChevronUpStandardIcon,
 } from "@/lib/chevron-icons";
-import { useChatPreferencesStore } from "@/features/chat/stores/chat-preferences-store";
 import { useAui, useAuiState } from "@assistant-ui/react";
 import { cn } from "@/lib/utils";
 import {
@@ -53,7 +52,6 @@ import {
   readPendingAttachmentTargetClaim,
   useChatRuntimeStore,
 } from "@/features/chat/stores/chat-runtime-store";
-import { useRagToolDisabled } from "@/features/chat/hooks/use-rag-tool-disabled";
 import type { ProjectAttachmentTarget } from "@/features/chat/utils/project-attachment-target";
 import {
   chatHistoryClearBoundary,
@@ -65,6 +63,8 @@ import {
   isPastedTextFile,
   isThreadIncognito,
   subscribeChatHistoryUpdated,
+  useChatPreferencesStore,
+  useRagToolDisabled,
 } from "@/features/chat";
 import {
   useNativeAttachmentTargetKey,
@@ -193,7 +193,6 @@ function useThreadProjectId(
     if (!threadId || isThreadIncognito(threadId)) {
       return;
     }
-    let cancelled = false;
     let announced = false;
     const record = (projectId: string | null, editedAt: number) =>
       { setResolved((previous) =>
@@ -209,14 +208,14 @@ function useThreadProjectId(
       announced = true;
       record(thread.projectId ?? null, thread.modifiedAt ?? 0);
     });
-    void (async () => {
+    (async () => {
       // A failed read is not proof of no project, and recording one would file
       // the next attachment into the chat. Retry, then leave it unresolved:
       // nothing re-runs this until the chat changes or its row is announced.
       for (let attempt = 0; attempt < PROJECT_LOOKUP_RETRIES; attempt += 1) {
         try {
           const thread = await getStoredChatThread(threadId);
-          if (cancelled || announced) return;
+          if (announced) return;
           // No row yet: initialize() does not await the write, so the composer's
           // project is the answer that row is about to record.
           const projectId = thread
@@ -225,16 +224,13 @@ function useThreadProjectId(
           record(projectId, thread?.modifiedAt ?? 0);
           return;
         } catch {
-          if (cancelled || announced) return;
+          if (announced) return;
           await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
-          if (cancelled || announced) return;
+          if (announced) return;
         }
       }
-    })();
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
+    })().catch(() => undefined);
+    return unsubscribe;
   }, [threadId]);
 
   if (!threadId) {
@@ -382,7 +378,7 @@ function loadThumbnailFile(doc: TrackedDocument): Promise<File | null> {
   }
   const pending = fetchThumbnailFile(doc).catch(() => null);
   thumbnailFiles.set(doc.id, pending);
-  void pending.then((file) => {
+  pending.then((file) => {
     if (thumbnailFiles.get(doc.id) !== pending) return;
     // A failure is not remembered, so the next mount tries again.
     if (file === null) {
@@ -395,7 +391,7 @@ function loadThumbnailFile(doc: TrackedDocument): Promise<File | null> {
       if (thumbnailBytes <= THUMBNAIL_CACHE_BYTES || oldest === doc.id) break;
       forgetThumbnail(oldest);
     }
-  });
+  }).catch(() => undefined);
   return pending;
 }
 
@@ -428,7 +424,7 @@ function useDocumentThumbnail(
     }
     let cancelled = false;
     let objectUrl: string | null = null;
-    void loadThumbnailFile(doc).then((file) => {
+    loadThumbnailFile(doc).then((file) => {
       if (cancelled || !file) return;
       const kind = attachmentFileKind(file.name, file.type);
       if (kind === "image") {
@@ -442,7 +438,7 @@ function useDocumentThumbnail(
       }
       const preview = attachmentPreview(file, kind);
       if (preview) setThumbnail({ kind: "file", file, preview });
-    });
+    }).catch(() => undefined);
     return () => {
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
@@ -744,7 +740,7 @@ function ChatFilesPanel({
   }, [measure]);
   // Drops here are indexed; elsewhere they attach to the message. The page handler skips
   // prevented drops, and the desktop's window-wide handler skips registered targets.
-  const ignoreDrop = useCallback(() => {}, []);
+  const ignoreDrop = useCallback(() => undefined, []);
   const { dragging, dropProps, nativeDropTarget } = useSourceDrop({
     onItems: onDropItems ?? ignoreDrop,
     disabledReason: dropDisabledReason,
@@ -1153,15 +1149,17 @@ export function ThreadDocumentsBar({
       if (sharesWithProject && projectId) {
         invalidateProjectSources(projectId);
         // Explicit scope: a desktop drop enables RAG and attaches in the same tick.
-        void uploadToProject(items, { type: "project", projectId }).finally(() =>
-          { announceProjectSourcesUpdated(projectId); },
-        );
+        uploadToProject(items, { type: "project", projectId })
+          .finally(() => {
+            announceProjectSourcesUpdated(projectId);
+          })
+          .catch(() => undefined);
         return;
       }
-      void upload(items, async () => ({
+      upload(items, async () => ({
         type: "thread",
         threadId: await ensureThreadId(),
-      }));
+      })).catch(() => undefined);
     },
     [ensureThreadId, projectId, sharesWithProject, upload, uploadToProject],
   );
@@ -1190,7 +1188,7 @@ export function ThreadDocumentsBar({
       if (skipped > 0) {
         toast.error(
           skipped === 1
-            ? `"${files.find((file) => !isRagIndexable(file))?.name}" can't be searched`
+            ? `"${files.find((file) => !isRagIndexable(file))?.name ?? "File"}" can't be searched`
             : `${skipped} files can't be searched`,
           { description: SUPPORTED_SOURCES_HINT },
         );
@@ -1487,16 +1485,20 @@ export function ThreadDocumentsBar({
                   ? undefined
                   : doc.status === "failed"
                     ? // Never indexed, so no other chat loses anything: no confirmation.
-                      () => void removeFromProject(doc.id)
+                      () => {
+                        removeFromProject(doc.id).catch(() => undefined);
+                      }
                     : () => { setRemovingShared(doc); }
               }
               onRetry={
                 canRetryProject(doc.id)
                   ? () => {
                       if (projectId) invalidateProjectSources(projectId);
-                      void retryProject(doc.id).finally(() => {
-                        if (projectId) announceProjectSourcesUpdated(projectId);
-                      });
+                      retryProject(doc.id)
+                        .finally(() => {
+                          if (projectId) announceProjectSourcesUpdated(projectId);
+                        })
+                        .catch(() => undefined);
                     }
                   : undefined
               }
@@ -1514,9 +1516,17 @@ export function ThreadDocumentsBar({
               onRemove={
                 doc.id.startsWith("pending_") && doc.status !== "failed"
                   ? undefined
-                  : () => void remove(doc.id)
+                  : () => {
+                      remove(doc.id).catch(() => undefined);
+                    }
               }
-              onRetry={canRetry(doc.id) ? () => void retry(doc.id) : undefined}
+              onRetry={
+                canRetry(doc.id)
+                  ? () => {
+                      retry(doc.id).catch(() => undefined);
+                    }
+                  : undefined
+              }
             />
           </div>
         ))}
@@ -1543,7 +1553,7 @@ export function ThreadDocumentsBar({
               onClick={() => {
                 const doc = removingShared;
                 setRemovingShared(null);
-                if (doc) void removeFromProject(doc.id);
+                if (doc) removeFromProject(doc.id).catch(() => undefined);
               }}
             >
               Remove

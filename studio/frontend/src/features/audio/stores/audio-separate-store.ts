@@ -24,7 +24,9 @@ export const useAudioSeparateStore = create<AudioSeparateState>()(
       setSource: (source) => set({ source }),
       setLastOverlap: (model, overlap) =>
         set((state) => {
-          const { [model]: _previous, ...rest } = state.lastOverlapByModel;
+          const rest = Object.fromEntries(
+            Object.entries(state.lastOverlapByModel).filter(([key]) => key !== model),
+          );
           const entries = Object.entries(rest);
           const kept = entries.slice(
             Math.max(0, entries.length - MAX_MODELS + 1),

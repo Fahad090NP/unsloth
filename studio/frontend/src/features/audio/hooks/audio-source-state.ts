@@ -139,8 +139,6 @@ export function audioSourceReducer(
       return { status: { phase: "expired" }, preview: EMPTY_PREVIEW };
     case "reset":
       return INITIAL_AUDIO_SOURCE_STATE;
-    default:
-      return state;
   }
 }
 

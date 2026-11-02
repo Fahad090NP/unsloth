@@ -99,6 +99,9 @@ function localModelSourceLabelKey(source: LocalSource): TranslationKey {
       return "studio.modelPicker.sourceHfCache";
     case "lmstudio":
       return "studio.modelPicker.sourceLmStudio";
+    case "omlx":
+    case "unsloth":
+      return "studio.modelPicker.sourceLocalModel";
     case "ollama":
       return "studio.modelPicker.sourceOllama";
     case "hermes":

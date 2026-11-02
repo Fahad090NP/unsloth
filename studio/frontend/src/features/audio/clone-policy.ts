@@ -18,6 +18,9 @@ export function referenceTextField(
       return "required";
     case "unused":
       return "hidden";
+    case "optional":
+    case null:
+    case undefined:
     default:
       return "optional";
   }

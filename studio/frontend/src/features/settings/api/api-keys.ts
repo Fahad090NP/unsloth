@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { authFetch } from "@/features/auth/api";
+import { authFetch } from "@/features/auth";
 
 export interface ApiKey {
   id: number;
@@ -44,7 +44,8 @@ export async function createApiKey(
     body: JSON.stringify({ name, expires_in_days: expiresInDays }),
   });
   if (!res.ok) throw await actionError(res);
-  return await res.json();
+  const data: unknown = await res.json();
+  return data as { key: string; api_key: ApiKey };
 }
 
 export async function revokeApiKey(keyId: number): Promise<void> {

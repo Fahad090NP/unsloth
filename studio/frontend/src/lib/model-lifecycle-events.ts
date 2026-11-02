@@ -32,7 +32,7 @@ export function subscribeModelEjected(
   if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
     const detail = (event as CustomEvent<{ runtime?: string }>).detail;
-    if (detail?.runtime === runtime) onEjected();
+    if (detail.runtime === runtime) onEjected();
   };
   window.addEventListener(MODEL_EJECTED_EVENT, handler);
   return () => { window.removeEventListener(MODEL_EJECTED_EVENT, handler); };
@@ -49,7 +49,7 @@ export function subscribeModelLifecycle(
   if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
     const detail = (event as CustomEvent<ModelLifecycle>).detail;
-    if (detail?.runtime) onChange(detail);
+    if (detail.runtime) onChange(detail);
   };
   window.addEventListener(MODEL_LIFECYCLE_EVENT, handler);
   return () => { window.removeEventListener(MODEL_LIFECYCLE_EVENT, handler); };
@@ -71,7 +71,7 @@ export function subscribeModelDeleted(
 ): () => void {
   if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
-    const repoId = (event as CustomEvent<{ repoId?: string }>).detail?.repoId;
+    const repoId = (event as CustomEvent<{ repoId?: string }>).detail.repoId;
     if (repoId) onDeleted(repoId);
   };
   window.addEventListener(MODEL_DELETED_EVENT, handler);
@@ -142,7 +142,11 @@ export async function withBackgroundLoadNotice<T>(
     // Re-announce after the POST: that is when the GPU arbiter has evicted the previous holder.
     // Repeats are no-ops for runtime-keyed rows.
     notifyModelLifecycle({ runtime, loading: true, model });
-    void settleWhenLoadEnds(runtime, model, readPhase, timing);
+    settleWhenLoadEnds(runtime, model, readPhase, timing).catch(
+      (error: unknown) => {
+        console.error("Failed to settle the background model load", error);
+      },
+    );
     return result;
   } finally {
     // Exactly one of the two paths ends the notice.

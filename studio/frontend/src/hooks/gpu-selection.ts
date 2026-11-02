@@ -127,12 +127,13 @@ export function reconcileGpuSelection(
 export function pickLoadDevice<
   T extends { index?: number; visible_ordinal?: number },
 >(devices: T[]): T | undefined {
-  const ordered = devices.filter((d) => typeof d.visible_ordinal === "number");
+  const ordered = devices.filter(
+    (d): d is T & { visible_ordinal: number } =>
+      typeof d.visible_ordinal === "number",
+  );
   if (ordered.length > 0) {
     return ordered.reduce((pick, d) =>
-      (d.visible_ordinal!) < (pick.visible_ordinal!)
-        ? d
-        : pick,
+      d.visible_ordinal < pick.visible_ordinal ? d : pick,
     );
   }
   if (devices.length === 0) return undefined;

@@ -49,7 +49,7 @@ function asksWhereToSave(): boolean {
 /** True when Settings asks where to save but the click that started this has expired,
  *  so the dialog can't open without another one. */
 export function saveNeedsClick(): boolean {
-  return asksWhereToSave() && !navigator.userActivation?.isActive;
+  return asksWhereToSave() && !navigator.userActivation.isActive;
 }
 
 /** The browser's save dialog when Settings asks for it; null when off or it can't open
@@ -81,7 +81,12 @@ function offerSave(name: string, save: () => Promise<void>, id?: string): void {
   const locale = getLocale();
   toast(translate("browser.downloadPrompt.ready", { name: safeDownloadName(name) }, locale), {
     id,
-    action: { label: translate("browser.downloadPrompt.save", {}, locale), onClick: () => void save() },
+    action: {
+      label: translate("browser.downloadPrompt.save", {}, locale),
+      onClick: () => {
+        save().catch(() => undefined);
+      },
+    },
   });
 }
 
@@ -102,7 +107,7 @@ export function saveLinkedFile(url: string, name: string, file: LinkedFile, askF
       (error: unknown) => void toast.error(error instanceof Error ? error.message : String(error)),
     );
   if (askFirst) offerSave(name || fileNameFromUrl(url), save, nextPrompt());
-  else void save();
+  else save().catch(() => undefined);
 }
 
 /** Website files wait for approval first. `target`: a location already picked, null for none; omitted, the dialog opens when Settings asks. */

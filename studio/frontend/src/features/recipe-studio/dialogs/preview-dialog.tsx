@@ -441,7 +441,7 @@ function RunDialogBody({
                   className="mt-(--ui-title-cap-inset)"
                   checked={settings.batchEnabled}
                   onCheckedChange={(checked) =>
-                    { onSettingsChange({ batchEnabled: Boolean(checked) }); }
+                    { onSettingsChange({ batchEnabled: checked }); }
                   }
                 />
               </div>
@@ -535,7 +535,7 @@ function RunDialogBody({
                       className="mt-(--ui-title-cap-inset)"
                       checked={settings.mergeBatches}
                       onCheckedChange={(checked) =>
-                        { onSettingsChange({ mergeBatches: Boolean(checked) }); }
+                        { onSettingsChange({ mergeBatches: checked }); }
                       }
                     />
                   </div>

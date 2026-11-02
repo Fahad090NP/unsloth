@@ -9,13 +9,13 @@ export function usePrefillOptionAvailable(
   modelPath: string | null,
   hfToken: string | null,
 ): boolean {
-  const key = (modelPath === null || modelPath === undefined) ? null : `${option}\n${modelPath}\n${hfToken ?? ""}`;
+  const key = modelPath == null ? null : `${option}\n${modelPath}\n${hfToken ?? ""}`;
   const [answer, setAnswer] = useState<{
     key: string;
     available: boolean;
   } | null>(null);
   useEffect(() => {
-    if ((key === null || key === undefined) || (modelPath === null || modelPath === undefined)) {
+    if (key == null || modelPath == null) {
       return;
     }
     const controller = new AbortController();

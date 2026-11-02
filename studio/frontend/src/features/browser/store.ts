@@ -495,8 +495,8 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       if (chat !== state.chat) {
         // Another chat's: it shows there next time, without moving this chat's panel.
         const saved = state.chats[chat];
-        const activeTabId = background && saved?.activeTabId ? saved.activeTabId : owned.id;
-        return { tabs, chats: { ...state.chats, [chat]: { open: true, fullView: saved?.fullView ?? false, activeTabId } } };
+        const activeTabId = background && saved.activeTabId ? saved.activeTabId : owned.id;
+        return { tabs, chats: { ...state.chats, [chat]: { open: true, fullView: saved.fullView ?? false, activeTabId } } };
       }
       return {
         open: true,
@@ -567,7 +567,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         return;
       }
       set((state) => ({
-        chats: { ...state.chats, [chat]: { open: true, fullView: state.chats[chat]?.fullView ?? false, activeTabId: tabId } },
+        chats: { ...state.chats, [chat]: { open: true, fullView: state.chats[chat].fullView ?? false, activeTabId: tabId } },
       }));
     },
     openTabIn: (chat, url, options) => {

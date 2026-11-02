@@ -33,7 +33,7 @@ function checkDataSourceRequired(allConfigs: NodeConfig[]): GraphWarning[] {
 function checkLlmModelAlias(allConfigs: NodeConfig[]): GraphWarning[] {
   const warnings: GraphWarning[] = [];
   for (const config of allConfigs) {
-    if (config.kind === "llm" && !config.model_alias?.trim()) {
+    if (config.kind === "llm" && !config.model_alias.trim()) {
       warnings.push({
         nodeId: config.id,
         nodeName: config.name,
@@ -48,7 +48,7 @@ function checkLlmModelAlias(allConfigs: NodeConfig[]): GraphWarning[] {
 function checkModelConfigProvider(allConfigs: NodeConfig[]): GraphWarning[] {
   const warnings: GraphWarning[] = [];
   for (const config of allConfigs) {
-    if (config.kind === "model_config" && !config.provider?.trim()) {
+    if (config.kind === "model_config" && !config.provider.trim()) {
       warnings.push({
         nodeId: config.id,
         nodeName: config.name,
@@ -95,7 +95,7 @@ function checkValidatorTargets(allConfigs: NodeConfig[]): GraphWarning[] {
   for (const config of allConfigs) {
     if (
       config.kind === "validator" &&
-      (!config.target_columns || config.target_columns.length === 0)
+      config.target_columns.length === 0
     ) {
       warnings.push({
         nodeId: config.id,

@@ -176,7 +176,7 @@ export function notifyChatHistoryUpdated(
 export function subscribeChatHistoryUpdated(
   listener: (detail: ChatHistoryUpdatedDetail) => void,
 ): () => void {
-  if (typeof window === "undefined") return () => {};
+  if (typeof window === "undefined") return () => undefined;
   const onEvent = (event: Event) =>
     { listener((event as CustomEvent<ChatHistoryUpdatedDetail>).detail ?? {}); };
   window.addEventListener(CHAT_HISTORY_UPDATED_EVENT, onEvent);
@@ -411,7 +411,9 @@ export async function loadModel(
     async () => {
       // An uncached model selected here is downloaded by the backend inside this request, bypassing
       // the download manager's disk check, so check here (throttled).
-      void checkDiskSpace();
+      checkDiskSpace().catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
       try {
         const response = await authFetch("/api/inference/load", {
           method: "POST",
@@ -427,7 +429,9 @@ export async function loadModel(
       } finally {
         // Forced, and in finally: the reading must follow the write, and a failed load is the likeliest
         // to have filled the disk.
-        void checkDiskSpace({ force: true });
+        checkDiskSpace({ force: true }).catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
       }
     },
   );

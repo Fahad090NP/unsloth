@@ -64,7 +64,7 @@ export interface CellState {
   maxShift?: number;
   loraWeights: Record<number, number>;
   replacements: [string, string][];
-  extra: Record<string, number>;
+  extra: Record<string, number | undefined>;
 }
 
 export interface AxisDef {
@@ -484,7 +484,8 @@ export function buildCellRequest(
     req.prompt = prompt;
     req.negative_prompt = negative;
   }
-  for (const [key, value] of Object.entries(cell.extra)) req[key] = value;
+  for (const [key, value] of Object.entries(cell.extra))
+    if (value !== undefined) req[key] = value;
   // Variation seed without a strength means nothing to the backend: use the model's Vary strength.
   if (cell.extra.variation_seed !== undefined && cell.extra.variation_strength === undefined && !req.variation_strength) {
     req.variation_strength = ctx.sdControls?.vary_strength ?? 0.15;

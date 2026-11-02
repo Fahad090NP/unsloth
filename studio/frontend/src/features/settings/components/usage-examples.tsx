@@ -591,7 +591,7 @@ export function UsageExamples({
   // set on answer, so a restored agent never validates against the defaults.
   const [agentsLoaded, setAgentsLoaded] = useState(false);
   // Guards the detection effect from clobbering a pick the user made first.
-  const agentPickedByUserRef = useRef((storedPrefs.apiExampleAgent !== null && storedPrefs.apiExampleAgent !== undefined));
+  const agentPickedByUserRef = useRef(storedPrefs.apiExampleAgent != null);
   // A manual pick is kept only until the model's GGUF-ness changes under it.
   const clickedUnderGgufRef = useRef<boolean | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "";

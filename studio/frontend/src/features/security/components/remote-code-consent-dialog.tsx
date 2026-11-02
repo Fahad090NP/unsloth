@@ -63,16 +63,17 @@ function SnippetLine({
   severity: RemoteCodeSeverity;
 }) {
   const tone = matchTone(severity);
+  const { matchStart, matchEnd } = row;
   const hasSpan =
     row.isMatch &&
-    typeof row.matchStart === "number" &&
-    typeof row.matchEnd === "number" &&
-    row.matchEnd > row.matchStart;
+    typeof matchStart === "number" &&
+    typeof matchEnd === "number" &&
+    matchEnd > matchStart;
 
   let body;
-  if (hasSpan) {
-    const start = row.matchStart!;
-    const end = row.matchEnd!;
+  if (hasSpan && typeof matchStart === "number" && typeof matchEnd === "number") {
+    const start = matchStart;
+    const end = matchEnd;
     body = (
       <>
         {row.text.slice(0, start)}

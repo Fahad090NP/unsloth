@@ -65,11 +65,11 @@ export function EngineVersionsSection() {
   // whisper.cpp only reports once the backend knows it, MLX only where installed; an empty row reads as missing.
   const visibleRows = rows.filter(
     (row) =>
-      (row.key !== "whisper" || (row.offer !== null && row.offer !== undefined)) &&
-      (row.key !== "mlx" || (row.installed !== null && row.installed !== undefined)),
+      (row.key !== "whisper" || row.offer != null) &&
+      (row.key !== "mlx" || row.installed != null),
   );
   const job = status?.job;
-  const offered = (status !== null && status !== undefined) && llamaUpdateOffered(status);
+  const offered = status != null && llamaUpdateOffered(status);
   // `supported` is llama.cpp's alone: an audio.cpp update still installs beside a self-managed llama.cpp.
   const unmanaged = status?.supported === false && !offered;
 
@@ -77,7 +77,7 @@ export function EngineVersionsSection() {
     setChecking(true);
     const next = await refresh();
     setChecking(false);
-    setCheckFailed((next === null || next === undefined));
+    setCheckFailed(next == null);
   }
 
   async function handleUpdate() {

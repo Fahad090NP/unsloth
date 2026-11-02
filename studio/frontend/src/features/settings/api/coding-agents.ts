@@ -31,7 +31,7 @@ async function fetchCodingAgents(): Promise<CodingAgentsInfo> {
       await readFastApiError(res, "Failed to load installed coding agents"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as ApiCodingAgentsInfo);
 }
 
 export async function loadCodingAgents(): Promise<CodingAgentsInfo> {

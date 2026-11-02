@@ -64,7 +64,8 @@ export function useStripReorder(
     onDragOver: (event: React.DragEvent<HTMLElement>) => {
       if (!dragIdRef.current) return;
       event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
+      const dataTransfer = event.dataTransfer;
+      dataTransfer.dropEffect = "move";
       const next = resolve(event.currentTarget, vertical ? event.clientY : event.clientX)?.cue ?? null;
       setCue((prev) =>
         prev?.id === next?.id && prev?.edge === next?.edge ? prev : next,
@@ -93,8 +94,9 @@ export function useStripReorder(
         if (!fromTile(event)) return;
         dragIdRef.current = id;
         setDraggingId(id);
-        event.dataTransfer.effectAllowed = "copyMove";
-        event.dataTransfer.setData(GALLERY_ITEM_DRAG_TYPE, id);
+        const dataTransfer = event.dataTransfer;
+        dataTransfer.effectAllowed = "copyMove";
+        dataTransfer.setData(GALLERY_ITEM_DRAG_TYPE, id);
       },
       onDragEnd: end,
       onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {

@@ -23,7 +23,7 @@ import {
   usePlusMenuPrefsStore,
 } from "@/features/chat";
 import { PASTED_TEXT_THRESHOLD_CHOICES } from "@/features/chat/utils/pasted-text";
-import { refreshContextUsage } from "@/features/chat/utils/refresh-context-usage";
+import { refreshContextUsage } from "@/features/chat";
 import { formatBindingLabel, isMacPlatform } from "../lib/keyboard-shortcuts";
 import { useIsAccountOwner } from "@/features/auth";
 import { type TranslationKey, useT } from "@/i18n";

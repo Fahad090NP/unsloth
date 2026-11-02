@@ -122,7 +122,8 @@ export function parseAxisValues(text: string, type: AxisValueType, options: { ke
     if (range) {
       const start = num(range[1]);
       const end = num(range[2]);
-      const step = range[3] !== undefined ? num(range[3]) : end >= start ? 1 : -1;
+      const stepText = range[3] as string | undefined;
+      const step = stepText !== undefined ? num(stepText) : end >= start ? 1 : -1;
       const expanded = inclusiveRange(start, end, step);
       if (expanded === null) return { ok: false, error: `Bad range step in "${item}"` };
       values.push(...expanded.map(isInt ? Math.trunc : roundValue));

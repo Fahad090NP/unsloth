@@ -359,7 +359,7 @@ function findShellQuoteStates(
     ) {
       resetIndex++;
     }
-    const resetRegion = resetRegions[resetIndex];
+    const resetRegion = resetRegions.at(resetIndex);
     if (resetRegion && index >= resetRegion[0] && index < resetRegion[1]) {
       quote = 0;
       index = resetRegion[1] - 1;
@@ -669,7 +669,7 @@ function mergeRegions(
       rightIndex >= right.length ||
       (leftIndex < left.length && left[leftIndex][0] <= right[rightIndex][0]);
     const next = takeLeft ? left[leftIndex++] : right[rightIndex++];
-    const last = merged[merged.length - 1];
+    const last = merged.at(-1);
     if (last && next[0] < last[1]) {
       if (next[1] > last[1]) {
         last[1] = next[1];
@@ -688,7 +688,7 @@ const INDENTED_CODE_CANDIDATE_RE =
   /(^|\r\n|\n|\r)(?: {0,3}>[ \t]?)*(?:(?: {4}| {0,3}\t)| {0,3}(?:[-+*]|\d{1,9}[.)])(?: {5,}|[ \t]*\t[ \t]*))/g;
 const BLOCK_LINE_RE =
   /^ {0,3}(?:#{1,6}([ \t]|$)|(?:\*[ \t]*){3,}$|(?:-[ \t]*){3,}$|(?:_[ \t]*){3,}$|>|=+[ \t]*$)/;
-const LINK_DEFINITION_RE = /^ {0,3}\[(?:[^\[\]\\]|\\.)+\]:/;
+const LINK_DEFINITION_RE = /^ {0,3}\[(?:[^[\]\\]|\\.)+\]:/;
 const NON_LINE_ENDING_RE = /[^\r\n]/g;
 
 function stripIndent(line: string, columns: number): string {
@@ -798,21 +798,21 @@ export function findCodeBlockRegions(content: string): [number, number][] {
   let simpleFenceMarker = "";
   let needsBlockScan = false;
   while ((match = FENCE_CANDIDATE_RE.exec(content)) !== null) {
-    const prefix = match[2] ?? "";
+    const prefix = match.at(2) ?? "";
     if (prefix.trim() || indentWidth(prefix) > 3) {
       needsBlockScan = true;
       break;
     }
-    const marker = match[3] ?? "";
-    const tail = match[4] ?? "";
-    const lineStart = match.index + (match[1]?.length ?? 0);
+    const marker = match.at(3) ?? "";
+    const tail = match.at(4) ?? "";
+    const lineStart = match.index + (match.at(1)?.length ?? 0);
     if (simpleFenceStart < 0) {
       if (!marker.startsWith("`") || !tail.includes("`")) {
         simpleFenceStart = lineStart;
         simpleFenceMarker = marker;
       }
     } else if (
-      marker[0] === simpleFenceMarker[0] &&
+      marker.startsWith(simpleFenceMarker.slice(0, 1)) &&
       marker.length >= simpleFenceMarker.length &&
       !tail.trim()
     ) {
@@ -898,8 +898,8 @@ export function findCodeBlockRegions(content: string): [number, number][] {
       const fence = FENCE_LINE_RE.exec(fenceSource);
       if (fence !== null) {
         lists = openLists(text, lists, afterParagraph, above.quoted);
-        const marker = fence[1] ?? "";
-        const tail = fence[2] ?? "";
+        const marker = fence.at(1) ?? "";
+        const tail = fence.at(2) ?? "";
         if (openFence === null) {
           if (!marker.startsWith("`") || !tail.includes("`")) {
             const quoted = containerContent(text, EMPTY_LIST_STATE, quotes);
@@ -913,7 +913,7 @@ export function findCodeBlockRegions(content: string): [number, number][] {
             };
           }
         } else if (
-          marker[0] === openFence.marker[0] &&
+          marker.startsWith(openFence.marker.slice(0, 1)) &&
           marker.length >= openFence.marker.length &&
           !tail.trim()
         ) {
@@ -982,7 +982,8 @@ function findLinkDestinationRegions(content: string): [number, number][] {
   LINK_DEST_RE.lastIndex = 0;
   while ((match = LINK_DEST_RE.exec(content)) !== null) {
     // escaped separators make searches unsafe; use the `d` flag's bounds.
-    regions.push(match.indices![1]!);
+    const bounds = match.indices?.[1];
+    if (bounds) regions.push(bounds);
   }
   return regions;
 }
@@ -1218,8 +1219,9 @@ function convertLatexDelimiters(content: string): {
       CONVERT_LATEX_DELIM_RE.lastIndex = match.index + 1;
       continue;
     }
-    const isDisplay = match[1] !== undefined;
-    const body = (isDisplay ? match[1] : match[2]).trim();
+    const displayBody = match.at(1);
+    const isDisplay = displayBody !== undefined;
+    const body = (displayBody ?? match.at(2) ?? "").trim();
     // A bare `$$` would open a stray display block.
     if (!body) {
       continue;

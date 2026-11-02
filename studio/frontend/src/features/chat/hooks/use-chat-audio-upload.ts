@@ -304,7 +304,9 @@ export function useChatAudioUpload({
           ggufVariant: target.ggufVariant,
         });
       } else if (readiness.state === "error") {
-        void refreshReadiness();
+        refreshReadiness().catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
       }
       return null;
     }
@@ -448,7 +450,9 @@ export function useChatAudioUpload({
       }
       retainedRef.current = null;
       setRetained(null);
-      void runTranscription(classifiedFile, snapshot);
+      runTranscription(classifiedFile, snapshot).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
     },
     [runTranscription, t],
   );
@@ -475,7 +479,9 @@ export function useChatAudioUpload({
           ggufVariant: failed.snapshot.ggufVariant,
         });
       } else {
-        void refreshReadiness();
+        refreshReadiness().catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
       }
       return;
     }
@@ -484,7 +490,9 @@ export function useChatAudioUpload({
     const snapshot = { ...failed.snapshot, generation };
     retainedRef.current = null;
     setRetained(null);
-    void runTranscription(failed.file, snapshot);
+    runTranscription(failed.file, snapshot).catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
   }, [
     busy,
     clearOperation,

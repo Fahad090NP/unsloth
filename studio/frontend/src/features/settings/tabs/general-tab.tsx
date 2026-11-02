@@ -17,7 +17,7 @@ import { useChatRuntimeStore } from "@/features/chat";
 // From the keys module, not the barrel or the store: both are in an import cycle with this file,
 // so the key was still in its temporal dead zone when the module-scope list below read it, killing
 // the module graph. The keys module imports nothing, so it is always evaluated first.
-import { SIDEBAR_ORGANIZATION_STORAGE_KEY } from "@/features/chat/stores/sidebar-organization-keys";
+import { SIDEBAR_ORGANIZATION_STORAGE_KEY } from "@/features/chat";
 import {
   LOADED_MODELS_PREFERENCE_KEYS,
   setShowLoadedModels,
@@ -908,7 +908,9 @@ export function GeneralTab() {
               {t("common.cancel")}
             </Button>
             <Button
-              onClick={resetAllPrefs}
+              onClick={() => {
+                resetAllPrefs().catch(() => undefined);
+              }}
               variant="destructive"
             >
               {t("settings.general.resetPreferences.confirmAction")}

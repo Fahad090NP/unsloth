@@ -68,7 +68,7 @@ export function visiblePendingStarts(
     ),
   );
   return Object.values(starts).filter((start) => {
-    const job = jobs[start.key];
+    const job = jobs[start.key] as (typeof jobs)[string] | undefined;
     if (job && ACTIVE_STATES.has(job.state)) return false;
     return !queuedKeys.has(start.key);
   });

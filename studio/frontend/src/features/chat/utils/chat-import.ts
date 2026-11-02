@@ -430,7 +430,7 @@ async function writeConversation(
     await syncStoredChatMessages(threadId, messages, { pruneMissing: false });
   } catch (error) {
     // Remove the blank thread row, or the user must delete it and a retry adds another.
-    await deleteStoredChatThreads([threadId]).catch(() => {});
+    await deleteStoredChatThreads([threadId]).catch(() => undefined);
     throw error;
   }
 }

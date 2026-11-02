@@ -36,7 +36,7 @@ function setResult(next: FindTargetResult): void {
 
 function nativeStep(tabId: string, backwards: boolean): void {
   const asked = query;
-  void nativeFind(tabId, asked, backwards).then((found) => {
+  nativeFind(tabId, asked, backwards).then((found) => {
     // The native view walks matches without counting them: null keeps the walk open.
     if (asked === query && searchedTabId === tabId) setResult({ count: found ? null : 0, active: found ? 0 : -1 });
     refreshCoveredPage(tabId);
@@ -84,7 +84,7 @@ export function registerBrowserFind(contains: (node: Node) => boolean): () => vo
     takeFocus: () => {
       const tab = activeTab();
       if (!searchable(tab) || !hasNativeView(tab.id) || document.hasFocus()) return false;
-      void focusPanel(tab.id);
+      focusPanel(tab.id).catch(() => undefined);
       return true;
     },
     returnFocus: () => {

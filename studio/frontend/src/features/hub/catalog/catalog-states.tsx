@@ -68,6 +68,8 @@ function describeFailure(
         offlineLike: false,
         tokenRejected: true,
       };
+    case "aborted":
+    case undefined:
     default:
       break;
   }
@@ -459,7 +461,7 @@ export function SkeletonList({ count }: { count?: number }) {
   const scale = useUiSpaceScale();
 
   useLayoutEffect(() => {
-    if ((count !== null && count !== undefined)) return;
+    if (count !== null) return;
     const container = ref.current?.parentElement;
     if (!container || typeof window === "undefined") return;
 

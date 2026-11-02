@@ -39,7 +39,7 @@ export async function loadChatMemory(
   if (!res.ok) {
     throw new Error(await readFastApiError(res, fallbackMessage));
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export async function updateChatMemory(
@@ -54,5 +54,5 @@ export async function updateChatMemory(
   if (!res.ok) {
     throw new Error(await readFastApiError(res, fallbackMessage));
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }

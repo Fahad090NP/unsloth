@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { authFetch } from "@/features/auth";
-import { consumeNativePathToken } from "@/features/native-intents/api";
+import { consumeNativePathToken } from "@/features/native-intents";
 
 /** Lives in the import-free memory-fit module so the node test runner can reach it. */
 export { formatMemoryGb } from "../model-config/memory-fit";

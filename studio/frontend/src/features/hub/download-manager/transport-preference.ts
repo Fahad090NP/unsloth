@@ -113,7 +113,11 @@ export function useTransportMode(): [
       setMode(getTransportMode());
     });
     // Refresh rather than read the cache, or the toggle shows a stale mode.
-    void hydrateInstallMode(true).then(() => { setMode(getTransportMode()); });
+    hydrateInstallMode(true)
+      .then(() => {
+        setMode(getTransportMode());
+      })
+      .catch(() => undefined);
     return () => {
       window.removeEventListener(CHANGE_EVENT, handleLocal);
       window.removeEventListener("storage", handleStorage);
@@ -141,7 +145,7 @@ export function useTransportMode(): [
       setMode(next);
       window.dispatchEvent(new Event(CHANGE_EVENT));
     }
-    void updateDownloadTransportSettings(next).catch((error) => {
+    updateDownloadTransportSettings(next).catch((error: unknown) => {
       console.warn(
         "Couldn't save the download transport for this install.",
         error,

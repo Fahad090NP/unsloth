@@ -78,7 +78,7 @@ export function mergeRanges(
     .sort((a, b) => a.start_s - b.start_s || a.end_s - b.end_s);
   const merged: WaveRange[] = [];
   for (const range of clamped) {
-    const last = merged[merged.length - 1];
+    const last = merged.at(-1);
     if (last && range.start_s <= last.end_s) {
       last.end_s = Math.max(last.end_s, range.end_s);
     } else {
@@ -127,7 +127,7 @@ export function moveRange(
   deltaS: number,
   limits: RangeLimits,
 ): WaveRange[] {
-  const range = ranges[index];
+  const range = ranges.at(index);
   if (!range) return [...ranges];
   const end = timelineEnd(limits);
   let next: WaveRange;

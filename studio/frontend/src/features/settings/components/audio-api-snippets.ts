@@ -188,7 +188,7 @@ interface Ref { upload: string }
 type Json = string | number | boolean | Ref | Json[] | { [key: string]: Json };
 
 function isRef(value: Json): value is Ref {
-  return typeof value === "object" && value !== null && "upload" in value;
+  return typeof value === "object" && value != null && "upload" in value;
 }
 
 type Style = "json" | "python" | "jq" | "powershell";

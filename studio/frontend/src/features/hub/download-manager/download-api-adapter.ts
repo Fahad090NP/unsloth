@@ -225,6 +225,10 @@ export function describeUnacceptedStart(state: DownloadStartState): string {
     case "running":
     case "cancelling":
       return "Another download for this repository is already in progress. Wait for it to finish or cancel it first.";
+    case "idle":
+    case "cancelled":
+    case "complete":
+    case "error":
     default:
       return "The download could not be started. Try again in a moment.";
   }

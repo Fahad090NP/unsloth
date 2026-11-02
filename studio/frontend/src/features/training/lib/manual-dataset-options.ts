@@ -149,11 +149,13 @@ function validSplitInstruction(value: string): boolean {
     if (!match) {
       return false;
     }
-    const [, , from, to, rounding] = match;
-    const usesPercent = from?.endsWith("%") || to?.endsWith("%");
+    const from = match.at(2) ?? "";
+    const to = match.at(3) ?? "";
+    const rounding = match.at(4);
+    const usesPercent = from.endsWith("%") || to.endsWith("%");
     if (
-      !validPercentBoundary(from, Boolean(usesPercent)) ||
-      !validPercentBoundary(to, Boolean(usesPercent)) ||
+      !validPercentBoundary(from, usesPercent) ||
+      !validPercentBoundary(to, usesPercent) ||
       (rounding !== undefined && !usesPercent)
     ) {
       return false;

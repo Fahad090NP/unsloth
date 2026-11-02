@@ -62,7 +62,7 @@ export function useMemoryEstimate(
   const key = estimateKey(request);
   // Computed during render: the clearing effect runs after paint and would flash the old model's numbers.
   const currentIdentity =
-    (request === null || request === undefined)
+    request == null
       ? null
       : resolveEstimateSourceIdentity(
           request.modelPath,
@@ -88,7 +88,7 @@ export function useMemoryEstimate(
 
   useEffect(() => {
     const pending = latestRequest.current;
-    if ((key === null || key === undefined) || (pending === null || pending === undefined)) {
+    if (key == null || pending == null) {
       shownModel.current = null;
       setState({ estimate: null, loading: false, stale: false, identity: null, probeKey: null });
       return;
@@ -103,7 +103,7 @@ export function useMemoryEstimate(
     setState((current) =>
       modelChanged
         ? { estimate: null, loading: true, stale: false, identity, probeKey: null }
-        : { ...current, loading: (current.estimate === null || current.estimate === undefined), stale: true, identity },
+        : { ...current, loading: current.estimate == null, stale: true, identity },
     );
     const controller = new AbortController();
     const timer = setTimeout(() => {
@@ -131,7 +131,7 @@ export function useMemoryEstimate(
   }, [key, refreshMemory]);
 
   if (state.identity !== currentIdentity) {
-    return { estimate: null, loading: (currentIdentity !== null && currentIdentity !== undefined), stale: false };
+    return { estimate: null, loading: currentIdentity != null, stale: false };
   }
   return {
     estimate: state.estimate,

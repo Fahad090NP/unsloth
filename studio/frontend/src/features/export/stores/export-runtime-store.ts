@@ -269,10 +269,9 @@ export const useExportRuntimeStore = create<ExportRuntimeStore>()((set, get) => 
 
   appendLogs: (entries) =>
     { set((state) => {
+      const lastSeq = state.lastSeq;
       const fresh =
-        state.lastSeq === null
-          ? entries
-          : entries.filter((e) => e.seq > (state.lastSeq!));
+        lastSeq === null ? entries : entries.filter((e) => e.seq > lastSeq);
       if (fresh.length === 0) return state;
 
       const merged = state.logLines.concat(
@@ -614,8 +613,6 @@ export function selectExportProgressPercent(state: ExportRuntimeStore): number {
     case "canceled":
       // Freeze near where it stopped so the bar does not snap back to 0.
       return Math.max(8, exportBand());
-    default:
-      return 0;
   }
 }
 

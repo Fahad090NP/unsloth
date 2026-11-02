@@ -239,7 +239,8 @@ export function useDatasetUploads() {
     event: ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
-    event.target.value = "";
+    const target = event.target;
+    target.value = "";
     if (file) {
       await handleDatasetFile(file);
     }
@@ -269,7 +270,8 @@ export function useDatasetUploads() {
     if (uploadLockRef.current) {
       return;
     }
-    event.dataTransfer.dropEffect = "copy";
+    const transfer = event.dataTransfer;
+    transfer.dropEffect = "copy";
     setIsDatasetDragOver(true);
   };
 
@@ -411,7 +413,8 @@ export function useDatasetUploads() {
 
   const handleEvalFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    event.target.value = "";
+    const target = event.target;
+    target.value = "";
     if (file) {
       if (!isTrainingDatasetUploadPath(file.name)) {
         toast.error(t("studio.dataset.unsupportedFileType"), {

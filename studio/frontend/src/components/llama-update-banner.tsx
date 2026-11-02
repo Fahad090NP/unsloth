@@ -54,7 +54,9 @@ function backendLabel(backend: string | null | undefined, t: Translate): string 
   if (!backend) {
     return "";
   }
-  const key: TranslationKey | undefined = LLAMA_BACKEND_LABELS[backend];
+  const key = (
+    LLAMA_BACKEND_LABELS as Partial<Record<string, TranslationKey>>
+  )[backend];
   return key ? t(key) : backend;
 }
 
@@ -270,7 +272,7 @@ export function LlamaUpdateBanner({
       : toastLabel;
   const bundled = rows.length > 1;
   const llamaRow = rows.find((row) => row.component === "llama.cpp") ?? null;
-  const primary = rows[0] ?? null;
+  const primary = rows.at(0) ?? null;
 
   async function handleUpdate() {
     // prefer the job message for bundles, migrations, and unchanged audio runtimes after refresh.
@@ -295,7 +297,7 @@ export function LlamaUpdateBanner({
           reloadRequired: result.reloadRequired,
         }),
       );
-    } else if (result) {
+    } else {
       // the failing phase may differ from the component named by the card.
       toast.error(
         t("runtimeUpdate.failed", {
@@ -335,11 +337,15 @@ export function LlamaUpdateBanner({
         for (const channel of fresh) {
           markNotificationShown(channel);
         }
-        setShownChannels([...shownChannels, ...fresh]);
+        queueMicrotask(() => {
+          setShownChannels([...shownChannels, ...fresh]);
+        });
       }
     } else if (!(show || skipped) && shownChannels.length > 0) {
       // the skip notice still stands for the card, so Undo can reopen it past the frequency gate.
-      setShownChannels([]);
+      queueMicrotask(() => {
+        setShownChannels([]);
+      });
     }
   }, [show, skipped, tabVisible, livePref, recordKey, shownChannels]);
   // a migration can reapply the automatic backend at the installed release.
@@ -384,7 +390,7 @@ export function LlamaUpdateBanner({
   const restartNote =
     backendOnly &&
     status?.from_backend === "rocm" &&
-    status?.to_backend === "vulkan"
+    status.to_backend === "vulkan"
       ? t("runtimeUpdate.vulkanFaster")
       : t("runtimeUpdate.noRestart");
   const changelogTags =

@@ -1397,7 +1397,7 @@ export function pickDefaultQuant(
   defaultVariant: string | null,
   budget: DeviceBudget,
 ): QuantVariant | null {
-  if (!variants || variants.length === 0) return null;
+  if (variants.length === 0) return null;
   const anyBudget = (budget.gpuGb || 0) > 0 || (budget.systemRamGb || 0) > 0;
   const runs = (v: QuantVariant) =>
     ggufFitRuns(
@@ -1479,7 +1479,7 @@ function residentSizeGb(
     const quantised = artifact.prequantSizeGb?.[scheme as DenseQuantScheme];
     if (quantised === undefined) continue;
     const sizeGb = Math.min(denseResidentGb, quantised + companionsGb);
-    if (firstHosted === undefined) firstHosted = sizeGb;
+    firstHosted ??= sizeGb;
     if (allowanceGb === undefined || sizeGb <= allowanceGb) return sizeGb;
   }
   return firstHosted ?? denseResidentGb;

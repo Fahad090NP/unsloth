@@ -25,8 +25,9 @@ export function normalizeTensorSplit(
     )
   )
     return null;
-  const total = value.reduce((sum, weight) => sum + weight, 0);
-  return Number.isFinite(total) && total > 0 ? [...value] : null;
+  const weights = value as number[];
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  return Number.isFinite(total) && total > 0 ? [...weights] : null;
 }
 
 export function reconcileTensorSplit(

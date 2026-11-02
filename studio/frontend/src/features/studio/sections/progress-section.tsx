@@ -185,7 +185,9 @@ export function ProgressSection({
   const canUseInDecisionApi = hasFinishedOutput && Boolean(data.isDecision) && isOwner;
   const handleExportGguf = () => {
     if (!exportRunName) return;
-    void navigate({ to: "/export", search: { run: exportRunName } });
+    navigate({ to: "/export", search: { run: exportRunName } }).catch(
+      () => undefined,
+    );
   };
   const handleUseInDecisionApi = async () => {
     if (!exportRunName) {
@@ -307,7 +309,9 @@ export function ProgressSection({
               variant="outline"
               className="gap-1.5 text-xs"
               disabled={enablingDecisionApi}
-              onClick={handleUseInDecisionApi}
+              onClick={() => {
+                handleUseInDecisionApi().catch(() => undefined);
+              }}
             >
               <HugeiconsIcon icon={TaskDone01Icon} className="size-3.5" />
               {t("studio.progress.useInDecisionApi")}
@@ -462,9 +466,9 @@ function LiveGpuPanel({
   const [selectedGpu, setSelectedGpu] = useState(0);
   const gpuData = useGpuUtilization(isTrainingRunning);
   const gpus: GpuUtilization[] =
-    Array.isArray(gpuData?.devices) && gpuData.devices.length > 0
+    Array.isArray(gpuData.devices) && gpuData.devices.length > 0
       ? gpuData.devices
-      : gpuData && Object.keys(gpuData).length > 0
+      : Object.keys(gpuData).length > 0
         ? [gpuData]
         : [];
 
@@ -509,7 +513,7 @@ function LiveGpuPanel({
           label={t("studio.progress.utilization")}
           icon={<HugeiconsIcon icon={DashboardSpeed01Icon} className="size-3.5" />}
           value={
-            currentGpu.gpu_utilization_pct !== null
+            currentGpu.gpu_utilization_pct !== undefined
               ? `${currentGpu.gpu_utilization_pct}%`
               : "--"
           }
@@ -519,7 +523,7 @@ function LiveGpuPanel({
           label={t("studio.progress.temperature")}
           icon={<HugeiconsIcon icon={TemperatureIcon} className="size-3.5" />}
           value={
-            currentGpu.temperature_c !== null ? `${currentGpu.temperature_c}°C` : "--"
+            currentGpu.temperature_c !== undefined ? `${currentGpu.temperature_c}°C` : "--"
           }
           pct={currentGpu.temperature_c ?? 0}
           max={100}
@@ -528,7 +532,8 @@ function LiveGpuPanel({
           label={t("studio.progress.vram")}
           icon={<HugeiconsIcon icon={RamMemoryIcon} className="size-3.5" />}
           value={
-            currentGpu.vram_used_gb !== null && currentGpu.vram_total_gb !== null
+            currentGpu.vram_used_gb !== undefined &&
+              currentGpu.vram_total_gb !== undefined
               ? `${currentGpu.vram_used_gb} / ${currentGpu.vram_total_gb} GiB`
               : "--"
           }
@@ -538,8 +543,8 @@ function LiveGpuPanel({
           label={t("studio.progress.power")}
           icon={<HugeiconsIcon icon={ZapIcon} className="size-3.5" />}
           value={
-            currentGpu.power_draw_w !== null
-              ? currentGpu.power_limit_w !== null
+            currentGpu.power_draw_w !== undefined
+              ? currentGpu.power_limit_w !== undefined
                 ? `${currentGpu.power_draw_w} / ${currentGpu.power_limit_w} W`
                 : `${currentGpu.power_draw_w} W`
               : "--"
@@ -642,7 +647,9 @@ function ConfigPopoverButton({
               variant="outline"
               size="sm"
               disabled={disabled}
-              onClick={() => void duplicate(runId)}
+              onClick={() => {
+                duplicate(runId).catch(() => undefined);
+              }}
             >
               {t("common.duplicate")}
             </Button>
@@ -704,11 +711,17 @@ function TrainingHeaderActions({
             <AlertDialogCancel>{t("studio.training.continueAction")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => onRequestStop(false)}
+              onClick={() => {
+                onRequestStop(false).catch(() => undefined);
+              }}
             >
               {t("studio.training.cancelAction")}
             </AlertDialogAction>
-            <AlertDialogAction onClick={() => onRequestStop(true)}>
+            <AlertDialogAction
+              onClick={() => {
+                onRequestStop(true).catch(() => undefined);
+              }}
+            >
               {t("studio.training.stopAndSave")}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -760,7 +773,12 @@ function MilestoneCallout({
       </div>
       {showCompletedHint && (
         <div className="mt-2 flex flex-wrap gap-2">
-          <Button size="xs" onClick={onCompareInChat}>
+          <Button
+            size="xs"
+            onClick={() => {
+              onCompareInChat().catch(() => undefined);
+            }}
+          >
             {t("studio.training.compareInChat")}
           </Button>
           <Button asChild={true} size="xs" variant="outline">
@@ -796,7 +814,7 @@ function MetricStat({
 function lastValue(points: { value: number }[]): number | null {
   if (points.length === 0) return null;
   const v = points[points.length - 1]?.value;
-  return v !== null && Number.isFinite(v) ? v : null;
+  return v !== undefined && Number.isFinite(v) ? v : null;
 }
 
 function getDisplayMetric(
@@ -805,9 +823,9 @@ function getDisplayMetric(
   history: { value: number }[],
 ): number | null {
   if (isTrainingRunning) {
-    return currentValue !== null ? currentValue : null;
+    return currentValue ?? null;
   }
-  return lastValue(history) ?? (currentValue !== null ? currentValue : null);
+  return lastValue(history) ?? currentValue ?? null;
 }
 
 function GpuStat({

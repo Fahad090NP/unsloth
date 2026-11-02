@@ -83,10 +83,10 @@ export function audioOptionSpecsFor(
 export function audioOptionUsesSlider(spec: AudioOptionSpec): boolean {
   return (
     (spec.type === "int" || spec.type === "float") &&
-    (spec.min !== null && spec.min !== undefined) &&
-    (spec.max !== null && spec.max !== undefined) &&
+    spec.min != null &&
+    spec.max != null &&
     spec.max > spec.min &&
-    (spec.default !== null && spec.default !== undefined)
+    spec.default != null
   );
 }
 
@@ -105,8 +105,8 @@ export function coerceAudioOptionValue(
         typeof value === "string" && value.trim() !== "" ? Number(value) : value;
       if (typeof number !== "number" || !Number.isFinite(number)) return undefined;
       let clamped = number;
-      if ((spec.min !== null && spec.min !== undefined)) clamped = Math.max(spec.min, clamped);
-      if ((spec.max !== null && spec.max !== undefined)) clamped = Math.min(spec.max, clamped);
+      if (spec.min != null) clamped = Math.max(spec.min, clamped);
+      if (spec.max != null) clamped = Math.min(spec.max, clamped);
       return spec.type === "int" ? Math.round(clamped) : clamped;
     }
     case "enum":

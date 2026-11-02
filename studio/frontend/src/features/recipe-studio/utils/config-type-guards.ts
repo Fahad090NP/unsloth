@@ -12,40 +12,36 @@ import type {
 export function isSamplerConfig(
   config: NodeConfig | null | undefined,
 ): config is SamplerConfig {
-  return Boolean(config?.kind === "sampler");
+  return config?.kind === "sampler";
 }
 
 export function isCategoryConfig(
   config: NodeConfig | null | undefined,
 ): config is SamplerConfig {
-  return Boolean(
-    config?.kind === "sampler" && config.sampler_type === "category",
-  );
+  return config?.kind === "sampler" && config.sampler_type === "category";
 }
 
 export function isSubcategoryConfig(
   config: NodeConfig | null | undefined,
 ): config is SamplerConfig {
-  return Boolean(
-    config?.kind === "sampler" &&
-      config.sampler_type === "subcategory",
-  );
+  return config?.kind === "sampler" &&
+    config.sampler_type === "subcategory";
 }
 
 export function isLlmConfig(
   config: NodeConfig | null | undefined,
 ): config is LlmConfig {
-  return Boolean(config?.kind === "llm");
+  return config?.kind === "llm";
 }
 
 export function isExpressionConfig(
   config: NodeConfig | null | undefined,
 ): config is ExpressionConfig {
-  return Boolean(config?.kind === "expression");
+  return config?.kind === "expression";
 }
 
 export function isValidatorConfig(
   config: NodeConfig | null | undefined,
 ): config is ValidatorConfig {
-  return Boolean(config?.kind === "validator");
+  return config?.kind === "validator";
 }

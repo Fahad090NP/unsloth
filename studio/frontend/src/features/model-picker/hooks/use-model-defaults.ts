@@ -65,7 +65,7 @@ export function useDefaultChatTemplate(
   } | null>(null);
 
   useEffect(() => {
-    if ((cacheKey === null || cacheKey === undefined) || !modelId || templateCache.has(cacheKey)) {
+    if (cacheKey == null || !modelId || templateCache.has(cacheKey)) {
       return;
     }
     const controller = new AbortController();
@@ -105,7 +105,7 @@ export function useDefaultChatTemplate(
     return () => { controller.abort(); };
   }, [cacheKey, modelId, ggufVariant, token, nativePathToken]);
 
-  if ((cacheKey === null || cacheKey === undefined)) {
+  if (cacheKey == null) {
     return { template: null, loading: false, error: null };
   }
   if (templateCache.has(cacheKey)) {
@@ -135,7 +135,7 @@ export function useModelMaxPositionEmbeddings(
   } | null>(null);
 
   useEffect(() => {
-    if ((cacheKey === null || cacheKey === undefined) || !modelId || maxPositionCache.has(cacheKey)) {
+    if (cacheKey == null || !modelId || maxPositionCache.has(cacheKey)) {
       return;
     }
     const controller = new AbortController();
@@ -170,7 +170,7 @@ export function useModelMaxPositionEmbeddings(
     return () => { controller.abort(); };
   }, [cacheKey, modelId, token]);
 
-  if ((cacheKey === null || cacheKey === undefined)) {
+  if (cacheKey == null) {
     return { maxPositionEmbeddings: null, loading: false, error: null };
   }
   if (maxPositionCache.has(cacheKey)) {

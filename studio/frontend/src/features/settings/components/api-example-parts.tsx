@@ -317,7 +317,9 @@ export function ExampleCodeBox({
         {/* On the first code line, clear of the vertical scrollbar. */}
         <button
           type="button"
-          onClick={handleCopy}
+          onClick={() => {
+            handleCopy().catch(() => undefined);
+          }}
           className="absolute top-2.5 right-3 z-10 flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           aria-label={
             copied

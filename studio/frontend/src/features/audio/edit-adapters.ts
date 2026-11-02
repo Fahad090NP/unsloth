@@ -112,7 +112,7 @@ function fireredInstruction(change: EditChange): string | null {
       return `Replace '${old}' with '${added}'.`;
     case "delete":
       return `Delete '${old}'.`;
-    default:
+    case "insert":
       return change.before === null
         ? null
         : `Insert '${added}' before '${change.before}'.`;
@@ -130,10 +130,8 @@ export function deliveryInstructions(
   pitchSteps: number | null | undefined,
 ): string[] {
   const lines: string[] = [];
-  if (!isUnchangedSpeed(speed))
-    lines.push(
-      `adjust the speed to ${Number((speed!).toPrecision(6))}x`,
-    );
+  if (typeof speed === "number" && !isUnchangedSpeed(speed))
+    lines.push(`adjust the speed to ${Number(speed.toPrecision(6))}x`);
   if (typeof pitchSteps === "number" && pitchSteps > 0)
     lines.push(`shift the pitch by ${Math.round(pitchSteps)} steps`);
   return lines;

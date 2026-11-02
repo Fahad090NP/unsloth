@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import {
   loadVramBudgetSettings,
   subscribeVramBudgetSettings,
-} from "@/features/settings/api/vram-budget";
+} from "@/features/settings";
 
 let cachedFraction: number | null = null;
 let inFlight: Promise<void> | null = null;
@@ -54,9 +54,13 @@ export function useVramBudgetFraction(): number | null {
       routeAbsent = false;
       if (alive) setFraction(settings.fraction);
     });
-    void ensureLoaded().then(() => {
-      if (alive) setFraction(cachedFraction);
-    });
+    ensureLoaded()
+      .then(() => {
+        if (alive) setFraction(cachedFraction);
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load the VRAM budget fraction", error);
+      });
     return () => {
       alive = false;
       unsubscribe();

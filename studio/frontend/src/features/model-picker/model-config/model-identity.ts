@@ -40,7 +40,7 @@ function parseVersionedModelStorageKey(
     return null;
   }
   try {
-    const parsed = JSON.parse(key.slice(MODEL_STORAGE_KEY_PREFIX.length));
+    const parsed: unknown = JSON.parse(key.slice(MODEL_STORAGE_KEY_PREFIX.length));
     if (
       !Array.isArray(parsed) ||
       parsed.length !== 2 ||

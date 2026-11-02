@@ -121,13 +121,15 @@ function applyTrainingSseLine(fields: TrainingSseFields, line: string): void {
   if (line.startsWith("event:")) {
     const value = line.slice(6).trim();
     if (isTrainingProgressEventName(value)) {
-      fields.eventName = value;
+      const parsed = fields;
+      parsed.eventName = value;
     }
     return;
   }
   if (line.startsWith("id:")) {
     const value = Number(line.slice(3).trim());
-    fields.id = Number.isFinite(value) ? value : null;
+    const parsed = fields;
+    parsed.id = Number.isFinite(value) ? value : null;
     return;
   }
   if (line.startsWith("data:")) {

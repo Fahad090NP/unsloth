@@ -990,7 +990,7 @@ function SizeText({ value }: { value: string }) {
     <>
       {approx}
       {whole}
-      {fraction === undefined ? null : (
+      {fraction == null ? null : (
         <>
           <span className="mx-[-0.1em]">.</span>
           {fraction}
@@ -1292,7 +1292,7 @@ function ModelRow({
   // With no GPU every load runs from RAM: `ram` keeps its warning but is not an overage to dim.
   const dimmed = exceeds && !(vramStatus === "ram" && !(gpuGb && gpuGb > 0));
   const showVramTooltip =
-    (vramEst !== null && vramEst !== undefined) && vramEst > 0 && (gpuGb !== null && gpuGb !== undefined) && gpuGb > 0;
+    vramEst != null && vramEst > 0 && gpuGb != null && gpuGb > 0;
   const vramTooltipText =
     showVramTooltip && vramStatus
       ? exceeds
@@ -1353,7 +1353,7 @@ function ModelRow({
     const release = (event: Event) => {
       const target = event.target as Element | null;
       if (nameRef.current?.contains(target)) return;
-      if (target?.closest?.('[data-slot="tooltip-content"]')) return;
+      if (target?.closest('[data-slot="tooltip-content"]')) return;
       setTappedOpen(false);
       setTooltipOpen(false);
     };
@@ -3097,10 +3097,10 @@ function GgufVariantExpander({
           candidate.variants.some((variant) => variant.filename === v.filename),
         );
         const showGroupHeading =
-          (group?.title !== null && group?.title !== undefined) && group.variants[0].filename === v.filename;
+          group?.title != null && group.variants[0].filename === v.filename;
         // Matching on quant alone works only because an H3 key is unique per file.
         const isRecommended =
-          (group !== null && group !== undefined) &&
+          group != null &&
           effectiveRecommendedByGroup.get(group.key) === v.quant;
         const fit = getVariantFit(v);
         const oom = fit === "oom";
@@ -3137,7 +3137,7 @@ function GgufVariantExpander({
             <span className="min-w-0 flex-1 truncate font-mono text-xs">
               <span className={cn(oom && "text-gray-500! dark:text-gray-400!")}>
                 {ggufVariantPickerLabel(v, {
-                  h3Grouped: (group?.title !== null && group?.title !== undefined),
+                  h3Grouped: group?.title != null,
                   hideH3PrunedBuild,
                 })}
               </span>
@@ -3343,7 +3343,7 @@ function taskMatchesFilter(
 ): boolean {
   if (!filter) return true;
   const wanted = Array.isArray(filter) ? filter : [filter];
-  return (repoTask !== null && repoTask !== undefined) && (wanted as readonly string[]).includes(repoTask);
+  return repoTask != null && (wanted as readonly string[]).includes(repoTask);
 }
 
 // Owned by the Images page, never chat-loadable.
@@ -4149,7 +4149,7 @@ export function HubModelPicker({
     null,
   );
   const updateTransportConflict = useDownloadManagerStore((state) =>
-    updateConflictKey ? state.conflicts[updateConflictKey]?.info : null,
+    updateConflictKey ? state.conflicts[updateConflictKey].info : null,
   );
   const cancelUpdateConflict = useCallback(() => {
     if (updateConflictKey) downloadManager.cancelConflict(updateConflictKey);
@@ -4789,7 +4789,7 @@ export function HubModelPicker({
       const anyBudget =
         budget.memoryTotalGb > 0 || budget.systemRamAvailableGb > 0;
       if (!budget.budgetKnown && !anyBudget) return null;
-      if ((sizeBytes === null || sizeBytes === undefined)) return null;
+      if (sizeBytes == null) return null;
       // Probed and genuinely zero (e.g. Vulkan reporting nothing) means nothing fits.
       if (!anyBudget) return "oom";
       // Same diffusion rule as its quant rows, so parent and children agree.

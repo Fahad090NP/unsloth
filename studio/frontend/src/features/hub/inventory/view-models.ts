@@ -35,8 +35,6 @@ export function localSourceLabel(source: LocalModelInfo["source"]): string {
       return "Models folder";
     case "hf_cache":
       return "HF Cache";
-    default:
-      return "Local model";
   }
 }
 
@@ -263,6 +261,7 @@ function sourceSortWeight(source: LocalModelInfo["source"]): number {
       return 4;
     case "hf_cache":
       return 5;
+    case "unsloth":
     default:
       return 6;
   }

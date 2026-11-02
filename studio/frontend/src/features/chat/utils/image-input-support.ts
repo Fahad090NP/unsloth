@@ -97,7 +97,7 @@ export function getImageInputUnavailableReason({
 const imageGateRunOwners = new WeakSet<() => void>();
 
 export function createImageGateRunOwner(): () => void {
-  const owner = () => {};
+  const owner = () => undefined;
   imageGateRunOwners.add(owner);
   return owner;
 }

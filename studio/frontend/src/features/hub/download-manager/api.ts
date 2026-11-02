@@ -25,7 +25,7 @@ function parseErrorText(status: number, body: unknown): string {
 }
 
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
-  const body = await response.json().catch(() => null);
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(parseErrorText(response.status, body));
   }

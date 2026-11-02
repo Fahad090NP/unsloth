@@ -302,7 +302,9 @@ const ComposerImageDialog: FC<PropsWithChildren<{ source: AttachmentSource; src:
           const neighbour = neighbourOf(images, image.id);
           if (image.id === attachmentId || !neighbour) gallery.onOpenChange(false);
           else gallery.onShow(neighbour.id);
-          void aui.composer().attachment({ id: image.id }).remove();
+          aui.composer().attachment({ id: image.id }).remove().catch((error: unknown) => {
+            console.error("Background chat operation failed", error);
+          });
         },
       })}
     >

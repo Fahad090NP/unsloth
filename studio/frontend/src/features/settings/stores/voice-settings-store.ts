@@ -527,7 +527,10 @@ export function applyDictationDictionary(
         "giu",
       );
       // Callback form avoids $-pattern expansion.
-      result = result.replace(regex, (_match, prefix) => `${prefix}${trimmed}`);
+      result = result.replace(
+        regex,
+        (_match, prefix) => `${String(prefix)}${trimmed}`,
+      );
     } catch {
       // Skip entries that produce an invalid pattern.
     }

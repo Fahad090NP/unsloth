@@ -477,7 +477,7 @@ function stringifyCell(value: unknown): string {
   try {
     return JSON.stringify(value);
   } catch {
-    return String(value);
+    return value instanceof Error ? value.message : "Unable to serialize value";
   }
 }
 
@@ -563,7 +563,8 @@ async function fileToBase64Payload(file: File): Promise<string> {
   return await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const value = String(reader.result ?? "");
+      const raw = reader.result;
+      const value = typeof raw === "string" ? raw : "";
       const parts = value.split(",");
       resolve(parts.length > 1 ? parts[1] : value);
     };
@@ -599,7 +600,7 @@ export function SeedDialog({
     },
   );
 
-  const mode = config.seed_source_type ?? "hf";
+  const mode = config.seed_source_type;
   const previewEmpty = getPreviewEmptyStateCopy(mode);
 
   const queueUploadCleanup = useRecipeStudioStore(
@@ -609,19 +610,11 @@ export function SeedDialog({
   // config.id collides across recipes (ids reset on import), so use a stable per-block uid.
   const uploadUid = config.unstructured_upload_uid?.trim() ?? "";
   const unstructuredFileCount = config.unstructured_file_ids?.length ?? 0;
-  const generatedUploadUidRef = useRef<string | null>(null);
-  if (
-    mode === "unstructured" &&
-    !uploadUid &&
-    unstructuredFileCount === 0 &&
-    generatedUploadUidRef.current === null
-  ) {
-    generatedUploadUidRef.current = makeUnstructuredUploadUid();
-  }
+  const [generatedUploadUid] = useState(makeUnstructuredUploadUid);
   const uploadBlockId = resolveUnstructuredUploadBlockId({
     configId: config.id,
     uploadUid,
-    generatedUploadUid: generatedUploadUidRef.current,
+    generatedUploadUid,
     unstructuredFileCount,
   });
 
@@ -629,11 +622,9 @@ export function SeedDialog({
     if (mode !== "unstructured") return;
     if (uploadUid) return;
     if (unstructuredFileCount > 0) return;
-    const nextUid =
-      generatedUploadUidRef.current ?? makeUnstructuredUploadUid();
-    generatedUploadUidRef.current = nextUid;
+    const nextUid = generatedUploadUid;
     onUpdate({ unstructured_upload_uid: nextUid });
-  }, [mode, uploadUid, unstructuredFileCount, onUpdate]);
+  }, [mode, uploadUid, unstructuredFileCount, generatedUploadUid, onUpdate]);
 
   const prevModeRef = useRef(mode);
   useEffect(() => {
@@ -770,7 +761,7 @@ export function SeedDialog({
             seed_drop_columns: (config.seed_drop_columns ?? []).filter((name) =>
               response.columns.includes(name),
             ),
-            seed_preview_rows: response.preview_rows ?? [],
+            seed_preview_rows: response.preview_rows,
             hf_split: response.split ?? "",
             hf_subset: response.subset ?? "",
             local_file_name: "",
@@ -779,7 +770,7 @@ export function SeedDialog({
             unstructured_file_names: [],
             unstructured_file_sizes: [],
           });
-          setPreviewRows(response.preview_rows ?? []);
+          setPreviewRows(response.preview_rows);
           setLastLoadedKey(loadKey);
           return true;
         }
@@ -809,7 +800,7 @@ export function SeedDialog({
             seed_drop_columns: (config.seed_drop_columns ?? []).filter((name) =>
               response.columns.includes(name),
             ),
-            seed_preview_rows: response.preview_rows ?? [],
+            seed_preview_rows: response.preview_rows,
             hf_repo_id: "",
             hf_subset: "",
             hf_split: "",
@@ -819,7 +810,7 @@ export function SeedDialog({
             unstructured_file_names: [],
             unstructured_file_sizes: [],
           });
-          setPreviewRows(response.preview_rows ?? []);
+          setPreviewRows(response.preview_rows);
           setLastLoadedKey(loadKey);
           return true;
         }
@@ -852,7 +843,7 @@ export function SeedDialog({
             hf_path: response.resolved_path,
             resolved_paths: response.resolved_paths ?? [],
             seed_columns: response.columns,
-            seed_preview_rows: response.preview_rows ?? [],
+            seed_preview_rows: response.preview_rows,
             seed_total_rows: response.total_rows ?? undefined,
             unstructured_file_ids: fileIds,
             unstructured_file_names: fileNames,
@@ -860,7 +851,7 @@ export function SeedDialog({
               .filter((f) => f.status === "ok")
               .map((f) => f.size),
           });
-          setPreviewRows(response.preview_rows ?? []);
+          setPreviewRows(response.preview_rows);
           setLastLoadedKey(loadKey);
           return true;
         }
@@ -902,7 +893,7 @@ export function SeedDialog({
     if (!key || key === lastLoadedKey) {
       return;
     }
-    void loadSeedMetadata({ silent: true });
+    loadSeedMetadata({ silent: true }).catch(() => undefined);
   }, [getCurrentLoadKey, isInspecting, lastLoadedKey, loadSeedMetadata, open]);
 
   const wasUploadingRef = useRef(false);
@@ -915,7 +906,7 @@ export function SeedDialog({
       wasUploadingRef.current = false;
       const hasOk = unstructuredFiles.some((f) => f.status === "ok");
       if (hasOk) {
-        void loadSeedMetadata({ silent: true });
+        loadSeedMetadata({ silent: true }).catch(() => undefined);
       }
     }
   }, [mode, unstructuredFiles, loadSeedMetadata]);
@@ -986,7 +977,9 @@ export function SeedDialog({
                     type="button"
                     variant="outline"
                     className="nodrag shrink-0"
-                    onClick={() => void loadSeedMetadata()}
+                    onClick={() => {
+                      loadSeedMetadata().catch(() => undefined);
+                    }}
                     disabled={isInspecting || !config.hf_repo_id.trim()}
                   >
                     {isInspecting ? "Loading..." : "Load"}
@@ -1041,7 +1034,9 @@ export function SeedDialog({
                   type="button"
                   variant="outline"
                   className="nodrag shrink-0"
-                  onClick={() => void loadSeedMetadata()}
+                  onClick={() => {
+                      loadSeedMetadata().catch(() => undefined);
+                    }}
                   disabled={isInspecting || !localFile}
                 >
                   {isInspecting ? "Loading..." : "Load"}
@@ -1384,9 +1379,8 @@ export function SeedDialog({
                               const value = stringifyCell(row[col]);
                               const rowHasExpandableCell =
                                 rowHasExpandableText(row);
-                              const rowExpanded = Boolean(
-                                expandedPreviewRows[rowIdx],
-                              );
+                              const rowExpanded =
+                                expandedPreviewRows[rowIdx] === true;
                               return rowHasExpandableCell && !rowExpanded
                                 ? truncatePreviewValue(value)
                                 : value;

@@ -79,7 +79,7 @@ function pdfLine(span: Element): Range[] {
   const middle = target.top + target.height / 2;
   return [...layer.querySelectorAll("span")]
     .filter((candidate) => {
-      if (candidate.querySelector("span") || !candidate.textContent?.trim())
+      if (candidate.querySelector("span") || !candidate.textContent.trim())
         return false;
       const rect = candidate.getBoundingClientRect();
       return (
@@ -143,7 +143,7 @@ function blocksIn(root: Element, area: DOMRect): Range[] {
     (element) =>
       !element.closest("[data-annotate-ui]") &&
       (element.closest(".textLayer")
-        ? !element.querySelector("span") && element.textContent?.trim()
+        ? !element.querySelector("span") && element.textContent.trim()
         : true) &&
       overlaps(element.getBoundingClientRect(), area),
   );
@@ -336,8 +336,8 @@ function rangeAt(place: Place, page: HTMLElement, indexes: Map<Element, TextInde
   const range = document.createRange();
   if ("path" in place) {
     let element: Element | undefined = item;
-    for (const step of place.path) element = element?.children[step];
-    if (element?.tagName !== place.tag) return null;
+    for (const step of place.path) element = element.children[step];
+    if (element.tagName !== place.tag) return null;
     range.selectNode(element);
     return range;
   }

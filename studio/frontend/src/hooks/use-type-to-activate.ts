@@ -53,7 +53,7 @@ export function useTypeToActivate(): void {
 // From the browser, not the server's device_type: remote sessions can differ.
 const IS_MAC =
   typeof navigator !== "undefined" &&
-  (navigator.platform?.toLowerCase().includes("mac") ||
+  (navigator.platform.toLowerCase().includes("mac") ||
     navigator.userAgent.toLowerCase().includes("mac"));
 
 const TEXT_INPUT_TYPES = new Set([

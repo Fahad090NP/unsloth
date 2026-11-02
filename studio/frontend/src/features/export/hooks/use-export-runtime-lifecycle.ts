@@ -22,11 +22,10 @@ const LOG_POLL_INTERVAL_MS = 750;
  */
 export function useExportRuntimeLifecycle(): void {
   useEffect(() => {
-    let disposed = false;
+    const runtime = { disposed: false, logPolling: false };
     let openingStream = false;
     let streamController: AbortController | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-    let logPolling = false;
     let logPollTimer: ReturnType<typeof setTimeout> | null = null;
     let statusPolling = false;
     let statusTimer: ReturnType<typeof setTimeout> | null = null;
@@ -54,10 +53,10 @@ export function useExportRuntimeLifecycle(): void {
     // Polling runs alongside SSE; over a Cloudflare tunnel the SSE is buffered, so polls fill
     // the log. A successful poll marks the stream connected.
     const pollLogsOnce = async () => {
-      if (disposed || !store.getState().isExporting) return;
+      if (runtime.disposed || !store.getState().isExporting) return;
       try {
         const res = await fetchExportLogs(store.getState().lastSeq);
-        if (disposed) return;
+        if (runtime.disposed) return;
         store.getState().setConnected(true);
         if (res.entries.length > 0) {
           store.getState().appendLogs(res.entries);
@@ -68,31 +67,35 @@ export function useExportRuntimeLifecycle(): void {
     };
 
     const logPollLoop = async () => {
-      if (disposed || !logPolling) return;
+      if (runtime.disposed || !runtime.logPolling) return;
       await pollLogsOnce();
-      if (disposed || !logPolling) return;
+      if (runtime.disposed || !runtime.logPolling) return;
       logPollTimer = setTimeout(() => {
-        void logPollLoop();
+        logPollLoop().catch(() => undefined);
       }, LOG_POLL_INTERVAL_MS);
     };
 
     const startLogPolling = () => {
-      if (logPolling || disposed) return;
-      logPolling = true;
-      void logPollLoop();
+      if (runtime.logPolling || runtime.disposed) return;
+      runtime.logPolling = true;
+      logPollLoop().catch(() => undefined);
     };
 
     function stopLogPolling() {
-      logPolling = false;
+      runtime.logPolling = false;
       if (logPollTimer) {
         clearTimeout(logPollTimer);
         logPollTimer = null;
       }
     }
 
+    const markOpeningDone = () => {
+      openingStream = false;
+    };
+
     const ensureStream = async () => {
       if (
-        disposed ||
+        runtime.disposed ||
         openingStream ||
         streamController ||
         !store.getState().isExporting
@@ -119,26 +122,26 @@ export function useExportRuntimeLifecycle(): void {
       } catch {
         // fetch-level failure: fall through to the reconnect below.
       } finally {
-        openingStream = false;
+        markOpeningDone();
         if (streamController === controller) {
           streamController = null;
         }
         // Do not clear `connected`: tunnel SSE reconnects would flap it. The poll owns the flag.
 
         if (
-          !disposed &&
+          !runtime.disposed &&
           !controller.signal.aborted &&
           store.getState().isExporting
         ) {
           reconnectTimer = setTimeout(() => {
-            void ensureStream();
+            ensureStream().catch(() => undefined);
           }, STREAM_RECONNECT_DELAY_MS);
         }
       }
     };
 
     const scheduleStatusPoll = () => {
-      if (disposed) return;
+      if (runtime.disposed) return;
       if (statusTimer) clearTimeout(statusTimer);
       const { isExporting, backendActive } = store.getState();
       const active = isExporting || backendActive;
@@ -146,10 +149,14 @@ export function useExportRuntimeLifecycle(): void {
         () => {
           statusTimer = null;
           if (!active && document.hidden) return;
-          void pollStatus();
+          pollStatus().catch(() => undefined);
         },
         active ? STATUS_POLL_INTERVAL_MS : IDLE_STATUS_POLL_INTERVAL_MS,
       );
+    };
+
+    const markStatusPollingDone = () => {
+      statusPolling = false;
     };
 
     const pollStatus = async () => {
@@ -161,25 +168,25 @@ export function useExportRuntimeLifecycle(): void {
       statusPolling = true;
       try {
         const status = await getExportStatus();
-        if (disposed) return;
+        if (runtime.disposed) return;
         store.getState().applyBackendStatus(status);
         if (store.getState().isExporting) {
-          void ensureStream();
+          ensureStream().catch(() => undefined);
           startLogPolling();
         }
       } catch {
         // ignore transient status failures
       } finally {
-        statusPolling = false;
+        markStatusPollingDone();
         scheduleStatusPoll();
       }
     };
 
     const onVisibilityChange = () => {
-      if (document.hidden || statusPolling || disposed) return;
+      if (document.hidden || statusPolling || runtime.disposed) return;
       if (statusTimer) clearTimeout(statusTimer);
       statusTimer = null;
-      void pollStatus();
+      pollStatus().catch(() => undefined);
     };
 
     // React to isExporting flipping (run start / terminal) without needing the
@@ -190,23 +197,23 @@ export function useExportRuntimeLifecycle(): void {
       prevExporting = state.isExporting;
       if (!statusPolling) scheduleStatusPoll();
       if (state.isExporting) {
-        void ensureStream();
+        ensureStream().catch(() => undefined);
         startLogPolling();
       } else {
         stopStream();
       }
     });
 
-    void pollStatus();
+    pollStatus().catch(() => undefined);
     if (store.getState().isExporting) {
-      void ensureStream();
+      ensureStream().catch(() => undefined);
       startLogPolling();
     }
 
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
-      disposed = true;
+      runtime.disposed = true;
       if (statusTimer) clearTimeout(statusTimer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       unsubscribe();

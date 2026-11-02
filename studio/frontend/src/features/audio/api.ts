@@ -195,15 +195,13 @@ export async function listAudioGallery(
   before?: AudioGalleryCursor | null,
   archived = false,
 ): Promise<AudioGalleryListResponse> {
-  const pin =
-    before?.pin !== null && before?.pin !== undefined
-      ? `&before_pin=${encodeURIComponent(before.pin)}`
+  const pin =before?.pin != null? `&before_pin=${encodeURIComponent(before.pin)}`
       : "";
   const cursor = before
     ? `&before_mtime=${encodeURIComponent(before.mtime)}&before_id=${encodeURIComponent(before.id)}${pin}`
     : "";
   const response = await authFetch(
-    `/api/inference/audio/gallery?offset=${offset}&limit=${limit}&archived=${archived}${cursor}`,
+    `/api/inference/audio/gallery?offset=${offset}&limit=${limit}&archived=${String(archived)}${cursor}`,
   );
   return await parseJson<AudioGalleryListResponse>(response);
 }
@@ -464,7 +462,7 @@ export async function audioInputAlive(inputId: string): Promise<boolean> {
       `/api/inference/audio/inputs/${encodeURIComponent(inputId)}/file`,
       { headers: { Range: "bytes=0-0" } },
     );
-    void response.body?.cancel().catch(() => undefined);
+    response.body?.cancel().catch(() => undefined);
     return response.status !== 404;
   } catch {
     return true;

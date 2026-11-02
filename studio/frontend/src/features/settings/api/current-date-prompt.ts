@@ -33,7 +33,7 @@ export async function loadCurrentDatePrompt(
       await readFastApiError(res, fallbackMessage),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export async function updateCurrentDatePrompt(
@@ -50,5 +50,5 @@ export async function updateCurrentDatePrompt(
       await readFastApiError(res, fallbackMessage),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }

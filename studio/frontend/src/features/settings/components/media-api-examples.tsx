@@ -195,9 +195,9 @@ export function MediaApiExamples({
         }))}
         onChange={setKind}
       />
-      {(pageModel === null || pageModel === undefined) || autoSwitch === false ? (
+      {pageModel == null || autoSwitch === false ? (
         <div className="flex min-w-0 flex-col gap-1 text-ui-11/relaxed text-muted-foreground">
-          {(pageModel === null || pageModel === undefined) ? (
+          {pageModel == null ? (
             <p>{t("settings.apiKeys.mediaApi.placeholderModel")}</p>
           ) : null}
           {autoSwitch === false ? (

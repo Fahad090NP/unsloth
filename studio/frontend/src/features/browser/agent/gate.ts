@@ -109,9 +109,9 @@ function mentioned(host: string, text: string): boolean {
   // script.google.com), so "google" approves google.com and nothing under it.
   if (labels.length !== 2) return false;
   const [name, tld] = labels;
-  if (!NAMED_TLDS.has(tld ?? "")) return false;
+  if (!NAMED_TLDS.has(tld)) return false;
   // A word of its own, not a label inside some other hostname.
-  const word = name?.replace(/[^a-z0-9-]/g, "");
+  const word = name.replace(/[^a-z0-9-]/g, "");
   return Boolean(word && word.length >= 4 && new RegExp(`(^|[^a-z0-9.-])${word}($|[^a-z0-9.-]|\\.(?![a-z0-9-]))`).test(lower));
 }
 

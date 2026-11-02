@@ -9,7 +9,7 @@ import {
   sttEngineStatusFor,
   SttModelNotDownloadedError,
   unloadSttModel,
-} from "@/features/chat/adapters/studio-model-dictation-adapter";
+} from "@/features/chat";
 import { getHfToken, hfApiToken } from "@/features/hub";
 import {
   trackSttDownload,
@@ -320,9 +320,11 @@ export function useSttSidecar({
         if (sttLoadingGeneration.current === generation) {
           sttLoadingGeneration.current = null;
           await refreshSttStatus();
+          const loadingGeneration: number | null =
+            sttLoadingGeneration.current;
           if (
             generation === sttLoadGeneration.current &&
-            sttLoadingGeneration.current === null
+            loadingGeneration === null
           ) {
             setBusy(null);
           }

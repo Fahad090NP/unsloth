@@ -120,7 +120,7 @@ export const STT_MODEL_NAMES: Record<DefaultSttModel, string> = {
     AUDIO_CPP_DICTATION_MODELS.map((model) => [
       model.key,
       "variant" in model
-        ? `${audioCppDisplayName(model.id)} (${model.variant})`
+        ? `${audioCppDisplayName(model.id)} (${model.variant ?? ""})`
         : audioCppDisplayName(model.id),
     ]),
   ) as Record<AudioCppSttKey, string>),

@@ -25,7 +25,7 @@ export async function loadModelAliases(): Promise<ModelAlias[]> {
       await readFastApiError(res, "Failed to load model aliases"),
     );
   }
-  return parseAliases(await res.json());
+  return parseAliases((await res.json()) as Parameters<typeof parseAliases>[0]);
 }
 
 /** Replaces the whole list; the server answers with what it stored. */
@@ -42,5 +42,5 @@ export async function saveModelAliases(
       await readFastApiError(res, "Failed to save model aliases"),
     );
   }
-  return parseAliases(await res.json());
+  return parseAliases((await res.json()) as Parameters<typeof parseAliases>[0]);
 }

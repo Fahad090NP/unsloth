@@ -187,7 +187,7 @@ export function DecisionApiSection({
       ? jobKeyOf(DOWNLOAD_KIND.MODEL, plan.repo, scopedVariant(DOWNLOAD_SCOPE))
       : null;
   const jobState = useDownloadManagerStore((s) =>
-    jobKey ? (s.jobs[jobKey]?.state ?? null) : null,
+    jobKey ? (s.jobs[jobKey].state ?? null) : null,
   );
   const downloading = jobState === "running" || jobState === "cancelling";
   const downloadDone = jobState === "complete";

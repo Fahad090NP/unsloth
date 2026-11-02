@@ -102,15 +102,15 @@ export function VideoFile({
   const fullscreen = () => {
     const root = rootRef.current;
     if (!root) return;
-    const request = document.fullscreenElement === root ? document.exitFullscreen() : root.requestFullscreen?.();
-    void request?.catch(() => undefined);
+    const request = document.fullscreenElement === root ? document.exitFullscreen() : root.requestFullscreen();
+    request.catch(() => undefined).catch(() => undefined);
   };
   const pictureInPicture = () => {
     const el = video();
     if (!el) return;
     const request =
       document.pictureInPictureElement === el ? document.exitPictureInPicture() : el.requestPictureInPicture();
-    void request.catch(() => undefined);
+    request.catch(() => undefined).catch(() => undefined);
   };
   const copyFrame = () => {
     const el = video();

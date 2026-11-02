@@ -215,7 +215,7 @@ const KEY = "unsloth:images:enhance-prompt-by-family";
 
 export function readEnhanceChoices(): Record<string, boolean> {
   try {
-    const value = JSON.parse(localStorage.getItem(KEY) ?? "{}");
+    const value: unknown = JSON.parse(localStorage.getItem(KEY) ?? "{}");
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
     const out: Record<string, boolean> = {};
     for (const [k, v] of Object.entries(value)) if (typeof v === "boolean") out[k] = v;

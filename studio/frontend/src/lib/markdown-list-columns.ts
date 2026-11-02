@@ -72,7 +72,7 @@ export function interruptsParagraph(line: string): boolean {
   if (item === null) {
     return false;
   }
-  const marker = item[1] ?? "";
+  const marker = item.at(1) ?? "";
   if (!line.slice(item[0].length).trim()) {
     return false;
   }
@@ -127,7 +127,7 @@ function mayBeLazy(line: string): boolean {
   const named = HTML_BLOCK_OPEN.exec(line);
   // HTML block type 7 cannot interrupt a paragraph, so it is deliberately excluded.
   const htmlBlock =
-    named !== null && HTML_BLOCK_TAGS.has((named[1] ?? "").toLowerCase());
+    named !== null && HTML_BLOCK_TAGS.has((named.at(1) ?? "").toLowerCase());
   return (
     PARAGRAPH_TEXT.test(line) &&
     !INTERRUPTS.test(line) &&
@@ -189,7 +189,7 @@ export function itemContent(line: string, afterParagraph: boolean): string {
   if (item === null) {
     return line;
   }
-  const padding = indentWidth(item[2] ?? "");
+  const padding = indentWidth(item.at(2) ?? "");
   const over = padding > MAX_ITEM_PADDING ? padding - 1 : 0;
   return `${" ".repeat(over)}${line.slice(item[0].length)}`;
 }
@@ -243,9 +243,9 @@ function sameLineListColumns(
   let rest = line;
   const columns = [...outerColumns];
 
-  while (true) {
-    const marker = item[1] ?? "";
-    const rawPadding = indentWidth(item[2] ?? "");
+  for (;;) {
+    const marker = item.at(1) ?? "";
+    const rawPadding = indentWidth(item.at(2) ?? "");
     const padding =
       rawPadding === 0 || rawPadding > MAX_ITEM_PADDING ? 1 : rawPadding;
     const contentColumn = itemIndent + marker.length + padding;

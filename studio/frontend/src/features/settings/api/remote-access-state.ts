@@ -169,6 +169,7 @@ export function remoteAccessBlockMessage(
       return "This tunnel is managed by the Colab runtime.";
     case "colab":
       return "Remote access settings are managed by the Colab runtime.";
+    case null:
     default:
       return null;
   }

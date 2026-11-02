@@ -83,7 +83,7 @@ function TextFile({
     let active = true;
     // HTML runs whole: a cut document breaks its scripts and closing tags.
     const bytes = kind === "html" ? blob.size : MAX_TEXT_BYTES;
-    void blob.slice(0, bytes).text().then((value) => active && setText(value));
+    blob.slice(0, bytes).text().then((value) => active && setText(value)).catch(() => undefined);
     return () => {
       active = false;
     };
@@ -210,7 +210,7 @@ export function FileView({
   const svg = media === "image" && (/^image\/svg\+xml\b/i.test(contentType) || /\.svg$/i.test(name));
   const src = useObjectUrl(blob, media !== null, svg);
   const [failed, setFailed] = useState(false);
-  const pageTarget = useBrowserStore((state) => (tabId ? state.fileViews[tabId]?.pageTarget : undefined));
+  const pageTarget = useBrowserStore((state) => (tabId ? state.fileViews[tabId].pageTarget : undefined));
   const dropPageTarget = useCallback(
     () => tabId && useBrowserStore.getState().setFileView(tabId, { pageTarget: null }),
     [tabId],

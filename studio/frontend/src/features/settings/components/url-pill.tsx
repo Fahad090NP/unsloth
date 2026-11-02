@@ -31,15 +31,19 @@ export function UrlPill({ url, className }: { url: string; className?: string })
         type="button"
         aria-label={copied ? "Copied" : `Copy ${url}`}
         title={copied ? "Copied" : "Copy URL"}
-        onClick={async () => {
-          if (!(await copyToClipboard(url))) {
-            return;
-          }
-          setCopied(true);
-          if (copyTimer.current !== null) {
-            window.clearTimeout(copyTimer.current);
-          }
-          copyTimer.current = window.setTimeout(() => { setCopied(false); }, 1800);
+        onClick={() => {
+          (async () => {
+            if (!(await copyToClipboard(url))) {
+              return;
+            }
+            setCopied(true);
+            if (copyTimer.current !== null) {
+              window.clearTimeout(copyTimer.current);
+            }
+            copyTimer.current = window.setTimeout(() => {
+              setCopied(false);
+            }, 1800);
+          })().catch(() => undefined);
         }}
         className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       >

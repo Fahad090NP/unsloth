@@ -109,7 +109,9 @@ export function BlockerNote({
   id: string;
   blocker: GenerateBlocker;
 }) {
-  const [first, ...rest] = blocker.actions ?? [];
+  const actions = blocker.actions ?? [];
+  const first = actions.at(0);
+  const rest = actions.slice(1);
   if (!first) {
     return (
       <p id={id} className="text-center text-ui-11p5/snug text-muted-foreground">

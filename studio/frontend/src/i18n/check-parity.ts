@@ -64,11 +64,11 @@ function checkOverlay(
         missing.push(subPath);
         continue;
       }
-      const overlayV: string | Tree | undefined = overlay[k];
-      if (overlayV === undefined) {
+      if (!(k in overlay)) {
         missing.push(subPath);
         continue;
       }
+      const overlayV = overlay[k];
       if (typeof overlayV !== "string") {
         errors.push(`${subPath} should be string, got ${typeof overlayV}`);
         continue;

@@ -207,7 +207,7 @@ export function useTrainingRuntimeLifecycle(): void {
           status.start_request_state !== "pending" &&
           (!nextState.isStarting || acceptedLocalStart)
         ) {
-          void ensureStream();
+          ensureStream().catch(() => undefined);
         } else {
           stopStream();
         }
@@ -259,8 +259,8 @@ export function useTrainingRuntimeLifecycle(): void {
 
             if (event.event === "complete") {
               stopStream();
-              void pollStatus({ fresh: true });
-              void pollMetrics({ fresh: true });
+              pollStatus({ fresh: true }).catch(() => undefined);
+              pollMetrics({ fresh: true }).catch(() => undefined);
               return;
             }
 
@@ -296,7 +296,7 @@ export function useTrainingRuntimeLifecycle(): void {
                   !disposed &&
                   isTrainingStreamScopeCurrent(scope, runtimeStore.getState())
                 ) {
-                  void ensureStream();
+                  ensureStream().catch(() => undefined);
                 }
               }, STREAM_RECONNECT_DELAY_MS);
             }
@@ -328,7 +328,7 @@ export function useTrainingRuntimeLifecycle(): void {
       },
     );
 
-    void hydrate();
+    hydrate().catch(() => undefined);
 
     const isIdle = () => {
       const s = runtimeStore.getState();
@@ -343,14 +343,14 @@ export function useTrainingRuntimeLifecycle(): void {
       if (isIdle()) {
         return;
       }
-      void pollStatus();
+      pollStatus().catch(() => undefined);
     }, STATUS_POLL_INTERVAL_MS);
 
     const metricsTimer = setInterval(() => {
       if (isIdle()) return;
       const s = runtimeStore.getState();
       if (shouldUseLiveSync(s) || s.currentStep > 0) {
-        void pollMetrics();
+        pollMetrics().catch(() => undefined);
       }
     }, METRICS_POLL_INTERVAL_MS);
 
@@ -363,7 +363,7 @@ export function useTrainingRuntimeLifecycle(): void {
       if (!isIdle()) {
         return;
       }
-      void pollStatus();
+      pollStatus().catch(() => undefined);
     }, IDLE_POLL_INTERVAL_MS);
 
     return () => {

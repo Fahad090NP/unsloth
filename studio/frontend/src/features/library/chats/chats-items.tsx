@@ -623,7 +623,7 @@ function ChatBadges({ chat, marksOnly = false }: { chat: SidebarItem; marksOnly?
 }
 
 function chatTitle(chat: SidebarItem, t: ReturnType<typeof useT>): string {
-  return chat.title?.trim() || t("settings.data.library.untitled");
+  return chat.title.trim() || t("settings.data.library.untitled");
 }
 
 function modelLabel(

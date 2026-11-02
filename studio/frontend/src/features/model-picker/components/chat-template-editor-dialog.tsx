@@ -49,7 +49,7 @@ export function ChatTemplateEditorDialog({
   const byteLength = chatTemplateByteLength(renderedDraft);
   const overLimit = !isChatTemplateWithinLimit(renderedDraft);
   const matchesDefault =
-    (defaultTemplate !== null && defaultTemplate !== undefined) && renderedDraft === defaultTemplate;
+    defaultTemplate != null && renderedDraft === defaultTemplate;
 
   const handleClose = () => {
     validationToken.current += 1;
@@ -175,7 +175,9 @@ export function ChatTemplateEditorDialog({
                 </Button>
                 <Button
                   type="button"
-                  onClick={handleSave}
+                  onClick={() => {
+                    handleSave().catch(() => undefined);
+                  }}
                   disabled={validating || overLimit}
                 >
                   {validating ? "Validating..." : "Save"}

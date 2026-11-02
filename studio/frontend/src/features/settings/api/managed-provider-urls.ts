@@ -47,7 +47,7 @@ export async function loadManagedProviderUrls(): Promise<ManagedProviderUrlSetti
       ),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export async function updateManagedProviderUrls(
@@ -66,5 +66,5 @@ export async function updateManagedProviderUrls(
       ),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }

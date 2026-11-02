@@ -129,7 +129,7 @@ function isBlockedReadmeUrl(
   if (!protocol) return false;
   if (BLOCKED_README_PROTOCOLS.has(protocol)) return true;
   if (protocol !== "data:") return false;
-  return String(node.tagName ?? "").toLowerCase() !== "img";
+  return typeof node.tagName !== "string" || node.tagName.toLowerCase() !== "img";
 }
 
 // Delegates to defaultUrlTransform so unsafe schemes stay stripped.

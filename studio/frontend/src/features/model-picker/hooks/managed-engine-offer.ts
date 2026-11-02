@@ -5,6 +5,11 @@ import { create } from "zustand";
 
 export type ManagedEngine = "vllm" | "sglang";
 
+const MANAGED_ENGINES: ReadonlySet<string> = new Set<ManagedEngine>([
+  "vllm",
+  "sglang",
+]);
+
 /** /validate's managed_engine_offer: the Default engine cannot run this quantization (#11728). */
 export interface ManagedEngineOffer {
   quantization: string;
@@ -70,8 +75,7 @@ export function offeredEngines(
   offer: ManagedEngineOffer | null | undefined,
 ): ManagedEngine[] {
   return (offer?.engines ?? []).filter(
-    (engine): engine is ManagedEngine =>
-      engine === "vllm" || engine === "sglang",
+    (engine): engine is ManagedEngine => MANAGED_ENGINES.has(engine),
   );
 }
 

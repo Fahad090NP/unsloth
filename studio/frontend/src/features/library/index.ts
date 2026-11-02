@@ -7,6 +7,7 @@ export { useLibraryFavorite, useLibraryFavorites, useLibraryFavoritesStore } fro
 export { ConfirmDeleteDialog } from "./components/library-dialogs";
 export { chatAboutMedia, resetToNewChat, startLibraryChat } from "./start-chat";
 export { revealInFolder, useRevealLabel } from "./reveal";
+export { RAISED_SURFACE } from "./surface";
 export { LIBRARY_TABS, validateLibrarySearch, type LibrarySearch, type LibraryTab } from "./search";
 export {
   LIBRARY_SETTINGS_STORAGE_KEY,

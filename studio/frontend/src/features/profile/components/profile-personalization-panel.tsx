@@ -203,7 +203,8 @@ export function ProfilePersonalizationPanel() {
         className="sr-only"
         onChange={(e) => {
           void onPickFile(e.target.files?.[0]);
-          e.target.value = "";
+          const target = e.target;
+          target.value = "";
         }}
       />
 

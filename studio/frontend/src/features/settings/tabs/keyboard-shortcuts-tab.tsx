@@ -9,8 +9,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useChatPreferencesStore } from "@/features/chat/stores/chat-preferences-store";
-import { composerShortcutLabels } from "@/features/chat/utils/composer-preferences";
+import { useChatPreferencesStore } from "@/features/chat";
+import { composerShortcutLabels } from "@/features/chat";
 import { useT } from "@/i18n";
 import { isTauri } from "@/lib/api-base";
 import { cn } from "@/lib/utils";

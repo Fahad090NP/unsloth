@@ -35,13 +35,13 @@ const EXPRESSION_LABELS: Record<ExpressionDtype, string> = {
 };
 
 export function labelForSampler(type: SamplerType): string {
-  return SAMPLER_LABELS[type] ?? "Generated field";
+  return SAMPLER_LABELS[type];
 }
 
 export function labelForLlm(type: LlmType): string {
-  return LLM_LABELS[type] ?? "AI";
+  return LLM_LABELS[type];
 }
 
 export function labelForExpression(type: ExpressionDtype): string {
-  return EXPRESSION_LABELS[type] ?? "Formula";
+  return EXPRESSION_LABELS[type];
 }

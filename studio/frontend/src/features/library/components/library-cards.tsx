@@ -189,7 +189,9 @@ function PlayButton({ item }: { item: LibraryItem }) {
       type="button"
       aria-label={t(playing ? "library.audio.pause" : "library.audio.play", { name: item.name })}
       aria-pressed={playing}
-      onClick={() => void toggleLibraryAudio(item)}
+      onClick={() => {
+        toggleLibraryAudio(item).catch(() => undefined);
+      }}
       className={cn(
         OVERLAY_CONTROL,
         "absolute bottom-3 left-4 flex size-7 items-center justify-center rounded-full text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-600",
@@ -310,9 +312,10 @@ function FolderCard({
       </CardFrame>
       <button
         type="button"
-        onClick={(event) =>
-          { selecting ? select.toggle(selectKey, event.shiftKey) : actions.openFolder(folder.id); }
-        }
+        onClick={(event) => {
+          if (selecting) select.toggle(selectKey, event.shiftKey);
+          else actions.openFolder(folder.id);
+        }}
         className="mt-2 block w-full px-1 text-left"
       >
         <p className="truncate font-medium text-ui-14 text-foreground">{folder.name}</p>

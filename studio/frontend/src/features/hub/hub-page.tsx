@@ -915,7 +915,7 @@ export function ModelsPage() {
   const mode: DiscoverMode = isModelDiscover
     ? hasQuery
       ? "search"
-      : (urlSection !== null && urlSection !== undefined)
+      : urlSection != null
         ? "channel-list"
         : sortBrowseActive || hasSearchFilters || uploaderPick !== null
           ? "search"
@@ -924,7 +924,7 @@ export function ModelsPage() {
   const isFeedMode = mode === "feed";
   const isChannelListMode = mode === "channel-list";
   const isSortBrowseMode =
-    sortBrowseActive && isModelDiscover && !hasQuery && (urlSection === null || urlSection === undefined);
+    sortBrowseActive && isModelDiscover && !hasQuery && urlSection == null;
 
   const liveListChannel = useMemo<ChannelPreset | null>(() => {
     if (isChannelListMode) return activeChannel;

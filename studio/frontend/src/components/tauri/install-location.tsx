@@ -20,17 +20,21 @@ export default function InstallLocation({ disabled }: { disabled: boolean }) {
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
+    const isCancelled = () => cancelled;
+    const load = async () => {
       try {
         const { invoke } = await import("@tauri-apps/api/core");
         const next = await invoke<StudioInstallLocation>(
           "studio_install_location",
         );
-        if (!cancelled) setLocation(next);
+        if (!isCancelled()) setLocation(next);
       } catch {
         // Older shell without the command.
       }
-    })();
+    };
+    load().catch((error: unknown) => {
+      console.error("Failed to read the install location", error);
+    });
     return () => {
       cancelled = true;
     };
@@ -63,7 +67,11 @@ export default function InstallLocation({ disabled }: { disabled: boolean }) {
           variant="link"
           size="xs"
           disabled={disabled || busy}
-          onClick={() => void run("choose_studio_install_location")}
+          onClick={() => {
+            run("choose_studio_install_location").catch((error: unknown) => {
+              setError(String(error));
+            });
+          }}
         >
           {t("desktopStartup.changeLocation")}
         </Button>
@@ -72,7 +80,11 @@ export default function InstallLocation({ disabled }: { disabled: boolean }) {
             variant="link"
             size="xs"
             disabled={disabled || busy}
-            onClick={() => void run("reset_studio_install_location")}
+            onClick={() => {
+              run("reset_studio_install_location").catch((error: unknown) => {
+                setError(String(error));
+              });
+            }}
           >
             {t("desktopStartup.useDefaultLocation")}
           </Button>

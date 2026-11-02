@@ -195,7 +195,7 @@ export function LibraryPage() {
   const visit = useLibraryVisitStore((s) => s.visit);
 
   useEffect(() => {
-    void refresh();
+    refresh().catch(() => undefined);
     const onFocus = () => void refresh();
     window.addEventListener("focus", onFocus);
     return () => { window.removeEventListener("focus", onFocus); };
@@ -275,7 +275,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
 
   const go = useCallback(
     (next: LibrarySearch, replace = false) =>
-      void navigate({ to: "/library", search: next, replace }),
+      navigate({ to: "/library", search: next, replace }).catch(() => undefined),
     [navigate],
   );
 
@@ -473,7 +473,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   };
 
   const chatAbout = (item: LibraryItem) =>
-    void (item.model ? chatWithModel(navigate, item) : chatAboutItems(navigate, [item]));
+    (item.model ? chatWithModel(navigate, item) : chatAboutItems(navigate, [item])).catch(() => undefined);
 
   const moveAll = async (targets: LibraryTarget[], destination: string | null) => {
     const folder = destination
@@ -501,7 +501,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
         : void chatAboutItems(navigate, filesInFolder(target.folder.id)); },
     editImage: (item) => void editLibraryImage(navigate, item),
     toggleFavorite: (item) =>
-      void patchItem(item.id, { favorite: !item.favorite }).catch(fail(t("library.toast.favoritesFailed"))),
+      patchItem(item.id, { favorite: !item.favorite }).catch(fail(t("library.toast.favoritesFailed"))).catch(() => undefined),
     download: (item) => void downloadLibraryItem(item),
     rename: (target) => { setNameDialog({ mode: "rename", target }); },
     moveTo: (target, destination) => void moveAll([target], destination),
@@ -567,19 +567,19 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   function handleNew(action: NewAction) {
     switch (action) {
       case "note":
-        void createNote();
+        createNote().catch(() => undefined);
         break;
       case "image":
-        void navigate({ to: "/images" });
+        navigate({ to: "/images" }).catch(() => undefined);
         break;
       case "video":
-        void navigate({ to: "/video" });
+        navigate({ to: "/video" }).catch(() => undefined);
         break;
       case "audio":
-        void navigate({ to: "/audio", search: { task: "text-to-speech" } });
+        navigate({ to: "/audio", search: { task: "text-to-speech" } }).catch(() => undefined);
         break;
       case "model":
-        void navigate({ to: "/studio" });
+        navigate({ to: "/studio" }).catch(() => undefined);
         break;
       case "folder":
         setNameDialog({ mode: "create", parentId: folderId });
@@ -996,10 +996,10 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   const bulkDownload = () => {
     const files = selectedFiles();
     setSelection(new Set());
-    void downloadLibraryItems(files);
+    downloadLibraryItems(files).catch(() => undefined);
   };
   const bulkMove = (destination: string | null) => {
-    void moveAll(selectedTargets(), destination);
+    moveAll(selectedTargets(), destination).catch(() => undefined);
     setSelection(new Set());
   };
   const deletableSelection = () =>
@@ -1029,7 +1029,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
           multiple
           hidden
           onChange={(event) => {
-            void uploadFiles([...(event.target.files ?? [])]);
+            uploadFiles([...(event.target.files ?? [])]).catch(() => undefined);
             event.target.value = "";
           }}
         />

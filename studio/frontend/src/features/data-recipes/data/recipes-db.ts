@@ -116,7 +116,7 @@ export async function saveRecipe(
 }
 
 export async function deleteRecipe(id: string): Promise<void> {
-  await recipeRequest<void>(`/${encodeURIComponent(id)}`, {
+  await recipeRequest<unknown>(`/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
   mutationVersion += 1;
@@ -160,7 +160,7 @@ export function useRecipes(enabled = true): {
       setReady(true);
     };
     listeners.add(listener);
-    listRecipes().catch((error) => {
+    listRecipes().catch((error: unknown) => {
       // biome-ignore lint/suspicious/noConsole: the page keeps its cached list
       console.error("Load data recipes failed:", error);
       setReady(true);

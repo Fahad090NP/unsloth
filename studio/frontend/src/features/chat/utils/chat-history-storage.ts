@@ -806,7 +806,9 @@ export async function readStoredChatMessages(
   ]);
   // No list means a failed read, not an empty thread, so the divider keeps its state.
   if (backendThread && backendMessages) {
-    void publishForkBoundary(backendThread, backendMessages);
+    publishForkBoundary(backendThread, backendMessages).catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
   }
   if (backendMessages && (backendThread || backendMessages.length > 0)) {
     const merged = mergeMessages(backendMessages, legacyMessages, {

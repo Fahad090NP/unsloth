@@ -106,7 +106,7 @@ export function readsRequestInput(
   ...names: string[]
 ): boolean {
   return (
-    (ctx.requestInputs === null || ctx.requestInputs === undefined) ||
+    ctx.requestInputs == null ||
     names.some((name) => ctx.requestInputs?.includes(name))
   );
 }

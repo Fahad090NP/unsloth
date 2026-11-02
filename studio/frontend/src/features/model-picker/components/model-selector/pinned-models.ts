@@ -59,7 +59,7 @@ export function pinnedQuantEntries(pinned: string[]): PinnedQuantEntry[] {
 
 function readPinned(): string[] {
   try {
-    const raw = JSON.parse(localStorage.getItem(KEY) ?? "[]");
+    const raw: unknown = JSON.parse(localStorage.getItem(KEY) ?? "[]");
     return Array.isArray(raw)
       ? raw.filter((v): v is string => typeof v === "string")
       : [];

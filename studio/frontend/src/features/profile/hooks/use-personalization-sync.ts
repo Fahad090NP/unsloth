@@ -86,26 +86,30 @@ function drainQueuedSave(
   authGenerationRef: RefValue<number>,
   lastSavedRef: RefValue<string>,
 ): void {
-  if (saveInFlightRef.current) return;
-  const next = queuedSaveRef.current;
+  const inFlight = saveInFlightRef;
+  const queuedSaves = queuedSaveRef;
+  const authGeneration = authGenerationRef;
+  const lastSaved = lastSavedRef;
+  if (inFlight.current) return;
+  const next = queuedSaves.current;
   if (!next) return;
-  queuedSaveRef.current = null;
-  saveInFlightRef.current = true;
-  void savePersonalization(next.data)
+  queuedSaves.current = null;
+  inFlight.current = true;
+  savePersonalization(next.data)
     .then(() => {
-      if (authGenerationRef.current === next.generation) {
-        lastSavedRef.current = next.serialized;
+      if (authGeneration.current === next.generation) {
+        lastSaved.current = next.serialized;
       }
     })
     .catch(() => {
-      if (authGenerationRef.current === next.generation) {
-        lastSavedRef.current = "";
+      if (authGeneration.current === next.generation) {
+        lastSaved.current = "";
       }
     })
     .finally(() => {
-      saveInFlightRef.current = false;
-      const queued = queuedSaveRef.current;
-      if (authGenerationRef.current === queued?.generation) {
+      inFlight.current = false;
+      const queued = queuedSaves.current;
+      if (authGeneration.current === queued?.generation) {
         drainQueuedSave(
           saveInFlightRef,
           queuedSaveRef,
@@ -228,14 +232,14 @@ export function usePersonalizationSync(enabled: boolean): void {
     if (!enabled) {
       return;
     }
-    let cancelled = false;
+    const cancelled = { value: false };
     const localeHydrationController = new AbortController();
     const customizationBeforeLoad =
       useAppearanceCustomStore.getState().customization;
-    void (async () => {
+    (async () => {
       try {
         const remote = await loadPersonalization();
-        if (cancelled) return;
+        if (cancelled.value) return;
         // Changed while the request was in flight: a newer local edit, which the server must not overwrite.
         const editedDuringLoad =
           useAppearanceCustomStore.getState().customization !==
@@ -249,8 +253,8 @@ export function usePersonalizationSync(enabled: boolean): void {
           const keepLocalGreeting =
             !remote.greetingSlothSaved && !localGreeting;
           const nextProfile: ProfileSnapshot = {
-            displayName: remote.profile.displayName ?? "",
-            nickname: remote.profile.nickname ?? "",
+            displayName: remote.profile.displayName,
+            nickname: remote.profile.nickname,
             avatarDataUrl: remote.profile.avatarDataUrl ?? null,
             avatarShape:
               remote.profile.avatarShape === "rounded" ? "rounded" : "circle",
@@ -284,12 +288,8 @@ export function usePersonalizationSync(enabled: boolean): void {
             editedDuringLoad ||
             (!remote.customizationSaved &&
               !isDefaultCustomization(localCustomization));
-          const keepLocalChatWidth =
-            remote.chatWidthSaved === false ||
-            remote.appearance.customization?.chatWidth === undefined;
-          const keepLocalSentAttachments =
-            remote.sentAttachmentsSaved === false ||
-            remote.appearance.customization?.sentAttachments === undefined;
+          const keepLocalChatWidth = remote.chatWidthSaved === false;
+          const keepLocalSentAttachments = remote.sentAttachmentsSaved === false;
           const nextCustomization = keepLocalCustomization
             ? localCustomization
             : {
@@ -326,7 +326,7 @@ export function usePersonalizationSync(enabled: boolean): void {
               // A request that never completes must not hold hydration (and all saves) open forever.
               timeoutMs: LOCALE_INITIALIZATION_TIMEOUT_MS,
             });
-            if (cancelled) return;
+            if (cancelled.value) return;
             // "superseded" is not the language in effect, so record no baseline; hydration must still finish.
             if (localeResult === "cancelled") return;
             if (localeResult === "superseded") {
@@ -386,17 +386,17 @@ export function usePersonalizationSync(enabled: boolean): void {
             lastSavedRef.current = nextSerialized;
           }
         }
-        if (!cancelled && authGenerationRef.current === generation) {
+        if (!cancelled.value && authGenerationRef.current === generation) {
           setHydratedGeneration(generation);
         }
       } catch {
-        if (!cancelled && authGenerationRef.current === generation) {
+        if (!cancelled.value && authGenerationRef.current === generation) {
           lastSavedRef.current = "";
         }
       }
-    })();
+    })().catch(() => undefined);
     return () => {
-      cancelled = true;
+      cancelled.value = true;
       localeHydrationController.abort();
     };
   }, [enabled]);

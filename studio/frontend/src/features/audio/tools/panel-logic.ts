@@ -264,7 +264,7 @@ export function voiceOptionName(
     specs.find((spec) => spec.name === name),
   ).filter((spec) => spec !== undefined);
   return (
-    ((declared.find((spec) => spec.type === "enum") ?? declared[0])?.name)  );
+    ((declared.find((spec) => spec.type === "enum") ?? declared[0]).name)  );
 }
 
 /** The kept picker value; one saved before the picker held built-in voices takes the voice
@@ -275,7 +275,7 @@ export function speakVoiceStored(
   voiceOption: string | null | undefined,
 ): unknown {
   const saved = voiceOption ? optionValues[voiceOption] : undefined;
-  if (saved === undefined || saved === null) return stored;
+  if (saved == null) return stored;
   if (stored === undefined) return { builtin: saved };
   if (typeof stored === "object" && stored !== null && !("builtin" in stored))
     return { ...stored, builtin: saved };

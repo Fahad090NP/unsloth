@@ -89,14 +89,15 @@ const rehypeLiteralUnknownTags: Plugin<[LiteralTagOptions], Root> =
               UNWRAPPED_TAGS.has(tag.toLowerCase())) ||
             matched.has(`${index}:${child.value.indexOf("<")}`)
           ) {
-            child.value = child.value.replace(
+            const value = child.value.replace(
               INNER_TAG,
-              (match, slash, name) =>
+              (match: string, slash: string, name: string) =>
                 isSchemaTag(name) ||
                 (unwrapFormatting && UNWRAPPED_TAGS.has(name.toLowerCase()))
                   ? match
                   : `&lt;${slash}${name}`,
             );
+            children[index] = { ...child, value };
             return;
           }
           // Streamdown's memoised components only re-render when the node position changes.

@@ -567,7 +567,7 @@ export const ModelInspector = memo(function ModelInspector({
   const libraryLabel = isDataset ? null : formatLibrary(model.libraryName);
   const gatedAccess = model.gated !== false && model.gated !== undefined;
   const downloadsTooltip =
-    (model.downloadsAllTime !== null && model.downloadsAllTime !== undefined) ? (
+    model.downloadsAllTime != null ? (
       <>
         Downloads (30 days)
         <span className="mt-1 block text-ui-10p5 font-normal text-(--tooltip-muted)">
@@ -835,14 +835,14 @@ export const ModelInspector = memo(function ModelInspector({
               icon={LibrariesIcon}
             />
           )}
-          {isDataset && (datasetSize?.numRows !== null && datasetSize?.numRows !== undefined) && (
+          {isDataset && datasetSize?.numRows != null && (
             <StatRow
               label="Rows"
               value={formatCompact(datasetSize.numRows)}
               icon={Database02Icon}
             />
           )}
-          {isDataset && (datasetSizeBytes !== null && datasetSizeBytes !== undefined) && (
+          {isDataset && datasetSizeBytes != null && (
             <StatRow
               label="Size"
               value={formatBytes(datasetSizeBytes)}
@@ -850,7 +850,7 @@ export const ModelInspector = memo(function ModelInspector({
             />
           )}
           {isDataset &&
-            (datasetSize?.numSplits !== null && datasetSize?.numSplits !== undefined) &&
+            datasetSize?.numSplits != null &&
             datasetSize.numSplits > 0 && (
               <StatRow
                 label="Splits"

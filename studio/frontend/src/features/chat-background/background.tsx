@@ -66,9 +66,14 @@ export function ChatBackground({ active = true }: { active?: boolean }) {
 			probe.style.position = "absolute";
 			probe.style.visibility = "hidden";
 			el.append(probe);
-			const ctx = document
+			const canvasContext = document
 				.createElement("canvas")
-				.getContext("2d", { willReadFrequently: true })!;
+				.getContext("2d", { willReadFrequently: true });
+			if (!canvasContext) {
+				probe.remove();
+				return;
+			}
+			const ctx = canvasContext;
 			const rgb = (token: string): RGB => {
 				probe.style.color = `var(${token})`;
 				ctx.clearRect(0, 0, 1, 1);
@@ -126,10 +131,11 @@ export function ChatBackground({ active = true }: { active?: boolean }) {
 		};
 	}, [outline, active]);
 	const adoptFrame = useEffectEvent((url: string) => {
+		if (!value) return;
 		urls.current.add(url);
 		clearTimeout(timer.current);
 		const previous = skin.reduced ? null : latest.current;
-		const current = { url, value: value! };
+		const current = { url, value };
 		latest.current = current;
 		setFrames({ current, previous });
 		timer.current = setTimeout(

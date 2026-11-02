@@ -98,7 +98,9 @@ function ShowcaseTile({
         <TooltipTrigger asChild={true}>
           <button
             type="button"
-            onClick={remove}
+            onClick={() => {
+              remove().catch(() => undefined);
+            }}
             disabled={deleting}
             aria-label={`Remove ${filename}`}
             className="absolute right-0.5 top-0.5 flex size-5 items-center justify-center rounded-full bg-background/90 text-muted-foreground opacity-0 any-pointer-coarse:opacity-100 shadow-sm backdrop-blur-sm transition-opacity hover:text-destructive focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover/thumb:opacity-100"

@@ -90,8 +90,7 @@ function useHfDownloadProgress(
       return;
     }
 
-    let cancelled = false;
-    let finished = false;
+    const status = { cancelled: false, finished: false };
     let interval: ReturnType<typeof setInterval> | null = null;
     let latest = EMPTY_DOWNLOAD_STATE;
     // The tick does not wait for the request, so discard readings older than the latest; a stale one
@@ -100,18 +99,18 @@ function useHfDownloadProgress(
     let applied = 0;
 
     const poll = async () => {
-      if (cancelled || finished) return;
+      if (status.cancelled || status.finished) return;
       const generation = ++issued;
       try {
         const prog = await fetcher(repoId);
-        if (cancelled || generation <= applied) return;
+        if (status.cancelled || generation <= applied) return;
         applied = generation;
         const next = downloadStateFromProgress(prog, latest);
         latest = next;
         setState({ ...next, repoId });
         // Only a verified snapshot stops the tick; a settled row can still be waiting on files.
         if (next.completeOnDisk) {
-          finished = true;
+          status.finished = true;
           if (interval) {
             clearInterval(interval);
             interval = null;
@@ -122,11 +121,13 @@ function useHfDownloadProgress(
       }
     };
 
-    void poll();
-    interval = setInterval(poll, 1500);
+    poll().catch(() => undefined);
+    interval = setInterval(() => {
+      poll().catch(() => undefined);
+    }, 1500);
 
     return () => {
-      cancelled = true;
+      status.cancelled = true;
       if (interval) clearInterval(interval);
     };
   }, [repoId, shouldPoll, fetcher]);
@@ -401,13 +402,15 @@ export function TrainingStartOverlay({
                     const cancellingPendingStart =
                       runtime.startRequestId !== null;
                     runtime.setStopRequested(true);
-                    void stopTrainingRun(false).then((ok) => {
-                      if (ok && !cancellingPendingStart) {
-                        void dismissTrainingRun();
-                      } else {
-                        setCancelRequested(false);
-                      }
-                    });
+                    stopTrainingRun(false)
+                      .then((ok) => {
+                        if (ok && !cancellingPendingStart) {
+                          dismissTrainingRun().catch(() => undefined);
+                        } else {
+                          setCancelRequested(false);
+                        }
+                      })
+                      .catch(() => undefined);
                   }}
                 >
                   {t("studio.training.cancelAction")}

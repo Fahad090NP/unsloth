@@ -275,7 +275,7 @@ function FamilyFacts({ family, baseModel }: { family?: FamilyPreset; baseModel?:
             {facts.params}
           </Badge>
         ) : null}
-        {(facts.qlora_vram_gb !== null && facts.qlora_vram_gb !== undefined) ? (
+        {facts.qlora_vram_gb != null ? (
           <Badge variant="secondary" className="font-normal">
             QLoRA {facts.qlora_vram_gb}GB+ VRAM
           </Badge>
@@ -322,7 +322,7 @@ function mergeFamilies(reported?: DiffusionTrainableFamily[]): FamilyPreset[] {
       gated: r.gated ?? p.gated,
       base_specs: r.base_specs,
       // A backend reporting any chip owns the whole set, so presets never mix with live values.
-      ...((r.params !== null && r.params !== undefined) || (r.qlora_vram_gb !== null && r.qlora_vram_gb !== undefined) || (r.note !== null && r.note !== undefined)
+      ...(r.params != null || r.qlora_vram_gb != null || r.note != null
         ? {
             params: r.params ?? "",
             qlora_vram_gb: r.qlora_vram_gb ?? null,
@@ -435,7 +435,7 @@ export function DiffusionTrainPanel({
   // above 1 rather than clamping, so a value carried over from another family rejected Start with nothing saying
   // why. Hidden when the family caps it at 1.
   const maxBatchSize = reportedFamily?.max_train_batch_size ?? null;
-  const batchIsFixed = (maxBatchSize !== null && maxBatchSize !== undefined) && maxBatchSize <= 1;
+  const batchIsFixed = maxBatchSize != null && maxBatchSize <= 1;
 
   const setBaseChoice = onBaseChoiceChange;
   const [customBase, setCustomBase] = useState("");
@@ -469,7 +469,7 @@ export function DiffusionTrainPanel({
   const [rank, setRank] = useState(family.defaults.rank);
   const [resolution, setResolution] = useState(family.defaults.resolution);
   const [batchSize, setBatchSize] = useState(1);
-  const effectiveBatchSize = (maxBatchSize === null || maxBatchSize === undefined) ? batchSize : Math.min(batchSize, maxBatchSize);
+  const effectiveBatchSize = maxBatchSize == null ? batchSize : Math.min(batchSize, maxBatchSize);
   const [gradAccum, setGradAccum] = useState(1);
   const [seed, setSeed] = useState(42);
   const [saveSteps, setSaveSteps] = useState(0);
@@ -758,14 +758,14 @@ export function DiffusionTrainPanel({
   const lossHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = status?.metric_history;
     if (!h) return [];
-    return h.steps.map((step, i) => ({ step, value: h.loss[i] })).filter((p) => (p.value !== null && p.value !== undefined));
+    return h.steps.map((step, i) => ({ step, value: h.loss[i] })).filter((p) => p.value != null);
   }, [status?.metric_history]);
   const gradNormHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = status?.metric_history;
     if (!h?.grad_norm) return [];
     return h.steps
       .map((step, i) => ({ step, value: h.grad_norm?.[i] ?? null }))
-      .filter((p): p is TrainingSeriesPoint => (p.value !== null && p.value !== undefined));
+      .filter((p): p is TrainingSeriesPoint => p.value != null);
   }, [status?.metric_history]);
 
   useEffect(() => {
@@ -802,14 +802,14 @@ export function DiffusionTrainPanel({
   const viewLossHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = viewRun?.metric_history;
     if (!h) return [];
-    return h.steps.map((step, i) => ({ step, value: h.loss[i] })).filter((p) => (p.value !== null && p.value !== undefined));
+    return h.steps.map((step, i) => ({ step, value: h.loss[i] })).filter((p) => p.value != null);
   }, [viewRun?.metric_history]);
   const viewGradNormHistory: TrainingSeriesPoint[] = useMemo(() => {
     const h = viewRun?.metric_history;
     if (!h?.grad_norm) return [];
     return h.steps
       .map((step, i) => ({ step, value: h.grad_norm?.[i] ?? null }))
-      .filter((p): p is TrainingSeriesPoint => (p.value !== null && p.value !== undefined));
+      .filter((p): p is TrainingSeriesPoint => p.value != null);
   }, [viewRun?.metric_history]);
 
   const uploadTo = useCallback(
@@ -1190,7 +1190,7 @@ export function DiffusionTrainPanel({
         setViewRun(null);
         setDismissedJobId(null);
         toast.success(
-          (detail.checkpoint_step !== null && detail.checkpoint_step !== undefined)
+          detail.checkpoint_step != null
             ? `Resuming from step ${detail.checkpoint_step}`
             : "Resuming training",
         );
@@ -2044,12 +2044,12 @@ export function DiffusionTrainPanel({
                 <Stat label="Steps" value={`${viewRun.step}/${viewRun.total_steps}`} />
                 <Stat
                   label="Avg loss"
-                  value={(viewRun.avg_loss !== null && viewRun.avg_loss !== undefined) ? viewRun.avg_loss.toFixed(4) : "-"}
+                  value={viewRun.avg_loss != null ? viewRun.avg_loss.toFixed(4) : "-"}
                 />
                 <Stat
                   label="Peak VRAM"
                   value={
-                    (viewRun.peak_memory_gb !== null && viewRun.peak_memory_gb !== undefined)
+                    viewRun.peak_memory_gb != null
                       ? `${viewRun.peak_memory_gb.toFixed(1)} GB`
                       : "-"
                   }
@@ -2159,7 +2159,7 @@ export function DiffusionTrainPanel({
                         </span>
                         <span className="text-muted-foreground">
                           {r.family ? ` ${r.family}` : ""} - {r.step}/{r.total_steps} steps
-                          {(r.avg_loss !== null && r.avg_loss !== undefined) ? `, avg loss ${r.avg_loss.toFixed(3)}` : ""}
+                          {r.avg_loss != null ? `, avg loss ${r.avg_loss.toFixed(3)}` : ""}
                         </span>
                       </span>
                       <span className="flex shrink-0 items-center gap-2">
@@ -2189,16 +2189,16 @@ export function DiffusionTrainPanel({
                 <div className="grid grid-cols-2 gap-3 @min-[440px]:grid-cols-4">
                 <Stat
                   label="Loss"
-                  value={(status?.loss !== null && status?.loss !== undefined) ? status.loss.toFixed(4) : "-"}
+                  value={status?.loss != null ? status.loss.toFixed(4) : "-"}
                 />
                 <Stat
                   label="Avg loss"
-                  value={(status?.avg_loss !== null && status?.avg_loss !== undefined) ? status.avg_loss.toFixed(4) : "-"}
+                  value={status?.avg_loss != null ? status.avg_loss.toFixed(4) : "-"}
                 />
                 <Stat
                   label="Speed"
                   value={
-                    (status?.samples_per_second !== null && status?.samples_per_second !== undefined)
+                    status?.samples_per_second != null
                       ? `${status.samples_per_second.toFixed(2)} img/s`
                       : "-"
                   }
@@ -2206,7 +2206,7 @@ export function DiffusionTrainPanel({
                 <Stat
                   label="Peak VRAM"
                   value={
-                    (status?.peak_memory_gb !== null && status?.peak_memory_gb !== undefined)
+                    status?.peak_memory_gb != null
                       ? `${status.peak_memory_gb.toFixed(1)} GB`
                       : "-"
                   }

@@ -17,7 +17,7 @@ export function canScreenshot(): boolean {
   if (isTauri) return true;
   return (
     typeof navigator !== "undefined" &&
-    typeof navigator.mediaDevices?.getDisplayMedia === "function" &&
+    typeof navigator.mediaDevices.getDisplayMedia === "function" &&
     cropTargets() !== null
   );
 }

@@ -61,7 +61,7 @@ export function PinnedPageRow({
   const [renaming, setRenaming] = useState(false);
   // Rename moves focus to the field; the closing menu mustn't take it back to its trigger.
   const keepFocus = useRef(false);
-  const title = tab?.customTitle ?? page.title ?? page.url;
+  const title = tab?.customTitle ?? (page.title || page.url);
 
   const open = () => {
     const show = () => { useBrowserStore.getState().openPinned(page.id, page.url, page.title); };
@@ -71,7 +71,9 @@ export function PinnedPageRow({
       return;
     }
     // The panel lives beside a chat: go to one first, once it is on screen.
-    void navigate({ to: "/chat" }).then(() => requestAnimationFrame(() => requestAnimationFrame(show)));
+    navigate({ to: "/chat" })
+      .then(() => requestAnimationFrame(() => requestAnimationFrame(show)))
+      .catch(() => undefined);
   };
   const startRename = () => {
     keepFocus.current = true;

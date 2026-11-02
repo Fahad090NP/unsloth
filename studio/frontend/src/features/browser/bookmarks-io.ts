@@ -18,7 +18,7 @@ export class BookmarksFileError extends Error {}
 function isToolbarHeading(heading: Element): boolean {
   return (
     heading.getAttribute("personal_toolbar_folder") === "true" ||
-    TOOLBAR_NAMES.test(heading.textContent?.trim() ?? "")
+    TOOLBAR_NAMES.test((heading.textContent ?? "").trim())
   );
 }
 
@@ -45,7 +45,7 @@ export function parseBookmarksHtml(html: string): { url: string; title: string; 
     return [
       {
         url,
-        title: link.textContent?.trim() || url,
+        title: link.textContent.trim() || url,
         folder: toolbar ? "toolbar" : "other",
         // Out of Date's range, it would throw when the Bookmarks page formats it.
         addedAt: added > 0 && !Number.isNaN(new Date(added * 1000).getTime()) ? added * 1000 : undefined,

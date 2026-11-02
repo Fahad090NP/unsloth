@@ -103,13 +103,19 @@ export function GradNormChartCard({
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(_value, payload) =>
-                    t("studio.charts.step", {
-                      step: payload?.[0]?.payload?.step ?? "",
-                    })
-                  }
+                  labelFormatter={(_value, payload) => {
+                    const first = (payload as
+                      | { payload?: { step?: number } }[]
+                      | undefined)?.[0];
+                    return t("studio.charts.step", {
+                      step: first?.payload?.step ?? "",
+                    });
+                  }}
                   formatter={(_value, _name, item) => {
-                    const raw = Number(item?.payload?.gradNorm);
+                    const data = (item as
+                      | { payload?: { gradNorm?: number } }
+                      | undefined)?.payload;
+                    const raw = Number(data?.gradNorm);
                     return [formatMetric(raw), t("studio.charts.gradNorm")];
                   }}
                 />

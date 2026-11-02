@@ -182,8 +182,14 @@ export function memoryRecipeValue(
   memoryMode: string | null | undefined,
   offloadPolicy: string | null | undefined,
 ): string {
-  const offloading = offloadPolicy !== null && offloadPolicy !== "" && offloadPolicy !== "none";
-  if (!offloading) return memoryMode ?? "";
+  if (
+    offloadPolicy === null ||
+    offloadPolicy === undefined ||
+    offloadPolicy === "" ||
+    offloadPolicy === "none"
+  ) {
+    return memoryMode ?? "";
+  }
   if (!memoryMode) return `${offloadPolicy} offload`;
   return `${memoryMode} (${offloadPolicy} offload)`;
 }

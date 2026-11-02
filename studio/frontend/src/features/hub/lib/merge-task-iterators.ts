@@ -19,7 +19,7 @@ function createTaskCursor<T>(iterator: AsyncGenerator<T>): TaskCursor<T> {
       .then(() => iterator.next())
       .then(
         (result): TaskPull<T> => ({ status: "fulfilled", result }),
-        (reason): TaskPull<T> => ({ status: "rejected", reason }),
+        (reason: unknown): TaskPull<T> => ({ status: "rejected", reason }),
       );
   let pending = pull();
   let active = true;

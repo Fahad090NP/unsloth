@@ -274,7 +274,7 @@ async function chatInstructionsTurn(threadId: string): Promise<MessageRecord[]> 
     threadId,
     thread.settings?.systemPrompt ?? threadScopedDefault("systemPrompt"),
     thread.settings?.systemVariables ?? threadScopedDefault("systemVariables"),
-    async () => thread,
+    () => Promise.resolve(thread),
   );
   if (!text) return [];
   return [
@@ -367,7 +367,7 @@ type OAIMessage =
   | { role: "tool"; tool_call_id: string; name: string; content: string };
 
 function messageToOpenAI(msg: { role: unknown; content: unknown; attachments?: unknown }): OAIMessage[] {
-  const role = (msg.role as string) ?? "user";
+  const role = msg.role as string;
   const blocks = Array.isArray(msg.content) ? msg.content : [];
   const attachments = Array.isArray(msg.attachments) ? msg.attachments : [];
 
@@ -576,7 +576,7 @@ async function saveConversationAsProjectSource(
   if (!messages) return "skipped";
   const markdown = buildConversationMarkdown(
     messages.map((msg) => ({
-      role: (msg.role ?? ""),
+      role: msg.role,
       // Project sources are retrieved into context, so strip renderer tokens.
       content: stripSearchImageTokens(messageToMarkdown(msg)),
     })),
@@ -1160,7 +1160,8 @@ async function importListsFromText(text: string, isCsv: boolean): Promise<{ coun
       if (listName && promptText) {
         const order = parseInt(cells[1] ?? "0", 10) || 0;
         if (!listMap.has(listName)) listMap.set(listName, []);
-        listMap.get(listName)!.push({ order, text: promptText });
+        const list = listMap.get(listName);
+      if (list) list.push({ order, text: promptText });
       }
     }
     for (const [listName, items] of listMap.entries()) {
@@ -1438,7 +1439,11 @@ function ExportModal({
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button size="sm" onClick={handleExport}>
+          <Button size="sm" onClick={() => {
+                handleExport().catch((error: unknown) => {
+                  console.error("Failed to export prompts", error);
+                });
+              }}>
             <HugeiconsIcon icon={Download01Icon} className="mr-1.5 size-3.5" />
             Download
           </Button>
@@ -1734,7 +1739,15 @@ function PromptDetail({
         <button
           type="button"
           disabled={pending}
-          onClick={() => { dirty ? setConfirmingDelete(true) : void handleDelete(); }}
+          onClick={() => {
+            if (dirty) {
+              setConfirmingDelete(true);
+              return;
+            }
+            handleDelete().catch((error: unknown) => {
+              console.error("Failed to delete prompt", error);
+            });
+          }}
           className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
           title="Delete"
         >
@@ -1753,7 +1766,11 @@ function PromptDetail({
             <><HugeiconsIcon icon={ViewIcon} className="size-3.5 mr-1" />Preview</>
           )}
         </Button>
-        <Button size="sm" variant="outline" disabled={pending || !dirty || !text.trim()} onClick={handleSave}>
+        <Button size="sm" variant="outline" disabled={pending || !dirty || !text.trim()} onClick={() => {
+                handleSave().catch((error: unknown) => {
+                  console.error("Failed to save prompt", error);
+                });
+              }}>
           <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-3.5 mr-1" />Save
         </Button>
         <Button size="sm" onClick={() => { onUse(text); }} disabled={!text.trim()}>
@@ -1768,7 +1785,9 @@ function PromptDetail({
       name={name.trim() || "Untitled Prompt"}
       onConfirm={() => {
         setConfirmingDelete(false);
-        void handleDelete();
+        handleDelete().catch((error: unknown) => {
+        console.error("Failed to delete prompt", error);
+      });
       }}
     />
     </>
@@ -1874,7 +1893,11 @@ function NewPromptForm({
         <Button size="sm" variant="ghost" onClick={onClose}>
           <HugeiconsIcon icon={Cancel01Icon} className="size-3.5 mr-1" />Cancel
         </Button>
-        <Button size="sm" onClick={handleSave} disabled={creating || !text.trim()}>
+        <Button size="sm" onClick={() => {
+                handleSave().catch((error: unknown) => {
+                  console.error("Failed to save prompt", error);
+                });
+              }} disabled={creating || !text.trim()}>
           <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-3.5 mr-1" />Save Prompt
         </Button>
       </div>
@@ -2072,7 +2095,15 @@ function PromptListDetail({
         <button
           type="button"
           disabled={pending}
-          onClick={() => { dirty ? setConfirmingDelete(true) : void handleDelete(); }}
+          onClick={() => {
+            if (dirty) {
+              setConfirmingDelete(true);
+              return;
+            }
+            handleDelete().catch((error: unknown) => {
+              console.error("Failed to delete prompt", error);
+            });
+          }}
           className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
           title="Delete"
         >
@@ -2093,7 +2124,11 @@ function PromptListDetail({
             )}
           </Button>
         )}
-        <Button size="sm" variant="outline" disabled={pending || !dirty || !savable} onClick={handleSave}>
+        <Button size="sm" variant="outline" disabled={pending || !dirty || !savable} onClick={() => {
+                handleSave().catch((error: unknown) => {
+                  console.error("Failed to save prompt", error);
+                });
+              }}>
           <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-3.5 mr-1" />Save
         </Button>
         {onRunList && (
@@ -2110,7 +2145,9 @@ function PromptListDetail({
       name={name.trim() || "Untitled List"}
       onConfirm={() => {
         setConfirmingDelete(false);
-        void handleDelete();
+        handleDelete().catch((error: unknown) => {
+        console.error("Failed to delete prompt", error);
+      });
       }}
     />
     </>
@@ -2204,7 +2241,11 @@ function NewPromptListForm({
         </Button>
         <Button
           size="sm"
-          onClick={handleSave}
+          onClick={() => {
+                handleSave().catch((error: unknown) => {
+                  console.error("Failed to save prompt", error);
+                });
+              }}
           disabled={creating || items.filter((t) => t.trim()).length === 0}
         >
           <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-3.5 mr-1" />Save Prompt List
@@ -2332,16 +2373,28 @@ export function PromptStorageDialog({
   );
 
   const refreshEntries = useCallback(async () => {
-    try { setPromptEntries(await listPromptEntries()); } catch {}
+    try {
+          setPromptEntries(await listPromptEntries());
+        } catch {
+          // Keep the previous entries when the request fails.
+        }
   }, []);
   const refreshLists = useCallback(async () => {
-    try { setPromptLists(await listPromptLists()); } catch {}
+    try {
+          setPromptLists(await listPromptLists());
+        } catch {
+          // Keep the previous lists when the request fails.
+        }
   }, []);
 
   useEffect(() => {
     if (open) {
-      void refreshEntries();
-      void refreshLists();
+      refreshEntries().catch((error: unknown) => {
+        console.error("Failed to refresh prompt entries", error);
+      });
+      refreshLists().catch((error: unknown) => {
+        console.error("Failed to refresh prompt lists", error);
+      });
     }
   }, [open, refreshEntries, refreshLists]);
 
@@ -2381,7 +2434,7 @@ export function PromptStorageDialog({
   );
 
   const filteredPrompts = useMemo(() => {
-    const all = promptEntries ?? [];
+    const all = promptEntries;
     if (!searchQuery.trim()) return all;
     const q = searchQuery.toLowerCase();
     return all.filter(
@@ -2390,7 +2443,7 @@ export function PromptStorageDialog({
   }, [promptEntries, searchQuery]);
 
   const filteredLists = useMemo(() => {
-    const all = promptLists ?? [];
+    const all = promptLists;
     if (!searchQuery.trim()) return all;
     const q = searchQuery.toLowerCase();
     return all.filter((e) => e.name.toLowerCase().includes(q));
@@ -2422,7 +2475,7 @@ export function PromptStorageDialog({
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
     const source: { name: string }[] =
-      activeTab === "prompts" ? (promptEntries ?? []) : (promptLists ?? []);
+      activeTab === "prompts" ? promptEntries : promptLists;
     return source
       .filter((e) => e.name.toLowerCase().includes(q))
       .slice(0, 7)
@@ -2466,8 +2519,12 @@ export function PromptStorageDialog({
               if (probe.type === "prompt" || probe.type === "prompt_list") {
                 const result = await importCollectionFromText(text);
                 const total = result.prompts + result.lists;
-                void refreshEntries();
-                void refreshLists();
+                refreshEntries().catch((error: unknown) => {
+        console.error("Failed to refresh prompt entries", error);
+      });
+                refreshLists().catch((error: unknown) => {
+        console.error("Failed to refresh prompt lists", error);
+      });
                 if (total > 0) {
                   toast.success(`Imported ${total} item${total !== 1 ? "s" : ""}`, {
                     description: `${result.prompts} prompt${result.prompts !== 1 ? "s" : ""}, ${result.lists} list${result.lists !== 1 ? "s" : ""}`,
@@ -2477,7 +2534,8 @@ export function PromptStorageDialog({
                     description: "The file may be empty or in an unsupported format.",
                   });
                 }
-                e.target.value = "";
+                const target = e.target;
+      target.value = "";
                 return;
               }
             } catch {
@@ -2490,10 +2548,14 @@ export function PromptStorageDialog({
         let skipped = 0;
         if (activeTab === "prompts") {
           ({ count, skipped } = await importPromptsFromText(text, isCsv));
-          void refreshEntries();
+          refreshEntries().catch((error: unknown) => {
+        console.error("Failed to refresh prompt entries", error);
+      });
         } else {
           ({ count, skipped } = await importListsFromText(text, isCsv));
-          void refreshLists();
+          refreshLists().catch((error: unknown) => {
+        console.error("Failed to refresh prompt lists", error);
+      });
         }
         if (count > 0) {
           toast.success(`Imported ${count} item${count !== 1 ? "s" : ""}`, {
@@ -2509,20 +2571,21 @@ export function PromptStorageDialog({
       } catch {
         toast.error("Import failed", { description: "Could not parse the file." });
       }
-      e.target.value = "";
+      const target = e.target;
+      target.value = "";
     },
     [activeTab, refreshEntries, refreshLists],
   );
 
   const bulkExportDisabled =
-    (activeTab === "prompts" ? (promptEntries.length ?? 0) : (promptLists.length ?? 0)) === 0;
+    (activeTab === "prompts" ? promptEntries.length : promptLists.length) === 0;
 
   const openBulkExport = useCallback(() => {
     setExportCtx({
       kind: "bulk",
       tab: activeTab,
-      prompts: promptEntries ?? [],
-      lists: promptLists ?? [],
+      prompts: promptEntries,
+      lists: promptLists,
     });
   }, [activeTab, promptEntries, promptLists]);
 
@@ -2546,7 +2609,11 @@ export function PromptStorageDialog({
                   type="file"
                   accept=".jsonl,.json,.csv"
                   className="hidden"
-                  onChange={handleImportFile}
+                  onChange={(event) => {
+                handleImportFile(event).catch((error: unknown) => {
+                  console.error("Failed to import prompts", error);
+                });
+              }}
                 />
                 <Button
                   variant="outline"

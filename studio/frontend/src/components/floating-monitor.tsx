@@ -177,19 +177,19 @@ function FloatingMonitorPanel({
     raisePanel("resource-monitor");
   }, [raisePanel]);
 
-  const ramTotal = systemInfo.memory?.total_gb ?? 0;
-  const ramAvailable = systemInfo.memory?.available_gb ?? 0;
+  const ramTotal = systemInfo.memory.total_gb;
+  const ramAvailable = systemInfo.memory.available_gb;
   const ramUsed = Math.max(0, ramTotal - ramAvailable);
-  const ramPercent = clampPercent(systemInfo.memory?.percent_used ?? 0);
+  const ramPercent = clampPercent(systemInfo.memory.percent_used);
   // The placeholder's zeros are not a reading: loading or a failed first request shows "--".
   const ramKnown = systemInfo.status === "ready";
   const stale = systemInfo.stale === true;
 
-  const displayedGpu = systemInfo.gpu?.available
+  const displayedGpu = systemInfo.gpu.available
     ? systemInfo.gpu
     : (systemInfo.inference_gpu ?? systemInfo.gpu);
   const separateInferenceGpu =
-    systemInfo.gpu?.available &&
+    systemInfo.gpu.available &&
     systemInfo.inference_gpu &&
     systemInfo.inference_gpu.backend !== systemInfo.gpu.backend
       ? systemInfo.inference_gpu
@@ -222,16 +222,16 @@ function FloatingMonitorPanel({
   const detailMetrics = selectedDetailMetrics(storedDetailMetrics);
   const cpuPercent =
     showDetails && detailMetrics.has("cpuLoad") && systemInfo.status === "ready"
-      ? clampPercent(systemInfo.cpu?.usage_percent ?? 0)
+      ? clampPercent(systemInfo.cpu.usage_percent)
       : null;
   const telemetryRows =
-    showDetails && displayedGpu?.available
+    showDetails && displayedGpu.available
       ? gpuTelemetryRows(displayedGpu.devices, detailMetrics)
       : [];
 
   const hasGpu =
-    (displayedGpu?.available ?? false) &&
-    (displayedGpu?.devices.length ?? 0) > 0;
+    displayedGpu.available &&
+    displayedGpu.devices.length > 0;
 
   // The container sits on the floating panel layer, above the bottom-right overlay stack. The stack
   // is anchored to that same corner and does not move for this monitor; at its default corner the
@@ -556,7 +556,9 @@ export function FloatingMonitor() {
   const [paintedSettingsWidth, setPaintedSettingsWidth] = useState(0);
   useEffect(() => {
     if (!(isOpen && isChatRoute && settingsPanelOpen)) {
-      setPaintedSettingsWidth(0);
+      queueMicrotask(() => {
+        setPaintedSettingsWidth(0);
+      });
       return;
     }
     const panel = document.querySelector('[data-slot="chat-settings-panel"]');
@@ -582,8 +584,10 @@ export function FloatingMonitor() {
   useEffect(() => {
     const sidebar = isOpen ? document.querySelector('[data-slot="sidebar"]') : null;
     if (!sidebar) {
-      setPaintedSidebarWidth(0);
-      setSidebarHoldsRail(false);
+      queueMicrotask(() => {
+        setPaintedSidebarWidth(0);
+        setSidebarHoldsRail(false);
+      });
       return;
     }
     const measure = () => {

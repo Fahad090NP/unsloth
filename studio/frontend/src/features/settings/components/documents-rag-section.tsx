@@ -293,11 +293,11 @@ export function DocumentsRagSection(): ReactElement {
       ? jobKeyOf(DOWNLOAD_KIND.MODEL, resolution.downloadRepo, null)
       : null;
   const downloadState = useDownloadManagerStore((state) =>
-    downloadJobKey ? (state.jobs[downloadJobKey]?.state ?? null) : null,
+    downloadJobKey ? (state.jobs[downloadJobKey].state ?? null) : null,
   );
   const fullSnapshotDownloadState = useDownloadManagerStore((state) =>
     fullSnapshotJobKey
-      ? (state.jobs[fullSnapshotJobKey]?.state ?? null)
+      ? (state.jobs[fullSnapshotJobKey].state ?? null)
       : null,
   );
   const downloading =

@@ -44,7 +44,7 @@ export const useAudioVoicesStore = create<AudioVoicesState>()((set, get) => ({
       const voices = await listVoices();
       if (started !== mutations) {
         set({ loading: false });
-        return get().refresh();
+        return await get().refresh();
       }
       set({ voices, loaded: true, loading: false, error: null });
     } catch (error) {
@@ -97,7 +97,7 @@ export const useAudioVoicesStore = create<AudioVoicesState>()((set, get) => ({
       mutations += 1;
     } catch (error) {
       // Put back only this voice: another deletion may have finished meanwhile.
-      const failed = before[index];
+      const failed = before.at(index);
       if (failed) {
         set((state) => {
           if (state.voices.some((voice) => voice.id === id)) return {};

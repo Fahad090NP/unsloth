@@ -11,11 +11,12 @@ import { useCallback } from "react";
 export function snapInlinePadding(element: HTMLElement | null): void {
   if (!element || typeof window === "undefined") return;
   const style = getComputedStyle(element);
+  const inlineStyle = element.style;
   for (const side of ["paddingLeft", "paddingRight", "marginLeft", "marginRight"] as const) {
     const px = Number.parseFloat(style[side]);
     if (!Number.isFinite(px)) continue;
     const snapped = Math.round(px);
-    if (Math.abs(snapped - px) > 0.001) element.style[side] = `${snapped}px`;
+    if (Math.abs(snapped - px) > 0.001) inlineStyle[side] = `${snapped}px`;
   }
 }
 
@@ -58,9 +59,10 @@ function balanceRowInsets(surface: HTMLElement): boolean {
     ["paddingLeft", padLeft + targetLeft - left],
     ["paddingRight", padRight + targetRight - right],
   ] as const;
+  const surfaceStyle = surface.style;
   for (const [side, padded] of insets) {
     if (Math.abs(padded - Number.parseFloat(style[side])) > 0.01) {
-      surface.style[side] = `${padded}px`;
+      surfaceStyle[side] = `${padded}px`;
     }
   }
   return true;
@@ -80,13 +82,20 @@ export function snapRowInsets(surface: HTMLElement | null): void {
   window.setTimeout(() => { observer.disconnect(); }, ROW_WAIT_MS);
 }
 
+function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null): void {
+  if (typeof ref === "function") ref(value);
+  else if (ref) {
+    const target = ref;
+    target.current = value;
+  }
+}
+
 export function useSnappedPaddingRef<T extends HTMLElement>(
   ref: React.Ref<T> | undefined,
 ): (element: T | null) => void {
   return useCallback(
     (element: T | null) => {
-      if (typeof ref === "function") ref(element);
-      else if (ref) ref.current = element;
+      assignRef(ref, element);
       snapRowInsets(element);
     },
     [ref],

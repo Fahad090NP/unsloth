@@ -128,7 +128,7 @@ export const useLibrarySettingsStore = create<LibrarySettingsState>()(
   ),
 );
 
-const SOURCE_SETTING: Record<string, keyof LibrarySettings> = {
+const SOURCE_SETTING: Partial<Record<string, keyof LibrarySettings>> = {
   attachment: "showChatAttachments",
   sandbox: "showChatToolFiles",
   image: "showGeneratedMedia",
@@ -159,9 +159,10 @@ export const SORT_STATES: Record<LibraryUrlSort, LibrarySortState> = {
 export const LIBRARY_URL_SORTS = Object.keys(SORT_STATES) as LibraryUrlSort[];
 
 export function sortParam(state: LibrarySortState): LibraryUrlSort {
-  return LIBRARY_URL_SORTS.find(
+  const match = LIBRARY_URL_SORTS.find(
     (sort) => SORT_STATES[sort].key === state.key && SORT_STATES[sort].desc === state.desc,
-  )!;
+  );
+  return match ?? (state.desc ? "recent" : "oldest");
 }
 
 export function nextSort(current: LibrarySortState, key: LibrarySortKey): LibrarySortState {

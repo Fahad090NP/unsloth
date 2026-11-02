@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { AUDIO_CPP_REPO } from "@/features/audio/audio-cpp-catalog";
-import { audioWorkflowForPick } from "@/features/audio/route-search";
+import { AUDIO_CPP_REPO } from "@/features/audio";
+import { audioWorkflowForPick } from "@/features/audio";
 import type { ModelConfigHandoffRequest } from "@/features/model-picker";
 import {
   audioPickIsRoutable,
   curatedAudioInventoryTask,
   speechGgufIsUndecodable,
-} from "@/features/model-picker/components/model-selector/audio-picker-policy";
+} from "@/features/model-picker";
 import {
   AUDIO_CATALOG,
   artifactForRepoId,
-} from "@/features/model-picker/components/model-selector/model-catalog";
+} from "@/features/model-picker";
 import type { SelectedModelView } from "../types";
 import { EMBEDDING_TAGS } from "./hf-model-meta.ts";
 import { routableToMediaPage } from "./local-path.ts";
@@ -183,12 +183,13 @@ export function hubModelRunsOnAudioPage(
   if (!id || !routableToMediaPage(model.kind, model.localSource)) return false;
   // The shared GGUF audio repo holds many models; the Audio page lists them one by one.
   if (id.toLowerCase() === AUDIO_CPP_REPO.toLowerCase()) return false;
-  task = hubAudioTask(model, task);
+  const resolvedTask = hubAudioTask(model, task);
   const audioType = model.audioType ?? null;
-  if (audioWorkflowForPick({ id, task, audioType }) === null) return false;
+  if (audioWorkflowForPick({ id, task: resolvedTask, audioType }) === null)
+    return false;
   return audioPickIsRoutable({
     id,
-    task,
+    task: resolvedTask,
     isGguf: model.isGguf,
     isCurated: artifactForRepoId(id, AUDIO_CATALOG) !== null,
     // An on-device GGUF is tagged text-to-audio only by the audio runtime's header classifier.

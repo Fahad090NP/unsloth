@@ -14,16 +14,19 @@ const EXTERNAL_SCHEMES = /^(https?|mailto):/i;
 export function openExternalLink(url: string): void {
   if (!EXTERNAL_SCHEMES.test(url.trim())) return;
   if (isTauri) {
-    import("@tauri-apps/plugin-opener").then(({ openUrl }) => {
-      openUrl(url).catch(console.error);
-    });
+    import("@tauri-apps/plugin-opener")
+      .then(({ openUrl }) => openUrl(url))
+      .catch((error: unknown) => {
+        console.error("Failed to open external link", error);
+      });
   } else {
     window.open(url, "_blank", "noopener,noreferrer");
   }
 }
 
 /** True means the caller should preventDefault. */
-export function openLink(url: string): boolean {
+export function openLink(initialUrl: string): boolean {
+  let url = initialUrl;
   if (!url) return false;
   // The URL parser drops tabs and newlines, so `https:\t//host` navigates like `https://host`.
   url = url.replace(/[\t\n\r]/g, "");

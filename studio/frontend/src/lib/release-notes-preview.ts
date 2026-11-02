@@ -35,7 +35,7 @@ const IMAGE = new RegExp(`!\\[${LABEL}\\]${DESTINATION}`, "g");
 const LINK = new RegExp(`\\[${LABEL}\\]${DESTINATION}`, "g");
 const IMAGE_REFERENCE = new RegExp(`!\\[${LABEL}\\](?:\\[([^\\]]*)\\])?`, "g");
 const LINK_REFERENCE = new RegExp(`\\[${LABEL}\\](?:\\[([^\\]]*)\\])?`, "g");
-const DEFINITION = /^ {0,3}\[((?:[^\[\]\\]|\\.)+)\]:/;
+const DEFINITION = /^ {0,3}\[((?:[^[\]\\]|\\.)+)\]:/;
 const ESCAPE = /\\([!-/:-@[-`{-~])/g;
 // Private-use sentinels park code spans, so document text cannot contain them.
 const SENTINELS = /[\uE000\uE001]/g;
@@ -178,7 +178,7 @@ function toPlainText(markdown: string, labels?: Set<string>): string {
     codes.push(text);
     return `\uE000${codes.length - 1}\uE001`;
   };
-  const parked = parkCodeSpans(markdown, park).replace(ESCAPE, (_match, char) =>
+  const parked = parkCodeSpans(markdown, park).replace(ESCAPE, (_match: string, char: string) =>
     park(char),
   );
 
@@ -187,10 +187,10 @@ function toPlainText(markdown: string, labels?: Set<string>): string {
       .replace(AUTOLINK, "$1")
       .replace(IMAGE, "")
       .replace(LINK, "$1")
-      .replace(IMAGE_REFERENCE, (match, text, ref) =>
+      .replace(IMAGE_REFERENCE, (match: string, text: string, ref: string) =>
         definedLabel(labels, ref, text) ? "" : match,
       )
-      .replace(LINK_REFERENCE, (match, text, ref) =>
+      .replace(LINK_REFERENCE, (match: string, text: string, ref: string) =>
         definedLabel(labels, ref, text) ? text : match,
       ),
   )
@@ -299,7 +299,7 @@ function stripRawHtml(
 
 function opensHtmlBlock(line: string, afterParagraph: boolean): boolean {
   const named = HTML_BLOCK_OPEN.exec(line);
-  if (named && HTML_BLOCK_TAGS.has((named[1] ?? "").toLowerCase())) {
+  if (named && HTML_BLOCK_TAGS.has((named.at(1) ?? "").toLowerCase())) {
     return true;
   }
   return !afterParagraph && HTML_TAG_ONLY_LINE.test(line);
@@ -359,12 +359,12 @@ function visibleText(
       );
   if (
     fence &&
-    (state.openFence !== null || opensFence(fence[1] ?? "", fence[2] ?? ""))
+    (state.openFence !== null || opensFence(fence.at(1) ?? "", fence.at(2) ?? ""))
   ) {
     state.openFence = nextFence(
       state.openFence,
-      fence[1] ?? "",
-      fence[2] ?? "",
+      fence.at(1) ?? "",
+      fence.at(2) ?? "",
     );
     return { text: "", structural: line };
   }
@@ -423,7 +423,7 @@ function opensDeepFence(line: ContentLine): string | null {
     return null;
   }
   const fence = FENCE.exec(line.text);
-  return fence ? (fence[1] ?? null) : null;
+  return fence ? (fence.at(1) ?? null) : null;
 }
 
 /** A fence inside a list item ends with the item, as `fence_column` does on the backend. */
@@ -440,11 +440,11 @@ function closesDeepFence(marker: string, line: ContentLine): boolean {
   if (!fence) {
     return false;
   }
-  const closer = fence[1] ?? "";
+  const closer = fence.at(1) ?? "";
   return (
-    closer[0] === marker[0] &&
+    closer.startsWith(marker.slice(0, 1)) &&
     closer.length >= marker.length &&
-    !NON_SPACE.test(fence[2] ?? "")
+    !NON_SPACE.test(fence.at(2) ?? "")
   );
 }
 
@@ -552,7 +552,7 @@ function nextFence(
     return opensFence(marker, rest) ? marker : null;
   }
   const closes =
-    marker[0] === open[0] &&
+    marker.startsWith(open.slice(0, 1)) &&
     marker.length >= open.length &&
     !NON_SPACE.test(rest);
   return closes ? null : open;
@@ -771,7 +771,7 @@ function collectBullets(markdown: string): {
     const definition = DEFINITION.exec(line.text);
     if (definition) {
       labels.add(
-        (definition[1] ?? "").trim().replace(WHITESPACE, " ").toLowerCase(),
+        (definition.at(1) ?? "").trim().replace(WHITESPACE, " ").toLowerCase(),
       );
     }
   }
@@ -821,9 +821,9 @@ function collectBullets(markdown: string): {
       !collector.quotedParagraph;
     if (
       bullet &&
-      !(interrupts && bullet[1] !== undefined && bullet[1] !== "1")
+      !(interrupts && bullet.at(1) !== undefined && bullet.at(1) !== "1")
     ) {
-      takeBullet(collector, bullet[2] ?? "", line, labels);
+      takeBullet(collector, bullet.at(2) ?? "", line, labels);
       continue;
     }
     takeText(collector, line.text, labels, line.quoted);

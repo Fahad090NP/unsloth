@@ -1192,7 +1192,7 @@ export function GgufDownloadCard({
                     fit={selectedFit ?? "oom"}
                     lookupTableBytes={ggufVariantLookupTableBytes(selected)}
                     showFit={showFitInfo}
-                    unifiedBudget={(unifiedLoadBudgetGb !== null && unifiedLoadBudgetGb !== undefined)}
+                    unifiedBudget={unifiedLoadBudgetGb != null}
                   />
                 ) : (
                   <span className="text-ui-12p5 text-muted-foreground">
@@ -1279,7 +1279,7 @@ export function GgufDownloadCard({
                     }
                     liveActive={liveActive}
                     showFitInfo={showFitInfo}
-                    unifiedBudget={(unifiedLoadBudgetGb !== null && unifiedLoadBudgetGb !== undefined)}
+                    unifiedBudget={unifiedLoadBudgetGb != null}
                     onSelect={handleSelectVariant}
                     onDelete={handleDeleteVariant}
                   />
@@ -1371,7 +1371,7 @@ export function GgufDownloadCard({
             ) : downloadingThisVariant ? (
               <span className="inline-flex items-center gap-2">
                 <DownloadStopIndicator mode={downloadAction.stopMode} />
-                {(downloadAction.progressPercent !== null && downloadAction.progressPercent !== undefined)
+                {downloadAction.progressPercent != null
                   ? `${downloadAction.progressPercent}%`
                   : null}
               </span>

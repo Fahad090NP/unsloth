@@ -81,7 +81,7 @@ export function offloadHardwareSupported(
 ): boolean {
   if (system?.status !== "ready") return true;
   if (system.device_backend !== "cuda" && system.device_backend !== "rocm") return false;
-  const devices = system.gpu?.devices ?? [];
+  const devices = system.gpu.devices;
   return devices.length === 0 || devices.some((device) => device.unified_memory !== true);
 }
 
@@ -227,7 +227,7 @@ export function buildTrainingStartPayload(
       config.isVisionModel && config.isDatasetImage === true && !isDeepseekOcr
         ? config.visionImageSize
         : null,
-    trust_remote_code: config.trustRemoteCode ?? false,
+    trust_remote_code: config.trustRemoteCode,
     approved_remote_code_fingerprint:
       config.approvedRemoteCodeFingerprint ?? null,
     hf_dataset: hfDataset,

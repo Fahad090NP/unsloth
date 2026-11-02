@@ -79,7 +79,12 @@ export function CreateKeyForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+    <form
+      onSubmit={(event) => {
+        handleSubmit(event).catch(() => undefined);
+      }}
+      className="flex flex-col gap-2"
+    >
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={name}

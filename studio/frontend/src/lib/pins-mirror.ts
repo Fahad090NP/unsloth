@@ -18,6 +18,7 @@ const restorers: Partial<Record<PinList, () => void>> = {};
 let hydrated = false;
 let pending: Partial<Record<PinList, string[]>> = {};
 let queue: Promise<void> = Promise.resolve();
+let hydration: Promise<void> | null = null;
 
 async function request(init?: RequestInit): Promise<Response> {
   // Imported on first use, so the stores stay importable where there is no auth module to load.
@@ -66,13 +67,20 @@ function readLocal(key: string): string[] | null {
 }
 
 /** Once per load after auth: restore a list the browser lacks, seed one the server lacks; if both have one, the browser's wins. */
-export async function hydratePins(): Promise<void> {
-  if (hydrated) return;
+export function hydratePins(): Promise<void> {
+  if (hydrated) return Promise.resolve();
+  hydration ??= runHydration().finally(() => {
+    hydration = null;
+  });
+  return hydration;
+}
+
+async function runHydration(): Promise<void> {
   let server: Partial<Record<PinList, string[] | null>>;
   try {
     const res = await request();
     if (!res.ok) return;
-    server = await res.json();
+    server = (await res.json()) as Partial<Record<PinList, string[] | null>>;
   } catch {
     return;
   }

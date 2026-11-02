@@ -82,8 +82,8 @@ function normalizeEdge(
       }
     : edge;
 
-  const source = configs[displayEdge.source];
-  const target = configs[displayEdge.target];
+  const source: (typeof configs)[string] | undefined = configs[displayEdge.source];
+  const target: (typeof configs)[string] | undefined = configs[displayEdge.target];
   const semantic =
     displayEdge.type === "semantic" ||
     (Boolean(source && target) && isSemanticRelation(source, target));
@@ -455,7 +455,7 @@ export function deriveDisplayGraph({
   );
 
   for (const node of displayNodes) {
-    const config = configs[node.id];
+    const config: (typeof configs)[string] | undefined = configs[node.id];
     if (!(config && config.kind === "llm")) {
       continue;
     }

@@ -923,7 +923,7 @@ function useFenceTokens(
     const options = fenceHighlightOptions(body, languageToken);
     const settled = settlesOffThread(body, streaming, options)
       ? code.cached(options)
-      : highlight(body, () => {});
+      : highlight(body, () => undefined);
     return settled ? { body, tokens: settled } : null;
   });
   const [tokens, setTokens] = useState<FenceTokens | null>(
@@ -967,7 +967,7 @@ function useFenceTokens(
     };
     const late = (result: FenceTokens) => { publish(() => { show(result); }); };
     const tokenizeNow = (): boolean => {
-      if (!current() || highlight("", () => {}) === null) return false;
+      if (!current() || highlight("", () => undefined) === null) return false;
       const result = code.highlightExact(options, late);
       if (result === null) return false;
       cancel?.();
@@ -1010,7 +1010,7 @@ function useFenceTokens(
           if (cancel === null && failover) {
             settled = highlight(body, late);
           } else {
-            highlight("", () => {});
+            highlight("", () => undefined);
             settled = code.cover(options).result;
           }
           release = awaitWorker(body.length, () => {
@@ -1174,8 +1174,8 @@ function FenceBlock({
         tokens
         && (!settlesOffThread(body, Boolean(isIncomplete), options)
           || code.cached(options) !== null);
-      if (inline && !isIncomplete) code.highlightExact(options, () => {});
-      else code.highlight(inline ? options : fenceHighlightOptions("", languageToken), () => {});
+      if (inline && !isIncomplete) code.highlightExact(options, () => undefined);
+      else code.highlight(inline ? options : fenceHighlightOptions("", languageToken), () => undefined);
     },
     [source, languageToken, isIncomplete],
   );
@@ -1236,7 +1236,7 @@ function FenceBlock({
         language: (languageToken ?? "text") as never,
         themes: STREAMDOWN_SHIKI_THEME,
       },
-      () => {},
+      () => undefined,
     );
   }, [pretokenize, source, languageToken]);
 

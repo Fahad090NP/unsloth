@@ -246,7 +246,7 @@ export function fetchDatasetSize(
           numBytesParquet: ds.num_bytes_parquet_files ?? null,
           numRows: ds.num_rows ?? null,
           numSplits: Array.isArray(data.size?.splits)
-            ? (data.size?.splits.length ?? null)
+            ? (data.size.splits.length ?? null)
             : null,
         },
       };

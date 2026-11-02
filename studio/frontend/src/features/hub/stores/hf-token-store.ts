@@ -160,7 +160,7 @@ function persistTokenToBackend(token: string): void {
 
 
 export async function waitForHfTokenPersistence(): Promise<void> {
-  while (true) {
+  for (;;) {
     const revision = persistenceRevision;
     await persistenceChain;
     if (revision !== persistenceRevision) continue;
@@ -291,7 +291,8 @@ export async function refreshHfTokenFromBackend(): Promise<void> {
   } catch {
     // The replay is the authoritative retry for the cross-tab notification.
   }
-  if (!hydrationReplayRequested) return;
+  const replayRequested: boolean = hydrationReplayRequested;
+  if (!replayRequested) return;
   hydrationReplayRequested = false;
   await hydrateHfTokenFromBackend();
 }
@@ -317,7 +318,7 @@ if (typeof window !== "undefined") {
 
   window.addEventListener("storage", (event) => {
     if (event.key !== HF_TOKEN_SYNC_KEY || !event.newValue) return;
-    void refreshHfTokenFromBackend().catch(() => undefined);
+    refreshHfTokenFromBackend().catch(() => undefined).catch(() => undefined);
   });
 }
 

@@ -48,7 +48,9 @@ export function pickGgufFilename(
     const byLabel = listed.filter(
       (v) => v.quant?.toLowerCase() === wanted.toLowerCase(),
     );
-    return (byLabel.find((v) => v.downloaded) ?? byLabel[0])?.filename ?? null;
+    return (
+      byLabel.find((v) => v.downloaded) ?? byLabel.at(0)
+    )?.filename ?? null;
   }
   // Only a lone file names itself; downloaded first.
   const downloaded = listed.filter((v) => v.downloaded);

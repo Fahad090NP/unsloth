@@ -151,12 +151,16 @@ export function useChatSidebarItems(options?: {
       pendingTimer = setTimeout(() => {
         pendingTimer = null;
         requestSeq += 1;
-        void doLoad(requestSeq);
+        doLoad(requestSeq).catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
       }, SIDEBAR_REFRESH_DEBOUNCE_MS);
     }
 
     requestSeq += 1;
-    void doLoad(requestSeq);
+    doLoad(requestSeq).catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
     window.addEventListener(CHAT_HISTORY_UPDATED_EVENT, load);
     return () => {
       cancelled = true;

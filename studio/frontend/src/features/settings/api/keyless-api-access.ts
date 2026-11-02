@@ -45,7 +45,7 @@ export async function loadKeylessApiAccess(): Promise<KeylessApiAccessSettings> 
       await readFastApiError(res, "Failed to load keyless API access settings"),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export async function updateKeylessApiAccess(
@@ -65,7 +65,7 @@ export async function updateKeylessApiAccess(
       ),
     );
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export function keylessAudience(

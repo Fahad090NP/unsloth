@@ -156,12 +156,14 @@ export function ApiKeyRow({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={async () => {
-              if (await copyToClipboard(prefix)) {
-                toast.success(t("settings.apiKeys.copied"));
-              } else {
-                toast.error(t("settings.apiKeys.copyFailed"));
-              }
+            onClick={() => {
+              (async () => {
+                if (await copyToClipboard(prefix)) {
+                  toast.success(t("settings.apiKeys.copied"));
+                } else {
+                  toast.error(t("settings.apiKeys.copyFailed"));
+                }
+              })().catch(() => undefined);
             }}
           >
             <HugeiconsIcon icon={Copy01Icon} className="size-3.5 mr-2" />

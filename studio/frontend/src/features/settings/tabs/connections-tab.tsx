@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { ChatProvidersSettings } from "@/features/chat/chat-providers-dialog";
-import { useExternalProvidersStore } from "@/features/chat/stores/external-providers-store";
+import { useExternalProvidersStore } from "@/features/chat";
 import { useSettingsDialogStore } from "../stores/settings-dialog-store";
 
 export function ConnectionsTab() {

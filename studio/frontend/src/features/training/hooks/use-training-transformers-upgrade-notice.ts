@@ -47,7 +47,7 @@ export function useTrainingTransformersUpgradeNotice(): TrainingTransformersUpgr
     (s) => s.sidecarGeneration,
   );
   // Resolved like freshModelCachePin; a known-cached row can have a null path, so the flag travels alone.
-  const preferLocalCache = Boolean(modelKnownCached);
+  const preferLocalCache = modelKnownCached;
   const localPath = (preferLocalCache && modelLocalPath) || null;
   // The cache is the state; this counter only forces a re-render once an answer lands.
   const [, markAnswered] = useState(0);

@@ -732,7 +732,7 @@ export const InventoryRow = memo(function InventoryRow({
   const pinnedKeys = usePinnedModelsStore((s) => s.pinned);
   const togglePinned = usePinnedModelsStore((s) => s.togglePinned);
   const rowPinned =
-    (cacheDeletableRepoId !== null && cacheDeletableRepoId !== undefined) &&
+    cacheDeletableRepoId != null &&
     pinnedKeys.includes(pinKey(cacheDeletableRepoId));
   const deletableRepoId = canDelete ? cacheDeletableRepoId : null;
   const deleteAction =

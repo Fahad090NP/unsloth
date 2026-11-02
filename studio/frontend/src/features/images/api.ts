@@ -556,7 +556,7 @@ export interface GalleryPage {
 export async function getGallery(offset = 0, limit = 50, archived = false): Promise<GalleryPage> {
   return await parseJson(
     await authFetch(
-      `/api/inference/images/gallery?offset=${offset}&limit=${limit}&archived=${archived}`,
+      `/api/inference/images/gallery?offset=${offset}&limit=${limit}&archived=${String(archived)}`,
     ),
   );
 }

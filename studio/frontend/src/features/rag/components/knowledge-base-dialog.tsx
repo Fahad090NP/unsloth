@@ -485,7 +485,8 @@ function KnowledgeBaseDocuments({
           className="hidden"
           onChange={(e) => {
             const files = Array.from(e.target.files ?? []);
-            e.target.value = "";
+            const target = e.target;
+            target.value = "";
             enqueue(files.map((file) => ({ kind: "file" as const, file })));
           }}
         />

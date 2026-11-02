@@ -65,7 +65,7 @@ export async function loadHuggingFaceCacheSettings() {
       ),
     );
   }
-  return fromApi(await response.json());
+  return fromApi((await response.json()) as Parameters<typeof fromApi>[0]);
 }
 
 export async function updateHuggingFaceCacheSettings(cacheHome: string | null) {
@@ -83,7 +83,7 @@ export async function updateHuggingFaceCacheSettings(cacheHome: string | null) {
       ),
     );
   }
-  const settings = fromApi(await response.json());
+  const settings = fromApi((await response.json()) as Parameters<typeof fromApi>[0]);
   bumpInventoryVersion();
   invalidateGgufVariantsCache();
   return settings;

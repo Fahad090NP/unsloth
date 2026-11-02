@@ -265,7 +265,7 @@ export function buildDiscoverRows(
       repo: repoOf(result.id),
       result,
       isAvailableOnDevice:
-        !companionPrefetch && Boolean(resource.cachedRow || resource.localRow),
+        !companionPrefetch && Boolean(resource.cachedRow ?? resource.localRow),
       isPartialOnDevice: partial,
       isDownloadingOnDevice: downloading,
       summary: buildSummary(result),

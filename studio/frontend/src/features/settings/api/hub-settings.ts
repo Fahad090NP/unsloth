@@ -40,7 +40,7 @@ export async function loadHubSettings(): Promise<HubSettings> {
   if (!res.ok) {
     throw new Error(await readFastApiError(res, "Failed to load hub settings"));
   }
-  return fromApi(await res.json());
+  return fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
 }
 
 async function followSavedEndpoints(): Promise<void> {
@@ -60,7 +60,7 @@ export async function updateHubSource(source: HubSource): Promise<HubSettings> {
   if (!res.ok) {
     throw new Error(await readFastApiError(res, "Failed to switch the model source"));
   }
-  const saved = fromApi(await res.json());
+  const saved = fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
   clearDownloadTransportCapabilitiesCache();
   // Its event also refreshes the hub's mounted transport toggle.
   await loadDownloadTransportSettings({ refresh: true }).catch(() => undefined);
@@ -109,7 +109,7 @@ export async function updateHubSettings(
       ? new InvalidHubEndpointError(message)
       : new Error(message);
   }
-  const saved = fromApi(await res.json());
+  const saved = fromApi((await res.json()) as Parameters<typeof fromApi>[0]);
   await followSavedEndpoints();
   return saved;
 }

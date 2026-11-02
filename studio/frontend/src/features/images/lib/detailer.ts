@@ -154,7 +154,7 @@ export function detailerRequestField(
   if (options.steps !== null && Number.isFinite(options.steps)) out.steps = clamp(Math.round(options.steps), 1, 200);
   const negative = ((options.negativePrompt)).trim();
   if (negative) out.negative_prompt = negative;
-  if (options.guidance !== null && options.guidance !== undefined && Number.isFinite(options.guidance))
+  if (options.guidance != null && Number.isFinite(options.guidance))
     out.guidance = clamp(options.guidance, 0, 100);
   return { detailer: out };
 }
@@ -329,7 +329,7 @@ const KEY = "unsloth:images:detailer-options";
 
 export function readDetailerOptions(): DetailerOptions {
   try {
-    const value = JSON.parse(localStorage.getItem(KEY) ?? "{}");
+    const value: unknown = JSON.parse(localStorage.getItem(KEY) ?? "{}");
     if (!value || typeof value !== "object" || Array.isArray(value)) return { ...DETAILER_DEFAULTS };
     const out = { ...DETAILER_DEFAULTS };
     for (const key of Object.keys(DETAILER_DEFAULTS) as (keyof DetailerOptions)[]) {

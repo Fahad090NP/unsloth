@@ -72,11 +72,11 @@ export function createCompareRun(
     },
     sentSeed(run) {
       const cell = plan.order[run];
-      return cell === undefined ? undefined : requests[cell]?.seed;
+      return cell == null ? undefined : requests[cell]?.seed;
     },
     onImages(run, images) {
       const cell = plan.order[run];
-      if (cell === undefined) return;
+      if (cell == null) return;
       // A lost-response recovery passes every record the gallery gained: the cell's own carries its seed.
       const seed = requests[cell]?.seed;
       const own = images.find((image) => image.seed === seed) ?? (images.length === 1 ? images[0] : undefined);

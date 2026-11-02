@@ -133,7 +133,8 @@ export function useSourceDrop({
     onDragOver: (event) => {
       event.preventDefault();
       if (disabled || !isFileDrag(event)) return;
-      event.dataTransfer.dropEffect = "copy";
+      const transfer = event.dataTransfer;
+      transfer.dropEffect = "copy";
     },
     onDragLeave: (event) => {
       if (disabled || !isFileDrag(event)) return;

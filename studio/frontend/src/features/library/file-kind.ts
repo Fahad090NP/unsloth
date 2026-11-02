@@ -127,7 +127,9 @@ export function fileKind(
   item: Pick<LibraryItem, "name" | "fileName" | "contentType">,
 ): LibraryFileKind {
   if (item.contentType === MODEL_CONTENT_TYPE) return "model";
-  const byExtension = EXTENSION_KINDS[ownExtension(item)];
+  const byExtension = EXTENSION_KINDS[ownExtension(item)] as
+    | LibraryFileKind
+    | undefined;
   if (byExtension) return byExtension;
   const type = item.contentType.toLowerCase();
   if (type.startsWith("image/")) return "image";

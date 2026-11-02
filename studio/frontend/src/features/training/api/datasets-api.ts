@@ -96,7 +96,7 @@ export async function checkDatasetFormat({
     throw await readDatasetFormatError(res);
   }
 
-  return await res.json();
+  return (await res.json()) as CheckFormatResponse;
 }
 
 export function uploadTrainingDataset(
@@ -129,7 +129,7 @@ async function uploadTrainingDatasetForm(
     throw new Error(await readFastApiError(res, "Upload failed"));
   }
 
-  return await res.json();
+  return (await res.json()) as UploadDatasetResponse;
 }
 
 interface AiAssistMappingArgs {
@@ -182,5 +182,5 @@ export async function aiAssistMapping({
     throw new Error(await readFastApiError(res, "AI assist failed"));
   }
 
-  return await res.json();
+  return (await res.json()) as AiAssistMappingResponse;
 }

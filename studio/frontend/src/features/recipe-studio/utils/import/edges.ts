@@ -118,10 +118,10 @@ export function buildEdges(
 
   for (const config of configs) {
     if (config.kind === "llm") {
-      for (const ref of extractRefs(config.prompt ?? "")) {
+      for (const ref of extractRefs(config.prompt)) {
         addEdgeByName(ref, config.name);
       }
-      for (const ref of extractRefs(config.system_prompt ?? "")) {
+      for (const ref of extractRefs(config.system_prompt)) {
         addEdgeByName(ref, config.name);
       }
     }
@@ -154,7 +154,7 @@ export function buildEdges(
       addEdgeByName(config.tool_alias, config.name);
     }
     if (config.kind === "validator") {
-      for (const targetColumn of config.target_columns ?? []) {
+      for (const targetColumn of config.target_columns) {
         if (targetColumn.trim()) {
           addEdgeByName(targetColumn, config.name);
         }

@@ -121,20 +121,26 @@ export function TrainingLossChartCard({
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(_value, payload) =>
-                    t("studio.charts.step", {
-                      step: payload?.[0]?.payload?.step ?? "",
-                    })
-                  }
+                  labelFormatter={(_value, payload) => {
+                    const first = (payload as
+                      | { payload?: { step?: number } }[]
+                      | undefined)?.[0];
+                    return t("studio.charts.step", {
+                      step: first?.payload?.step ?? "",
+                    });
+                  }}
                   formatter={(_value, name, item) => {
+                    const data = (item as
+                      | { payload?: { smoothed?: number; loss?: number } }
+                      | undefined)?.payload;
                     if (name === "displaySmoothed") {
                       return [
-                        formatMetric(Number(item?.payload?.smoothed)),
+                        formatMetric(Number(data?.smoothed)),
                         t("studio.charts.smoothed"),
                       ];
                     }
                     return [
-                      formatMetric(Number(item?.payload?.loss)),
+                      formatMetric(Number(data?.loss)),
                       t("studio.charts.loss"),
                     ];
                   }}

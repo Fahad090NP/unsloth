@@ -17,7 +17,6 @@ export async function decodePeaks(
         webkitOfflineAudioContext?: typeof OfflineAudioContext;
       }
     ).webkitOfflineAudioContext;
-  if (!Offline) return { peaks: null, durationS: null };
   try {
     const context = new Offline(1, 1, 22050);
     const buffer = await context.decodeAudioData(await blob.arrayBuffer());

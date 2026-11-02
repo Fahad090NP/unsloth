@@ -98,10 +98,7 @@ function SidebarProvider({
   // The shell decision, not the viewport: a narrowed desktop window keeps the desktop sidebar.
   const isMobile = useIsMobileShell()
   const [openMobile, setOpenMobile] = React.useState(false)
-  const {
-    width,
-    scale: widthScale,
-  } = useSidebarWidth()
+  useSidebarWidth()
 
   const prevIsMobileRef = React.useRef(isMobile)
   React.useEffect(() => {
@@ -116,7 +113,7 @@ function SidebarProvider({
   const [_open, _setOpen] = React.useState(defaultOpen)
 
   // Pin mode drives open entirely from `pinned`; otherwise controlled/uncontrolled.
-  const open = hasPinMode ? pinnedProp === true : (openProp ?? _open)
+  const open = hasPinMode ? Boolean(pinnedProp) : (openProp ?? _open)
 
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {

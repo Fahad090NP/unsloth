@@ -26,7 +26,7 @@ export function isLlamaRuntimeReason(reason: string | null): boolean {
 }
 
 function llamaRuntimeFolder(): string {
-  return typeof navigator !== "undefined" && /Win/i.test(navigator.platform ?? "")
+  return typeof navigator !== "undefined" && /Win/i.test(navigator.platform)
     ? "%USERPROFILE%\\.unsloth\\llama.cpp"
     : "~/.unsloth/llama.cpp";
 }
@@ -49,7 +49,7 @@ export function preflightStaleMessage(
   // offered, not asserted.
   if (kind === WORKING_DIRECTORY_UNAVAILABLE) {
     const cause =
-      typeof navigator !== "undefined" && /Win/i.test(navigator.platform ?? "")
+      typeof navigator !== "undefined" && /Win/i.test(navigator.platform)
         ? " This usually means a network or roaming profile is not available yet."
         : "";
     return `Unsloth cannot reach your user folder, so it has nowhere to run from.${cause} Reconnect and try again.`;

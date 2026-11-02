@@ -51,7 +51,9 @@ export function CopyBtn({ text }: { text: string }) {
     <IconActionButton
       label={copied ? "Copied" : "Copy to clipboard"}
       onClick={() => {
-        void copy();
+        copy().catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
       }}
     >
       {copied ? (

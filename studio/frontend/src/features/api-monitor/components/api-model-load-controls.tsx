@@ -147,12 +147,14 @@ function useLoadAfterDownload(
       return;
     }
     let active = true;
-    startStagedDownload(pending.id, pending.meta).then((error) => {
-      if (active && error) {
-        onStartError(error);
-        setPending(null);
-      }
-    });
+    startStagedDownload(pending.id, pending.meta)
+      .then((error) => {
+        if (active && error) {
+          onStartError(error);
+          setPending(null);
+        }
+      })
+      .catch(() => undefined);
     return () => {
       active = false;
     };
@@ -221,8 +223,8 @@ export function ApiModelLoadControls({
   const [pendingDownload, setPendingDownload] =
     useState<PendingDownload | null>(null);
   useEffect(() => {
-    refresh();
-    refreshLocalModels();
+    refresh().catch(() => undefined);
+    refreshLocalModels().catch(() => undefined);
     onLastLoadChanged?.();
   }, [refresh, refreshLocalModels, onLastLoadChanged]);
 
@@ -242,7 +244,7 @@ export function ApiModelLoadControls({
     }
     onLastLoadChanged?.();
     if (!useChatRuntimeStore.getState().modelLoading) {
-      refresh({ includeLoras: false });
+      refresh({ includeLoras: false }).catch(() => undefined);
     }
   }, [activeModel, residencyKey, refresh, onLastLoadChanged]);
 
@@ -321,7 +323,7 @@ export function ApiModelLoadControls({
     setPendingDownload,
     activeModel ?? null,
     (id, meta) => {
-      handlePick(id, meta);
+      handlePick(id, meta).catch(() => undefined);
     },
     setActionError,
   );
@@ -330,7 +332,11 @@ export function ApiModelLoadControls({
     (modelId?: string) => {
       setPendingDownload(null);
       if (modelId) {
-        ejectModel(modelId).then(() => { onSettled(); });
+        ejectModel(modelId)
+          .then(() => {
+            onSettled();
+          })
+          .catch(() => undefined);
       } else {
         onUnloadActive();
       }
@@ -365,7 +371,7 @@ export function ApiModelLoadControls({
         configRequest={configRequest}
         onConfigRequestAdopted={onConfigRequestAdopted}
         onValueChange={(value, meta) => {
-          handlePick(value, meta);
+          handlePick(value, meta).catch(() => undefined);
         }}
         // The page unload skips the runtime's load guard, so a replacement mid-load would land after it.
         onEject={busy ? undefined : handleEject}
@@ -373,11 +379,11 @@ export function ApiModelLoadControls({
         loadedCount={loadedModels.length}
         loadedNames={loadedNames}
         onFoldersChange={() => {
-          refreshLocalModels();
+          refreshLocalModels().catch(() => undefined);
         }}
         onModelsChange={() => {
-          refresh();
-          refreshLocalModels();
+          refresh().catch(() => undefined);
+          refreshLocalModels().catch(() => undefined);
         }}
         deleteDisabled={modelLoading}
         variant="ghost"

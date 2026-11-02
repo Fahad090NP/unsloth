@@ -121,7 +121,6 @@ export function markDownloadingRows<
   getRepoId: (row: T) => string | null | undefined,
   downloadingRepoKeys: ReadonlySet<string>,
 ): T[] {
-  let changed = false;
   const next = rows.map((row) => {
     const key = repoKey(getRepoId(row));
     const family = row.modelFormat ? partialFormatFamily(row.modelFormat) : null;
@@ -131,10 +130,9 @@ export function markDownloadingRows<
         downloadingRepoKeys.has(family ? `${key}\0${family}` : key),
     );
     if (Boolean(row.downloading) === downloading) return row;
-    changed = true;
     return { ...row, downloading };
   });
-  return changed ? next : rows;
+  return next.some((row, index) => row !== rows[index]) ? next : rows;
 }
 
 export function partialSetFromRows<T extends { partial?: boolean }>(

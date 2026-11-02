@@ -28,7 +28,7 @@ export function ReembedDocumentsRow(): ReactElement | null {
     <SettingsRow
       label={t("settings.general.rag.reembed.label")}
       description={
-        running && job ? (
+        running ? (
           <span className="flex flex-col gap-1.5">
             <span>
               {t("settings.general.rag.reembed.running", {
@@ -52,7 +52,7 @@ export function ReembedDocumentsRow(): ReactElement | null {
           size="sm"
           disabled={stoppingJobId === job.id}
           onClick={() => {
-            setStoppingJobId(job?.id ?? null);
+            setStoppingJobId(job.id);
             (useReembedStore
               .getState()
               .cancel()

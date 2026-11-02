@@ -85,8 +85,6 @@ function sourceLabel(model: LocalModelInfo): string {
       return "Hermes";
     case "custom":
       return "Custom folder";
-    default:
-      return "Local";
   }
 }
 
@@ -140,7 +138,7 @@ function LocalGgufVariantList({
         setVariants(response.variants);
         setDefaultVariant(response.default_variant);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (cancelled) {
           return;
         }
@@ -514,7 +512,7 @@ export function LocalRecipeModelSelector({
         }
         setModels(response.models);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (cancelled) {
           return;
         }

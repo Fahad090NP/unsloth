@@ -51,7 +51,7 @@ const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
   const instanceRef = useRef<ConfettiInstance | null>(null);
 
   const canvasRef = useCallback(
-    (node: HTMLCanvasElement) => {
+    (node: HTMLCanvasElement | null) => {
       if (node !== null) {
         if (instanceRef.current) return;
         instanceRef.current = confetti.create(node, {
@@ -92,13 +92,9 @@ const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
 
   useEffect(() => {
     if (!manualstart) {
-      (async () => {
-        try {
-          await fire();
-        } catch (error) {
-          console.error("Confetti effect error:", error);
-        }
-      })();
+      fire().catch((error: unknown) => {
+        console.error("Confetti effect error:", error);
+      });
     }
   }, [manualstart, fire]);
 

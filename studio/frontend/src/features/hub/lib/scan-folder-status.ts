@@ -28,6 +28,7 @@ function permissionHint(userAgent: string): string {
       return "Grant access in System Settings > Privacy & Security > Files and Folders, then refresh the list.";
     case "windows":
       return "Check the folder's security permissions, or allow Unsloth in Controlled Folder Access, then refresh the list.";
+    case "other":
     default:
       return "Check the folder's permissions, then refresh the list.";
   }
@@ -63,6 +64,8 @@ export function scanFolderStatusCopy(
         title: "This folder is taking too long to scan",
         hint: "It may be on a slow or disconnected network drive. Its models are skipped until a scan finishes in time.",
       };
+    case "ok":
+    case undefined:
     default:
       return null;
   }

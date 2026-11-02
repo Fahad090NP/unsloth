@@ -338,14 +338,17 @@ export function DatasetPreviewDialog({
 
   const handleRoleChange = useCallback(
     (colName: string, role: string | undefined) => {
-      const next = { ...manualMapping };
-      delete next[colName];
-      if (role) {
-        for (const [col, r] of Object.entries(next)) {
-          if (r === role) delete next[col];
-        }
-        next[colName] = role;
-      }
+      const withoutColumn = Object.fromEntries(
+        Object.entries(manualMapping).filter(([key]) => key !== colName),
+      );
+      const next = role
+        ? {
+            ...Object.fromEntries(
+              Object.entries(withoutColumn).filter(([, value]) => value !== role),
+            ),
+            [colName]: role,
+          }
+        : withoutColumn;
       setManualMapping(next);
     },
     [manualMapping, setManualMapping],
@@ -377,7 +380,7 @@ export function DatasetPreviewDialog({
           });
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (controller.signal.aborted) {
           return;
         }

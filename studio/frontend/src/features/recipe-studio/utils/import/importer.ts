@@ -213,12 +213,18 @@ function parseToolConfigs(input: unknown): Map<string, LlmToolConfig> {
         item.max_tool_call_turns === null ||
         item.max_tool_call_turns === undefined
           ? "5"
-          : String(item.max_tool_call_turns),
+          : typeof item.max_tool_call_turns === "string" ||
+              typeof item.max_tool_call_turns === "number"
+            ? String(item.max_tool_call_turns)
+            : "5",
       // biome-ignore lint/style/useNamingConvention: api schema
       timeout_sec:
         item.timeout_sec === null || item.timeout_sec === undefined
           ? ""
-          : String(item.timeout_sec),
+          : typeof item.timeout_sec === "string" ||
+              typeof item.timeout_sec === "number"
+            ? String(item.timeout_sec)
+            : ""
     });
   });
   return toolConfigs;
@@ -340,7 +346,8 @@ function applyAdvancedOpen(
   if (!isAdvancedOpenConfig(config)) {
     return;
   }
-  config.advancedOpen = advancedOpenByNode[config.name];
+  const target = config;
+  target.advancedOpen = advancedOpenByNode[config.name];
 }
 
 function buildToolProfileConfig(

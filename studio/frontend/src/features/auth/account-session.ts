@@ -22,15 +22,18 @@ export function sessionAccount(
 ): { username: string; isOwner: boolean } | null {
   if (!token) return null;
   try {
-    const payload = JSON.parse(
+    const parsed: unknown = JSON.parse(
       atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
     );
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const payload = parsed as { sub?: unknown; role?: unknown };
     if (typeof payload.sub !== "string") return null;
     return {
       username: payload.sub,
-      isOwner: payload.role
-        ? payload.role === "owner"
-        : payload.sub === OWNER_USERNAME,
+      isOwner:
+        typeof payload.role === "string"
+          ? payload.role === "owner"
+          : payload.sub === OWNER_USERNAME,
     };
   } catch {
     return null;

@@ -8,8 +8,8 @@ import {
   isTtsAudioType,
   trainedTtsCheckpointIsLoadable,
   trainedTtsCheckpointIsRunnableOnMac,
-} from "@/features/audio/audio-page-policy";
-import { audioWorkflowForAudioType } from "@/features/audio/workflows";
+} from "@/features/audio";
+import { audioWorkflowForAudioType } from "@/features/audio";
 import { getAuthSessionEpoch } from "@/features/auth";
 import { listLoras } from "@/features/chat";
 import {
@@ -207,7 +207,7 @@ export async function editLibraryImage(navigate: Navigate, item: LibraryItem): P
     const dataUrl = await fitImageDataUrl(await blobToDataUrl(file), MAX_UPLOAD_IMAGE_SIDE);
     if (getAuthSessionEpoch() !== epoch || claimed !== editRequest) return;
     useImageEditHandoffStore.getState().offer(dataUrl);
-    void navigate({ to: "/images" });
+    navigate({ to: "/images" }).catch(() => undefined);
   } catch (error) {
     if (claimed !== editRequest) return;
     toast.error(translate("library.toast.editImageFailed"), { description: errorMessage(error) });
@@ -249,7 +249,7 @@ export async function chatWithModel(
     toast(translate("library.toast.speechModel", { name: item.name }), {
       description: translate("library.toast.speechModelDescription"),
     });
-    void navigate({ to: "/audio" });
+    navigate({ to: "/audio" }).catch(() => undefined);
     return;
   }
   const requestId = createModelConfigHandoffRequestId();

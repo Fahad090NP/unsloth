@@ -249,6 +249,7 @@ import {
   sectionKeyLanding,
   useSectionDrag,
   prefetchChatPage,
+  NewProjectDialog,
 } from "@/features/chat";
 import {
   imeOwnsInputKeydown,
@@ -257,7 +258,6 @@ import {
   resetInputIme,
 } from "@/features/chat/utils/composer-preferences";
 import { sandboxSessionIdFor } from "@/components/assistant-ui/sandbox-files";
-import { NewProjectDialog } from "@/features/chat/components/new-project-dialog";
 import {
   sidebarNavRowPinned,
   useAppearanceCustomStore,
@@ -489,7 +489,9 @@ function landedOrder(
   order: SidebarDropEffects["orders"][number],
   before: string[] | undefined,
 ): string[] {
-  const current = useSidebarOrganizationStore.getState().manualOrder[order.scope];
+  const current = useSidebarOrganizationStore.getState().manualOrder[
+    order.scope
+  ] as string[] | undefined;
   if (!order.place || !current || current === before) return order.ids;
   return placeIdAt(current, order.place.id, order.place.targetId, order.place.edge);
 }
@@ -619,8 +621,6 @@ function runStatusDotClass(status: TrainingRunSummary["status"]): string {
       return "bg-amber-500";
     case "error":
       return "bg-red-500";
-    default:
-      return "bg-muted-foreground";
   }
 }
 
@@ -1860,11 +1860,13 @@ export function AppSidebar() {
   useEffect(() => {
     if (!slotActiveId || isAssistantLocalThreadId(slotActiveId)) return;
     const running = new Set(runningRowKey.split("\n"));
-    setOpenedChatIds((opened) => keepOpenedChats(touchOpenedChat(opened, slotActiveId), running));
+    queueMicrotask(() => {
+      setOpenedChatIds((opened) => keepOpenedChats(touchOpenedChat(opened, slotActiveId), running));
+    });
   }, [slotActiveId, runningRowKey]);
   const recentsPages = chatRowLists.recents;
   // a failed first read is not an empty history: "No chats yet" waits for a read that worked
-  const chatItemsLoaded = Boolean(recentsPages?.loaded && !recentsPages.error);
+  const chatItemsLoaded = recentsPages.loaded && !recentsPages.error;
   const folderPages = useCallback(
     (projectId: string) => chatRowLists[`folder:${projectId}`],
     [chatRowLists],
@@ -1875,7 +1877,9 @@ export function AppSidebar() {
   const sidebarLooksEmpty = chatItemsLoaded && allChatItems.length === 0;
   useEffect(() => {
     if (!sidebarLooksEmpty) {
-      setHasUnlistedChats(null);
+      queueMicrotask(() => {
+        setHasUnlistedChats(null);
+      });
       return;
     }
     let cancelled = false;
@@ -1953,7 +1957,7 @@ export function AppSidebar() {
       const newest = chatsByProjectId.get(project.id)?.[0]?.updatedAt ?? 0;
       map.set(
         project.id,
-        Math.max(project.lastActivityAt ?? 0, project.updatedAt ?? project.createdAt, newest),
+        Math.max(project.lastActivityAt ?? 0, project.updatedAt, newest),
       );
     }
     return map;
@@ -1988,10 +1992,13 @@ export function AppSidebar() {
     const pinned = pinnedProjectIds
       .map((id) => byId.get(id))
       .filter((p): p is ProjectRecord => Boolean(p));
+    const pinnedProjectOrder = manualOrder[
+      PINNED_PROJECT_ORDER_SCOPE
+    ] as string[] | undefined;
     return applyManualOrder(
       pinned,
-      manualOrder[PINNED_PROJECT_ORDER_SCOPE]?.length
-        ? manualOrder[PINNED_PROJECT_ORDER_SCOPE]
+      pinnedProjectOrder?.length
+        ? pinnedProjectOrder
         : manualOrder[PROJECT_ORDER_SCOPE],
       (project) => project.id,
     );
@@ -2268,9 +2275,14 @@ export function AppSidebar() {
   // until a drop says otherwise; a chat sort other than Manual keeps the chats after them.
   // Pinning is its own grouping: a pinned folder stays here whichever way the sidebar organizes,
   // and "In one list" only takes the Projects section away.
-  const pinnedHasMore = chatRowLists.pinned?.hasMore;
+  const pinnedHasMore = chatRowLists.pinned.hasMore;
   const sectionHasMoreKey = customSections
-    .filter((section) => chatRowLists[`section:${section.id}`]?.hasMore)
+    .filter((section) => {
+      const rows = chatRowLists[`section:${section.id}`] as
+        | { hasMore?: boolean }
+        | undefined;
+      return rows?.hasMore;
+    })
     .map((section) => section.id)
     .join("\n");
   const sectionHasMore = useMemo(
@@ -2294,7 +2306,7 @@ export function AppSidebar() {
     return holdRowsPastLoadedChats(
       applyManualOrder(rows, order, (row) => row.id),
       order,
-      Boolean(pinnedHasMore),
+      pinnedHasMore,
     );
   }, [
     pinnedProjectBase,
@@ -2464,7 +2476,9 @@ export function AppSidebar() {
     mountedFolderIds,
   ]);
   useEffect(() => {
-    setOpenFolderIds(wantedFolderIds ? wantedFolderIds.split("\n") : []);
+    queueMicrotask(() => {
+      setOpenFolderIds(wantedFolderIds ? wantedFolderIds.split("\n") : []);
+    });
   }, [wantedFolderIds]);
   // The chats a section's folders show, in row order. A pinned folder leaves with Pinned's
   // disclosure, not the Projects one, so each section collects its own.
@@ -2620,16 +2634,27 @@ export function AppSidebar() {
   ]);
   const chordTargetRef = useRef<string | null>(null);
   const lastRecentId = visibleRecentItems[visibleRecentItems.length - 1]?.id;
-  const loadMoreRecents = recentsPages?.hasMore ? recentsPages.loadMore : undefined;
+  const loadMoreRecents = recentsPages.hasMore ? recentsPages.loadMore : undefined;
   useEffect(() => {
     if (!activeThreadId || chordTargetRef.current !== activeThreadId) return;
-    if (activeThreadId === lastRecentId) void loadMoreRecents?.();
+    if (activeThreadId === lastRecentId) {
+      const more = loadMoreRecents?.();
+      if (more) {
+        more.catch((error: unknown) => {
+          console.error("Failed to load more recent chats", error);
+        });
+      }
+    }
   }, [activeThreadId, lastRecentId, loadMoreRecents]);
   useEffect(() => {
     if (!activeThreadId || chordTargetRef.current !== activeThreadId) return;
     for (const [name, list] of Object.entries(chatRowLists)) {
       if (name === "recents" || name.startsWith("latest:") || !list.hasMore) continue;
-      if (list.rows[list.rows.length - 1]?.id === activeThreadId) void list.loadMore();
+      if (list.rows[list.rows.length - 1]?.id === activeThreadId) {
+        list.loadMore().catch((error: unknown) => {
+          console.error("Failed to load more chats", error);
+        });
+      }
     }
   }, [activeThreadId, chatRowLists]);
 
@@ -2697,7 +2722,9 @@ export function AppSidebar() {
   // what stayed.
   useEffect(() => {
     if (!chatRowsOnScreen) {
-      clearSelection();
+      queueMicrotask(() => {
+        clearSelection();
+      });
       return;
     }
     const anchor = selectionAnchorRef.current;
@@ -2765,8 +2792,10 @@ export function AppSidebar() {
   }, [chatRowsOnScreen, renderedChatItems, dropProjectSelection]);
   useEffect(() => {
     if (!selectAllPending) return;
-    setSelectAllPending(false);
-    selectRenderedChats();
+    queueMicrotask(() => {
+      setSelectAllPending(false);
+      selectRenderedChats();
+    });
   }, [selectAllPending, selectRenderedChats]);
 
   const manualOrderWritesRef = useRef(new Map<string, number>());
@@ -2786,9 +2815,16 @@ export function AppSidebar() {
                 ? `folder:${scope.slice("project:".length)}`
                 : null;
       const query = slot ? chatRowSlots[slot]?.query : undefined;
-      if (!slot || !query || !chatRowLists[slot]?.hasMore) {
+      const slotRows = slot
+        ? (chatRowLists[slot] as { hasMore?: boolean } | undefined)
+        : undefined;
+      if (!slot || !query || !slotRows?.hasMore) {
         setManualOrder(scope, ids);
-        setPendingManualOrder(({ [scope]: _superseded, ...rest }) => rest);
+        setPendingManualOrder((pending) => {
+          const next = { ...pending };
+          delete next[scope];
+          return next;
+        });
         return;
       }
       const saved = useSidebarOrganizationStore.getState().manualOrder[scope] ?? [];
@@ -2797,7 +2833,11 @@ export function AppSidebar() {
       const settle = (order: string[]) => {
         if (writes.get(scope) !== generation) return;
         setManualOrder(scope, order);
-        setPendingManualOrder(({ [scope]: _settled, ...rest }) => rest);
+        setPendingManualOrder((pending) => {
+          const next = { ...pending };
+          delete next[scope];
+          return next;
+        });
       };
       // a partial order would rank every unloaded row ahead of the ones just arranged, so it is never
       // saved: a read that keeps failing leaves the saved order as it was
@@ -2811,14 +2851,18 @@ export function AppSidebar() {
           }
         }
       };
-      void readAll()
+      readAll()
         .then((all) => {
           const current = useSidebarOrganizationStore.getState().manualOrder[scope] ?? [];
           settle(settledManualOrder(ids, all, current));
         })
         .catch(() => {
           if (writes.get(scope) !== generation) return;
-          setPendingManualOrder(({ [scope]: _dropped, ...rest }) => rest);
+          setPendingManualOrder((pending) => {
+            const next = { ...pending };
+            delete next[scope];
+            return next;
+          });
           toast.error("Couldn't save the new order");
         });
     },
@@ -2862,10 +2906,11 @@ export function AppSidebar() {
     const anchor = selectionAnchorRef.current;
     const sameList = anchor?.scope === list.scope;
     if (!sameList) selectionAnchorRef.current = { scope: list.scope, id: item.id };
+    const anchorId = sameList ? anchor?.id : undefined;
     setSelectedChatIds(
       new Set(
-        sameList && anchor
-          ? rangeBetween(list.ids, anchor.id, item.id)
+        anchorId
+          ? rangeBetween(list.ids, anchorId, item.id)
           : [item.id],
       ),
     );

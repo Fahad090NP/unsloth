@@ -43,25 +43,33 @@ export function useGpuUtilization(
 
     useEffect(() => {
         if (!enabled) {
-            setData(DEFAULT);
+            queueMicrotask(() => {
+                setData(DEFAULT);
+            });
             return;
         }
 
         let cancelled = false;
+        const isCancelled = () => cancelled;
+        const runPoll = () => {
+            poll().catch((error: unknown) => {
+                console.error("Failed to poll GPU utilization", error);
+            });
+        };
 
         async function poll() {
             try {
                 const res = await authFetch("/api/train/hardware");
-                if (!res.ok || cancelled) return;
+                if (!res.ok || isCancelled()) return;
                 const json = (await res.json()) as GpuUtilization;
-                if (!cancelled) setData(json);
+                if (!isCancelled()) setData(json);
             } catch {
                 // Retry on the next poll.
             }
         }
 
-        void poll();
-        timerRef.current = setInterval(() => void poll(), intervalMs);
+        runPoll();
+        timerRef.current = setInterval(runPoll, intervalMs);
 
         return () => {
             cancelled = true;

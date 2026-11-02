@@ -506,7 +506,7 @@ export function DownloadedList({
                     height: pinnedCellHeightPx,
                     opacity: dragRowKey === rowKey ? 0.4 : undefined,
                   }}
-                  draggable={(itemPinKey !== null && itemPinKey !== undefined)}
+                  draggable={itemPinKey != null}
                   onDragStart={(eventParam) => { const event = eventParam;
                     if (!itemPinKey) return;
                     event.dataTransfer.effectAllowed = "move";

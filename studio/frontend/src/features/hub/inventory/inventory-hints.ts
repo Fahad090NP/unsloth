@@ -199,9 +199,9 @@ function serverRowSatisfiesHint(
     return false;
   }
   const hintTimestamp = normalizeTimestamp(hint.startedAt ?? hint.createdAt);
-  if ((hintTimestamp !== null && hintTimestamp !== undefined)) {
+  if (hintTimestamp != null) {
     const rowTimestamp = normalizeTimestamp(row.last_modified);
-    if ((rowTimestamp !== null && rowTimestamp !== undefined) && rowTimestamp >= hintTimestamp) {
+    if (rowTimestamp != null && rowTimestamp >= hintTimestamp) {
       return true;
     }
     return Boolean(

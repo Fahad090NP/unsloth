@@ -220,7 +220,9 @@ export function MediaGenerationPresetControl({
               type="button"
               size="sm"
               disabled={!canSave}
-              onClick={() => save().catch(() => undefined)}
+              onClick={() => {
+                save().catch(() => undefined);
+              }}
               className="h-9 shrink-0 rounded-full px-3"
             >
               {saveLabel}
@@ -258,7 +260,9 @@ export function MediaGenerationPresetControl({
             <button
               type="button"
               disabled={saving}
-              onClick={() => remove().catch(() => undefined)}
+              onClick={() => {
+                remove().catch(() => undefined);
+              }}
               className="mt-3 flex h-8 w-full items-center justify-center gap-1.5 rounded-full text-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.75} className="size-3.5" />

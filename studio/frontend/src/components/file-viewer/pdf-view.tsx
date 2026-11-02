@@ -58,9 +58,11 @@ function PdfCanvas() {
     canvas.style.width = `${Math.floor(shown.width)}px`;
     canvas.style.height = `${Math.floor(shown.height)}px`;
     let over = false;
+    const canvasContext = canvas.getContext("2d", { alpha: false });
+    if (!canvasContext) return;
     const task = page.render({
       canvas,
-      canvasContext: canvas.getContext("2d", { alpha: false })!,
+      canvasContext,
       viewport,
       annotationMode: pdfjs.AnnotationMode.ENABLE,
       operationsFilter: (index) => {
@@ -92,12 +94,15 @@ function PdfPage({ pdf, index, width, aspect }: { pdf: PdfDocument; index: numbe
   const [own, setOwn] = useState<{ index: number; aspect: number } | null>(null);
   useEffect(() => {
     let live = true;
+    const isLive = () => live;
     pdf.getPage(index + 1).then(
       (page) => {
         const viewport = page.getViewport({ scale: 1 });
-        if (live) setOwn({ index, aspect: viewport.height / viewport.width });
+        if (isLive()) setOwn({ index, aspect: viewport.height / viewport.width });
       },
-      () => live && setOwn({ index, aspect: Number.NaN }),
+      () => {
+        if (isLive()) setOwn({ index, aspect: Number.NaN });
+      },
     );
     return () => {
       live = false;
@@ -106,18 +111,23 @@ function PdfPage({ pdf, index, width, aspect }: { pdf: PdfDocument; index: numbe
   const [selectable, setSelectable] = useState<number | null>(null);
   useEffect(() => {
     let live = true;
+    const isLive = () => live;
     let reader: ReadableStreamDefaultReader<{ items: unknown[] }> | undefined;
     void (async () => {
       reader = (await pdf.getPage(index + 1)).streamTextContent().getReader();
       let items = 0;
       for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
         items += chunk.value.items.length;
-        if (!live || items > MAX_TEXT_ITEMS) return;
+        if (!isLive() || items > MAX_TEXT_ITEMS) return;
       }
-      if (live) setSelectable(index);
+      if (isLive()) setSelectable(index);
     })()
       .catch(() => { /* no-op */ })
-      .finally(() => void reader?.cancel().catch(() => { /* no-op */ }));
+      .finally(() => {
+        if (reader) {
+          reader.cancel().catch(() => { /* no-op */ });
+        }
+      });
     return () => {
       live = false;
     };
@@ -221,14 +231,16 @@ function useParseSlot(enabled: boolean, file: Blob): { ready: boolean; release: 
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    void queueParse(
+    queueParse(
       () =>
         new Promise<void>((resolve) => {
           done.current = resolve;
           setReady(file);
         }),
       () => cancelled,
-    );
+    ).catch((error: unknown) => {
+      console.error("Failed to queue the PDF page parse", error);
+    });
     return () => {
       cancelled = true;
       release();
@@ -303,9 +315,11 @@ export default function PdfView({
           slot.release();
           setPdf(document);
           setPages(document.numPages);
-          void document.getPage(1).then((page) => {
+          document.getPage(1).then((page) => {
             const viewport = page.getViewport({ scale: 1 });
             setAspect(clampAspect(viewport.height / viewport.width));
+          }).catch((error: unknown) => {
+            console.error("Failed to read the first PDF page", error);
           });
         }}
         onLoadError={() => {

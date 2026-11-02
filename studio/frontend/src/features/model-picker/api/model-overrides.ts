@@ -316,7 +316,8 @@ export function fromApiOverride(
   // two lengths, since the picker reads customContextLength first and the API's
   // auto-switch max_seq_length first. So a row stating either field owns both.
   const serverStatesPin =
-    (override.custom_context_length !== null && override.custom_context_length !== undefined) || (override.max_seq_length !== null && override.max_seq_length !== undefined);
+    override.custom_context_length != null ||
+    override.max_seq_length !== undefined;
   const serverStatesKvQuant =
     "mlx_kv_quant" in override || "mlx_kv_bits" in override;
   const normalized = normalizePerModelConfig({
@@ -446,10 +447,10 @@ export function toApiOverride(config: PerModelConfig | null): ApiModelOverride {
   if (config.specDraftCacheDtype) {
     payload.spec_draft_cache_type = config.specDraftCacheDtype;
   }
-  if ((config.ctxCheckpoints !== null && config.ctxCheckpoints !== undefined) && config.ctxCheckpoints >= 0) {
+  if (config.ctxCheckpoints != null && config.ctxCheckpoints >= 0) {
     payload.ctx_checkpoints = config.ctxCheckpoints;
   }
-  if ((config.cacheRam !== null && config.cacheRam !== undefined)) {
+  if (config.cacheRam != null) {
     payload.cache_ram = config.cacheRam;
   }
   if (config.tensorParallel) {

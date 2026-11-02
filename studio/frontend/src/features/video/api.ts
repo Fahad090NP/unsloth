@@ -4,7 +4,7 @@
 import { withBackgroundLoadNotice } from "@/lib/model-lifecycle-events";
 import { authFetch } from "@/features/auth";
 // Both /download-plan routes share a response model.
-import type { DiffusionDownloadPlan } from "@/features/images/api";
+import type { DiffusionDownloadPlan } from "@/features/images";
 import { apiUrl } from "@/lib/api-base";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 import { parseLoadJson } from "@/lib/multi-model-refusal";

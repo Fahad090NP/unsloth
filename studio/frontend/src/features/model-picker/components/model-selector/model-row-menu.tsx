@@ -180,7 +180,7 @@ export function ModelRowMenu({
     });
   }, [onReveal, cachePathRepoId, cachePathVariant]);
 
-  const canReveal = Boolean(revealLabel && (cachePath || onReveal));
+  const canReveal = Boolean(revealLabel && (cachePath ?? onReveal));
   if (!pin && !update && !del && !canReveal && !items?.length) return null;
 
   return (

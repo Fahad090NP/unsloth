@@ -101,13 +101,19 @@ export function LearningRateChartCard({
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(_value, payload) =>
-                    t("studio.charts.step", {
-                      step: payload?.[0]?.payload?.step ?? "",
-                    })
-                  }
+                  labelFormatter={(_value, payload) => {
+                    const first = (payload as
+                      | { payload?: { step?: number } }[]
+                      | undefined)?.[0];
+                    return t("studio.charts.step", {
+                      step: first?.payload?.step ?? "",
+                    });
+                  }}
                   formatter={(_value, _name, item) => {
-                    const raw = Number(item?.payload?.lr);
+                    const data = (item as
+                      | { payload?: { lr?: number } }
+                      | undefined)?.payload;
+                    const raw = Number(data?.lr);
                     return [
                       Number.isFinite(raw) ? raw.toExponential(3) : "0e+0",
                       t("studio.charts.lr"),

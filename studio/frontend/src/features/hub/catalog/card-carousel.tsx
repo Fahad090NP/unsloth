@@ -150,7 +150,7 @@ export function CardCarousel<T>({
       suppressClick.current = true;
       const el = scrollerRef.current;
       if (el) el.style.scrollSnapType = "";
-      el?.releasePointerCapture?.(d.id);
+      el?.releasePointerCapture(d.id);
     }
     drag.current = null;
   }, []);

@@ -88,7 +88,7 @@ export function useRequiredAssetsDownload({
   useEffect(() => {
     if (!runtime) return;
     const timer = window.setTimeout(() => {
-      void resolvePlan().catch(() => { /* noop */ });
+      resolvePlan().catch(() => { /* noop */ }).catch(() => undefined);
     }, 200);
     return () => { window.clearTimeout(timer); };
   }, [resolvePlan, runtime]);

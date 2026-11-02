@@ -89,7 +89,8 @@ export interface ModelsCatalogHandlers {
 }
 
 function assignRef<T>(ref: RefObject<T | null>, value: T | null) {
-  (ref as { current: T | null }).current = value;
+  const target = ref as { current: T | null };
+  target.current = value;
 }
 
 export const ModelsCatalog = memo(function ModelsCatalog({

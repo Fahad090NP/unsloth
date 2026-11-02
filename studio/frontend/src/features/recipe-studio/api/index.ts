@@ -11,8 +11,11 @@ import { openStreamResponse } from "@/lib/open-stream-response";
 
 const DEFAULT_BASE = "/api/data-recipe";
 
-export const DATA_DESIGNER_API_BASE =
-  import.meta.env.VITE_DATA_DESIGNER_API ?? DEFAULT_BASE;
+const configuredBase: unknown = import.meta.env.VITE_DATA_DESIGNER_API;
+export const DATA_DESIGNER_API_BASE: string =
+  typeof configuredBase === "string" && configuredBase
+    ? configuredBase
+    : DEFAULT_BASE;
 
 export interface JobCreateResponse {
   // biome-ignore lint/style/useNamingConvention: api schema
@@ -238,7 +241,7 @@ async function postJson<T>(path: string, payload: unknown): Promise<T> {
     throw new Error(await parseErrorResponse(response));
   }
 
-  return await response.json();
+  return (await response.json()) as T;
 }
 
 async function getJson<T>(path: string): Promise<T> {
@@ -246,7 +249,7 @@ async function getJson<T>(path: string): Promise<T> {
   if (!response.ok) {
     throw new Error(await parseErrorResponse(response));
   }
-  return await response.json();
+  return (await response.json()) as T;
 }
 
 function parseJobEvent(rawEvent: string): JobEvent | null {
@@ -424,7 +427,7 @@ export async function streamRecipeJobEvents(options: {
   let buffer = "";
 
   try {
-    while (true) {
+    for (;;) {
       const { value, done } = await reader.read();
       if (done) {
         break;
@@ -509,7 +512,7 @@ export async function uploadUnstructuredFile(
     throw new Error(await readFastApiError(res, "Upload failed"));
   }
 
-  return await res.json();
+  return (await res.json()) as UnstructuredFileUploadResponse;
 }
 
 export async function removeUnstructuredFile(

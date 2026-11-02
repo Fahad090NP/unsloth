@@ -252,7 +252,8 @@ async function prepareResumeHfToken(
   if (!preparedToken.proceed) {
     return attempt.cancel();
   }
-  payload.hf_token = preparedToken.token;
+  const targetPayload = payload;
+  targetPayload.hf_token = preparedToken.token;
   return true;
 }
 
@@ -273,7 +274,8 @@ async function confirmResumeTransformersUpgrade(
     // The checkpoint may be attested against a 4-bit load the latest sidecar refuses.
     resumeRunId: runId,
   });
-  verdict.requiresTrustRemoteCode = outcome.requiresTrustRemoteCode;
+  const targetVerdict = verdict;
+  targetVerdict.requiresTrustRemoteCode = outcome.requiresTrustRemoteCode;
   if (!attempt.isPreflightActive()) {
     return false;
   }
@@ -319,8 +321,9 @@ async function confirmResumeRemoteCode(
   if (!remoteCodeOk) {
     return attempt.cancel();
   }
-  payload.trust_remote_code = trustRemoteCode;
-  payload.approved_remote_code_fingerprint = approvedRemoteCodeFingerprint;
+  const targetPayload = payload;
+  targetPayload.trust_remote_code = trustRemoteCode;
+  targetPayload.approved_remote_code_fingerprint = approvedRemoteCodeFingerprint;
   return true;
 }
 

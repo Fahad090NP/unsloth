@@ -66,8 +66,7 @@ export function getClientPlatform(): string {
   const nav = navigator as NavigatorWithUserAgentData;
   return (
     nav.userAgentData?.platform ??
-    navigator.platform ??
-    navigator.userAgent
+    navigator.platform
   ).toLowerCase();
 }
 

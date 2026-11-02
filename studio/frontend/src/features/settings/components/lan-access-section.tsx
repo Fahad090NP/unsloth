@@ -263,7 +263,7 @@ export function LanAccessSection() {
 
   useEffect(() => {
     const configured = status?.configuredPort;
-    setPortMode((configured === null || configured === undefined) ? "automatic" : "custom");
+    setPortMode(configured == null ? "automatic" : "custom");
     setPortDraft(String(configured ?? 8888));
     setPortError(null);
   }, [status?.configuredPort]);

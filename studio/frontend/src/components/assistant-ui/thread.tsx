@@ -713,7 +713,7 @@ function appendQueuedPrompt(run: PromptQueueRun, item: PromptQueueItem) {
     if (result && typeof result.catch === "function") {
       void result
         .then(() => { consumePromptQueueDeepResearch(run, item); })
-        .catch((error) => {
+        .catch((error: unknown) => {
           handleQueuedPromptAppendFailure(run, item, error);
         });
     } else {
@@ -1794,7 +1794,7 @@ function handlePromptQueueRunFailed(threadId?: string | null, localOnly = false)
 if (typeof window !== "undefined") {
   window.addEventListener(PROMPT_QUEUE_STOP_EVENT, (event) => {
     const { threadIds, temporaryOnly, localOnly } =
-      (event as CustomEvent<PromptQueueStopEventDetail>).detail ?? {};
+      (event as CustomEvent<PromptQueueStopEventDetail>).detail;
     if (localOnly) {
       stopLocalPromptQueueRunsForThreadIds(threadIds ?? []);
       return;
@@ -1810,7 +1810,7 @@ if (typeof window !== "undefined") {
   });
   window.addEventListener(PROMPT_QUEUE_RUN_FAILED_EVENT, (event) => {
     const { threadId, localOnly } =
-      (event as CustomEvent<PromptQueueRunFailedEventDetail>).detail ?? {};
+      (event as CustomEvent<PromptQueueRunFailedEventDetail>).detail;
     handlePromptQueueRunFailed(threadId, localOnly);
   });
 }
@@ -1951,9 +1951,11 @@ const ForkContinuationRule: FC = () => {
   useEffect(() => {
     if (!isAnchor || !sourceThreadId) return;
     let live = true;
-    void forkSourceTitle(sourceThreadId).then((title) => {
+    forkSourceTitle(sourceThreadId).then((title) => {
       if (live) setSource({ id: sourceThreadId, title });
-    });
+    }).catch((error: unknown) => {
+  console.error("Failed to load fork source title", error);
+});
     return () => {
       live = false;
     };
@@ -2247,7 +2249,7 @@ export const Thread: FC<{
   const [pageDragging, setPageDragging] = useState(false);
   const dragDepth = useRef(0);
   const hasFiles = (e: ReactDragEvent) =>
-    Array.from(e.dataTransfer.types ?? []).includes("Files");
+    Array.from(e.dataTransfer.types).includes("Files");
   const onDragEnter = (e: ReactDragEvent) => {
     if (isTauri || !hasFiles(e)) return;
     dragDepth.current += 1;
@@ -3052,7 +3054,7 @@ const Composer: FC<{
         performance.now(),
       );
       plainPasteAtRef.current = 0;
-      const pastedText = event.clipboardData.getData("text/plain") ?? "";
+      const pastedText = event.clipboardData.getData("text/plain");
       const pastedYoutubeUrl = extractYoutubeVideoUrlFromClipboard(
         event.clipboardData,
       );
@@ -3259,9 +3261,13 @@ const Composer: FC<{
       const held = await attachLibraryChatFiles(targetKey, add);
       if (held > 0) toast(translate("library.toast.chatFilesWaiting", { count: held }));
     };
-    void drain();
+    drain().catch((error: unknown) => {
+  console.error("Failed to drain chat handoff", error);
+});
     const offers = useLibraryChatHandoffStore.subscribe((state) => {
-      if (state.pending?.targetKey === targetKey) void drain();
+      if (state.pending?.targetKey === targetKey) drain().catch((error: unknown) => {
+  console.error("Failed to drain chat handoff", error);
+});
     });
     let retrying = false;
     let again = false;
@@ -3287,7 +3293,9 @@ const Composer: FC<{
         state.codeToolsEnabled !== prev.codeToolsEnabled ||
         state.supportsTools !== prev.supportsTools
       ) {
-        void retry();
+        retry().catch((error: unknown) => {
+  console.error("Failed to retry chat handoff", error);
+});
       }
     });
     return () => {
@@ -3299,7 +3307,7 @@ const Composer: FC<{
   const hasPendingImageAttachments = useNativeIntentStore((s) =>
     Boolean(
       nativeAttachmentTargetKey &&
-        (s.pendingImageAttachments[nativeAttachmentTargetKey].length ?? 0) > 0,
+        (s.pendingImageAttachments[nativeAttachmentTargetKey].length) > 0,
     ),
   );
   const hasPendingOpenDocumentAttachments = useNativeIntentStore((s) =>
@@ -3321,7 +3329,7 @@ const Composer: FC<{
   const hasPendingAudioAttachments = useNativeIntentStore((s) =>
     Boolean(
       nativeAttachmentTargetKey &&
-        (s.pendingAudioAttachments[nativeAttachmentTargetKey].length ?? 0) > 0,
+        (s.pendingAudioAttachments[nativeAttachmentTargetKey].length) > 0,
     ),
   );
   const registeringAudioDrops = useNativeIntentStore(
@@ -3332,7 +3340,7 @@ const Composer: FC<{
   const hasPendingVideoAttachments = useNativeIntentStore((s) =>
     Boolean(
       nativeAttachmentTargetKey &&
-        (s.pendingVideoAttachments[nativeAttachmentTargetKey].length ?? 0) > 0,
+        (s.pendingVideoAttachments[nativeAttachmentTargetKey].length) > 0,
     ),
   );
   const registeringVideoDrops = useNativeIntentStore(
@@ -3449,10 +3457,12 @@ const Composer: FC<{
           // Early returns requeue mid-batch, and drops can land while `draining` gated the subscription.
           const pending =
             useNativeIntentStore.getState().pendingAudioAttachments[targetKey]
-              .length ?? 0;
+              .length;
           // Only the owning instance re-drains; otherwise the batch stays parked instead of looping.
           if (pending > 0 && stillThisComposer()) {
-            void drainPendingAudio();
+            drainPendingAudio().catch((error: unknown) => {
+  console.error("Failed to drain pending audio", error);
+});
           } else {
             setMaterializingDroppedAudio(false);
           }
@@ -3471,11 +3481,15 @@ const Composer: FC<{
           .claimAudioAttachments(identityAtSetup, targetKey);
         return;
       }
-      if ((state.pendingAudioAttachments[targetKey].length ?? 0) > 0) {
-        void drainPendingAudio();
+      if ((state.pendingAudioAttachments[targetKey].length) > 0) {
+        drainPendingAudio().catch((error: unknown) => {
+  console.error("Failed to drain pending audio", error);
+});
       }
     });
-    void drainPendingAudio();
+    drainPendingAudio().catch((error: unknown) => {
+  console.error("Failed to drain pending audio", error);
+});
 
     return () => {
       disposed = true;
@@ -3555,9 +3569,11 @@ const Composer: FC<{
         if (!disposed) {
           const pending =
             useNativeIntentStore.getState().pendingVideoAttachments[targetKey]
-              .length ?? 0;
+              .length;
           if (pending > 0 && stillThisComposer()) {
-            void drainPendingVideo();
+            drainPendingVideo().catch((error: unknown) => {
+  console.error("Failed to drain pending video", error);
+});
           } else {
             setMaterializingDroppedVideo(false);
           }
@@ -3575,11 +3591,15 @@ const Composer: FC<{
           .claimVideoAttachments(identityAtSetup, targetKey);
         return;
       }
-      if ((state.pendingVideoAttachments[targetKey].length ?? 0) > 0) {
-        void drainPendingVideo();
+      if ((state.pendingVideoAttachments[targetKey].length) > 0) {
+        drainPendingVideo().catch((error: unknown) => {
+  console.error("Failed to drain pending video", error);
+});
       }
     });
-    void drainPendingVideo();
+    drainPendingVideo().catch((error: unknown) => {
+  console.error("Failed to drain pending video", error);
+});
 
     return () => {
       disposed = true;
@@ -3681,9 +3701,11 @@ const Composer: FC<{
         }
         const pending =
           useNativeIntentStore.getState().pendingImageAttachments[targetKey]
-            .length ?? 0;
+            .length;
         if (pending > 0) {
-          void drainPendingImages();
+          drainPendingImages().catch((error: unknown) => {
+  console.error("Failed to drain pending images", error);
+});
         } else {
           setMaterializingDroppedImages(false);
         }
@@ -3702,13 +3724,17 @@ const Composer: FC<{
         return;
       }
       const pending =
-        state.pendingImageAttachments[targetKey].length ?? 0;
+        state.pendingImageAttachments[targetKey].length;
       if (pending > 0) {
-        void drainPendingImages();
+        drainPendingImages().catch((error: unknown) => {
+  console.error("Failed to drain pending images", error);
+});
       }
     });
 
-    void drainPendingImages();
+    drainPendingImages().catch((error: unknown) => {
+  console.error("Failed to drain pending images", error);
+});
 
     return () => {
       disposed = true;
@@ -3785,9 +3811,11 @@ const Composer: FC<{
           const pending =
             useNativeIntentStore.getState().pendingOpenDocumentAttachments[
               targetKey
-            ].length ?? 0;
+            ].length;
           if (pending > 0 && stillThisComposer()) {
-            void drainPendingOpenDocuments();
+            drainPendingOpenDocuments().catch((error: unknown) => {
+  console.error("Failed to drain pending documents", error);
+});
           } else {
             setMaterializingDroppedOpenDocuments(false);
           }
@@ -3806,12 +3834,16 @@ const Composer: FC<{
         return;
       }
       if (
-        (state.pendingOpenDocumentAttachments[targetKey].length ?? 0) > 0
+        (state.pendingOpenDocumentAttachments[targetKey].length) > 0
       ) {
-        void drainPendingOpenDocuments();
+        drainPendingOpenDocuments().catch((error: unknown) => {
+  console.error("Failed to drain pending documents", error);
+});
       }
     });
-    void drainPendingOpenDocuments();
+    drainPendingOpenDocuments().catch((error: unknown) => {
+  console.error("Failed to drain pending documents", error);
+});
 
     return () => {
       disposed = true;
@@ -3842,7 +3874,7 @@ const Composer: FC<{
   );
   const referenceThreadId = threadId ?? activeThreadId ?? null;
   // Not referenceThreadId: it moves null -> remote id on first persist of the same composer.
-  const composerIdentity = threadListItemId ?? "";
+  const composerIdentity = threadListItemId;
   composerIdentityRef.current = composerIdentity;
   const chatActive = useChatActive();
   // assistant-ui's Escape cancels the run and prevents the key, which would block declining a tool request.
@@ -3860,7 +3892,7 @@ const Composer: FC<{
   useLayoutEffect(() => {
     const input = inputRef.current;
     if (composerFocusable || !input) return;
-    input.focus = () => {};
+    input.focus = () => undefined;
     return () => {
       Reflect.deleteProperty(input, "focus");
     };
@@ -4017,7 +4049,9 @@ const Composer: FC<{
       if (pasted.length > 0) {
         // Removing them changes the attachments, which runs this again.
         for (const attachment of pasted) {
-          void composer.attachment({ id: attachment.id }).remove();
+          composer.attachment({ id: attachment.id }).remove().catch((error: unknown) => {
+  console.error("Failed to remove pasted attachment", error);
+});
         }
         return;
       }
@@ -4050,15 +4084,19 @@ const Composer: FC<{
     restoringPasteScopeRef.current = draftScope;
     // Claim the chat only once the attachments are in, so the save effect
     // cannot write an empty composer over the draft still being restored.
-    void Promise.all(
+    Promise.all(
       missing.map((text) => composer.addAttachment(createPastedTextFile(text))),
-    ).finally(() => {
-      restoringPasteScopeRef.current = undefined;
-      // A switch while these were added re-runs the restore for the new scope instead.
-      if (draftScopeRef.current === draftScope) {
-        restoredPasteScopeRef.current = draftScope;
-      }
-    });
+    )
+      .finally(() => {
+        restoringPasteScopeRef.current = undefined;
+        // A switch while these were added re-runs the restore for the new scope instead.
+        if (draftScopeRef.current === draftScope) {
+          restoredPasteScopeRef.current = draftScope;
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to restore pasted text attachments", error);
+      });
   }, [draftScope, pasteDraftKey, composerAttachmentSignature, aui]);
   // Keyed on the paste identities, never their bodies, so typing beside a
   // megabyte paste does not rewrite it to localStorage every 300ms.
@@ -4201,7 +4239,7 @@ const Composer: FC<{
   useEffect(() => {
     const cancelPendingQueueFactories = (event: Event) => {
       const detail =
-        (event as CustomEvent<PromptQueueStopEventDetail>).detail ?? {};
+        (event as CustomEvent<PromptQueueStopEventDetail>).detail;
       const state = aui.threadListItem().getState();
       const aliases = compactIds([state.id, state.remoteId, referenceThreadId]);
       cancelPendingPromptQueueFactoriesForStop(
@@ -4418,7 +4456,7 @@ const Composer: FC<{
             claimThreadCreation([state.id, state.remoteId], {
               projectId: projectIdAtQueueStart,
               incognito: incognitoAtQueueStart,
-              modelId: runSettingsAtQueueStart.params.checkpoint ?? "",
+              modelId: runSettingsAtQueueStart.params.checkpoint,
               modelGgufVariant: runSettingsAtQueueStart.activeGgufVariant,
               createdAt: Date.now(),
             });
@@ -4445,7 +4483,7 @@ const Composer: FC<{
           if (shouldCorrectPersistedModel) {
             // initialize() persisted the live global model; correct it to this run's captured model.
             await updateStoredChatThread(remoteId, {
-              modelId: runSettingsAtQueueStart.params.checkpoint ?? "",
+              modelId: runSettingsAtQueueStart.params.checkpoint,
               modelGgufVariant: runSettingsAtQueueStart.activeGgufVariant,
             });
             shouldCorrectPersistedModel = false;
@@ -4657,7 +4695,7 @@ const Composer: FC<{
             onAborted?.();
           }
         })
-        .catch((error) => {
+        .catch((error: unknown) => {
           toast.error("Could not start prompt queue", {
             description:
               error instanceof Error ? error.message : "Please try again.",
@@ -4708,7 +4746,9 @@ const Composer: FC<{
             ) {
               return;
             }
-            void composer.clearAttachments();
+            composer.clearAttachments().catch((error: unknown) => {
+  console.error("Failed to clear attachments", error);
+});
             flushResourcesSync(() => { composer.setText(""); });
             clearStoredDraft();
             armJustSent(text);
@@ -4759,7 +4799,9 @@ const Composer: FC<{
             ) {
               return;
             }
-            void composer.clearAttachments();
+            composer.clearAttachments().catch((error: unknown) => {
+  console.error("Failed to clear attachments", error);
+});
             flushResourcesSync(() => {
               composer.setText("");
             });
@@ -5018,7 +5060,7 @@ const Composer: FC<{
       claimThreadCreation(preStreamThreadIds, {
         projectId: projectScope,
         incognito: chatStateAtSend.incognito,
-        modelId: chatStateAtSend.params.checkpoint ?? "",
+        modelId: chatStateAtSend.params.checkpoint,
         modelGgufVariant: chatStateAtSend.activeGgufVariant,
         createdAt: Date.now(),
       });
@@ -6604,8 +6646,8 @@ const ToolStatusDisplay: FC = () => {
     // Newest run for this key, so one finishing cannot blank a sibling still running a tool.
     return own[own.length - 1];
   });
-  const toolStatus = entry.status ?? null;
-  const startedAt = entry.startedAt ?? null;
+  const toolStatus = entry.status;
+  const startedAt = entry.startedAt;
   const [now, setNow] = useState(() => Date.now());
   const [visible, setVisible] = useState(false);
   const visibleRef = useRef(false);
@@ -6704,7 +6746,9 @@ function usePickComposerAttachment(): () => void {
     );
     openFilePicker(attachmentAccept, (files) => {
       for (const file of files) {
-        void aui.composer().addAttachment(file);
+        aui.composer().addAttachment(file).catch((error: unknown) => {
+  console.error("Failed to add attachment", error);
+});
       }
     });
   }, [aui, audioAttachmentsEnabled]);
@@ -6787,7 +6831,9 @@ const ComposerToolsMenu: FC<{
   const recentProjects = sortProjectsByActivity(projects).slice(0, 3);
   const openProject = (projectId: string) => {
     useChatRuntimeStore.getState().setActiveProjectId(projectId);
-    navigate({ to: "/chat", search: { project: projectId } });
+    navigate({ to: "/chat", search: { project: projectId } }).catch((error: unknown) => {
+  console.error("Failed to open project", error);
+});
   };
 
   const startCompare = useCallback(() => {
@@ -6799,7 +6845,9 @@ const ComposerToolsMenu: FC<{
       typeof globalThis.crypto.randomUUID === "function"
         ? globalThis.crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-    navigate({ to: "/chat", search: { compare: compareId } });
+    navigate({ to: "/chat", search: { compare: compareId } }).catch((error: unknown) => {
+  console.error("Failed to open comparison", error);
+});
   }, [navigate]);
 
   const [newProjectOpen, setNewProjectOpen] = useState(false);
@@ -6864,7 +6912,9 @@ const ComposerToolsMenu: FC<{
   const [plusOpen, setPlusOpen] = useState(false);
   const setPlusMenuOpen = (open: boolean) => {
     setPlusOpen(open);
-    if (open) void refreshRecentPrompts();
+    if (open) refreshRecentPrompts().catch((error: unknown) => {
+  console.error("Failed to refresh recent prompts", error);
+});
   };
   useShortcut(
     "openComposerMenu",
@@ -7042,7 +7092,7 @@ const ComposerToolsMenu: FC<{
           <DropdownMenuItem
             onSelect={() => {
               if (!activeThreadId) return;
-              exportConversationRawJsonl(activeThreadId).catch((error) => {
+              exportConversationRawJsonl(activeThreadId).catch((error: unknown) => {
                 if (!isDownloadCancelled(error)) toast.error("Export failed.");
               });
             }}
@@ -7052,7 +7102,7 @@ const ComposerToolsMenu: FC<{
           <DropdownMenuItem
             onSelect={() => {
               if (!activeThreadId) return;
-              exportConversationMessagesJsonl(activeThreadId).catch((error) => {
+              exportConversationMessagesJsonl(activeThreadId).catch((error: unknown) => {
                 if (!isDownloadCancelled(error)) toast.error("Export failed.");
               });
             }}
@@ -7062,7 +7112,7 @@ const ComposerToolsMenu: FC<{
           <DropdownMenuItem
             onSelect={() => {
               if (!activeThreadId) return;
-              exportConversationCsv(activeThreadId).catch((error) => {
+              exportConversationCsv(activeThreadId).catch((error: unknown) => {
                 if (!isDownloadCancelled(error)) toast.error("Export failed.");
               });
             }}
@@ -7072,7 +7122,7 @@ const ComposerToolsMenu: FC<{
           <DropdownMenuItem
             onSelect={() => {
               if (!activeThreadId) return;
-              exportConversationShareGPT(activeThreadId).catch((error) => {
+              exportConversationShareGPT(activeThreadId).catch((error: unknown) => {
                 if (!isDownloadCancelled(error)) toast.error("Export failed.");
               });
             }}
@@ -7082,7 +7132,7 @@ const ComposerToolsMenu: FC<{
           <DropdownMenuItem
             onSelect={() => {
               if (!activeThreadId) return;
-              exportConversationMarkdown(activeThreadId).catch((error) => {
+              exportConversationMarkdown(activeThreadId).catch((error: unknown) => {
                 if (!isDownloadCancelled(error)) toast.error("Export failed.");
               });
             }}
@@ -7404,7 +7454,7 @@ const ComposerRightControls: FC<{
       setStoppingResearchRunId(activeResearchRunId);
       void cancelResearchRun(activeResearchRunId)
         .then((run) => { ingestResearchUpdate(run); })
-        .catch((error) => {
+        .catch((error: unknown) => {
           stoppingResearchRunIdRef.current = null;
           setStoppingResearchRunId(null);
           toast.error("Could not stop research", {
@@ -7912,7 +7962,7 @@ const ContinueMessageBarForLastMessage: FC = () => {
     let mounted = true;
     // Claimed in module scope under a cross-tab lock: a ref survives StrictMode replay but not a
     // remount, and module scope alone does not cover a second tab.
-    void claimAutoContinue(messageId, runThreadId ?? "").then((claim) => {
+    claimAutoContinue(messageId, runThreadId ?? "").then((claim) => {
       if (claim === "started") {
         // `aui.thread()` follows the selection, so check the message still exists BEFORE holding:
         // a hold whose run never appears renews forever and blocks other tabs.
@@ -7937,6 +7987,8 @@ const ContinueMessageBarForLastMessage: FC = () => {
       if (claim === "held-elsewhere" && mounted) {
         setHeldElsewhereFor(messageId);
       }
+    }).catch((error: unknown) => {
+      console.error("Failed to claim auto-continue", error);
     });
     return () => {
       mounted = false;
@@ -8200,7 +8252,9 @@ const AssistantMessage: FC = () => {
               onKeyDown={(e) => {
                 e.stopPropagation();
                 if (isModEnter(e)) {
-                  handleSave();
+                  handleSave().catch((error: unknown) => {
+  console.error("Failed to save title", error);
+});
                 }
                 if (e.key === 'Escape') {
                   setEditingId(null); // UX: Close editor on Escape
@@ -8268,7 +8322,7 @@ const useThreadForkCounts = (): void => {
     useAuiState(({ threadListItem }) => threadListItem.remoteId) ?? null;
   useEffect(() => {
     if (!remoteId) return;
-    return subscribeForkCounts(remoteId, () => {});
+    return subscribeForkCounts(remoteId, () => undefined);
   }, [remoteId]);
 };
 
@@ -8278,7 +8332,7 @@ const ForkCountBadge: FC = () => {
   const messageId = useAuiState(({ message }) => message.id);
   const subscribe = useCallback(
     (onChange: () => void) =>
-      remoteId ? subscribeForkCounts(remoteId, onChange) : () => {},
+      remoteId ? subscribeForkCounts(remoteId, onChange) : () => undefined,
     [remoteId],
   );
   const getSnapshot = useCallback(
@@ -8365,7 +8419,9 @@ const ForkChatShortcut: FC = () => {
     () => {
       // `chatActive` is the visible tab, not the foreground; a dialog over Chat must not fork.
       if (!isSurfaceInForeground(COMPOSER_INPUT_SELECTOR)) return;
-      void forkMessage();
+      forkMessage().catch((error: unknown) => {
+  console.error("Failed to fork message", error);
+});
     },
     { enabled: chatActive && !inComparePane && !forkDisabled },
   );
@@ -8498,7 +8554,11 @@ const DeleteMessageButton: FC = () => {
     <TooltipIconButton
       tooltip="Delete"
       disabled={isRunning}
-      onClick={() => void handleDelete()}
+      onClick={() => {
+        handleDelete().catch((error: unknown) => {
+  console.error("Failed to delete message", error);
+});
+      }}
       className="hover:text-destructive!"
     >
       <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.75} className="size-icon" />
@@ -8798,7 +8858,7 @@ const AssistantActionBar: FC = () => {
                     const remoteId =
                       state.remoteId ||
                       useChatRuntimeStore.getState().activeThreadId;
-                    void (async () => {
+                    (async () => {
                       const thread = remoteId
                         ? await getStoredChatThread(remoteId).catch(() => null)
                         : null;
@@ -8811,7 +8871,9 @@ const AssistantActionBar: FC = () => {
                         text,
                         title,
                       );
-                    })();
+                    })().catch((error: unknown) => {
+                      console.error("Failed to save message to project sources", error);
+                    });
                   }}
                   className="aui-action-bar-more-item flex cursor-pointer select-none items-center gap-2 rounded-md px-3 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                 >
@@ -8884,7 +8946,11 @@ const ScheduledTaskSource: FC = () => {
   return (
     <button
       type="button"
-      onClick={() => void navigate({ to: "/tasks", search: { edit: taskId } })}
+      onClick={() => {
+        navigate({ to: "/tasks", search: { edit: taskId } }).catch((error: unknown) => {
+  console.error("Failed to open task", error);
+});
+      }}
       className="inline-flex cursor-pointer items-center gap-1.5 rounded-md text-ui-13 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
     >
       <HugeiconsIcon icon={Clock01Icon} strokeWidth={1.75} className="size-3.5" />

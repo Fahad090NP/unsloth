@@ -219,7 +219,7 @@ export function MemoryEstimateRow({
   );
   const kvNote = resolveKvNote(estimate);
   const weightsNote = [
-    (estimate.gpuLayers !== null && estimate.gpuLayers !== undefined) && (estimate.layerCount !== null && estimate.layerCount !== undefined)
+    estimate.gpuLayers != null && estimate.layerCount != null
       ? `${estimate.gpuLayers} of ${estimate.layerCount + 1} layers on GPU`
       : null,
     estimate.mlxPleOffload ? `PLE ${mlxOffloadPercent(estimate.mlxPleOffload)} on disk` : null,

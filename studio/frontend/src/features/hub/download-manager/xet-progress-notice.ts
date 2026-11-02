@@ -32,7 +32,7 @@ function appendCallerDescription(
   description: string,
   callerToast?: { description: string } | null,
 ): string {
-  const extra = callerToast?.description?.trim();
+  const extra = callerToast?.description.trim();
   return extra ? `${description} ${extra}` : description;
 }
 

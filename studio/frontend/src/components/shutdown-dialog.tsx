@@ -71,7 +71,12 @@ export function ShutdownDialog({
             onClick={(event) => {
               // Keep the dialog open so the error path can retry; success replaces the body.
               event.preventDefault();
-              void handleStop();
+              handleStop().catch((error: unknown) => {
+                toastError(
+                  error instanceof Error ? error.message : "Failed to shut down server",
+                );
+                setStopping(false);
+              });
             }}
             disabled={stopping}
             variant="destructive"
