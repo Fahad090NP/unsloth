@@ -754,6 +754,11 @@ function TauriWrapper({ children }: { children: ReactNode }) {
   const canMountApp = status === "running" && desktopAuthReady;
   // Reset during render (like upgradingToFull above): a backend restart must re-wait for the shell.
   if (!canMountApp && appShellReady) setAppShellReady(false);
+  // Same render-time reset: a backend restart must re-run desktop auth from a clean slate.
+  if (isTauri && status !== "running") {
+    if (desktopAuthReady) setDesktopAuthReady(false);
+    if (desktopAuthRetry !== 0) setDesktopAuthRetry(0);
+  }
   useEffect(() => {
     if (!isTauri) return;
     setDesktopShellReady(canMountApp && appShellReady);
@@ -786,6 +791,7 @@ function TauriWrapper({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isTauri) return;
     const lifecycle = { disposed: false };
+    const isDisposed = () => lifecycle.disposed;
     let stopListening: (() => void) | undefined;
 
     wasLaunchedHidden()
@@ -802,7 +808,7 @@ function TauriWrapper({ children }: { children: ReactNode }) {
             setWindowRevealRevision((revision) => revision + 1);
           },
         );
-        if (lifecycle.disposed) unlisten();
+        if (isDisposed()) unlisten();
         else stopListening = unlisten;
       })
       .catch(() => undefined);
@@ -870,15 +876,9 @@ function TauriWrapper({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!isTauri) return;
-    if (status !== "running") {
-      setDesktopAuthReady(false);
-      setDesktopAuthRetry(0);
-      return;
-    }
+    if (!isTauri || status !== "running") return;
 
     let disposed = false;
-    setDesktopAuthReady(false);
     tauriAutoAuth({ force: true }).then((authenticated) => {
       if (disposed) return;
       if (authenticated) {

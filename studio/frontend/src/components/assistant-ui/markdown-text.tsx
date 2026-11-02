@@ -222,7 +222,6 @@ const MarkdownImage = memo(function MarkdownImage(props: ComponentProps<"img">) 
     node: _node,
     ...dom
   } = props as ComponentProps<"img"> & { node?: unknown };
-  void _node;
   // Fallback scope for a src that records no session; one that does keeps it.
   const remoteId = useAuiState(({ threadListItem }) => threadListItem.remoteId);
   const activeThreadId = useChatRuntimeStore((state) => state.activeThreadId);
@@ -350,7 +349,6 @@ const LINK_CLASS =
 
 function MarkdownLink({ href, children, ...props }: ComponentProps<"a">) {
   const { node: _node, ...dom } = props as ComponentProps<"a"> & { node?: unknown };
-  void _node;
   const file = href ? sandboxFileForHref(href) : null;
   // Only file links subscribe to the chat's scope; links re-render per streamed token.
   if (href && file !== null) {

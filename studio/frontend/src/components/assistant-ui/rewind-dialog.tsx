@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { useAui, useAuiState } from "@assistant-ui/react";
-import { type FC, useEffect, useMemo, useState } from "react";
+import { type FC, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -263,6 +263,7 @@ const RewindChoices: FC<{
   }, [remoteId, tracked, turnKey]);
 
   const result = dryRun.state === "done" ? dryRun.result : null;
+  const dryRunError = dryRun.state === "error" ? dryRun.message : null;
   // Rows can exist with nothing left to put back (right after a rewind): that is no change.
   const hasChanges = result !== null && rewindChangedCount(result) > 0;
 
@@ -303,21 +304,24 @@ const RewindChoices: FC<{
 
   // Only the conversation can go back: no choice to make, so no dialog.
   const conversationOnly = dryRun.state !== "loading" && !hasChanges;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: fires once, when the check settles.
+  const autoRewindHandledRef = useRef(false);
   useEffect(() => {
-    if (!conversationOnly) return;
-    if (dryRun.state === "error") {
-      toast.error(t("rewind.checkFailed", { error: dryRun.message }));
+    if (!conversationOnly || autoRewindHandledRef.current) return;
+    autoRewindHandledRef.current = true;
+    if (dryRunError !== null) {
+      toast.error(t("rewind.checkFailed", { error: dryRunError }));
     }
     // Files changed since, but none can be put back: say so, or the rewind reads as a full restore.
     const skipped = result ? result.conflicts.length + result.untracked.length : 0;
     if (skipped > 0) {
       toast.warning(t("rewind.filesNotRestored", { count: skipped }));
     }
-    rewind("conversation").catch((error: unknown) => {
-      console.error("Background chat operation failed", error);
+    queueMicrotask(() => {
+      rewind("conversation").catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
     });
-  }, [conversationOnly]);
+  }, [conversationOnly, dryRunError, result, rewind, t]);
 
   if (!hasChanges) return null;
 

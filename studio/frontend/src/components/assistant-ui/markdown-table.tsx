@@ -38,7 +38,6 @@ function streamdownIcon(icon: typeof Copy01Icon) {
     strokeWidth: _strokeWidth,
     ...props
   }: ComponentProps<"svg"> & { size?: number }) {
-    void _strokeWidth;
     return <HugeiconsIcon icon={icon} size={size} {...props} />;
   };
 }
@@ -136,7 +135,6 @@ export function MarkdownTable({
   node: _node,
   ...props
 }: ComponentProps<"table"> & ExtraProps) {
-  void _node;
   const t = useT();
   const { isAnimating } = useContext(StreamdownContext);
   const [expanded, setExpanded] = useState(false);
@@ -220,7 +218,6 @@ export function StaticMarkdownTable({
   node: _node,
   ...props
 }: ComponentProps<"table"> & ExtraProps) {
-  void _node;
   return (
     <div className="aui-md-table">
       <TableScroll className={className} props={props}>

@@ -22,7 +22,7 @@ import {
 } from "shiki/engine/javascript";
 
 // Fence tags shiki does not alias: lower-cased input to canonical shiki id.
-const LANGUAGE_ALIAS_OVERRIDES: Record<string, BundledLanguage> = {
+const LANGUAGE_ALIAS_OVERRIDES: Record<string, BundledLanguage | undefined> = {
   objectivec: "objective-c",
   "obj-c": "objective-c",
   objectivecpp: "objective-cpp",
@@ -51,7 +51,7 @@ const LANGUAGE_ALIAS_OVERRIDES: Record<string, BundledLanguage> = {
   "vue-html": "vue",
 };
 
-const SHIKI_LANGUAGE_ALIASES: Record<string, BundledLanguage> =
+const SHIKI_LANGUAGE_ALIASES: Record<string, BundledLanguage | undefined> =
   Object.fromEntries(
     bundledLanguagesInfo.flatMap((info) =>
       (info.aliases ?? []).map((alias) => [alias, info.id as BundledLanguage]),
@@ -238,9 +238,10 @@ export function createCodePlugin(
   };
 
   const clearTrailing = (fence: Fence): void => {
-    if (fence.trailing !== null) clearTimeout(fence.trailing);
-    fence.trailing = null;
-    fence.pending = null;
+    const target = fence;
+    if (target.trailing !== null) clearTimeout(target.trailing);
+    target.trailing = null;
+    target.pending = null;
   };
 
   const queuePending = (
@@ -248,10 +249,13 @@ export function createCodePlugin(
     code: string,
     callback?: HighlightCallback,
   ): void => {
-    if (!fence.pending || fence.pending.code !== code) {
-      fence.pending = { code, callbacks: new Set() };
-    }
-    if (callback) fence.pending.callbacks.add(callback);
+    const target = fence;
+    const pending =
+      target.pending?.code === code
+        ? target.pending
+        : { code, callbacks: new Set<HighlightCallback>() };
+    target.pending = pending;
+    if (callback) pending.callbacks.add(callback);
   };
 
   const notifyPending = (
@@ -271,10 +275,11 @@ export function createCodePlugin(
   };
 
   const evict = (): void => {
-    while (
-      fences.length > MAX_FENCES ||
-      (cachedCharacters > MAX_CACHED_CHARACTERS && fences.length > 1)
-    ) {
+    for (;;) {
+      const overCapacity =
+        fences.length > MAX_FENCES ||
+        (cachedCharacters > MAX_CACHED_CHARACTERS && fences.length > 1);
+      if (!overCapacity) return;
       // Keep pending callbacks until their grammar resolves.
       let dropIndex = fences.length - 1;
       while (dropIndex >= 0 && fences[dropIndex].pending !== null) {
@@ -321,7 +326,7 @@ export function createCodePlugin(
   /** The fence whose cached code reaches furthest into `code`. */
   const findFence = (key: string, code: string): Fence => {
     const exact = fencesByCode.get(codeKey(key, code));
-    if (exact && exact.code === code) return promote(exact);
+    if (exact?.code === code) return promote(exact);
     let match: Fence | null = null;
     let matchLength = -1;
     for (const fence of fences) {
@@ -363,6 +368,7 @@ export function createCodePlugin(
     themes: ThemeNames,
     budgetMs: number,
   ): HighlightResult => {
+    const target = fence;
     const lang = highlighter.getLoadedLanguages().includes(language)
       ? language
       : PLAIN_TEXT;
@@ -370,70 +376,80 @@ export function createCodePlugin(
       highlighter.codeToTokens(text, {
         lang,
         themes,
-        grammarState: fence.state,
+        grammarState: target.state,
         ...TOKENIZE_LIMITS,
       });
 
     const lastNewline = code.lastIndexOf("\n");
-    if (lastNewline >= fence.committedLength && budgetMs < Number.POSITIVE_INFINITY) {
+    if (
+      lastNewline >= target.committedLength &&
+      budgetMs < Number.POSITIVE_INFINITY
+    ) {
       const deadline = monotonicNow() + budgetMs;
-      while (fence.committedLength <= lastNewline) {
-        const newline = code.indexOf("\n", fence.committedLength);
+      let completedMeta: ResultMeta;
+      do {
+        const newline = code.indexOf("\n", target.committedLength);
         const end =
-          newline > fence.committedLength && code[newline - 1] === "\r"
+          newline > target.committedLength && code[newline - 1] === "\r"
             ? newline - 1
             : newline;
-        const completed = tokenizeFrom(code.slice(fence.committedLength, end));
+        const completed = tokenizeFrom(code.slice(target.committedLength, end));
         for (const line of completed.tokens) {
-          fence.lines.push(shiftLine(line, fence.committedLength));
+          target.lines.push(shiftLine(line, target.committedLength));
         }
-        fence.state = completed.grammarState;
-        fence.committedLength = newline + 1;
-        fence.liveTokens = null;
-        fence.meta = stripTokens(completed);
-        if (monotonicNow() >= deadline) break;
-      }
-      if (fence.committedLength <= lastNewline) {
-        fence.lastTokenizedAt = monotonicNow();
-        const tail = code.slice(fence.committedLength).split("\n");
+        completedMeta = stripTokens(completed);
+        target.state = completed.grammarState;
+        target.committedLength = newline + 1;
+        target.liveTokens = null;
+        target.meta = completedMeta;
+      } while (
+        target.committedLength <= lastNewline &&
+        monotonicNow() < deadline
+      );
+      if (target.committedLength <= lastNewline) {
+        target.lastTokenizedAt = monotonicNow();
+        const tail = code.slice(target.committedLength).split("\n");
         return {
-          ...(fence.meta!),
-          tokens: [...fence.lines, ...tail.map(plainLine)],
+          ...completedMeta,
+          tokens: [...target.lines, ...tail.map(plainLine)],
         };
       }
     }
 
-    if (lastNewline >= fence.committedLength) {
+    if (lastNewline >= target.committedLength) {
       // Shiki omits CR from CRLF token content.
       const completedEnd =
         lastNewline > 0 && code[lastNewline - 1] === "\r"
           ? lastNewline - 1
           : lastNewline;
       const completed = tokenizeFrom(
-        code.slice(fence.committedLength, completedEnd),
+        code.slice(target.committedLength, completedEnd),
       );
       for (const line of completed.tokens) {
-        fence.lines.push(shiftLine(line, fence.committedLength));
+        target.lines.push(shiftLine(line, target.committedLength));
       }
-      fence.state = completed.grammarState;
-      fence.committedLength = lastNewline + 1;
-      fence.liveTokens = null;
-      fence.meta = stripTokens(completed);
+      target.state = completed.grammarState;
+      target.committedLength = lastNewline + 1;
+      target.liveTokens = null;
+      target.meta = stripTokens(completed);
     }
 
-    const live = code.slice(fence.committedLength);
+    const live = code.slice(target.committedLength);
     const liveResult = tokenizeFrom(live);
-    fence.meta = stripTokens(liveResult);
-    fence.liveTokens = shiftLine(
+    target.meta = stripTokens(liveResult);
+    target.liveTokens = shiftLine(
       liveResult.tokens[0] ?? ([] as unknown as TokenLine),
-      fence.committedLength,
+      target.committedLength,
     );
-    fence.lastTokenizedAt = monotonicNow();
-    return { ...fence.meta, tokens: [...fence.lines, fence.liveTokens] };
+    target.lastTokenizedAt = monotonicNow();
+    return { ...target.meta, tokens: [...target.lines, target.liveTokens] };
   };
 
-  const approximateResult = (fence: Fence, code: string): HighlightResult => {
-    const exact = fence.result!;
+  const approximateResult = (
+    fence: Fence,
+    exact: HighlightResult,
+    code: string,
+  ): HighlightResult => {
     // A live line may have grown mid-token, so render the whole tail plain.
     const keptLines = exact.tokens.slice(0, fence.lines.length);
     const tail = code.slice(fence.committedLength).split("\n");
@@ -441,11 +457,12 @@ export function createCodePlugin(
   };
 
   const resetFence = (fence: Fence): void => {
-    fence.lines = [];
-    fence.committedLength = 0;
-    fence.state = undefined;
-    fence.liveTokens = null;
-    fence.meta = null;
+    const target = fence;
+    target.lines = [];
+    target.committedLength = 0;
+    target.state = undefined;
+    target.liveTokens = null;
+    target.meta = null;
   };
 
   const update = (
@@ -466,11 +483,12 @@ export function createCodePlugin(
       if (fence.result === null) dropFence(fence);
       return null;
     }
-    cachedCharacters += code.length - fence.code.length;
-    dropCodeIndex(fence);
-    fence.code = code;
-    fence.result = result;
-    fencesByCode.set(codeKey(fence.key, code), fence);
+    const target = fence;
+    cachedCharacters += code.length - target.code.length;
+    dropCodeIndex(target);
+    target.code = code;
+    target.result = result;
+    fencesByCode.set(codeKey(target.key, code), target);
     evict();
     return result;
   };
@@ -513,7 +531,7 @@ export function createCodePlugin(
         entry.highlighter = highlighter;
         resume(highlighter);
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         console.error("[Unsloth Code] Failed to highlight code:", error);
         highlighters.delete(key);
         // Failed callbacks must not pin fences or fire after a later retry.
@@ -530,14 +548,14 @@ export function createCodePlugin(
     type: "code-highlighter",
     cached: (opts) => {
       const exact = fencesByCode.get(codeKey(fenceKeyOf(opts), opts.code));
-      return exact && exact.code === opts.code && exact.result
+      return exact?.code === opts.code && exact.result
         ? promote(exact).result
         : null;
     },
     cover: (opts) => {
       const key = fenceKeyOf(opts);
       const exact = fencesByCode.get(codeKey(key, opts.code));
-      if (exact && exact.code === opts.code && exact.result) {
+      if (exact?.code === opts.code && exact.result) {
         return { uncovered: 0, result: exact.result };
       }
       let match: Fence | null = null;
@@ -549,17 +567,19 @@ export function createCodePlugin(
         match = fence;
         matchLength = reach;
       }
-      if (match === null) return { uncovered: opts.code.length, result: null };
+      if (match === null || match.result === null) {
+        return { uncovered: opts.code.length, result: null };
+      }
       return {
         uncovered:
           opts.code.length - Math.min(match.committedLength, opts.code.length),
-        result: approximateResult(match, opts.code),
+        result: approximateResult(match, match.result, opts.code),
       };
     },
     seed: (opts, result) => {
       const key = fenceKeyOf(opts);
       const exact = fencesByCode.get(codeKey(key, opts.code));
-      if (exact && exact.code === opts.code && exact.result) return;
+      if (exact?.code === opts.code && exact.result) return;
       const fence: Fence = {
         key,
         code: opts.code,
@@ -644,8 +664,8 @@ export function createCodePlugin(
         fence.result !== null &&
         fence.code.length >= MIN_INCREMENTAL_CHARS &&
         opts.code.length > fence.code.length;
-      if (!exact && grewLargeFence && elapsed < REFRESH_MS) {
-        const result = approximateResult(fence, opts.code);
+      if (!exact && grewLargeFence && fence.result !== null && elapsed < REFRESH_MS) {
+        const result = approximateResult(fence, fence.result, opts.code);
         queuePending(fence, opts.code, callback);
         const refresh = (): void => {
           const pending = fence.pending;
