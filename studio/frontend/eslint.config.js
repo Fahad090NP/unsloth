@@ -194,6 +194,37 @@ export default defineConfig([
     },
   },
   {
+    // `node:test` schedules tests itself; awaiting the registration call is not
+    // how the runner works. Treat its registration helpers as safe to float so
+    // real floating promises in tests are still reported.
+    files: ["tests/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-floating-promises": [
+        "error",
+        {
+          ignoreVoid: false,
+          ignoreIIFE: false,
+          allowForKnownSafeCalls: [
+            {
+              from: "package",
+              package: "node:test",
+              name: [
+                "test",
+                "it",
+                "describe",
+                "suite",
+                "before",
+                "after",
+                "beforeEach",
+                "afterEach",
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["**/*.{js,jsx,mjs,cjs}"],
     extends: [js.configs.recommended],
     languageOptions: {
