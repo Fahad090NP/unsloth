@@ -350,11 +350,9 @@ function useSourceSide(clip: AudioGalleryClip | null): {
   const sourceId = clip?.source_clip_id ?? clip?.source_input_id ?? null;
   const kind = clip?.source_clip_id ? "clip" : "input";
   const [side, setSide] = useState<{ src?: string; unavailable?: string }>({});
+  const missing = !savedUrl && !sourceId;
   useEffect(() => {
-    if (!savedUrl && !sourceId) {
-      setSide({ unavailable: "The source is not saved with this clip." });
-      return;
-    }
+    if (missing) return;
     let url: string | null = null;
     let cancelled = false;
     setSide({});
@@ -388,8 +386,8 @@ function useSourceSide(clip: AudioGalleryClip | null): {
       cancelled = true;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [savedUrl, sourceId, kind]);
-  return side;
+  }, [missing, savedUrl, sourceId, kind]);
+  return missing ? { unavailable: "The source is not saved with this clip." } : side;
 }
 
 export function ConvertOutput({

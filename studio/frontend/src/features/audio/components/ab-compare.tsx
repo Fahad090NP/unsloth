@@ -120,12 +120,16 @@ export function ABCompare({
   // A new pair resets the player; the Original's object URL arriving late does not.
   const originalKey = original.fileUrl ?? original.src;
   const editedKey = edited.fileUrl ?? edited.src;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the clip keys are the trigger, not inputs.
-  useEffect(() => {
-    pendingRef.current = null;
+  const pairKey = `${originalKey}\u0000${editedKey}`;
+  const [trackedPairKey, setTrackedPairKey] = useState(pairKey);
+  if (trackedPairKey !== pairKey) {
+    setTrackedPairKey(pairKey);
     setAb(INITIAL_AB_STATE);
     setMediaDuration({});
-  }, [originalKey, editedKey]);
+  }
+  useEffect(() => {
+    pendingRef.current = null;
+  }, [pairKey]);
 
   const toggle = useCallback(() => {
     const audio = audioRef.current;

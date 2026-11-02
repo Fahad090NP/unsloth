@@ -130,20 +130,25 @@ export function OnDeviceFoldersDialog({
 
   useEffect(() => {
     if (!open) return;
-    setInputError(null);
     let cancelled = false;
     // The dialog stays mounted, so re-arm the flag or a reopen shows stale data.
-    setDownloadCacheLoaded(false);
+    const reset = window.setTimeout(() => {
+      if (cancelled) return;
+      setInputError(null);
+      setDownloadCacheLoaded(false);
+    }, 0);
     loadHuggingFaceCacheSettings()
       // Null drops the stale path rather than offer Change against a location we could not confirm.
       .catch(() => null)
       .then((settings) => {
         if (cancelled) return;
+        window.clearTimeout(reset);
         setDownloadCache(settings);
         setDownloadCacheLoaded(true);
       }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
+      window.clearTimeout(reset);
     };
   }, [open]);
 

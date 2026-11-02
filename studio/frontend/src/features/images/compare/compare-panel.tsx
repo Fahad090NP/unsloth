@@ -133,7 +133,8 @@ async function composeGrid(
 }
 
 function setRefValue<T>(ref: { current: T }, value: T): void {
-  ref.current = value;
+  const target = ref;
+  target.current = value;
 }
 
 export default function ComparePanel(props: ComparePanelProps) {
@@ -243,7 +244,6 @@ export default function ComparePanel(props: ComparePanelProps) {
     })).catch(() => { /* noop */ });
   };
 
-  const count = preview.ok ? preview.plan.cellCount : preview.cellCount;
   const shape = preview.ok
     ? preview.plan.axes
         .filter((a) => a.def.id !== NOTHING)

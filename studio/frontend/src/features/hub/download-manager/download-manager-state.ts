@@ -453,7 +453,7 @@ export function hasVariantRepoActivity(
   opts: { includeOwnRuntime: boolean; includePending: boolean },
 ): boolean {
   const state = getState();
-  const own: ManagedDownload | undefined = state.jobs[key];
+  const own = state.jobs[key] as ManagedDownload | undefined;
   if (own && ACTIVE_STATES.has(own.state)) return true;
   if (selectActiveJob(state, kind, repoId, null)) return true;
   const snapshotKey = jobKeyOf(kind, repoId, null);
@@ -488,7 +488,7 @@ function refreshCompletedHintSignature(): void {
 }
 
 export function patchJob(key: string, patch: Partial<ManagedDownload>): void {
-  const previousJob: ManagedDownload | undefined = getState().jobs[key];
+  const previousJob = getState().jobs[key] as ManagedDownload | undefined;
   if (
     previousJob &&
     previousJob.state !== "complete" &&
@@ -506,7 +506,7 @@ export function patchJob(key: string, patch: Partial<ManagedDownload>): void {
     );
   }
   setState((state) => {
-    const job: ManagedDownload | undefined = state.jobs[key];
+    const job = state.jobs[key] as ManagedDownload | undefined;
     if (!job) return state;
     const nextJob = {
       ...job,
@@ -524,12 +524,11 @@ export function patchJob(key: string, patch: Partial<ManagedDownload>): void {
     }
     return withCompletedHintSignature(nextState);
   });
-  const completedJob: ManagedDownload | undefined = getState().jobs[key];
+  const completedJob = getState().jobs[key] as ManagedDownload | undefined;
   if (
     previousJob &&
     previousJob.state !== "complete" &&
-    completedJob &&
-    completedJob.state === "complete"
+    completedJob?.state === "complete"
   ) {
     rememberCompletedInventoryHints(
       collectCompletedInventoryHints({ [key]: completedJob }),
@@ -622,7 +621,9 @@ export function selectActiveJob(
   variant?: string | null,
 ): ManagedDownload | null {
   if (variant !== undefined) {
-    const job: ManagedDownload | undefined = state.jobs[jobKeyOf(kind, repoId, variant)];
+    const job = state.jobs[jobKeyOf(kind, repoId, variant)] as
+      | ManagedDownload
+      | undefined;
     return job && ACTIVE_STATES.has(job.state) ? job : null;
   }
   return findActiveJobForRepo(state.jobs, kind, repoId);

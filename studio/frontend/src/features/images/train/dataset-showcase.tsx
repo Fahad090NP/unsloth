@@ -131,38 +131,49 @@ export function DatasetShowcase({
   onBrowse: () => void;
   onChanged?: () => void;
 }) {
-  const [names, setNames] = useState<string[] | null>(null);
+  const requestKey = `${dataset}:${refreshKey}`;
+  const [result, setResult] = useState<{
+    key: string;
+    names: string[] | null;
+  }>({ key: requestKey, names: null });
+  const names = result.key === requestKey ? result.names : null;
 
   useEffect(() => {
     let cancelled = false;
-    setNames(null);
     listDiffusionDatasetImages(dataset)
       .then((r) => {
         if (cancelled) return;
         const all = imageRecordsOnly(r.images).map((im) => im.filename);
         if (all.length <= MAX_TILES) {
-          setNames(all);
+          setResult({ key: requestKey, names: all });
           return;
         }
         const stride = all.length / MAX_TILES;
         const picked: string[] = [];
         for (let i = 0; i < MAX_TILES; i++) picked.push(all[Math.floor(i * stride)]);
-        setNames(picked);
+        setResult({ key: requestKey, names: picked });
       })
       .catch(() => {
-        if (!cancelled) setNames([]);
+        if (!cancelled) setResult({ key: requestKey, names: [] });
       });
     return () => {
       cancelled = true;
     };
-  }, [dataset, refreshKey]);
+  }, [dataset, requestKey]);
 
   const onRemoved = useCallback(
     (filename: string) => {
-      setNames((cur) => (cur ? cur.filter((n) => n !== filename) : cur));
+      setResult((cur) =>
+        cur.key === requestKey
+          ? {
+              ...cur,
+              names: cur.names ? cur.names.filter((n) => n !== filename) : cur.names,
+            }
+          : cur,
+      );
       onChanged?.();
     },
-    [onChanged],
+    [onChanged, requestKey],
   );
 
   if (names !== null && names.length === 0) return null;

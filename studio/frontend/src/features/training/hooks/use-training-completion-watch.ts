@@ -43,13 +43,17 @@ export function useTrainingCompletionWatch(): void {
       }
     });
 
-    const id = window.setInterval(tick, WATCH_INTERVAL_MS);
+    const id = window.setInterval(() => {
+      tick().catch(() => undefined);
+    }, WATCH_INTERVAL_MS);
     return () => {
       cancelled = true;
       window.clearInterval(id);
       // Post-download disk check: the worker downloads after start, so look again when the run stops,
       // finished or failed. Forced so the reading is taken after the writes.
-      void checkDiskSpace({ force: true });
+      checkDiskSpace({ force: true }).catch((error: unknown) => {
+        console.error("Post-download disk check failed:", error);
+      });
     };
   }, [active]);
 }

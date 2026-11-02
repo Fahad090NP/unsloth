@@ -14,9 +14,13 @@ export function useUploadQueue<T>(
   const queue = useRef<{ key: string | null; items: T[] }>({ key, items: [] });
   const [queued, setQueued] = useState(0);
   const latestRun = useRef(run);
-  latestRun.current = run;
+  useEffect(() => {
+    latestRun.current = run;
+  }, [run]);
   const latestKey = useRef(key);
-  latestKey.current = key;
+  useEffect(() => {
+    latestKey.current = key;
+  }, [key]);
 
   const enqueue = useCallback(
     (items: T[]) => {
@@ -61,8 +65,10 @@ export function useUploadQueue<T>(
     }
     if (busy) return;
     queue.current = { key, items: [] };
-    setQueued(0);
-    latestRun.current(pending.items);
+    queueMicrotask(() => {
+      setQueued(0);
+      latestRun.current(pending.items);
+    });
   }, [busy, key]);
 
   return { enqueue, queued };

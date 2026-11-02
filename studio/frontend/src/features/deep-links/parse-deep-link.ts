@@ -5,7 +5,7 @@ const MAX_REPO_ID_SEGMENT_LENGTH = 96;
 const MAX_GGUF_FILE_LENGTH = 512;
 const REPO_SEGMENT = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$/;
 function hasControlCharacters(value: string): boolean {
-  return [...value].some((character) => {
+  return Array.from(value).some((character) => {
     const codePoint = character.codePointAt(0) ?? 0;
     return codePoint <= 0x1f || codePoint === 0x7f;
   });

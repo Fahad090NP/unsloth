@@ -33,7 +33,7 @@ async function previewSource(
   const tooLarge = () => new Error(translate("library.preview.tooLargeToPreview"));
   if (item.sizeBytes !== null && item.sizeBytes > MAX_BUFFERED_PREVIEW_BYTES) throw tooLarge();
   const type = embeddedBlobType(body, item.contentType);
-  const blob = await fetchLibraryBlob(item, type, MAX_BUFFERED_PREVIEW_BYTES).catch((error) => {
+  const blob = await fetchLibraryBlob(item, type, MAX_BUFFERED_PREVIEW_BYTES).catch((error: unknown) => {
     throw error instanceof LibraryFileTooLarge ? tooLarge() : error;
   });
   return { url: URL.createObjectURL(blob), streamed: false };
@@ -57,12 +57,18 @@ export function useLibraryPreviewUrl(
     let cancelled = false;
     const next = previewSource(item, body);
     next.then(
-      ({ url, streamed }) => !cancelled && setState({ key, url, streamed }),
-      (err: unknown) => !cancelled && setState({ key, url: null, error: errorMessage(err) }),
+      ({ url, streamed }) => {
+        if (!cancelled) setState({ key, url, streamed });
+      },
+      (err: unknown) => {
+        if (!cancelled) setState({ key, url: null, error: errorMessage(err) });
+      },
     );
     return () => {
       cancelled = true;
-      next.then(({ url, streamed }) => !streamed && URL.revokeObjectURL(url), () => { /* no-op */ }).catch(() => undefined);
+      next.then(({ url, streamed }) => {
+        if (!streamed) URL.revokeObjectURL(url);
+      }, () => { /* no-op */ }).catch(() => undefined);
     };
     // `key` carries the item's identity and version; the object changes on every refresh.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,16 +93,19 @@ export function useLibraryDocument(
     if (!enabled || tooLarge) return;
     let cancelled = false;
     fetchLibraryBlob(item, item.contentType, MAX_DOCUMENT_PREVIEW_BYTES).then(
-      (file) => !cancelled && setState({ key, file }),
-      (err: unknown) =>
-        !cancelled &&
+      (file) => {
+        if (!cancelled) setState({ key, file });
+      },
+      (err: unknown) => {
+        if (cancelled) return;
         setState({
           key,
           error:
             err instanceof LibraryFileTooLarge
               ? translate("library.preview.tooLargeToPreview")
               : errorMessage(err),
-        }),
+        });
+      },
     );
     return () => {
       cancelled = true;
@@ -121,8 +130,12 @@ export function useLibraryAudioPeaks(item: LibraryItem, enabled: boolean): numbe
     fetchLibraryBlob(item, item.contentType, MAX_PEAKS_BYTES)
       .then(decodePeaks)
       .then(
-        ({ peaks }) => !cancelled && setState({ key, peaks }),
-        () => !cancelled && setState({ key, peaks: null }),
+        ({ peaks }) => {
+          if (!cancelled) setState({ key, peaks });
+        },
+        () => {
+          if (!cancelled) setState({ key, peaks: null });
+        },
       );
     return () => {
       cancelled = true;
@@ -147,8 +160,12 @@ export function useLibraryThumbnail(
     let cancelled = false;
     const { url: next, release } = acquireObjectUrl(key, () => fetchLibraryThumbnail(item));
     next.then(
-      (url) => !cancelled && setState({ key, url }),
-      () => !cancelled && setState({ key, url: null }),
+      (url) => {
+        if (!cancelled) setState({ key, url });
+      },
+      () => {
+        if (!cancelled) setState({ key, url: null });
+      },
     );
     return () => {
       cancelled = true;

@@ -7,7 +7,7 @@ import type {
   ApiMonitorEntry,
   ApiMonitorResponse,
 } from "@/features/chat/types/api";
-import { FIND_PORTAL_ATTRIBUTE } from "@/features/find-in-page/lib/find-attributes";
+import { FIND_PORTAL_ATTRIBUTE } from "@/features/find-in-page";
 import { useMonitorFrameStore, useShortcut } from "@/features/settings";
 import { FLOATING_PANEL_POSITION_KEYS } from "@/hooks/floating-panel-position";
 import { useFloatingPanelLayout } from "@/hooks/use-floating-panel-layout";

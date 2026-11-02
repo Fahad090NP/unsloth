@@ -61,9 +61,13 @@ export function ProjectSourcesPanel({ projectId }: { projectId: string }) {
     (items: RagUploadItem[]) => {
       if (items.length === 0) return;
       invalidateProjectSources(projectId);
-      void upload(items).finally(() =>
-        { announceProjectSourcesUpdated(projectId); },
-      );
+      upload(items)
+        .finally(() => {
+          announceProjectSourcesUpdated(projectId);
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to upload project sources:", error);
+        });
     },
     [projectId, upload],
   );
@@ -76,9 +80,13 @@ export function ProjectSourcesPanel({ projectId }: { projectId: string }) {
   const handleRetry = useCallback(
     (documentId: string) => {
       invalidateProjectSources(projectId);
-      void retry(documentId).finally(() =>
-        { announceProjectSourcesUpdated(projectId); },
-      );
+      retry(documentId)
+        .finally(() => {
+          announceProjectSourcesUpdated(projectId);
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to retry project source:", error);
+        });
     },
     [projectId, retry],
   );
@@ -278,7 +286,11 @@ export function ProjectSourcesPanel({ projectId }: { projectId: string }) {
                   isLinkedFolderManaged(doc) ||
                   (doc.id.startsWith("pending_") && doc.status !== "failed")
                     ? undefined
-                    : () => void handleRemove(doc.id)
+                    : () => {
+                        handleRemove(doc.id).catch((error: unknown) => {
+                          console.error("Failed to remove project source:", error);
+                        });
+                      }
                 }
                 onRetry={
                   canRetry(doc.id) ? () => { handleRetry(doc.id); } : undefined

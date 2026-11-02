@@ -179,24 +179,24 @@ function formatAgo(value: number, now: number): string {
 }
 
 const AGO_TICK_MS = 10_000;
+const INITIAL_NOW_SECONDS = Date.now() / 1000;
 
 // Server-clock seconds (host clock may differ over a tunnel); ticks itself since a paused feed stops polls.
 function useServerNow(
   serverTime: number | undefined,
   ticking: boolean,
 ): number {
-  const [tick, setTick] = useState(0);
+  const [now, setNow] = useState(INITIAL_NOW_SECONDS);
   useEffect(() => {
     if (!ticking) return;
-    const timer = window.setInterval(() => { setTick((n) => n + 1); }, AGO_TICK_MS);
+    const timer = window.setInterval(() => { setNow(Date.now() / 1000); }, AGO_TICK_MS);
     return () => { window.clearInterval(timer); };
   }, [ticking]);
   const skew = useMemo(
-    () => (serverTime == null ? 0 : Math.round(serverTime - Date.now() / 1000)),
-    [serverTime],
+    () => (serverTime == null ? 0 : Math.round(serverTime - now)),
+    [serverTime, now],
   );
-  // biome-ignore lint/correctness/useExhaustiveDependencies: tick is what advances the clock
-  return useMemo(() => Date.now() / 1000 + skew, [skew, tick]);
+  return now + skew;
 }
 
 function formatDuration(value?: number | null): string {
@@ -1131,12 +1131,14 @@ export function ApiMonitorPage(): ReactElement {
   const scrollToSelected = useRef(false);
   useEffect(() => {
     if (focusRequestId == null) return;
-    setSelectedId(focusRequestId);
-    setQuery("");
-    setStatusFilter("all");
-    setModelFilter(ALL_MODELS);
-    scrollToSelected.current = true;
-    useApiMonitorOverlayStore.getState().focusRequest(null);
+    queueMicrotask(() => {
+      setSelectedId(focusRequestId);
+      setQuery("");
+      setStatusFilter("all");
+      setModelFilter(ALL_MODELS);
+      scrollToSelected.current = true;
+      useApiMonitorOverlayStore.getState().focusRequest(null);
+    });
   }, [focusRequestId]);
 
   const loggedModels = useMemo(() => {
@@ -1178,7 +1180,8 @@ export function ApiMonitorPage(): ReactElement {
   // Keyed on identity and revision, never `details`, which the fetch rewrites (loop).
   const selectedId_ = selected?.id ?? null;
   const selectedUpdatedAt = selected?.updated_at ?? null;
-  const selectedIsMissing = selectedId_ != null && details[selectedId_] == null;
+  const selectedIsMissing =
+    selectedId_ != null && !Object.hasOwn(details, selectedId_);
   const lastFetchedRef = useRef<string | null>(null);
   const attemptsRef = useRef<{ revision: string; count: number }>({
     revision: "",
@@ -1206,7 +1209,6 @@ export function ApiMonitorPage(): ReactElement {
     // Only when a fetch started; recording a refused one skips that revision for good.
     if (requestDetail(selectedId_)) {
       lastFetchedRef.current = revision;
-      setRetryTick(0);
     } else {
       // Refused: an older fetch is running and no dep changes when it settles.
       const timer = window.setTimeout(() => { setRetryTick((n) => n + 1); }, 250);

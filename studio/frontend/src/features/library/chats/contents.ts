@@ -6,7 +6,7 @@ import {
   countStoredChatMessages,
   listStoredChatMessagesMany,
 } from "@/features/chat";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type ChatContents, summarizeChatMessages } from "./model";
 
 const cache = new Map<string, ChatContents>();
@@ -27,7 +27,10 @@ function threadIdsOf(chat: SidebarItem): string[] {
 
 function remember(key: string, value: ChatContents): void {
   cache.set(key, value);
-  if (cache.size > MAX_CACHED) cache.delete(cache.keys().next().value!);
+  if (cache.size > MAX_CACHED) {
+    const oldest = cache.keys().next();
+    if (!oldest.done) cache.delete(oldest.value);
+  }
 }
 
 function needsRead(chat: SidebarItem): boolean {
@@ -71,7 +74,7 @@ async function readContents(chats: SidebarItem[]): Promise<void> {
 }
 
 export function useChatContents(chats: readonly SidebarItem[]): ReadonlyMap<string, ChatContents> {
-  const [version, setVersion] = useState(0);
+  const [, setVersion] = useState(0);
   useEffect(() => {
     const listener = () => { setVersion((v) => v + 1); };
     listeners.add(listener);
@@ -79,20 +82,20 @@ export function useChatContents(chats: readonly SidebarItem[]): ReadonlyMap<stri
       listeners.delete(listener);
     };
   }, []);
-  const missingKey = chats.filter(needsRead).map(cacheKey).join(",");
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the missing keys are the cue to read
+  const chatsRef = useRef(chats);
   useEffect(() => {
-    const missing = chats.filter(needsRead);
+    chatsRef.current = chats;
+  }, [chats]);
+  const missingKey = chats.filter(needsRead).map(cacheKey).join(",");
+  useEffect(() => {
+    const missing = chatsRef.current.filter(needsRead);
     // Not cancelled: a read in flight still fills the shared cache.
-    if (missing.length > 0) void readContents(missing);
+    if (missing.length > 0) readContents(missing).catch(() => undefined);
   }, [missingKey]);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: version marks new cache entries
-  return useMemo(() => {
-    const out = new Map<string, ChatContents>();
-    for (const chat of chats) {
-      const entry = cache.get(cacheKey(chat));
-      if (entry) out.set(chat.id, entry);
-    }
-    return out;
-  }, [chats, version]);
+  const out = new Map<string, ChatContents>();
+  for (const chat of chats) {
+    const entry = cache.get(cacheKey(chat));
+    if (entry) out.set(chat.id, entry);
+  }
+  return out;
 }

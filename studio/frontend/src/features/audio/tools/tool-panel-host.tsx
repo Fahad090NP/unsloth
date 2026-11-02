@@ -29,7 +29,7 @@ export function AudioToolPanels({
       {audioToolPanelsFor(workflow, ctx).map((panel) => (
         <panel.Component
           key={panel.id}
-          value={panelValue(panel, values, specs)}
+          value={panelValue<unknown>(panel, values, specs)}
           onChange={(value: unknown) => { onChange(panel.id, value); }}
           specs={specs}
           disabled={disabled}

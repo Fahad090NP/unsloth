@@ -5,6 +5,12 @@ export {
   hasSeparateStreamingEvalSplit,
   useTrainingConfigStore,
 } from "./stores/training-config-store";
+export { trainingToggleDefaults } from "./stores/training-config-policy";
+export {
+  buildTrainingStartPayload,
+  offloadHardwareSupported,
+  offloadSupported,
+} from "./api/mappers";
 export {
   isTrainingRunActive,
   isTrainingStartPending,
@@ -57,6 +63,8 @@ export type { CheckFormatResponse } from "./types/datasets";
 export type {
   AdvancedSettingsBaseline,
   LoraVariant,
+  OffloadLayers,
+  PrefetchDepth,
   TrainingConfigState,
 } from "./types/config";
 export { getModelConfig, listLocalModels } from "./api/models-api";

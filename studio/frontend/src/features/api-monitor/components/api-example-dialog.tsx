@@ -37,7 +37,7 @@ export function ApiExampleDialog({
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    setSampling(null);
+    queueMicrotask(() => setSampling(null));
     authFetch(
       `/api/inference/sampling-defaults?model=${encodeURIComponent(samplingModelId)}`,
     )

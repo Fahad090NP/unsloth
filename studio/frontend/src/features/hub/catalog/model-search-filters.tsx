@@ -35,7 +35,7 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { type ReactNode, useEffect, useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 import type { HubCapabilityFilter } from "../lib/model-capabilities";
 import {
   HUB_UPLOADERS,
@@ -235,11 +235,20 @@ function RangeStops({
   ];
   // Only while dragging. Radix can report a keyboard step after its commit, so a new committed
   // value (or a reset elsewhere) clears it too.
-  const [dragging, setDragging] = useState<[number, number] | null>(null);
   const minValue = value[spec.min];
   const maxValue = value[spec.max];
-  // biome-ignore lint/correctness/useExhaustiveDependencies: clears on a committed change
-  useEffect(() => { setDragging(null); }, [minValue, maxValue]);
+  const [dragState, setDragState] = useState<{
+    min: number | undefined;
+    max: number | undefined;
+    value: [number, number] | null;
+  }>({ min: minValue, max: maxValue, value: null });
+  const dragging =
+    dragState.min === minValue && dragState.max === maxValue
+      ? dragState.value
+      : null;
+  const setDragging = (next: [number, number] | null) => {
+    setDragState({ min: minValue, max: maxValue, value: next });
+  };
   const [lo, hi] = dragging ?? committed;
   const set = lo !== 0 || hi !== last;
   // Thumbs stay inside the track, so stop i sits half a thumb in from each end.

@@ -22,6 +22,11 @@ import { toast } from "@/lib/toast";
 
 const PAGE_SIZE = 24;
 
+function setRefValue<T>(ref: { current: T }, value: T): void {
+  const target = ref;
+  target.current = value;
+}
+
 import {
   type DiffusionDatasetImageRecord,
   deleteDiffusionDatasetImage,
@@ -77,7 +82,7 @@ function LabelTile({
     setSaving(true);
     try {
       const updated = await setDiffusionDatasetCaption(dataset, record.filename, next);
-      persisted.current = updated.caption ?? "";
+      setRefValue(persisted, updated.caption ?? "");
       setCaption(updated.caption ?? "");
       onSaved(updated);
       setSavedTick(true);
@@ -117,7 +122,9 @@ function LabelTile({
           <TooltipTrigger asChild={true}>
             <button
               type="button"
-              onClick={remove}
+              onClick={() => {
+                remove().catch(() => undefined);
+              }}
               disabled={deleting}
               aria-label="Remove image"
               className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-background/85 text-muted-foreground opacity-0 any-pointer-coarse:opacity-100 shadow-sm backdrop-blur-sm transition-opacity hover:bg-background hover:text-destructive focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover/tile:opacity-100"
@@ -174,43 +181,75 @@ export function DatasetLabelingGrid({
   refreshKey?: number;
   onCountsChanged?: () => void;
 }) {
-  const [records, setRecords] = useState<DiffusionDatasetImageRecord[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(0);
+  const requestKey = `${dataset}:${refreshKey}`;
+  const [load, setLoad] = useState<{
+    key: string;
+    records: DiffusionDatasetImageRecord[] | null;
+    error: string | null;
+  }>({ key: requestKey, records: null, error: null });
+  const [pageState, setPageState] = useState({ key: requestKey, page: 0 });
+  const records = load.key === requestKey ? load.records : null;
+  const error = load.key === requestKey ? load.error : null;
+  const page = pageState.key === requestKey ? pageState.page : 0;
 
   useEffect(() => {
     let cancelled = false;
-    setRecords(null);
-    setError(null);
-    setPage(0);
     listDiffusionDatasetImages(dataset)
       .then((r) => {
-        if (!cancelled) setRecords(imageRecordsOnly(r.images));
+        if (!cancelled) {
+          setLoad({
+            key: requestKey,
+            records: imageRecordsOnly(r.images),
+            error: null,
+          });
+        }
       })
       .catch((e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to list images");
+        if (!cancelled) {
+          setLoad({
+            key: requestKey,
+            records: null,
+            error: e instanceof Error ? e.message : "Failed to list images",
+          });
+        }
       }).catch(() => { /* noop */ });
     return () => {
       cancelled = true;
     };
-  }, [dataset, refreshKey]);
+  }, [dataset, requestKey]);
 
   const onSaved = useCallback(
     (rec: DiffusionDatasetImageRecord) => {
-      setRecords((cur) =>
-        cur ? cur.map((r) => (r.filename === rec.filename ? rec : r)) : cur,
+      setLoad((cur) =>
+        cur.key === requestKey
+          ? {
+              ...cur,
+              records: cur.records
+                ? cur.records.map((r) => (r.filename === rec.filename ? rec : r))
+                : cur.records,
+            }
+          : cur,
       );
       onCountsChanged?.();
     },
-    [onCountsChanged],
+    [onCountsChanged, requestKey],
   );
 
   const onDeleted = useCallback(
     (filename: string) => {
-      setRecords((cur) => (cur ? cur.filter((r) => r.filename !== filename) : cur));
+      setLoad((cur) =>
+        cur.key === requestKey
+          ? {
+              ...cur,
+              records: cur.records
+                ? cur.records.filter((r) => r.filename !== filename)
+                : cur.records,
+            }
+          : cur,
+      );
       onCountsChanged?.();
     },
-    [onCountsChanged],
+    [onCountsChanged, requestKey],
   );
 
   if (error) {
@@ -252,7 +291,12 @@ export function DatasetLabelingGrid({
               size="icon"
               className="size-6"
               disabled={clampedPage === 0}
-              onClick={() => { setPage((p) => Math.max(0, p - 1)); }}
+              onClick={() => {
+                setPageState((cur) => ({
+                  key: requestKey,
+                  page: Math.max(0, (cur.key === requestKey ? cur.page : 0) - 1),
+                }));
+              }}
               aria-label="Previous images"
             >
               <HugeiconsIcon icon={ChevronLeftStandardIcon} className="size-3.5" />
@@ -263,7 +307,15 @@ export function DatasetLabelingGrid({
               size="icon"
               className="size-6"
               disabled={clampedPage >= pageCount - 1}
-              onClick={() => { setPage((p) => Math.min(pageCount - 1, p + 1)); }}
+              onClick={() => {
+                setPageState((cur) => ({
+                  key: requestKey,
+                  page: Math.min(
+                    pageCount - 1,
+                    (cur.key === requestKey ? cur.page : 0) + 1,
+                  ),
+                }));
+              }}
               aria-label="Next images"
             >
               <HugeiconsIcon icon={ChevronRightStandardIcon} className="size-3.5" />

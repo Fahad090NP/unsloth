@@ -244,7 +244,7 @@ export function finalize(
   outcome: Terminal,
   opts: { bytes?: number; error?: string | null } = {},
 ): void {
-  const job = getState().jobs[key];
+  const job = getState().jobs[key] as ManagedDownload | undefined;
   teardownRuntime(key);
   dismissStartToast(key);
   if (!job) return;
@@ -334,9 +334,14 @@ function syncServerGeneration(
   if (Number.isSafeInteger(status.generation)) {
     patch.serverGeneration = status.generation;
   }
-  if (change === "attempt") {
+  if (
+    change === "attempt" &&
+    typeof status.attempt === "number" &&
+    Number.isSafeInteger(status.attempt)
+  ) {
+    const attempt = status.attempt;
     rt.floorHold = {
-      attempt: status.attempt!,
+      attempt,
       remainingBytes: job.expectedBytes - job.downloadedBytes,
       until: Date.now() + ATTEMPT_FLOOR_HOLD_MS,
     };
@@ -357,7 +362,7 @@ async function finalizeTerminalStatus(
   abort: AbortController | null,
   epoch: number,
 ): Promise<void> {
-  const current = getState().jobs[key];
+  const current = getState().jobs[key] as ManagedDownload | undefined;
   if (!current) return;
   if (terminalKind === "complete") {
     let finalBytes = current.downloadedBytes;
@@ -366,7 +371,7 @@ async function finalizeTerminalStatus(
         apiGetProgress(current, signal),
       );
       if (!isCurrent(key, epoch)) return;
-      const latest = getState().jobs[key];
+      const latest = getState().jobs[key] as ManagedDownload | undefined;
       if (latest) {
         const { downloadedBytes } = applyProgressUpdate(key, latest, progressResp);
         finalBytes = downloadedBytes;
@@ -451,7 +456,7 @@ function handleIdleAfterProgress(
   madeProgress: boolean,
   progressResp: ProgressLike,
 ): void { const rt = rtParam;
-  const updatedJob = getState().jobs[key];
+  const updatedJob = getState().jobs[key] as ManagedDownload | undefined;
   if (updatedJob && hasObservedExpectedBytes(updatedJob)) {
     finalize(key, "complete", { bytes: updatedJob.downloadedBytes });
   } else if (rt.cancelRequested) {
@@ -483,7 +488,11 @@ function handleTickError(
 ): void {
   if (!isCurrent(key, epoch)) return;
   const accessMessage = pollAccessErrorMessage(
-    error instanceof Error ? error.message : String(error ?? ""),
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "",
   );
   if (accessMessage) {
     finalize(key, "error", { error: accessMessage });
@@ -495,7 +504,7 @@ function handleTickError(
 async function tick(key: string): Promise<void> {
   const rt = runtimeRegistry.runtimes.get(key);
   if (!rt) return;
-  const job = getState().jobs[key];
+  const job = getState().jobs[key] as ManagedDownload | undefined;
   if (!job) {
     teardownRuntime(key);
     return;
@@ -526,7 +535,7 @@ async function tick(key: string): Promise<void> {
     }
 
     if (status.state === "idle") {
-      const observedJob = getState().jobs[key];
+      const observedJob = getState().jobs[key] as ManagedDownload | undefined;
       if (observedJob && hasObservedExpectedBytes(observedJob)) {
         finalize(key, "complete", { bytes: observedJob.downloadedBytes });
         return;
@@ -545,7 +554,7 @@ async function tick(key: string): Promise<void> {
       apiGetProgress(jobForProgress, signal),
     );
     if (!isCurrent(key, epoch)) return;
-    const current = getState().jobs[key];
+    const current = getState().jobs[key] as ManagedDownload | undefined;
     if (!current) return;
 
     const generationChanged = rt.pendingGenerationChange === true;
@@ -613,7 +622,7 @@ function beginPolling(key: string, rtParam: JobRuntime): void { const rt = rtPar
       const live = runtimeRegistry.runtimes.get(key);
       if (live !== rt) return;
       if (live.inFlight) return;
-      if ((live.pollTimer !== null && live.pollTimer !== undefined)) {
+      if (live.pollTimer !== null) {
         window.clearTimeout(live.pollTimer);
         live.pollTimer = null;
       }
@@ -691,7 +700,7 @@ export async function startJob(
     opts.generation,
   );
   const expected = Math.max(
-    carryOverSeed ? (existing?.expectedBytes ?? 0) : 0,
+    carryOverSeed ? existing.expectedBytes : 0,
     req.expectedBytes,
   );
   const hfToken = getHfToken() || null;
@@ -713,11 +722,9 @@ export async function startJob(
     teardownRuntime(key);
     throw error;
   }
-  const seedDownloaded = carryOverSeed
-    ? (existing?.downloadedBytes ?? 0)
-    : 0;
-  const seedCompleted = carryOverSeed ? (existing?.completedBytes ?? 0) : 0;
-  const seedFraction = carryOverSeed ? (existing?.fraction ?? 0) : 0;
+  const seedDownloaded = carryOverSeed ? existing.downloadedBytes : 0;
+  const seedCompleted = carryOverSeed ? existing.completedBytes : 0;
+  const seedFraction = carryOverSeed ? existing.fraction : 0;
     // The measured flag must travel with the seeded bytes.
   const seedMeasuredTransfer = seededMeasuredTransfer(
     carryOverSeed,
@@ -763,7 +770,7 @@ export async function startJob(
     fraction: seedFraction,
     bytesPerSec: 0,
     error: null,
-    startedAt: opts.adopt ? (existing?.startedAt ?? Date.now()) : Date.now(),
+    startedAt: opts.adopt ? existing.startedAt : Date.now(),
     // Prefer the backend's live transport, then persisted; never the HTTP placeholder.
     ...(activeTransport ? { transport: activeTransport } : {}),
     ...(adopted.cancelTransport
@@ -913,14 +920,15 @@ async function resolveCancelWatchdog(
 ): Promise<void> {
   const rt = runtimeRegistry.runtimes.get(key);
   if (rt?.epoch !== cancelEpoch || !rt.cancelRequested) return;
-  const job = getState().jobs[key];
+  const job = getState().jobs[key] as ManagedDownload | undefined;
   if (!job) return;
   const probe = await probeCancelOutcome(key, job, rt, cancelEpoch);
   if (probe === "stale") return;
   const live = runtimeRegistry.runtimes.get(key);
   if (live?.epoch !== cancelEpoch || !live.cancelRequested) return;
   if (probe.terminal === "complete") {
-    finalize(key, "complete", { bytes: (getState().jobs[key]?.downloadedBytes)});
+    const current = getState().jobs[key] as ManagedDownload | undefined;
+    finalize(key, "complete", { bytes: current?.downloadedBytes });
   } else if (probe.terminal === "error") {
     finalize(key, "error", { error: probe.error });
   } else {
@@ -946,13 +954,12 @@ function applyCancelResult(
     clearWatchdog(live);
   }
   if (result.state === "complete") {
-    finalize(key, "complete", {
-      bytes: (getState().jobs[key]?.downloadedBytes)
-    });
+    const current = getState().jobs[key] as ManagedDownload | undefined;
+    finalize(key, "complete", { bytes: current?.downloadedBytes });
   } else if (result.state === "error") {
     finalize(key, "error");
   } else if (result.state === "idle") {
-    const current = getState().jobs[key];
+    const current = getState().jobs[key] as ManagedDownload | undefined;
     finalize(
       key,
       current && hasObservedExpectedBytes(current) ? "complete" : "cancelled",
@@ -985,7 +992,7 @@ async function probeCancelOutcome(
       return { terminal: "cancelled", error: null };
     }
     if (probe.state === "idle") {
-      const current = getState().jobs[key];
+      const current = getState().jobs[key] as ManagedDownload | undefined;
       if (current && hasObservedExpectedBytes(current)) {
         return { terminal: "complete", error: null };
       }
@@ -998,10 +1005,12 @@ async function probeCancelOutcome(
           if (rt && liveAfterProgress && liveAfterProgress.epoch !== cancelEpoch) {
             return "stale";
           }
-          const latest = getState().jobs[key];
+          const latest = getState().jobs[key] as ManagedDownload | undefined;
           if (latest) {
             applyProgressUpdate(key, latest, progressResp);
-            const updated = getState().jobs[key];
+            const updated = getState().jobs[key] as
+              | ManagedDownload
+              | undefined;
             return {
               terminal:
                 updated && hasObservedExpectedBytes(updated)
@@ -1024,7 +1033,7 @@ async function probeCancelOutcome(
 }
 
 export async function cancelJob(key: string): Promise<void> {
-  const job = getState().jobs[key];
+  const job = getState().jobs[key] as ManagedDownload | undefined;
   if (!job) return;
   if (isExternalJob(key)) {
     await cancelExternalJob(key);
@@ -1055,8 +1064,8 @@ export async function cancelJob(key: string): Promise<void> {
 
     if (probe.terminal !== null) {
       if (probe.terminal === "complete") {
-        const current = getState().jobs[key];
-        finalize(key, "complete", { bytes: (current?.downloadedBytes)});
+        const current = getState().jobs[key] as ManagedDownload | undefined;
+        finalize(key, "complete", { bytes: current?.downloadedBytes });
       } else if (probe.terminal === "error") {
         finalize(key, "error", { error: probe.error });
       } else {
@@ -1085,7 +1094,8 @@ export function adoptJob(
   const key = jobKeyOf(req.kind, req.repoId, req.variant);
   if (runtimeRegistry.runtimes.get(key)?.pollingStarted) {
   // Only apply a late response to the run it described; a restart in between is a different job.
-    const known = getState().jobs[key].serverGeneration;
+    const known = (getState().jobs[key] as ManagedDownload | undefined)
+      ?.serverGeneration;
     if (probeDescribesCurrentRun(known, generation)) {
       const inventoryKind = downloadRequestInventoryKind(req);
       patchJob(key, {
@@ -1175,7 +1185,7 @@ export async function probeAndAdopt(
       return;
     }
     if (import.meta.env.DEV) {
-      console.debug("Download adoption probe failed", { kind, repoId, error });
+      console.warn("Download adoption probe failed", { kind, repoId, error });
     }
   }
 }

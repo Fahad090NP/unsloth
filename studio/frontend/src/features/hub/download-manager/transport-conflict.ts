@@ -294,7 +294,7 @@ export async function requestStart(
 }
 
 export function resumeConflict(conflictKey: string): void {
-  const entry: ConflictEntry | undefined = getState().conflicts[conflictKey];
+  const entry = getState().conflicts[conflictKey] as ConflictEntry | undefined;
   if (!entry) return;
   setConflict(conflictKey, null);
   (runWithPendingStartGuard(entry.pending, async () => {
@@ -306,7 +306,7 @@ export function resumeConflict(conflictKey: string): void {
 }
 
 export function restartConflict(conflictKey: string): void {
-  const entry: ConflictEntry | undefined = getState().conflicts[conflictKey];
+  const entry = getState().conflicts[conflictKey] as ConflictEntry | undefined;
   if (!entry) return;
   setConflict(conflictKey, null);
   (runWithPendingStartGuard(entry.pending, async () => {

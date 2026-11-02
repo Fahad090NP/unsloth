@@ -142,7 +142,11 @@ export function ConfigActions() {
             variant="outline"
             size="sm"
             className="h-9 cursor-pointer rounded-full"
-            onClick={() => void handleLoadConfig()}
+            onClick={() => {
+              handleLoadConfig().catch((error: unknown) => {
+                console.error("Failed to load training config:", error);
+              });
+            }}
           >
             <HugeiconsIcon icon={Upload01Icon} className="size-3.5" />
             {t("studio.wizard.loadYaml")}

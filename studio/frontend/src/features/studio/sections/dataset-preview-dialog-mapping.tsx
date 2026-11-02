@@ -265,7 +265,11 @@ export function DatasetMappingFooter({
             size="sm"
             className="cursor-pointer"
             disabled={!mappingOk || startBlocked}
-            onClick={() => void onStartTraining()}
+            onClick={() => {
+              onStartTraining().catch((error: unknown) => {
+                console.error("Failed to start training:", error);
+              });
+            }}
           >
             {stopRequested
               ? t("studio.training.stopping")

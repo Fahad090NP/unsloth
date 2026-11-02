@@ -254,24 +254,26 @@ export function useRecipePersistence({
   const savedAtLabel = formatSavedLabel(lastSavedAt);
 
   useEffect(() => {
-    const nextName = normalizeNonEmptyName(initialRecipeName, "Unnamed");
-    resetRecipe();
-    setWorkflowName(nextName);
-    setLastSavedAt(initialSavedAt);
-    setCopied(false);
+    queueMicrotask(() => {
+      const nextName = normalizeNonEmptyName(initialRecipeName, "Unnamed");
+      resetRecipe();
+      setWorkflowName(nextName);
+      setLastSavedAt(initialSavedAt);
+      setCopied(false);
 
-    const parsed = importRecipePayload(JSON.stringify(initialPayload), {
-      preserveUnstructuredUploads: true,
+      const parsed = importRecipePayload(JSON.stringify(initialPayload), {
+        preserveUnstructuredUploads: true,
+      });
+      if (parsed.snapshot) {
+        loadRecipe(parsed.snapshot);
+      } else {
+        console.error("Failed to load recipe payload.", parsed.errors);
+      }
+
+      const payload = getCurrentPayloadFromStore();
+      setSavedSignature(buildSignature(nextName, payload));
+      setInitialRecipeReady(true);
     });
-    if (parsed.snapshot) {
-      loadRecipe(parsed.snapshot);
-    } else {
-      console.error("Failed to load recipe payload.", parsed.errors);
-    }
-
-    const payload = getCurrentPayloadFromStore();
-    setSavedSignature(buildSignature(nextName, payload));
-    setInitialRecipeReady(true);
   }, [
     getCurrentPayloadFromStore,
     initialPayload,

@@ -31,7 +31,7 @@ import type {
   UnsafeFile,
 } from "../types";
 
-function matchTone(severity: RemoteCodeSeverity | string): {
+function matchTone(severity: RemoteCodeSeverity): {
   row: string;
   span: string;
 } {

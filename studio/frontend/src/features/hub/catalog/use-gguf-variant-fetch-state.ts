@@ -46,7 +46,7 @@ export function useGgufVariantFetchState({
     () =>
       `${repoId}::${fingerprintToken(hfToken)}::${
         preferLocalCache ? "local" : "remote"
-      }::${localVariantPath ?? ""}::${includeCacheLocations}`,
+      }::${localVariantPath ?? ""}::${String(includeCacheLocations)}`,
     [hfToken, localVariantPath, preferLocalCache, includeCacheLocations, repoId],
   );
   const variantKey = useMemo(
@@ -115,7 +115,7 @@ export function useGgufVariantFetchState({
       setState((prev) => {
         const sameScope = prev.scopeKey === variantScopeKey;
         const variants = sameScope ? prev.variants : null;
-        const hasUsableVariants = !!variants && variants.length > 0;
+        const hasUsableVariants = variants !== null && variants.length > 0;
         const message = error instanceof Error ? error.message : errorFallback;
         return {
           key: variantKey,

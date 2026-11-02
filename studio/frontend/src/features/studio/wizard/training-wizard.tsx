@@ -108,7 +108,7 @@ function TrainingMethodSelect() {
   );
   const deviceType = usePlatformStore((state) => state.deviceType);
   const activeMeta = TRAINING_METHOD_META[trainingMethod];
-  const activeLabel = activeMeta ? t(activeMeta.labelKey) : trainingMethod;
+  const activeLabel = t(activeMeta.labelKey);
   return (
     <Select
       value={trainingMethod}
@@ -127,7 +127,7 @@ function TrainingMethodSelect() {
             aria-hidden="true"
             className={cn(
               "size-2 shrink-0 rounded-full",
-              activeMeta?.dotClass ?? "bg-muted-foreground",
+              activeMeta.dotClass,
             )}
           />
           <span className="truncate font-medium text-foreground">
@@ -245,9 +245,7 @@ function CheckpointSelect({
     checkpoints.find((checkpoint) => checkpoint.subfolder === modelSubfolder) ??
     checkpoints[0];
   const checkpointLabel = (checkpoint: DecisionCheckpoint) =>
-    DECISION_MODEL_LABELS[checkpoint.name]
-      ? t(DECISION_MODEL_LABELS[checkpoint.name])
-      : checkpoint.name;
+    t(DECISION_MODEL_LABELS[checkpoint.name]);
   return (
     <Select
       value={active.name}

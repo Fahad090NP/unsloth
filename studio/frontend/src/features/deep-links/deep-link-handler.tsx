@@ -64,8 +64,8 @@ export function DeepLinkHandler({
       }
       if (!intent || intentSequence === null) return hasValidIntent;
 
-      void restoreMainWindow().catch(() => undefined);
-      void navigate({
+      restoreMainWindow().catch(() => undefined);
+      navigate({
         to: "/hub",
         search: {
           tab: "discover",
@@ -75,6 +75,8 @@ export function DeepLinkHandler({
 
           intent: intentSequence,
         },
+      }).catch((error: unknown) => {
+        console.error("Failed to navigate to deep link:", error);
       });
       return true;
     };
@@ -89,7 +91,7 @@ export function DeepLinkHandler({
           receivedLiveIntent = true;
         }
       });
-      if (disposed) {
+      if (Boolean(disposed)) {
         cleanup();
         return;
       }

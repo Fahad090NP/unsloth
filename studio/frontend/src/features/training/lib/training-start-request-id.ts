@@ -35,7 +35,7 @@ function formatUuid(bytes: Uint8Array): string {
 }
 
 export function createTrainingStartRequestId(
-  cryptoSource: RandomUuidCrypto | null = globalThis.crypto ?? null,
+  cryptoSource: RandomUuidCrypto | null = globalThis.crypto,
 ): string {
   if (typeof cryptoSource?.randomUUID === "function") {
     try {

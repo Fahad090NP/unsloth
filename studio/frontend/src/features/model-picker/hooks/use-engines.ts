@@ -76,7 +76,7 @@ export function useEngines(enabled = true, background = false) {
         setFetching(false);
         if (!isDisposed()) {
           timer = setTimeout(
-            () => { void refresh(); },
+            () => { refresh().catch(() => undefined); },
             document.hidden
               ? 30000
               : installing

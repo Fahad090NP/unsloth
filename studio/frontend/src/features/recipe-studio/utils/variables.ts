@@ -12,8 +12,14 @@ export interface AvailableVariableEntry {
 
 function getStructuredRefs(llmName: string, outputFormat: string): string[] {
   try {
-    const schema = JSON.parse(outputFormat);
-    if (!(schema?.properties && typeof schema.properties === "object")) {
+    const schema: unknown = JSON.parse(outputFormat);
+    if (
+      typeof schema !== "object" ||
+      schema === null ||
+      !("properties" in schema) ||
+      typeof schema.properties !== "object" ||
+      schema.properties === null
+    ) {
       return [];
     }
     return Object.keys(schema.properties).map((key) => `${llmName}.${key}`);

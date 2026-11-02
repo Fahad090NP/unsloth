@@ -357,7 +357,9 @@ export function useLinkedFolders(
     async (folderId: string, removeIndex: boolean) => {
       const operationScopeKey = scopeKey;
       const previous = folders;
-      const jobForFolder: FolderSyncJob | undefined = jobs[folderId];
+      const jobForFolder = Object.hasOwn(jobs, folderId)
+        ? jobs[folderId]
+        : undefined;
       const activeJobId =
         folders.find((folder) => folder.id === folderId)?.activeJobId ??
         jobForFolder?.id;

@@ -131,10 +131,11 @@ export function parsePreparationProgress(
   const current = Number(groups.current.replaceAll(",", ""));
   const total = Number(groups.total.replaceAll(",", ""));
   // Use the tqdm percent so it matches the log line.
+  const percentText: string | undefined = groups.percent;
   const percent =
-    groups.percent === undefined
+    percentText === undefined
       ? Math.floor((current / total) * 100)
-      : Number(groups.percent);
+      : Number(percentText);
   if (percent > 100 || total <= 0 || current > total) {
     return indeterminatePreparation(groups.label);
   }

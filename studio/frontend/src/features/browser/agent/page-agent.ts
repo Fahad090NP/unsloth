@@ -75,6 +75,9 @@ export interface PageAgent {
 
 /** Returns the agent it built, so the proxied frame keeps its own reference rather than trusting
  *  KEY, which a page script can define before the agent arrives. */
+const textOf = (value: unknown): string =>
+  typeof value === "string" ? value : "";
+
 export function installPageAgent(): PageAgent {
   const KEY = Symbol.for("unsloth.agent");
   const host = window as unknown as Record<symbol, unknown>;
@@ -148,7 +151,7 @@ export function installPageAgent(): PageAgent {
     return `r${id}`;
   };
   const lookup = (ref: string): Element => {
-    const el = byRef.get(Number(String(ref).replace(/^r/i, "")))?.deref();
+    const el = byRef.get(Number(ref.replace(/^r/i, "")))?.deref();
     if (!el?.isConnected) throw new AgentError(`${ref} is no longer on the page; call browser_snapshot for fresh refs.`);
     return el;
   };
@@ -325,7 +328,7 @@ export function installPageAgent(): PageAgent {
       else if (role !== "button" && role !== "file-input" && field.value) parts.push(`value=${quoted(clean(field.value, 60))}`);
     } else if (tag === "select") {
       const select = el as HTMLSelectElement;
-      const chosen = select.selectedOptions[0];
+      const chosen: HTMLOptionElement | undefined = select.selectedOptions[0];
       if (chosen) parts.push(`selected=${quoted(clean(chosen.text, 40))}`);
       const options = Array.from(select.options).map((option) => clean(option.text, 30));
       if (options.length) {
@@ -454,7 +457,7 @@ export function installPageAgent(): PageAgent {
 
   const position = (): string => {
     const page = scroller();
-    const height = Math.max(page.scrollHeight, document.body.scrollHeight ?? 0);
+    const height = Math.max(page.scrollHeight, document.body.scrollHeight);
     if (height <= window.innerHeight + 4) return "";
     const top = Math.round(page.scrollTop || window.scrollY);
     const bottom = Math.min(height, top + window.innerHeight);
@@ -462,7 +465,7 @@ export function installPageAgent(): PageAgent {
   };
 
   const snapshot = (fullPage: boolean, ref?: string): Record<string, unknown> => {
-    const root = ref ? lookup(ref) : (document.body ?? document.documentElement);
+    const root = ref ? lookup(ref) : document.body;
     const { text, links, cut } = read(root, fullPage || Boolean(ref), fullPage || ref ? PAGE_CHARS : VIEW_CHARS);
     const header = !ref && !fullPage ? position() : "";
     const tail = cut ? "\n… (more below: use browser_scroll, browser_find, or a snapshot ref)" : "";
@@ -478,8 +481,10 @@ export function installPageAgent(): PageAgent {
     // The snapshot's rules too, so hidden text can't reach the model through a search instead.
     const visible = (el: Element) => {
       if (el.closest("[aria-hidden=true], [hidden]") || !sized(el.getBoundingClientRect())) return false;
-      const check = (el as Element & { checkVisibility?: (options?: object) => boolean }).checkVisibility;
-      if (check) return check.call(el, { checkOpacity: true, checkVisibilityCSS: true });
+      const withVisibility = el as Element & { checkVisibility?: (options?: object) => boolean };
+      if (withVisibility.checkVisibility) {
+        return withVisibility.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+      }
       for (let node: Element | null = el; node; node = node.parentElement) {
         if (hidden(node, getComputedStyle(node))) return false;
       }
@@ -700,7 +705,7 @@ export function installPageAgent(): PageAgent {
     if (op !== "click" && op !== "type" && op !== "select" && op !== "pointer") return null;
     const at = pointIn(command);
     if (at || op === "pointer") return at;
-    const el = byRef.get(Number(String(command.ref ?? "").replace(/^r/i, "")))?.deref();
+    const el = byRef.get(Number(textOf(command.ref).replace(/^r/i, "")))?.deref();
     if (!el?.isConnected) return null;
     if (op === "click") el.scrollIntoView({ block: "center", inline: "center" });
     else if (op === "type") el.scrollIntoView({ block: "center" });
@@ -987,14 +992,17 @@ export function installPageAgent(): PageAgent {
   const shown = (value: unknown): string => {
     if (value === undefined) return "undefined (use return to give back a value)";
     try {
-      const json = JSON.stringify(value, (_key, item) =>
-        item instanceof Element ? `<${item.tagName.toLowerCase()}>` : typeof item === "bigint" ? String(item) : item,
+      const json: string | undefined = JSON.stringify(value, (_key, item) =>
+        item instanceof Element ? `<${item.tagName.toLowerCase()}>` : typeof item === "bigint" ? String(item) : (item as unknown),
       );
       if (json != null) return json;
     } catch {
+      /* no-op */
     }
     try {
-      return String(value);
+      if (typeof value === "string") return value;
+      if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") return String(value);
+      return "a value that can't be shown";
     } catch {
       return "a value that can't be shown";
     }
@@ -1007,7 +1015,7 @@ export function installPageAgent(): PageAgent {
     const oldest = scripts.keys().next().value;
     if (scripts.size >= 20 && oldest !== undefined) scripts.delete(oldest);
     const entry = { done: false, text: "" };
-    scripts.set(String(id), entry);
+    scripts.set(id, entry);
     const finish = (text: string) => {
       entry.done = true;
       entry.text = text.length > SCRIPT_CHARS ? `${text.slice(0, SCRIPT_CHARS)}… (cut)` : text;
@@ -1015,7 +1023,7 @@ export function installPageAgent(): PageAgent {
     try {
       Promise.resolve(start()).then(
         (value) => { finish(`Returned: ${shown(value)}`); },
-        (error) => { finish(`Threw ${thrown(error)}`); },
+        (error: unknown) => { finish(`Threw ${thrown(error)}`); },
       );
     } catch (error) {
       finish(`Threw ${thrown(error)}`);
@@ -1025,10 +1033,13 @@ export function installPageAgent(): PageAgent {
   const compileAndEvaluate = (id: string, doc: unknown, script: string): Record<string, unknown> => {
     let start: () => unknown;
     try {
-      const AsyncFunction = Object.getPrototypeOf(async () => undefined).constructor as new (body: string) => () => unknown;
+      const prototype = Object.getPrototypeOf(async () => {
+        await Promise.resolve();
+      }) as { constructor: new (body: string) => () => unknown };
+      const AsyncFunction = prototype.constructor;
       start = new AsyncFunction(script);
     } catch (error) {
-      start = () => Promise.reject(error);
+      start = () => Promise.reject(error instanceof Error ? error : new Error(String(error)));
     }
     return evaluate(id, doc, start);
   };
@@ -1115,8 +1126,8 @@ export function installPageAgent(): PageAgent {
     const target = active ?? document.body ?? document.documentElement;
     // WebKit acts on a synthetic keypress (implicit submit, a button's click), and so may the page's
     // own key handler: acting again would send the form or click the button twice.
-    let acted = false;
-    let submitted = false;
+    let acted: boolean = false;
+    let submitted: boolean = false;
     const mark = (event: Event) => {
       acted = true;
       if (event.type === "submit") submitted = true;
@@ -1146,8 +1157,8 @@ export function installPageAgent(): PageAgent {
       else if (tag === "textarea") {
         const area = target as HTMLTextAreaElement;
         if (area.readOnly || area.matches(":disabled")) return { ok: false, error: "that key does nothing in this field; click or type instead." };
-        const end = area.selectionEnd ?? area.value.length;
-        const start = area.selectionStart ?? end;
+        const end = area.selectionEnd;
+        const start = area.selectionStart;
         setValue(area, `${area.value.slice(0, start)}\n${area.value.slice(end)}`);
         area.setSelectionRange(start + 1, start + 1);
       } else if ((target as HTMLElement).isContentEditable) {
@@ -1319,7 +1330,7 @@ export function installPageAgent(): PageAgent {
       switch (command.op) {
         case "status": {
           // Fetch/XHR the proxied shell counts as open since `since` (routes/browser_network.py).
-          const pending = host[Symbol.for("unsloth.browser.pending")];
+          const pending = host[Symbol.for("unsloth.browser.pending")] as ((since: number) => unknown) | undefined;
           const since = typeof command.since === "number" ? command.since : Number.POSITIVE_INFINITY;
           return {
             ok: true,
@@ -1333,7 +1344,7 @@ export function installPageAgent(): PageAgent {
         case "snapshot":
           return snapshot(command.fullPage === true, ref || undefined);
         case "find":
-          return find(String(command.query ?? ""));
+          return find(textOf(command.query));
         case "describe":
           return describe(ref, command.value, pointIn(command));
         case "click": {
@@ -1349,17 +1360,17 @@ export function installPageAgent(): PageAgent {
           return at ? inOwnTab(() => pointer(command.phase, at, command.expect, command.sig)) : { ok: false, error: "unknown command" };
         }
         case "evaluate":
-          return compileAndEvaluate(String(command.id ?? ""), command.doc, String(command.script ?? ""));
+          return compileAndEvaluate(textOf(command.id), command.doc, textOf(command.script));
         case "evaluated":
-          return evaluated(String(command.id ?? ""));
+          return evaluated(textOf(command.id));
         case "type":
-          return inOwnTab(() => type(ref, String(command.text ?? ""), command.submit === true));
+          return inOwnTab(() => type(ref, textOf(command.text), command.submit === true));
         case "select":
-          return inOwnTab(() => choose(ref, String(command.value ?? "")));
+          return inOwnTab(() => choose(ref, textOf(command.value)));
         case "scroll":
-          return scrollPage(String(command.direction ?? "down"), ref || undefined);
+          return scrollPage(textOf(command.direction) || "down", ref || undefined);
         case "press":
-          return inOwnTab(() => press(String(command.key ?? "")));
+          return inOwnTab(() => press(textOf(command.key)));
         case "mask":
           return mask(command.on === true);
         default:

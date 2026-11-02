@@ -27,7 +27,7 @@ export function groupSamplesByStep(
 ): SampleRound[] {
   const byStep = new Map<number, DiffusionSampleImage[]>();
   for (const item of samples ?? []) {
-    const s: DiffusionSampleImage | undefined = item;
+    const s = item as DiffusionSampleImage | undefined;
     if (!s || typeof s.path !== "string" || !Number.isFinite(s.step)) {
       continue;
     }

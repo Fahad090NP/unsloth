@@ -17,7 +17,8 @@ function setTaskPending<T>(
   state: { pending: Promise<TaskPull<T>> },
   next: Promise<TaskPull<T>>,
 ): void {
-  state.pending = next;
+  const target = state;
+  target.pending = next;
 }
 
 function createTaskCursor<T>(iterator: AsyncGenerator<T>): TaskCursor<T> {

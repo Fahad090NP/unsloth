@@ -261,22 +261,25 @@ export function LanAccessSection() {
     publishLanUrls(next);
   }, []);
 
-  useEffect(() => {
-    const configured = status?.configuredPort;
-    setPortMode(configured == null ? "automatic" : "custom");
-    setPortDraft(String(configured ?? 8888));
+  const [syncedPort, setSyncedPort] = useState<number | null | undefined>(undefined);
+  const configuredPort = status?.configuredPort ?? null;
+  if (syncedPort !== configuredPort) {
+    setSyncedPort(configuredPort);
+    setPortMode(configuredPort == null ? "automatic" : "custom");
+    setPortDraft(String(configuredPort ?? 8888));
     setPortError(null);
-  }, [status?.configuredPort]);
+  }
 
   // keyed on the saved value, not the array: every poll returns a fresh one, which would wipe the draft
   const configuredAddressesKey = status?.configuredAddresses?.join(",") ?? null;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: configuredAddressesKey stands in for status.configuredAddresses
-  useEffect(() => {
+  const [syncedAddressesKey, setSyncedAddressesKey] = useState<string | null | undefined>(undefined);
+  if (syncedAddressesKey !== configuredAddressesKey) {
+    setSyncedAddressesKey(configuredAddressesKey);
     const configured = status?.configuredAddresses ?? null;
     setAddressMode(configured === null ? "automatic" : "chosen");
     setAddressDraft(configured ?? []);
     setAddressError(null);
-  }, [configuredAddressesKey]);
+  }
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: pollRevision intentionally restarts polling after a mutation
   useEffect(() => {
@@ -460,7 +463,7 @@ export function LanAccessSection() {
           variant={stopAction ? "outline" : "dark"}
           // Top edge on the h2's cap top (text-base at leading 1.5; Hellix: 0.372em).
           className="mt-[calc(var(--text-base)*0.372)] shrink-0"
-          onClick={stopAction ? stop : start}
+          onClick={stopAction ? () => { stop().catch(() => undefined); } : () => { start().catch(() => undefined); }}
           disabled={actionDisabled}
         >
           {actionLabel}
@@ -671,7 +674,7 @@ export function LanAccessSection() {
               lanAccessAutoStartReadOnly(status) ||
               (addressesDirty && !status.autoStart)
             }
-            onCheckedChange={setAutoStart}
+            onCheckedChange={(checked) => { setAutoStart(checked).catch(() => undefined); }}
             aria-label="Start automatically"
           />
         </SettingsRow>

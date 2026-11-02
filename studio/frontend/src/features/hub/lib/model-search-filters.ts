@@ -35,7 +35,7 @@ export function needsModelMetadata(filters: ModelSearchFilters): boolean {
   return (
     filters.minContext !== undefined ||
     filters.maxContext !== undefined ||
-    (!!uploaders &&
+    (uploaders !== undefined &&
       uploaders.length < HUB_UPLOADERS.length &&
       uploaders.includes("organization") !== uploaders.includes("personal"))
   );
@@ -118,7 +118,7 @@ export async function* filterModelListing(
   iterator: AsyncGenerator,
   filters: ModelSearchFilters,
   fetchJson: JsonFetch,
-  pinnedModel?: Promise<unknown | null>,
+  pinnedModel?: Promise<unknown>,
   keep?: (raw: unknown) => boolean,
 ): AsyncGenerator {
   const owners = new Map<string, Promise<boolean>>();
@@ -184,7 +184,7 @@ export async function* filterModelListing(
     if (pinned) {
       yield filteredPinned;
     }
-    while (true) {
+    for (;;) {
       const batch: unknown[] = [];
       let done = false;
       for (let i = 0; i < 4; i++) {

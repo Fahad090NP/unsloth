@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTrainingConfigStore } from "@/features/training";
-import type { OffloadLayers, PrefetchDepth } from "@/features/training/types/config";
+import type { OffloadLayers, PrefetchDepth } from "@/features/training";
 import { useGpuDevices, useGpuInfo } from "@/hooks/use-gpu-info";
 import { useT } from "@/i18n";
 import { type ReactElement, useState } from "react";

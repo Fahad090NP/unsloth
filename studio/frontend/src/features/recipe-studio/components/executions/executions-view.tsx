@@ -70,7 +70,15 @@ export function ExecutionsView({
     typeof value === "number" && Number.isFinite(value)
       ? `${value.toLocaleString()} s`
       : "--";
-  const [detailTab, setDetailTab] = useState("data");
+  const [detailTabState, setDetailTabState] = useState<{
+    executionId: string | null;
+    tab: string;
+  }>({ executionId: null, tab: "data" });
+  const detailTab =
+    detailTabState.executionId === selectedExecutionId ? detailTabState.tab : "data";
+  const setDetailTab = (tab: string) => {
+    setDetailTabState({ executionId: selectedExecutionId, tab });
+  };
   const [hiddenDatasetColumnsByExecution, setHiddenDatasetColumnsByExecution] = useState<
     Record<string, string[]>
   >({});
@@ -367,10 +375,6 @@ export function ExecutionsView({
   }, [selectedExecution]);
 
   useEffect(() => {
-    setDetailTab("data");
-  }, [selectedExecution?.id]);
-
-  useEffect(() => {
     if (detailTab !== "overview" || !terminalRef.current) {
       return;
     }
@@ -485,9 +489,6 @@ export function ExecutionsView({
                       aria-label={downloadingDataset ? "Downloading dataset" : "Download dataset"}
                       title="Download dataset as JSONL"
                       onClick={() => {
-                        if (!selectedExecution) {
-                          return;
-                        }
                         setDownloadingDataset(true);
                         downloadExecutionDataset(selectedExecution)
                           .then((outcome) => {

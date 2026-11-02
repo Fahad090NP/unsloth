@@ -59,12 +59,19 @@ export function ImageLoraExportCard({ preselect }: { preselect?: string }) {
   }, []);
 
   // From a finished image run: pick it and scroll here, since the text-model card above shows no runs.
+  const [appliedPreselect, setAppliedPreselect] = useState<string | null>(null);
+  if (preselect && preselect !== appliedPreselect) {
+    const id = matchCatalogId(loras ?? [], preselect);
+    if (id) {
+      setAppliedPreselect(preselect);
+      setLoraId(id);
+    }
+  }
   useEffect(() => {
     const id = preselect ? matchCatalogId(loras ?? [], preselect) : undefined;
     if (!id) {
       return;
     }
-    setLoraId(id);
     document
       .getElementById("image-lora-id")
       ?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -161,7 +168,7 @@ export function ImageLoraExportCard({ preselect }: { preselect?: string }) {
           >
             {result?.text ?? "A plain file copy: no model load or GPU needed."}
           </p>
-          <Button variant="dark" disabled={!canExport} onClick={handleExport}>
+          <Button variant="dark" disabled={!canExport} onClick={() => { handleExport().catch(() => undefined); }}>
             {running && <Spinner />}
             Export
           </Button>

@@ -173,7 +173,7 @@ export function ChatBackground({ active = true }: { active?: boolean }) {
 					URL.revokeObjectURL(url);
 					throw new Error("decode");
 				}
-				if (cancelState.current) {
+				if (Boolean(cancelState.current)) {
 					urls.current.delete(url);
 					URL.revokeObjectURL(url);
 					return;

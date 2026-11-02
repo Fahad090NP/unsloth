@@ -98,7 +98,9 @@ export function useAudioSource({
   );
   const [elapsed, setElapsed] = useState(0);
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
   const uploadAbort = useRef<AbortController | null>(null);
   const loadAbort = useRef<AbortController | null>(null);
   const recorderRef = useRef<SegmentRecorder | null>(null);
@@ -263,9 +265,16 @@ export function useAudioSource({
     streamRef.current = null;
   }, []);
 
+  const markAcquiring = useCallback((value: boolean) => {
+    acquiring.current = value;
+  }, []);
+  const setRecorder = useCallback((value: SegmentRecorder | null) => {
+    recorderRef.current = value;
+  }, []);
+
   const startRecording = useCallback(async () => {
     if (recorderRef.current || acquiring.current) return;
-    acquiring.current = true;
+    markAcquiring(true);
     const ticket = ++acquisition.current;
     let stream: MediaStream;
     try {
@@ -273,12 +282,12 @@ export function useAudioSource({
         useVoiceSettingsStore.getState().micDeviceId,
       );
     } catch (error) {
-      acquiring.current = false;
+      markAcquiring(false);
       if (ticket !== acquisition.current) return;
       dispatch({ type: "fail", message: micErrorMessage(error, isTauri) });
       return;
     }
-    acquiring.current = false;
+    markAcquiring(false);
     // Cleared, unmounted or hidden while the permission prompt was open: release the mic at once.
     if (ticket !== acquisition.current || !activeRef.current) {
       for (const track of stream.getTracks()) track.stop();
@@ -306,7 +315,7 @@ export function useAudioSource({
     });
     recorder.addEventListener("stop", () => {
       window.clearTimeout(limit);
-      recorderRef.current = null;
+      setRecorder(null);
       stopStream();
       dispatch({ type: "record-stop" });
       if (discardRecording.current) {
@@ -324,11 +333,11 @@ export function useAudioSource({
             : "webm";
       if (blob.size > 0) (pickFile(blob, `Recording.${extension}`)).catch(() => { /* noop */ });
     });
-    recorderRef.current = recorder;
+    setRecorder(recorder);
     discardRecording.current = false;
     recorder.start(RECORDING_CHUNK_MS);
     dispatch({ type: "record-start", now: Date.now() });
-  }, [pickFile, stopStream, maxRecordSeconds]);
+  }, [pickFile, stopStream, maxRecordSeconds, markAcquiring, setRecorder]);
 
   const stopRecording = useCallback(() => {
     const recorder = recorderRef.current;
@@ -344,10 +353,7 @@ export function useAudioSource({
   const recordingStartedAt =
     state.status.phase === "recording" ? state.status.startedAt : null;
   useEffect(() => {
-    if (recordingStartedAt === null) {
-      setElapsed(0);
-      return;
-    }
+    if (recordingStartedAt === null) return;
     const timer = window.setInterval(
       () => { setElapsed(Math.floor((Date.now() - recordingStartedAt) / 1000)); },
       250,
@@ -395,7 +401,7 @@ export function useAudioSource({
   return {
     status: state.status,
     preview: state.preview,
-    elapsed,
+    elapsed: recordingStartedAt === null ? 0 : elapsed,
     expire,
     pickFile,
     startRecording,

@@ -131,7 +131,7 @@ export function AudioOptionFields({
               max={spec.max ?? undefined}
               // As typed: clamping mid-entry breaks multi-digit input. The request clamps.
               value={
-                rawValue == null ? "" : String(rawValue)
+                rawValue === undefined ? "" : String(rawValue)
               }
               placeholder={
                 spec.default != null ? String(spec.default) : "Model default"

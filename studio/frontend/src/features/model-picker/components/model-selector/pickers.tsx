@@ -985,7 +985,8 @@ function SizeText({ value }: { value: string }) {
     return <>{value}</>;
   }
   const [, approx, digits, unit] = parts;
-  const [whole, fraction] = digits.split(".");
+  const [whole] = digits.split(".");
+  const fraction = digits.split(".").at(1);
   return (
     <>
       {approx}
@@ -2517,7 +2518,9 @@ function useSoleDownloadedQuants(
 
   // Read at call time so a token change does not strand the reader.
   const hfTokenRef = useRef(hfToken);
-  hfTokenRef.current = hfToken;
+  useEffect(() => {
+    hfTokenRef.current = hfToken;
+  }, [hfToken]);
   const mountedRef = useRef(true);
   useEffect(() => {
     // Set on setup too: StrictMode replays effects.
@@ -2531,8 +2534,7 @@ function useSoleDownloadedQuants(
   const readerRef = useRef<ReturnType<
     typeof createSoleQuantReader<SoleDownloadedQuant>
   > | null>(null);
-  if (readerRef.current === null) {
-    readerRef.current = createSoleQuantReader<SoleDownloadedQuant>({
+  readerRef.current ??= createSoleQuantReader<SoleDownloadedQuant>({
       workers: SOLE_QUANT_WORKERS,
       read: (target) => readSoleQuant(target, hfTokenRef.current),
       commit: (target, quant) => {
@@ -2561,7 +2563,6 @@ function useSoleDownloadedQuants(
         })).catch(() => { /* noop */ });
       },
     });
-  }
 
   useEffect(() => {
     if (stale.length > 0) readerRef.current?.start(stale);
@@ -2749,6 +2750,7 @@ function GgufVariantExpander({
     pipelineTag,
     onDevice,
     visionInScope,
+    onHasVision,
   ]);
 
   const isLocalPath = /^(\/|\.{1,2}[\\/]|~[\\/]|[A-Za-z]:[\\/]|\\\\)/.test(
@@ -3825,9 +3827,9 @@ export function HubModelPicker({
     loadedIdSet.has(repoId.toLowerCase());
   const loadedQuantsFor = (repoId: string): readonly string[] => {
     const quants = isChatPicker
-      ? loadedModels
-          .filter((m) => m.quant && modelIdsMatchForPicker(m.id, repoId))
-          .map((m) => m.quant!)
+      ? loadedModels.flatMap((m) =>
+          m.quant && modelIdsMatchForPicker(m.id, repoId) ? [m.quant] : [],
+        )
       : [];
     if (activeGgufVariant && modelIdsMatchForPicker(loadedModelId, repoId)) {
       quants.push(activeGgufVariant);
@@ -3996,12 +3998,16 @@ export function HubModelPicker({
   }>(() => ({ expandQuantizations, value: new Set(), reopened: new Set() }));
   const expansionMatchesSetting =
     collapsedGgufState.expandQuantizations === expandQuantizations;
-  const collapsedGguf = expansionMatchesSetting
-    ? collapsedGgufState.value
-    : new Set<string>();
-  const reopenedGguf = expansionMatchesSetting
-    ? collapsedGgufState.reopened
-    : new Set<string>();
+  const collapsedGguf = useMemo(
+    () =>
+      expansionMatchesSetting ? collapsedGgufState.value : new Set<string>(),
+    [expansionMatchesSetting, collapsedGgufState.value],
+  );
+  const reopenedGguf = useMemo(
+    () =>
+      expansionMatchesSetting ? collapsedGgufState.reopened : new Set<string>(),
+    [expansionMatchesSetting, collapsedGgufState.reopened],
+  );
   const isGgufExpanded = useCallback(
     (id: string) =>
       expandQuantizations ? !collapsedGguf.has(id) : expandedGguf === id,
@@ -4103,7 +4109,6 @@ export function HubModelPicker({
     cachedGguf,
     cachedModels,
     cachedReady,
-    refreshInventory,
     refreshInventoryIfOlderThan,
   } = pickerInventory;
   const cachedReadyAtMount = useRef(cachedReady);
@@ -4176,14 +4181,14 @@ export function HubModelPicker({
 
   const refreshLocalModelsList = useCallback(() => {
     (pickerInventory.refreshInventory()).catch(() => { /* noop */ });
-  }, [pickerInventory.refreshInventory]);
+  }, [pickerInventory]);
 
   // The store's mutations bump the inventory version, which refetches every inventory reader
   // (this picker's included); a forced refresh on top would scan twice.
   const handleAddFolder = useCallback(
     async (overridePath?: string) => {
       // An explicit path avoids racing the `setFolderInput` update.
-      const raw = overridePath !== undefined ? overridePath : folderInput;
+      const raw = overridePath ?? folderInput;
       const trimmed = raw.trim();
       if (!trimmed || folderLoading) return;
       setFolderError(null);
@@ -4254,7 +4259,7 @@ export function HubModelPicker({
 
   const refreshCachedLists = useCallback(() => {
     (pickerInventory.refreshInventory()).catch(() => { /* noop */ });
-  }, [pickerInventory.refreshInventory]);
+  }, [pickerInventory]);
 
   // Managed downloads pull only changed blobs, so the cached copy stays usable.
   const startManagedUpdate = useCallback(
@@ -4602,8 +4607,11 @@ export function HubModelPicker({
   );
 
   // Recommended suggests GGUF anywhere, plus MLX and safetensors on Mac.
-  const hubRowAllowed = (r: HfModelResult) =>
-    !rowFilter || rowFilter({ id: r.id, task: r.pipelineTag });
+  const hubRowAllowed = useCallback(
+    (r: HfModelResult) =>
+      !rowFilter || rowFilter({ id: r.id, task: r.pipelineTag }),
+    [rowFilter],
+  );
   const recommendedRows = useMemo(() => {
     const catalogSeedIds = new Set(
       catalogSeedRows.map((row) => row.id.toLowerCase()),
@@ -4715,6 +4723,7 @@ export function HubModelPicker({
     isLoadableCommunityRepo,
     runsCheckpointQuant,
     chatSupportedCheckpointQuant,
+    hubRowAllowed,
   ]);
 
   const moreById = useMemo(
@@ -4898,7 +4907,6 @@ export function HubModelPicker({
     communityBrowse.results,
     catalogSeedRows,
     moreRows,
-    catalog,
     catalogFit,
     task,
     isKnownGgufRepo,
@@ -5486,7 +5494,10 @@ export function HubModelPicker({
   }, [sortedCachedModels, showHfSection, debouncedQuery, formatFilter]);
 
   // Empty-state logic must use this or the picker can go blank.
-  const visibleCachedModelRows = chatOnly && !task ? [] : visibleCachedModels;
+  const visibleCachedModelRows = useMemo(
+    () => (chatOnly && !task ? [] : visibleCachedModels),
+    [chatOnly, task, visibleCachedModels],
+  );
 
   const visibleAdditionalOnDeviceModels = useMemo(() => {
     const alreadyListed = new Set(
@@ -6384,7 +6395,6 @@ export function HubModelPicker({
     loadedRows,
     loadedRowIds,
     cachedReady,
-    chatOnly,
     sortedCustomFolderModels,
     customFoldersCollapsed,
     connectedGroups,
@@ -6438,7 +6448,9 @@ export function HubModelPicker({
             result.id,
             result.estimatedSizeBytes
               ? `~${formatBytes(result.estimatedSizeBytes)}`
-              : formatCompact(result.totalParams!),
+              : result.totalParams
+                ? formatCompact(result.totalParams)
+                : "",
           ]),
       ),
     [results],
@@ -6520,8 +6532,7 @@ export function HubModelPicker({
     hasMore,
     fetchMore,
     communityDiscoveryEnabled,
-    communityQuerySearch.hasMore,
-    communityQuerySearch.fetchMore,
+    communityQuerySearch,
   ]);
   const { scrollRef, sentinelRef } = useHubInfiniteScroll(
     fetchSearchMore,
@@ -6572,11 +6583,9 @@ export function HubModelPicker({
       communityBrowse.fetchMore();
     }
   }, [
-    recommendedSearch.hasMore,
-    recommendedSearch.fetchMore,
+    recommendedSearch,
     communityRecommendedEnabled,
-    communityBrowse.hasMore,
-    communityBrowse.fetchMore,
+    communityBrowse,
   ]);
   useEffect(() => {
     if (!recommendedSentinel || !recommendedHasMore) return;

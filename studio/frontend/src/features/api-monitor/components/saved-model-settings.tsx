@@ -158,7 +158,9 @@ export function SavedModelSettingsPanel(): ReactElement {
   }, []);
 
   useEffect(() => {
-    load().catch(() => undefined);
+    queueMicrotask(() => {
+      load().catch(() => undefined);
+    });
   }, [load]);
 
   const forget = useCallback(

@@ -926,6 +926,10 @@ async function paintSnapshot(tabId: string, fresh = false): Promise<boolean> {
 // Covered views are parked off-window instead of hidden: a hidden view stops painting and returns blank.
 let parkedView: string | null = null;
 
+function setParkedView(tabId: string | null): void {
+  parkedView = tabId;
+}
+
 function parkable(tabId: string): boolean {
   return views.has(tabId) && shownBounds !== null && (shownView === tabId || parkedView === tabId);
 }
@@ -953,7 +957,7 @@ async function coverView(tabId: string, zoom: number, bounds: Bounds): Promise<v
       return;
     }
     await call("browser_view_show", { tabId, bounds: shownBounds, parked: true });
-    parkedView = tabId;
+    setParkedView(tabId);
     staleSnapshot = null;
     coverFails = 0;
     setShownView(null);

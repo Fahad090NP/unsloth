@@ -20,10 +20,10 @@ export interface UpgradeDialogActions {
 export function upgradeInstallVersion(
   upgrade: TransformersUpgradeInfo | null,
 ): string | null {
-  if (upgrade?.supported_in_pypi && upgrade?.pypi_version) {
+  if (upgrade?.supported_in_pypi && upgrade.pypi_version) {
     return upgrade.pypi_version;
   }
-  if (upgrade?.supported_in_main && upgrade?.main_version) {
+  if (upgrade?.supported_in_main && upgrade.main_version) {
     return upgrade.main_version;
   }
   return null;
@@ -45,9 +45,9 @@ export function upgradeDialogActions({
   phase: TransformersUpgradePhase;
   trustRemoteCodeFallback: boolean;
 }): UpgradeDialogActions {
-  const fromPypi = Boolean(upgrade?.supported_in_pypi && upgrade?.pypi_version);
+  const fromPypi = Boolean(upgrade?.supported_in_pypi && upgrade.pypi_version);
   const fromMain =
-    !fromPypi && Boolean(upgrade?.supported_in_main && upgrade?.main_version);
+    !fromPypi && Boolean(upgrade?.supported_in_main && upgrade.main_version);
   const installable = fromPypi || fromMain;
   return {
     installable,

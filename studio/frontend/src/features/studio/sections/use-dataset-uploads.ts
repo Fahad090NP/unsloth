@@ -296,7 +296,9 @@ export function useDatasetUploads() {
       setDocumentRedirectOpen(true);
       return;
     }
-    void uploadNativeFile(dropped.path, dropped.filename);
+    uploadNativeFile(dropped.path, dropped.filename).catch((error: unknown) => {
+      console.error("Failed to upload native dataset file:", error);
+    });
   });
   const canHandleNativeDrop = useEffectEvent(() => !uploadLockRef.current);
 
@@ -355,7 +357,7 @@ export function useDatasetUploads() {
 
         const revisionBeforeRead = scaleFactorRevision;
         const currentScaleFactor = await currentWindow.scaleFactor();
-        if (disposed) {
+        if (Boolean(disposed)) {
           return;
         }
         if (scaleFactorRevision === revisionBeforeRead) {
@@ -397,7 +399,7 @@ export function useDatasetUploads() {
             handleNativeDrop(event.payload.paths);
           }
         });
-        if (disposed) {
+        if (Boolean(disposed)) {
           stopDragDrop();
         } else {
           unlistenDragDrop = stopDragDrop;

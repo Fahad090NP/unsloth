@@ -540,9 +540,9 @@ export function ModelsPage() {
     (refreshResidentModelStatus().finally(() => {
       if (active) setInitialResidentStatusSettled(true);
     })).catch(() => { /* noop */ });
-    const unsubscribe = subscribeResidentStatusRefresh(
-      refreshResidentModelStatus,
-    );
+    const unsubscribe = subscribeResidentStatusRefresh(() => {
+      refreshResidentModelStatus().catch(() => undefined);
+    });
     return () => {
       active = false;
       residentStatusSeq.current += 1;
@@ -727,7 +727,14 @@ export function ModelsPage() {
       setFirstPickArmed(true);
       setModelsTab(next);
     },
-    [setModelsTab],
+    [
+      setModelsTab,
+      setSortBrowseActive,
+      setSearchFilters,
+      setDatasetModalities,
+      setUploaderPick,
+      setFirstPickArmed,
+    ],
   );
 
   const handleResourceTypeChange = useCallback(
@@ -758,7 +765,21 @@ export function ModelsPage() {
         replace: true,
       })).catch(() => { /* noop */ });
     },
-    [resourceType, navigate],
+    [
+      resourceType,
+      navigate,
+      setResourceType,
+      setDownloadedFormat,
+      setCapabilityFilters,
+      setDatasetModalities,
+      setSearchFilters,
+      setUploaderPick,
+      setFirstPickArmed,
+      setSortBrowseActive,
+      setDiscoverFormat,
+      setSortBy,
+      setDirection,
+    ],
   );
 
   const handleOpenList = useCallback(
@@ -783,7 +804,20 @@ export function ModelsPage() {
         search: (prev) => ({ ...prev, section, model: undefined }),
       })).catch(() => { /* noop */ });
     },
-    [urlSection, navigate],
+    [
+      urlSection,
+      navigate,
+      setDiscoverFormat,
+      setSortBy,
+      setDirection,
+      setCapabilityFilters,
+      setDatasetModalities,
+      setSearchFilters,
+      setUploaderPick,
+      setFirstPickArmed,
+      setSortBrowseActive,
+      setQuery,
+    ],
   );
   const handleBackToFeed = useCallback(() => {
     const preset = findChannel(DEFAULT_DISCOVER_CHANNEL);
@@ -800,7 +834,18 @@ export function ModelsPage() {
       to: "/hub",
       search: (prev) => ({ ...prev, section: undefined }),
     })).catch(() => { /* noop */ });
-  }, [navigate]);
+  }, [
+    navigate,
+    setDiscoverFormat,
+    setSortBy,
+    setDirection,
+    setCapabilityFilters,
+    setDatasetModalities,
+    setSearchFilters,
+    setUploaderPick,
+    setFirstPickArmed,
+    setSortBrowseActive,
+  ]);
   const handleResetToDiscover = useCallback(() => {
     const preset = findChannel(DEFAULT_DISCOVER_CHANNEL);
     setModelsTab("discover");
@@ -827,7 +872,22 @@ export function ModelsPage() {
         kind: undefined,
       }),
     })).catch(() => { /* noop */ });
-  }, [navigate, setModelsTab]);
+  }, [
+    navigate,
+    setModelsTab,
+    setResourceType,
+    setQuery,
+    setCapabilityFilters,
+    setDatasetModalities,
+    setSearchFilters,
+    setUploaderPick,
+    setFirstPickArmed,
+    setDownloadedFormat,
+    setDiscoverFormat,
+    setSortBy,
+    setDirection,
+    setSortBrowseActive,
+  ]);
 
   // A capability link opens the sorted Discover list with that filter on (the feed ignores it).
   // The param is consumed so later filter changes stick and a repeat link re-applies.
@@ -835,32 +895,35 @@ export function ModelsPage() {
   const urlTaskKey = hubSearch.audioTask?.join("|") ?? "";
   useEffect(() => {
     if (!urlCapability) return;
-    setResourceType("models");
-    setQuery("");
-    setDiscoverFormat("all");
-    setCapabilityFilters([urlCapability]);
-    setLinkedAudioTask(
-      urlCapability === "audio" && urlTaskKey
-        ? (urlTaskKey.split("|") as PipelineType[])
-        : null,
-    );
-    setSortBrowseActive(true);
-    // The media pages run curated Unsloth uploads, so start there.
-    setUploaderPick([...UNSLOTH_UPLOADER]);
-    setFirstPickArmed(false);
-    (navigate({
-      to: "/hub",
-      search: (prev) => ({
-        ...prev,
-        tab: "discover",
-        kind: undefined,
-        capability: undefined,
-        audioTask: undefined,
-        section: undefined,
-        model: undefined,
-      }),
-      replace: true,
-    })).catch(() => { /* noop */ });
+    const timer = window.setTimeout(() => {
+      setResourceType("models");
+      setQuery("");
+      setDiscoverFormat("all");
+      setCapabilityFilters([urlCapability]);
+      setLinkedAudioTask(
+        urlCapability === "audio" && urlTaskKey
+          ? (urlTaskKey.split("|") as PipelineType[])
+          : null,
+      );
+      setSortBrowseActive(true);
+      // The media pages run curated Unsloth uploads, so start there.
+      setUploaderPick([...UNSLOTH_UPLOADER]);
+      setFirstPickArmed(false);
+      (navigate({
+        to: "/hub",
+        search: (prev) => ({
+          ...prev,
+          tab: "discover",
+          kind: undefined,
+          capability: undefined,
+          audioTask: undefined,
+          section: undefined,
+          model: undefined,
+        }),
+        replace: true,
+      })).catch(() => { /* noop */ });
+    }, 0);
+    return () => { window.clearTimeout(timer); };
   }, [urlCapability, urlTaskKey, navigate]);
   // Picking another filter drops the link's tasks, so returning to Audio shows every audio model.
   if (!capabilityFilters.includes("audio") && linkedAudioTask !== null) {
@@ -1081,7 +1144,12 @@ export function ModelsPage() {
         effectiveCachedRows,
         effectiveLocalRows,
       ),
-    [visibleResults, modelDiscoveryInventorySignature],
+    [
+      visibleResults,
+      effectiveCachedRows,
+      effectiveLocalRows,
+      modelDiscoveryInventorySignature,
+    ],
   );
 
   const deferredDatasetModalities = useDeferredValue(datasetModalities);
@@ -1219,6 +1287,8 @@ export function ModelsPage() {
       rowFitsDevice,
       hubFeed.trending.results,
       hiddenEmbeddingModelIds,
+      effectiveCachedRows,
+      effectiveLocalRows,
       modelDiscoveryInventorySignature,
       fitOnDeviceOnly,
       gpu,
@@ -1392,7 +1462,20 @@ export function ModelsPage() {
     setSearchFilters({});
     setUploaderPick(null);
     setFirstPickArmed(true);
-  }, [isDiscoverTab, urlSection, navigate]);
+  }, [
+    isDiscoverTab,
+    urlSection,
+    navigate,
+    setDiscoverFormat,
+    setDownloadedFormat,
+    setInventoryCapabilities,
+    setInventoryFirstPickArmed,
+    setCapabilityFilters,
+    setDatasetModalities,
+    setSearchFilters,
+    setUploaderPick,
+    setFirstPickArmed,
+  ]);
   const handleResetInventoryFilters = useCallback(() => {
     setInventoryCapabilities([]);
     setInventoryFirstPickArmed(true);
@@ -1403,7 +1486,13 @@ export function ModelsPage() {
     setSearchFilters({});
     setUploaderPick(null);
     setFirstPickArmed(true);
-  }, []);
+  }, [
+    setCapabilityFilters,
+    setDatasetModalities,
+    setSearchFilters,
+    setUploaderPick,
+    setFirstPickArmed,
+  ]);
   const handleDiscoverFetchIntent = useCallback(() => {
     setDiscoverFetchIntent((value) => value + 1);
   }, []);
@@ -1504,7 +1593,24 @@ export function ModelsPage() {
       to: "/hub",
       search: (prev) => ({ ...prev, model: undefined }),
     })).catch(() => { /* noop */ });
-  }, [navigate, allModelsView, isCompactViewport, runConfigOpenCoordinator]);
+  }, [
+    navigate,
+    allModelsView,
+    isCompactViewport,
+    runConfigOpenCoordinator,
+    setAllModelsViewState,
+    setRunConfigOpening,
+    setDiscoverFormat,
+    setSortBy,
+    setDirection,
+    setCapabilityFilters,
+    setDatasetModalities,
+    setSearchFilters,
+    setUploaderPick,
+    setFirstPickArmed,
+    setSortBrowseActive,
+    setQuery,
+  ]);
   const handleQueryChange = useCallback(
     (next: string) => {
       if (next.trim() === "") {
@@ -1539,7 +1645,22 @@ export function ModelsPage() {
       }
       setQuery(next);
     },
-    [query, urlSection, urlModel, navigate],
+    [
+      query,
+      urlSection,
+      urlModel,
+      navigate,
+      setCapabilityFilters,
+      setDatasetModalities,
+      setSearchFilters,
+      setUploaderPick,
+      setFirstPickArmed,
+      setSortBrowseActive,
+      setDiscoverFormat,
+      setSortBy,
+      setDirection,
+      setQuery,
+    ],
   );
 
   useEffect(() => {
@@ -1622,14 +1743,17 @@ export function ModelsPage() {
     if (!isModelDiscover || !sectionChannelId || urlCapability) return;
     const preset = findChannel(sectionChannelId);
     if (!preset) return;
-    setDiscoverFormat(preset.format);
-    setSortBy(preset.sort);
-    setDirection("desc");
-    setCapabilityFilters([]);
-    setDatasetModalities([]);
-    setSearchFilters({});
-    setUploaderPick(null);
-    setFirstPickArmed(true);
+    const timer = window.setTimeout(() => {
+      setDiscoverFormat(preset.format);
+      setSortBy(preset.sort);
+      setDirection("desc");
+      setCapabilityFilters([]);
+      setDatasetModalities([]);
+      setSearchFilters({});
+      setUploaderPick(null);
+      setFirstPickArmed(true);
+    }, 0);
+    return () => { window.clearTimeout(timer); };
   }, [isModelDiscover, sectionChannelId, urlCapability]);
   const handleManageLocalFolders = useCallback(
     () => { setFoldersDialogOpen(true); },
@@ -1707,7 +1831,19 @@ export function ModelsPage() {
         }),
       })).catch(() => { /* noop */ });
     },
-    [navigate, setModelsTab],
+    [
+      navigate,
+      setModelsTab,
+      setResourceType,
+      setDiscoverFormat,
+      setCapabilityFilters,
+      setDatasetModalities,
+      setSearchFilters,
+      setSortBrowseActive,
+      setUploaderPick,
+      setFirstPickArmed,
+      setQuery,
+    ],
   );
   const openRunSettingsInChat = useCallback(
     (request: ModelConfigHandoffRequest) => {
@@ -1784,7 +1920,7 @@ export function ModelsPage() {
         )
       ) {
         toast.error(
-          `${selectedModel.hubRepoId} is not an audio model Unsloth can run yet. The Audio page lists the families it supports.`,
+          `${selectedModel.hubRepoId ?? ""} is not an audio model Unsloth can run yet. The Audio page lists the families it supports.`,
           { duration: 7000 },
         );
         return;
@@ -1862,7 +1998,9 @@ export function ModelsPage() {
 
   const inspectorActions = useMemo(
     () => ({
-      onInventoryChange: refreshInventory,
+      onInventoryChange: () => {
+        refreshInventory().catch(() => undefined);
+      },
       onSearchHub: handleSearchHub,
       onRun: handleRun,
       runConfigPending: runConfigOpening?.modelId === selectedModel?.id,
@@ -1954,6 +2092,7 @@ export function ModelsPage() {
       ownerScope,
       debouncedQuery,
       inventoryCapabilities,
+      isModelDiscover,
     ],
   );
 
@@ -1972,7 +2111,9 @@ export function ModelsPage() {
       onFetchMore: fetchMoreDiscoverManually,
       onClearFilters: handleClearFilters,
       onRetry: handleRetrySearch,
-      onInventoryChange: refreshInventory,
+      onInventoryChange: () => {
+        refreshInventory().catch(() => undefined);
+      },
       onSwitchDevice: handleSwitchDevice,
     }),
     [
@@ -2069,6 +2210,8 @@ export function ModelsPage() {
     deviceType,
     handleSelect,
     handleOpenList,
+    handleRetrySearch,
+    isLoading,
   ]);
 
   const downloadedHeader = useMemo(() => {
@@ -2262,7 +2405,9 @@ export function ModelsPage() {
       <FreeUpSpaceDialog
         open={freeUpSpaceOpen}
         onOpenChange={setFreeUpSpaceOpen}
-        onChange={refreshInventory}
+        onChange={() => {
+          refreshInventory().catch(() => undefined);
+        }}
       />
       <ExternalLinkConfirmDialog />
     </div>

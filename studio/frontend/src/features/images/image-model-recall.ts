@@ -23,6 +23,14 @@ const RETIRED_FULL_COPIES: Record<string, string> = {
   "unsloth/flux-3-image-klein-base": "black-forest-labs/flux-3-image-klein-base",
 };
 
+function omitKeys<T extends object>(value: T, keys: readonly string[]): T {
+  const copy = { ...value } as Record<string, unknown>;
+  for (const key of keys) {
+    delete copy[key];
+  }
+  return copy as T;
+}
+
 // ``.../models--unsloth--flux-3-image-klein/snapshots/<sha>`` -> the repo id it is a snapshot of ("" otherwise).
 function retiredSnapshotRepo(path: string): string {
   const match = /(?:^|[\\/])models--unsloth--(flux-3-image-klein(?:-base)?)[\\/]snapshots[\\/][^\\/]+[\\/]?$/i.exec(
@@ -50,11 +58,11 @@ export function retiredSnapshotAsLoaded<T extends RememberedImageModel & { displ
 ): T {
   if (!isRetiredCopySnapshot(pick) || matchesRememberedModel(pick, status)) return pick;
   // A complete snapshot's root model.safetensors pick loads as the snapshot's own pipeline.
-  const { filename: _filename, baseRepo: _base, ...asPipeline } = { ...pick, kind: "pipeline" as const };
+  const asPipeline = { ...omitKeys(pick, ["filename", "baseRepo"]), kind: "pipeline" as const };
   if (matchesRememberedModel(asPipeline, status)) return asPipeline as T;
   const copy = retiredCopyOf(pick);
   // A redirect loads another checkpoint, whose base the backend infers (handleLoad drops it the same way).
-  const { baseRepo: _baseRepo, ...rest } = pick;
+  const rest = omitKeys(pick, ["baseRepo"]);
   const asBase = redirectRetiredImagePick({ ...rest, repoId: copy } as T);
   return asBase.repoId !== copy && matchesRememberedModel(asBase, status) ? asBase : pick;
 }
@@ -71,12 +79,12 @@ export function redirectRetiredImagePick<
 >(pick: T): T {
   const base = RETIRED_FULL_COPIES[pick.repoId.trim().toLowerCase()];
   if (!base) return pick;
-  const { displayRepoId: _display, ...rest } = pick;
+  const rest = omitKeys(pick, ["displayRepoId"]);
   if (pick.kind === "pipeline") return { ...rest, repoId: base } as T;
   // Supplied encoder / VAE files make it a different build, which the backend leaves on the copy too.
   const components = (pick.textEncoderFiles?.length ?? 0) > 0 || Boolean(pick.vaeFile);
   if (pick.kind === "single_file" && pick.filename === "model.safetensors" && !components) {
-    const { filename: _filename, textEncoderFiles: _te, vaeFile: _vae, ...model } = rest;
+    const model = omitKeys(rest, ["filename", "textEncoderFiles", "vaeFile"]);
     return { ...model, repoId: base, kind: "pipeline" } as T;
   }
   return pick;
@@ -268,7 +276,7 @@ export function forgetStaleResidentComponents(status: {
   if (!slot || componentsKey(slot) !== componentsKey(resident)) return null;
   const files = cleanComponentFiles(slot);
   if ((!files.textEncoderFiles && !files.vaeFile) || componentFilesMatch(files, status.component_files)) return null;
-  const { textEncoderFiles: _te, vaeFile: _vae, ...bare } = slot;
+  const bare = omitKeys(slot, ["textEncoderFiles", "vaeFile"]);
   const next = { ...bare, ...engagedComponentFiles(files, status.component_files) };
   rememberImageModel(next);
   return next;
@@ -294,10 +302,10 @@ export function reconcileRememberedComponents<T extends ImageModelKey & ImageCom
   if (sameComponentFiles(kept, saved)) return null;
   const slot = readImageModel();
   if (slot && componentsKey(slot) === componentsKey(model)) {
-    const { textEncoderFiles: _te, vaeFile: _vae, ...bare } = slot;
+    const bare = omitKeys(slot, ["textEncoderFiles", "vaeFile"]);
     rememberImageModel({ ...bare, ...engagedComponentFiles(slot, status.component_files) });
   }
-  const { textEncoderFiles: _te, vaeFile: _vae, ...rest } = model;
+  const rest = omitKeys(model, ["textEncoderFiles", "vaeFile"]);
   return { ...rest, ...kept };
 }
 

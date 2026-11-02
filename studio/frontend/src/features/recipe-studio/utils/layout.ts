@@ -37,8 +37,6 @@ function getPipelineRank(config: NodeConfig | undefined): number {
     case "model_provider":
     case "tool_config":
       return 2;
-    default:
-      return 2;
   }
 }
 
@@ -46,7 +44,7 @@ function isInfraNode(
   nodeId: string,
   configs: Record<string, NodeConfig>,
 ): boolean {
-  const config = configs[nodeId];
+  const config = nodeId in configs ? configs[nodeId] : undefined;
   return config ? INFRA_NODE_KINDS.has(config.kind) : false;
 }
 
@@ -167,7 +165,7 @@ export function getLayoutedElements<TNode extends Node>(
 
   const layoutedPositions = new Map<string, { x: number; y: number }>();
   for (const node of dataNodes) {
-    const pos = graph.node(node.id);
+    const pos = graph.node(node.id) as { x: number; y: number };
     const width = readNodeWidth(node) ?? nodeWidth;
     const height = readNodeHeight(node) ?? nodeHeight;
     layoutedPositions.set(node.id, {

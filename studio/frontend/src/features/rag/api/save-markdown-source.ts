@@ -100,7 +100,9 @@ export async function saveMarkdownAsProjectSource(
   try {
     const result = await uploadProjectDocument(projectId, file);
     if (!options.quiet) toast.success("Saved to project sources.");
-    void watchIngestion(projectId, result.jobId, result.filename || filename);
+    watchIngestion(projectId, result.jobId, result.filename || filename).catch((error: unknown) => {
+      console.error("Failed to watch document ingestion:", error);
+    });
     return true;
   } catch (error) {
     toast.error("Failed to save to project sources.", {

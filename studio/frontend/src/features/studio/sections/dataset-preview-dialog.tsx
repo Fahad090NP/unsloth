@@ -247,7 +247,7 @@ export function DatasetPreviewDialog({
   );
 
   const handleAiAssist = useCallback(async () => {
-    if (!data?.columns || !data?.preview_samples) return;
+    if (!data?.columns || !data.preview_samples) return;
     aiAssistControllerRef.current?.abort();
     const controller = new AbortController();
     aiAssistControllerRef.current = controller;
@@ -276,7 +276,7 @@ export function DatasetPreviewDialog({
         const table = ROLE_REMAP[datasetFormat];
         const mapped: Record<string, string> = {};
         for (const [col, role] of Object.entries(result.suggested_mapping)) {
-          mapped[col] = table ? (table[role] ?? role) : role;
+          mapped[col] = table[role] ?? role;
         }
         setManualMapping(mapped);
 
@@ -675,7 +675,11 @@ export function DatasetPreviewDialog({
                   isVlm={effectiveIsVlm}
                   isAudio={effectiveIsAudio}
                   format={datasetFormat}
-                  onAiAssist={handleAiAssist}
+                  onAiAssist={() => {
+                    handleAiAssist().catch((error: unknown) => {
+                      console.error("AI assist failed:", error);
+                    });
+                  }}
                   isAiLoading={isAiLoading}
                   aiError={aiError}
                   advisorNotification={datasetAdvisorNotification}

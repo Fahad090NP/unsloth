@@ -59,10 +59,10 @@ export function adoptEditSource(next: AudioSourceSelection | null) {
 /** Mirrors useCloneGeneration so Stop, phases and errors behave the same. */
 export function useEditGeneration({
   status,
-  busyRef,
+  busyRef: sharedBusyRef,
   setBusy,
   updateGenerationPhase,
-  generateAbort,
+  generateAbort: sharedGenerateAbort,
   setMode,
   setAdvancedOpen,
   refreshStatus,
@@ -97,6 +97,8 @@ export function useEditGeneration({
     audioOptionValues: AudioOptionValues;
     sttRepo: string | null;
   }) {
+  const busyRef = sharedBusyRef;
+  const generateAbort = sharedGenerateAbort;
   const source = useAudioEditStore((state) => state.source);
   const transcript = useAudioEditStore((state) => state.transcript);
   const transcriptFor = useAudioEditStore((state) => state.transcriptFor);
@@ -388,9 +390,12 @@ export function useEditGeneration({
     replayQueuedTtsPick,
   ]);
 
-  useEffect(() => {
+  const sourceKey = source ? `${source.kind}:${source.id}` : null;
+  const [trackedSourceKey, setTrackedSourceKey] = useState<string | null>(sourceKey);
+  if (trackedSourceKey !== sourceKey) {
+    setTrackedSourceKey(sourceKey);
     if (source) setGenerationError(null);
-  }, [source]);
+  }
 
   return {
     source,

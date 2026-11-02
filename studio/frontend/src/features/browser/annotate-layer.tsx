@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import {
   type PointerEvent as ReactPointerEvent,
   type RefObject,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -218,7 +219,7 @@ function cssZoomOf(element: Element | null): number {
 
 /** Effective CSS zoom at the content. */
 function zoomAt(ranges: Range[]): number {
-  const range = ranges[0];
+  const range: Range | undefined = ranges[0];
   if (!range) return 1;
   const node = range.startContainer;
   // A selected node (an image) can carry its own zoom; its range starts at the parent.
@@ -273,24 +274,24 @@ function offsetIn(index: TextIndex, node: Node, offset: number): number {
   const start = index.at.get(node);
   if (start !== undefined) return start + offset;
   // A point beside a text node, as around a span's own text.
-  const next = node.childNodes[offset];
-  const after = next && index.at.get(next);
+  const next: Node | undefined = node.childNodes[offset];
+  const after = next ? index.at.get(next) : undefined;
   if (after !== undefined) return after;
-  const prior = node.childNodes[offset - 1];
-  const before = prior && index.at.get(prior);
+  const prior: Node | undefined = node.childNodes[offset - 1];
+  const before = prior ? index.at.get(prior) : undefined;
   if (before !== undefined) return before + (prior.textContent?.length ?? 0);
   // Elsewhere between nodes: count the text nodes that start before it.
   const point = document.createRange();
   point.setStart(node, offset);
   const last = lastWhere(index.nodes, (text) => point.comparePoint(text, 0) < 0);
-  const text = index.nodes[last];
+  const text: Text | undefined = index.nodes[last];
   return text ? (index.starts[last] ?? 0) + text.length : 0;
 }
 
 /** The text node and offset `offset` characters in; a start between nodes takes the next. */
 function pointIn(index: TextIndex, offset: number, start: boolean): [Node, number] | null {
   const found = lastWhere(index.starts, (at) => (start ? at <= offset : at < offset));
-  const node = index.nodes[Math.max(found, 0)];
+  const node: Text | undefined = index.nodes[Math.max(found, 0)];
   const local = offset - (index.starts[Math.max(found, 0)] ?? 0);
   return node && local >= 0 && local <= node.length ? [node, local] : null;
 }
@@ -313,8 +314,10 @@ function placesOf(ranges: Range[]): (Place | null)[] {
     if (!text.trim()) {
       if (!element) return null;
       const path: number[] = [];
-      for (let node: Element = element; node !== item; node = node.parentElement!) {
-        path.unshift([...node.parentElement!.children].indexOf(node));
+      for (let node: Element | null = element; node && node !== item; node = node.parentElement) {
+        const parent = node.parentElement;
+        if (!parent) break;
+        path.unshift([...parent.children].indexOf(node));
       }
       return { item: item.dataset.index ?? "", path, tag: element.tagName };
     }
@@ -456,7 +459,9 @@ export function AnnotateLayer({
     setDraft("");
   };
   const saveRef = useRef(save);
-  saveRef.current = save;
+  useEffect(() => {
+    saveRef.current = save;
+  });
 
   const send = async () => {
     const outgoing = committed();
@@ -485,7 +490,9 @@ export function AnnotateLayer({
       frame = requestAnimationFrame(() => { setFrame((value) => value + 1); });
     };
     // Reduced motion gives zoom a 0.01ms transition, so content settles when it ends.
-    const zoomed = (event: TransitionEvent) => event.propertyName === "zoom" && redraw();
+    const zoomed = (event: TransitionEvent) => {
+      if (event.propertyName === "zoom") redraw();
+    };
     page.addEventListener("scroll", redraw, { capture: true, passive: true });
     page.addEventListener("transitionend", zoomed, true);
     const resize = new ResizeObserver(redraw);
@@ -736,7 +743,7 @@ export function AnnotateLayer({
           count={shown}
           canSend={canSend}
           sendDisabled={!sendAnnotations || sending}
-          onSend={send}
+          onSend={() => { send().catch(() => { /* noop */ }); }}
           onExit={exit}
         />
       ) : null}
@@ -776,7 +783,7 @@ function Mark({
 const CURSOR =
   "absolute top-0 left-0 size-7 rounded-full rounded-bl-[4px] bg-primary shadow-md ring-2 ring-background transition-[opacity,scale] duration-100 data-[shown=false]:scale-50 data-[shown=false]:opacity-0 motion-reduce:transition-none";
 
-function markNumber<Item extends { id: number }>(items: Item[], id: number | null): number {
+function markNumber(items: { id: number }[], id: number | null): number {
   const index = id === null ? -1 : items.findIndex((item) => item.id === id);
   return index === -1 ? items.length + 1 : index + 1;
 }
@@ -823,8 +830,17 @@ function useCommentDictation(draft: string, onDraft: (value: string) => void) {
       });
     }
   };
-  const stop = () => void session.current?.stop();
-  return { listening, toggle: () => { listening ? stop() : start(); } };
+  const stop = () => {
+    const stopping = session.current?.stop();
+    if (stopping) stopping.catch(() => { /* noop */ });
+  };
+  return {
+    listening,
+    toggle: () => {
+      if (listening) stop();
+      else start();
+    },
+  };
 }
 
 function CommentForm({
@@ -1047,8 +1063,8 @@ export function WebAnnotateLayer({
   const nativeSend = useRef<((command: FrameCommand) => void) | null>(null);
 
   const exit = () => { setAnnotating(null); };
-  const command = (next: FrameCommand) =>
-    native ? nativeSend.current?.(next) : sendFrameCommand(tabId, next);
+  const command = useCallback((next: FrameCommand) =>
+    native ? nativeSend.current?.(next) : sendFrameCommand(tabId, next), [native, tabId]);
   const forget = (id: number) => command({ command: "annotateForget", id });
   // The page gets the annotate code only now (each document once; repeats are ignored there).
   const start = () =>
@@ -1058,7 +1074,9 @@ export function WebAnnotateLayer({
         command({ command: "annotateInstall", code });
         command({ command: "annotate", on: true, color: accentColor() });
       },
-      () => liveTab.current === tabId && exit(),
+      () => {
+        if (liveTab.current === tabId) exit();
+      },
     );
 
   const committed = (): WebMark[] => {
@@ -1098,7 +1116,7 @@ export function WebAnnotateLayer({
     setDraft("");
     const files = await annotationScreenshot(page);
     const sent = await sendAnnotations(
-      { file: title ?? url ?? "", url, items: outgoing.map(({ quote, request }) => ({ quote, request })) },
+      { file: title || url || "", url, items: outgoing.map(({ quote, request }) => ({ quote, request })) },
       files,
     ).finally(() => { setSending(false); });
     if (sent) exit();
@@ -1106,7 +1124,9 @@ export function WebAnnotateLayer({
 
   // A press in a native view keeps key focus there: move it back to the comment.
   const takeKeys = () => {
-    if (native) void focusPanel(tabId).then(() => inputRef.current?.focus());
+    if (native) {
+      focusPanel(tabId).then(() => inputRef.current?.focus()).catch(() => { /* noop */ });
+    }
   };
 
   // Read on each report, so one always sees this render's state.
@@ -1161,9 +1181,11 @@ export function WebAnnotateLayer({
     }
   };
   const handleRef = useRef(handle);
-  handleRef.current = handle;
   const startRef = useRef(start);
-  startRef.current = start;
+  useEffect(() => {
+    handleRef.current = handle;
+    startRef.current = start;
+  });
 
   useEffect(() => {
     const listener = (event: AnnotateEvent) => { handleRef.current(event); };
@@ -1219,7 +1241,7 @@ export function WebAnnotateLayer({
     const numbers: [number, number][] = items.map((item, index) => [item.id, index + 1]);
     if (pending && !pending.saved) numbers.push([pending.id, items.length + 1]);
     command({ command: "annotateNumbers", numbers });
-  }, [tabId, items, pending]);
+  }, [command, tabId, items, pending]);
 
   const origin = layerRef.current?.getBoundingClientRect() ?? new DOMRect();
   // Native views report CSS pixels; scale by their zoom.
@@ -1268,7 +1290,7 @@ export function WebAnnotateLayer({
           count={shown}
           canSend={canSend}
           sendDisabled={!sendAnnotations || sending}
-          onSend={send}
+          onSend={() => { send().catch(() => { /* noop */ }); }}
           onExit={exit}
           besidePage={native}
         />

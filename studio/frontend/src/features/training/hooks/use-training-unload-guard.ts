@@ -28,8 +28,6 @@ export function useTrainingUnloadGuard() {
         return;
       }
       e.preventDefault();
-      const target = e;
-      target.returnValue = "";
     };
     currentHandler = handler;
     window.addEventListener("beforeunload", handler);

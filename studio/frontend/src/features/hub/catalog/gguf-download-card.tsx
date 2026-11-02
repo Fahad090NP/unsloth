@@ -892,14 +892,20 @@ export function GgufDownloadCard({
   }, [variants, progress?.variant, progress?.expectedBytes, setExpectedBytes]);
 
   useEffect(() => {
-    setCompletedVariantKeys(new Set<string>());
+    const timer = window.setTimeout(() => {
+      setCompletedVariantKeys(new Set<string>());
+    }, 0);
+    return () => { window.clearTimeout(timer); };
   }, [repoId]);
 
   useEffect(() => {
     if (loading || error || refreshError || !variants) return;
-    setCompletedVariantKeys((prev) =>
-      prev.size === 0 ? prev : new Set<string>(),
-    );
+    const timer = window.setTimeout(() => {
+      setCompletedVariantKeys((prev) =>
+        prev.size === 0 ? prev : new Set<string>(),
+      );
+    }, 0);
+    return () => { window.clearTimeout(timer); };
   }, [loading, error, refreshError, variants]);
 
   const assets = useRequiredAssetsDownload({

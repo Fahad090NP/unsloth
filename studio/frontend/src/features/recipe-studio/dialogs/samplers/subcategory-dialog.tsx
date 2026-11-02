@@ -107,7 +107,7 @@ export function SubcategoryDialog({
         {categoryValues.length > 0 && (
           <div className="grid gap-4">
             {categoryValues.map((value) => {
-              const subvalues: string[] | undefined = mapping[value];
+              const subvalues = value in mapping ? mapping[value] : undefined;
               return (
                 <div key={value}>
                   <div className="mb-2 flex items-center justify-between gap-2">
@@ -122,7 +122,7 @@ export function SubcategoryDialog({
                     values={subvalues ?? []}
                     onAdd={(item) => {
                       const next = { ...mapping };
-                      const existing: string[] | undefined = next[value];
+                      const existing = value in next ? next[value] : undefined;
                       const list = existing ? [...existing] : [];
                       list.push(item);
                       next[value] = list;
@@ -130,7 +130,7 @@ export function SubcategoryDialog({
                     }}
                     onRemove={(index) => {
                       const next = { ...mapping };
-                      const existing: string[] | undefined = next[value];
+                      const existing = value in next ? next[value] : undefined;
                       const list = [...(existing ?? [])];
                       list.splice(index, 1);
                       next[value] = list;

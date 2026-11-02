@@ -74,7 +74,7 @@ export function useStemSources(
       const [clipId, url] = entry.split("\u0000");
       return { clipId, url };
     });
-    const tracker = { cancelled: false };
+    const tracker: { cancelled: boolean } = { cancelled: false };
     const cache = new BlobUrlCache(Number.POSITIVE_INFINITY);
     const peaksById: Record<string, readonly number[]> = {};
     const failedIds: string[] = [];
@@ -116,7 +116,7 @@ export function useStemSources(
         if (tracker.cancelled) return;
         const blob = blobs.get(clipId);
         blobs.delete(clipId);
-        const currentPeaks: readonly number[] | undefined = peaksById[clipId];
+        const currentPeaks = (peaksById as Record<string, readonly number[] | undefined>)[clipId];
         if (currentPeaks || !blob) continue;
         try {
           const peaks = await decodePeaks(blob);

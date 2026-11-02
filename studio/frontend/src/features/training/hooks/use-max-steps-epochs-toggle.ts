@@ -75,16 +75,20 @@ export function useMaxStepsEpochsToggle({
   useEffect(() => {
     if (maxSteps > 0) {
       const normalized = normalizePrevMaxSteps(maxSteps);
-      setPrevMaxSteps(normalized);
-      writeStoredNumber(PREV_MAX_STEPS_KEY, normalized);
+      queueMicrotask(() => {
+        setPrevMaxSteps(normalized);
+        writeStoredNumber(PREV_MAX_STEPS_KEY, normalized);
+      });
     }
   }, [maxSteps]);
 
   useEffect(() => {
     if (!useEpochs) {
       const normalized = normalizePrevSaveSteps(saveSteps);
-      setPrevSaveSteps(normalized);
-      writeStoredNumber(PREV_SAVE_STEPS_KEY, normalized);
+      queueMicrotask(() => {
+        setPrevSaveSteps(normalized);
+        writeStoredNumber(PREV_SAVE_STEPS_KEY, normalized);
+      });
     }
   }, [saveSteps, useEpochs]);
 

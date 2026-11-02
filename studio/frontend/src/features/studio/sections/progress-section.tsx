@@ -513,7 +513,7 @@ function LiveGpuPanel({
           label={t("studio.progress.utilization")}
           icon={<HugeiconsIcon icon={DashboardSpeed01Icon} className="size-3.5" />}
           value={
-            currentGpu.gpu_utilization_pct !== undefined
+            currentGpu.gpu_utilization_pct != null
               ? `${currentGpu.gpu_utilization_pct}%`
               : "--"
           }
@@ -523,7 +523,7 @@ function LiveGpuPanel({
           label={t("studio.progress.temperature")}
           icon={<HugeiconsIcon icon={TemperatureIcon} className="size-3.5" />}
           value={
-            currentGpu.temperature_c !== undefined ? `${currentGpu.temperature_c}°C` : "--"
+            currentGpu.temperature_c != null ? `${currentGpu.temperature_c}°C` : "--"
           }
           pct={currentGpu.temperature_c ?? 0}
           max={100}
@@ -532,8 +532,8 @@ function LiveGpuPanel({
           label={t("studio.progress.vram")}
           icon={<HugeiconsIcon icon={RamMemoryIcon} className="size-3.5" />}
           value={
-            currentGpu.vram_used_gb !== undefined &&
-              currentGpu.vram_total_gb !== undefined
+            currentGpu.vram_used_gb != null &&
+              currentGpu.vram_total_gb != null
               ? `${currentGpu.vram_used_gb} / ${currentGpu.vram_total_gb} GiB`
               : "--"
           }
@@ -543,8 +543,8 @@ function LiveGpuPanel({
           label={t("studio.progress.power")}
           icon={<HugeiconsIcon icon={ZapIcon} className="size-3.5" />}
           value={
-            currentGpu.power_draw_w !== undefined
-              ? currentGpu.power_limit_w !== undefined
+            currentGpu.power_draw_w != null
+              ? currentGpu.power_limit_w != null
                 ? `${currentGpu.power_draw_w} / ${currentGpu.power_limit_w} W`
                 : `${currentGpu.power_draw_w} W`
               : "--"
@@ -813,7 +813,7 @@ function MetricStat({
 
 function lastValue(points: { value: number }[]): number | null {
   if (points.length === 0) return null;
-  const v = points[points.length - 1]?.value;
+  const v = points.at(-1)?.value;
   return v !== undefined && Number.isFinite(v) ? v : null;
 }
 

@@ -141,7 +141,7 @@ export function useRecipeEditorGraph({
       if (node.type !== "builder") {
         return;
       }
-      const nodeConfig: NodeConfig | undefined = configs[node.id];
+      const nodeConfig = node.id in configs ? configs[node.id] : undefined;
       if (nodeConfig?.kind === "markdown_note") {
         openConfig(node.id);
       }

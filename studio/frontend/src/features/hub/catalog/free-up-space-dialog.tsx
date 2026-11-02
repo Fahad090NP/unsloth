@@ -61,7 +61,11 @@ export function FreeUpSpaceDialog({
   }, []);
 
   useEffect(() => {
-    if (open) (refresh()).catch(() => { /* noop */ });
+    if (!open) return;
+    const timer = window.setTimeout(() => {
+      (refresh()).catch(() => { /* noop */ });
+    }, 0);
+    return () => { window.clearTimeout(timer); };
   }, [open, refresh]);
 
   const selectedCompanions = companions.filter((c) => selected.has(companionIdentity(c)));

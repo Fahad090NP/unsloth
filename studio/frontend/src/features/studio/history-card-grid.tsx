@@ -413,7 +413,7 @@ export function HistoryCardGrid({
         aria-label={t("studio.history.title")}
       >
         <p className="text-sm text-destructive">{error}</p>
-        <Button variant="outline" size="sm" onClick={() => fetchRuns(0).catch(() => undefined)}>
+        <Button variant="outline" size="sm" onClick={() => { fetchRuns(0).catch(() => undefined); }}>
           {t("studio.history.retry")}
         </Button>
       </div>
@@ -584,7 +584,7 @@ export function HistoryCardGrid({
                   variant="outline"
                   className="absolute bottom-3 left-4 z-10 h-6 rounded-full px-2.5 text-ui-11 leading-none shadow-sm"
                   disabled={startBlocked || isResuming}
-                  onClick={() => handleResume(run.id).catch(() => undefined)}
+                  onClick={() => { handleResume(run.id).catch(() => undefined); }}
                 >
                   {stopRequested
                     ? t("studio.training.stopping")
@@ -653,7 +653,7 @@ export function HistoryCardGrid({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fetchRuns(runs.length, true).catch(() => undefined)}
+            onClick={() => { fetchRuns(runs.length, true).catch(() => undefined); }}
             disabled={loading}
           >
             {loading
@@ -725,7 +725,7 @@ export function HistoryCardGrid({
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => handleDelete().catch(() => undefined)}
+              onClick={() => { handleDelete().catch(() => undefined); }}
             >
               {t("common.delete")}
             </AlertDialogAction>

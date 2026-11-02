@@ -247,7 +247,10 @@ function WeekChart({
     <ChartTooltip
       cursor={mode === "weekly" ? undefined : false}
       content={({ active, payload }) => {
-        const point = payload?.[0]?.payload as WeekChartPoint | undefined;
+        const entries = payload as
+          | Array<{ payload?: unknown }>
+          | undefined;
+        const point = entries?.at(0)?.payload as WeekChartPoint | undefined;
         if (!(active && point)) {
           return null;
         }

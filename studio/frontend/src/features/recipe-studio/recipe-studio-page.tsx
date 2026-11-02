@@ -50,10 +50,7 @@ import { ImportDialog } from "./dialogs/import-dialog";
 import { RunDialog } from "./dialogs/preview-dialog";
 import { ProcessorsDialog } from "./dialogs/processors-dialog";
 import { GithubCrawlerEasyView } from "./easy/github-crawler-easy-view";
-import type {
-  RecipeExecutionRecord,
-  RecipeStudioView,
-} from "./execution-types";
+import type { RecipeStudioView } from "./execution-types";
 import { isExecutionInProgress } from "./executions/execution-helpers";
 import { useRecipeEditorGraph } from "./hooks/use-recipe-editor-graph";
 import { useRecipeRuntimeVisuals } from "./hooks/use-recipe-runtime-visuals";
@@ -230,11 +227,14 @@ export function RecipeStudioPage({
   const [interactive, setInteractive] = useState(true);
   const [maximized, setMaximized] = useState(false);
   const [runtimeIslandMinimized, setRuntimeIslandMinimized] = useState(false);
-  const [recentCompletedExecution, setRecentCompletedExecution] =
-    useState<RecipeExecutionRecord | null>(null);
+  const [dismissedCompletedExecutionId, setDismissedCompletedExecutionId] =
+    useState<string | null>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance<
     Node<RecipeNodeData | RecipeGraphAuxNodeData>
   > | null>(null);
+  // Leaving the editor drops both: the canvas is gone, so neither applies there.
+  const activeFlowInstance = activeView === "editor" ? reactFlowInstance : null;
+  const activeMaximized = activeView === "editor" && maximized;
   const lastProcessedFitTickRef = useRef(0);
   const previousActiveViewRef = useRef<RecipeStudioView>("editor");
   const previousActiveExecutionIdRef = useRef<string | null>(null);
@@ -261,7 +261,7 @@ export function RecipeStudioPage({
     nodes,
     edges,
     configs,
-    reactFlowInstance,
+    reactFlowInstance: activeFlowInstance,
     flowContainerRef,
     selectConfig,
     openConfig,
@@ -397,6 +397,23 @@ export function RecipeStudioPage({
   const executionLocked = runtimeVisualState.executionLocked;
   const canvasInteractive = interactive && !executionLocked;
   const runBusy = previewLoading || fullLoading || executionLocked;
+  const latestCompletedExecution = useMemo(() => {
+    if (activeExecution) return null;
+    const latestCompleted = executions.find(
+      (execution) =>
+        execution.status === "completed" &&
+        typeof execution.finishedAt === "number",
+    );
+    if (!latestCompleted || typeof latestCompleted.finishedAt !== "number") {
+      return null;
+    }
+    const elapsedMs = Date.now() - latestCompleted.finishedAt;
+    return elapsedMs < COMPLETE_ISLAND_VISIBLE_MS ? latestCompleted : null;
+  }, [activeExecution, executions]);
+  const recentCompletedExecution =
+    latestCompletedExecution?.id !== dismissedCompletedExecutionId
+      ? latestCompletedExecution
+      : null;
   const islandExecution = activeExecution ?? recentCompletedExecution;
 
   // runFull needs a non-empty fullRunName and Easy mode has no input for it, so seed a default.
@@ -432,27 +449,12 @@ export function RecipeStudioPage({
   }, [activeExecution?.id]);
 
   useEffect(() => {
-    if (activeExecution) {
-      setRecentCompletedExecution(null);
+    if (!recentCompletedExecution || typeof recentCompletedExecution.finishedAt !== "number") {
       return;
     }
-    const latestCompleted = executions.find(
-      (execution) =>
-        execution.status === "completed" &&
-        typeof execution.finishedAt === "number",
-    );
-    if (!latestCompleted || typeof latestCompleted.finishedAt !== "number") {
-      setRecentCompletedExecution(null);
-      return;
-    }
-    const elapsedMs = Date.now() - latestCompleted.finishedAt;
-    if (elapsedMs >= COMPLETE_ISLAND_VISIBLE_MS) {
-      setRecentCompletedExecution(null);
-      return;
-    }
-    setRecentCompletedExecution(latestCompleted);
+    const elapsedMs = Date.now() - recentCompletedExecution.finishedAt;
     const hideTimer = window.setTimeout(() => {
-      setRecentCompletedExecution(null);
+      setDismissedCompletedExecutionId(recentCompletedExecution.id);
       setActiveView((currentView) =>
         currentView === "editor" ? "executions" : currentView,
       );
@@ -460,7 +462,7 @@ export function RecipeStudioPage({
     return () => {
       window.clearTimeout(hideTimer);
     };
-  }, [activeExecution, executions]);
+  }, [recentCompletedExecution, setActiveView]);
 
   const openProcessorsFromSheet = useCallback(() => {
     if (
@@ -488,7 +490,7 @@ export function RecipeStudioPage({
 
   const scheduleFitView = useCallback(
     ({ delayMs = 0 }: { delayMs?: number } = {}) => {
-      if (!reactFlowInstance) {
+      if (!activeFlowInstance) {
          
         return () => {
           /* no-op: instance not available */
@@ -504,16 +506,16 @@ export function RecipeStudioPage({
         targets.every(
           (n) =>
             n.measured?.width !== undefined &&
-            n.measured?.height !== undefined,
+            n.measured.height !== undefined,
         );
 
       const doFit = () => {
-        const targets = getFitViewTargetNodes(reactFlowInstance.getNodes());
+        const targets = getFitViewTargetNodes(activeFlowInstance.getNodes());
         if (targets.length === 0) {
           return;
         }
         viewportMovedSinceAutoFitRef.current = false;
-        reactFlowInstance.fitView({
+        activeFlowInstance.fitView({
           duration: FIT_VIEW_DURATION_MS,
           maxZoom: FIT_VIEW_MAX_ZOOM,
           padding: FIT_VIEW_PADDING,
@@ -531,7 +533,7 @@ export function RecipeStudioPage({
           doFit();
           return;
         }
-        const targets = getFitViewTargetNodes(reactFlowInstance.getNodes());
+        const targets = getFitViewTargetNodes(activeFlowInstance.getNodes());
         if (allTargetsMeasured(targets)) {
           stableCount++;
           if (stableCount >= FIT_VIEW_STABLE_FRAMES) {
@@ -565,7 +567,7 @@ export function RecipeStudioPage({
         }
       };
     },
-    [reactFlowInstance],
+    [activeFlowInstance],
   );
 
   const toggleMaximize = useCallback(() => {
@@ -587,24 +589,7 @@ export function RecipeStudioPage({
   }, [activeView]);
 
   useEffect(() => {
-    if (activeView !== "editor" && reactFlowInstance) {
-      setReactFlowInstance(null);
-    }
-  }, [activeView, reactFlowInstance]);
-
-  // The exit control lives in the editor canvas, so leaving the editor must drop full view.
-  useEffect(() => {
-    if (activeView !== "editor" && maximized) {
-      setMaximized(false);
-    }
-  }, [activeView, maximized]);
-
-  useEffect(() => {
-    if (
-      !reactFlowInstance ||
-      activeView !== "editor" ||
-      !pendingEditorTabFitRef.current
-    ) {
+    if (!activeFlowInstance || !pendingEditorTabFitRef.current) {
       return;
     }
     pendingEditorTabFitRef.current = false;
@@ -614,10 +599,10 @@ export function RecipeStudioPage({
       return;
     }
     return scheduleFitView({ delayMs: TAB_SWITCH_FIT_DELAY_MS });
-  }, [activeView, reactFlowInstance, scheduleFitView]);
+  }, [activeFlowInstance, scheduleFitView]);
 
   useEffect(() => {
-    if (!reactFlowInstance || fitViewTick === 0 || activeView !== "editor") {
+    if (!activeFlowInstance || fitViewTick === 0) {
       return;
     }
     if (lastProcessedFitTickRef.current === fitViewTick) {
@@ -625,7 +610,7 @@ export function RecipeStudioPage({
     }
     lastProcessedFitTickRef.current = fitViewTick;
     return scheduleFitView();
-  }, [activeView, fitViewTick, reactFlowInstance, scheduleFitView]);
+  }, [activeFlowInstance, fitViewTick, scheduleFitView]);
 
   let editorContent: ReactElement;
   if (initialRecipeReady) {
@@ -748,7 +733,7 @@ export function RecipeStudioPage({
           interactive={canvasInteractive}
           lockDisabled={executionLocked}
           onToggleInteractive={toggleInteractive}
-          maximized={maximized}
+          maximized={activeMaximized}
           onToggleMaximize={toggleMaximize}
         />
         {islandExecution &&
@@ -793,12 +778,12 @@ export function RecipeStudioPage({
   return (
     <div
       className={
-        maximized
+        activeMaximized
           ? "fixed inset-x-0 bottom-0 z-50 flex flex-col bg-background"
           : "flex h-full min-h-0 flex-1 flex-col bg-background"
       }
       style={
-        maximized
+        activeMaximized
           ? {
               // Start below the custom/mac titlebar so the header is not hidden or click-blocked.
               top: "var(--studio-non-chat-content-top-inset, var(--studio-content-top-inset,0))",

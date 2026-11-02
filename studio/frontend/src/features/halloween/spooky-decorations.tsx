@@ -99,12 +99,22 @@ export function SpookyDecorations() {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const href = useRouterState({ select: (s) => s.location.href });
   // biome-ignore lint/correctness/useExhaustiveDependencies: each page rolls its own webs.
-  const webs = useMemo(() => rollSpiderWebs(), [href]);
+  const webs = useMemo(() => {
+    let seed = 0;
+    for (const character of href) {
+      seed = (seed * 31 + character.charCodeAt(0)) >>> 0;
+    }
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 2 ** 32;
+    };
+    return rollSpiderWebs(rand);
+  }, [href]);
   const nextId = useRef(0);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: each page rolls its own visitors.
   useEffect(() => {
-    setVisitors([]);
+    queueMicrotask(() => setVisitors([]));
     if (!on) {
       return;
     }

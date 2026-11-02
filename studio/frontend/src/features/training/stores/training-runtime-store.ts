@@ -440,7 +440,7 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
           phase: payload.phase,
           isTrainingRunning: payload.is_training_running,
           stopRequested,
-          evalEnabled: payload.eval_enabled ?? runtimeState.evalEnabled,
+          evalEnabled: payload.eval_enabled,
           message: payload.message,
           error: payload.error,
           warnings: nextWarnings,

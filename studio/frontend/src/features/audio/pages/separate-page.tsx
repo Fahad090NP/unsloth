@@ -398,10 +398,7 @@ export function SeparateOutput({
     lastResult !== null &&
     selected !== null &&
     (lastResult.groupId === null || selected.groupId === lastResult.groupId);
-  const [focusedGroup, setFocusedGroup] = useState<string | null>(null);
-  useEffect(() => {
-    if (fresh && selected) setFocusedGroup(selected.groupId);
-  }, [fresh, selected]);
+  const focusedGroup = fresh ? (selected?.groupId ?? null) : null;
   const announcement = lastResult
     ? `Separated into ${lastResult.stems} stem${lastResult.stems === 1 ? "" : "s"}.`
     : "";

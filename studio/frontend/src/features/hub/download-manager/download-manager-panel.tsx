@@ -198,7 +198,7 @@ function DownloadRow({
   jobKey: string;
   pendingStart?: PendingStart;
 }) {
-  const job: ManagedDownload | undefined = useDownloadManagerStore((state) => state.jobs[jobKey]);
+  const job = useDownloadManagerStore((state) => state.jobs[jobKey]) as ManagedDownload | undefined;
   if (!job) return null;
   const starting = pendingStart !== undefined;
   const subject = pendingStart ?? job;

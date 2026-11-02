@@ -134,15 +134,15 @@ export function VideoFile({
     if (!event.currentTarget.contains(target) || target instanceof HTMLInputElement) return;
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     if (event.key === " " && target !== event.currentTarget && target.closest("button")) return;
-    const handlers: Record<string, () => void> = {
-      " ": togglePlay,
-      k: togglePlay,
-      ArrowLeft: () => { seekBy(-SEEK_SECONDS); },
-      ArrowRight: () => { seekBy(SEEK_SECONDS); },
-      m: toggleMute,
-      f: fullscreen,
-    };
-    const handler: (() => void) | undefined = handlers[event.key];
+    const handlers = new Map<string, () => void>([
+      [" ", togglePlay],
+      ["k", togglePlay],
+      ["ArrowLeft", () => { seekBy(-SEEK_SECONDS); }],
+      ["ArrowRight", () => { seekBy(SEEK_SECONDS); }],
+      ["m", toggleMute],
+      ["f", fullscreen],
+    ]);
+    const handler = handlers.get(event.key);
     if (!handler) return;
     event.preventDefault();
     handler();

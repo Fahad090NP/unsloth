@@ -50,7 +50,6 @@ import { cn } from "@/lib/utils";
 import {
   PENDING_CHAT_ATTACHMENT_KEY,
   readPendingAttachmentTargetClaim,
-  useChatRuntimeStore,
 } from "@/features/chat/stores/chat-runtime-store";
 import type { ProjectAttachmentTarget } from "@/features/chat/utils/project-attachment-target";
 import {
@@ -64,6 +63,7 @@ import {
   isThreadIncognito,
   subscribeChatHistoryUpdated,
   useChatPreferencesStore,
+  useChatRuntimeStore,
   useRagToolDisabled,
 } from "@/features/chat";
 import {
@@ -194,6 +194,7 @@ function useThreadProjectId(
       return;
     }
     let announced = false;
+    const isAnnounced = () => announced;
     const record = (projectId: string | null, editedAt: number) =>
       { setResolved((previous) =>
         previous?.threadId === threadId
@@ -215,7 +216,7 @@ function useThreadProjectId(
       for (let attempt = 0; attempt < PROJECT_LOOKUP_RETRIES; attempt += 1) {
         try {
           const thread = await getStoredChatThread(threadId);
-          if (announced) return;
+          if (isAnnounced()) return;
           // No row yet: initialize() does not await the write, so the composer's
           // project is the answer that row is about to record.
           const projectId = thread
@@ -224,9 +225,9 @@ function useThreadProjectId(
           record(projectId, thread?.modifiedAt ?? 0);
           return;
         } catch {
-          if (announced) return;
+          if (isAnnounced()) return;
           await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
-          if (announced) return;
+          if (isAnnounced()) return;
         }
       }
     })().catch(() => undefined);
@@ -419,7 +420,6 @@ function useDocumentThumbnail(
   }, [enabled, element]);
   useEffect(() => {
     if (!enabled || !visible) {
-      setThumbnail(null);
       return;
     }
     let cancelled = false;
@@ -446,7 +446,7 @@ function useDocumentThumbnail(
     // The id names the stored file; the rest of the row changes with progress frames.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doc.id, enabled, visible]);
-  return enabled ? thumbnail : null;
+  return enabled && visible ? thumbnail : null;
 }
 
 function DocumentCard({
@@ -1007,7 +1007,7 @@ export function ThreadDocumentsBar({
     if (!hadThreadId) {
       useChatRuntimeStore.getState().adoptPendingProjectAttachmentTarget(threadId);
     }
-    setMaterializedId(null);
+    queueMicrotask(() => setMaterializedId(null));
     initGenerationRef.current += 1;
     initPromiseRef.current = null;
   }, [threadId]);
@@ -1225,7 +1225,8 @@ export function ThreadDocumentsBar({
   const hasPendingAttachments = useNativeIntentStore((s) =>
     Boolean(
       nativeAttachmentTargetKey &&
-        (s.pendingAttachments[nativeAttachmentTargetKey]?.length ?? 0) > 0,
+        Object.hasOwn(s.pendingAttachments, nativeAttachmentTargetKey) &&
+        s.pendingAttachments[nativeAttachmentTargetKey].length > 0,
     ),
   );
   useEffect(() => {

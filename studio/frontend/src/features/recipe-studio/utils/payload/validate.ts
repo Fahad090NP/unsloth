@@ -36,7 +36,7 @@ export function validateSubcategoryConfigs(
         : [];
     const mapping = config.subcategory_mapping ?? {};
     for (const value of parentValues) {
-      const list: (typeof mapping)[string] | undefined = mapping[value];
+      const list = value in mapping ? mapping[value] : undefined;
       if (!list || list.length === 0) {
         errors.push(
           `Subcategory ${config.name}: '${value}' needs at least 1 subcategory.`,
@@ -200,7 +200,7 @@ export function validateValidatorConfigs(
       !isOxcValidationMode(config.oxc_validation_mode)
     ) {
       errors.push(
-        `Validator ${config.name}: oxc_validation_mode '${config.oxc_validation_mode}' is invalid.`,
+        `Validator ${config.name}: oxc_validation_mode '${String(config.oxc_validation_mode)}' is invalid.`,
       );
       continue;
     }
@@ -209,7 +209,7 @@ export function validateValidatorConfigs(
       !isOxcCodeShape(config.oxc_code_shape)
     ) {
       errors.push(
-        `Validator ${config.name}: oxc_code_shape '${config.oxc_code_shape}' is invalid.`,
+        `Validator ${config.name}: oxc_code_shape '${String(config.oxc_code_shape)}' is invalid.`,
       );
       continue;
     }

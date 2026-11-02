@@ -66,8 +66,9 @@ export function samplerRecipeLabel(
   scheduleType: string | null | undefined,
 ): string | null {
   if (!sampler && !scheduleType) return null;
-  const label: string | undefined = SAMPLER_LABELS[sampler ?? DEFAULT_SAMPLER];
-  const name = label ?? sampler ?? "";
+  const key = sampler ?? DEFAULT_SAMPLER;
+  const label = SAMPLER_LABELS[key] as string | undefined;
+  const name = label ?? key;
   const schedule = scheduleType ? (SCHEDULE_LABELS[scheduleType] ?? scheduleType) : "";
   return [name, schedule].filter(Boolean).join(" ");
 }

@@ -10,7 +10,7 @@ import type {
   AdvancedSettingsBaseline,
   TrainingConfigState,
 } from "@/features/training";
-import { trainingToggleDefaults } from "@/features/training/stores/training-config-policy";
+import { trainingToggleDefaults } from "@/features/training";
 import { isAdapterMethod } from "@/types/training";
 
 type AdvancedSettingsState = Pick<

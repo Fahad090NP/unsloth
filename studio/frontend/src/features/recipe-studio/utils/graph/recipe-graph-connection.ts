@@ -51,7 +51,7 @@ function syncSubcategoryMapping(
     ...(subcategory.subcategory_mapping ?? {}),
   };
   for (const value of parent.values ?? []) {
-    const existing: string[] | undefined = nextMapping[value];
+    const existing = value in nextMapping ? nextMapping[value] : undefined;
     if (!existing) {
       nextMapping[value] = [];
     }
@@ -145,7 +145,7 @@ function isCompetingIncomingEdge(
   if (edge.target !== targetId) {
     return false;
   }
-  const source: (typeof configs)[string] | undefined = configs[edge.source];
+  const source = edge.source in configs ? configs[edge.source] : undefined;
   if (!source) {
     return false;
   }
@@ -162,7 +162,7 @@ function isCompetingIncomingEdge(
     return isCategoryConfig(source);
   }
   if (relation === "validator_target_columns") {
-    const target: (typeof configs)[string] | undefined = configs[targetId];
+    const target = targetId in configs ? configs[targetId] : undefined;
     if (target && isTextFormatValidator(target)) {
       return isTextFormatValidatorTarget(source);
     }
@@ -329,10 +329,10 @@ export function isValidRecipeConnection(
   if (connection.source === connection.target) {
     return false;
   }
-  const source: (typeof configs)[string] | undefined =
-    configs[connection.source];
-  const target: (typeof configs)[string] | undefined =
-    configs[connection.target];
+  const source =
+    connection.source in configs ? configs[connection.source] : undefined;
+  const target =
+    connection.target in configs ? configs[connection.target] : undefined;
   if (!(source && target)) {
     return false;
   }

@@ -76,10 +76,10 @@ function ttsDraftKey(field: TtsDraftField, workflow: TtsWorkflow): string {
 export function useSpeechGeneration({
   workflow,
   status,
-  busyRef,
+  busyRef: sharedBusyRef,
   setBusy,
   updateGenerationPhase,
-  generateAbort,
+  generateAbort: sharedGenerateAbort,
   setMode,
   setAdvancedOpen,
   refreshStatus,
@@ -107,6 +107,8 @@ export function useSpeechGeneration({
 > &
   Pick<AudioGallery, "refreshGallery" | "selectClip" | "setFallbackClip" | "setSelectedId"> &
   Pick<AudioModelSlot, "pendingTranscribeRelease" | "replayQueuedTtsPick">) {
+  const busyRef = sharedBusyRef;
+  const generateAbort = sharedGenerateAbort;
   const [drafts, setDrafts] = useState<Record<TtsDraftField, Record<TtsWorkflow, string>>>(
     () => ({
       prompt: {
@@ -160,7 +162,9 @@ export function useSpeechGeneration({
   const mossMaxSecondsLimit =
     (mossFrameLimit ?? MOSS_TTS_MAX_FRAMES) / MOSS_TTS_FRAMES_PER_SECOND;
 
-  useEffect(() => {
+  const [trackedMossFrameLimit, setTrackedMossFrameLimit] = useState(mossFrameLimit);
+  if (trackedMossFrameLimit !== mossFrameLimit) {
+    setTrackedMossFrameLimit(mossFrameLimit);
     setTemperature(mossFrameLimit !== null ? 1.7 : 0.6);
     setTemperatureEdited(false);
     if (mossFrameLimit !== null) {
@@ -168,7 +172,7 @@ export function useSpeechGeneration({
         Math.min(current, mossFrameLimit / MOSS_TTS_FRAMES_PER_SECOND),
       );
     }
-  }, [mossFrameLimit]);
+  }
 
   const ttsLoaded = Boolean(
     status?.active_model &&

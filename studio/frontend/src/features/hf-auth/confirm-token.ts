@@ -97,9 +97,9 @@ function ensureTokenChangeSubscription(): void {
   }
   tokenChangeSubscribed = true;
   // Seeded: zustand does not fire subscribe on install.
-  lastKnownStoredToken = useHfTokenStore.getState().token?.trim() ?? "";
+  lastKnownStoredToken = useHfTokenStore.getState().token.trim();
   useHfTokenStore.subscribe((state) => {
-    const next = state.token?.trim() ?? "";
+    const next = state.token.trim();
     if (lastKnownStoredToken != null && lastKnownStoredToken !== next) {
       forgetHfTokenValidation(lastKnownStoredToken);
     }

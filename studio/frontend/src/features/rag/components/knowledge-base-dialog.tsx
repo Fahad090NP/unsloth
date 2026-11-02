@@ -526,9 +526,21 @@ function KnowledgeBaseDocuments({
                 isLinkedFolderManaged(doc) ||
                 (doc.id.startsWith("pending_") && doc.status !== "failed")
                   ? undefined
-                  : () => void remove(doc.id)
+                  : () => {
+                      remove(doc.id).catch((error: unknown) => {
+                        console.error("Failed to remove knowledge base document:", error);
+                      });
+                    }
               }
-              onRetry={canRetry(doc.id) ? () => void retry(doc.id) : undefined}
+              onRetry={
+                canRetry(doc.id)
+                  ? () => {
+                      retry(doc.id).catch((error: unknown) => {
+                        console.error("Failed to retry knowledge base document:", error);
+                      });
+                    }
+                  : undefined
+              }
             />
           ))}
         </div>

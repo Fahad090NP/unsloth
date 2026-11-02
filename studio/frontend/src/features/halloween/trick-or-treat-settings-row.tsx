@@ -24,9 +24,13 @@ export function TrickOrTreatSettingsRow() {
         aria-label={t("settings.appearance.trickOrTreat.label")}
         data-testid="settings-trick-or-treat-sidebar"
         checked={inSidebar}
-        onCheckedChange={(on) =>
-          { on ? showTrickOrTreatRow() : hideTrickOrTreatRow(); }
-        }
+        onCheckedChange={(on) => {
+          if (on) {
+            showTrickOrTreatRow();
+          } else {
+            hideTrickOrTreatRow();
+          }
+        }}
       />
     </SettingsRow>
   );

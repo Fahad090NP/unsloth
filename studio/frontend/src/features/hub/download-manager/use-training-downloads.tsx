@@ -22,6 +22,7 @@ import {
   removeJob,
   useDownloadManagerStore,
 } from "./download-manager-state";
+import type { ManagedDownload } from "./download-manager-types";
 import { adoptJob } from "./poll-loop";
 import {
   isTrainingDownloadVariant,
@@ -35,7 +36,7 @@ export function useTrainingDownloads(enabled: boolean): void {
     let disposed = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const session = () =>
-      `${getAuthSessionEpoch()}:${localStorage.getItem(AUTH_SESSION_MARK_KEY)}`;
+      `${getAuthSessionEpoch()}:${localStorage.getItem(AUTH_SESSION_MARK_KEY) ?? ""}`;
     const notices = new Set<string>();
     const dismissed = new Set<string>();
     const clearNotices = () => {
@@ -64,8 +65,8 @@ export function useTrainingDownloads(enabled: boolean): void {
                 job.state === "cancelling"
                   ? "Stopping training download…"
                   : known
-                    ? `Downloading ${job.repoId.split("/").at(-1)}…`
-                    : `Preparing ${job.repoId.split("/").at(-1)} download…`
+                    ? `Downloading ${job.repoId.split("/").at(-1) ?? ""}…`
+                    : `Preparing ${job.repoId.split("/").at(-1) ?? ""} download…`
               }
               message="Preparing model files for training…"
               progressPercent={known ? job.fraction * 100 : null}
@@ -94,9 +95,10 @@ export function useTrainingDownloads(enabled: boolean): void {
       fetch: (signal) => getAllActiveModelDownloads(signal, { fresh: true }),
       session,
       adopt: (job) => {
-        const repoId = job.repo_id!.trim();
+        const repoId = job.repo_id?.trim();
+        if (!repoId) return;
         const key = jobKeyOf(DOWNLOAD_KIND.MODEL, repoId, job.variant);
-        const existing = getState().jobs[key];
+        const existing = getState().jobs[key] as ManagedDownload | undefined;
         if (
           existing &&
           existing.serverGeneration === job.generation &&

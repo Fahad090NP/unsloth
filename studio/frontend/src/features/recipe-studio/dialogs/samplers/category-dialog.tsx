@@ -57,7 +57,7 @@ export function CategoryDialog({
 
   const handleAddCondition = () => {
     const condition = conditionDraft.trim();
-    if (!condition || conditional[condition]) {
+    if (!condition || Object.hasOwn(conditional, condition)) {
       return;
     }
     onUpdate({
@@ -211,7 +211,7 @@ export function CategoryDialog({
                   </Button>
                 </div>
                 <ChipInput
-                  values={params.values ?? []}
+                  values={params.values}
                   onAdd={(value) => {
                     const { values, weights } = addChipWithWeight(
                       params.values,
@@ -247,7 +247,7 @@ export function CategoryDialog({
                     Rule weights (optional)
                   </p>
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {(params.values ?? []).map((value, index) => (
+                    {(params.values).map((value, index) => (
                       <div
                         key={`${condition}-${value}-${index}-weight`}
                         className="space-y-1"
@@ -267,7 +267,7 @@ export function CategoryDialog({
                             const weights = [
                               ...(params.weights ??
                                 Array.from(
-                                  { length: (params.values ?? []).length },
+                                  { length: (params.values).length },
                                   () => null,
                                 )),
                             ];

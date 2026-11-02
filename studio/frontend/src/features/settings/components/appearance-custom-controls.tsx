@@ -39,7 +39,6 @@ import { Folder01Icon } from "@/lib/folder-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { motion, useReducedMotionConfig } from "motion/react";
 import {
-  useEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -217,9 +216,15 @@ function detectFontsByMeasurement(candidates: string[]): string[] {
 }
 
 let deviceFontsCache: string[] | null = null;
+let deviceFontsInFlight: Promise<string[]> | null = null;
 
-async function loadDeviceFonts(): Promise<string[]> {
-  if (deviceFontsCache) return deviceFontsCache;
+function loadDeviceFonts(): Promise<string[]> {
+  if (deviceFontsCache) return Promise.resolve(deviceFontsCache);
+  deviceFontsInFlight ??= loadDeviceFontsUncached();
+  return deviceFontsInFlight;
+}
+
+async function loadDeviceFontsUncached(): Promise<string[]> {
   let families: string[] = [];
   const query = (
     globalThis as {

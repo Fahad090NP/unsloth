@@ -665,7 +665,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
             }
 
             if (autoSelectionPromise) {
-              void autoSelectionPromise.then((method) => {
+              autoSelectionPromise.then((method) => {
                 if (controller.signal.aborted || !requestMatchesSelection()) {
                   return;
                 }
@@ -694,6 +694,8 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
                   ...lrPatch,
                   isLoadingModelDefaults: false,
                 });
+              }).catch((error: unknown) => {
+                console.error("Failed to apply model defaults:", error);
               });
             }
           })
@@ -1825,7 +1827,5 @@ export function clearDeletedDataset(datasetName: string): boolean {
     case "huggingface":
       state.setDataset(null);
       return true;
-    default:
-      return false;
   }
 }

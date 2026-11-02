@@ -90,7 +90,7 @@ export function LanguageSelect() {
   const pick = (value: string) => {
     close(false);
     if (value !== checked && isLocalePreference(value)) {
-      setLocale(value);
+      Promise.resolve(setLocale(value)).catch(() => undefined);
     }
   };
 

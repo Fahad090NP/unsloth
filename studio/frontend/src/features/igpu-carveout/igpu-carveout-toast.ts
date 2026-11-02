@@ -55,7 +55,7 @@ export function showCarveoutAdvice(
     action: {
       label: "Don't show again",
       onClick: () => {
-        void dismissCarveoutNotice(advice.current_gb);
+        dismissCarveoutNotice(advice.current_gb).catch(() => false);
       },
     },
   });

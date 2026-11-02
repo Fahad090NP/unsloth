@@ -302,17 +302,17 @@ function EditComparePlayer({
   focusRef: ((element: HTMLElement | null) => void) | undefined;
 }) {
   const sourceId = clip.source_clip_id ?? null;
-  const [originalSrc, setOriginalSrc] = useState<string | null>(null);
+  const [original, setOriginal] = useState<{ key: string; src: string | null } | null>(null);
+  const originalSrc = original?.key === sourceId ? original.src : null;
   useEffect(() => {
     if (!sourceId) return;
     let url: string | null = null;
     let cancelled = false;
-    setOriginalSrc(null);
     fetchAudioBlob(galleryFileUrl(sourceId))
       .then((blob) => {
         if (cancelled) return;
         url = URL.createObjectURL(blob);
-        setOriginalSrc(url);
+        setOriginal({ key: sourceId, src: url });
       })
       .catch(() => {
         // Original deleted: the compare still plays the edit.

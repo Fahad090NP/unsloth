@@ -37,12 +37,11 @@ export function useDetailerSegmenter(modelCapable: boolean, modelKey: string): S
   useEffect(() => {
     if (!modelCapable) {
       seq.current += 1;
-      setStatus(null);
       return;
     }
     read();
     const onStatus = (event: Event) => {
-      const next = (event as CustomEvent<SegmenterStatus>).detail;
+      const next = (event as CustomEvent<SegmenterStatus | null>).detail;
       if (next) {
         seq.current += 1;
         setStatus(next);
@@ -57,7 +56,7 @@ export function useDetailerSegmenter(modelCapable: boolean, modelKey: string): S
     const id = window.setInterval(read, 2000);
     return () => { window.clearInterval(id); };
   }, [downloading, read]);
-  return status;
+  return modelCapable ? status : null;
 }
 
 /** Empty means "the image's own"; keeps partial text like "4." while editing. */
@@ -70,13 +69,16 @@ function OptionalNumberInput({
   value: number | null;
   onChange: (next: number | null) => void;
 }) {
-  const [text, setText] = useState(value === null ? "" : String(value));
-  useEffect(() => {
-    setText((current) => {
-      const n = current.trim() === "" ? null : Number(current);
-      return n === value ? current : value === null ? "" : String(value);
-    });
-  }, [value]);
+  const [input, setInput] = useState(() => ({
+    value,
+    text: value === null ? "" : String(value),
+  }));
+  let text = input.text;
+  if (input.value !== value) {
+    const n = text.trim() === "" ? null : Number(text);
+    text = n === value ? text : value === null ? "" : String(value);
+    setInput({ value, text });
+  }
   return (
     <Input
       aria-label={ariaLabel}
@@ -85,7 +87,7 @@ function OptionalNumberInput({
       placeholder="Same as the image"
       value={text}
       onChange={(e) => {
-        setText(e.target.value);
+        setInput((current) => ({ ...current, text: e.target.value }));
         const raw = e.target.value.trim();
         const n = Number(raw);
         onChange(raw === "" || !Number.isFinite(n) || n < 0 ? null : n);

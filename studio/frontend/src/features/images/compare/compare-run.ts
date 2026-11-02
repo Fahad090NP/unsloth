@@ -181,7 +181,7 @@ export function gridRecipeFields(
         ? typeof sampler.value === "string"
           ? (SAMPLER_LABELS[sampler.value] ?? sampler.value)
           : sampler.value == null
-            ? SAMPLER_LABELS["default"]
+            ? SAMPLER_LABELS.default
             : undefined
         : undefined,
     ],

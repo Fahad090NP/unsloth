@@ -196,7 +196,7 @@ export function LibraryPage() {
 
   useEffect(() => {
     refresh().catch(() => undefined);
-    const onFocus = () => void refresh();
+    const onFocus = () => { refresh().catch(() => undefined); };
     window.addEventListener("focus", onFocus);
     return () => { window.removeEventListener("focus", onFocus); };
   }, [refresh]);
@@ -244,7 +244,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   const loaded = status === "ready";
   // "auto" tabs count as shown until the listing lands, so the start tab is not swapped mid-load.
   const tabVisible = (entry: LibraryTab) => {
-    const visibility = settings.tabs[entry] ?? "always";
+    const visibility = settings.tabs[entry];
     if (visibility === "hidden" || (entry === "models" && !settings.showFineTunes)) return false;
     return visibility === "always" || !loaded || items.some(KIND_TABS[entry] ?? (() => true));
   };
@@ -309,7 +309,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   useEffect(() => {
     if (!folderGone) return;
     const parent = parentOfOpen && folderById.has(parentOfOpen) ? parentOfOpen : undefined;
-    go({ folder: parent, show: "folders" }, true);
+    go({ folder: parent, show: "folders" }, true).catch(() => undefined);
   }, [folderGone, parentOfOpen, folderById, go]);
 
 
@@ -408,12 +408,12 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   }, [search.item]);
   const openPreview = (id: string) => {
     pushedPreview.current = id;
-    go({ ...search, item: id });
+    go({ ...search, item: id }).catch(() => undefined);
   };
   // Another clip of the same run, in place of this one: Back still closes the preview.
   const switchPreview = (id: string) => {
     if (pushedPreview.current === search.item) pushedPreview.current = id;
-    go({ ...search, item: id }, true);
+    go({ ...search, item: id }, true).catch(() => undefined);
   };
   const previewRun = useMemo(
     () => (previewItem ? runSiblings(items, previewItem) : []),
@@ -426,7 +426,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
       pushedPreview.current = null;
       router.history.back();
     } else {
-      go({ ...search, item: undefined }, true);
+      go({ ...search, item: undefined }, true).catch(() => undefined);
     }
   };
 
@@ -437,16 +437,16 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   useEffect(() => {
     if (!missingItem) return;
     let cancelled = false;
-    void refresh().then(() => {
+    refresh().then(() => {
       if (cancelled) return;
       if (useLibraryStore.getState().items.some((item) => item.id === missingItem)) return;
       toast(t("library.toast.missingItem"));
-      void navigate({
+      navigate({
         to: "/library",
         search: (prev) => ({ ...prev, item: undefined }),
         replace: true,
-      });
-    });
+      }).catch(() => undefined);
+    }).catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -495,16 +495,20 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   const actions: LibraryActions = {
     folders,
     openItem: (item) => { openPreview(item.id); },
-    openFolder: (id) => { go({ folder: id }); },
-    chatAbout: (target) => { target.kind === "item"
-        ? chatAbout(target.item)
-        : void chatAboutItems(navigate, filesInFolder(target.folder.id)); },
-    editImage: (item) => void editLibraryImage(navigate, item),
-    toggleFavorite: (item) =>
-      patchItem(item.id, { favorite: !item.favorite }).catch(fail(t("library.toast.favoritesFailed"))).catch(() => undefined),
-    download: (item) => void downloadLibraryItem(item),
+    openFolder: (id) => { go({ folder: id }).catch(() => undefined); },
+    chatAbout: (target) => {
+      if (target.kind === "item") chatAbout(target.item).catch(() => undefined);
+      else chatAboutItems(navigate, filesInFolder(target.folder.id)).catch(() => undefined);
+    },
+    editImage: (item) => { editLibraryImage(navigate, item).catch(() => undefined); },
+    toggleFavorite: (item) => {
+      patchItem(item.id, { favorite: !item.favorite })
+        .catch(fail(t("library.toast.favoritesFailed")))
+        .catch(() => undefined);
+    },
+    download: (item) => { downloadLibraryItem(item).catch(() => undefined); },
     rename: (target) => { setNameDialog({ mode: "rename", target }); },
-    moveTo: (target, destination) => void moveAll([target], destination),
+    moveTo: (target, destination) => { moveAll([target], destination).catch(() => undefined); },
     moveToNewFolder: (target) => { setNameDialog({ mode: "create", parentId: folderId, thenMove: target }); },
     remove: (target) => { requestDelete([target]); },
   };
@@ -608,7 +612,10 @@ function LibraryView({ search }: { search: LibrarySearch }) {
     }
   }
 
-  const requestDelete = (targets: LibraryTarget[]) => { settings.confirmDelete ? setPendingDelete(targets) : void confirmDelete(targets); };
+  const requestDelete = (targets: LibraryTarget[]) => {
+    if (settings.confirmDelete) setPendingDelete(targets);
+    else confirmDelete(targets).catch(() => undefined);
+  };
 
   async function confirmDelete(targets: LibraryTarget[]) {
     setPendingDelete(null);
@@ -624,7 +631,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
     const failed = results.find((result) => result.status === "rejected");
     if (failed) fail(t("library.toast.deleteFailed"))(failed.reason);
     if (folderId && targets.some((t) => t.kind === "folder" && t.folder.id === folderId)) {
-      go({ folder: currentFolder?.parentId ?? undefined, show: "folders" }, true);
+      go({ folder: currentFolder?.parentId ?? undefined, show: "folders" }, true).catch(() => undefined);
     }
   }
 
@@ -728,7 +735,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
     <nav className="flex min-w-0 items-center gap-2 text-[calc(1.6875rem*var(--ui-font-scale,1))] font-semibold tracking-[-0.028em]" aria-label={t("library.breadcrumb")}>
       <button
         type="button"
-        onClick={() => { go({ show: "folders" }); }}
+        onClick={() => { go({ show: "folders" }).catch(() => undefined); }}
         className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
       >
         {t("shell.navigation.library")}
@@ -741,7 +748,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
           ) : (
             <button
               type="button"
-              onClick={() => { go({ folder: folder.id }); }}
+              onClick={() => { go({ folder: folder.id }).catch(() => undefined); }}
               className="truncate text-muted-foreground transition-colors hover:text-foreground"
             >
               {folder.name}
@@ -823,7 +830,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
     if (!(tab in EMPTY_LINKS)) return uploadButton;
     const [to, label] = EMPTY_LINKS[tab as keyof typeof EMPTY_LINKS];
     const generate = (
-      <Button variant="muted" className="rounded-full" onClick={() => void navigate({ to })}>
+      <Button variant="muted" className="rounded-full" onClick={() => { navigate({ to }).catch(() => undefined); }}>
         {t(label)}
       </Button>
     );
@@ -856,7 +863,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
                   onSelectionChange={setSelection}
                   onToggle={toggleSelected}
                   sort={sort}
-                  onSortChange={(key) => { go({ ...search, sort: sortParam(nextSort(sort, key)) }, true); }}
+                  onSortChange={(key) => { go({ ...search, sort: sortParam(nextSort(sort, key)) }, true).catch(() => undefined); }}
                   activity={false}
                   leading={entries.rows}
                   favoriteMarks={false}
@@ -890,7 +897,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
           title={t("library.empty.loadErrorTitle")}
           description={error ?? t("library.empty.loadErrorFallback")}
           action={
-            <Button variant="muted" className="rounded-full" onClick={() => void refresh()}>
+            <Button variant="muted" className="rounded-full" onClick={() => { refresh().catch(() => undefined); }}>
               {t("library.empty.tryAgain")}
             </Button>
           }
@@ -940,7 +947,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
             onSelectionChange={setSelection}
             onToggle={toggleSelected}
             sort={sort}
-            onSortChange={(key) => { go({ ...search, sort: sortParam(nextSort(sort, key)) }, true); }}
+            onSortChange={(key) => { go({ ...search, sort: sortParam(nextSort(sort, key)) }, true).catch(() => undefined); }}
             activity={tab === "suggested" && !folderId}
             favoriteMarks={tab !== "favorites"}
           />
@@ -989,8 +996,8 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   };
   const bulkChat = () => {
     const model = selectedModel();
-    if (model) chatAbout(model);
-    else void chatAboutItems(navigate, selectedFiles());
+    if (model) chatAbout(model).catch(() => undefined);
+    else chatAboutItems(navigate, selectedFiles()).catch(() => undefined);
     setSelection(new Set());
   };
   const bulkDownload = () => {
@@ -1009,7 +1016,7 @@ function LibraryView({ search }: { search: LibrarySearch }) {
   const headerTabs = {
     items: shownTabs.map((key) => ({ key, label: t(TAB_LABELS[key]) })),
     active: tab,
-    onChange: (next: string) => { go({ show: next as LibraryTab }); },
+    onChange: (next: string) => { go({ show: next as LibraryTab }).catch(() => undefined); },
   };
 
   if (tab === "chats" && !folderId) {
@@ -1030,7 +1037,8 @@ function LibraryView({ search }: { search: LibrarySearch }) {
           hidden
           onChange={(event) => {
             uploadFiles([...(event.target.files ?? [])]).catch(() => undefined);
-            event.target.value = "";
+            const input = event.target;
+            input.value = "";
           }}
         />
         <LibraryHeader
@@ -1180,27 +1188,27 @@ function LibraryView({ search }: { search: LibrarySearch }) {
         open={nameDialog !== null}
         {...nameDialogProps}
         onSubmit={submitName}
-        onOpenChange={(open) => !open && setNameDialog(null)}
+        onOpenChange={(open) => { if (!open) setNameDialog(null); }}
       />
       <ConfirmDeleteDialog
         open={pendingDelete !== null}
         title={deleteText?.title ?? ""}
         description={deleteText?.description ?? ""}
         confirmLabel={t("common.delete")}
-        onConfirm={() => pendingDelete && void confirmDelete(pendingDelete)}
-        onOpenChange={(open) => !open && setPendingDelete(null)}
+        onConfirm={() => { if (pendingDelete) confirmDelete(pendingDelete).catch(() => undefined); }}
+        onOpenChange={(open) => { if (!open) setPendingDelete(null); }}
       />
       <LibraryPreview
         item={previewItem}
-        onOpenChange={(open) => !open && closePreview()}
-        onChat={chatAbout}
-        onDownload={(item) => void downloadLibraryItem(item)}
+        onOpenChange={(open) => { if (!open) closePreview(); }}
+        onChat={(item) => { chatAbout(item).catch(() => undefined); }}
+        onDownload={(item) => { downloadLibraryItem(item).catch(() => undefined); }}
         onToggleFavorite={actions.toggleFavorite}
         onDelete={(item) => { actions.remove({ kind: "item", item }); }}
-        onSaved={() => void refresh()}
+        onSaved={() => { refresh().catch(() => undefined); }}
         run={previewRun}
         onOpenItem={switchPreview}
-        onDownloadRun={(run) => void downloadLibraryItems(run)}
+        onDownloadRun={(run) => { downloadLibraryItems(run).catch(() => undefined); }}
       />
     </LibraryActionsProvider>
   );

@@ -134,6 +134,7 @@ export function useTrainingRuntimeLifecycle(): void {
 
   useEffect(() => {
     let disposed = false;
+    const isDisposed = () => disposed;
     let streamController: AbortController | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -273,7 +274,7 @@ export function useTrainingRuntimeLifecycle(): void {
       } catch (error) {
         if (
           isCurrentStream() &&
-          !disposed &&
+          !isDisposed() &&
           !controller.signal.aborted &&
           !isAbortError(error)
         ) {
@@ -284,7 +285,7 @@ export function useTrainingRuntimeLifecycle(): void {
           streamController = null;
           runtimeStore.getState().setSseConnected(false);
 
-          if (!disposed && !controller.signal.aborted) {
+          if (!isDisposed() && !controller.signal.aborted) {
             const liveState = runtimeStore.getState();
             if (
               isTrainingStreamScopeCurrent(scope, liveState) &&

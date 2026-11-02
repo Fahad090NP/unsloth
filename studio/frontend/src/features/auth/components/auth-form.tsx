@@ -80,6 +80,9 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
     password: string;
     token: TokenResponse;
   } | null>(null);
+  const setPendingLogin = (value: typeof pendingLogin.current) => {
+    pendingLogin.current = value;
+  };
   const spooky = useSpookyGreetings();
   const [halloweenSloth] = useState(pickSpookySloth);
   const spookySloth = isLoginMode && spooky ? halloweenSloth : null;
@@ -263,7 +266,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
           setPassword("");
           return;
         }
-        pendingLogin.current = { username: normalizedUsername, password, token: result };
+        setPendingLogin({ username: normalizedUsername, password, token: result });
         token = result;
       } else {
         let accessToken = getAuthToken();
@@ -334,9 +337,11 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
         route,
         finishSession,
       );
-      pendingLogin.current = null;
+      setPendingLogin(null);
       if (replaced) return;
-      navigate({ to: getPostAuthRoute() });
+      navigate({ to: getPostAuthRoute() }).catch((error: unknown) => {
+        console.error("Post-auth navigation failed:", error);
+      });
     } catch (err: unknown) {
       // Show the backend's PATH-based command as-is; a relative Windows path only resolves in the
       // Unsloth home dir.

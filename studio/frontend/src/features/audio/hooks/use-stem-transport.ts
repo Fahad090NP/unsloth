@@ -52,6 +52,10 @@ function setGain(voice: StemVoice, value: number, context: AudioContext) {
   voice.gain?.gain.setTargetAtTime(value, context.currentTime, 0.015);
 }
 
+function seekElement(element: HTMLAudioElement, seconds: number): void {
+  element.currentTime = seconds;
+}
+
 /** Media elements through gain nodes, not decoded buffers, so memory stays near the blob size. */
 export function useStemTransport({
   sources,
@@ -67,7 +71,9 @@ export function useStemTransport({
   const contextRef = useRef<AudioContext | null>(null);
   const voicesRef = useRef<StemVoice[]>([]);
   const gainsRef = useRef(gains);
-  gainsRef.current = gains;
+  useEffect(() => {
+    gainsRef.current = gains;
+  }, [gains]);
   const positionRef = useRef(0);
   const playingRef = useRef(false);
   // Lets a start still waiting on `canplay` know it is stale.
@@ -83,7 +89,15 @@ export function useStemTransport({
   const duration =
     mediaDuration > 0 ? mediaDuration : Math.max(0, durationHint);
   const durationRef = useRef(duration);
-  durationRef.current = duration;
+  useEffect(() => {
+    durationRef.current = duration;
+  }, [duration]);
+  const [trackedSrcKey, setTrackedSrcKey] = useState(srcKey);
+  if (trackedSrcKey !== srcKey) {
+    setTrackedSrcKey(srcKey);
+    setPosition(0);
+    setMediaDuration(0);
+  }
 
   const updatePosition = useCallback((seconds: number) => {
     positionRef.current = seconds;
@@ -106,8 +120,7 @@ export function useStemTransport({
       return { element, source: null, gain: null };
     });
     voicesRef.current = voices;
-    updatePosition(0);
-    setMediaDuration(0);
+    positionRef.current = 0;
     const first = voices[0].element;
     const onMetadata = () => {
       const lengths = voices
@@ -185,7 +198,7 @@ export function useStemTransport({
       const token = ++startToken.current;
       const context = ensureGraph();
       for (const voice of voices) voice.element.pause();
-      for (const voice of voices) voice.element.currentTime = from;
+      for (const voice of voices) seekElement(voice.element, from);
       updatePosition(from);
       playingRef.current = true;
       setPlaying(true);
@@ -212,9 +225,10 @@ export function useStemTransport({
 
   const pause = useCallback(() => {
     if (!playingRef.current) return;
-    const current = voicesRef.current[0].element.currentTime;
+    const lead: StemVoice | undefined = voicesRef.current[0];
+    const current = lead?.element.currentTime;
     stopAll();
-    if (current != null && Number.isFinite(current))
+    if (current !== undefined && Number.isFinite(current))
       updatePosition(current);
   }, [stopAll, updatePosition]);
 
@@ -233,7 +247,7 @@ export function useStemTransport({
       }
       startToken.current += 1;
       updatePosition(next);
-      for (const voice of voicesRef.current) voice.element.currentTime = next;
+      for (const voice of voicesRef.current) seekElement(voice.element, next);
     },
     [start, updatePosition],
   );
@@ -242,7 +256,8 @@ export function useStemTransport({
     if (!playing) return;
     const timer = window.setInterval(() => {
       const voices = voicesRef.current;
-      const lead = voices[0].element;
+      const firstVoice: StemVoice | undefined = voices[0];
+      const lead = firstVoice?.element;
       if (!lead || lead.paused || lead.seeking) return;
       const now = lead.currentTime;
       updatePosition(now);

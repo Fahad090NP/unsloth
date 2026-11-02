@@ -179,7 +179,7 @@ export function collectToolRequest(
   const patch: AudioRunPatch = {};
   let error: string | null = null;
   for (const panel of panels) {
-    const value = panelValue(panel, values, specs);
+    const value: unknown = panelValue<unknown>(panel, values, specs);
     error ??= panel.validate?.(value, core, ctx) ?? null;
     const part = panel.toRequest(value, ctx);
     if (part.options) patch.options = { ...patch.options, ...part.options };

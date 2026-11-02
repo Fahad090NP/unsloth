@@ -25,13 +25,15 @@ export function useTranscribeCapabilities(
   );
   const [loading, setLoading] = useState(false);
   const [generation, setGeneration] = useState(0);
+  const [trackedKey, setTrackedKey] = useState(key);
+  if (trackedKey !== key) {
+    setTrackedKey(key);
+    setCaps(key ? (cache.get(key) ?? null) : null);
+    setLoading(false);
+  }
 
   useEffect(() => {
-    if (!(key && model)) {
-      setCaps(null);
-      setLoading(false);
-      return;
-    }
+    if (!(key && model)) return;
     const cached = cache.get(key);
     setCaps(cached ?? null);
     if (cached && generation === 0) return;

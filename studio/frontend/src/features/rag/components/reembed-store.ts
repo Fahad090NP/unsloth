@@ -59,6 +59,12 @@ async function request<T>(
   }
 }
 
+function loadQuietly(): void {
+  useReembedStore.getState().load().catch((error: unknown) => {
+    console.error("Failed to load reembed status:", error);
+  });
+}
+
 function setJob(job: ReembedJob): void {
   useReembedStore.setState((state) => ({
     status: { staleDocuments: 0, staleArchived: 0, ...state.status, job },
@@ -67,7 +73,7 @@ function setJob(job: ReembedJob): void {
   if (job.status !== "running") {
     // Only a status read carries the stale counts a finished job changed.
     reconciling = true;
-    void useReembedStore.getState().load();
+    loadQuietly();
   }
 }
 
@@ -135,7 +141,7 @@ if (typeof window !== "undefined") {
 
 function schedulePoll(): void {
   if (pollTimer !== null) clearTimeout(pollTimer);
-  pollTimer = setTimeout(() => void useReembedStore.getState().load(), POLL_MS);
+  pollTimer = setTimeout(loadQuietly, POLL_MS);
 }
 
 function follow(job: ReembedJob | null): void {
@@ -202,7 +208,11 @@ export async function toastEmbeddingModelSaved(
     duration: 10_000,
     action: {
       label: translate("settings.general.rag.reembed.action"),
-      onClick: () => void useReembedStore.getState().start(),
+      onClick: () => {
+        useReembedStore.getState().start().catch((error: unknown) => {
+          console.error("Failed to start reembedding:", error);
+        });
+      },
     },
   });
 }

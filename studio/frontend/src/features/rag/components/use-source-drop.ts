@@ -40,7 +40,7 @@ export interface SourceDrop {
 }
 
 function isFileDrag(event: ReactDragEvent): boolean {
-  return Array.from(event.dataTransfer?.types ?? []).includes("Files");
+  return Array.from(event.dataTransfer.types).includes("Files");
 }
 
 export function useSourceDrop({
@@ -112,7 +112,9 @@ export function useSourceDrop({
         toast.info(reason);
         return;
       }
-      void addNativePaths(paths);
+      addNativePaths(paths).catch((error: unknown) => {
+        console.error("Failed to add native drop paths:", error);
+      });
     },
     onDragOver: (over) => { setDragging(over && !disabled); },
   });

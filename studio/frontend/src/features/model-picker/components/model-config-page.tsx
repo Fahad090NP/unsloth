@@ -127,7 +127,7 @@ import {
   loadManagedLlamaFlags,
   subscribeLlamaFlagCatalog,
 } from "../api/llama-flags";
-import type { MemoryEstimate, MlxOffloadablePart } from "../api/memory-estimate";
+import type { MlxOffloadablePart } from "../api/memory-estimate";
 import { fetchMlxDrafters } from "../api/mlx-drafters";
 import {
   resolveEstimateContext,
@@ -1357,7 +1357,7 @@ function useStoredPerModelConfig(
   // biome-ignore lint/correctness/useExhaustiveDependencies: version is the storage write signal
   return useMemo(
     () => resolveInitialConfig(configId, ggufVariant),
-    [configId, ggufVariant, version],
+    [configId, ggufVariant],
   );
 }
 
@@ -2568,7 +2568,7 @@ export function ModelConfigPage({
   const configId = target.configId ?? target.id;
   const targetIsNpu = isNpuModelId(target.id);
   const gpuDevices = useGpuDevices();
-  const resolveInitial = () => {
+  const resolveInitial = useCallback(() => {
     const resolved = resolveInitialConfig(configId, target.ggufVariant);
     if (loadedConfig) {
       return { config: loadedConfig, remembered: resolved.remembered };
@@ -2582,7 +2582,7 @@ export function ModelConfigPage({
       };
     }
     return resolved;
-  };
+  }, [configId, target.ggufVariant, loadedConfig, initialConfig]);
   const draftKey = modelConfigDraftKey(configId, target.ggufVariant);
   const liveSignature = loadedConfigSignature(loadedConfig);
   // Layout effect: only layout cleanups run before a same-key remount re-primes.
@@ -2602,14 +2602,14 @@ export function ModelConfigPage({
       },
       liveSignature,
     );
-  }, [draftKey, liveSignature]);
+  }, [draftKey, liveSignature, gpuDevices, isDiffusion, resolveInitial]);
   const draftSnapshot = useSyncExternalStore(
     subscribeModelConfigDraft,
     () => readModelConfigDraft(draftKey),
   );
   const initialFallback = useMemo(
     () => resolveInitial(),
-    [configId, target.ggufVariant, loadedConfig, initialConfig],
+    [resolveInitial],
   );
   const configState =
     draftSnapshot?.config ??
@@ -2630,9 +2630,13 @@ export function ModelConfigPage({
     sharedExtraArgsCurrent && sharedExtraArgsEdit.loadable === true;
   // Live config for async reads; a closure would hold the value from request start.
   const configRef = useRef(configState);
-  configRef.current = configState;
+  useEffect(() => {
+    configRef.current = configState;
+  }, [configState]);
   const rememberRef = useRef(remember);
-  rememberRef.current = remember;
+  useEffect(() => {
+    rememberRef.current = remember;
+  }, [remember]);
   const setConfig = useCallback(
     (action: SetStateAction<PerModelConfig>) => {
       // A plain value replaces, like useState; merging could not clear a GPU pick on Reset.
@@ -2796,7 +2800,7 @@ export function ModelConfigPage({
     if (contextFetchKey == null) {
       return;
     }
-    let cancelled = false;
+    let cancelled: boolean = false;
     const settleWithoutMetadata = () => {
       if (!cancelled) {
         setFetchedStagedDims({
@@ -3130,6 +3134,9 @@ export function ModelConfigPage({
     target.isGguf,
     resolvedIsDiffusion,
     draftKey,
+    loadedConfig,
+    setConfig,
+    setSavedRemember,
   ]);
   const config = reconcileConfigGpuSelection(
     configState,
@@ -3847,7 +3854,7 @@ export function ModelConfigPage({
     }
     if (pinned !== null && target !== pinned) {
       setPickedSet(target);
-      toast.success(message ?? `Saved "${target}".`);
+      toast.success(message ?? `Saved "${target ?? ""}".`);
       return true;
     }
     const { saved, defaultConfig } = persistConfig(effectiveRuntimeConfig, keep);
@@ -4268,18 +4275,12 @@ export function ModelConfigPage({
               inputMax={targetIsNpu ? maxSeqLengthMax : MAX_SEQ_LENGTH_MAX}
               inputRef={maxSeqLengthInputRef}
               isMlx={pinsContextLength}
-              pinned={
-                savedContextPin(config) !== null &&
-                savedContextPin(config) !== undefined
-              }
+              pinned={savedContextPin(config) !== null}
               fittedToMemory={
-                (savedContextPin(config) === null ||
-                  savedContextPin(config) === undefined) &&
-                mlxFittedWindow != null
+                savedContextPin(config) === null && mlxFittedWindow != null
               }
               windowUnknown={
-                (savedContextPin(config) === null ||
-                  savedContextPin(config) === undefined) &&
+                savedContextPin(config) === null &&
                 mlxServedWindow == null &&
                 npuServedWindow == null
               }

@@ -60,10 +60,14 @@ export function EditRecipePage({ recipeId }: EditRecipePageProps): ReactElement 
     const cachedRecipe = getCachedRecipe(recipeId);
     if (cachedRecipe) {
       // A later server read would replace edits already made in the open editor.
-      setLoadState({ status: "ready", record: cachedRecipe });
+      queueMicrotask(() => {
+        if (active) setLoadState({ status: "ready", record: cachedRecipe });
+      });
       return;
     }
-    setLoadState({ status: "loading" });
+    queueMicrotask(() => {
+      if (active) setLoadState({ status: "loading" });
+    });
 
     getRecipe(recipeId)
       .then((record) => {
@@ -96,6 +100,9 @@ export function EditRecipePage({ recipeId }: EditRecipePageProps): ReactElement 
   }, [loadState.status, signalReady]);
 
   const editedVersion = useRef<number | undefined>(undefined);
+  const setEditedVersion = (value: number | undefined) => {
+    editedVersion.current = value;
+  };
   const loadedRecord = loadState.status === "ready" ? loadState.record : null;
   useEffect(() => {
     editedVersion.current = loadedRecord?.updatedAt;
@@ -109,7 +116,7 @@ export function EditRecipePage({ recipeId }: EditRecipePageProps): ReactElement 
         payload: input.payload,
         baseUpdatedAt: editedVersion.current,
       });
-      editedVersion.current = record.updatedAt;
+      setEditedVersion(record.updatedAt);
       primeRecipeCache(record);
       return { id: record.id, updatedAt: record.updatedAt };
     },
@@ -121,7 +128,11 @@ export function EditRecipePage({ recipeId }: EditRecipePageProps): ReactElement 
       <RecipeLoadState
         title="Loading recipe..."
         description="Please wait while we load your recipe."
-        onBack={() => void navigate({ to: "/data-recipes" })}
+        onBack={() => {
+          navigate({ to: "/data-recipes" }).catch((error: unknown) => {
+            console.error("Failed to navigate to recipes:", error);
+          });
+        }}
       />
     );
   }
@@ -131,7 +142,11 @@ export function EditRecipePage({ recipeId }: EditRecipePageProps): ReactElement 
       <RecipeLoadState
         title="Recipe not found"
         description="This recipe may have been deleted."
-        onBack={() => void navigate({ to: "/data-recipes" })}
+        onBack={() => {
+          navigate({ to: "/data-recipes" }).catch((error: unknown) => {
+            console.error("Failed to navigate to recipes:", error);
+          });
+        }}
       />
     );
   }

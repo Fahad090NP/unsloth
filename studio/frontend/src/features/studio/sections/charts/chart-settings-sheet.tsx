@@ -179,7 +179,7 @@ export function ChartSettingsSheet(): ReactElement {
 
   const minWindow = Math.min(10, Math.max(1, availableSteps));
   const effectiveWindowSize =
-    windowSize === null ? Math.max(availableSteps, 1) : windowSize;
+    windowSize ?? Math.max(availableSteps, 1);
   const showingAll =
     availableSteps > 0 &&
     (windowSize === null || effectiveWindowSize >= availableSteps);

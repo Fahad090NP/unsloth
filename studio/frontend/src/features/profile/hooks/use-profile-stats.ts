@@ -19,11 +19,11 @@ export function useProfileStats(): ProfileStatsState {
   // A refresh aborts the in-flight request so a slow first load cannot overwrite the newer one.
   const abortRef = useRef<AbortController | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (showLoading = false) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       const next = await loadProfileStats(controller.signal);
       if (controller.signal.aborted) return;
@@ -38,15 +38,27 @@ export function useProfileStats(): ProfileStatsState {
   }, []);
 
   useEffect(() => {
-    void load();
+    load().catch((cause: unknown) => {
+      console.error("Profile stats load failed:", cause);
+    });
     return () => abortRef.current?.abort();
   }, [load]);
 
   // Tokens move while backgrounded, so a watcher is needed; reopen needs none (not force-mounted).
-  useEffect(() => subscribeResidentStatusRefresh(load), [load]);
+  useEffect(
+    () =>
+      subscribeResidentStatusRefresh(() => {
+        load().catch((cause: unknown) => {
+          console.error("Profile stats refresh failed:", cause);
+        });
+      }),
+    [load],
+  );
 
   const reload = useCallback(() => {
-    void load();
+    load(true).catch((cause: unknown) => {
+      console.error("Profile stats reload failed:", cause);
+    });
   }, [load]);
 
   return { stats, loading, error, reload };

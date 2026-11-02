@@ -46,8 +46,8 @@ import {
   fetchGalleryVideoThumbnail,
   getVideoGallery,
   setGalleryVideoFlags,
-} from "@/features/video/api";
-import { videoThumbnailQueue } from "@/features/video/thumbnail-request-queue";
+  videoThumbnailQueue,
+} from "@/features/video";
 import { BlobUrlCache } from "@/lib/blob-url-cache";
 import { notifyArchiveChanged, notifyGalleryChanged } from "@/lib/gallery-flags";
 import { translate, useLocale, useT } from "@/i18n";
@@ -190,9 +190,9 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
   );
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
+    let cancelled: boolean = false;
     ((async () => {
+      setLoading(true);
       try {
         const page = await loadPage(0);
         if (cancelled) return;
@@ -291,7 +291,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
   }, []);
   useEffect(() => {
     if (isAudio) return;
-    let cancelled = false;
+    let cancelled: boolean = false;
     ((async () => {
       for (const row of rows) {
         if (cancelled) return;
@@ -301,7 +301,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
         if ((failures.current.get(row.id) ?? 0) > THUMB_RETRY_LIMIT) continue;
         requested.current.add(row.id);
         try {
-          if (isImages || kind === "videos") {
+          {
             const { url, bytes } = isImages
               ? await fetchGalleryObjectUrl(row.url)
               : await videoThumbnailQueue.run(() =>
@@ -348,7 +348,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
     return () => {
       cancelled = true;
     };
-  }, [rows, isImages, isAudio, kind, visible, retryTick]);
+  }, [rows, isImages, isAudio, visible, retryTick]);
 
   // Top the page back up so the list never dead-ends behind a hidden "Show more".
   const dropRow = useCallback(

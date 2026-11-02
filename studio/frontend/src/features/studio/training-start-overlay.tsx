@@ -84,9 +84,16 @@ function useHfDownloadProgress(
     phase === "loading_dataset" ||
     phase === "training";
 
+  const inactive =
+    !repoId || !HF_REPO_REGEX.test(repoId) || !shouldPoll;
+  const [wasInactive, setWasInactive] = useState(inactive);
+  if (inactive !== wasInactive) {
+    setWasInactive(inactive);
+    if (inactive) setState(EMPTY_DOWNLOAD_STATE);
+  }
+
   useEffect(() => {
     if (!repoId || !HF_REPO_REGEX.test(repoId) || !shouldPoll) {
-      setState(EMPTY_DOWNLOAD_STATE);
       return;
     }
 
@@ -103,7 +110,7 @@ function useHfDownloadProgress(
       const generation = ++issued;
       try {
         const prog = await fetcher(repoId);
-        if (status.cancelled || generation <= applied) return;
+        if (Boolean(status.cancelled) || generation <= applied) return;
         applied = generation;
         const next = downloadStateFromProgress(prog, latest);
         latest = next;
@@ -354,12 +361,11 @@ export function TrainingStartOverlay({
     preparationTarget === "model" ? preparationProgress : null;
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelRequested, setCancelRequested] = useState(false);
-
-  useEffect(() => {
-    if (!isStarting) {
-      setCancelRequested(false);
-    }
-  }, [isStarting]);
+  const [wasStarting, setWasStarting] = useState(isStarting);
+  if (isStarting !== wasStarting) {
+    setWasStarting(isStarting);
+    if (!isStarting) setCancelRequested(false);
+  }
 
   const alreadyAnimated = jobId !== null && animatedJobs.has(jobId);
   useEffect(() => {

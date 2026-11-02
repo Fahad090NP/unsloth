@@ -47,7 +47,7 @@ export function DocumentStatusChip({
   shared?: boolean;
 }) {
   const processing = status === "pending" || status === "running";
-  const openable = status === "completed" && (onOpen || openTrigger);
+  const openable = status === "completed" && (onOpen ?? openTrigger);
   const nameButton = openable ? (
     <button
       type="button"

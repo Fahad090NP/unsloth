@@ -37,10 +37,10 @@ export const SEPARATE_TRACK_EXPIRED_MESSAGE =
 /** Mirrors useCloneGeneration so Stop, phases and errors behave the same. */
 export function useSeparateGeneration({
   status,
-  busyRef,
+  busyRef: sharedBusyRef,
   setBusy,
   updateGenerationPhase,
-  generateAbort,
+  generateAbort: sharedGenerateAbort,
   setMode,
   refreshStatus,
   activeRef,
@@ -70,6 +70,8 @@ export function useSeparateGeneration({
     "refreshGallery" | "selectClip" | "setFallbackClip" | "setSelectedId"
   > &
   Pick<AudioModelSlot, "pendingTranscribeRelease" | "replayQueuedTtsPick">) {
+  const busyRef = sharedBusyRef;
+  const generateAbort = sharedGenerateAbort;
   const source = useAudioSeparateStore((state) => state.source);
   const lastOverlapByModel = useAudioSeparateStore(
     (state) => state.lastOverlapByModel,
@@ -295,9 +297,12 @@ export function useSeparateGeneration({
     replayQueuedTtsPick,
   ]);
 
-  useEffect(() => {
+  const sourceKey = source ? `${source.kind}:${source.id}` : null;
+  const [trackedSourceKey, setTrackedSourceKey] = useState<string | null>(sourceKey);
+  if (trackedSourceKey !== sourceKey) {
+    setTrackedSourceKey(sourceKey);
     if (source) setGenerationError(null);
-  }, [source]);
+  }
 
   return {
     source,

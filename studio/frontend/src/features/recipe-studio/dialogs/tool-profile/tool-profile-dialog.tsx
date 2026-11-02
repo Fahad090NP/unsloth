@@ -363,7 +363,7 @@ export function ToolProfileDialog({
   onUpdate,
 }: ToolProfileDialogProps): ReactElement {
   const providers = config.mcp_providers;
-  const [activeTab, setActiveTab] = useState<"profile" | "servers">(
+  const [activeTabState, setActiveTab] = useState<"profile" | "servers">(
     providers.length > 0 ? "profile" : "servers",
   );
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -418,20 +418,10 @@ export function ToolProfileDialog({
   }, [config.fetched_tools_by_provider, onUpdate, providerSignature]);
 
   useEffect(() => {
-    const tools = config.fetched_tools_by_provider ?? {};
-    setToolsByProvider(tools);
-  }, [config.fetched_tools_by_provider]);
-
-  useEffect(() => {
-    setOpenProviders((current) => {
-      const next: Record<string, boolean> = {};
-      for (const provider of providers) {
-        next[provider.id] =
-          current[provider.id] ?? !isProviderConfigured(provider);
-      }
-      return next;
+    queueMicrotask(() => {
+      setToolsByProvider(config.fetched_tools_by_provider ?? {});
     });
-  }, [providers]);
+  }, [config.fetched_tools_by_provider]);
 
   function updateProviders(nextProviders: LlmMcpProviderConfig[]): void {
     onUpdate({
@@ -455,7 +445,7 @@ export function ToolProfileDialog({
     index: number,
     mapProvider: (provider: LlmMcpProviderConfig) => Partial<LlmMcpProviderConfig>,
   ): void {
-    const provider = providers[index];
+    const provider = providers.at(index);
     if (!provider) {
       return;
     }
@@ -579,7 +569,7 @@ export function ToolProfileDialog({
             .map((provider) => [provider.name.trim(), provider.error ?? "Failed to load tools."]),
         ),
       );
-      setDuplicateTools(response.duplicate_tools ?? {});
+      setDuplicateTools(response.duplicate_tools);
     } catch (error) {
       toastError(
         "Couldn't load tools",
@@ -602,12 +592,9 @@ export function ToolProfileDialog({
     [providerNames, toolsByProvider],
   );
   const hasProviders = providers.length > 0;
-
-  useEffect(() => {
-    if (!hasProviders && activeTab === "profile") {
-      setActiveTab("servers");
-    }
-  }, [activeTab, hasProviders]);
+  // With no servers there is nothing to show on the profile tab, so it falls back.
+  const activeTab =
+    activeTabState === "profile" && !hasProviders ? "servers" : activeTabState;
 
   return (
     <Tabs
@@ -672,7 +659,7 @@ export function ToolProfileDialog({
                   variant="outline"
                   disabled={loadingTools}
                   onClick={() => {
-                    void loadTools();
+                    loadTools().catch(() => undefined);
                   }}
                 >
                   {loadingTools ? "Loading..." : "Load tools"}

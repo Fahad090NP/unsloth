@@ -51,7 +51,6 @@ export function useOffloadState(enabled: boolean, intervalMs = 2000): OffloadSta
   const [data, setData] = useState<OffloadState>({ active: false });
   useEffect(() => {
     if (!enabled) {
-      setData({ active: false });
       return;
     }
     let cancelled = false;
@@ -60,19 +59,24 @@ export function useOffloadState(enabled: boolean, intervalMs = 2000): OffloadSta
         const res = await authFetch("/api/train/offload");
         if (!res.ok || cancelled) return;
         const json = (await res.json()) as OffloadState;
-        if (!cancelled) setData(json);
+        if (!Boolean(cancelled)) setData(json);
       } catch {
         // Retry on the next poll.
       }
     }
-    void poll();
-    const timer = setInterval(() => void poll(), intervalMs);
+    const runPoll = () => {
+      poll().catch((error: unknown) => {
+        console.error("Offload poll failed:", error);
+      });
+    };
+    runPoll();
+    const timer = setInterval(runPoll, intervalMs);
     return () => {
       cancelled = true;
       clearInterval(timer);
     };
   }, [enabled, intervalMs]);
-  return data;
+  return enabled ? data : { active: false };
 }
 
 function useSweep(count: number): number {

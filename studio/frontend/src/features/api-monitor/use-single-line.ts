@@ -4,11 +4,13 @@
 import { useLayoutEffect, useState } from "react";
 
 /** Callback ref, so a box that mounts later is measured too; ResizeObserver catches wrapping. */
-export function useSingleLine<T extends HTMLElement>(): [
+export function useSingleLine<T extends HTMLElement>(
+  initial: T | null = null,
+): [
   (element: T | null) => void,
   boolean,
 ] {
-  const [element, setElement] = useState<T | null>(null);
+  const [element, setElement] = useState<T | null>(initial);
   const [single, setSingle] = useState(true);
   useLayoutEffect(() => {
     if (!element) return;

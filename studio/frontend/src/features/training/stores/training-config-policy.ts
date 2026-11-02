@@ -137,9 +137,7 @@ export function streamingCompatiblePatch(
   }
 
   const willStream =
-    patch.datasetStreaming !== undefined
-      ? patch.datasetStreaming
-      : state.datasetStreaming;
+    patch.datasetStreaming ?? state.datasetStreaming;
 
   if (willStream && state.trainOnCompletions) {
     patch.trainOnCompletions = false;
@@ -223,8 +221,8 @@ export function resolveTrainingToggleDefaults(state: Parameters<typeof trainingT
 ): { packing: boolean; trainOnCompletions: boolean } {
   const defaults = trainingToggleDefaults(state);
   return {
-    packing: defaults.packing && (state.trainingToggleChoices?.packing ?? true),
+    packing: defaults.packing && (state.trainingToggleChoices.packing ?? true),
     trainOnCompletions: defaults.trainOnCompletions &&
-      (state.trainingToggleChoices?.trainOnCompletions ?? true),
+      (state.trainingToggleChoices.trainOnCompletions ?? true),
   };
 }

@@ -91,7 +91,6 @@ export function useTrainingActions() {
       await syncTrainingRuntimeFromBackend().catch(() => undefined);
       const currentRuntime = useTrainingRuntimeStore.getState();
       return (
-        scope.kind === "job" &&
         currentRuntime.jobId === scope.jobId &&
         currentRuntime.resetGeneration === expectedResetGeneration
       );

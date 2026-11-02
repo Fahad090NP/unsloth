@@ -72,7 +72,7 @@ export function applyLayoutDirectionToNodes(
   layoutDirection: LayoutDirection,
 ): RecipeNode[] {
   return nodes.map((node) => {
-    const config: NodeConfig | undefined = configs[node.id];
+    const config = node.id in configs ? configs[node.id] : undefined;
     if (config) {
       return { ...node, data: nodeDataFromConfig(config, layoutDirection) };
     }

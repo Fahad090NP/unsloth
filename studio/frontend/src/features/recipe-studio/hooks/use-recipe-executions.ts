@@ -208,7 +208,7 @@ function getLocalModelLoadPlan(
     };
   }
 
-  const selection = [...selections.values()][0];
+  const selection = [...selections.values()].at(0);
   return selection ? { selection, error: null } : null;
 }
 
@@ -324,14 +324,14 @@ async function loadLocalModelSelection(
     reasoningBudgetMessage,
   } = selection;
   const modelLabel = ggufVariant ? `${target} (${ggufVariant})` : target;
-  let loadToastDismissed = false;
+  const loadToastState = { dismissed: false };
   const toastId = toast.message(`Loading ${modelLabel}...`, {
     description: "Starting the local inference server for this recipe.",
     duration: Number.POSITIVE_INFINITY,
     closeButton: true,
     icon: createLoadingToastIcon(),
     onDismiss: () => {
-      loadToastDismissed = true;
+      loadToastState.dismissed = true;
     },
   });
   try {
@@ -379,7 +379,7 @@ async function loadLocalModelSelection(
     };
     const title = `Loaded ${modelLabel}${offloadNotice?.titleSuffix ?? ""}`;
     const showToast = offloadNotice ? toast.warning : toast.success;
-    if (loadToastDismissed) {
+    if (loadToastState.dismissed) {
       showToast(title, successOptions);
     } else {
       showToast(title, { ...successOptions, id: toastId });
@@ -535,7 +535,7 @@ async function prepareLocalModelForRun(payload: RecipePayload): Promise<{
       : previousSnapshot.unrestorableLabel
         ? () => {
             toast.warning("Previous local model was not restored", {
-              description: `${previousSnapshot.unrestorableLabel} was selected from a native file path. Reopen it in Chat to continue with that model.`,
+              description: `${previousSnapshot.unrestorableLabel ?? ""} was selected from a native file path. Reopen it in Chat to continue with that model.`,
             });
             return Promise.resolve();
           }
@@ -715,7 +715,7 @@ export function useRecipeExecutions({
           return;
         }
 
-        trackRecipeExecution({
+        await trackRecipeExecution({
           label: executionLabel(resumable.kind),
           kind: resumable.kind,
           rows: resumable.rows,
@@ -732,7 +732,7 @@ export function useRecipeExecutions({
       }
     }
 
-    hydrate();
+    hydrate().catch(() => undefined);
 
     return () => {
       cancelled = true;
@@ -1066,7 +1066,7 @@ export function useRecipeExecutions({
       setRunDialogKind(kind);
       if (kind === "full") {
         const payload = readPayload();
-        const payloadRows = Number(payload?.run?.rows);
+        const payloadRows = Number(payload?.run.rows);
         if (Number.isFinite(payloadRows) && payloadRows > 0) {
           setFullRows(Math.floor(payloadRows));
         }

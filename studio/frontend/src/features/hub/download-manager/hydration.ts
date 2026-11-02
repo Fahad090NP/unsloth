@@ -180,10 +180,10 @@ async function probeHydratedIdleProgress(
     const progressResp = await withHydrationTimeout((signal) =>
       apiGetProgress(job, signal),
     );
-    const current: ManagedDownload | undefined = getState().jobs[key];
+    const current = getState().jobs[key] as ManagedDownload | undefined;
     if (!current || !ACTIVE_STATES.has(current.state)) return "settled";
     applyProgressUpdate(key, current, progressResp);
-    const updated: ManagedDownload | undefined = getState().jobs[key];
+    const updated = getState().jobs[key] as ManagedDownload | undefined;
     if (!updated || !ACTIVE_STATES.has(updated.state)) return "settled";
     if (hasObservedExpectedBytes(updated)) {
       finalize(key, "complete", { bytes: updated.downloadedBytes });
@@ -219,7 +219,7 @@ async function settleHydratedJob(
   } else if (status.state === "error") {
     finalize(key, "error", { error: status.error ?? null });
   } else {
-    const job: ManagedDownload | undefined = getState().jobs[key];
+    const job = getState().jobs[key] as ManagedDownload | undefined;
     if (!job) {
       finalize(key, "gone");
     } else if (hasObservedExpectedBytes(job)) {
@@ -231,7 +231,7 @@ async function settleHydratedJob(
         adoptJob(req);
         return;
       }
-      const latest: ManagedDownload | undefined = getState().jobs[key];
+      const latest = getState().jobs[key] as ManagedDownload | undefined;
       if (latest && hasObservedExpectedBytes(latest)) {
         finalize(key, "complete", { bytes: latest.downloadedBytes });
       } else {
@@ -250,7 +250,7 @@ function scheduleHydrationProbeRetry(
 ): void {
   const timer = window.setTimeout(() => {
     runtimeRegistry.hydrationRetryTimers.delete(timer);
-    const job: ManagedDownload | undefined = getState().jobs[key];
+    const job = getState().jobs[key] as ManagedDownload | undefined;
     if (!job || !ACTIVE_STATES.has(job.state)) return;
     (probeHydratedJob(key, req, attempt)).catch(() => { /* noop */ });
   }, HYDRATE_STATUS_RETRY_MS);
@@ -262,13 +262,13 @@ async function probeHydratedJob(
   req: DownloadRequest,
   attempt: number,
 ): Promise<void> {
-  const job: ManagedDownload | undefined = getState().jobs[key];
+  const job = getState().jobs[key] as ManagedDownload | undefined;
   if (!job || !ACTIVE_STATES.has(job.state)) return;
   try {
     const status = await withHydrationTimeout((signal) =>
       apiGetStatus(job, signal),
     );
-    const current: ManagedDownload | undefined = getState().jobs[key];
+    const current = getState().jobs[key] as ManagedDownload | undefined;
     if (!current || !ACTIVE_STATES.has(current.state)) return;
     await settleHydratedJob(key, req, status);
   } catch (error) {

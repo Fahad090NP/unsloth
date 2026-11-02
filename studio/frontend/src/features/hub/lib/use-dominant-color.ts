@@ -75,7 +75,6 @@ export function useDominantColor(url: string | null): string | null {
   );
   useEffect(() => {
     if (!url) {
-      setColor(null);
       return;
     }
     if (colorCache.has(url)) {
@@ -101,5 +100,5 @@ export function useDominantColor(url: string | null): string | null {
       alive = false;
     };
   }, [url]);
-  return color;
+  return url ? color : null;
 }

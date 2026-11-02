@@ -41,7 +41,6 @@ import { Copy01Icon } from "@/lib/copy-icon";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { useNavigate } from "@tanstack/react-router";
 import { type ComponentType, Fragment, type ReactNode } from "react";
-import { hostOf } from "./address";
 import { callNative, useNativeBrowser } from "./native-support";
 import { nativeAction, hasNativeView } from "./native-view";
 import { type PinnedPage, usePinnedPagesStore } from "./pinned-pages-store";

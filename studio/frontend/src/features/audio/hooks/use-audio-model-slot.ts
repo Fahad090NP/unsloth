@@ -116,7 +116,7 @@ export function useAudioModelSlot({
   active,
   activeRef,
   busy,
-  busyRef,
+  busyRef: sharedBusyRef,
   setBusy,
   mode,
   setMode,
@@ -135,16 +135,16 @@ export function useAudioModelSlot({
   sttEngineFor,
   refreshSttStatus,
   sttLoadedModel,
-  selectedSttRepoRef,
+  selectedSttRepoRef: sharedSelectedSttRepoRef,
   setSelectedSttRepo,
-  deferredSttLoad,
-  sttLoadingGeneration,
-  sttLoadGeneration,
-  sttLoadAbort,
+  deferredSttLoad: sharedDeferredSttLoad,
+  sttLoadingGeneration: sharedSttLoadingGeneration,
+  sttLoadGeneration: sharedSttLoadGeneration,
+  sttLoadAbort: sharedSttLoadAbort,
   audioCppRuntime,
   selectedSttRepo,
   sttReady,
-  sttStatusRefreshGeneration,
+  sttStatusRefreshGeneration: sharedSttStatusRefreshGeneration,
 }: Pick<
   AudioHostState,
   | "active"
@@ -183,6 +183,13 @@ export function useAudioModelSlot({
     | "sttReady"
     | "sttStatusRefreshGeneration"
   >) {
+  const busyRef = sharedBusyRef;
+  const deferredSttLoad = sharedDeferredSttLoad;
+  const sttLoadGeneration = sharedSttLoadGeneration;
+  const sttLoadingGeneration = sharedSttLoadingGeneration;
+  const sttLoadAbort = sharedSttLoadAbort;
+  const selectedSttRepoRef = sharedSelectedSttRepoRef;
+  const sttStatusRefreshGeneration = sharedSttStatusRefreshGeneration;
   const ttsLoadInFlight = useRef(false);
   const loadFailureHandlers = useRef<AudioLoadFailureHandlers | null>(null);
   const setLoadFailureHandlers = useCallback(
@@ -229,7 +236,9 @@ export function useAudioModelSlot({
   const stagedTtsLoadDeferred = useRef(false);
   const pickModelVariantRef = useRef<
     (id: string, quant?: string) => Promise<void>
-  >(async () => {});
+  >(async () => {
+    /* no-op */
+  });
   // Repeats the last successful load, so a generation failure's "Load into CPU RAM" reloads the resident model.
   const lastTtsLoad = useRef<((device: "cpu") => Promise<void>) | null>(null);
 
@@ -431,7 +440,7 @@ export function useAudioModelSlot({
               // The mode is an installation setting: a managed account's save is refused.
               action:
                 replacesChat && isAccountOwner()
-                  ? { label: "Keep both loaded", onClick: () => void keepBothLoaded() }
+                  ? { label: "Keep both loaded", onClick: () => { keepBothLoaded().catch(() => { /* noop */ }); } }
                   : undefined,
             },
           );
@@ -475,8 +484,9 @@ export function useAudioModelSlot({
             ...handlers,
             deviceIsCpu: deviceOverride === "cpu" || audioDevice === "cpu",
             cpuUnsupported: musicGenerationRequiresCuda(repoId, audioType),
-            onUseVariant: (variant) =>
-              pickModelVariantRef.current(repoId, variant).catch(() => undefined),
+            onUseVariant: (variant) => {
+              pickModelVariantRef.current(repoId, variant).catch(() => undefined);
+            },
             onUseCpu: () => {
               handlers.selectCpuDevice();
               retryLoad("cpu").catch(() => undefined);
@@ -511,7 +521,9 @@ export function useAudioModelSlot({
   );
 
   const loadTtsModelRef = useRef(loadTtsModel);
-  loadTtsModelRef.current = loadTtsModel;
+  useEffect(() => {
+    loadTtsModelRef.current = loadTtsModel;
+  });
   /** Repeat the last load into CPU RAM; false when there is none to repeat. */
   const reloadOnCpu = useCallback(() => {
     lastTtsLoad.current?.("cpu").catch(() => undefined);
@@ -523,7 +535,7 @@ export function useAudioModelSlot({
     const queued = pendingRoutedTtsPick.current;
     if (!queued) return;
     pendingRoutedTtsPick.current = null;
-    void loadTtsModelRef.current(
+    loadTtsModelRef.current(
       queued.repoId,
       queued.ggufFilename,
       queued.loadId,
@@ -531,7 +543,7 @@ export function useAudioModelSlot({
       queued.remoteCodeApproval,
       queued.isGguf,
       queued.deviceOverride,
-    );
+    ).catch(() => undefined);
   }, []);
   const invalidatePendingStagedTts = useCallback(() => {
     stagedTtsGeneration.current += 1;
@@ -575,12 +587,12 @@ export function useAudioModelSlot({
           },
         );
         pendingTranscribeRelease.current = release;
-        void release.then((released) => {
+        release.then((released) => {
           if (pendingTranscribeRelease.current !== release) return;
           pendingTranscribeRelease.current = null;
           // Sidecar still resident: back to Transcribe so Eject can retry, unless something moved on.
           if (!released && modeRef.current === "speak") setMode("transcribe");
-        });
+        }).catch(() => undefined);
       }
       return true;
     },
@@ -647,14 +659,14 @@ export function useAudioModelSlot({
         return;
       }
       pendingStagedTtsLoad.current = null;
-      void loadTtsModelRef.current(
+      loadTtsModelRef.current(
         pending.repoId,
         pending.ggufFilename,
         pending.loadId,
         pending.audioType,
         pending.remoteCodeApproval,
         pending.isGguf,
-      );
+      ).catch(() => undefined);
     },
     onCancelled: invalidatePendingStagedTts,
     onReset: invalidatePendingStagedTts,
@@ -676,14 +688,14 @@ export function useAudioModelSlot({
       return;
     }
     pendingStagedTtsLoad.current = null;
-    void loadTtsModelRef.current(
+    loadTtsModelRef.current(
       pending.repoId,
       pending.ggufFilename,
       pending.loadId,
       pending.audioType,
       pending.remoteCodeApproval,
       pending.isGguf,
-    );
+    ).catch(() => undefined);
   }, [active, busy]);
 
   const loadOrStageTtsModel = useCallback(
@@ -743,14 +755,14 @@ export function useAudioModelSlot({
         } catch (error) {
           if (generation !== stagedTtsGeneration.current) return;
           if (meta.isDownloaded === true) {
-            void loadTtsModelRef.current(
+            loadTtsModelRef.current(
               repoId,
               ggufFilename,
               meta.loadId,
               meta.audioType,
               remoteCodeApproval,
               meta.isGguf,
-            );
+            ).catch(() => undefined);
             return;
           }
           toast.error(
@@ -818,14 +830,14 @@ export function useAudioModelSlot({
         return;
       }
 
-      void loadTtsModelRef.current(
+      loadTtsModelRef.current(
         repoId,
         ggufFilename,
         meta.loadId,
         meta.audioType,
         remoteCodeApproval,
         meta.isGguf,
-      );
+      ).catch(() => undefined);
     },
     [stageTtsDownload],
   );
@@ -841,10 +853,10 @@ export function useAudioModelSlot({
         pendingTtsLoad.current = null;
         pending.controller.abort();
         if (pending.requestStarted)
-          void unloadModel({
+          unloadModel({
             model_path: pending.loadTarget,
             cancel_load_request_id: pending.loadRequestId,
-          }).catch(() => {});
+          }).catch(() => undefined);
       }
       if (ttsInspectionGeneration.current !== null) {
         ttsInspectionGeneration.current = null;
@@ -897,14 +909,15 @@ export function useAudioModelSlot({
           )
             return;
         } catch {
+          /* no-op */
         }
         if (activeRef.current && selectedSttRepoRef.current === deferred.repoId)
-          void ensureSttLoaded(
+          ensureSttLoaded(
             deferred.repoId,
             deferred.sidecarKey,
             deferred.engine,
-          );
-      })();
+          ).catch(() => undefined);
+      })().catch(() => undefined);
     }
   }, [active, ensureSttLoaded]);
 
@@ -1055,7 +1068,7 @@ export function useAudioModelSlot({
     if (!active || mode !== "transcribe" || busy !== null || !sttLoadedModel)
       return;
     const refresh = () => {
-      if (!document.hidden) void refreshSttStatus();
+      if (!document.hidden) refreshSttStatus().catch(() => undefined);
     };
     const interval = window.setInterval(refresh, STT_STATUS_POLL_MS);
     window.addEventListener("focus", refresh);
@@ -1083,7 +1096,7 @@ export function useAudioModelSlot({
 
       setBusy("unloading");
       const toastId = toast.loading("Unloading transcription model…");
-      void (async () => {
+      (async () => {
         try {
           const outcome = await ejectTranscribeModel();
           if (outcome === "unloaded") {
@@ -1109,7 +1122,7 @@ export function useAudioModelSlot({
         } finally {
           setBusy(null);
         }
-      })();
+      })().catch(() => undefined);
       return;
     }
 
@@ -1123,7 +1136,7 @@ export function useAudioModelSlot({
     }
 
     setBusy("unloading");
-    void (async () => {
+    (async () => {
       try {
         // A speech model beside the chat model unloads alone, so the chats keep running.
         const slotModel = audioSlotRoutingId(activeModel);
@@ -1170,7 +1183,7 @@ export function useAudioModelSlot({
       } finally {
         useChatRuntimeStore.getState().endModelLoading(lifecycleLease);
       }
-    })();
+    })().catch(() => undefined);
   }, [
     busy,
     ejectTranscribeModel,

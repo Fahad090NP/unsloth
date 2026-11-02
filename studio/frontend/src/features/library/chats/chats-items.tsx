@@ -1077,11 +1077,13 @@ export function ChatRow({
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: the title button is the keyboard target
     <div
-      onClick={(event) =>
-        { actions.selection.size > 0
-          ? actions.toggleSelected(chat.id, event.shiftKey)
-          : actions.open(chat); }
-      }
+      onClick={(event) => {
+        if (actions.selection.size > 0) {
+          actions.toggleSelected(chat.id, event.shiftKey);
+        } else {
+          actions.open(chat);
+        }
+      }}
       className={cn(
         "group/chat relative flex cursor-pointer items-center gap-4 rounded-md transition-colors hover:bg-muted dark:hover:bg-muted/60",
         ROW_INSET,
@@ -1177,9 +1179,10 @@ export function ChatCard({
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: the title button is the keyboard target
     <div
-      onClick={(event) =>
-        { selecting ? actions.toggleSelected(chat.id, event.shiftKey) : actions.open(chat); }
-      }
+      onClick={(event) => {
+        if (selecting) actions.toggleSelected(chat.id, event.shiftKey);
+        else actions.open(chat);
+      }}
       className={cn(CARD, selected && "ring-2 ring-foreground")}
     >
       <div className={cn("flex items-center gap-2", !showTile && TILELESS_ROW)}>
@@ -1386,7 +1389,10 @@ function ProjectMenu({
           <MenuItem
             icon={Upload01Icon}
             label={t("settings.chat.importChats")}
-            onSelect={() => void pickAndImportChats({ projectId: project.id, name: project.name })}
+            onSelect={() => {
+              pickAndImportChats({ projectId: project.id, name: project.name })
+                .catch(() => undefined);
+            }}
           />
           <DropdownMenuSeparator className="mx-3" />
           <MenuItem
@@ -1612,9 +1618,10 @@ export function SectionMenuItems({
       <MenuItem
         icon={Upload01Icon}
         label={t("settings.chat.importChats")}
-        onSelect={() =>
-          void pickAndImportChats({ projectId: null, sectionId: section.id, name: section.name })
-        }
+        onSelect={() => {
+          pickAndImportChats({ projectId: null, sectionId: section.id, name: section.name })
+            .catch(() => undefined);
+        }}
       />
       <DropdownMenuSeparator className="mx-3" />
       <MenuItem

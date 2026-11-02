@@ -143,7 +143,11 @@ function SampleCard({
           variant="ghost"
           size="sm"
           className="ml-auto h-6 px-2 text-xs"
-          onClick={copyIds}
+          onClick={() => {
+            copyIds().catch((error: unknown) => {
+              console.error("Failed to copy token ids:", error);
+            });
+          }}
         >
           <HugeiconsIcon icon={Copy01Icon} className="size-3" />
           {t("studio.dataset.tokenPreview.copyIds")}
@@ -243,8 +247,8 @@ function useTokenPreview(query: PreviewQuery | null, debounceMs = 0) {
       return;
     }
     const controller = new AbortController();
-    setState((prev) => ({ ...prev, error: null, loading: true }));
     const timer = window.setTimeout(() => {
+      setState((prev) => ({ ...prev, error: null, loading: true }));
       fetchTokenPreview({ ...query, signal: controller.signal })
         .then((data) => { setState({ data, error: null, loading: false }); })
         .catch((error: unknown) => {

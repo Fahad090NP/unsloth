@@ -504,9 +504,10 @@ function useTabDrag(listRef: RefObject<HTMLDivElement | null>, tabCount: number)
   // A tab opened or closed mid-drag makes the measured places wrong: drop the drag.
   // biome-ignore lint/correctness/useExhaustiveDependencies: the tab count is the trigger
   useEffect(() => { reset(); }, [tabCount]);
-  const begin = (current: TabDrag, element: HTMLElement) => {
+  const begin = (element: HTMLElement) => {
+    const current = drag.current;
     const list = listRef.current;
-    if (!list) return false;
+    if (!current || !list) return false;
     const elements = [...list.querySelectorAll<HTMLElement>("[data-tab-id]")];
     const slot = elements.indexOf(element);
     if (slot < 0) return false;
@@ -522,12 +523,15 @@ function useTabDrag(listRef: RefObject<HTMLDivElement | null>, tabCount: number)
     for (const [position, tab] of elements.entries()) {
       tab.style.transition = position === slot ? "none" : TAB_SHIFT_TRANSITION;
     }
-    element.style.zIndex = "10";
+    const node = element;
+    node.style.zIndex = "10";
     return true;
   };
-  const follow = (current: TabDrag, clientX: number) => {
+  const follow = (clientX: number) => {
+    const current = drag.current;
     const list = listRef.current;
-    const element = current.elements[current.slot];
+    if (!current) return;
+    const element: HTMLElement | undefined = current.elements[current.slot];
     if (!list || !element) return;
     const width = current.widths[current.slot] ?? 0;
     const natural = current.lefts[current.slot] ?? 0;
@@ -581,16 +585,16 @@ function useTabDrag(listRef: RefObject<HTMLDivElement | null>, tabCount: number)
         if (current?.pointerId !== event.pointerId) return;
         if (!current.moved) {
           if (Math.abs(event.clientX - current.startX) < TAB_DRAG_THRESHOLD_PX) return;
-          if (!begin(current, event.currentTarget)) return;
+          if (!begin(event.currentTarget)) return;
           current.moved = true;
           dragged.current = true;
         }
-        follow(current, event.clientX);
+        follow(event.clientX);
       },
       onPointerUp: (event: ReactPointerEvent<HTMLElement>) => {
         const current = drag.current;
         if (current?.moved && current.pointerId === event.pointerId) {
-          follow(current, event.clientX);
+          follow(event.clientX);
           const { id, target, slot } = current;
           reset();
           if (target !== slot) useBrowserStore.getState().moveTab(id, target);
@@ -646,8 +650,10 @@ function TabStrip({
         data-tauri-drag-region={true}
         aria-label={t("browser.tabs")}
         onWheel={(event) => {
-          if (Math.abs(event.deltaY) > Math.abs(event.deltaX))
-            event.currentTarget.scrollLeft += event.deltaY;
+          if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+            const target = event.currentTarget;
+            target.scrollLeft += event.deltaY;
+          }
         }}
         className="browser-tablist flex min-w-0 flex-1 items-center gap-1 overflow-x-auto overflow-y-hidden"
       >
@@ -1109,8 +1115,9 @@ function ZoomControl({ tab }: { tab: BrowserTab | undefined }) {
   const preferred = useBrowserPrefsStore((state) => state.defaultZoom);
   const resetZoom = zoomable ? homeZoom(tab, preferred) : preferred;
   const zoom = zoomable ? tab.zoom : resetZoom;
-  const setZoom = (next: number) =>
-    zoomable && useBrowserStore.getState().setZoom(tab.id, next);
+  const setZoom = (next: number) => {
+    if (zoomable) useBrowserStore.getState().setZoom(tab.id, next);
+  };
   const percent = new Intl.NumberFormat(locale, {
     style: "percent",
     maximumFractionDigits: 0,
@@ -1189,14 +1196,14 @@ async function takeScreenshot(tab: BrowserTab, page: HTMLElement, t: ReturnType<
   const attach = useBrowserStore.getState().attachToChat;
   if (attach && (await attach(new File([blob], name, { type: "image/png" })))) {
     toast.success(t("browser.screenshot.added"), {
-      action: { label: t("browser.screenshot.save"), onClick: () => void saveBrowserDownload(download) },
+      action: { label: t("browser.screenshot.save"), onClick: () => { saveBrowserDownload(download).catch(() => { /* noop */ }); } },
     });
     return;
   }
   // The share prompt outlasts the click, so the save dialog needs a fresh one.
   if (saveNeedsClick()) {
     toast.success(t("browser.screenshot.taken"), {
-      action: { label: t("browser.screenshot.save"), onClick: () => void saveBrowserDownload(download) },
+      action: { label: t("browser.screenshot.save"), onClick: () => { saveBrowserDownload(download).catch(() => { /* noop */ }); } },
     });
     return;
   }
@@ -1296,7 +1303,7 @@ function PanelMenu({ tab, children }: { tab: BrowserTab | undefined; children?: 
           >
             {t("browser.copyLink")}
           </DropdownMenuItem>
-          <DropdownMenuItem disabled={!webUrl} onSelect={() => webUrl && openExternalLink(webUrl)}>
+          <DropdownMenuItem disabled={!webUrl} onSelect={() => { if (webUrl) openExternalLink(webUrl); }}>
             {t("browser.openExternal")}
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -1331,7 +1338,7 @@ function PanelMenu({ tab, children }: { tab: BrowserTab | undefined; children?: 
                 // The innermost page box: with the device toolbar, just the device's width.
                 const pages = triggerRef.current?.closest("section")?.querySelectorAll<HTMLElement>("[data-browser-page]");
                 const page = pages?.[pages.length - 1];
-                if (tab && page) void takeScreenshot(tab, page, t);
+                if (tab && page) takeScreenshot(tab, page, t).catch(() => { /* noop */ });
               }}
             >
               {t("browser.menu.screenshot")}
@@ -1417,7 +1424,9 @@ function AnnotatePageButton({ tab }: { tab: BrowserTab | undefined }) {
     <IconButton
       label={t("browser.annotate.page")}
       disabled={annotateMode(tab, native) === null}
-      onClick={() => tab && useBrowserStore.getState().setAnnotating(annotating ? null : tab.id)}
+      onClick={() => {
+        if (tab) useBrowserStore.getState().setAnnotating(annotating ? null : tab.id);
+      }}
       className={cn(
         ANNOTATE_BUTTON,
         annotating &&
@@ -1512,7 +1521,8 @@ function BrowserFileToolbar({
   const requestEdits = useBrowserStore((state) => state.requestEdits);
   const canAnnotate = useBrowserStore((state) => state.sendAnnotations !== null);
   const annotating = useBrowserStore((state) => state.annotateTabId === tab.id);
-  const view = useBrowserStore((state) => state.fileViews[tab.id]) ?? DEFAULT_FILE_VIEW;
+  const storedView: FileViewState | undefined = useBrowserStore((state) => state.fileViews[tab.id]);
+  const view = storedView ?? DEFAULT_FILE_VIEW;
   const [copied, setCopied] = useState(false);
   const { goBack, goForward } = useBrowserStore.getState();
   const download = tabDownload(tab);
@@ -1526,23 +1536,23 @@ function BrowserFileToolbar({
     { useBrowserStore.getState().setAnnotating(annotating ? null : tab.id); };
   const copyContents = () => {
     if (!blob) return;
-    void copyToClipboardFrom(() => blob.text()).then((ok) => {
+    copyToClipboardFrom(() => blob.text()).then((ok) => {
       if (!ok) {
         toast.error(t("browser.file.copyFailed"));
         return;
       }
       setCopied(true);
       window.setTimeout(() => { setCopied(false); }, 2000);
-    });
+    }).catch(() => { /* noop */ });
   };
   const runAgain = () => {
     if (kind === "html") setView({ mode: "preview" });
     useBrowserStore.getState().reload(tab.id);
   };
-  const toggleConsole = () =>
-    { htmlPreview
-      ? setView({ consoleOpen: !view.consoleOpen })
-      : setView({ mode: "preview", consoleOpen: true }); };
+  const toggleConsole = () => {
+    if (htmlPreview) setView({ consoleOpen: !view.consoleOpen });
+    else setView({ mode: "preview", consoleOpen: true });
+  };
   const openInNewChat = () => {
     if (!blob) return;
     startLibraryChat(navigate, {
@@ -1552,7 +1562,7 @@ function BrowserFileToolbar({
     });
   };
   // Null for HTML and SVG, which would run on Studio's origin from a blob URL.
-  const tabType = browserTabType(entry.name, entry.contentType ?? blob?.type ?? "");
+  const tabType = browserTabType(entry.name, entry.contentType || blob?.type || "");
   const openInBrowser = () => {
     if (!blob || !tabType) return;
     const url = URL.createObjectURL(new Blob([blob], { type: tabType }));
@@ -1639,11 +1649,10 @@ function BrowserFileToolbar({
         <IconButton
           label={t("browser.file.requestEdits")}
           // Without a chat to send marks to, stages a prompt naming the file.
-          onClick={() =>
-            { canAnnotate
-              ? toggleAnnotating()
-              : (requestEdits ?? stageEditsPrompt)(t("browser.file.requestEditsPrompt", { name: entry.name })); }
-          }
+          onClick={() => {
+            if (canAnnotate) toggleAnnotating();
+            else (requestEdits ?? stageEditsPrompt)(t("browser.file.requestEditsPrompt", { name: entry.name }));
+          }}
           className={cn(
             ANNOTATE_BUTTON,
             annotating &&
@@ -1761,7 +1770,8 @@ function FloatingFileToolbar({
   const requestEdits = useBrowserStore((state) => state.requestEdits);
   const canAnnotate = useBrowserStore((state) => state.sendAnnotations !== null);
   const annotating = useBrowserStore((state) => state.annotateTabId === tab.id);
-  const view = useBrowserStore((state) => state.fileViews[tab.id]) ?? DEFAULT_FILE_VIEW;
+  const storedView: FileViewState | undefined = useBrowserStore((state) => state.fileViews[tab.id]);
+  const view = storedView ?? DEFAULT_FILE_VIEW;
   const [copied, setCopied] = useState(false);
   const download = tabDownload(tab);
   const blob = download?.blob;
@@ -1776,14 +1786,14 @@ function FloatingFileToolbar({
     { useBrowserStore.getState().setAnnotating(annotating ? null : tab.id); };
   const copyContents = () => {
     if (!blob) return;
-    void copyToClipboardFrom(() => blob.text()).then((ok) => {
+    copyToClipboardFrom(() => blob.text()).then((ok) => {
       if (!ok) {
         toast.error(t("browser.file.copyFailed"));
         return;
       }
       setCopied(true);
       window.setTimeout(() => { setCopied(false); }, 2000);
-    });
+    }).catch(() => { /* noop */ });
   };
   const fileLabel = (
     <>
@@ -1875,13 +1885,12 @@ function FloatingFileToolbar({
         <IconButton
           label={t("browser.file.requestEdits")}
           // Without a chat to send marks to, stages a prompt naming the file.
-          onClick={() =>
-            { canAnnotate
-              ? toggleAnnotating()
-              : (requestEdits ?? stageEditsPrompt)(
-                  t("browser.file.requestEditsPrompt", { name: entry.name }),
-                ); }
-          }
+          onClick={() => {
+            if (canAnnotate) toggleAnnotating();
+            else (requestEdits ?? stageEditsPrompt)(
+              t("browser.file.requestEditsPrompt", { name: entry.name }),
+            );
+          }}
           className={cn(
             PILL,
             "size-9 rounded-full p-0 text-foreground",
@@ -2011,15 +2020,15 @@ function CopySplit({
   const copyFrame = () => {
     const video = tabVideo(tab.id);
     if (!video) return;
-    void copyVideoFrame(video).then((ok) =>
+    copyVideoFrame(video).then((ok) =>
       ok ? toast.success(t("browser.video.frameCopied")) : toast.error(t("browser.video.copyFrameFailed")),
-    );
+    ).catch(() => { /* noop */ });
   };
   const copyPath = () => {
     if (!blob) return;
-    void copyToClipboardFrom(() => withLocalCopy(blob, entry.name, (copy) => localCopyPath(copy.id))).then((ok) =>
+    copyToClipboardFrom(() => withLocalCopy(blob, entry.name, (copy) => localCopyPath(copy.id))).then((ok) =>
       ok ? toast.success(t("browser.file.pathCopied")) : toast.error(t("browser.file.copyFailed")),
-    );
+    ).catch(() => { /* noop */ });
   };
   const options: { label: string; icon: IconSvgElement; run: () => void }[] = [];
   if (kind) options.push({ label: t("browser.file.copy"), icon: Copy01Icon, run: onCopyContents });
@@ -2028,7 +2037,8 @@ function CopySplit({
     options.push({ label: t("browser.video.copyFrame"), icon: Copy01Icon, run: copyFrame });
   }
   if (isTauri) options.push({ label: t("browser.file.copyPath"), icon: Link01Icon, run: copyPath });
-  const [first, ...rest] = options;
+  const first: (typeof options)[number] | undefined = options[0];
+  const rest = options.slice(1);
   if (!first) return null;
   return (
     <div className={cn(SPLIT_PILL, "hidden @[40rem]:flex")}>
@@ -2089,7 +2099,7 @@ function OpenSplit({ entry, blob }: { entry: FileEntry; blob: Blob | undefined }
   const listing = useRef(false);
   // Programs and scripts never open from here (browser_open_with.rs); their folder still does.
   const runsCode = isDangerousDownload(entry.name);
-  const tabType = isTauri ? null : browserTabType(entry.name, entry.contentType ?? blob?.type ?? "");
+  const tabType = isTauri ? null : browserTabType(entry.name, entry.contentType || blob?.type || "");
   const failed = () => toast.error(t("browser.file.openFailed", { name: entry.name }));
   const listApps = () => {
     if (!isTauri || !blob || runsCode || listing.current) return;
@@ -2147,7 +2157,7 @@ function OpenSplit({ entry, blob }: { entry: FileEntry; blob: Blob | undefined }
         {primary.label}
       </button>
       {hasMenu ? (
-      <DropdownMenu onOpenChange={(open) => open && listApps()}>
+      <DropdownMenu onOpenChange={(open) => { if (open) listApps(); }}>
         <DropdownMenuTrigger asChild={true}>
           <button
             type="button"
@@ -2308,7 +2318,8 @@ export const BrowserPanel = memo(function BrowserPanel({ active = true }: { acti
   const activeTabId = useBrowserStore((state) => state.activeTabId);
   const device = useBrowserStore((state) => state.device);
   const annotateTabId = useBrowserStore((state) => state.annotateTabId);
-  const fileMode = useBrowserStore((state) => state.fileViews[state.activeTabId ?? ""].mode) ?? DEFAULT_FILE_VIEW.mode;
+  const fileViews: Record<string, FileViewState | undefined> = useBrowserStore((state) => state.fileViews);
+  const fileMode = fileViews[activeTabId ?? ""]?.mode ?? DEFAULT_FILE_VIEW.mode;
   const tabTitle = useTabTitle();
   const [pageElement, setPageElement] = useState<HTMLDivElement | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
@@ -2343,7 +2354,7 @@ export const BrowserPanel = memo(function BrowserPanel({ active = true }: { acti
   }
   const { live, pendingDrafts } = retainedTabs(mounted, tabs, activeTabId);
   const cancelEviction = () => {
-    const previous = tabs.find((tab) => tab.id === selection.previous) ?? pendingDrafts[0];
+    const previous: BrowserTab | undefined = tabs.find((tab) => tab.id === selection.previous) ?? pendingDrafts[0];
     if (previous) {
       setMounted(selection.mounted);
       useBrowserStore.getState().activateTab(previous.id);

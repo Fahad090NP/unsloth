@@ -505,11 +505,7 @@ export function ResourcesTab() {
     systemInfo.status === "unavailable"
       ? t("settings.resources.gpu.unreadable")
       : t("common.loading");
-  const backendLabel = (
-    displayedGpu.backend ??
-    systemInfo.device_backend ??
-    "cpu"
-  ).toUpperCase();
+  const backendLabel = (systemInfo.device_backend ?? "cpu").toUpperCase();
   const modelsFolderPath = hfCache
     ? hfCache.cacheHome
     : hfCacheLoaded
@@ -815,7 +811,7 @@ export function ResourcesTab() {
               size="sm"
               className="h-7 shrink-0 px-2 text-xs"
               onClick={() => {
-                if (driverWarning?.driver_version)
+                if (driverWarning.driver_version)
                   dismissDriverWarning(driverWarning.driver_version);
               }}
             >

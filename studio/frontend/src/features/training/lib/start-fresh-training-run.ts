@@ -525,7 +525,7 @@ async function confirmSelectedModelRemoteCode(
       });
     },
   });
-  if (!approvalApplied || attempt.abortIfInputsChanged()) {
+  if (!Boolean(approvalApplied) || attempt.abortIfInputsChanged()) {
     return false;
   }
   return approved || attempt.cancel();
@@ -702,7 +702,7 @@ function remapSuggestedColumns(
   const hint: Record<string, string> = {};
   const table = ROLE_REMAP[config.datasetFormat];
   for (const [column, role] of Object.entries(suggestedMapping)) {
-    hint[column] = table ? (table[role] ?? role) : role;
+    hint[column] = table[role] ?? role;
   }
   return hint;
 }

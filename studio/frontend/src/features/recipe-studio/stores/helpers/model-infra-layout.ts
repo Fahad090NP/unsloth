@@ -75,8 +75,8 @@ function isProviderToConfigEdge(
   edge: Edge,
   configs: Record<string, NodeConfig>,
 ): boolean {
-  const source: (typeof configs)[string] | undefined = configs[edge.source];
-  const target: (typeof configs)[string] | undefined = configs[edge.target];
+  const source = edge.source in configs ? configs[edge.source] : undefined;
+  const target = edge.target in configs ? configs[edge.target] : undefined;
   return source?.kind === "model_provider" && target?.kind === "model_config";
 }
 
@@ -84,8 +84,8 @@ function isConfigToLlmEdge(
   edge: Edge,
   configs: Record<string, NodeConfig>,
 ): boolean {
-  const source: (typeof configs)[string] | undefined = configs[edge.source];
-  const target: (typeof configs)[string] | undefined = configs[edge.target];
+  const source = edge.source in configs ? configs[edge.source] : undefined;
+  const target = edge.target in configs ? configs[edge.target] : undefined;
   return source?.kind === "model_config" && target?.kind === "llm";
 }
 
@@ -93,8 +93,8 @@ function isToolConfigToLlmEdge(
   edge: Edge,
   configs: Record<string, NodeConfig>,
 ): boolean {
-  const source: (typeof configs)[string] | undefined = configs[edge.source];
-  const target: (typeof configs)[string] | undefined = configs[edge.target];
+  const source = edge.source in configs ? configs[edge.source] : undefined;
+  const target = edge.target in configs ? configs[edge.target] : undefined;
   return source?.kind === "tool_config" && target?.kind === "llm";
 }
 
@@ -266,8 +266,8 @@ export function optimizeModelInfraEdgeHandles(
 
   const nextEdges: Edge[] = [];
   for (const edge of edges) {
-    const source: (typeof configs)[string] | undefined = configs[edge.source];
-    const target: (typeof configs)[string] | undefined = configs[edge.target];
+    const source = edge.source in configs ? configs[edge.source] : undefined;
+    const target = edge.target in configs ? configs[edge.target] : undefined;
     if (!(source && target)) {
       nextEdges.push(edge);
       continue;

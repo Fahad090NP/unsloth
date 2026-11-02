@@ -8,7 +8,7 @@ import {
   useDownloadManagerStore,
 } from "@/features/hub";
 import { useHfTokenStore } from "@/features/hub";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import type { LocalDatasetInfo, LocalModelInfo } from "./api";
 import {
   activeDownloadRepoKeys,
@@ -19,13 +19,11 @@ import {
 import {
   type PendingHintReconciliationCommit,
   pendingHintReconciliationNeedsCommit,
-  pendingInventoryHintsEqual,
   pendingWithInventoryHints,
   reconcileInventoryHints,
   useInventoryHintStore,
 } from "./inventory-hint-store";
 import {
-  type PendingInventoryHints,
   inventoryHintKey,
   nextInventoryHintExpiryDelay,
   repoKey,
@@ -375,26 +373,11 @@ export function useHubInventory(
     [isDatasetMode],
   );
   const liveInventoryJobs = useDownloadManagerStore(selectLiveInventoryJobs);
-  const pendingForRenderRef = useRef<PendingInventoryHints | null>(null);
-
   const pendingForRenderNext = useMemo(
     () => pendingWithInventoryHints(pendingHints, completedHints),
     [completedHints, pendingHints],
   );
-  const pendingForRender = useMemo(() => {
-    const current = pendingForRenderRef.current;
-    if (current && pendingInventoryHintsEqual(current, pendingForRenderNext)) {
-      return current;
-    }
-    return pendingForRenderNext;
-  }, [pendingForRenderNext]);
-
-  useEffect(() => {
-    const current = pendingForRenderRef.current;
-    if (!current || !pendingInventoryHintsEqual(current, pendingForRender)) {
-      pendingForRenderRef.current = pendingForRender;
-    }
-  }, [pendingForRender]);
+  const pendingForRender = pendingForRenderNext;
 
   useEffect(() => {
     const delay = nextInventoryHintExpiryDelay(pendingHints);
@@ -766,7 +749,16 @@ export function useHubInventory(
         cachedModelsSource,
         ...(includeLocal ? [localModelsSource] : []),
       ];
-  const now = Date.now();
+  const now = useMemo(
+    () => Date.now(),
+    [
+      cachedDatasetsSource,
+      cachedGgufSource,
+      cachedModelsSource,
+      localDatasetsSource,
+      localModelsSource,
+    ],
+  );
   const emptyRevalidationFresh = relevantInventorySources.every(
     (source) =>
       source.error === null &&

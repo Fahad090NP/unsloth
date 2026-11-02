@@ -116,7 +116,7 @@ export function LlmGeneralTab({
     [configs],
   );
   const hasHfSeed = Boolean(
-    seedConfig && seedConfig.seed_source_type === "hf",
+    seedConfig?.seed_source_type === "hf",
   );
   const seedColumns = useMemo(
     () => seedConfig?.seed_columns ?? [],

@@ -61,10 +61,10 @@ function sourceBusy(status: AudioSourceStatus): boolean {
 
 export function useConvertGeneration({
   status,
-  busyRef,
+  busyRef: sharedBusyRef,
   setBusy,
   updateGenerationPhase,
-  generateAbort,
+  generateAbort: sharedGenerateAbort,
   setMode,
   setAdvancedOpen,
   refreshStatus,
@@ -99,6 +99,8 @@ export function useConvertGeneration({
     audioOptionValues: AudioOptionValues;
     sttRepo: string | null;
   }) {
+  const busyRef = sharedBusyRef;
+  const generateAbort = sharedGenerateAbort;
   const source = useAudioConvertStore((state) => state.source);
   const target = useAudioConvertStore((state) => state.target);
   const builtinVoice = useAudioConvertStore((state) => state.builtinVoice);
@@ -503,9 +505,12 @@ export function useConvertGeneration({
     replayQueuedTtsPick,
   ]);
 
-  useEffect(() => {
+  const selectionKey = `${source?.kind ?? ""}:${source?.id ?? ""}\u0000${target?.kind ?? ""}:${target?.id ?? ""}`;
+  const [trackedSelectionKey, setTrackedSelectionKey] = useState(selectionKey);
+  if (trackedSelectionKey !== selectionKey) {
+    setTrackedSelectionKey(selectionKey);
     if (source || target) setGenerationError(null);
-  }, [source, target]);
+  }
 
   return {
     source,

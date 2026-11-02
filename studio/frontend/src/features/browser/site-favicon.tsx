@@ -47,14 +47,15 @@ export function SiteFavicon({
   const ref = useRef<HTMLSpanElement>(null);
   const declared = useBrowserHistoryStore((state) => state.icons[hostOf(url)]);
   const local = icon?.startsWith("/") || icon?.startsWith("data:image/") ? icon : null;
-  const [found, setFound] = useState<string | null>(null);
-  const [broken, setBroken] = useState(false);
+  const [loaded, setLoaded] = useState<{ key: string; src: string } | null>(null);
+  const [brokenKey, setBrokenKey] = useState<string | null>(null);
   const candidates = iconsFor(url, declared, local ? undefined : icon).join(
     "\n",
   );
+  const iconKey = `${candidates}\u0000${local ?? ""}`;
+  const found = loaded?.key === iconKey ? loaded.src : null;
+  const broken = brokenKey === iconKey;
   useEffect(() => {
-    setFound(null);
-    setBroken(false);
     const node = ref.current;
     const list = candidates ? candidates.split("\n") : [];
     if (local || !node || list.length === 0) return;
@@ -67,7 +68,7 @@ export function SiteFavicon({
           const loaded = await proxiedFavicon(candidate);
           if (!live) return;
           if (loaded) {
-            setFound(loaded);
+            setLoaded({ key: iconKey, src: loaded });
             return;
           }
         }
@@ -78,7 +79,7 @@ export function SiteFavicon({
       live = false;
       observer.disconnect();
     };
-  }, [candidates, local]);
+  }, [candidates, iconKey, local]);
   const src = local ?? found;
   return (
     <span ref={ref} className="flex shrink-0 items-center justify-center">
@@ -86,7 +87,7 @@ export function SiteFavicon({
         <img
           src={src}
           alt=""
-          onError={() => { setBroken(true); }}
+          onError={() => { setBrokenKey(iconKey); }}
           className={cn("object-contain", className)}
         />
       ) : (

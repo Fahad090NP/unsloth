@@ -106,7 +106,7 @@ export const NumericValueInput = forwardRef<
       }
       return final;
     },
-    [derived, displayValue, max, min, onChange, step, value],
+    [derived, displayValue, isEdit, max, min, onChange, step, value],
   );
 
   useImperativeHandle(
@@ -140,7 +140,7 @@ export const NumericValueInput = forwardRef<
         return null;
       },
     }),
-    [commitDraft, derived, displayValue, draft, focused, max, min, onChange, step, value],
+    [commitDraft, focused, value],
   );
 
   const displayed = focused ? draft : (displayValue ?? String(value));

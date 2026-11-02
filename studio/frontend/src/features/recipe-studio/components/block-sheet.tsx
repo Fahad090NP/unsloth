@@ -166,7 +166,7 @@ const SEARCHABLE_KINDS: SheetKind[] = [
 ];
 const PROCESSOR_TITLE = "Final dataset shape";
 const PROCESSOR_DESCRIPTION = "Rename, reorder, or reshape the final dataset.";
-const SHOW_PROCESSOR_IN_BLOCK_SHEET: boolean = false;
+const SHOW_PROCESSOR_IN_BLOCK_SHEET = false;
 const LLM_SETUP_TYPES = new Set<BlockType>([
   "model_provider",
   "model_config",

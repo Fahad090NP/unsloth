@@ -65,10 +65,10 @@ function requestedVariations(
 
 export function useMusicGeneration({
   status,
-  busyRef,
+  busyRef: sharedBusyRef,
   setBusy,
   updateGenerationPhase,
-  generateAbort,
+  generateAbort: sharedGenerateAbort,
   setMode,
   setAdvancedOpen,
   refreshStatus,
@@ -115,6 +115,8 @@ export function useMusicGeneration({
     modelName: string | null;
     musicLoaded: boolean;
   }) {
+  const busyRef = sharedBusyRef;
+  const generateAbort = sharedGenerateAbort;
   const pickedMode = useAudioMusicStore((state) => state.mode);
   const song = useAudioMusicStore((state) => state.song);
   const sfx = useAudioMusicStore((state) => state.sfx);

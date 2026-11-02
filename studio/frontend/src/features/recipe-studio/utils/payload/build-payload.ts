@@ -127,7 +127,7 @@ export function buildRecipePayload(
   }
 
   for (const node of nodes) {
-    const config: (typeof configs)[string] | undefined = configs[node.id];
+    const config = node.id in configs ? configs[node.id] : undefined;
     if (!config) {
       continue;
     }
@@ -255,7 +255,7 @@ export function buildRecipePayload(
   }
 
   const uiNodes = nodes.flatMap((node) => {
-    const config: (typeof configs)[string] | undefined = configs[node.id];
+    const config = node.id in configs ? configs[node.id] : undefined;
     if (!config) {
       return [];
     }
@@ -370,8 +370,8 @@ export function buildRecipePayload(
         return [];
       }
       const [, llmId, key] = match;
-      const llmConfig: (typeof configs)[string] | undefined = configs[llmId];
-      if (!(llmConfig && llmConfig.kind === "llm")) {
+      const llmConfig = llmId in configs ? configs[llmId] : undefined;
+      if (llmConfig?.kind !== "llm") {
         return [];
       }
       return [

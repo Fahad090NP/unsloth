@@ -20,27 +20,40 @@ export function MlxPrecisionCard({
   runPending?: boolean;
 }) {
   const hfToken = useHfTokenStore((s) => s.token);
-  const [listing, setListing] = useState<GgufVariantsResponse | null>(null);
-  const [picked, setPicked] = useState<string | null>(null);
+  const requestKey = `${repoId}:${hfToken ?? ""}`;
+  const [listingState, setListingState] = useState<{
+    key: string;
+    listing: GgufVariantsResponse | null;
+    picked: string | null;
+  }>({ key: requestKey, listing: null, picked: null });
+  const listing =
+    listingState.key === requestKey ? listingState.listing : null;
+  const picked = listingState.key === requestKey ? listingState.picked : null;
+  const setPicked = (next: string | null) => {
+    setListingState((cur) =>
+      cur.key === requestKey ? { ...cur, picked: next } : cur,
+    );
+  };
 
   useEffect(() => {
     const controller = new AbortController();
-    setListing(null);
-    setPicked(null);
     listGgufVariants(repoId, hfToken || undefined, {
       signal: controller.signal,
     })
       .then((res) => {
         if (controller.signal.aborted) return;
         if (res.variant_format === "mlx" && res.variants.length > 0) {
-          setListing(res);
-          setPicked(res.default_variant ?? res.variants[0].quant);
+          setListingState({
+            key: requestKey,
+            listing: res,
+            picked: res.default_variant ?? res.variants[0].quant,
+          });
         }
       })
       .catch(() => {
        /* noop */ });
     return () => { controller.abort(); };
-  }, [repoId, hfToken]);
+  }, [repoId, hfToken, requestKey]);
 
   if (!listing) return null;
   const chosen =

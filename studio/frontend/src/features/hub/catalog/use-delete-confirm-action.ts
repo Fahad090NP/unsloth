@@ -21,7 +21,8 @@ function resolveErrorToast(
 }
 
 function setRefValue<T>(ref: { current: T }, value: T): void {
-  ref.current = value;
+  const target = ref;
+  target.current = value;
 }
 
 export function useDeleteConfirmAction({

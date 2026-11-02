@@ -180,13 +180,7 @@ export function ProfilePersonalizationPanel() {
   const [pendingAvatar, setPendingAvatar] = useState<{
     value: string | null;
   } | null>(null);
-  const shownAvatar = pendingAvatar ? pendingAvatar.value : avatarDataUrl;
-
-  useEffect(() => {
-    if (avatarDataUrl === pendingAvatar?.value) {
-      setPendingAvatar(null);
-    }
-  }, [avatarDataUrl, pendingAvatar]);
+  const shownAvatar = pendingAvatar && avatarDataUrl !== pendingAvatar.value ? pendingAvatar.value : avatarDataUrl;
 
   const pickAvatarValue = (value: string | null) => {
     setImageError(null);
@@ -202,7 +196,9 @@ export function ProfilePersonalizationPanel() {
         accept="image/jpeg,image/png,image/webp,image/gif"
         className="sr-only"
         onChange={(e) => {
-          void onPickFile(e.target.files?.[0]);
+          onPickFile(e.target.files?.[0]).catch((error: unknown) => {
+            console.error("Failed to pick avatar file:", error);
+          });
           const target = e.target;
           target.value = "";
         }}

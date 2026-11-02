@@ -12,7 +12,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { useDebouncedValue } from "@/hooks";
 import { useHubDatasetSearch } from "@/features/hub";
-import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactElement, useMemo, useRef, useState } from "react";
 
 interface HfDatasetComboboxProps {
   value: string;
@@ -31,14 +31,15 @@ export function HfDatasetCombobox({
   placeholder = "Search datasets...",
   className,
 }: HfDatasetComboboxProps): ReactElement {
-  const [inputValue, setInputValue] = useState(value);
+  // The draft belongs to the prop value it was typed against; a new value takes over.
+  const [inputState, setInputState] = useState({ source: value, value });
+  const inputValue = inputState.source === value ? inputState.value : value;
+  const setInputValue = (next: string) => {
+    setInputState({ source: value, value: next });
+  };
   const selectingRef = useRef(false);
   const anchorRef = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebouncedValue(inputValue);
-
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
 
   const { results, isLoading, error } = useHubDatasetSearch(debouncedQuery, {
     accessToken,

@@ -630,25 +630,27 @@ export function SeedDialog({
   useEffect(() => {
     const prevMode = prevModeRef.current;
     prevModeRef.current = mode;
-    setInspectError(null);
-    setLocalFile(null);
-    if (prevMode === "unstructured" && mode !== "unstructured") {
-      setUnstructuredFiles([]);
-    }
-    if (prevMode !== "unstructured" && mode === "unstructured") {
-      if (config.unstructured_file_ids?.length) {
-        setUnstructuredFiles(
-          config.unstructured_file_ids.map((id, i) => ({
-            id,
-            name: config.unstructured_file_names?.[i] ?? "Unknown",
-            size: config.unstructured_file_sizes?.[i] ?? 0,
-            status: "ok" as const,
-          })),
-        );
-      } else {
+    queueMicrotask(() => {
+      setInspectError(null);
+      setLocalFile(null);
+      if (prevMode === "unstructured" && mode !== "unstructured") {
         setUnstructuredFiles([]);
       }
-    }
+      if (prevMode !== "unstructured" && mode === "unstructured") {
+        if (config.unstructured_file_ids?.length) {
+          setUnstructuredFiles(
+            config.unstructured_file_ids.map((id, i) => ({
+              id,
+              name: config.unstructured_file_names?.[i] ?? "Unknown",
+              size: config.unstructured_file_sizes?.[i] ?? 0,
+              status: "ok" as const,
+            })),
+          );
+        } else {
+          setUnstructuredFiles([]);
+        }
+      }
+    });
   }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const didSyncFilesRef = useRef(false);
@@ -662,14 +664,16 @@ export function SeedDialog({
     if (unstructuredFiles.length > 0) return;
     if (!config.unstructured_file_ids?.length) return;
     didSyncFilesRef.current = true;
-    setUnstructuredFiles(
-      config.unstructured_file_ids.map((id, i) => ({
-        id,
-        name: config.unstructured_file_names?.[i] ?? "Unknown",
-        size: config.unstructured_file_sizes?.[i] ?? 0,
-        status: "ok" as const,
-      })),
-    );
+    queueMicrotask(() => {
+      setUnstructuredFiles(
+        config.unstructured_file_ids?.map((id, i) => ({
+          id,
+          name: config.unstructured_file_names?.[i] ?? "Unknown",
+          size: config.unstructured_file_sizes?.[i] ?? 0,
+          status: "ok" as const,
+        })) ?? [],
+      );
+    });
   }, [
     open,
     mode,
@@ -700,8 +704,10 @@ export function SeedDialog({
   );
 
   useEffect(() => {
-    setPreviewRows(config.seed_preview_rows ?? []);
-    setExpandedPreviewRows({});
+    queueMicrotask(() => {
+      setPreviewRows(config.seed_preview_rows ?? []);
+      setExpandedPreviewRows({});
+    });
   }, [config.seed_preview_rows]);
 
   const samplingId = `${config.id}-sampling`;
@@ -893,7 +899,9 @@ export function SeedDialog({
     if (!key || key === lastLoadedKey) {
       return;
     }
-    loadSeedMetadata({ silent: true }).catch(() => undefined);
+    queueMicrotask(() => {
+      loadSeedMetadata({ silent: true }).catch(() => undefined);
+    });
   }, [getCurrentLoadKey, isInspecting, lastLoadedKey, loadSeedMetadata, open]);
 
   const wasUploadingRef = useRef(false);
@@ -906,7 +914,9 @@ export function SeedDialog({
       wasUploadingRef.current = false;
       const hasOk = unstructuredFiles.some((f) => f.status === "ok");
       if (hasOk) {
-        loadSeedMetadata({ silent: true }).catch(() => undefined);
+        queueMicrotask(() => {
+          loadSeedMetadata({ silent: true }).catch(() => undefined);
+        });
       }
     }
   }, [mode, unstructuredFiles, loadSeedMetadata]);
@@ -1379,8 +1389,7 @@ export function SeedDialog({
                               const value = stringifyCell(row[col]);
                               const rowHasExpandableCell =
                                 rowHasExpandableText(row);
-                              const rowExpanded =
-                                expandedPreviewRows[rowIdx] === true;
+                              const rowExpanded = expandedPreviewRows[rowIdx];
                               return rowHasExpandableCell && !rowExpanded
                                 ? truncatePreviewValue(value)
                                 : value;

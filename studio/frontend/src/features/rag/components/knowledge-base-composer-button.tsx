@@ -82,8 +82,13 @@ export function KnowledgeBaseComposerButton({
   }, []);
 
   useEffect(() => {
-    void refresh();
-    return subscribeKnowledgeBasesChanged(() => void refresh());
+    const runRefresh = () => {
+      refresh().catch((error: unknown) => {
+        console.error("Failed to refresh knowledge bases:", error);
+      });
+    };
+    queueMicrotask(runRefresh);
+    return subscribeKnowledgeBasesChanged(runRefresh);
   }, [refresh]);
 
   // Gate on kbsLoaded, not kbs.length: deleting the last KB empties the list and would leave a
@@ -106,8 +111,11 @@ export function KnowledgeBaseComposerButton({
         open={menuOpen}
         onOpenChange={(open) => {
           setMenuOpen(open);
-          if (open) void refresh();
-          else setView("source");
+          if (open) {
+            refresh().catch((error: unknown) => {
+              console.error("Failed to refresh knowledge bases:", error);
+            });
+          } else setView("source");
         }}
       >
         <DropdownMenuTrigger asChild={true}>

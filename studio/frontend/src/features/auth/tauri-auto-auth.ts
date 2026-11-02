@@ -151,8 +151,7 @@ export function tauriAutoAuth(
   if (!isTauri) return Promise.resolve(false);
   const force = options.force === true;
   if (!pending || (force && !pending.force)) {
-    let promise: Promise<boolean>;
-    promise = doTauriAutoAuth({ force }).finally(() => {
+    const promise = doTauriAutoAuth({ force }).finally(() => {
       if (pending?.promise === promise) pending = null;
     });
     pending = { promise, force };

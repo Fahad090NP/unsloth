@@ -38,6 +38,10 @@ function initialLoginMode(): LoginMode {
 let loginMode: LoginMode = initialLoginMode();
 let statusKnown = false;
 let inflight: Promise<AuthStatusResponse> | null = null;
+
+function clearInflight(): void {
+  inflight = null;
+}
 const listeners = new Set<() => void>();
 export const getLoginMode = (): LoginMode => loginMode;
 export const subscribeLoginMode = (listener: () => void): (() => void) => {
@@ -96,7 +100,7 @@ export async function fetchAuthStatus(): Promise<AuthStatusResponse> {
   try {
     return await inflight;
   } finally {
-    inflight = null;
+    clearInflight();
   }
 }
 export function ensureLoginMode(): void {
@@ -130,7 +134,7 @@ export async function loginWithPassword(
     } | null;
     throw new LoginError(payload?.detail ?? "Login failed.", response.status);
   }
-  return await response.json();
+  return (await response.json()) as TokenResponse;
 }
 
 /** Only a rejected single-mode submit probes for an account created since page load. */

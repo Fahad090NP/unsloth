@@ -132,9 +132,12 @@ function useItemText(item: LibraryItem | null, enabled: boolean) {
     let cancelled = false;
     const itemId = item.id;
     fetchLibraryText(item, MAX_TEXT_PREVIEW_BYTES).then(
-      ({ text, truncated, format, readOnlyReason }) =>
-        !cancelled && setState({ key, itemId, text, truncated, format, readOnlyReason }),
-      (err: unknown) => !cancelled && setState({ key, itemId, error: errorMessage(err) }),
+      ({ text, truncated, format, readOnlyReason }) => {
+        if (!cancelled) setState({ key, itemId, text, truncated, format, readOnlyReason });
+      },
+      (err: unknown) => {
+        if (!cancelled) setState({ key, itemId, error: errorMessage(err) });
+      },
     );
     return () => {
       cancelled = true;
@@ -263,7 +266,7 @@ function RunStrip({
             size="sm"
             aria-pressed={clip.id === item.id}
             className="rounded-full px-3"
-            onClick={() => clip.id !== item.id && onOpenItem(clip.id)}
+            onClick={() => { if (clip.id !== item.id) onOpenItem(clip.id); }}
           >
             {audioDetail(clip) ?? clip.name}
           </Button>
@@ -363,25 +366,31 @@ function PreviewBody({
   ) {
     return <Spinner className="m-auto size-6" />;
   }
-  const prefix = truncated ? `${text}\n\n…` : text!;
+  const textValue = text ?? "";
+  const prefix = truncated ? `${textValue}\n\n…` : textValue;
   const language = !item.textOnly && CODE_LANGUAGES[fileExtension(ownName(item))];
   switch (body) {
     case "model":
       return <ModelDetails item={item} />;
     case "image":
+      if (!url) return <Spinner className="m-auto size-6" />;
       return (
-        <img src={url!} alt={item.name} onError={handleMediaError} className="size-full object-contain" />
+        <img src={url} alt={item.name} onError={handleMediaError} className="size-full object-contain" />
       );
-    case "document":
+    case "document": {
+      const file = draftFile ?? doc.file;
+      const kind = documentKind(ownName(item), item.contentType);
+      if (!file || !kind) return <Spinner className="m-auto size-6" />;
       return (
         <DocumentView
-          file={draftFile ?? doc.file!}
-          kind={documentKind(ownName(item), item.contentType)!}
+          file={file}
+          kind={kind}
           name={ownName(item)}
           contentType={item.contentType}
           scale={pageScale}
         />
       );
+    }
     case "markdown":
       return (
         <Zoomed scale={pageScale}>
@@ -410,9 +419,10 @@ function PreviewBody({
         </div>
       );
     case "video":
+      if (!url) return <Spinner className="m-auto size-6" />;
       return (
         <video
-          src={url!}
+          src={url}
           controls
           autoPlay
           onError={handleMediaError}
@@ -424,7 +434,7 @@ function PreviewBody({
         return (
           <Zoomed scale={pageScale}>
             <CodeSourceView
-              code={truncated ? `${text!}\n…` : text!}
+              code={truncated ? `${textValue}\n…` : textValue}
               language="html"
               className="px-6 pb-6"
             />
@@ -440,7 +450,7 @@ function PreviewBody({
       }
       return (
         <Zoomed scale={pageScale}>
-          <ArtifactHtmlFrame code={text!} title={item.name} fill />
+          <ArtifactHtmlFrame code={textValue} title={item.name} fill />
         </Zoomed>
       );
     case "text":
@@ -448,7 +458,7 @@ function PreviewBody({
         return (
           <Zoomed scale={pageScale}>
             <textarea
-              value={draft ?? text!}
+              value={draft ?? textValue}
               onChange={(event) => { onDraftChange(event.target.value); }}
               spellCheck={false}
               placeholder={t("library.preview.startWriting")}
@@ -478,6 +488,7 @@ function PreviewBody({
           )}
         </Zoomed>
       );
+    case "none":
     default:
       return noPreview(t("library.preview.noPreview"));
   }
@@ -522,8 +533,9 @@ export function LibraryPreview({
   const lastSaved = useRef<{ itemId: string; text: string } | null>(null);
   const current = item && edit?.itemId === item.id ? edit : null;
   if (
+    item !== null &&
     current?.savedAt !== undefined &&
-    item!.updatedAt !== current.savedAt &&
+    item.updatedAt !== current.savedAt &&
     itemText.loadedKey === version
   ) {
     setEdit(null);
@@ -642,13 +654,13 @@ export function LibraryPreview({
         formatCardTime(item.updatedAt, locale),
       ].filter(Boolean)
     : [];
-  const download = item && isFileItem(item) ? () => void saveThen(() => { onDownload(item); }) : undefined;
+  const download = item && isFileItem(item) ? () => { saveThen(() => { onDownload(item); }).catch(() => undefined); } : undefined;
   const media = (body === "image" || body === "video") && !mediaFailed;
 
   return (
     <MediaViewer
       open={item !== null}
-      onOpenChange={(open) => void handleOpenChange(open)}
+      onOpenChange={(open) => { handleOpenChange(open).catch(() => undefined); }}
       title={item?.name ?? ""}
       meta={meta.join(" · ")}
       media={media}
@@ -689,7 +701,7 @@ export function LibraryPreview({
             </div>
           )}
           {unsaved && (
-            <Button variant="dark" size="sm" className="mr-1" disabled={saving} onClick={() => void save()}>
+            <Button variant="dark" size="sm" className="mr-1" disabled={saving} onClick={() => { save().catch(() => undefined); }}>
               {t("common.save")}
             </Button>
           )}
@@ -702,17 +714,17 @@ export function LibraryPreview({
                 label: t(item.model ? "library.menu.chatWithModel" : "library.menu.chatAboutThis"),
                 icon: MessageCircleIcon,
                 disabled: saving,
-                onClick: () => void saveThen(() => { onChat(item); }),
+                onClick: () => { saveThen(() => { onChat(item); }).catch(() => undefined); },
               },
               onDownload: download,
               viewOriginal: origin
-                ? { label: t(origin.label), onClick: () => void saveThen(origin.open) }
+                ? { label: t(origin.label), onClick: () => { saveThen(origin.open).catch(() => undefined); } }
                 : undefined,
               reveal:
                 revealLabel && canReveal(item)
                   ? {
                       label: revealLabel,
-                      onClick: () => void saveThen(() => { revealInFolder(item.id); }),
+                      onClick: () => { saveThen(() => { revealInFolder(item.id); }).catch(() => undefined); },
                     }
                   : undefined,
               favorite: item.favorite,

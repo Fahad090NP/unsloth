@@ -35,7 +35,7 @@ export async function recipeRequest<T>(
     { beforeRetry: () => { assertSameSession(epoch); } },
   );
   if (res.status === 204) return undefined as T;
-  const body = await res.json().catch(() => null);
+  const body: unknown = await res.json().catch(() => null);
   if (!res.ok) {
     const detail = (body as { detail?: unknown } | null)?.detail;
     throw new RecipeApiError(

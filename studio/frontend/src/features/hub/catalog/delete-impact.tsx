@@ -16,10 +16,7 @@ export function useDeleteImpact(
   const [impact, setImpact] = useState<DeleteImpact | null>(null);
   const hfToken = useHfTokenStore((state) => state.token);
   useEffect(() => {
-    if (!open) {
-      setImpact(null);
-      return;
-    }
+    if (!open) return;
     let cancelled = false;
     (fetchDeleteImpact(
       repoId,
@@ -33,7 +30,7 @@ export function useDeleteImpact(
       cancelled = true;
     };
   }, [open, repoId, variant, cachePath, hfToken]);
-  return impact;
+  return open ? impact : null;
 }
 
 function joinNames(names: string[]): string {

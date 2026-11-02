@@ -250,7 +250,8 @@ export function useNativeModelDrop(
 
     void import("@tauri-apps/api/webview")
       .then(({ getCurrentWebview }) =>
-        getCurrentWebview().onDragDropEvent(async (event) => {
+        getCurrentWebview().onDragDropEvent((event) => {
+          (async () => {
           const currentOptions = optionsRef.current;
           if (event.payload.type === "leave") {
             draggedPaths = [];
@@ -437,6 +438,9 @@ export function useNativeModelDrop(
                 error instanceof Error ? error.message : String(error),
             });
           }
+          })().catch((error: unknown) => {
+            console.error("Native drop event failed:", error);
+          });
         }),
       )
       .then((cleanup) => {

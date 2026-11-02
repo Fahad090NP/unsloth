@@ -443,12 +443,13 @@ export function TranscribeFooter({
   const working = running || busy === "loading";
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [trackedWorking, setTrackedWorking] = useState(working);
+  if (trackedWorking !== working) {
+    setTrackedWorking(working);
+    setStartedAt(working ? Date.now() : null);
+  }
   useEffect(() => {
-    if (!working) {
-      setStartedAt(null);
-      return;
-    }
-    setStartedAt((value) => value ?? Date.now());
+    if (!working) return;
     const timer = window.setInterval(() => { setNow(Date.now()); }, 1000);
     return () => { window.clearInterval(timer); };
   }, [working]);

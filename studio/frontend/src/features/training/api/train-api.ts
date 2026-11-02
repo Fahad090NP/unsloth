@@ -156,7 +156,9 @@ export async function startTraining(
 ): Promise<TrainingStartResponse> {
   // The worker downloads the base model and datasets itself, bypassing requestStart. Only the pre
   // reading belongs here; useTrainingCompletionWatch takes the post-download one. Never gates the start.
-  void checkDiskSpace();
+  checkDiskSpace().catch((error: unknown) => {
+    console.error("Pre-start disk check failed:", error);
+  });
   let result: TrainingStartResponse;
   try {
     result = await runRequestWithTimeout(

@@ -97,11 +97,11 @@ export {
 } from "./sharing";
 
 export { explicitFamily, resolvedFamilyOverrideSelection, useFamilyOverride } from "./components/model-selector/family-override";
-export { IMAGE_GEN_TASKS } from "./components/model-selector/pickers";
+export { IMAGE_GEN_TASKS, VIDEO_GEN_TASKS } from "./components/model-selector/pickers";
 export { PillTabs } from "./components/model-selector/pill-tabs";
 export type { HostClass } from "./components/model-selector/host-artifact-policy";
 export { hostOffersDensePrecision } from "./components/model-selector/host-artifact-policy";
-export { IMAGE_CATALOG, catalogToModelOptions, curatedArtifactTakesDenseQuant, loadSpecFor, AUDIO_CATALOG, artifactForRepoId, groupForRepoId } from "./components/model-selector/model-catalog";
+export { IMAGE_CATALOG, VIDEO_CATALOG, catalogToModelOptions, curatedArtifactTakesDenseQuant, loadSpecFor, AUDIO_CATALOG, artifactForRepoId, groupForRepoId } from "./components/model-selector/model-catalog";
 export { ggufQuantLabel } from "./model-config/model-identity";
 export { taskForMediaPick, audioPickIsRoutable, curatedAudioInventoryTask, speechGgufIsUndecodable } from "./components/model-selector/audio-picker-policy";
 export { InferenceEnginesSection } from "./components/inference-engines";

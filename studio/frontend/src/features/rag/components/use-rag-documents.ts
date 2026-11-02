@@ -396,9 +396,13 @@ export function useRagDocuments(
       setDocuments([]);
       if (scope) {
          
-        (scope.type === "project"
-          ? loadProjectSources(scope.projectId)
-          : refresh()).catch(() => undefined);
+        if (scope.type === "project") {
+          loadProjectSources(scope.projectId).catch(() => undefined);
+        } else {
+          queueMicrotask(() => {
+            refresh().catch(() => undefined);
+          });
+        }
       } else {
         // Left set, the composer reads the list as unknown and holds every send.
         refreshInFlight.current = false;
@@ -426,7 +430,6 @@ export function useRagDocuments(
   const workScopeId = scope?.type === "project" ? scope.projectId : null;
   useEffect(() => {
     if (!workScopeId) {
-      setWorkElsewhere(0);
       return;
     }
     const read = () => { setWorkElsewhere(projectWorkCount(workScopeId)); };
@@ -445,8 +448,9 @@ export function useRagDocuments(
     };
   }, [workScopeId]);
 
+  const currentWorkElsewhere = workScopeId ? workElsewhere : 0;
   const hasIndexing =
-    workElsewhere > 0 ||
+    currentWorkElsewhere > 0 ||
     documents.some((d) => d.status === "pending" || d.status === "running");
   useEffect(() => {
     if (!scopeKey || !hasIndexing) return;

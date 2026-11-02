@@ -60,14 +60,16 @@ function useSourceAudio(source: TranscriptSource | null): SourceAudio {
   const [state, setState] = useState<SourceAudio>({ status: "idle" });
   const kind = source?.kind ?? null;
   const id = source?.id ?? null;
+  const targetKey = kind && id ? `${kind}:${id}` : null;
+  const [trackedKey, setTrackedKey] = useState<string | null>(targetKey);
+  if (trackedKey !== targetKey) {
+    setTrackedKey(targetKey);
+    setState(targetKey ? { status: "loading" } : { status: "idle" });
+  }
   useEffect(() => {
-    if (!(kind && id)) {
-      setState({ status: "idle" });
-      return;
-    }
+    if (!(kind && id)) return;
     const controller = new AbortController();
     let url: string | null = null;
-    setState({ status: "loading" });
     fetchAudioBlob(
       sourceFileUrl({ kind, id, name: "", durationS: null }),
       controller.signal,

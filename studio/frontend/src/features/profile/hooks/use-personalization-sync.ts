@@ -233,6 +233,7 @@ export function usePersonalizationSync(enabled: boolean): void {
       return;
     }
     const cancelled = { value: false };
+    const isCancelled = () => cancelled.value;
     const localeHydrationController = new AbortController();
     const customizationBeforeLoad =
       useAppearanceCustomStore.getState().customization;
@@ -326,7 +327,7 @@ export function usePersonalizationSync(enabled: boolean): void {
               // A request that never completes must not hold hydration (and all saves) open forever.
               timeoutMs: LOCALE_INITIALIZATION_TIMEOUT_MS,
             });
-            if (cancelled.value) return;
+            if (isCancelled()) return;
             // "superseded" is not the language in effect, so record no baseline; hydration must still finish.
             if (localeResult === "cancelled") return;
             if (localeResult === "superseded") {
@@ -386,11 +387,11 @@ export function usePersonalizationSync(enabled: boolean): void {
             lastSavedRef.current = nextSerialized;
           }
         }
-        if (!cancelled.value && authGenerationRef.current === generation) {
+        if (!isCancelled() && authGenerationRef.current === generation) {
           setHydratedGeneration(generation);
         }
       } catch {
-        if (!cancelled.value && authGenerationRef.current === generation) {
+        if (!isCancelled() && authGenerationRef.current === generation) {
           lastSavedRef.current = "";
         }
       }

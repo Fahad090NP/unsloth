@@ -27,6 +27,17 @@ interface AuthFetchOptions {
 let isRedirecting = false;
 let refreshInflight: Promise<RefreshOutcome> | null = null;
 let refreshInflightToken: string | null = null;
+
+function setRedirecting(value: boolean): void {
+  isRedirecting = value;
+}
+
+function clearRefreshInflightIf(promise: Promise<RefreshOutcome>): void {
+  if (refreshInflight === promise) {
+    refreshInflight = null;
+    refreshInflightToken = null;
+  }
+}
 let logoutGeneration = 0;
 
 // Sums to 10.5s, just past the launcher's 10s HEALTH_PROBE_TIMEOUT. Guarded by
@@ -116,7 +127,7 @@ async function isPasswordChangeRequiredResponse(
 
 async function redirectToAuth(passwordChangeRequired = false): Promise<void> {
   if (isRedirecting) return;
-  isRedirecting = true;
+  setRedirecting(true);
 
   let target = "/login";
   try {
@@ -141,7 +152,7 @@ async function redirectToAuth(passwordChangeRequired = false): Promise<void> {
   }
 
   if (window.location.pathname === target) {
-    isRedirecting = false;
+    setRedirecting(false);
     return;
   }
   window.location.href = target;
@@ -350,7 +361,7 @@ async function runRefresh(refreshToken: string): Promise<RefreshOutcome> {
       const stale = superseded();
       if (stale) return stale;
       storeAuthTokens(payload.access_token, payload.refresh_token);
-      setMustChangePassword(payload.must_change_password ?? false);
+      setMustChangePassword(payload.must_change_password);
       return "ok";
     }
     if (response.status !== 503 && response.status !== 429) {
@@ -382,10 +393,7 @@ export async function refreshSessionOutcome(): Promise<RefreshOutcome> {
   try {
     return await promise;
   } finally {
-    if (refreshInflight === promise) {
-      refreshInflight = null;
-      refreshInflightToken = null;
-    }
+    clearRefreshInflightIf(promise);
   }
 }
 
@@ -436,7 +444,9 @@ export async function authFetch(
         )) ?? response
       );
     }
-    void redirectToAuth(true);
+    redirectToAuth(true).catch((error: unknown) => {
+      console.error("Auth redirect failed:", error);
+    });
     return response;
   }
   if (response.status !== 401) return response;
@@ -456,7 +466,9 @@ export async function authFetch(
       );
     }
     clearAuthTokensIfCurrent(refreshToken);
-    void redirectToAuth();
+    redirectToAuth().catch((error: unknown) => {
+      console.error("Auth redirect failed:", error);
+    });
     return response;
   }
 
@@ -471,7 +483,9 @@ export async function authFetch(
         )) ?? response
       );
     }
-    void redirectToAuth();
+    redirectToAuth().catch((error: unknown) => {
+      console.error("Auth redirect failed:", error);
+    });
     return response;
   }
 

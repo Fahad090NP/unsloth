@@ -21,7 +21,8 @@ import type { StagedDownloadEntry } from "../download-manager/use-staged-downloa
 export type AssetRuntime = "images" | "video" | "audio";
 
 function setRefValue<T>(ref: { current: T }, value: T): void {
-  ref.current = value;
+  const target = ref;
+  target.current = value;
 }
 
 export function useRequiredAssetsDownload({
@@ -98,11 +99,14 @@ export function useRequiredAssetsDownload({
   }, [resolvePlan, runtime]);
   useEffect(() => {
     const seq = sequence;
-    ++sequence.current;
-    setPending(null);
-    setChecking(false);
-    starting.current = false;
+    const timer = window.setTimeout(() => {
+      ++sequence.current;
+      setPending(null);
+      setChecking(false);
+      starting.current = false;
+    }, 0);
     return () => {
+      window.clearTimeout(timer);
       ++seq.current;
     };
   }, [fetchPlan, runtime]);

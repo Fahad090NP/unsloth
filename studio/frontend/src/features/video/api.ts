@@ -338,9 +338,9 @@ export interface VideoGalleryPage {
 
 /** `archived`: false is the strip, true is the archive. */
 export async function getVideoGallery(
-  offset: number = 0,
-  limit: number = 50,
-  archived: boolean = false,
+  offset = 0,
+  limit = 50,
+  archived = false,
 ): Promise<VideoGalleryPage> {
   return await parseJson(
     await authFetch(

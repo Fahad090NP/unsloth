@@ -33,12 +33,8 @@ export function useExportSizeEstimate(
   );
 
   useEffect(() => {
-    if (!modelKey) {
-      setState({ key: "", value: EMPTY });
-      return;
-    }
+    if (!modelKey) return;
     const controller = new AbortController();
-    setState({ key, value: { ...EMPTY, loading: true } });
     void fetchExportSize(modelKey, token, controller.signal)
       .then((data) => {
         if (controller.signal.aborted) {
@@ -58,5 +54,9 @@ export function useExportSizeEstimate(
     return () => { controller.abort(); };
   }, [key, modelKey, token]);
 
-  return state.key === key ? state.value : EMPTY;
+  return state.key === key
+    ? state.value
+    : modelKey
+      ? { ...EMPTY, loading: true }
+      : EMPTY;
 }

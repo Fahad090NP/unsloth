@@ -386,7 +386,7 @@ export function DebuggingTab() {
   useEffect(() => {
     const controller = new AbortController();
     let timer: number | undefined;
-    let stopped = false;
+    let stopped: boolean = false;
 
     // Self-scheduling so a slow link builds no backlog.
     const tick = async () => {
@@ -400,7 +400,7 @@ export function DebuggingTab() {
       }
       if (stopped) return;
       const delay = pollDelayMs(mode);
-      if (delay !== null) timer = window.setTimeout(tick, delay);
+      if (delay !== null) timer = window.setTimeout(() => { tick().catch(() => undefined); }, delay);
     };
 
     (tick()).catch(() => { /* noop */ });
@@ -873,7 +873,7 @@ export function DebuggingTab() {
                   variant="ghost"
                   aria-label={t("settings.debugging.pathCopy")}
                   disabled={!shownPath}
-                  onClick={() => shownPath && copyPath(shownPath)}
+                  onClick={() => { if (shownPath) copyPath(shownPath).catch(() => undefined); }}
                   className="text-muted-foreground"
                 >
                   <HugeiconsIcon
@@ -891,7 +891,7 @@ export function DebuggingTab() {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => copy(text)}
+              onClick={() => { copy(text).catch(() => undefined); }}
               disabled={!text}
             >
               <HugeiconsIcon

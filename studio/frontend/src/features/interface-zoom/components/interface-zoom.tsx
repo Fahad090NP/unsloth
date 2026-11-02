@@ -5,17 +5,17 @@ import { Button } from "@/components/ui/button";
 import {
   getAppliedInterfaceZoom,
   isImeComposing,
+  isMacPlatform,
   subscribeAppliedInterfaceZoom,
   useInterfaceScaleStore,
+  useKeyboardShortcutsStore,
 } from "@/features/settings";
 import {
   formatBindingValueLabel,
-  isMacPlatform,
 } from "@/features/settings/lib/keyboard-shortcuts";
 import { INTERFACE_SCALE_RANGE } from "@/features/settings/stores/interface-scale-store";
 import {
   shortcutOwningBinding,
-  useKeyboardShortcutsStore,
 } from "@/features/settings/stores/keyboard-shortcuts-store";
 import { useT } from "@/i18n";
 import { isTauri } from "@/lib/api-base";

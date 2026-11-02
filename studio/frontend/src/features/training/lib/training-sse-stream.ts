@@ -172,15 +172,16 @@ export async function consumeTrainingProgressStream(options: {
   let buffer = "";
 
   try {
-    while (!options.signal.aborted) {
+    const isAborted = () => options.signal.aborted;
+    while (!isAborted()) {
       const { value, done } = await reader.read();
-      if (done || options.signal.aborted) {
+      if (done || isAborted()) {
         break;
       }
 
       buffer += decoder.decode(value, { stream: true });
       let frame = takeSseFrame(buffer);
-      while (frame && !options.signal.aborted) {
+      while (frame && !isAborted()) {
         const rawEvent = frame.event;
         buffer = frame.remainder;
 

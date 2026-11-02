@@ -127,9 +127,10 @@ function decode(entries: unknown): SavedRunSettings[] {
   }
   const out: SavedRunSettings[] = [];
   for (const entry of entries as StoredEntry[]) {
+    const record: StoredEntry | null | undefined = entry;
     const name =
-      entry && typeof entry.name === "string"
-        ? normalizeSavedRunSettingsName(entry.name)
+      record && typeof record.name === "string"
+        ? normalizeSavedRunSettingsName(record.name)
         : "";
     // Future-schema records stay stored but are not offered.
     const config = name ? fromStoredPerModelConfig(entry.config) : null;
@@ -342,7 +343,7 @@ export function getSelectedRunSettings(
   ggufVariant: string | null | undefined,
 ): string | null | undefined {
   const value = readSelections()[selectionKey(modelId, ggufVariant)];
-  return typeof value === "string" || value == null ? value : undefined;
+  return value;
 }
 
 export function setSelectedRunSettings(
@@ -417,9 +418,10 @@ export function getRunSettingsLoadedOnce(
   modelId: string,
   ggufVariant: string | null | undefined,
 ): { name: string | null; sent: PerModelConfig } | null {
-  const entry = readJson<LoadedOnceMap>(LOADED_ONCE_RUN_SETTINGS_STORAGE_KEY)[
-    selectionKey(modelId, ggufVariant)
-  ];
+  const entry: { name: unknown; sent: unknown } | undefined =
+    readJson<LoadedOnceMap>(LOADED_ONCE_RUN_SETTINGS_STORAGE_KEY)[
+      selectionKey(modelId, ggufVariant)
+    ];
   const sent = entry ? fromStoredPerModelConfig(entry.sent) : null;
   if (
     !entry ||

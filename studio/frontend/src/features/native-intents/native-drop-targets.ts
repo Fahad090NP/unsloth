@@ -68,10 +68,8 @@ function listen(): void {
       // Failing here must not reset `listening`, or the next registration would
       // stack a second drop listener and double every drop.
       const currentWindow = getCurrentWindow();
-      let scaleReported = false;
       await currentWindow
         .onScaleChanged(({ payload }) => {
-          scaleReported = true;
           scaleFactor = payload.scaleFactor;
         })
         .catch(() => undefined);

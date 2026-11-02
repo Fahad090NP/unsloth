@@ -91,9 +91,9 @@ export function useDownloadCardState({
     };
   }, []);
   useEffect(() => {
-    if (downloading || cancelling || disabled) {
-      setStarting(false);
-    }
+    if (!downloading && !cancelling && !disabled) return;
+    const timer = window.setTimeout(() => { setStarting(false); }, 0);
+    return () => { window.clearTimeout(timer); };
   }, [cancelling, disabled, downloading]);
   const progressPercent =
     job.progress != null

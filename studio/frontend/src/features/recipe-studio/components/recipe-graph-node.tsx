@@ -249,7 +249,7 @@ function getConfigSummary(config: NodeConfig | undefined): string {
   }
 
   if (config.kind === "seed") {
-    const seedSourceType = config.seed_source_type ?? "hf";
+    const seedSourceType = config.seed_source_type;
     if (seedSourceType === "hf" && config.hf_repo_id.trim()) {
       return config.hf_repo_id.trim();
     }
@@ -379,7 +379,7 @@ function RecipeGraphNodeBase({
     updateNodeInternals(id);
   }, [id, layoutDirection, config, updateNodeInternals]);
 
-  if (config?.kind === "markdown_note") {
+  if (config.kind === "markdown_note") {
     const rgb = hexToRgb(config.note_color ?? "#FDE68A");
     const alpha = parseNoteOpacity(config.note_opacity);
     const noteStyle = rgb
@@ -434,12 +434,12 @@ function RecipeGraphNodeBase({
     localProviderNames,
   );
   const canShowLlmAux =
-    config?.kind === "llm" &&
+    config.kind === "llm" &&
     (Boolean(config.prompt.trim()) ||
       Boolean(config.system_prompt.trim()) ||
       ((config.scores?.length ?? 0) > 0));
   const iconTone =
-    config?.kind === "sampler" &&
+    config.kind === "sampler" &&
     (config.sampler_type === "person" ||
       config.sampler_type === "person_from_faker")
       ? RECIPE_STUDIO_USER_NODE_TONE
@@ -464,7 +464,7 @@ function RecipeGraphNodeBase({
           "opacity-80 border-dashed border-amber-400/70",
       )}
     >
-      {runtimeState === "running" && config?.kind === "llm" && (
+      {runtimeState === "running" && config.kind === "llm" && (
         <div className="pointer-events-none absolute -top-7 right-2 z-20 rounded-full bg-background">
           <Spinner className="size-6 text-primary/90" />
         </div>

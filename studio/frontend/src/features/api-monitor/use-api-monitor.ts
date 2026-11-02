@@ -6,8 +6,8 @@ import {
   getApiMonitor,
   getApiMonitorEntry,
 } from "@/features/chat/api/chat-api";
+import type { ApiMonitorEntry } from "@/features/chat";
 import type {
-  ApiMonitorEntry,
   ApiMonitorResponse,
 } from "@/features/chat/types/api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -33,7 +33,7 @@ function retainDetail(
   cachedPrompt: string | undefined,
 ): Record<string, ApiMonitorEntry> {
   const refreshed =
-    cachedPrompt === null ? entry : { ...entry, prompt: cachedPrompt };
+    cachedPrompt === undefined ? entry : { ...entry, prompt: cachedPrompt };
   const retained: Record<string, ApiMonitorEntry> = { [id]: refreshed };
   let promptChars = refreshed.prompt?.length ?? 0;
   for (const [cachedId, cached] of Object.entries(previous)) {
@@ -218,8 +218,10 @@ export function useApiMonitor({
       inFlightDetails.current.add(id);
       const requestGeneration = detailRequestGeneration.current;
       setLoadingDetails((prev) => new Set(prev).add(id));
-      const cachedPrompt = details[id]?.prompt;
-      getApiMonitorEntry(id, cachedPrompt === null)
+      const cachedPrompt = Object.hasOwn(details, id)
+        ? details[id].prompt
+        : undefined;
+      getApiMonitorEntry(id, cachedPrompt === undefined)
         .then((entry) => {
           if (
             detailRequestGeneration.current !== requestGeneration ||
@@ -283,7 +285,11 @@ export function useApiMonitor({
     refreshing,
     paused,
     setPaused,
-    refresh: () => void load(),
+    refresh: () => {
+      load().catch((error: unknown) => {
+        console.error("Failed to refresh API monitor:", error);
+      });
+    },
     clear,
     details,
     loadingDetails,

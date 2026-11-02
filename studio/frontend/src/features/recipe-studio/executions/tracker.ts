@@ -100,7 +100,7 @@ export async function trackRecipeExecution({
   onSetPreviewErrors,
   onPreviewSuccess,
 }: TrackRecipeExecutionParams): Promise<TrackRecipeExecutionResult> {
-  let done = false;
+  const runState = { done: false };
   let lastStatus: RecipeExecutionStatus = initialExecution.status;
   let completedEventPayload: Record<string, unknown> | null = null;
   let latestExecution: RecipeExecutionRecord = initialExecution;
@@ -148,7 +148,7 @@ export async function trackRecipeExecution({
       if (eventType === "job.completed") {
         lastStatus = "completed";
         completedEventPayload = event.payload;
-        done = true;
+        runState.done = true;
         latestExecution = {
           ...latestExecution,
           status: "completed",
@@ -165,7 +165,7 @@ export async function trackRecipeExecution({
 
       if (eventType === "job.error") {
         lastStatus = "error";
-        done = true;
+        runState.done = true;
         latestExecution = {
           ...latestExecution,
           status: "error",
@@ -190,7 +190,7 @@ export async function trackRecipeExecution({
 
       if (eventType === "job.cancelled") {
         lastStatus = "cancelled";
-        done = true;
+        runState.done = true;
         latestExecution = {
           ...latestExecution,
           status: "cancelled",
@@ -210,7 +210,7 @@ export async function trackRecipeExecution({
   });
 
   try {
-    while (!done) {
+    while (!runState.done) {
       const status = await getRecipeJobStatus(jobId);
       if (isTerminalStatus(lastStatus)) {
         break;
@@ -220,7 +220,7 @@ export async function trackRecipeExecution({
       latestExecution = applyExecutionStatusSnapshot(latestExecution, status);
       onUpsert(latestExecution);
 
-      if (isTerminalStatus(mappedStatus) || done) {
+      if (isTerminalStatus(mappedStatus) || runState.done) {
         break;
       }
       if (Date.now() - lastDatasetPollAt >= 2500) {

@@ -12,10 +12,8 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import {
-  type RagMode,
-  useChatRuntimeStore,
-} from "@/features/chat/stores/chat-runtime-store";
+import { type RagMode } from "@/features/chat/stores/chat-runtime-store";
+import { useChatRuntimeStore } from "@/features/chat";
 import { ChevronDownStandardIcon } from "@/lib/chevron-icons";
 import { cn } from "@/lib/utils";
 

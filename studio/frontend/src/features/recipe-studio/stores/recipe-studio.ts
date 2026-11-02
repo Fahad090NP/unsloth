@@ -264,22 +264,22 @@ function connectSemantic(
 
 function isModelSemanticEdge(
   edge: Edge,
-  configs: Record<string, NodeConfig>,
+  configs: Partial<Record<string, NodeConfig>>,
 ): boolean {
   const source = configs[edge.source];
   const target = configs[edge.target];
-  return (
+  return Boolean(
     source &&
       target &&
       ((source.kind === "model_provider" && target.kind === "model_config") ||
         (source.kind === "model_config" && target.kind === "llm") ||
-        (source.kind === "tool_config" && target.kind === "llm"))
+        (source.kind === "tool_config" && target.kind === "llm")),
   );
 }
 
 // Only uid directories qualify; legacy node-id directories can be shared by other recipes.
 function seedUploadCleanupUid(config: NodeConfig | undefined): string | null {
-  if (!config || config.kind !== "seed") {
+  if (config?.kind !== "seed") {
     return null;
   }
   const uid = config.unstructured_upload_uid?.trim();
@@ -717,7 +717,7 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
       layoutDirection: snapshot.layoutDirection,
       nextId: snapshot.nextId,
       nextY: snapshot.nextY,
-      auxNodePositions: snapshot.auxNodePositions ?? {},
+      auxNodePositions: snapshot.auxNodePositions,
       llmAuxVisibility: {},
       activeConfigId: null,
       dialogOpen: false,
@@ -727,8 +727,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
       pendingUploadCleanups: [],
     })); },
   setAuxNodePosition: (id, position) => { set((state) => {
-      const current = state.auxNodePositions[id];
-      if (current && current.x === position.x && current.y === position.y) {
+      const current = id in state.auxNodePositions ? state.auxNodePositions[id] : undefined;
+      if (current !== undefined && current.x === position.x && current.y === position.y) {
         return state;
       }
       return {
@@ -743,7 +743,7 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
       if (state.executionLocked) {
         return state;
       }
-      const current = state.configs[id];
+      const current = id in state.configs ? state.configs[id] : undefined;
       if (!current) {
         return state;
       }
@@ -885,8 +885,8 @@ export const useRecipeStudioStore = create<RecipeStudioState>((set, get) => ({
   isValidConnection: (connection) =>
     isValidRecipeConnection(
       {
-        source: connection.source ?? null,
-        target: connection.target ?? null,
+        source: connection.source,
+        target: connection.target,
         sourceHandle: connection.sourceHandle ?? null,
         targetHandle: connection.targetHandle ?? null,
       },

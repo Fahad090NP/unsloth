@@ -77,8 +77,8 @@ function isReversedRuntimeReferenceEdge(input: {
   if (edge.source !== runningNodeId) {
     return false;
   }
-  const target: (typeof configs)[string] | undefined = configs[edge.target];
-  const targetName = target?.name?.trim() ?? "";
+  const target = edge.target in configs ? configs[edge.target] : undefined;
+  const targetName = target?.name.trim() ?? "";
   return Boolean(targetName && runningTemplateRefs.has(targetName));
 }
 
@@ -252,7 +252,7 @@ function collectUpstreamDoneNodeIds(input: {
       if (!visited.has(sourceId)) {
         queue.push(sourceId);
       }
-      const config: (typeof configs)[string] | undefined = configs[sourceId];
+      const config = sourceId in configs ? configs[sourceId] : undefined;
       if (config && DONE_UPSTREAM_KINDS.has(config.kind)) {
         doneNodeIds.add(sourceId);
       }

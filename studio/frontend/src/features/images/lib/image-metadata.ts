@@ -147,7 +147,9 @@ const LONG = 4;
 const UNDEFINED = 7;
 
 function asciiValue(text: string): Uint8Array {
-  return new Uint8Array([...text].map((c) => c.charCodeAt(0) & 0x7f).concat(0));
+  return new Uint8Array(
+    Array.from(text, (c) => c.charCodeAt(0) & 0x7f).concat(0),
+  );
 }
 
 function userComment(text: string): Uint8Array {
@@ -261,7 +263,8 @@ export function withJpegExif(jpeg: Bytes, meta: EmbeddedRecipe): Bytes {
     at = end;
   }
   const head = jpeg.subarray(0, 2);
-  const app0 = insertAt > 2 ? [kept.shift()!] : [];
+  const first = kept.shift();
+  const app0 = insertAt > 2 && first ? [first] : [];
   if (!tiff) {
     return concat([head, ...app0, ...kept, jpeg.subarray(at)]);
   }
@@ -303,7 +306,7 @@ function riffChunks(webp: Uint8Array): Chunk[] | null {
 
 function riffChunk(type: string, payload: Uint8Array): Uint8Array {
   const out = new Uint8Array(8 + payload.length + (payload.length & 1));
-  out.set([...type].map((c) => c.charCodeAt(0)));
+  out.set(Array.from(type, (c) => c.charCodeAt(0)));
   new DataView(out.buffer).setUint32(4, payload.length, true);
   out.set(payload, 8);
   return out;
@@ -598,8 +601,8 @@ export interface LoraTag {
 }
 
 function loraTag(body: string): LoraTag | null {
-  const positional: string[] = [];
-  const named: Record<string, string> = {};
+  const positional: (string | undefined)[] = [];
+  const named: Record<string, string | undefined> = {};
   for (const item of body.split(":")) {
     const eq = item.indexOf("=");
     if (eq > 0) named[item.slice(0, eq).trim()] = item.slice(eq + 1).trim();
@@ -626,7 +629,7 @@ export function extractExtraNetworks(prompt: string): {
 } {
   const loras: LoraTag[] = [];
   const other: string[] = [];
-  let found = false;
+  let found: boolean = false;
   const stripped = prompt.replace(
     EXTRA_NETWORK,
     (tag, kind: string, body: string) => {
@@ -809,9 +812,11 @@ export function parseA1111Parameters(text: string): ImportedRecipe | null {
     // the prompt enhancer it forced off.
     else if (key === "loras" && value) {
       // CSV items: an entry whose id holds a comma or quote is written "id: weight" with "" for a quote.
-      const items = [...value.matchAll(/\s*(?:"((?:[^"]|"")*)"|([^,]+))\s*(?:,|$)/g)].map((m) =>
-        m[1] != null ? m[1].replace(/""/g, '"') : (m[2] ?? "").trim(),
-      );
+      const items = [...value.matchAll(/\s*(?:"((?:[^"]|"")*)"|([^,]+))\s*(?:,|$)/g)].map((m) => {
+        const quoted = m[1] as string | undefined;
+        const plain = m[2] as string | undefined;
+        return quoted != null ? quoted.replace(/""/g, '"') : (plain ?? "").trim();
+      });
       const loras = items.flatMap((item) => {
         const at = item.lastIndexOf(":");
         return at > 0 ? [`${item.slice(0, at).trim()}:${item.slice(at + 1).trim()}`] : [];
@@ -1097,17 +1102,18 @@ export function importNotApplied(
   sdControls?: SdControlsCapability | null,
 ): string[] {
   const out: string[] = [];
-  const literal = literalPromptNotApplied(r, parsesEmphasis, sdControls);
+  let parses = parsesEmphasis;
+  const literal = literalPromptNotApplied(r, parses, sdControls);
   if (literal) out.push(literal);
   // Weighting off reads brackets and escapes as typed, which an engine without the parser does too.
-  if (sdControls?.prompt_weighting || r.prompt_weighting === false) parsesEmphasis = true;
-  if (!parsesEmphasis && Array.isArray(r.prompt_emphasis) && r.prompt_emphasis.length > 0) {
+  if (sdControls?.prompt_weighting || r.prompt_weighting === false) parses = true;
+  if (!parses && Array.isArray(r.prompt_emphasis) && r.prompt_emphasis.length > 0) {
     const groups = r.prompt_emphasis.filter((g): g is string => typeof g === "string");
     const shown = groups.slice(0, 3).join(", ") + (groups.length > 3 ? ", ..." : "");
     out.push(`prompt emphasis (${shown}) is passed as plain text`);
-  } else if (!parsesEmphasis && r.prompt_weighting) out.push("prompt weighting");
+  } else if (!parses && r.prompt_weighting) out.push("prompt weighting");
   if (
-    !parsesEmphasis &&
+    !parses &&
     Array.isArray(r.prompt_escaped_brackets) &&
     r.prompt_escaped_brackets.length > 0
   ) {
@@ -1118,7 +1124,7 @@ export function importNotApplied(
     const b = RECIPE_BOUNDS[key];
     const raw = b.integer ? int(r[key]) : num(r[key]);
     const sent = bounded(r, key);
-    if (raw !== undefined && sent !== raw)
+    if (raw !== undefined && sent !== undefined && sent !== raw)
       out.push(`${b.label} ${raw} (clamped to ${sent})`);
   }
   const clipSkip = num(r.clip_skip);
@@ -1140,14 +1146,15 @@ export function importNotApplied(
   }
   const variation = num(r.variation_seed);
   const variationStrength = num(r.variation_strength);
-  if (variationApplies(r, sdControls)) {
-  } else if (variation !== undefined && variationStrength !== 0) {
-    out.push(
-      `variation seed ${variation}${variationStrength !== undefined ? ` (strength ${variationStrength})` : ""}`,
-    );
-  } else if (variation === undefined && variationStrength !== undefined && variationStrength !== 0) {
-    // A strength with no seed still varies the image (A1111 then draws a random variation seed).
-    out.push(`variation strength ${variationStrength}`);
+  if (!variationApplies(r, sdControls)) {
+    if (variation !== undefined && variationStrength !== 0) {
+      out.push(
+        `variation seed ${variation}${variationStrength !== undefined ? ` (strength ${variationStrength})` : ""}`,
+      );
+    } else if (variation === undefined && variationStrength !== undefined && variationStrength !== 0) {
+      // A strength with no seed still varies the image (A1111 then draws a random variation seed).
+      out.push(`variation strength ${variationStrength}`);
+    }
   }
   if (r.hires && typeof r.hires === "object" && !Array.isArray(r.hires)) {
     const parts = Object.entries(r.hires as Record<string, unknown>)
@@ -1396,7 +1403,7 @@ export function matchLoraTags(
       notes.push(`LoRA ${name} (ambiguous: ${candidates.length} adapters named ${key})`);
       continue;
     }
-    const hit = candidates[0];
+    const hit = candidates.at(0);
     if (!hit) {
       unmatched.push(name);
       continue;

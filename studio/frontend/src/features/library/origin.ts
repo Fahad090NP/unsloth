@@ -19,18 +19,19 @@ export function useLibraryOrigin(): (item: LibraryItem) => LibraryOrigin | null 
       const { threadId, pairId } = item;
       return {
         label: "library.preview.viewOriginalChat",
-        open: () =>
-          void navigate({
+        open: () => {
+          navigate({
             to: "/chat",
             search: pairId ? { compare: pairId } : { thread: threadId },
-          }),
+          }).catch(() => undefined);
+        },
       };
     }
     if (item.projectId) {
       const project = item.projectId;
       return {
         label: "library.preview.viewOriginalProject",
-        open: () => void navigate({ to: "/chat", search: { project } }),
+        open: () => { navigate({ to: "/chat", search: { project } }).catch(() => undefined); },
       };
     }
     if (item.runId) {
@@ -49,24 +50,25 @@ export function useLibraryOrigin(): (item: LibraryItem) => LibraryOrigin | null 
     if (kind === "image") {
       return {
         label: "library.preview.viewInImages",
-        open: () => void navigate({ to: "/images", search }),
+        open: () => { navigate({ to: "/images", search }).catch(() => undefined); },
       };
     }
     if (kind === "video") {
       return {
         label: "library.preview.viewInVideo",
-        open: () => void navigate({ to: "/video", search }),
+        open: () => { navigate({ to: "/video", search }).catch(() => undefined); },
       };
     }
     if (kind === "audio") {
       const workflow = item.audio?.workflow;
       return {
         label: "library.preview.viewInAudio",
-        open: () =>
-          void navigate({
+        open: () => {
+          navigate({
             to: "/audio",
             search: isAudioWorkflowId(workflow) ? { ...search, workflow } : search,
-          }),
+          }).catch(() => undefined);
+        },
       };
     }
     return null;

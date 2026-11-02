@@ -413,7 +413,7 @@ const patchTab = (tabs: BrowserTab[], tabId: string, update: (tab: BrowserTab) =
  *  web page shows at 100%. A zoom the reader chose carries over, and Back/Forward (`traversal`)
  *  skip the new tab rule, so a page keeps the zoom its new tab entry carried. */
 function zoomFor(tab: BrowserTab, entry: BrowserEntry, traversal = false): number {
-  const from = tab.history[tab.index];
+  const from: BrowserEntry | undefined = tab.history[tab.index];
   if (!from) return tab.zoom;
   const preferred = defaultZoom();
   const at = (zoom: number) => Math.abs(tab.zoom - zoom) < 0.001;
@@ -496,7 +496,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         // Another chat's: it shows there next time, without moving this chat's panel.
         const saved = state.chats[chat];
         const activeTabId = background && saved.activeTabId ? saved.activeTabId : owned.id;
-        return { tabs, chats: { ...state.chats, [chat]: { open: true, fullView: saved.fullView ?? false, activeTabId } } };
+        return { tabs, chats: { ...state.chats, [chat]: { open: true, fullView: saved.fullView, activeTabId } } };
       }
       return {
         open: true,
@@ -529,7 +529,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       } else {
         Reflect.deleteProperty(chats, state.chat);
       }
-      const saved = chats[chat];
+      const saved: ChatBrowser | undefined = chats[chat];
       Reflect.deleteProperty(chats, chat);
       const own = state.tabs.filter((tab) => tab.chat === chat);
       const activeTabId =
@@ -553,7 +553,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       set((state) => {
         const tabs = state.tabs.map((tab) => (tab.chat === from ? { ...tab, chat: to } : tab));
         const chats = { ...state.chats };
-        const saved = chats[from];
+        const saved: ChatBrowser | undefined = chats[from];
         Reflect.deleteProperty(chats, from);
         if (saved && !chats[to]) chats[to] = saved;
         return { tabs, chats, chat: state.chat === from ? to : state.chat };
@@ -567,7 +567,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         return;
       }
       set((state) => ({
-        chats: { ...state.chats, [chat]: { open: true, fullView: state.chats[chat].fullView ?? false, activeTabId: tabId } },
+        chats: { ...state.chats, [chat]: { open: true, fullView: state.chats[chat].fullView, activeTabId: tabId } },
       }));
     },
     openTabIn: (chat, url, options) => {
@@ -613,7 +613,10 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       set((state) => ({ open: true, openSequence: state.openSequence + 1 }));
     },
     closePanel: () => { set({ open: false, fullView: false, annotateTabId: null }); },
-    togglePanel: () => { get().open ? get().closePanel() : get().openPanel(); },
+    togglePanel: () => {
+      if (get().open) get().closePanel();
+      else get().openPanel();
+    },
     newTab: () => {
       openTab(createTab({ kind: "newtab" }));
       get().focusAddress();
@@ -719,10 +722,10 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
           }
         });
         refreshes.set(existing.id, next);
-        void next.finally(() => {
+        next.finally(() => {
           queuedFiles.delete(fileId);
           if (refreshes.get(existing.id) === next) refreshes.delete(existing.id);
-        });
+        }).catch(() => undefined);
         return;
       }
       const tab = createTab(entry, openKey);
@@ -733,26 +736,27 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       if (!isWeb(request.url)) return;
       set((state) => ({
         tabs: patchTab(state.tabs, tabId, (tab) => {
-          let current = currentEntry(tab);
+          let working = tab;
+          let current = currentEntry(working);
           // A native view is rebuilt, losing its history, when it enters or leaves a local origin.
           const rebuilt = nativeWebHistory && current.kind === "web" && localOriginOf(current.url) !== localOriginOf(request.url);
           const replace = options?.replace ?? (nativeWebHistory && current.kind === "web" && !rebuilt);
           // So the page it leaves is kept as reached (after redirects and router moves), not as requested.
-          if (rebuilt && !replace && current.kind === "web" && current.method !== "POST" && tab.displayUrl && isWeb(tab.displayUrl) && tab.displayUrl !== current.url) {
-            const reached = webEntry(tab.displayUrl, "GET", undefined, undefined, current.temporary);
-            tab = { ...tab, history: tab.history.map((item) => (item === current ? reached : item)) };
+          if (rebuilt && !replace && current.kind === "web" && current.method !== "POST" && working.displayUrl && isWeb(working.displayUrl) && working.displayUrl !== current.url) {
+            const reached = webEntry(working.displayUrl, "GET", undefined, undefined, current.temporary);
+            working = { ...working, history: working.history.map((item) => (item === current ? reached : item)) };
             current = reached;
           }
           const entry = webEntry(request.url, request.method, request.body, request.from, request.temporary);
           if (request.from && !replace) sentFrom.set(entry, current);
-          return pushEntry(tab, entry, replace);
+          return pushEntry(working, entry, replace);
         }),
       }));
     },
     leaveDownload: (tabId, entry) =>
       { set((state) => ({
         tabs: patchTab(state.tabs, tabId, (tab) => {
-          const previous = tab.history[tab.index - 1];
+          const previous: BrowserEntry | undefined = tab.history[tab.index - 1];
           if (currentEntry(tab) !== entry || !previous || sentFrom.get(entry) !== previous) return tab;
           const history = tab.history.filter((candidate) => candidate !== entry);
           pageCache.delete(entry);
@@ -791,8 +795,8 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         const strip = chatTabs(state);
         const from = strip.findIndex((tab) => tab.id === tabId);
         const to = Math.max(0, Math.min(index, strip.length - 1));
-        const moved = strip[from];
-        const target = strip[to];
+        const moved: BrowserTab | undefined = strip[from];
+        const target: BrowserTab | undefined = strip[to];
         if (!moved || !target || from === to) return state;
         const tabs = state.tabs.filter((tab) => tab !== moved);
         const at = tabs.indexOf(target);
@@ -818,7 +822,8 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       const next = (current: string | null) =>
         current === tabId ? (left[Math.min(index, left.length - 1)]?.id ?? null) : current;
       if (closing.chat !== chat) {
-        const { [closing.chat]: saved, ...chats } = get().chats;
+        const { [closing.chat]: savedState, ...chats } = get().chats;
+        const saved: ChatBrowser | undefined = savedState;
         if (saved && left.length > 0) chats[closing.chat] = { ...saved, activeTabId: next(saved.activeTabId) };
         set({ tabs: remaining, chats, annotateTabId, renamingTabId, fileViews });
         return;

@@ -13,7 +13,7 @@ import {
   useSettingsDialogStore,
 } from "@/features/settings";
 import { useTrainingConfigStore } from "@/features/training";
-import { buildTrainingStartPayload } from "@/features/training/api/mappers";
+import { buildTrainingStartPayload } from "@/features/training";
 import { useT } from "@/i18n";
 import { ApiIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";

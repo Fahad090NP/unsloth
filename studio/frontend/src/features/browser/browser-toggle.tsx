@@ -43,6 +43,10 @@ export function BrowserToggleButton({
   const timer = useRef<number | null>(null);
   // Focus given back when the hover menu closes without opening a tab.
   const restore = useRef<HTMLElement | null>(null);
+  const clearTimer = () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+  };
   const openTab = (fullView = false) => {
     clearTimer();
     restore.current = null;
@@ -66,10 +70,6 @@ export function BrowserToggleButton({
     },
     { enabled: active && !(hideWhenOpen && open) },
   );
-  const clearTimer = () => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    timer.current = null;
-  };
   const hoverTo = (next: boolean) => {
     clearTimer();
     timer.current = window.setTimeout(() => {
@@ -85,25 +85,20 @@ export function BrowserToggleButton({
     },
     [],
   );
-  useEffect(() => {
-    if (!open) return;
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    timer.current = null;
-    setMenuOpen(false);
-  }, [open]);
   if (hideWhenOpen && open) return null;
   const label = t("browser.newTab");
-  const onMouse = (handler: () => void) => (event: { pointerType: string }) => {
-    if (event.pointerType === "mouse") handler();
-  };
   return (
-    <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen} modal={false}>
+    <DropdownMenu open={menuOpen && !open} onOpenChange={setMenuOpen} modal={false}>
       <DropdownMenuTrigger asChild={true}>
         <button
           type="button"
           aria-label={label}
-          onPointerEnter={onMouse(() => { hoverTo(true); })}
-          onPointerLeave={onMouse(() => { hoverTo(false); })}
+          onPointerEnter={(event) => {
+            if (event.pointerType === "mouse") hoverTo(true);
+          }}
+          onPointerLeave={(event) => {
+            if (event.pointerType === "mouse") hoverTo(false);
+          }}
           // A press opens a tab rather than the menu; hovering, or the arrow keys, open the menu.
           onPointerDown={(event) => { event.preventDefault(); }}
           onKeyDown={(event) => {
@@ -120,8 +115,12 @@ export function BrowserToggleButton({
       <DropdownMenuContent
         align="end"
         sideOffset={6}
-        onPointerEnter={onMouse(clearTimer)}
-        onPointerLeave={onMouse(() => { hoverTo(false); })}
+        onPointerEnter={(event) => {
+          if (event.pointerType === "mouse") clearTimer();
+        }}
+        onPointerLeave={(event) => {
+          if (event.pointerType === "mouse") hoverTo(false);
+        }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           restore.current?.focus({ preventScroll: true });

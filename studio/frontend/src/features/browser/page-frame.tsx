@@ -27,7 +27,7 @@ const subscribeFrames = (listener: () => void) => {
 };
 
 export function useFrameAvailable(tabId: string | null): boolean {
-  return useSyncExternalStore(subscribeFrames, () => !!tabId && frames.has(tabId), () => false);
+  return useSyncExternalStore(subscribeFrames, () => tabId !== null && frames.has(tabId), () => false);
 }
 
 export type FrameCommand =
@@ -51,7 +51,7 @@ export type FrameCommand =
   | { command: "annotateInstall"; code: string }
   | { command: "annotate"; on: boolean; color?: string }
   | { command: "annotateForget"; id: number }
-  | { command: "annotateNumbers"; numbers: Array<[number, number]> }
+  | { command: "annotateNumbers"; numbers: [number, number][] }
   | { command: "agent"; id: string; op: Record<string, unknown>; code?: string }
   | ({ command: "response"; id: string } & (({ ok: true } & PageResponse) | { ok: false }));
 
@@ -74,7 +74,7 @@ export function requestFrameAgent(
       agentRequests.delete(id);
       resolve(reply);
     };
-    const timer = setTimeout(() => finish(null), timeoutMs);
+    const timer = setTimeout(() => { finish(null); }, timeoutMs);
     agentRequests.set(id, finish);
     if (!sendFrameCommand(tabId, { command: "agent", id, op, ...(code ? { code } : {}) })) finish(null);
   });
@@ -125,7 +125,7 @@ export function requestFrameSnapshot(tabId: string): Promise<string | null> {
       if (snapshotRequests.get(tabId) === finish) snapshotRequests.delete(tabId);
       resolve(html);
     };
-    const timer = setTimeout(() => finish(null), 5000);
+    const timer = setTimeout(() => { finish(null); }, 5000);
     snapshotRequests.set(tabId, finish);
     if (!sendFrameCommand(tabId, { command: "snapshot" })) finish(null);
   });
@@ -145,7 +145,7 @@ export function sendFrameCommand(tabId: string, command: FrameCommand): boolean 
 /** Recent user activation in the focused frame; without the API, focus opens a tab but never the system browser. */
 function userActive(frame: HTMLIFrameElement, message: FrameMessage): boolean {
   if (document.activeElement !== frame) return false;
-  const active = navigator.userActivation.isActive;
+  const active: boolean | undefined = navigator.userActivation.isActive;
   return active ?? message.type !== "external";
 }
 
@@ -207,7 +207,8 @@ export function PageFrame({
     );
     const listener = (event: MessageEvent) => {
       const frame = frameRef.current;
-      if (!frame || event.source !== frame.contentWindow) return;
+      if (!frame) return;
+      if (event.source !== frame.contentWindow) return;
       let message = parseFrameMessage(event.data);
       if (!message) return;
       if (message.type === "request") {

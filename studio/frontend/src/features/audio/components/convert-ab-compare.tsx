@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { PillTabs } from "@/features/model-picker";
-import { type Ref, useCallback, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { type ABPlayback, nextPlayback } from "./convert-ab-compare-state";
 
 export interface ABSide {
@@ -26,15 +26,13 @@ export function ABCompare({
   side: ABSideId;
   onSideChange: (side: ABSideId) => void;
   ariaLabel: string;
-  playerRef?: Ref<HTMLAudioElement>;
+  playerRef?: (element: HTMLAudioElement | null) => void;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const setAudio = useCallback(
     (element: HTMLAudioElement | null) => {
       audioRef.current = element;
-      const target = playerRef;
-      if (typeof target === "function") target(element);
-      else if (target) target.current = element;
+      playerRef?.(element);
     },
     [playerRef],
   );

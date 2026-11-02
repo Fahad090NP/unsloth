@@ -327,11 +327,13 @@ export function ChatsLibrary({
   const [filters, setFilters] = useState<ChatFilters>(EMPTY_CHAT_FILTERS);
   const [selection, setSelectionState] = useState<Set<string>>(new Set());
   const selectionAnchor = useRef<string | null>(null);
-  // Clearing drops the shift-click anchor too, or the next range targets an unselected row.
   const setSelection = useCallback((next: SetStateAction<Set<string>>) => {
-    if (typeof next !== "function" && next.size === 0) selectionAnchor.current = null;
     setSelectionState(next);
   }, []);
+  // Clearing drops the shift-click anchor too, or the next range targets an unselected row.
+  useEffect(() => {
+    if (selection.size === 0) selectionAnchor.current = null;
+  }, [selection]);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [renaming, setRenaming] = useState<SidebarItem | null>(null);
   const [editing, setEditing] = useState<ProjectRecord | null>(null);
@@ -364,16 +366,20 @@ export function ChatsLibrary({
     setVisibleCount(PAGE_SIZE);
   }
 
-  const go = (next: Partial<LibrarySearch>, replace = false) =>
-    void navigate({
+  const go = (next: Partial<LibrarySearch>, replace = false) => {
+    navigate({
       to: "/library",
       search: { show: "chats", ...next },
       replace,
-    });
+    }).catch(() => undefined);
+  };
 
   const sectionGone = openSectionId !== null && currentSection === null && openSectionId !== awaitedSection;
   useEffect(() => {
-    if (sectionGone) void navigate({ to: "/library", search: { show: "chats", chatView: "sections" }, replace: true });
+    if (sectionGone) {
+      navigate({ to: "/library", search: { show: "chats", chatView: "sections" }, replace: true })
+        .catch(() => undefined);
+    }
   }, [sectionGone, navigate]);
 
   const archived = section === "archived";
@@ -401,7 +407,7 @@ export function ChatsLibrary({
     "project",
     ...(sections.length > 0 && !openSectionId ? (["section"] as const) : []),
   ];
-  const ungrouped = embedded || section === "all";
+  const ungrouped = Boolean(embedded) || section === "all";
   const groupBy = !ungrouped && groupOptions.includes(prefs.groupBy) ? prefs.groupBy : "none";
   const pinnedFirst = prefs.pinnedFirst && !archived && !embedded;
   const visibleChats = useMemo(() => {
@@ -579,7 +585,7 @@ export function ChatsLibrary({
     };
     window.addEventListener("keydown", onKey);
     return () => { window.removeEventListener("keydown", onKey); };
-  }, [selection.size]);
+  }, [selection.size, setSelection]);
 
   const activeChatId = () => useChatRuntimeStore.getState().activeThreadId ?? undefined;
 
@@ -610,9 +616,9 @@ export function ChatsLibrary({
     runtime.setActiveProjectId(null);
     runtime.setIncognito(false);
     setPendingNewChatSection(null);
-    void navigate({ to: "/chat", search: { new: nonce } }).then(() =>
+    navigate({ to: "/chat", search: { new: nonce } }).then(() =>
       { setPendingNewChatSection({ sectionId, nonce }); },
-    );
+    ).catch(() => undefined);
   };
 
   const newChatIn = (id: string | null) => {
@@ -620,10 +626,10 @@ export function ChatsLibrary({
     runtime.setActiveThreadId(null);
     runtime.setActiveProjectId(id);
     runtime.setIncognito(false);
-    void navigate({
+    navigate({
       to: "/chat",
       search: id ? { project: id } : { new: crypto.randomUUID() },
-    });
+    }).catch(() => undefined);
   };
 
   async function run(action: () => Promise<unknown>, success: string | null, failure: string) {
@@ -637,7 +643,7 @@ export function ChatsLibrary({
 
   const moveToProject = (chats: SidebarItem[], destination: string | null, name?: string) => {
     setSelection(new Set());
-    void run(
+    run(
       async () => {
         await Promise.all(chats.map((chat) => moveChatItemToProject(chat, destination)));
         notifyChatHistoryUpdated();
@@ -650,7 +656,7 @@ export function ChatsLibrary({
           })
         : t("settings.data.library.movedChatsToRecents", { count: chats.length }),
       t("settings.data.library.moveFailed"),
-    );
+    ).catch(() => undefined);
   };
 
   const fileInSection = (chats: SidebarItem[], sectionId: string | null, name?: string) => {
@@ -712,7 +718,7 @@ export function ChatsLibrary({
 
   const archiveChats = (chats: SidebarItem[]) => {
     setSelection(new Set());
-    void eachChat(
+    eachChat(
       chats,
       (chat) => archiveChatItems([chat], activeChatId(), () => { /* no-op */ }),
       (count) =>
@@ -720,17 +726,17 @@ export function ChatsLibrary({
           ? t("settings.data.archivedOneChat")
           : t("settings.data.archivedChatCount", { count }),
       t("settings.data.failedToArchiveChats"),
-    );
+    ).catch(() => undefined);
   };
 
   const unarchiveChats = (chats: SidebarItem[]) => {
     setSelection(new Set());
-    void eachChat(
+    eachChat(
       chats,
       unarchiveChatItem,
       (count) => t("settings.data.library.restoredChats", { count }),
       t("settings.data.library.restoreFailed"),
-    );
+    ).catch(() => undefined);
   };
 
   const setChatsPinned = (chats: SidebarItem[], next: boolean) => {
@@ -812,8 +818,8 @@ export function ChatsLibrary({
   const listed = view === "list" && !embedded;
   const chatContents = useChatContents(listed ? shownChats : NO_CHATS);
 
-  const dateColumn = <K extends string>(
-    sort: { key: K; desc: boolean },
+  const dateColumn = (
+    sort: { key: string; desc: boolean },
     setSort: (next: { key: DateField; desc: boolean }) => void,
     fields: readonly DateField[],
     field: DateField,
@@ -870,7 +876,7 @@ export function ChatsLibrary({
     },
     open: openChat,
     rename: setRenaming,
-    regenerateTitle: (chat) => void regenerateChatTitleWithToast(chat),
+    regenerateTitle: (chat) => { regenerateChatTitleWithToast(chat).catch(() => undefined); },
     togglePin: (chat) => { togglePinned(chat.id); },
     setFavorite: (chats, favorite) => {
       setFavoriteChats(
@@ -881,16 +887,16 @@ export function ChatsLibrary({
     },
     toggleFavoriteProject: (id) => { setFavoriteProjects([id], !favoriteProjects.has(id)); },
     toggleFavoriteSection: (id) => { setFavoriteSections([id], !favoriteSections.has(id)); },
-    fork: (chat) => void forkChat(chat),
+    fork: (chat) => { forkChat(chat).catch(() => undefined); },
     move: moveChats,
     moveProject,
     archive: archiveChats,
     unarchive: unarchiveChats,
-    exportChats: (chats, choice) => void exportChats(chats, choice),
+    exportChats: (chats, choice) => { exportChats(chats, choice).catch(() => undefined); },
     remove: (chats) => {
       const target = { kind: "chats", chats, deleteFiles: alwaysDeleteChatFiles } as const;
       if (confirmDeleteChats) setPendingDelete(target);
-      else void confirmDelete(target);
+      else confirmDelete(target).catch(() => undefined);
     },
     viewProject: openProject,
     filterProject: embedded
@@ -912,23 +918,25 @@ export function ChatsLibrary({
       });
       if (openSectionId === entry.id) go({ chatView: "sections" }, true);
     },
-    exportSection: (entry, choice) =>
-      void exportChats(
+    exportSection: (entry, choice) => {
+      exportChats(
         items.filter((chat) => sectionOf.get(chat.id) === entry.id),
         choice,
         `section-${entry.name}`,
-      ),
+      ).catch(() => undefined);
+    },
     newChatIn,
     editProject: setEditing,
     togglePinProject,
     projectChatCounts,
     sectionChatCounts,
-    exportProject: (project, choice) =>
-      void exportChats(
+    exportProject: (project, choice) => {
+      exportChats(
         items.filter((chat) => chat.projectId === project.id),
         choice,
         `project-${project.name}`,
-      ),
+      ).catch(() => undefined);
+    },
     // Off by default: the workspace may hold the user's own files.
     deleteProject: (project) => { setPendingDelete({ kind: "project", project, deleteFiles: false }); },
   };
@@ -1347,7 +1355,7 @@ export function ChatsLibrary({
   const selectedFavorite =
     selectedChats.length > 0 && selectedChats.every((chat) => favorites.has(chat.id));
   const shared = <T,>(of: (chat: SidebarItem) => T): T | undefined => {
-    const first = selectedChats[0];
+    const first = selectedChats.at(0);
     if (!first) return undefined;
     const value = of(first);
     return selectedChats.every((chat) => of(chat) === value) ? value : undefined;
@@ -1456,10 +1464,14 @@ export function ChatsLibrary({
                 search={query}
                 onSearchChange={setQuery}
                 searchPlaceholder={searchPlaceholder}
-                onNewChat={() => { openSectionId ? newChatInSection(openSectionId) : newChatIn(null); }}
-                onNewProject={() =>
-                  { openSectionId ? newProjectInSection(openSectionId) : setCreatingProject(true); }
-                }
+                onNewChat={() => {
+                  if (openSectionId) newChatInSection(openSectionId);
+                  else newChatIn(null);
+                }}
+                onNewProject={() => {
+                  if (openSectionId) newProjectInSection(openSectionId);
+                  else setCreatingProject(true);
+                }}
                 onNewSection={() => { setMovingIntoNew({ kind: "section", chats: [] }); }}
                 showView={section !== "projects"}
               />
@@ -1582,7 +1594,7 @@ export function ChatsLibrary({
                   )}
                   <ExportSubmenu
                     bulk={selectedChats.length > 1}
-                    onExport={(choice) => void exportChats(selectedChats, choice)}
+                    onExport={(choice) => { exportChats(selectedChats, choice).catch(() => undefined); }}
                   />
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -1614,11 +1626,11 @@ export function ChatsLibrary({
             throw err;
           }
         }}
-        onOpenChange={(open) => !open && setRenaming(null)}
+        onOpenChange={(open) => { if (!open) setRenaming(null); }}
       />
       <EditProjectDialog
         project={editing}
-        onOpenChange={(open) => !open && setEditing(null)}
+        onOpenChange={(open) => { if (!open) setEditing(null); }}
         onDelete={(project) => {
           setEditing(null);
           actions.deleteProject(project);
@@ -1646,7 +1658,7 @@ export function ChatsLibrary({
       <SectionNameDialog
         open={movingIntoNew?.kind === "section"}
         mode="create"
-        onOpenChange={(open) => !open && setMovingIntoNew(null)}
+        onOpenChange={(open) => { if (!open) setMovingIntoNew(null); }}
         onSubmit={(name) => {
           const sectionId = createCustomSection(name);
           if (!sectionId || !movingIntoNew) return;
@@ -1666,10 +1678,10 @@ export function ChatsLibrary({
         open={renamingSection !== null}
         mode="rename"
         initialName={renamingSection?.name ?? ""}
-        onOpenChange={(open) => !open && setRenamingSection(null)}
-        onSubmit={(name) => renamingSection && renameCustomSection(renamingSection.id, name)}
+        onOpenChange={(open) => { if (!open) setRenamingSection(null); }}
+        onSubmit={(name) => { if (renamingSection) renameCustomSection(renamingSection.id, name); }}
       />
-      <AlertDialog open={pendingDelete !== null} onOpenChange={(open) => !open && setPendingDelete(null)}>
+      <AlertDialog open={pendingDelete !== null} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>
         <AlertDialogContent onOverlayClick={() => { setPendingDelete(null); }}>
           <AlertDialogHeader>
             <AlertDialogTitle className="wrap-break-word">{deleteCopy?.title}</AlertDialogTitle>

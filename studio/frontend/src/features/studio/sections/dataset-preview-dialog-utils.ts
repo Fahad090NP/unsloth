@@ -36,6 +36,9 @@ export function formatCell(value: unknown): string {
   if (Array.isArray(value) || typeof value === "object") {
     return JSON.stringify(value).slice(0, 500);
   }
+  if (typeof value === "function") {
+    return value.name;
+  }
   return String(value);
 }
 
@@ -56,7 +59,7 @@ function previewChildren(
   path: (string | number)[],
 ): PreviewTraversalEntry[] {
   if (Array.isArray(value)) {
-    return value.map((item, index) => ({
+    return value.map((item: unknown, index: number) => ({
       path: [...path, index],
       value: item,
     }));

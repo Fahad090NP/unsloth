@@ -160,9 +160,13 @@ export function ProjectSourceDropzone({
   const [dragging, setDragging] = useState(false);
   // Native drop registration is async, so merge against these rather than stale props.
   const stagedRef = useRef(staged);
-  stagedRef.current = staged;
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  useEffect(() => {
+    stagedRef.current = staged;
+  }, [staged]);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
   // Set on setup, or StrictMode's replayed cleanup would leave it false forever.
   const mounted = useRef(true);
   useEffect(() => {
@@ -188,7 +192,9 @@ export function ProjectSourceDropzone({
   }, []);
 
   const onPendingChangeRef = useRef(onPendingChange);
-  onPendingChangeRef.current = onPendingChange;
+  useEffect(() => {
+    onPendingChangeRef.current = onPendingChange;
+  }, [onPendingChange]);
   const pending = useRef(0);
   const addPending = useCallback((delta: number) => {
     pending.current += delta;
@@ -294,7 +300,9 @@ export function ProjectSourceDropzone({
         });
         return;
       }
-      void addNativePaths(paths);
+      addNativePaths(paths).catch((error: unknown) => {
+        console.error("Failed to add native drop paths:", error);
+      });
     },
     onDragOver: (over) => { setDragging(over && !disabled); },
   });
@@ -330,7 +338,7 @@ export function ProjectSourceDropzone({
           e.preventDefault();
           if (disabled) return;
           endDrag();
-          addFiles(Array.from(e.dataTransfer.files ?? []));
+          addFiles(Array.from(e.dataTransfer.files));
         }}
         className={cn(
           "rounded-2xl border border-border transition-colors dark:border-[rgb(255_255_255/calc(0.1*var(--contrast-edge-gain,1)))]",

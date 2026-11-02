@@ -73,7 +73,7 @@ function buildSamplerParams(
   if (config.sampler_type === "subcategory") {
     const mapping = config.subcategory_mapping ?? {};
     for (const [key, values] of Object.entries(mapping)) {
-      if (!values || values.length === 0) {
+      if (values.length === 0) {
         errors.push(
           `Subcategory ${config.name}: '${key}' needs at least 1 subcategory.`,
         );
@@ -104,7 +104,7 @@ function buildSamplerParams(
   if (config.sampler_type === "datetime") {
     const rawUnit = config.datetime_unit?.trim();
     let unit: string | undefined = rawUnit ?? undefined;
-    if (rawUnit && DATETIME_UNIT_MAP[rawUnit]) {
+    if (rawUnit && Object.hasOwn(DATETIME_UNIT_MAP, rawUnit)) {
       unit = DATETIME_UNIT_MAP[rawUnit];
     }
     if (rawUnit === "week") {

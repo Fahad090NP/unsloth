@@ -153,7 +153,9 @@ export function TransformersUpgradeDialog() {
                 onClick={(event) => {
                   // Keep the dialog open; the store closes it on success.
                   event.preventDefault();
-                  void install();
+                  install().catch((error: unknown) => {
+                    console.error("Failed to install transformers:", error);
+                  });
                 }}
               >
                 {installing ? (
@@ -164,7 +166,7 @@ export function TransformersUpgradeDialog() {
                 ) : phase === "error" ? (
                   "Retry install"
                 ) : (
-                  `Install transformers ${version}`
+                  `Install transformers ${version ?? ""}`
                 )}
               </AlertDialogAction>
             </>

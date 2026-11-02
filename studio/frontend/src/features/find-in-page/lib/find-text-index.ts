@@ -299,9 +299,8 @@ export function buildTextIndex(
         : preservesWhitespace(style.whiteSpace);
     const ownTextHidden = hidesOwnText(style);
     const children = element.childNodes;
-    for (let i = 0; i < children.length; i += 1) {
+    for (const child of Array.from(children)) {
       if (full) return;
-      const child = children[i];
       if (child.nodeType === TEXT_NODE) {
         if (ownTextHidden) continue;
         const node = child as FindTextNodeLike;
@@ -358,7 +357,7 @@ export function buildTextIndex(
         }
       } else if (child.nodeType === ELEMENT_NODE) {
         visit(child as FindElementLike, preserved);
-        if (full) return;
+        if (Boolean(full)) return;
       }
     }
     if (block) {
@@ -374,7 +373,7 @@ export function buildTextIndex(
   ceiling = MAX_INDEX_CHARS;
   full = false;
   for (const extra of extraRoots) {
-    if (full) break;
+    if (Boolean(full)) break;
     pendingSeparator = true;
     dropped = null;
     const firstSegment = segments.length;
@@ -572,7 +571,7 @@ function splitsCrlf(text: string, at: number): boolean {
   return at > 0 && text.charCodeAt(at - 1) === 13 && text.charCodeAt(at) === 10;
 }
 
-const JOINS_GRAPHEME = /[^\u0000-\u02ff]/;
+const JOINS_GRAPHEME = /[\u0300-\u{10FFFF}]/u;
 
 interface GraphemeSegments {
   containing(at: number): { index: number } | undefined;

@@ -60,14 +60,18 @@ export function Waveform({
   const [playing, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [mediaDuration, setMediaDuration] = useState<number | null>(null);
+  const [trackedSrc, setTrackedSrc] = useState(src);
+  if (trackedSrc !== src) {
+    setTrackedSrc(src);
+    setPlaying(false);
+    setPosition(0);
+    setMediaDuration(null);
+  }
   const duration =
     durationS && durationS > 0 ? durationS : (mediaDuration ?? 0);
   const fraction = duration > 0 ? Math.min(1, position / duration) : 0;
 
   useEffect(() => {
-    setPlaying(false);
-    setPosition(0);
-    setMediaDuration(null);
     if (src === null) audioRef.current?.pause();
   }, [src]);
 

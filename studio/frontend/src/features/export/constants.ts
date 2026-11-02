@@ -257,7 +257,7 @@ export function estimateQuantBytes(
   if (!fp16Bytes || fp16Bytes <= 0) {
     return null;
   }
-  const bpw: number | undefined = GGUF_BPW[quant];
+  const bpw = (GGUF_BPW as Record<string, number | undefined>)[quant];
   if (bpw == null) {
     return null;
   }

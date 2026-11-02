@@ -95,7 +95,7 @@ function jsonInit(method: string, body: unknown): RequestInit {
 
 export async function getLibrary(): Promise<LibrarySnapshot> {
   const response = await ensureOk(await authFetch("/api/library"));
-  return await response.json();
+  return (await response.json()) as LibrarySnapshot;
 }
 
 export async function getLibraryFavorites(): Promise<string[]> {
@@ -157,7 +157,7 @@ export async function addLibraryItemToProject(
   const response = await ensureOk(
     await sendWrite("/api/library/items/project", jsonInit("POST", { id, projectId })),
   );
-  return await response.json();
+  return (await response.json()) as { already: boolean };
 }
 
 export async function revealLibraryItem(id: string): Promise<void> {
@@ -176,7 +176,8 @@ export interface LibraryLocation {
 
 export async function getLibraryLocations(): Promise<LibraryLocation[]> {
   const response = await ensureOk(await authFetch("/api/library/locations"));
-  return (await response.json()).locations;
+  const body = (await response.json()) as { locations: LibraryLocation[] };
+  return body.locations;
 }
 
 export async function revealLibraryLocation(key: LibraryLocation["key"]): Promise<void> {
@@ -190,7 +191,10 @@ export async function moveLibraryLocation(
   const response = await ensureOk(
     await sendWrite("/api/library/locations/move", jsonInit("POST", { key, path })),
   );
-  const body = await response.json();
+  const body = (await response.json()) as {
+    locations: LibraryLocation[];
+    leftBehind?: string | null;
+  };
   return { locations: body.locations, leftBehind: body.leftBehind ?? null };
 }
 
@@ -287,7 +291,7 @@ export async function createLibraryFolder(
   const response = await ensureOk(
     await sendWrite("/api/library/folders", jsonInit("POST", { name, parentId })),
   );
-  return await response.json();
+  return (await response.json()) as LibraryFolder;
 }
 
 export function updateLibraryFolder(

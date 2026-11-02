@@ -55,16 +55,22 @@ export function useNpuCatalog(
   useEffect(() => {
     if (!ready) return;
     // This listing can run a pending upgrade: re-read status for its versions, or for Try again.
-    void refreshNpuModels().then(() =>
-      getNpuStatus().then(
-        (next) => statusChange.current?.(next),
-        () => undefined,
-      ),
-    );
+    refreshNpuModels()
+      .then(() =>
+        getNpuStatus().then(
+          (next) => statusChange.current?.(next),
+          () => undefined,
+        ),
+      )
+      .catch((error: unknown) => {
+        console.error("Failed to refresh NPU models:", error);
+      });
     listNpuDownloads().then(
       (running) => {
         for (const { model, percent } of running) {
-          void followNpuDownload(model, { follow: true, percent });
+          followNpuDownload(model, { follow: true, percent }).catch((error: unknown) => {
+            console.error("Failed to follow NPU download:", error);
+          });
         }
       },
       () => undefined,

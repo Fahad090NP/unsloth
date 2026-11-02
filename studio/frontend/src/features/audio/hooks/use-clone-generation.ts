@@ -125,10 +125,10 @@ export async function showRunResult({
 export function useCloneGeneration({
   status,
   busy,
-  busyRef,
+  busyRef: sharedBusyRef,
   setBusy,
   updateGenerationPhase,
-  generateAbort,
+  generateAbort: sharedGenerateAbort,
   setMode,
   setAdvancedOpen,
   refreshStatus,
@@ -170,6 +170,8 @@ export function useCloneGeneration({
     /** Audio is the visible tab and Clone its page: auto-transcribe runs only then. */
     onClonePage: boolean;
   }) {
+  const busyRef = sharedBusyRef;
+  const generateAbort = sharedGenerateAbort;
   const reference = useAudioCloneStore((state) => state.reference);
   const referenceText = useAudioCloneStore((state) => state.referenceText);
   const text = useAudioCloneStore((state) => state.text);
@@ -493,9 +495,12 @@ export function useCloneGeneration({
     replayQueuedTtsPick,
   ]);
 
-  useEffect(() => {
+  const referenceKey = reference ? `${reference.kind}:${reference.id}` : null;
+  const [trackedReferenceKey, setTrackedReferenceKey] = useState<string | null>(referenceKey);
+  if (trackedReferenceKey !== referenceKey) {
+    setTrackedReferenceKey(referenceKey);
     if (reference) setGenerationError(null);
-  }, [reference]);
+  }
 
   return {
     reference,

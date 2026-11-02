@@ -7,9 +7,9 @@ import {
   useChatRuntimeStore,
 } from "@/features/chat";
 import { isPrecisionFolderName } from "@/features/hub/lib/dataset-size";
+import { isStandaloneGgufPath } from "@/features/hub";
 import {
   isNativeFileLabel,
-  isStandaloneGgufPath,
 } from "@/features/hub/lib/model-identity";
 import { isNpuModelId } from "@/features/npu";
 import {

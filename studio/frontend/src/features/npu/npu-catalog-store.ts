@@ -119,7 +119,6 @@ export function followNpuDownload(
       setProgress(id, next);
       return true;
     };
-    let streamed = false;
     const onProgress = (event: { event: string; percent?: number }) => {
       setReconnecting(id, false);
       flags.completed ||= event.event === "complete";
@@ -152,7 +151,7 @@ export function followNpuDownload(
             setReconnecting(id, unreachable);
             advance(running?.percent);
             stalledReconnects =
-              flags.streamed || (wasUnreachable && !unreachable)
+              Boolean(flags.streamed) || (wasUnreachable && !unreachable)
                 ? 0
                 : stalledReconnects + 1;
             wasUnreachable = unreachable;

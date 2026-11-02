@@ -136,7 +136,7 @@ export function useMediaGenerationPresets<Params extends object>({
 
   const hydrateSavedSettings = useCallback(
     (settings: MediaGenerationPresetSettings<Params>) => {
-      const custom = settings.customPresets ?? [];
+      const custom = settings.customPresets;
       deferredFreshSettingsRef.current = false;
       setCustomPresets(custom);
       // A model pick made mid-request is newer than storage: keep its values, still load presets.
@@ -176,7 +176,7 @@ export function useMediaGenerationPresets<Params extends object>({
           return;
         }
         if (!settings.saved) {
-          hydrateLocalSettings("fresh", settings.customPresets ?? []);
+          hydrateLocalSettings("fresh", settings.customPresets);
           return;
         }
         hydrateSavedSettings(settings);
