@@ -13,7 +13,7 @@ import { SidebarEdgeTrigger } from "@/components/sidebar-edge-trigger";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { fetchDeviceType, usePlatformStore } from "@/config/env";
 import { videoNavHint } from "@/config/hardware-verdict";
-import { ApiMonitorOverlay } from "@/features/api-monitor/api-monitor-overlay";
+import { ApiMonitorOverlay } from "@/features/api-monitor";
 import { DownloadApprovalDialog } from "@/features/browser";
 import {
   AUTH_SESSION_CLEARED_EVENT,
@@ -45,7 +45,7 @@ import {
 import { backfillModelOverrides } from "@/features/model-picker/api/migrate-model-overrides";
 import { hydratePins } from "@/lib/pins-mirror";
 import { usePersonalizationSync } from "@/features/profile";
-import { ScheduledTaskRunNotifier } from "@/features/scheduled-tasks/run-notifier";
+import { ScheduledTaskRunNotifier } from "@/features/scheduled-tasks";
 import { RemoteCodeConsentDialog } from "@/features/security";
 import {
   SETTINGS_TABS,

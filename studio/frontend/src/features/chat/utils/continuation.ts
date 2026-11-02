@@ -236,7 +236,7 @@ export function isContinuableContent(
   let hasText = false;
   let hasReasoning = false;
   for (const part of content) {
-    const type = (part as { type?: string })?.type;
+    const type = (part as { type?: string }).type;
     if (type === "text") {
       hasText = hasText || ((part as { text?: string }).text ?? "").length > 0;
       continue;
@@ -731,7 +731,7 @@ export function createAutoContinueTab({
     try {
       store.setItem(AUTO_CONTINUE_LEASE_KEY, JSON.stringify(next));
       // Without a lock manager, read back: the last writer's token wins.
-      if (readLeases(store)[messageId]?.token !== token) {
+      if (readLeases(store)[messageId].token !== token) {
         return "held-elsewhere";
       }
     } catch {
@@ -763,7 +763,7 @@ export function createAutoContinueTab({
     }
     try {
       const leases = prune(readLeases(store), now);
-      if (leases[messageId]?.token !== held.token) {
+      if (leases[messageId].token !== held.token) {
         ownTokens.delete(messageId);
         return false;
       }
@@ -856,8 +856,8 @@ export function createAutoContinueTab({
       try {
         const leases = readLeases(store);
         for (const [id, held] of ownTokens) {
-          if (leases[id]?.token === held.token) {
-            delete leases[id];
+          if (leases[id].token === held.token) {
+            Reflect.deleteProperty(leases, id);
           }
         }
         store.setItem(AUTO_CONTINUE_LEASE_KEY, JSON.stringify(leases));

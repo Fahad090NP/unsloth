@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { getAuthSessionEpoch } from "@/features/auth";
 import { useFullAccessAllowed } from "@/features/auth/account-session";
-import { FullAccessConfirmContent } from "@/features/chat/permission-mode-select";
-import { hasChatFullAccess, withChatFullAccess } from "@/features/chat/utils/chat-full-access";
+import { FullAccessConfirmContent } from "@/features/chat";
+import { hasChatFullAccess, withChatFullAccess } from "@/features/chat";
 import {
   resolveToolConfirmation,
   ToolApprovalGoneError,
-} from "@/features/chat/api/chat-api";
-import { useChatRuntimeStore } from "@/features/chat/stores/chat-runtime-store";
+} from "@/features/chat";
+import { useChatRuntimeStore } from "@/features/chat";
 import {
   COMPOSER_INPUT_SELECTOR,
   isSurfaceBackgrounded,
@@ -98,7 +98,7 @@ export function ToolConfirmationControls({
             useChatRuntimeStore.getState().chatPermissionChoiceVersion === choiceVersion) {
             // Autosave may adopt the first turn while the POST is in flight.
             const current = useChatRuntimeStore.getState().toolConfirmations[toolCallId];
-            const target = current?.approvalId === confirmation.approvalId ? current : confirmation;
+            const target = current.approvalId === confirmation.approvalId ? current : confirmation;
             grantChatFullAccess({
               runId: confirmation.runId,
               sessionId: confirmation.sessionId,
@@ -209,7 +209,7 @@ export function ToolConfirmationControls({
       >
         Deny
       </Button>
-      {!disclosure && fullAccessAllowed && permissionMode !== "full" && confirmation?.sessionId && confirmation?.runId ? (
+      {!disclosure && fullAccessAllowed && permissionMode !== "full" && confirmation.sessionId && confirmation.runId ? (
         <>
           <Button
             size="xs"

@@ -11,7 +11,7 @@ import {
 import type {
   LoraModelOption,
   ModelSelectorChangeMeta,
-} from "@/features/model-picker/components/model-selector/types";
+} from "@/features/model-picker";
 import {
   ggufQuantLabel,
   ggufVariantsMatch,

@@ -6,7 +6,6 @@ import type {
   ModelType,
   ParsedConversation,
   ProjectRecord,
-  ThreadRecord,
 } from "../types";
 import { compareStoredMessages } from "./message-order";
 

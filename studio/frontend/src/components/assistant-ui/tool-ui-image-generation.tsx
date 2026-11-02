@@ -583,7 +583,7 @@ const VideoGenerationToolUIImpl: ToolCallMessagePartComponent = ({
   result,
   status,
 }) => {
-  const prompt = toolArgText((args as { prompt?: unknown })?.prompt).trim();
+  const prompt = toolArgText((args as { prompt?: unknown }).prompt).trim();
   const isRunning = isToolCallRunning(status);
   const localResult = sandboxMediaResult(result);
   const videoFile = localResult?.files?.find((file) =>

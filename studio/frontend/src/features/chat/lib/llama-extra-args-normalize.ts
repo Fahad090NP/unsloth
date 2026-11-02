@@ -46,10 +46,10 @@ function lastFlagValue(
       continue;
     }
     const next = args?.[i + 1];
-    if (next === undefined || flagName(String(next)) !== null) {
+    if (next === undefined || flagName(next) !== null) {
       return null;
     }
-    value = String(next);
+    value = next;
     i += 1;
   }
   return value;
@@ -93,7 +93,7 @@ export function stripManagedOffloadFlags(
   }
   const kept: string[] = [];
   for (let i = 0; i < extraArgs.length; i += 1) {
-    const token = String(extraArgs[i]);
+    const token = extraArgs[i];
     const flag = flagName(token);
     if (flag === null || !OFFLOAD_SHADOWING_FLAGS.has(flag)) {
       kept.push(token);
@@ -101,7 +101,7 @@ export function stripManagedOffloadFlags(
     }
     if (!token.includes("=")) {
       const next = extraArgs[i + 1];
-      if (next !== undefined && flagName(String(next)) === null) {
+      if (next !== undefined && flagName(next) === null) {
         i += 1;
       }
     }

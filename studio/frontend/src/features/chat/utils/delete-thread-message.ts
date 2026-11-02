@@ -52,7 +52,7 @@ export function exportedItemToRecord(
   const content = snapshotContent(message.content);
   if (message.role === "user") {
     const attachments = snapshotAttachments(message.attachments);
-    const custom = message.metadata?.custom;
+    const custom = message.metadata.custom;
     return {
       id: message.id,
       threadId,
@@ -64,7 +64,7 @@ export function exportedItemToRecord(
       createdAt: toEpochMillis(message.createdAt),
     };
   }
-  const custom = (message.metadata?.custom ?? {});
+  const custom = (message.metadata.custom ?? {});
   return {
     id: message.id,
     threadId,

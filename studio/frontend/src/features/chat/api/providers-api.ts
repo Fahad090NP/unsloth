@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import type forge from "node-forge";
-import { authFetch } from "@/features/auth/api";
+import { authFetch } from "@/features/auth";
 import { formatFastApiDetail } from "@/lib/format-fastapi-error";
 import type { ModelCatalogSnapshotEntry } from "../model-catalog-snapshot";
 import type { CustomReasoningConfig } from "../custom-reasoning";
@@ -147,7 +147,7 @@ async function importProviderPublicKey(
   }
   const response = await authFetch("/api/providers/public-key");
   const body = await parseJsonOrThrow<{ public_key: string }>(response);
-  const publicKeyPem = body.public_key?.trim();
+  const publicKeyPem = body.public_key.trim();
   if (!publicKeyPem) {
     throw new Error("Provider public key is missing.");
   }

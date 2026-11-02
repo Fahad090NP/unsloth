@@ -435,7 +435,7 @@ export function attachmentAudioSrc(
 ): string {
   const extension = name?.toLowerCase().split(".").pop() ?? "";
   const mime = AUDIO_MIME_RE.test(contentType ?? "")
-    ? (contentType as string)
+    ? (contentType ?? "")
     : (lookUp(AUDIO_EXTENSION_MIMES, extension) ??
       (audio.format === "mp3" ? "audio/mpeg" : "audio/wav"));
   return `data:${mime};base64,${audio.data}`;
@@ -498,7 +498,7 @@ export function isTextAttachment(
       return accepted === extension;
     }
     if (accepted.endsWith("/*")) {
-      return mime.startsWith(`${accepted.slice(0, -1)}`);
+      return mime.startsWith(accepted.slice(0, -1));
     }
     return accepted === mime;
   });
@@ -900,7 +900,7 @@ function linearizeDocxMathParts(select: DocxPartSelect): Record<string, Uint8Arr
     if (!xml.includes("oMath")) continue;
     const doc = new DOMParser().parseFromString(xml, "application/xml");
     const root = doc.documentElement;
-    const w = root?.namespaceURI ?? "";
+    const w = root.namespaceURI ?? "";
     // Chromium keeps the root of malformed XML and drops everything after the error.
     if (!WORDPROCESSINGML_NAMESPACES.has(w) || doc.getElementsByTagName("parsererror").length) continue;
     const tag = (local: string) => (root.prefix ? `${root.prefix}:${local}` : local);
@@ -946,7 +946,7 @@ function writeDocxBreakAndCheckboxParts(select: DocxPartSelect): Record<string, 
     if (!DOCX_BREAK_OR_CHECKBOX_RE.test(xml)) continue;
     const doc = new DOMParser().parseFromString(xml, "application/xml");
     const root = doc.documentElement;
-    const w = root?.namespaceURI ?? "";
+    const w = root.namespaceURI ?? "";
     if (!WORDPROCESSINGML_NAMESPACES.has(w) || doc.getElementsByTagName("parsererror").length) continue;
     const tag = (local: string) => (root.prefix ? `${root.prefix}:${local}` : local);
     const text = (value: string) => {
@@ -1003,7 +1003,7 @@ function writeDocxTableRowParts(select: DocxPartSelect): Record<string, Uint8Arr
     if (!DOCX_TABLE_RE.test(xml)) continue;
     const doc = new DOMParser().parseFromString(xml, "application/xml");
     const root = doc.documentElement;
-    const w = root?.namespaceURI ?? "";
+    const w = root.namespaceURI ?? "";
     if (!WORDPROCESSINGML_NAMESPACES.has(w) || doc.getElementsByTagName("parsererror").length) continue;
     const tag = (local: string) => (root.prefix ? `${root.prefix}:${local}` : local);
     const run = (child: Element) => {
@@ -1128,7 +1128,7 @@ function injectDocxListNumbers(select: DocxPartSelect): Record<string, Uint8Arra
     if (!bytes) return null;
     const doc = new DOMParser().parseFromString(strFromU8(bytes), "application/xml");
     const root = doc.documentElement;
-    if (!WORDPROCESSINGML_NAMESPACES.has(root?.namespaceURI ?? "") || doc.getElementsByTagName("parsererror").length) return null;
+    if (!WORDPROCESSINGML_NAMESPACES.has(root.namespaceURI ?? "") || doc.getElementsByTagName("parsererror").length) return null;
     return { doc, root, w: root.namespaceURI ?? "" };
   };
   const related = (name: string) => parse(resolve(targets.get(`${DOCX_RELATIONSHIP_NAMESPACE}${name}`), `word/${name}.xml`));
@@ -1396,7 +1396,7 @@ function markDocxNoteParts(select: DocxPartSelect): {
       strFromU8(xml),
       "application/xml",
     );
-    const ns = doc.documentElement?.namespaceURI ?? "";
+    const ns = doc.documentElement.namespaceURI ?? "";
     if (!WORDPROCESSINGML_NAMESPACES.has(ns)) continue;
     notes.ns = ns;
     for (const note of Array.from(doc.getElementsByTagNameNS(ns, kind))) {
@@ -1523,7 +1523,6 @@ export function repackDocxPreviewArchive(
 const XML_ELEMENT_TAG_RE = /<[^\s/>!?](?:"[^"]*"|'[^']*'|[^"'>])*>/g;
 // Relationship id attributes, whatever their prefix.
 const DOCX_RELATIONSHIP_ID_ATTRIBUTE_RE = /^[\w.-]+:(?:embed|link|id)$/;
-const DOCX_IMAGE_RELATIONSHIP_TYPE_RE = /\/image$/;
 
 type DocxRelationship = { id: string; type: string; path: string };
 
@@ -1579,7 +1578,7 @@ function addKeptDocxImages(bytes: Uint8Array, archive: DocxArchive, mainDocument
   const addImages = (relationships: DocxRelationship[], ids: Set<string>) => {
     for (const rel of relationships) {
       // Images only: an oversized altChunk or OLE part the first pass left out stays out.
-      if (ids.has(rel.id) && DOCX_IMAGE_RELATIONSHIP_TYPE_RE.test(rel.type)) wanted.add(rel.path);
+      if (ids.has(rel.id) && rel.type.endsWith("/image")) wanted.add(rel.path);
     }
   };
   const mainRels = docxRelationships(archive.entries[docxRelationshipsPath(mainDocument)], dirname(mainDocument));
@@ -1884,7 +1883,7 @@ function declaredHtmlEncoding(bytes: Uint8Array): string | null {
     bytes.subarray(0, HTML_PRESCAN_BYTES),
   );
   for (const [, tag, attributes] of head.matchAll(HTML_PRESCAN_TAG_RE)) {
-    if (tag?.toLowerCase() !== "meta") {
+    if (tag.toLowerCase() !== "meta") {
       continue;
     }
     const attrs = new Map<string, string>();
@@ -2227,7 +2226,7 @@ function attachmentBodyRange(raw: string): {
 } {
   const head = raw.slice(0, MAX_ATTACHMENT_WRAPPER_LENGTH);
 
-  const labelled = head.match(LABELLED_ATTACHMENT_TEXT_RE);
+  const labelled = LABELLED_ATTACHMENT_TEXT_RE.exec(head);
   if (labelled) {
     return {
       label: labelled[1] as AttachmentTextLabel,
@@ -2236,7 +2235,7 @@ function attachmentBodyRange(raw: string): {
     };
   }
 
-  const tagOpen = head.match(ATTACHMENT_TAG_OPEN_RE);
+  const tagOpen = ATTACHMENT_TAG_OPEN_RE.exec(head);
   if (tagOpen && raw.endsWith(ATTACHMENT_TAG_CLOSE)) {
     return {
       label: null,

@@ -99,7 +99,7 @@ export function engineClipboardIsMapped(
   }
   let mapped = false;
   try {
-    const ua = view.navigator?.userAgent ?? "";
+    const ua = view.navigator.userAgent ?? "";
     if (
       /Chrome\/|Chromium\/|Edg\//.test(ua) &&
       !/\bAppleWebKit\b(?!.*Chrome)/.test(ua)

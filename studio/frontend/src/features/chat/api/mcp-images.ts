@@ -151,9 +151,9 @@ export function boundMcpImageEnvelopes<T extends EnvelopeCarrier>(
   const batches: Carrier[][] = [];
   for (const carrier of carriers) {
     const previous = batches[batches.length - 1];
-    const last = previous?.[previous.length - 1];
+    const last = previous[previous.length - 1];
     let sameBatch = localMarkers && last !== undefined;
-    for (let j = (last?.index ?? 0) + 1; sameBatch && j < carrier.index; j++) {
+    for (let j = (last.index ?? 0) + 1; sameBatch && j < carrier.index; j++) {
       if (out[j]?.role !== "tool") sameBatch = false;
     }
     if (sameBatch && previous) previous.push(carrier);

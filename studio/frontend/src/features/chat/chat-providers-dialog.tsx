@@ -232,7 +232,7 @@ export function codexCapabilitiesWithPlanModels(
   const capabilities = mergeLearnedModelCapabilities(
     stored,
     registryCapabilities,
-    entry?.supports_studio_tools,
+    entry.supports_studio_tools,
   );
   for (const model of listed.known ?? listed.models) {
     // Only the plan describes unlisted slugs; mirror the backend bool(vision) gate as false, not null.
@@ -885,7 +885,7 @@ export function ChatProvidersSettings({
     const curated = selectedRegistryEntry?.model_list_mode === "curated";
     const manualOnly =
       (isCustomProvider && !supportsRemoteModelCatalog(providerType)) ||
-      (curated && selectedRegistryEntry?.model_ids_editable !== false);
+      (curated && selectedRegistryEntry.model_ids_editable !== false);
     const remoteAllowsManual = allowsManualModelIdsWithCatalog(providerType);
     const manualIds = parseManualModelIds(manualModelIds);
     const allowManual = manualOnly || remoteAllowsManual;

@@ -26,7 +26,7 @@ import {
 import { authFetch, getAuthToken } from "@/features/auth";
 import { withSandboxAttachmentPaths } from "../sandbox-attachments";
 import { prepareHfTokenForUse } from "@/features/hf-auth";
-import { DOWNLOAD_KIND } from "@/features/hub/download-manager/constants";
+import { DOWNLOAD_KIND } from "@/features/hub";
 import {
   downloadManager,
   jobKeyOf,
@@ -37,8 +37,8 @@ import {
 import {
   type LocalModelInfo,
   listLocalModels,
-} from "@/features/hub/inventory/api";
-import { isHiddenModelId } from "@/features/hub/lib/hidden-models";
+} from "@/features/hub";
+import { isHiddenModelId } from "@/features/hub";
 import {
   isServedByLlamaCpp,
   resumesThought,
@@ -74,7 +74,7 @@ function userTexts(
   messages: readonly { role?: string; content?: unknown }[],
 ): string[] {
   return messages
-    .filter((message) => message?.role === "user")
+    .filter((message) => message.role === "user")
     .map((message) => messageText(message.content));
 }
 import { endBrowserAgentRun } from "@/features/browser/agent/agent-store";
@@ -86,7 +86,6 @@ import {
   SANDBOX_FILE_TOOLS,
   SANDBOX_RUN_TOOLS,
   extractCreatedFiles,
-  isSandboxFileList,
   isSandboxToolResult,
   type SandboxFile,
   sandboxSessionIdFor,
@@ -446,7 +445,6 @@ import {
 } from "../stores/research-run-store";
 import {
   documentCitationToSource,
-  isSafeNavigableSourceUrl,
   parseSourcesFromResult,
 } from "../utils/document-citation-source";
 import { mergeGoogleNativeParts } from "../utils/google-native-parts";
@@ -906,9 +904,9 @@ function collectTextParts(message: RunMessage): string[] {
 
 function collectImageParts(
   message: RunMessage,
-): Array<{ type: "image_url"; image_url: { url: string } }> {
+): { type: "image_url"; image_url: { url: string } }[] {
   message = modelVisibleMessage(message);
-  const parts: Array<{ type: "image_url"; image_url: { url: string } }> = [];
+  const parts: { type: "image_url"; image_url: { url: string } }[] = [];
   const pushImagePart = (part: { type: string }) => {
     if (part.type !== "image" || !("image" in part)) {
       return;
@@ -1015,12 +1013,12 @@ type SerializedMessage = {
   role: "system" | "user" | "assistant" | "tool";
   content: OpenAIMessageContent | null;
   reasoning_content?: string;
-  tool_calls?: Array<{
+  tool_calls?: {
     id: string;
     type: "function";
     function: { name: string; arguments: string };
     extra_content?: unknown;
-  }>;
+  }[];
   tool_call_id?: string;
   name?: string;
   /** Gemini text-part thoughtSignature; backend reads extra_content.google.thought_signature. */
@@ -1297,7 +1295,7 @@ function sanitizeAssistantReplayText(text: string): string {
 
 function buildReplayContent(
   textContent: string,
-  imageParts: Array<{ type: "image_url"; image_url: { url: string } }>,
+  imageParts: { type: "image_url"; image_url: { url: string } }[],
 ): OpenAIMessageContent {
   if (imageParts.length === 0) return textContent;
   // Anthropic rejects whitespace-only text; spread so the caller's array is not reused as content.
@@ -1315,7 +1313,7 @@ function collectAssistantTextThoughtSignature(
       string,
       unknown
     >;
-    if (part?.type !== "text") continue;
+    if (part.type !== "text") continue;
     const sig = part._google_thought_signature;
     if (typeof sig === "string" && sig) return sig;
   }
@@ -1481,7 +1479,7 @@ function stripGeminiContinuationVisiblePrefix(
     return;
   }
   if (!Array.isArray(assistant.content)) return;
-  const content = assistant.content as Array<Record<string, unknown>>;
+  const content = assistant.content as Record<string, unknown>[];
   const text = content
     .filter((part) => part.type === "text" && typeof part.text === "string")
     .map((part) => part.text as string)
@@ -1796,7 +1794,7 @@ function fillStoppedAssistantReplay(
     return serialized;
   }
   const [only, ...rest] = serialized;
-  if (rest.length !== 0 || only?.role !== "assistant") {
+  if (rest.length !== 0 || only.role !== "assistant") {
     return serialized;
   }
   if (
@@ -1826,7 +1824,7 @@ function isAbandonedAssistantTurn(
   const [only, ...rest] = toOpenAIMessages(message, includeReasoningContent);
   return (
     rest.length === 0 &&
-    only?.role === "assistant" &&
+    only.role === "assistant" &&
     !hasReplayContent(only.content) &&
     !only.tool_calls &&
     !only.reasoning_content
@@ -1893,7 +1891,7 @@ function findLatestUserImageBase64(messages: RunMessages): string | undefined {
       }
     }
 
-    if ("attachments" in message && (message.attachments?.length ?? 0) > 0) {
+    if ("attachments" in message && (message.attachments.length ?? 0) > 0) {
       for (const attachment of message.attachments ?? []) {
         for (const part of attachment.content ?? []) {
           if (part.type !== "image") {
@@ -1921,7 +1919,7 @@ function extractAudioPartBase64(
       audio: string | { data: string; format: string };
     }
   ).audio;
-  const raw = typeof audioPart === "string" ? audioPart : audioPart?.data;
+  const raw = typeof audioPart === "string" ? audioPart : audioPart.data;
   if (!raw) return undefined;
   return raw.startsWith("data:") ? raw.split(",")[1] : raw;
 }
@@ -2158,7 +2156,7 @@ function localTargetReadsImages(
     (model) => model.id === state.params.checkpoint,
   );
   if (typeof activeModel?.isVision === "boolean") return activeModel.isVision;
-  return state.loadedIsMultimodal !== false;
+  return state.loadedIsMultimodal;
 }
 
 /** Tools are priced server-side since --enable-tools can inject schemas the client cannot see. */
@@ -3098,8 +3096,8 @@ async function resolveAutoLoadCandidate(
   const wanted = rememberedVariant?.trim().toLowerCase();
   const ordered = wanted
     ? [
-        ...downloaded.filter((v) => v.quant?.toLowerCase() === wanted),
-        ...downloaded.filter((v) => v.quant?.toLowerCase() !== wanted),
+        ...downloaded.filter((v) => v.quant.toLowerCase() === wanted),
+        ...downloaded.filter((v) => v.quant.toLowerCase() !== wanted),
       ]
     : downloaded;
   for (const variant of ordered) {
@@ -3135,7 +3133,7 @@ async function ensureDefaultModelDownloaded(
       signal: abortSignal,
     });
     const variant = listing.variants.find(
-      (entry) => entry.quant?.toLowerCase() === variantKey,
+      (entry) => entry.quant.toLowerCase() === variantKey,
     );
     if (variant?.downloaded && variant.partial !== true) return "ready";
     expectedBytes = variant?.download_size_bytes || variant?.size_bytes || 0;
@@ -3197,7 +3195,7 @@ async function ensureDefaultModelDownloaded(
 
   return await new Promise<"ready" | "cancelled" | "failed">((resolve) => {
     let settled = false;
-    const cleanups: Array<() => void> = [];
+    const cleanups: (() => void)[] = [];
     const finish = (outcome: "ready" | "cancelled" | "failed"): void => {
       if (settled) return;
       settled = true;
@@ -3316,7 +3314,7 @@ async function waitForSettledServerStatus(options?: {
 
       options?.abortSignal?.throwIfAborted();
       if (options?.stopEarly?.()) return { outcome: "stopped" };
-      if (status && (status.loading?.length ?? 0) === 0) {
+      if (status && (status.loading.length ?? 0) === 0) {
         return { outcome: "settled", status };
       }
       if (status && !announced) {
@@ -3471,8 +3469,8 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
       unslothUserCancelled?: boolean;
     };
     const blamesModel = !(
-      marker?.unslothTransportFailure === true ||
-      marker?.unslothUserCancelled === true
+      marker.unslothTransportFailure === true ||
+      marker.unslothUserCancelled === true
     );
     loadFailure.current = {
       label,
@@ -3521,7 +3519,7 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
     // Record every rejection: the sweep's bare catches would read it as nothing cached.
     const marker = error as { unslothUserCancelled?: boolean };
     noteLoadFailure(label, error);
-    if (marker?.unslothUserCancelled === true) {
+    if (marker.unslothUserCancelled === true) {
       // Stop instead of reopening the dialog per repo; transport failures go on, the backend may return.
       autoLoadCancelled = true;
     }
@@ -3588,7 +3586,7 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
     let isDiffusion = false;
     if (
       candidate.kind === "gguf" &&
-      (config.selectedGpuIds != null || config.tensorParallel === true)
+      (config.selectedGpuIds != null || config.tensorParallel)
     ) {
       // The Hub 401s an invalid Authorization header even for public repos.
       const preparedToken = await prepareHfTokenForUse(hfToken);
@@ -4746,10 +4744,10 @@ export function createOpenAIStreamAdapter(
                 : userMessageParentId,
             role: "user",
             content: userMessage.content,
-            ...(userMessage.attachments?.length
+            ...(userMessage.attachments.length
               ? { attachments: userMessage.attachments }
               : {}),
-            createdAt: userMessage.createdAt?.getTime?.() ?? Date.now(),
+            createdAt: userMessage.createdAt.getTime() ?? Date.now(),
           });
           const createdRun = await createResearchRun({
             threadId: resolvedThreadId,
@@ -5150,7 +5148,7 @@ export function createOpenAIStreamAdapter(
       const targetReadsImages = isExternalRequest
         ? providerModelTakesMcpImages(
             externalProvider?.providerType,
-            externalSelection?.modelId,
+            externalSelection.modelId,
           )
         : localTargetReadsImages(runtime);
       // A non-GGUF local target renders replayed pictures as markers, so bound the upload accordingly.
@@ -5168,7 +5166,7 @@ export function createOpenAIStreamAdapter(
         runtime.preserveThinking
       ) || providerModelReplaysReasoning(
         externalProvider?.providerType,
-        externalSelection?.modelId,
+        externalSelection.modelId,
       );
       const survivingMessages = pruneOutboundHistory(messages, replayReasoning);
       const { messages: renderedMessages, sandboxAttachments } =
@@ -5177,7 +5175,7 @@ export function createOpenAIStreamAdapter(
           ? withSandboxAttachmentPaths(survivingMessages)
           : { messages: survivingMessages, sandboxAttachments: [] };
       // The backend Gemini translator rebuilds functionCall/functionResponse parts from these.
-      let outboundMessages = renderedMessages
+      const outboundMessages = renderedMessages
         .flatMap((message) => {
           const serialized = toOpenAIMessages(
             message,
@@ -5189,7 +5187,7 @@ export function createOpenAIStreamAdapter(
                 providerType: toExternalBackendProviderType(
                   externalProvider?.providerType,
                 ),
-                modelId: externalSelection?.modelId,
+                modelId: externalSelection.modelId,
                 connectionKey: providerCompactionTargetConnectionKey,
               })
             : serialized;
@@ -5388,7 +5386,7 @@ export function createOpenAIStreamAdapter(
       ): void {
         if (!text) return;
         const firstMessage = targetMessages[0];
-        if (firstMessage?.role === "system") {
+        if (firstMessage.role === "system") {
           if (typeof firstMessage.content === "string") {
             targetMessages[0] = {
               ...firstMessage,
@@ -5612,7 +5610,7 @@ export function createOpenAIStreamAdapter(
               parseThinkTags: parseThink,
             }
           : {};
-      if (activeModel?.isAudio && !activeModel?.hasAudioInput) {
+      if (activeModel?.isAudio && !activeModel.hasAudioInput) {
         const audioCancel = () => runAbort.abort();
         runtime.registerThreadServerCancel(threadKey, audioCancel);
         releaseCurrentPreStreamRun();
@@ -6153,9 +6151,9 @@ export function createOpenAIStreamAdapter(
         }
         const runs = segmentedText.runs(rawText, boundaries);
 
-        const assembled: Array<
+        const assembled: (
           ReturnType<typeof parseAssistantContent>[number] | ToolCallMessagePart
-        > = [];
+        )[] = [];
         let toolIndex = 0;
 
         for (let index = 0; index < boundaries.length; index += 1) {
@@ -6281,7 +6279,7 @@ export function createOpenAIStreamAdapter(
           ? requestParsesThinkTags({
               ...externalReasoningFields,
               provider_type: externalProvider?.providerType,
-              external_model: externalSelection?.modelId,
+              external_model: externalSelection.modelId,
             })
           : reasoningAlwaysOn ||
               Boolean(resumedThought) ||
@@ -6330,14 +6328,14 @@ export function createOpenAIStreamAdapter(
         reasoningDurationTracker.finishGroup();
       };
       // Anthropic document_citations, converted at end-of-stream so inline [N] markers have matching entries.
-      const documentCitationParts: Array<{
+      const documentCitationParts: {
         type: "source";
         sourceType: "url";
         id: string;
         url: string;
         title: string;
         metadata?: { description: string };
-      }> = [];
+      }[] = [];
       // Stamped as custom.anthropicRefusal to drive the history prune.
       let anthropicRefusalSeen = false;
       let serverMetadata: {
@@ -6624,7 +6622,7 @@ export function createOpenAIStreamAdapter(
             return {
               model: externalSelection.modelId,
               messages: outboundMessages,
-              ...(providerSupportsPreserveThinking(externalProvider?.providerType)
+              ...(providerSupportsPreserveThinking(externalProvider.providerType)
                 ? { preserve_thinking: runtime.preserveThinking }
                 : {}),
               stream: true,
@@ -6642,18 +6640,18 @@ export function createOpenAIStreamAdapter(
               max_tokens: Math.min(
                 Math.max(
                   params.maxTokens,
-                  getExternalMinOutputTokens(externalProvider?.providerType),
+                  getExternalMinOutputTokens(externalProvider.providerType),
                 ),
                 getExternalMaxOutputTokens(
-                  externalProvider?.providerType,
-                  externalSelection?.modelId,
-                  externalProvider?.maxOutputTokens,
+                  externalProvider.providerType,
+                  externalSelection.modelId,
+                  externalProvider.maxOutputTokens,
                 ),
               ),
 
               ...(externalCapabilities?.topK ? { top_k: params.topK } : {}),
               ...(externalCapabilities?.minP
-                ? minPSamplingPayload(externalProvider?.providerType, params)
+                ? minPSamplingPayload(externalProvider.providerType, params)
                 : {}),
               ...(externalCapabilities?.repetitionPenalty
                 ? { repetition_penalty: params.repetitionPenalty }
@@ -7188,13 +7186,13 @@ export function createOpenAIStreamAdapter(
                 ) {
                   rollingContextNoticeThreads.add(resolvedThreadId);
                   // Once per thread per page load; the durable record is the notice on the turn that compacted.
-                  const archived = contextTruncation?.archived_messages ?? 0;
+                  const archived = contextTruncation.archived_messages ?? 0;
                   toast.info("This conversation was compacted", {
                     description: archived
                       ? "It got long, so older turns were removed from the model's " +
                         "context. They are saved and searchable, and relevant parts are " +
                         "brought back automatically."
-                      : contextTruncation?.summarized
+                      : contextTruncation.summarized
                         ? "The full conversation is still visible and saved. " +
                           "The provider summarized older turns so the chat can continue."
                         : "The full conversation is still visible and saved. " +
@@ -7846,7 +7844,7 @@ export function createOpenAIStreamAdapter(
               if (
                 isExternalRequest &&
                 externalProvider?.providerType === "openrouter" &&
-                externalSelection?.modelId === "openrouter/free"
+                externalSelection.modelId === "openrouter/free"
               ) {
                 const chunkModel = (chunk as { model?: unknown }).model;
                 if (

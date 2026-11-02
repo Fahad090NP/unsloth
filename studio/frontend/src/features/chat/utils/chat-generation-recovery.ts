@@ -30,7 +30,7 @@ export function generationChunkHasSubstantiveDelta(payload: unknown): boolean {
         };
       }[];
     }
-  )?.choices?.[0]?.delta;
+  ).choices?.[0]?.delta;
   const reasoning =
     typeof delta?.reasoning_content === "string" ? delta.reasoning_content : "";
   const reasoningDetails = Array.isArray(delta?.reasoning_details)
@@ -592,8 +592,8 @@ export function recoveredContentToImport<TContent>(
     }
     const spoken = recoveredContent.filter(
       (part) =>
-        (part as { type?: string })?.type === "text" ||
-        (part as { type?: string })?.type === "reasoning",
+        (part as { type?: string }).type === "text" ||
+        (part as { type?: string }).type === "reasoning",
     );
     return restoreCarriedParts(
       spoken,
@@ -713,12 +713,12 @@ export function shouldPreserveGenerationMetadata(
   const existingStatus = String(existing.generationStatus);
   return (
     !sameRun ||
-    incoming?.serverManaged !== true ||
+    incoming.serverManaged !== true ||
     existingSeq > incomingSeq ||
     (TERMINAL.has(existingStatus as StoredGenerationStatus) &&
-      incoming?.generationStatus !== existing.generationStatus) ||
+      incoming.generationStatus !== existing.generationStatus) ||
     (existing.generationSettled === true &&
-      incoming?.generationSettled !== true)
+      incoming.generationSettled !== true)
   );
 }
 

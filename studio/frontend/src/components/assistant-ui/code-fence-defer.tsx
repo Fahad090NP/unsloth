@@ -400,7 +400,7 @@ if (typeof window !== "undefined" && typeof window.addEventListener === "functio
     setPrinting(true);
   });
   window.addEventListener("afterprint", () => { setPrinting(false); });
-  window.matchMedia?.("print")?.addEventListener?.("change", (event) => {
+  window.matchMedia("print").addEventListener("change", (event) => {
     if (event.matches) {
       upgradeEverythingForPrint();
       setPrinting(true);

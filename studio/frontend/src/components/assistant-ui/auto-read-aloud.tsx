@@ -70,7 +70,7 @@ export const AutoReadAloud: FC = () => {
         aui
           .threads()
           .__internal_getAssistantRuntime?.()
-          ?.threads.getById(threadId) ?? null;
+          .threads.getById(threadId) ?? null;
     } catch {
       bound = null;
     }

@@ -32,7 +32,7 @@ function roleLabel(role: string): string {
   // Imported role strings go into a heading: strip line breaks and markup characters.
   const label = role.replace(/[\s]+/g, " ").replace(/[<>&\\[\]`*_#]/g, "").trim();
   return label.length > 0
-    ? `${label[0]?.toUpperCase()}${label.slice(1)}`
+    ? `${label[0].toUpperCase()}${label.slice(1)}`
     : "Message";
 }
 
@@ -159,7 +159,7 @@ function closeOpenBlocks(text: string): string {
     const [, indent = "", run, info = ""] =
       unfinished.length || literal ? [] : FENCE_LINE_PATTERN.exec(content) ?? [];
     if (fence !== null) {
-      if (run?.[0] === fence.run[0] && run.length >= fence.run.length && !info.trim()) {
+      if (run.startsWith(fence.run[0]) && run.length >= fence.run.length && !info.trim()) {
         fence = null;
       }
       continue;

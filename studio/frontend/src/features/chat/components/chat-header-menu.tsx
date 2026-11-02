@@ -179,7 +179,7 @@ function ChatMenuItems({ menu }: { menu: ActiveChatMenu }) {
     () => false,
   );
   const busy = useChatRuntimeStore((state) =>
-    state.modelLoading || Boolean(state.runningByThreadId[menu.item.id]),
+    state.modelLoading || state.runningByThreadId[menu.item.id],
   ) || preStreamRunActive || liveRunActive;
   const compact = () => {
     const runtime = useChatRuntimeStore.getState();
@@ -211,7 +211,7 @@ function ChatMenuItems({ menu }: { menu: ActiveChatMenu }) {
     state.chatIds.includes(menu.item.id),
   );
   const generating = useChatRuntimeStore((s) =>
-    getSidebarItemThreadIds(menu.item).some((id) => Boolean(s.runningByThreadId[id])),
+    getSidebarItemThreadIds(menu.item).some((id) => s.runningByThreadId[id]),
   );
   // As the Library exports one: each thread behind the chat, a comparison's two included.
   const exportAs = async (format: ConversationExportFormat) => {

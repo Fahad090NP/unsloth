@@ -97,17 +97,17 @@ const WebSearchToolUIImpl: ToolCallMessagePartComponent = ({
   toolCallId,
 }) => {
   // Coerced: local models emit numbers or objects here, and .trim() would crash the card.
-  const query = toolArgText((args as { query?: unknown })?.query);
-  const url = toolArgText((args as { url?: unknown })?.url).trim();
+  const query = toolArgText((args as { query?: unknown }).query);
+  const url = toolArgText((args as { url?: unknown }).url).trim();
   // gpt-5.x open_page/find_in_page; older streams omit them, so match a url+pattern by shape.
-  const pattern = toolArgText((args as { pattern?: unknown })?.pattern);
+  const pattern = toolArgText((args as { pattern?: unknown }).pattern);
   const actionType = toolArgText(
-    (args as { action_type?: unknown })?.action_type,
+    (args as { action_type?: unknown }).action_type,
   );
   const isFindInPage =
     actionType === "find_in_page" || (Boolean(url) && Boolean(pattern.trim()));
   const isUrlFetch = Boolean(url) && !isFindInPage;
-  const rawImageQueries = (args as { image_queries?: unknown })?.image_queries;
+  const rawImageQueries = (args as { image_queries?: unknown }).image_queries;
   const imageQueries = Array.isArray(rawImageQueries)
     ? rawImageQueries
         .map((q) => toolArgText(q).trim())

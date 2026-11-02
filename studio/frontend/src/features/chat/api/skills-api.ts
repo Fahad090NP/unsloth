@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { authFetch } from "@/features/auth";
-import { AUTH_SESSION_CLEARED_EVENT } from "@/features/auth/session";
+import { AUTH_SESSION_CLEARED_EVENT } from "@/features/auth";
 import { useEffect, useSyncExternalStore } from "react";
 import { useSkillsSwitchStore } from "../stores/skills-switch-store";
 import { refreshContextUsage } from "../utils/refresh-context-usage";

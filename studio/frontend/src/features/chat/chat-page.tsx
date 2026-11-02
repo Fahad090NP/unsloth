@@ -67,7 +67,7 @@ import {
 import {
   INVENTORY_FRESHNESS_WINDOW_MS,
   useDeviceInventorySources,
-} from "@/features/hub/inventory";
+} from "@/features/hub";
 import { modelIdsMatch } from "@/features/hub/lib/model-identity";
 import { ChatHeaderMenu } from "./components/chat-header-menu";
 import { DeleteChatFilesSwitch } from "./components/delete-chat-files-switch";
@@ -510,8 +510,8 @@ function messageHasImage(message: MessageRecord): boolean {
     : [];
   for (const attachment of attachments) {
     const parts = Array.isArray(attachment.content) ? attachment.content : [];
-    for (const part of parts as Array<{ type?: string }>) {
-      if (part?.type === "image") {
+    for (const part of parts as { type?: string }[]) {
+      if (part.type === "image") {
         return true;
       }
     }
@@ -541,7 +541,9 @@ function sendDocumentAnnotations(
       (staged, file) =>
         staged.then(() =>
           composer.addAttachment(file).then(
-            () => void extras++,
+            () => {
+              extras += 1;
+            },
             () => undefined,
           ),
         ),
@@ -635,13 +637,13 @@ const SingleContent = memo(function SingleContent({
   useEffect(() => {
     if (!activeThreadId || !openResearchRunId) return;
     const openRun =
-      useResearchRunStore.getState().sessions[openResearchRunId]?.run;
+      useResearchRunStore.getState().sessions[openResearchRunId].run;
     if (openRun && openRun.threadId !== activeThreadId) closeResearchPanel();
   }, [activeThreadId, openResearchRunId, closeResearchPanel]);
   // A string, not the run: report deltas replace the run ~12x/s, and this owns the thread pane.
   const openResearchThreadId = useResearchRunStore((state) =>
     openResearchRunId
-      ? state.sessions[openResearchRunId]?.run.threadId
+      ? state.sessions[openResearchRunId].run.threadId
       : undefined,
   );
   const artifactPanelRef = useRef<PanelImperativeHandle | null>(null);
@@ -1753,7 +1755,7 @@ function formatProjectChatDate(timestamp: number): string {
 }
 
 function createThreadNonce(): string {
-  if (typeof globalThis.crypto?.randomUUID === "function") {
+  if (typeof globalThis.crypto.randomUUID === "function") {
     return globalThis.crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -2352,7 +2354,7 @@ function ProjectLanding({
                           </div>
                         </div>
                         <span className="shrink-0 text-ui-14 text-muted-foreground transition-opacity max-md:opacity-0 pointer-coarse:opacity-0 group-hover:opacity-0 group-has-[[data-state=open]]:opacity-0">
-                          {preview?.date ??
+                          {preview.date ??
                             formatProjectChatDate(item.createdAt)}
                         </span>
                       </button>
@@ -2797,7 +2799,7 @@ export function ChatPage({
   // Status, not the run: a run selector here re-rendered the page on every research delta.
   const latestResearchRunStatus = useResearchRunStore((state) =>
     latestResearchRunId
-      ? state.sessions[latestResearchRunId]?.run.status
+      ? state.sessions[latestResearchRunId].run.status
       : undefined,
   );
   const openResearchPanel = useResearchRunStore((state) => state.openPanel);

@@ -55,7 +55,7 @@ export function groupThreads(
 
   for (const t of threads) {
     // Legacy threads may have archived undefined or null; treat missing as false.
-    if (Boolean(t.archived) !== archived) {
+    if (t.archived !== archived) {
       continue;
     }
     if (t.pairId) {

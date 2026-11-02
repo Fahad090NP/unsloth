@@ -5,7 +5,7 @@
 import {
   type DisplayVisibility,
   defaultOpenFor,
-} from "@/features/chat/utils/display-visibility";
+} from "@/features/chat";
 
 interface ToolActivityTransition {
   currentOpen: boolean;

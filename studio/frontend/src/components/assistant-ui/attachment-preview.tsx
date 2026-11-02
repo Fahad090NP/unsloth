@@ -54,7 +54,6 @@ import { asPng } from "@/lib/copy-to-clipboard";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useAui, useAuiState } from "@assistant-ui/react";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   type FC,
   type PropsWithChildren,
@@ -134,7 +133,7 @@ const loadGalleryImage = (image: GalleryImage): Promise<Blob> =>
   image.file ? Promise.resolve(image.file) : fetchBlob(image.image ?? "");
 
 const copyImage = (image: GalleryImage, t: ReturnType<typeof useT>): void => {
-  if (typeof ClipboardItem === "undefined" || !navigator.clipboard?.write) {
+  if (typeof ClipboardItem === "undefined" || !navigator.clipboard.write) {
     toast.error(t("imageViewer.copyFailed"));
     return;
   }

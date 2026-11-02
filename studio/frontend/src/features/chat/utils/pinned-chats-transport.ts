@@ -243,7 +243,7 @@ export function createPinnedChatsTransport(options: PinnedChatsTransportOptions)
       } catch (error) {
         assertCurrent(epoch);
         const transient = error instanceof TypeError ||
-          (error as { unslothTransportFailure?: unknown })?.unslothTransportFailure === true ||
+          (error as { unslothTransportFailure?: unknown }).unslothTransportFailure === true ||
           (error instanceof Error && ["AbortError", "TimeoutError"].includes(error.name)) ||
           (error instanceof ChatSettingsRequestError &&
             (error.status >= 500 || error.status === 429 || error.status === 408));

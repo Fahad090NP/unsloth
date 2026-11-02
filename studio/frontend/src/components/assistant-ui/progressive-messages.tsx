@@ -190,7 +190,7 @@ function useProgressiveMountWindow(
     return (index: number) => {
       const message = messages[index];
       // Unknown shapes count as renderable, degrading to the count-based window rather than none.
-      if (message?.role == null) return true;
+      if (message.role == null) return true;
       return rendersAsRow(message.role, message.composer?.isEditing === true);
     };
   }, [aui]);

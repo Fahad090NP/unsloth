@@ -52,7 +52,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NonModalDropdownMenu } from "@/components/ui/non-modal-dropdown-menu";
-import { applyQwenThinkingParams } from "@/features/chat/utils/qwen-params";
+import { applyQwenThinkingParams } from "@/features/chat";
 import { FIND_SKIP_ATTRIBUTE } from "@/features/find-in-page";
 import {
   DRAFT_N_MAX_SPEC_TYPES,
@@ -62,8 +62,8 @@ import {
   StudioDictationAdapter,
   isStudioDictationAvailable,
   notifyStudioDictationUnavailable,
-} from "@/features/chat/adapters/studio-dictation-adapter";
-import type { StudioDictationSession } from "@/features/chat/adapters/studio-web-speech-dictation-adapter";
+} from "@/features/chat";
+import type { StudioDictationSession } from "@/features/chat";
 import {
   COMPOSER_INPUT_SELECTOR,
   isSurfaceInForeground,
@@ -71,7 +71,7 @@ import {
   useSettingsDialogStore,
   isMacPlatform,
 } from "@/features/settings";
-import { useVoiceSettingsStore } from "@/features/settings/stores/voice-settings-store";
+import { useVoiceSettingsStore } from "@/features/settings";
 import {
   AUDIO_PICKER_ACCEPT,
   isAudioAttachmentFile,
@@ -153,7 +153,7 @@ import { SkillsComposerButton, useSkillsSwitch } from "./skills-composer-button"
 import { PermissionModeComposerPill } from "./permission-mode-select";
 import { reasoningCapsFromLoad } from "./lib/apply-inference-status-to-store";
 import { resyncInferenceStatusAfterServerModelChange } from "./hooks/use-chat-model-runtime";
-import { KnowledgeBaseComposerButton } from "@/features/rag/components/knowledge-base-composer-button";
+import { KnowledgeBaseComposerButton } from "@/features/rag";
 import { NewProjectDialog } from "./components/new-project-dialog";
 import { ChatAudioUploadMount } from "./components/chat-audio-upload-mount";
 import { useChatProjects } from "./hooks/use-chat-projects";
@@ -359,7 +359,7 @@ function useDictation(
 
     session.onSpeech((result) => {
       if (!result.isFinal) return;
-      const transcript = result.transcript?.trim() ?? "";
+      const transcript = result.transcript.trim() ?? "";
       if (transcript) {
         setText((prev) => (prev ? `${prev} ${transcript}` : transcript));
       }
@@ -503,7 +503,7 @@ export function RegisterCompareHandle({
         }),
     };
     return () => {
-      delete currentHandles[name];
+      Reflect.deleteProperty(currentHandles, name);
     };
   }, [handlesRef, name, aui]);
 
@@ -581,7 +581,7 @@ function PillGlyph({ children }: { children: ReactNode }) {
 /** A drop from a portaled child (dialog) that React routes through here but it owns. */
 function isPortaledDrop(event: ReactDragEvent): boolean {
   const target = event.target as Element | null;
-  return !target?.closest?.(".unsloth-composer-surface");
+  return !target?.closest(".unsloth-composer-surface");
 }
 
 const LOAD_SETTLE_POLL_MS = 1000;
@@ -907,7 +907,7 @@ export function SharedComposer({
     externalSelection != null
       ? getExternalReasoningCapabilities(
           selectedExternalProvider?.providerType,
-          externalSelection?.modelId,
+          externalSelection.modelId,
           {
             isReasoningProvider:
               selectedExternalProvider?.isReasoningModel === true,
@@ -2078,7 +2078,7 @@ export function SharedComposer({
         const currentModels = useChatRuntimeStore.getState().models;
         const idx = currentModels.findIndex((m) => m.id === sel.id);
         const synced = {
-          isVision: Boolean(resp.is_vision),
+          isVision: resp.is_vision,
           isGguf: Boolean(resp.is_gguf),
           isMlx: Boolean(resp.is_mlx),
           isAudio: Boolean(resp.is_audio),

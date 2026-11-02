@@ -421,7 +421,7 @@ const ImageImpl: ImageMessagePartComponent = (props) => {
   const { image, filename, status } = props;
   const alt = filename || "Image content";
 
-  if (status?.type === "running") {
+  if (status.type === "running") {
     return (
       <ImageRoot>
         <ImageGenerating />
@@ -430,7 +430,7 @@ const ImageImpl: ImageMessagePartComponent = (props) => {
     );
   }
 
-  if (status?.type === "incomplete" && status.reason === "content-filter") {
+  if (status.type === "incomplete" && status.reason === "content-filter") {
     return (
       <ImageRoot>
         <ImageContentFilterError reason="The provider blocked this image." />

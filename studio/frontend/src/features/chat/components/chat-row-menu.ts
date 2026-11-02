@@ -57,10 +57,10 @@ export type ConversationExportFormat =
   | typeof CONVERSATION_MARKDOWN_FORMAT;
 
 /** Built on call: reading the barrel's label at module load throws on the import cycle. */
-export function chatExportOptions(): Array<{
+export function chatExportOptions(): {
   label: string;
   format: ConversationExportFormat;
-}> {
+}[] {
   return [
     { label: "Training JSONL", format: "raw-jsonl" },
     { label: "Message JSONL", format: "messages-jsonl" },

@@ -209,10 +209,10 @@ function useResearchActivityScroll(runId: string) {
       }
     };
     const onTouchStart = (event: TouchEvent) => {
-      touchStartY = event.touches[0]?.clientY ?? 0;
+      touchStartY = event.touches[0].clientY ?? 0;
     };
     const onTouchMove = (event: TouchEvent) => {
-      const y = event.touches[0]?.clientY ?? 0;
+      const y = event.touches[0].clientY ?? 0;
       if (
         y - touchStartY > 4 &&
         element.scrollTop > 0 &&
@@ -333,7 +333,7 @@ const ActivityRow = memo(function ActivityRow({
   activity: ResearchActivity;
 }): ReactElement {
   const storedOpen = useResearchRunStore(
-    (state) => state.activityOpenByRunId[runId]?.[activity.id],
+    (state) => state.activityOpenByRunId[runId][activity.id],
   );
   const setActivityOpen = useResearchRunStore(
     (state) => state.setActivityOpen,
@@ -518,7 +518,7 @@ const ActivityRow = memo(function ActivityRow({
 });
 
 function PlanReview({ runId }: { runId: string }): ReactElement | null {
-  const run = useResearchRunStore((state) => state.sessions[runId]?.run);
+  const run = useResearchRunStore((state) => state.sessions[runId].run);
   const review = useResearchRunStore(
     (state) => state.planReviewByRunId[runId],
   );
@@ -530,11 +530,11 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
   const [pending, setPending] = useState(false);
   const stepKeyPrefix = useId();
   const [stepKeys, setStepKeys] = useState(() =>
-    (review?.draft.steps ?? []).map((_, index) => `${stepKeyPrefix}-${index}`),
+    (review.draft.steps ?? []).map((_, index) => `${stepKeyPrefix}-${index}`),
   );
   const reduceMotion = useReducedMotion();
 
-  if (!run?.plan || run.status !== "awaiting_approval" || !review) return null;
+  if (!run.plan || run.status !== "awaiting_approval" || !review) return null;
   const { draft, editing, open } = review;
 
   const start = async () => {
@@ -697,7 +697,7 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
                 <Button
                   variant="ghost"
                   size="sm"
-                  disabled={draft.steps.length >= (run?.config?.budgets?.maxSteps ?? 30)}
+                  disabled={draft.steps.length >= (run.config?.budgets?.maxSteps ?? 30)}
                   onClick={() => {
                     setStepKeys((keys) => [
                       ...keys,
@@ -784,7 +784,7 @@ function PlanReview({ runId }: { runId: string }): ReactElement | null {
 }
 
 function ResearchActions({ runId }: { runId: string }): ReactElement | null {
-  const run = useResearchRunStore((state) => state.sessions[runId]?.run);
+  const run = useResearchRunStore((state) => state.sessions[runId].run);
   const [pending, setPending] = useState(false);
   if (!run) return null;
   const canRetry = run.status === "failed" || run.status === "cancelled";
@@ -835,20 +835,20 @@ export function ResearchActivityPanel({
   const [elapsedNow, setElapsedNow] = useState<number | null>(null);
   const { viewportRef, isAtBottom, scrollToLatest } =
     useResearchActivityScroll(runId);
-  const hydrating = Boolean(
-    session?.connection === "connecting" &&
-      session.lastAppliedSeq < session.run.lastEventSeq,
+  const hydrating = (
+    session.connection === "connecting" &&
+      session.lastAppliedSeq < session.run.lastEventSeq
   );
 
   useEffect(() => {
-    ensureResearchRunFollowed(runId, session?.run);
-  }, [runId, session?.following]);
+    ensureResearchRunFollowed(runId, session.run);
+  }, [runId, session.following]);
 
   useEffect(() => {
     if (!session || terminalStatuses.has(session.run.status)) return;
     const timer = window.setInterval(() => { setElapsedNow(Date.now()); }, 1000);
     return () => { window.clearInterval(timer); };
-  }, [session?.run.status]);
+  }, [session.run.status]);
 
   if (!session) {
     return (

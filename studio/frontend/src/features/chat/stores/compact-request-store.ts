@@ -22,7 +22,7 @@ export const useCompactRequestStore = create<CompactRequestState>()((set) => ({
     { set((state) => {
       if (!state.requested[threadId]) return state;
       const requested = { ...state.requested };
-      delete requested[threadId];
+      Reflect.deleteProperty(requested, threadId);
       return { requested };
     }); },
 }));

@@ -54,7 +54,7 @@ export function useChatCreatedModel(
     let readGeneration = 0;
     const onHistoryUpdated = (event: Event): void => {
       const updatedThread = (event as CustomEvent<ChatHistoryUpdatedDetail>)
-        .detail?.thread;
+        .detail.thread;
       if (updatedThread) {
         if (updatedThread.id === threadId) readGeneration += 1;
         reader.applyUpdate(updatedThread);

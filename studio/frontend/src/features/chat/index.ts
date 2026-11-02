@@ -779,3 +779,12 @@ export { applyQwenThinkingParams } from "./utils/qwen-params";
 export { extractTaggedText, updateThreadMessage } from "./utils/update-thread-message";
 
 export { extractHtmlFences, extractReactFences } from './artifacts/html-fences';
+export { FullAccessConfirmContent } from "./permission-mode-select";
+export { McpAppFrame } from "./mcp-apps/mcp-app-frame";
+export { isMcpUiToolResult, type McpUiToolResult } from "./mcp-apps/mcp-ui";
+export { type StudioDictationSession } from "./adapters/studio-web-speech-dictation-adapter";
+export { ToolApprovalGoneError, resolveToolConfirmation } from "./api/chat-api";
+export { getCodeFence, isFullHtmlDocument, isHtmlFence, isSvgFence } from "./artifacts/html-fences";
+export { hasChatFullAccess, withChatFullAccess } from "./utils/chat-full-access";
+export { imeOwnsInputKeydown, inputImeHandlers, newInputImeState } from "./utils/composer-preferences";
+export { splitMcpToolName } from "./utils/mcp-tool-name";

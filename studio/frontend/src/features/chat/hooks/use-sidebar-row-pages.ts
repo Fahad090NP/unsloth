@@ -29,7 +29,7 @@ const FALLBACK_CURSOR = "full:";
 
 function toSidebarItem(row: SidebarRowRecord): SidebarItem | null {
   // a delete tombstones its threads before the server forgets them
-  const threadIds = (row.threadIds?.length ? row.threadIds : [row.id]).filter(
+  const threadIds = (row.threadIds.length ? row.threadIds : [row.id]).filter(
     (id) => !isChatThreadDeleted(id),
   );
   if (threadIds.length === 0) return null;
@@ -122,7 +122,7 @@ export async function fetchSidebarRowPage(
     if (page) {
       serverPages = true;
       const shown = page.rows.flatMap((row) =>
-        (row.threadIds?.length ? row.threadIds : [row.id]).map((id, index) => ({
+        (row.threadIds.length ? row.threadIds : [row.id]).map((id, index) => ({
           id,
           title: row.threadTitles?.[index] ?? row.title,
         })),

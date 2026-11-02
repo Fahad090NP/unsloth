@@ -54,11 +54,11 @@ function storedMessageToRunMessage(record: MessageRecord): ThreadMessage {
       attachments: record.attachments
         ? structuredClone(record.attachments)
         : [],
-      metadata: { custom: (record.metadata!) ?? {} },
+      metadata: { custom: record.metadata ?? {} },
     };
   }
 
-  const custom = (record.metadata!) ?? {};
+  const custom = record.metadata ?? {};
   const savedTiming = custom.timing as
     | import("@assistant-ui/react").MessageTiming
     | undefined;
@@ -95,7 +95,7 @@ function foldPart(part: unknown, seed: number): number {
   try {
     serialized = JSON.stringify(part) ?? "";
   } catch {
-    serialized = String((part as { type?: unknown })?.type);
+    serialized = String((part as { type?: unknown }).type);
   }
   return foldHash(serialized, seed);
 }
@@ -109,8 +109,8 @@ function branchSignature(messages: readonly ThreadMessage[]): string {
       [
         message.id,
         message.role,
-        message.metadata?.custom?.revision,
-        message.metadata?.custom?.contextTruncation,
+        message.metadata.custom.revision,
+        message.metadata.custom.contextTruncation,
       ],
       hash,
     );
@@ -216,10 +216,10 @@ export async function refreshContextUsage(
   }
 
   // Output-only audio GGUFs never get chat usage to correct the count.
-  const activeModel = store.models?.find(
+  const activeModel = store.models.find(
     (model: { id: string }) => model.id === checkpoint,
   );
-  if (activeModel?.isAudio && !activeModel?.hasAudioInput) return;
+  if (activeModel?.isAudio && !activeModel.hasAudioInput) return;
 
   if (options?.invalidate) {
     store.setContextUsage(null);
@@ -296,7 +296,7 @@ export async function refreshContextUsage(
 
     if (
       !store.loadedIsGguf &&
-      runMessages.some((message) => message.metadata?.custom?.contextTruncation)
+      runMessages.some((message) => message.metadata.custom.contextTruncation)
     ) return;
 
     if (fromLiveBranch) {

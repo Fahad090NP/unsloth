@@ -740,8 +740,8 @@ const ReasoningGroupBlock = ({
     // until the answer.
     for (let i = endIndex + 1; i < len; i += 1) {
       const part = parts[i];
-      if (part?.type === "tool-call") continue;
-      if (foldLead && (part?.type === "reasoning" || isBlankTextPart(part))) {
+      if (part.type === "tool-call") continue;
+      if (foldLead && (part.type === "reasoning" || isBlankTextPart(part))) {
         continue;
       }
       return false;
@@ -774,7 +774,7 @@ const ReasoningGroupBlock = ({
 
   const persistedDuration = useMessageMemo(
     (message) => {
-      const custom = message.metadata?.custom as
+      const custom = message.metadata.custom as
         | Record<string, unknown>
         | undefined;
       if (foldLead) {

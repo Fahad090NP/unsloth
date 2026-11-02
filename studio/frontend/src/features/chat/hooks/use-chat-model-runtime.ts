@@ -23,7 +23,7 @@ import {
   MULTI_MODEL_REFUSAL_TITLE,
   refusalHeadersOf,
 } from "@/lib/multi-model-refusal";
-import { modelMemorySettingsAction } from "@/features/settings/lib/model-memory-action";
+import { modelMemorySettingsAction } from "@/features/settings";
 import { createNavigationNonce } from "@/lib/navigation-nonce";
 import {
   isBackendDownForDesktopUpdate,
@@ -56,8 +56,8 @@ import {
   loadFailureLogFamily,
   viewLogsAction,
 } from "@/features/settings/lib/view-logs-action";
-import { loadModelMemorySettings } from "@/features/settings/api/model-memory";
-import { loadVramBudgetSettings } from "@/features/settings/api/vram-budget";
+import { loadModelMemorySettings } from "@/features/settings";
+import { loadVramBudgetSettings } from "@/features/settings";
 import {
   listOpenAIModels,
   loadMultiModelEnabled,
@@ -67,7 +67,7 @@ import {
   confirmTransformersUpgradeIfNeeded,
   useTransformersUpgradeDialogStore,
 } from "@/features/transformers-upgrade";
-import { consumeNativePathToken } from "@/features/native-intents/api";
+import { consumeNativePathToken } from "@/features/native-intents";
 // eslint-disable-next-line no-restricted-imports -- Avoid the hub barrel's React and download-manager exports.
 import {
   isOllamaModelId,
@@ -206,15 +206,6 @@ import type {
   ChatLoraSummary,
   ChatModelRow,
 } from "../types/runtime";
-
-interface LoadingModelState {
-  id: string;
-  displayName: string;
-  isDownloaded?: boolean;
-  isCachedLora?: boolean;
-  ggufVariant?: string | null;
-  nativePathToken?: string | null;
-}
 
 /** One attempt at claiming the shared load slot; its token lets late callbacks prove ownership. */
 interface ActiveModelLoadRun {
@@ -390,7 +381,7 @@ async function waitForServerModel(signal?: AbortSignal): Promise<void> {
     }
 
     if (status) {
-      const loading = (status.loading?.length ?? 0) > 0;
+      const loading = (status.loading.length ?? 0) > 0;
       sawLoad ||= loading;
       if (!loading && status.active_model) {
         await tryAdoptServerActiveModel({ status });
@@ -702,7 +693,7 @@ export async function syncInferenceStatusToStore(options?: {
       statusRes.serving_checkpoints,
     );
 
-    const statusLoading = (statusRes.loading?.length ?? 0) > 0;
+    const statusLoading = (statusRes.loading.length ?? 0) > 0;
     // Adopting the outgoing model would set the checkpoint the observer needs empty.
     if (statusLoading && serverModelWaitOutstanding()) return;
 
@@ -1079,7 +1070,7 @@ export function useChatModelRuntime() {
             if (run.loadAttemptPath && run.forceCancelActive && !run.residentModelUnloaded) {
               try {
                 const status = await getInferenceStatus(undefined, run.rollbackCheckpoint ?? undefined);
-                if ((status.loading?.length ?? 0) === 0) {
+                if ((status.loading.length ?? 0) === 0) {
                   run.residentModelUnloaded = !residentModelMatchesPick(status, {
                     id: run.rollbackCheckpoint ?? "",
                     loadPath: run.rollbackLoadId ?? run.rollbackCheckpoint,
@@ -1149,7 +1140,7 @@ export function useChatModelRuntime() {
       if (!stopped && !activeLoadRunRef.current) {
         return true;
       }
-      if (!stopped && pendingExternalReplacement?.intentId === intentId) {
+      if (!stopped && pendingExternalReplacement.intentId === intentId) {
         pendingExternalReplacement = null;
       }
       return stopped;
@@ -1245,8 +1236,8 @@ export function useChatModelRuntime() {
       const currentVariant = useChatRuntimeStore.getState().activeGgufVariant;
       const initiallyLoadingSamePick =
         loadingModelRef.current?.id === modelId &&
-        (loadingModelRef.current?.ggufVariant ?? null) === (ggufVariant ?? null) &&
-        (loadingModelRef.current?.nativePathToken ?? null) ===
+        (loadingModelRef.current.ggufVariant ?? null) === (ggufVariant ?? null) &&
+        (loadingModelRef.current.nativePathToken ?? null) ===
           (nativePathToken ?? null);
       if (
         !forceReload &&
@@ -1313,7 +1304,7 @@ export function useChatModelRuntime() {
                     );
                     if (modelSelectionIntentEpoch !== loadIntentId) return;
                     if (
-                      (status.loading?.length ?? 0) === 0 &&
+                      (status.loading.length ?? 0) === 0 &&
                       useChatRuntimeStore.getState().params.checkpoint ===
                         activeRunBeforeCredentials.rollbackCheckpoint
                     ) {
@@ -1377,7 +1368,7 @@ export function useChatModelRuntime() {
                 activeRunBeforeCredentials.rollbackCheckpoint ?? undefined,
               );
               if (
-                (status.loading?.length ?? 0) === 0 &&
+                (status.loading.length ?? 0) === 0 &&
                 residentModelMatchesPick(status, {
                   id: activeRunBeforeCredentials.rollbackCheckpoint ?? "",
                   loadPath:
@@ -1532,7 +1523,7 @@ export function useChatModelRuntime() {
           : null;
         // Hoisted to run twice: another tab can swap the resident model during the awaits.
         const adoptable = (status: InferenceStatusResponse) =>
-          (status.loading?.length ?? 0) === 0 &&
+          (status.loading.length ?? 0) === 0 &&
           (status.engine ?? "auto") === (comparedConfig.engine ?? "auto") &&
           residentModelMatchesPick(status, {
             id: modelId,
@@ -3302,7 +3293,7 @@ export function useChatModelRuntime() {
           try {
             const prog = await getLoadProgress();
             if (abortCtrl.signal.aborted || !loadingModelRef.current) return;
-            if (prog?.phase == null) return;
+            if (prog.phase == null) return;
             if (prog.phase === "ready") {
               if (progressInterval) clearInterval(progressInterval);
               return;

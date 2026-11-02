@@ -320,7 +320,7 @@ export function learnCatalogModelCapabilities(
   let learned = false;
   for (const model of models) {
     const names = model.capabilities;
-    const modelId = model.id?.trim();
+    const modelId = model.id.trim();
     if (!modelId || !Array.isArray(names)) continue;
     merged[modelId] = {
       ...stored[modelId],
@@ -754,7 +754,7 @@ export function pruneExternalProviderApiKeys(providerIds: Iterable<string>): voi
     let changed = false;
     for (const providerId of Object.keys(keys)) {
       if (retainedIds.has(providerId)) continue;
-      delete keys[providerId];
+      Reflect.deleteProperty(keys, providerId);
       changed = true;
     }
     if (changed) saveRawKeyMap(keys);
@@ -774,7 +774,7 @@ export function removeExternalProviderApiKey(
     const keys = loadRawKeyMap();
 
     if (expectedApiKey !== undefined && keys[providerId] !== expectedApiKey) return;
-    delete keys[providerId];
+    Reflect.deleteProperty(keys, providerId);
     saveRawKeyMap(keys);
   } catch {
     // ignore

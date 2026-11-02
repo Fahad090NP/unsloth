@@ -394,7 +394,7 @@ export const useSidebarOrganizationStore = create<SidebarOrganizationState>()(
       deleteCustomSection: (sectionId) =>
         set((state) => {
           const manualOrder = { ...state.manualOrder };
-          delete manualOrder[customSectionScope(sectionId)];
+          Reflect.deleteProperty(manualOrder, customSectionScope(sectionId));
           const gone = (id: string) => id === sectionId;
           return {
             customSections: state.customSections.filter((s) => s.id !== sectionId),
@@ -437,7 +437,7 @@ export const useSidebarOrganizationStore = create<SidebarOrganizationState>()(
             if (sectionId) {
               next[id] = sectionId;
               touched.add(sectionId);
-            } else delete next[id];
+            } else Reflect.deleteProperty(next, id);
           }
           return {
             sectionByChatId: next,
@@ -458,7 +458,7 @@ export const useSidebarOrganizationStore = create<SidebarOrganizationState>()(
             if (sectionId) {
               next[id] = sectionId;
               touched.add(sectionId);
-            } else delete next[id];
+            } else Reflect.deleteProperty(next, id);
           }
           return {
             sectionByProjectId: next,
@@ -479,7 +479,7 @@ export const useSidebarOrganizationStore = create<SidebarOrganizationState>()(
             if (sectionId) {
               next[id] = sectionId;
               touched.add(sectionId);
-            } else delete next[id];
+            } else Reflect.deleteProperty(next, id);
           }
           return {
             sectionByPageId: next,

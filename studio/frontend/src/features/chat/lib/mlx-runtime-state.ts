@@ -38,12 +38,12 @@ export function mlxOffloadStateFrom(resp: Partial<MlxRuntimeResponse>): {
   const offload = resp.is_mlx === true ? resp.mlx_offload : null;
   const disk = offload?.disk_bytes;
   return {
-    loadedMlxPleOffloadRequested: normalizeMlxOffload(offload?.ple?.requested),
-    loadedMlxExpertOffloadRequested: normalizeMlxOffload(offload?.experts?.requested),
-    loadedMlxPleOffload: appliedFraction(offload?.ple?.applied),
-    loadedMlxExpertOffload: appliedFraction(offload?.experts?.applied),
-    mlxPleOffloadReason: offload?.ple?.reason ?? null,
-    mlxExpertOffloadReason: offload?.experts?.reason ?? null,
+    loadedMlxPleOffloadRequested: normalizeMlxOffload(offload?.ple.requested),
+    loadedMlxExpertOffloadRequested: normalizeMlxOffload(offload?.experts.requested),
+    loadedMlxPleOffload: appliedFraction(offload?.ple.applied),
+    loadedMlxExpertOffload: appliedFraction(offload?.experts.applied),
+    mlxPleOffloadReason: offload?.ple.reason ?? null,
+    mlxExpertOffloadReason: offload?.experts.reason ?? null,
     loadedMlxOffloadDiskBytes:
       typeof disk === "number" && Number.isFinite(disk) && disk > 0 ? disk : null,
   };

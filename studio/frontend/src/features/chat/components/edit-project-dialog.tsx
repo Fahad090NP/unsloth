@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { NativeDocumentFolderSelection } from "@/features/native-intents";
 import { WorkingFolderPicker } from "./working-folder-picker";
 import { LinkedFoldersManager } from "@/features/rag";
-import { isModEnter } from "@/features/settings/lib/keyboard-shortcuts";
+import { isModEnter } from "@/features/settings";
 import { toast } from "@/lib/toast";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ProjectIcon } from "@/lib/project-icon";

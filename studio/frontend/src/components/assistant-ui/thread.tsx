@@ -12,7 +12,7 @@ import {
   queuedPromptMessage,
   snapshotQueuedTextPrompt,
   type QueuedPrompt,
-} from "@/features/chat/utils/queued-text-attachments";
+} from "@/features/chat";
 import { getAuthSessionEpoch } from "@/features/auth";
 import { useMarkChatWelcome } from "@/features/chat-background";
 
@@ -167,12 +167,12 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { forkChatThread } from "@/features/chat/api/chat-api";
+import { forkChatThread } from "@/features/chat";
 import {
   findLatestUserAudioBase64,
   resolveProjectId,
   sentAudioNames,
-} from "@/features/chat/api/chat-adapter";
+} from "@/features/chat";
 import {
   PromptStorageDialog,
   exportConversationShareGPT,
@@ -180,57 +180,57 @@ import {
   exportConversationMessagesJsonl,
   exportConversationCsv,
   exportConversationMarkdown,
-} from "@/features/chat/prompt-storage/prompt-storage-dialog";
+} from "@/features/chat";
 import {
   listPromptEntries,
   listPromptLists,
   type PromptEntry,
   type PromptListEntry,
-} from "@/features/chat/api/prompts-api";
-import { PromptCountBadge } from "@/features/chat/prompt-storage/prompt-count-badge";
-import { useChatPreferencesStore } from "@/features/chat/stores/chat-preferences-store";
+} from "@/features/chat";
+import { PromptCountBadge } from "@/features/chat";
+import { useChatPreferencesStore } from "@/features/chat";
 import {
   sortProjectsByActivity,
   useChatProjects,
-} from "@/features/chat/hooks/use-chat-projects";
-import { NewProjectDialog } from "@/features/chat/components/new-project-dialog";
-import { ResearchMessage } from "@/features/chat/components/research-message";
+} from "@/features/chat";
+import { NewProjectDialog } from "@/features/chat";
+import { ResearchMessage } from "@/features/chat";
 import {
   DeepResearchComposerButton,
   DeepResearchWebsiteAccessDialog,
-} from "@/features/chat/components/deep-research-composer-button";
+} from "@/features/chat";
 import {
   NativeAttachmentDragContext,
   type NativeIntent,
   useNativeAttachmentTargetKey,
   useNativeIntentStore,
 } from "@/features/native-intents";
-import { nativeAttachmentIntentToFile } from "@/features/native-intents/native-attachment-file";
+import { nativeAttachmentIntentToFile } from "@/features/native-intents";
 import {
   attachLibraryChatFiles,
   useLibraryChatHandoffStore,
 } from "@/features/library/chat-handoff-store";
 import { resumesThought } from "@/features/model-picker";
-import { cancelResearchRun } from "@/features/chat/api/research-api";
+import { cancelResearchRun } from "@/features/chat";
 import {
   ingestResearchUpdate,
   useResearchRunStore,
-} from "@/features/chat/stores/research-run-store";
-import { researchReplyOwnsRun } from "@/features/chat/utils/research-run-binding";
+} from "@/features/chat";
+import { researchReplyOwnsRun } from "@/features/chat";
 import {
   isExternalModelId,
   parseExternalModelId,
   providerModelSupportsStudioTools,
-} from "@/features/chat/external-providers";
-import { toolStatusKind } from "@/features/chat/utils/tool-status";
+} from "@/features/chat";
+import { toolStatusKind } from "@/features/chat";
 import { formatPrefillDetails, formatPrefillTimeLeft, prefillPercent } from "@/features/chat";
-import { replySourceMarkdown } from "@/features/chat/utils/reply-source-markdown";
-import { toolResultModelText } from "@/features/chat/api/chat-adapter";
+import { replySourceMarkdown } from "@/features/chat";
+import { toolResultModelText } from "@/features/chat";
 import {
   collectGeminiAnswerReplayParts,
   collectGeminiThoughtReplayParts,
   continuationGeminiReplayTurns,
-} from "@/features/chat/gemini-thought-replay";
+} from "@/features/chat";
 import {
   CONTINUATION_RUN_CONFIG_KEY,
   type ContinuationRequest,
@@ -248,17 +248,17 @@ import {
   forgetAutoContinue,
   recordAutoContinue,
   shouldAutoContinueMessage,
-} from "@/features/chat/utils/continuation";
+} from "@/features/chat";
 import {
   holdAutoContinueRun,
   watchAutoContinueRun,
-} from "@/features/chat/utils/auto-continue-run-keeper";
-import { McpComposerButton } from "@/features/chat/mcp-composer-button";
+} from "@/features/chat";
+import { McpComposerButton } from "@/features/chat";
 import {
   SkillsComposerButton,
   useSkillsSwitch,
-} from "@/features/chat/skills-composer-button";
-import { pickerAcceptForTextBasenames } from "@/features/chat/text-attachment-accept";
+} from "@/features/chat";
+import { pickerAcceptForTextBasenames } from "@/features/chat";
 import {
   COMPOSER_INPUT_SELECTOR,
   isModEnter,
@@ -280,27 +280,27 @@ import {
   kimiSearchExcludesThinking,
   modelCatalogVersion,
   subscribeModelCatalog,
-} from "@/features/chat/provider-capabilities";
-import { useRagToolDisabled } from "@/features/chat/hooks/use-rag-tool-disabled";
-import { BypassPermissionsMenuItem } from "@/features/chat/bypass-permissions-menu-item";
-import { PermissionModeComposerPill } from "@/features/chat/permission-mode-select";
+} from "@/features/chat";
+import { useRagToolDisabled } from "@/features/chat";
+import { BypassPermissionsMenuItem } from "@/features/chat";
+import { PermissionModeComposerPill } from "@/features/chat";
 import {
   codeToolsOn,
   imageToolAvailable,
   localImagePillCount,
   settleThreadScopedSettingsForCopy,
   useChatRuntimeStore,
-} from "@/features/chat/stores/chat-runtime-store";
+} from "@/features/chat";
 import {
   forkBoundaryAnchor,
   setForkBoundaryAnchor,
   useForkBoundaryStore,
-} from "@/features/chat/stores/fork-boundary-store";
+} from "@/features/chat";
 import {
   PROMPT_QUEUE_RUN_FAILED_EVENT,
   PROMPT_QUEUE_STOP_EVENT,
-} from "@/features/chat/utils/prompt-queue-events";
-import { useExternalProvidersStore } from "@/features/chat/stores/external-providers-store";
+} from "@/features/chat";
+import { useExternalProvidersStore } from "@/features/chat";
 import { saveMarkdownAsProjectSource } from "@/features/rag";
 import {
   splitPlusMenuItems,
@@ -366,32 +366,32 @@ import {
   markSentTextGuardUserInput,
   sentTextGuardBlocksDraft,
   type SentTextGuard,
-} from "@/features/chat/utils/composer-send-guard";
-import { deleteThreadMessage } from "@/features/chat/utils/delete-thread-message";
+} from "@/features/chat";
+import { deleteThreadMessage } from "@/features/chat";
 import {
   readBackendChatThread,
   getStoredChatThread,
   updateStoredChatThread,
-} from "@/features/chat/utils/chat-history-storage";
+} from "@/features/chat";
 import {
   dictationSendBlocked,
   shouldSubmitDictation,
-} from "@/features/chat/utils/dictation-send";
+} from "@/features/chat";
 import {
   isRagClientError,
   listProjectDocuments,
   listThreadDocuments,
   projectWorkCount,
 } from "@/features/rag/api/rag-api";
-import { useRagAvailabilityStore } from "@/features/rag/api/rag-availability";
-import { ThreadDocumentsBar } from "@/features/rag/components/thread-documents-bar";
-import { KnowledgeBaseComposerButton } from "@/features/rag/components/knowledge-base-composer-button";
-import { useUserProfileStore } from "@/features/profile/stores/user-profile-store";
+import { useRagAvailabilityStore } from "@/features/rag";
+import { ThreadDocumentsBar } from "@/features/rag";
+import { KnowledgeBaseComposerButton } from "@/features/rag";
+import { useUserProfileStore } from "@/features/profile";
 import { useSpookyGreetings } from "@/features/halloween/halloween-store";
 import { buildSpookyWelcome } from "@/features/halloween/spooky-greetings";
 import { usePublishedFrame } from "@/features/settings/hooks/use-published-frame";
-import { useVoiceSettingsStore } from "@/features/settings/stores/voice-settings-store";
-import { applyQwenThinkingParams } from "@/features/chat/utils/qwen-params";
+import { useVoiceSettingsStore } from "@/features/settings";
+import { applyQwenThinkingParams } from "@/features/chat";
 import { isTauri } from "@/lib/api-base";
 import { openFilePicker } from "@/lib/open-file-picker";
 import { InternetGlyph } from "@/lib/internet-icon";
@@ -488,7 +488,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { extractTaggedText, updateThreadMessage } from "@/features/chat/utils/update-thread-message";
+import { extractTaggedText, updateThreadMessage } from "@/features/chat";
 import { useComposerPillFit } from "@/hooks/use-composer-pill-fit";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUiSpaceScale } from "@/hooks/use-ui-space-scale";
@@ -810,7 +810,7 @@ function scheduleQueuedPromptDispatch(
 
 function isPromptQueueRunReadyToDispatch(run: PromptQueueRun) {
   const item = getActivePromptQueueItem(run);
-  return Boolean(
+  return (
     item &&
       run.index >= 0 &&
       !item.dispatched &&
@@ -819,7 +819,7 @@ function isPromptQueueRunReadyToDispatch(run: PromptQueueRun) {
       !run.paused &&
       !run.retryTimer &&
       !promptQueueActiveRunIds.has(run.id) &&
-      !promptQueueDispatchingRunIds.has(run.id),
+      !promptQueueDispatchingRunIds.has(run.id)
   );
 }
 
@@ -1112,7 +1112,7 @@ function syncPromptQueueUI() {
       total: runTotal,
       local: promptQueueRunUsesLocalModel(run),
       temporary: promptQueueRunIsTemporary(run),
-      dispatched: Boolean(getActivePromptQueueItem(run)?.dispatched),
+      dispatched: getActivePromptQueueItem(run).dispatched,
       paused: run.paused || run.items.some((item) => item.blockedByModelFailure),
     };
     for (const id of ids) {
@@ -1267,7 +1267,7 @@ function isPromptQueueRunTargetRunning(
 function advancePromptQueue(run: PromptQueueRun) {
   clearPromptQueueRetryTimer(run);
   promptQueueActiveRunIds.delete(run.id);
-  getActivePromptQueueItem(run)?.target.complete();
+  getActivePromptQueueItem(run).target.complete();
   const nextIndex = run.index + 1;
   if (nextIndex >= run.items.length) {
     deletePromptQueueRun(run);
@@ -1284,7 +1284,7 @@ function shouldPollPromptQueueTargetState(run: PromptQueueRun) {
   return (
     run.waitingForTargetIdle ||
     run.index < 0 ||
-    Boolean(getActivePromptQueueItem(run)?.dispatched)
+    getActivePromptQueueItem(run).dispatched
   );
 }
 
@@ -1346,7 +1346,7 @@ function handlePromptQueueRunState(
   // race with the dispatch timer); index -1 is the normal wait for the current response.
   if (
     run.waitingForTargetIdle ||
-    (run.index >= 0 && !getActivePromptQueueItem(run)?.dispatched)
+    (run.index >= 0 && !getActivePromptQueueItem(run).dispatched)
   ) {
     clearPromptQueueRetryTimer(run);
     run.waitingForTargetIdle = false;
@@ -1552,9 +1552,9 @@ function pausePromptQueueRun(threadIds?: string[]) {
     }
     try {
       if (cancelMode === "permanent") {
-        activeItem?.target.cancel();
+        activeItem.target.cancel();
       } else {
-        activeItem?.target.cancelActiveRun();
+        activeItem.target.cancelActiveRun();
       }
     } catch {
       // The active run may have already ended.
@@ -1585,14 +1585,14 @@ function resumePromptQueueRun(threadIds?: string[]) {
 function stopPromptQueueRun(threadIds?: string[]) {
   for (const run of getPromptQueueRunsForThreadIds(threadIds)) {
     const activeItem = getActivePromptQueueItem(run);
-    const activeTarget = activeItem?.target;
-    const shouldCancelActiveRun = Boolean(activeItem?.dispatched);
+    const activeTarget = activeItem.target;
+    const shouldCancelActiveRun = activeItem.dispatched;
     deletePromptQueueRun(run);
     if (!shouldCancelActiveRun) {
       continue;
     }
     try {
-      activeTarget?.cancel();
+      activeTarget.cancel();
     } catch {
       // The active run may have already ended.
     }
@@ -1644,7 +1644,7 @@ function stopLocalPromptQueueRun(run: PromptQueueRun) {
   if (!getActivePromptQueueItem(run)) {
     deletePromptQueueRun(run);
     try {
-      activeItem?.target.cancel();
+      activeItem.target.cancel();
     } catch {
       // The active local run may have already ended.
     }
@@ -1654,10 +1654,10 @@ function stopLocalPromptQueueRun(run: PromptQueueRun) {
     waitForPromptQueueTargetIdle(run);
     try {
       // A permanent cancel would also void the held prompts that share this target.
-      if (run.items.some((item) => item.target === activeItem?.target)) {
-        activeItem?.target.cancelActiveRun();
+      if (run.items.some((item) => item.target === activeItem.target)) {
+        activeItem.target.cancelActiveRun();
       } else {
-        activeItem?.target.cancel();
+        activeItem.target.cancel();
       }
     } catch {
       // The active local run may have already ended.
@@ -1665,7 +1665,7 @@ function stopLocalPromptQueueRun(run: PromptQueueRun) {
     refreshPromptQueueTargetIdleWait(run);
     return;
   }
-  if (getActivePromptQueueItem(run)?.blockedByModelFailure) {
+  if (getActivePromptQueueItem(run).blockedByModelFailure) {
     // Invalidate an attempt already underway for the now-held item.
     run.generation += 1;
     clearPromptQueueRetryTimer(run);
@@ -1695,7 +1695,7 @@ function retainPendingPromptQueueItemsAfterFailure(run: PromptQueueRun) {
   }
   const activeIndex = Math.max(run.index, 0);
   const activeItem = run.items[activeIndex];
-  if (run.index < 0 || !activeItem?.dispatched) {
+  if (run.index < 0 || !activeItem.dispatched) {
     return false;
   }
 
@@ -1744,13 +1744,13 @@ function stopAllPromptQueueRuns() {
   }));
   resetPromptQueues();
   for (const { activeItem } of activeRuns) {
-    const activeTarget = activeItem?.target;
-    const shouldCancelActiveRun = Boolean(activeItem?.dispatched);
+    const activeTarget = activeItem.target;
+    const shouldCancelActiveRun = activeItem.dispatched;
     if (!shouldCancelActiveRun) {
       continue;
     }
     try {
-      activeTarget?.cancel();
+      activeTarget.cancel();
     } catch {
       // The active run may have already ended.
     }
@@ -1765,7 +1765,7 @@ function handlePromptQueueRunFailed(threadId?: string | null, localOnly = false)
           item.blockedByModelFailure = true;
         }
       }
-      if (getActivePromptQueueItem(run)?.blockedByModelFailure) {
+      if (getActivePromptQueueItem(run).blockedByModelFailure) {
         run.generation += 1;
         clearPromptQueueRetryTimer(run);
         promptQueueDispatchingRunIds.delete(run.id);
@@ -1904,7 +1904,7 @@ const useTrackForkBoundaryAnchor = (threadId: string | null): void => {
   const inherited = useForkBoundaryStore((s) =>
     threadId === null
       ? undefined
-      : s.boundaryByThreadId[threadId]?.messageIds,
+      : s.boundaryByThreadId[threadId].messageIds,
   );
   const anchor = useAuiState(({ thread }) =>
     memoOnArrayByKey(thread.messages, inherited ?? FORK_BOUNDARY_NONE, () =>
@@ -1924,7 +1924,7 @@ function forkSourceTitle(sourceThreadId: string): Promise<string | null> {
   if (!title) {
     title = readBackendChatThread(sourceThreadId).then((source) => {
       if (source === undefined) forkSourceTitles.delete(sourceThreadId);
-      return source?.title?.trim() || null;
+      return source?.title.trim() || null;
     });
     forkSourceTitles.set(sourceThreadId, title);
   }
@@ -1943,7 +1943,7 @@ const ForkContinuationRule: FC = () => {
   const sourceThreadId = useForkBoundaryStore((s) =>
     threadId === null
       ? null
-      : (s.boundaryByThreadId[threadId]?.sourceThreadId ?? null),
+      : (s.boundaryByThreadId[threadId].sourceThreadId ?? null),
   );
   const navigate = useNavigate();
   const isAnchor = anchor !== undefined && anchor === messageId;
@@ -2247,7 +2247,7 @@ export const Thread: FC<{
   const [pageDragging, setPageDragging] = useState(false);
   const dragDepth = useRef(0);
   const hasFiles = (e: ReactDragEvent) =>
-    Array.from(e.dataTransfer?.types ?? []).includes("Files");
+    Array.from(e.dataTransfer.types ?? []).includes("Files");
   const onDragEnter = (e: ReactDragEvent) => {
     if (isTauri || !hasFiles(e)) return;
     dragDepth.current += 1;
@@ -2891,7 +2891,7 @@ const PendingAudioChip: FC = () => {
 /** React routes portal events through the composer, whose dropzone captures them first. */
 function claimPortaledDrop(event: ReactDragEvent): void {
   const target = event.target as Element | null;
-  if (!target?.closest?.(".aui-composer-attachment-dropzone")) {
+  if (!target?.closest(".aui-composer-attachment-dropzone")) {
     event.preventDefault();
   }
 }
@@ -2932,7 +2932,7 @@ const Composer: FC<{
   const activeThreadId = useChatRuntimeStore((s) => s.activeThreadId);
   const researchThreadId = threadId ?? activeThreadId ?? null;
   const researchThreadClaimed = useResearchRunStore((state) =>
-    researchThreadId ? Boolean(state.claimedThreadIds[researchThreadId]) : false,
+    researchThreadId ? state.claimedThreadIds[researchThreadId] : false,
   );
   const liveResearchRunId = useResearchRunStore((state) =>
     researchThreadId ? state.latestRunByThreadId[researchThreadId] : undefined,
@@ -2942,7 +2942,7 @@ const Composer: FC<{
     const runId = researchThreadId
       ? state.latestRunByThreadId[researchThreadId]
       : undefined;
-    const run = runId ? state.sessions[runId]?.run : undefined;
+    const run = runId ? state.sessions[runId].run : undefined;
     return Boolean(
       run && !["completed", "failed", "cancelled"].includes(run.status),
     );
@@ -3052,7 +3052,7 @@ const Composer: FC<{
         performance.now(),
       );
       plainPasteAtRef.current = 0;
-      const pastedText = event.clipboardData?.getData("text/plain") ?? "";
+      const pastedText = event.clipboardData.getData("text/plain") ?? "";
       const pastedYoutubeUrl = extractYoutubeVideoUrlFromClipboard(
         event.clipboardData,
       );
@@ -3299,13 +3299,13 @@ const Composer: FC<{
   const hasPendingImageAttachments = useNativeIntentStore((s) =>
     Boolean(
       nativeAttachmentTargetKey &&
-        (s.pendingImageAttachments[nativeAttachmentTargetKey]?.length ?? 0) > 0,
+        (s.pendingImageAttachments[nativeAttachmentTargetKey].length ?? 0) > 0,
     ),
   );
   const hasPendingOpenDocumentAttachments = useNativeIntentStore((s) =>
     Boolean(
       nativeAttachmentTargetKey &&
-        (s.pendingOpenDocumentAttachments[nativeAttachmentTargetKey]?.length ??
+        (s.pendingOpenDocumentAttachments[nativeAttachmentTargetKey].length ??
           0) > 0,
     ),
   );
@@ -3321,7 +3321,7 @@ const Composer: FC<{
   const hasPendingAudioAttachments = useNativeIntentStore((s) =>
     Boolean(
       nativeAttachmentTargetKey &&
-        (s.pendingAudioAttachments[nativeAttachmentTargetKey]?.length ?? 0) > 0,
+        (s.pendingAudioAttachments[nativeAttachmentTargetKey].length ?? 0) > 0,
     ),
   );
   const registeringAudioDrops = useNativeIntentStore(
@@ -3332,7 +3332,7 @@ const Composer: FC<{
   const hasPendingVideoAttachments = useNativeIntentStore((s) =>
     Boolean(
       nativeAttachmentTargetKey &&
-        (s.pendingVideoAttachments[nativeAttachmentTargetKey]?.length ?? 0) > 0,
+        (s.pendingVideoAttachments[nativeAttachmentTargetKey].length ?? 0) > 0,
     ),
   );
   const registeringVideoDrops = useNativeIntentStore(
@@ -3449,7 +3449,7 @@ const Composer: FC<{
           // Early returns requeue mid-batch, and drops can land while `draining` gated the subscription.
           const pending =
             useNativeIntentStore.getState().pendingAudioAttachments[targetKey]
-              ?.length ?? 0;
+              .length ?? 0;
           // Only the owning instance re-drains; otherwise the batch stays parked instead of looping.
           if (pending > 0 && stillThisComposer()) {
             void drainPendingAudio();
@@ -3471,7 +3471,7 @@ const Composer: FC<{
           .claimAudioAttachments(identityAtSetup, targetKey);
         return;
       }
-      if ((state.pendingAudioAttachments[targetKey]?.length ?? 0) > 0) {
+      if ((state.pendingAudioAttachments[targetKey].length ?? 0) > 0) {
         void drainPendingAudio();
       }
     });
@@ -3555,7 +3555,7 @@ const Composer: FC<{
         if (!disposed) {
           const pending =
             useNativeIntentStore.getState().pendingVideoAttachments[targetKey]
-              ?.length ?? 0;
+              .length ?? 0;
           if (pending > 0 && stillThisComposer()) {
             void drainPendingVideo();
           } else {
@@ -3575,7 +3575,7 @@ const Composer: FC<{
           .claimVideoAttachments(identityAtSetup, targetKey);
         return;
       }
-      if ((state.pendingVideoAttachments[targetKey]?.length ?? 0) > 0) {
+      if ((state.pendingVideoAttachments[targetKey].length ?? 0) > 0) {
         void drainPendingVideo();
       }
     });
@@ -3681,7 +3681,7 @@ const Composer: FC<{
         }
         const pending =
           useNativeIntentStore.getState().pendingImageAttachments[targetKey]
-            ?.length ?? 0;
+            .length ?? 0;
         if (pending > 0) {
           void drainPendingImages();
         } else {
@@ -3702,7 +3702,7 @@ const Composer: FC<{
         return;
       }
       const pending =
-        state.pendingImageAttachments[targetKey]?.length ?? 0;
+        state.pendingImageAttachments[targetKey].length ?? 0;
       if (pending > 0) {
         void drainPendingImages();
       }
@@ -3785,7 +3785,7 @@ const Composer: FC<{
           const pending =
             useNativeIntentStore.getState().pendingOpenDocumentAttachments[
               targetKey
-            ]?.length ?? 0;
+            ].length ?? 0;
           if (pending > 0 && stillThisComposer()) {
             void drainPendingOpenDocuments();
           } else {
@@ -3806,7 +3806,7 @@ const Composer: FC<{
         return;
       }
       if (
-        (state.pendingOpenDocumentAttachments[targetKey]?.length ?? 0) > 0
+        (state.pendingOpenDocumentAttachments[targetKey].length ?? 0) > 0
       ) {
         void drainPendingOpenDocuments();
       }
@@ -4542,7 +4542,7 @@ const Composer: FC<{
       usesDeepResearch: runSettingsAtQueueStart.deepResearchEnabled,
       researchStarted: () => {
         const claimed = useResearchRunStore.getState().claimedThreadIds;
-        return getQueueThreadIds().some((id) => Boolean(claimed[id]));
+        return getQueueThreadIds().some((id) => claimed[id]);
       },
       temporary: incognitoAtQueueStart,
       consumeDeepResearch: () => {
@@ -6099,7 +6099,7 @@ function useImeComposerInputHandlers({
         const intent = composerSubmitIntent(
           imeKey ? composerKeyEventForImeSubmit(e) : e,
           sendShortcut,
-          e.currentTarget?.value,
+          e.currentTarget.value,
         );
         if (intent) {
           e.preventDefault();
@@ -6203,7 +6203,7 @@ const ReasoningToggle: FC<{ side?: "top" | "bottom" }> = ({
       ? getExternalReasoningCapabilities(
           selectedExternalProvider?.providerType,
           // The adapter resolves reasoning for the selected id; openrouter/free can route each turn elsewhere.
-          externalSelection?.modelId,
+          externalSelection.modelId,
           {
             isReasoningProvider:
               selectedExternalProvider?.isReasoningModel === true,
@@ -6240,7 +6240,7 @@ const ReasoningToggle: FC<{ side?: "top" | "bottom" }> = ({
   const formatEffortLabel = (level: typeof reasoningEffort): string => {
     if (level !== "xhigh")
       return level.charAt(0).toUpperCase() + level.slice(1);
-    const normalized = externalSelection?.modelId?.trim().toLowerCase() ?? "";
+    const normalized = externalSelection?.modelId.trim().toLowerCase() ?? "";
     if (
       normalized.startsWith("claude-opus-4-6") ||
       normalized.startsWith("claude-sonnet-4-6")
@@ -6600,12 +6600,12 @@ const ToolStatusDisplay: FC = () => {
     const unresolved = s.toolStatusByThreadId.__default;
     const own =
       s.toolStatusByThreadId[threadListItemId ?? ""] ??
-      (isThreadRunning && unresolved?.length === 1 ? unresolved : undefined);
+      (isThreadRunning && unresolved.length === 1 ? unresolved : undefined);
     // Newest run for this key, so one finishing cannot blank a sibling still running a tool.
-    return own?.[own.length - 1];
+    return own[own.length - 1];
   });
-  const toolStatus = entry?.status ?? null;
-  const startedAt = entry?.startedAt ?? null;
+  const toolStatus = entry.status ?? null;
+  const startedAt = entry.startedAt ?? null;
   const [now, setNow] = useState(() => Date.now());
   const [visible, setVisible] = useState(false);
   const visibleRef = useRef(false);
@@ -6796,7 +6796,7 @@ const ComposerToolsMenu: FC<{
     store.setContextUsage(null);
     // crypto.randomUUID is undefined in non-secure contexts (HTTP over a LAN IP).
     const compareId =
-      typeof globalThis.crypto?.randomUUID === "function"
+      typeof globalThis.crypto.randomUUID === "function"
         ? globalThis.crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     navigate({ to: "/chat", search: { compare: compareId } });
@@ -7365,7 +7365,7 @@ const ComposerRightControls: FC<{
     const runId = activeThreadId
       ? state.latestRunByThreadId[activeThreadId]
       : undefined;
-    return runId ? state.sessions[runId]?.run.status : undefined;
+    return runId ? state.sessions[runId].run.status : undefined;
   });
   const isResearchActive = Boolean(
     activeResearchRunStatus &&
@@ -7644,14 +7644,14 @@ const GeneratingStatus: FC = () => {
   const threadKey =
     useAuiState(({ threadListItem }) => threadListItem.remoteId) ?? "__default";
   const prefill = useChatRuntimeStore(
-    (s) => s.liveGenerationByThreadId[threadKey]?.prefill ?? null,
+    (s) => s.liveGenerationByThreadId[threadKey].prefill ?? null,
   );
   const labelShown = useChatRuntimeStore(
-    (s) => s.liveGenerationByThreadId[threadKey]?.prefillShown,
+    (s) => s.liveGenerationByThreadId[threadKey].prefillShown,
   );
   // A reply can decode with nothing to show yet (a tool call being written): past the prompt, back to Working.
   const decoding = useChatRuntimeStore(
-    (s) => s.liveGenerationByThreadId[threadKey]?.decode != null,
+    (s) => s.liveGenerationByThreadId[threadKey].decode != null,
   );
   const showDetails = useChatPreferencesStore((s) => s.showGenerationDetails);
   const locale = useLocale();
@@ -7683,7 +7683,7 @@ const CancelledIndicator: FC = () => {
     ({ message }) =>
       message.content.length === 0 &&
       message.status?.type === "incomplete" &&
-      message.status?.reason === "cancelled",
+      message.status.reason === "cancelled",
   );
   if (!show) {
     return null;
@@ -7784,7 +7784,7 @@ function useContinuation() {
   // Cancelled comes through status; other reasons are on metadata (survive reload) and outrank it.
   const stamped = readIncompleteInfo(metadata);
   const cancelled =
-    status?.type === "incomplete" && status?.reason === "cancelled";
+    status?.type === "incomplete" && status.reason === "cancelled";
   const reason =
     cancelled && !isProviderReportedReason(stamped?.reason)
       ? ("cancelled" as const)
@@ -7997,7 +7997,7 @@ const ToolGroupThenCompaction = memo<
     if (!marker) return null;
     for (let index = startIndex; index <= endIndex; index += 1) {
       const part = message.parts[index];
-      if (part?.type === "tool-call" && part.toolCallId === marker.afterToolCallId) {
+      if (part.type === "tool-call" && part.toolCallId === marker.afterToolCallId) {
         return marker.truncation;
       }
     }
@@ -8115,7 +8115,7 @@ const AssistantMessage: FC = () => {
   );
   const boundResearchAssistantMessageId = useResearchRunStore((state) =>
     metadataResearchRunId
-      ? state.sessions[metadataResearchRunId]?.run?.assistantMessageId
+      ? state.sessions[metadataResearchRunId].run.assistantMessageId
       : undefined,
   );
   const researchRunId =
@@ -8432,7 +8432,7 @@ const useThreadResearchActive = (): boolean => {
     const runId = activeThreadId
       ? state.latestRunByThreadId[activeThreadId]
       : undefined;
-    const run = runId ? state.sessions[runId]?.run : undefined;
+    const run = runId ? state.sessions[runId].run : undefined;
     return Boolean(
       run && !["completed", "failed", "cancelled"].includes(run.status),
     );
@@ -8865,7 +8865,7 @@ const ScheduledTaskSource: FC = () => {
   const t = useT();
   const navigate = useNavigate();
   const taskId = useAuiState(({ thread, message }) => {
-    const own = scheduledTaskIdOf(message.metadata?.custom);
+    const own = scheduledTaskIdOf(message.metadata.custom);
     if (own) return own;
     // One pass per messages snapshot, not a search per prompt per streamed token.
     const byPrompt = memoOnArrayByKey(thread.messages, SCHEDULED_REPLY_KEY, () => {
@@ -8873,7 +8873,7 @@ const ScheduledTaskSource: FC = () => {
       thread.messages.forEach((entry, index) => {
         const reply = thread.messages[index + 1];
         const replyTask =
-          reply?.role === "assistant" ? scheduledTaskIdOf(reply.metadata?.custom) : null;
+          reply.role === "assistant" ? scheduledTaskIdOf(reply.metadata.custom) : null;
         if (replyTask) map.set(entry.id, replyTask);
       });
       return map;

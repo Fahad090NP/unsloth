@@ -19,7 +19,7 @@ import { ToolLiveOutput } from "./tool-live-output";
 import { ToolResultOutput } from "./tool-result-output";
 import { SandboxFiles } from "./sandbox-files-view";
 import { isSandboxToolResult, type SandboxFile } from "./sandbox-files";
-import { useChatRuntimeStore } from "@/features/chat/stores/chat-runtime-store";
+import { useChatRuntimeStore } from "@/features/chat";
 
 import {
   preferSanitizedFullToolOutput,
@@ -35,7 +35,7 @@ const TerminalToolUIImpl: ToolCallMessagePartComponent = ({
   result,
   status,
 }) => {
-  const command = toolArgText((args as { command?: unknown })?.command);
+  const command = toolArgText((args as { command?: unknown }).command);
   const isRunning = isToolCallRunning(status);
   // Args still streaming = the model is WRITING the command, not running it yet.
   const { propStatus } = useToolArgsStatus();

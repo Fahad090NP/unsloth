@@ -77,7 +77,7 @@ export function startLlamaCppAutoReload(intervalMs = 10_000): () => void {
       const models = mergeReloadedModels(previousModels, previousCatalog, catalog);
       const edited = () => {
         const row = useExternalProvidersStore.getState().providers.find((p) => p.id === provider.id);
-        return row?.models !== latest.models || row?.availableModels !== latest.availableModels;
+        return row?.models !== latest.models || row.availableModels !== latest.availableModels;
       };
       if (providerSavesInFlight.has(provider.id) || edited()) return;
       if (!sameList(models, previousModels) || !sameList(catalog, previousCatalog)) {

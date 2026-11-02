@@ -3,7 +3,7 @@
 
 import { TTS_MAX_TOKENS } from "@/features/audio/audio-workspace-constants";
 import { authFetch } from "@/features/auth";
-import { useVoiceSettingsStore } from "@/features/settings/stores/voice-settings-store";
+import { useVoiceSettingsStore } from "@/features/settings";
 import { formatApiErrorBody } from "@/lib/format-fastapi-error";
 import { toast } from "@/lib/toast";
 import type { SpeechSynthesisAdapter } from "@assistant-ui/react";

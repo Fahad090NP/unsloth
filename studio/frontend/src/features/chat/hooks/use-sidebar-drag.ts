@@ -506,7 +506,7 @@ export function useSidebarDrag(options: UseSidebarDragOptions): SidebarDragApi {
       onPointerDown: (event: React.PointerEvent) => {
         if (event.button !== 0 || event.pointerType === "touch") return;
         if (!event.isPrimary) return;
-        if ((event.target as Element | null)?.closest?.(NO_DRAG_SELECTOR)) {
+        if ((event.target as Element | null)?.closest(NO_DRAG_SELECTOR)) {
           return;
         }
         // Abandon, not refuse: a release the window never saw would block every later drag.
@@ -530,7 +530,7 @@ export function useSidebarDrag(options: UseSidebarDragOptions): SidebarDragApi {
           window.removeEventListener("pointercancel", onCancel);
           window.removeEventListener("keydown", onKey, true);
           // Captured on the body, which no re-render can unmount mid-gesture.
-          if (document.body.hasPointerCapture?.(pointerId)) {
+          if (document.body.hasPointerCapture(pointerId)) {
             document.body.releasePointerCapture(pointerId);
           }
         };

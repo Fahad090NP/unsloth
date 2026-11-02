@@ -17,14 +17,14 @@ import {
   disposableTimeoutSignal,
 } from "@/features/hub/lib/abort-signals";
 // eslint-disable-next-line no-restricted-imports
-import { hubTokenHeader } from "@/features/hub/lib/hub-token-header";
+import { hubTokenHeader } from "@/features/hub";
 // eslint-disable-next-line no-restricted-imports
-import { isHuggingFaceOffline } from "@/features/hub/lib/network";
+import { isHuggingFaceOffline } from "@/features/hub";
 import { dismissCarveoutAdviceForModel, showCarveoutAdvice } from "@/features/igpu-carveout";
 // eslint-disable-next-line no-restricted-imports
-import { consumeNativePathToken } from "@/features/native-intents/api";
+import { consumeNativePathToken } from "@/features/native-intents";
 // eslint-disable-next-line no-restricted-imports
-import { checkDiskSpace } from "@/features/settings/low-disk-check";
+import { checkDiskSpace } from "@/features/settings";
 import { formatApiErrorBody } from "@/lib/format-fastapi-error";
 import {
   type ModelRuntime,
@@ -925,7 +925,7 @@ export async function fetchSidebarRows(
   return {
     rows: Array.isArray(data.rows) ? data.rows : [],
     nextCursor: data.nextCursor ?? null,
-    hasMore: Boolean(data.hasMore),
+    hasMore: data.hasMore,
     total: typeof data.total === "number" ? data.total : null,
   };
 }
@@ -1228,7 +1228,7 @@ export async function deleteChatThreads(
   );
   const data = await parseJsonOrThrow<{ sandboxes_kept?: string[] }>(response);
   notifyChatHistoryUpdated();
-  return Array.isArray(data?.sandboxes_kept) ? data.sandboxes_kept : [];
+  return Array.isArray(data.sandboxes_kept) ? data.sandboxes_kept : [];
 }
 
 export async function listChatProjects(
@@ -1334,7 +1334,7 @@ export async function deleteChatProject(
     ProjectRecord & { sandboxes_kept?: string[] }
   >(response);
   notifyChatProjectsUpdated();
-  return Array.isArray(data?.sandboxes_kept) ? data.sandboxes_kept : [];
+  return Array.isArray(data.sandboxes_kept) ? data.sandboxes_kept : [];
 }
 
 export async function listChatMessages(
@@ -1446,7 +1446,7 @@ export async function saveChatMessage(
   // thread-id collision, which the caller must see. Only the header separates them.
   if (
     response.status === 409 &&
-    response.headers?.get(CONFLICT_KIND_HEADER) === CONFLICT_KIND_PROTECTED
+    response.headers.get(CONFLICT_KIND_HEADER) === CONFLICT_KIND_PROTECTED
   ) {
     // Read here, not in parseJsonOrThrow: a body is single-use.
     const body = await response.json().catch(() => null);
@@ -1521,10 +1521,10 @@ export async function clearBackendChats(
     notifyChatHistoryUpdated();
   }
   return {
-    deletedThreadIds: Array.isArray(data?.deletedThreadIds)
+    deletedThreadIds: Array.isArray(data.deletedThreadIds)
       ? data.deletedThreadIds
       : [],
-    sandboxesKept: Array.isArray(data?.sandboxes_kept)
+    sandboxesKept: Array.isArray(data.sandboxes_kept)
       ? data.sandboxes_kept
       : [],
   };

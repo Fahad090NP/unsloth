@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { authFetch } from "@/features/auth";
-import { AUTH_SESSION_CLEARED_EVENT, AUTH_SESSION_STORED_EVENT } from "@/features/auth/session-events";
+import { AUTH_SESSION_CLEARED_EVENT, AUTH_SESSION_STORED_EVENT } from "@/features/auth";
 import {
   revokeChatFullAccess,
   withChatFullAccess,
@@ -14,12 +14,12 @@ import type { ImageDisclosure } from "../api/mcp-image";
 import {
   mirrorHfTokenInto,
   useHfTokenStore,
-} from "@/features/hub/stores/hf-token-store";
+} from "@/features/hub";
 // eslint-disable-next-line no-restricted-imports -- Leaf module; the model-picker index pulls in chat.
 import {
   pinnedReasoningEffort,
   useModelReasoningEffortStore,
-} from "@/features/model-picker/components/model-selector/model-reasoning-effort";
+} from "@/features/model-picker";
 import {
   loadedContextFields,
   type MlxKvQuant,
@@ -292,10 +292,10 @@ function loadRagSource(): RagSource {
     const raw = window.localStorage.getItem(CHAT_RAG_SOURCE_KEY);
     if (!raw) return DEFAULT_RAG_SOURCE;
     const parsed = JSON.parse(raw) as RagSource;
-    if (parsed?.type === "kb" && typeof parsed.kbId === "string") {
+    if (parsed.type === "kb" && typeof parsed.kbId === "string") {
       return { type: "kb", kbId: parsed.kbId };
     }
-    if (parsed?.type === "thread") return { type: "thread" };
+    if (parsed.type === "thread") return { type: "thread" };
     return DEFAULT_RAG_SOURCE;
   } catch {
     return DEFAULT_RAG_SOURCE;
@@ -1394,7 +1394,7 @@ function forgetReplayedThreadSettings(
     ) {
       return;
     }
-    delete pending[threadId];
+    Reflect.deleteProperty(pending, threadId);
     if (Object.keys(pending).length === 0) {
       localStorage.removeItem(THREAD_SETTINGS_REPLAY_KEY);
     } else {
@@ -2018,7 +2018,7 @@ export function normalizeSpeculativeType(
   v: string | null | undefined,
 ): string | null {
   if (v == null) return null;
-  const s = String(v).trim().toLowerCase();
+  const s = v.trim().toLowerCase();
   if (!s) return null;
   if (s === "auto" || s === "default") return "auto";
   // Same spellings as _LEGACY_SPEC_MODE_MAP "off"; Auto here would re-send /load on every pick.
@@ -3088,7 +3088,7 @@ function getParamsByModelAfterEdit(
         pickRememberedParams(withoutActiveThreadParams(state, nextParams)),
         rememberedWindow(nextParams.checkpoint),
         changedParams.maxTokens === undefined
-          ? (outgoing ?? state.paramsByModel)[nextParams.checkpoint]?.maxTokens
+          ? (outgoing ?? state.paramsByModel)[nextParams.checkpoint].maxTokens
           : undefined,
       ),
     ),
@@ -3183,7 +3183,7 @@ function rememberOutgoingModel(
   const snapshot = recordMaxTokensAsMax(
     picked,
     rememberedWindow(outgoing.checkpoint),
-    state.paramsByModel[outgoing.checkpoint]?.maxTokens,
+    state.paramsByModel[outgoing.checkpoint].maxTokens,
   );
   // Only to seed a model with no entry: later changes are written key by key, and a full
   // snapshot would put this browser's copy of untouched keys over another tab's.
@@ -4628,7 +4628,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       } else if (fromModelDefaults && !state.settingsHydrated) {
         noteModelDefaultsBeforeHydration(
           nextParams.checkpoint,
-          options?.migrateOwnedGlobalQwenDefaults === true,
+          options.migrateOwnedGlobalQwenDefaults === true,
         );
       }
       return {
@@ -4696,7 +4696,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         if (local) {
           nextLocal[threadId] = true;
         } else if (!owners.some((o) => o.local)) {
-          delete nextLocal[threadId];
+          Reflect.deleteProperty(nextLocal, threadId);
         }
       } else {
         const remaining = options?.owner
@@ -4710,12 +4710,12 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           if (remaining.some((o) => o.local)) {
             nextLocal[threadId] = true;
           } else {
-            delete nextLocal[threadId];
+            Reflect.deleteProperty(nextLocal, threadId);
           }
         } else {
-          delete next[threadId];
-          delete nextLocal[threadId];
-          delete nextOwner[threadId];
+          Reflect.deleteProperty(next, threadId);
+          Reflect.deleteProperty(nextLocal, threadId);
+          Reflect.deleteProperty(nextOwner, threadId);
         }
       }
       return {
@@ -4728,7 +4728,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const key = "__default";
       if (!threadId || threadId === key) return state;
       // Two first turns can share "__default"; moving wholesale could hand over a sibling's handle.
-      if ((state.runOwnerByThreadId[key]?.length ?? 0) > 1) return state;
+      if ((state.runOwnerByThreadId[key].length ?? 0) > 1) return state;
       const moved: Partial<ChatRuntimeStore> = {};
       const move = <T,>(
         map: Record<string, T>,
@@ -4737,7 +4737,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         const entry = map[key];
         if (entry === undefined || map[threadId] !== undefined) return;
         const next = { ...map };
-        delete next[key];
+        Reflect.deleteProperty(next, key);
         next[threadId] = entry;
         (moved as Record<string, unknown>)[name as string] = next;
       };
@@ -4777,7 +4777,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       if (!(threadId in state.cancelByThreadId)) return state;
       if (cancel && state.cancelByThreadId[threadId] !== cancel) return state;
       const next = { ...state.cancelByThreadId };
-      delete next[threadId];
+      Reflect.deleteProperty(next, threadId);
       return { cancelByThreadId: next };
     }); },
   registerThreadServerCancel: (threadId, cancel) => { set((state) => {
@@ -4796,7 +4796,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       if (remaining.length > 0) {
         next[threadId] = remaining;
       } else {
-        delete next[threadId];
+        Reflect.deleteProperty(next, threadId);
       }
       return { serverCancelByThreadId: next };
     }); },
@@ -4844,7 +4844,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         options?.maxTokensCap !== undefined &&
         ((previousWindow !== null && state.params.maxTokens >= previousWindow) ||
           (state.rememberParamsPerModel &&
-            state.paramsByModel[modelId]?.maxTokens ===
+            state.paramsByModel[modelId].maxTokens ===
               REMEMBERED_MAX_TOKENS_MAX))
       ) {
         baseParams = { ...baseParams, maxTokens: options.maxTokensCap };
@@ -4999,7 +4999,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           } else if (beforeWindow && field in beforeWindow) {
             captured[field] = beforeWindow[field];
           } else {
-            delete captured[field];
+            Reflect.deleteProperty(captured, field);
           }
           hydratedDefaultsByHeldField.delete(field);
         }
@@ -5597,7 +5597,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       if (!grant || grant.threadId) return recorded ? state : { chatFullAccessThreadByRunId: runThreads };
       const grants = { ...state.chatFullAccessGrants };
       if (grant.choiceVersion === state.chatPermissionChoiceVersion) grants[runId] = { ...grant, threadId };
-      else delete grants[runId];
+      else Reflect.deleteProperty(grants, runId);
       return {
         chatFullAccessGrants: grants,
         chatFullAccessThreadByRunId: runThreads,
@@ -5611,7 +5611,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const grant = state.chatFullAccessGrants[runId];
       if (!grant || grant.threadId) return state;
       const grants = { ...state.chatFullAccessGrants };
-      delete grants[runId];
+      Reflect.deleteProperty(grants, runId);
       return {
         chatFullAccessGrants: grants,
         chatFullAccessPendingRunId: state.chatFullAccessPendingRunId === runId
@@ -5670,7 +5670,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         return state;
       }
       const next = { ...state.toolConfirmations };
-      delete next[toolCallId];
+      Reflect.deleteProperty(next, toolCallId);
       return { toolConfirmations: next };
     }); },
   setWebFetchToolsEnabled: (webFetchToolsEnabled) => { set((state) => {
@@ -5719,7 +5719,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         return state;
       }
       const next = { ...state.projectAttachmentTargetByThread };
-      delete next[PENDING_CHAT_ATTACHMENT_KEY];
+      Reflect.deleteProperty(next, PENDING_CHAT_ATTACHMENT_KEY);
       next[threadId] = pending;
       return { projectAttachmentTargetByThread: next };
     }); },
@@ -5730,7 +5730,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       }
       pendingAttachmentTargetClaim += 1;
       const next = { ...byThread };
-      delete next[PENDING_CHAT_ATTACHMENT_KEY];
+      Reflect.deleteProperty(next, PENDING_CHAT_ATTACHMENT_KEY);
       return { projectAttachmentTargetByThread: next };
     }); },
   setRememberParamsPerModel: (rememberParamsPerModel) => { set((state) => {
@@ -5746,7 +5746,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const remembered = recordMaxTokensAsMax(
         snapshot,
         rememberedWindow(state.params.checkpoint),
-        state.paramsByModel[state.params.checkpoint]?.maxTokens,
+        state.paramsByModel[state.params.checkpoint].maxTokens,
       );
       const paramsByModel = trackParamsByModel(
         state,
@@ -5834,7 +5834,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         if (rest.length > 0) {
           next[threadId] = rest;
         } else {
-          delete next[threadId];
+          Reflect.deleteProperty(next, threadId);
         }
       } else {
         if (mine?.status === status) return state;
@@ -5862,7 +5862,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         return {};
       }
       const next = { ...state.toolFullOutput };
-      delete next[toolCallId];
+      Reflect.deleteProperty(next, toolCallId);
       return { toolFullOutput: next };
     }); },
   clearToolLiveOutput: (toolCallId) => { set((state) => {
@@ -5875,7 +5875,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         return {};
       }
       const next = { ...state.toolLiveOutput };
-      delete next[toolCallId];
+      Reflect.deleteProperty(next, toolCallId);
       return { toolLiveOutput: next };
     }); },
   setActiveDiffusionCanvas: (threadId, canvas) => { set((state) => ({
@@ -5888,7 +5888,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const key = threadId || "__default";
       if (state.activeDiffusionCanvasByThreadId[key] === undefined) return state;
       const next = { ...state.activeDiffusionCanvasByThreadId };
-      delete next[key];
+      Reflect.deleteProperty(next, key);
       return { activeDiffusionCanvasByThreadId: next };
     }); },
   setLivePrefill: (threadId, prefill) => { set((state) => {
@@ -5909,8 +5909,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         liveGenerationByThreadId: {
           ...state.liveGenerationByThreadId,
           [key]: {
-            prefill: current?.prefill ?? null,
-            prefillShown: current?.prefillShown ?? false,
+            prefill: current.prefill ?? null,
+            prefillShown: current.prefillShown ?? false,
             decode,
           },
         },
@@ -5920,7 +5920,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const key = threadId || "__default";
       if (state.liveGenerationByThreadId[key] === undefined) return state;
       const next = { ...state.liveGenerationByThreadId };
-      delete next[key];
+      Reflect.deleteProperty(next, key);
       return { liveGenerationByThreadId: next };
     }); },
   setGeneratingStatus: (generatingStatus) => { set({ generatingStatus }); },
@@ -6042,7 +6042,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       if (stamped) {
         next[state.activeThreadId] = stamped;
       } else {
-        delete next[state.activeThreadId];
+        Reflect.deleteProperty(next, state.activeThreadId);
       }
       return { contextUsage: stamped, contextUsageByThreadId: next };
     }); },
@@ -6050,7 +6050,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       if (!usage) {
         if (!Object.hasOwn(state.contextUsageByThreadId, threadId)) return state;
         const next = { ...state.contextUsageByThreadId };
-        delete next[threadId];
+        Reflect.deleteProperty(next, threadId);
         return { contextUsageByThreadId: next };
       }
       return {

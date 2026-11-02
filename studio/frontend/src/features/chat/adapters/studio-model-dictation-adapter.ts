@@ -7,11 +7,11 @@ import {
   isAudioCppFolderId,
 } from "../../audio/audio-cpp-catalog";
 import { authFetch } from "@/features/auth";
-import { listGgufVariants } from "@/features/hub/inventory/api";
-import { hubTokenHeader } from "@/features/hub/lib/hub-token-header";
-import { getHfToken, hfApiToken } from "@/features/hub/stores/hf-token-store";
-import { useSettingsDialogStore } from "@/features/settings/stores/settings-dialog-store";
-import { requestSttDownload } from "@/features/settings/stores/stt-download-prompt-store";
+import { listGgufVariants } from "@/features/hub";
+import { hubTokenHeader } from "@/features/hub";
+import { getHfToken, hfApiToken } from "@/features/hub";
+import { useSettingsDialogStore } from "@/features/settings";
+import { requestSttDownload } from "@/features/settings";
 import {
   AUDIO_CPP_STT_MODELS,
   MTMD_STT_MODELS,
@@ -503,7 +503,7 @@ export class StudioModelDictationAdapter implements DictationAdapter {
       typeof window !== "undefined" &&
       window.isSecureContext &&
       typeof MediaRecorder !== "undefined" &&
-      navigator.mediaDevices?.getUserMedia !== undefined
+      navigator.mediaDevices.getUserMedia !== undefined
     );
   }
 
@@ -615,7 +615,7 @@ export class StudioModelDictationAdapter implements DictationAdapter {
 
     const buildTranscript = () =>
       results
-        .filter((part) => part?.trim())
+        .filter((part) => part.trim())
         .join(" ")
         .trim();
 

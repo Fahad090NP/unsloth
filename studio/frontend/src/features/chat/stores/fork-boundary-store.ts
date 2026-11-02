@@ -57,7 +57,7 @@ export const useForkBoundaryStore = create<ForkBoundaryState>()((set) => ({
       if (boundary === null) {
         if (current === undefined) return state;
         const next = { ...state.boundaryByThreadId };
-        delete next[threadId];
+        Reflect.deleteProperty(next, threadId);
         return { boundaryByThreadId: next };
       }
       if (same(current, boundary)) return state;
@@ -72,7 +72,7 @@ export const useForkBoundaryStore = create<ForkBoundaryState>()((set) => ({
       if (anchor === undefined) {
         if (current === undefined) return state;
         const next = { ...state.anchorByThreadId };
-        delete next[threadId];
+        Reflect.deleteProperty(next, threadId);
         return { anchorByThreadId: next };
       }
       return {

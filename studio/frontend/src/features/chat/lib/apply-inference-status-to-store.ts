@@ -766,7 +766,7 @@ export async function tryAdoptServerActiveModel(options?: {
   // Not chat-adoptable; the sweep picks a real chat model, which evicts it.
   if (
     !status.active_model ||
-    (status.loading?.length ?? 0) > 0 ||
+    (status.loading.length ?? 0) > 0 ||
     isSpeechOnlyStatus(status)
   ) {
     return false;

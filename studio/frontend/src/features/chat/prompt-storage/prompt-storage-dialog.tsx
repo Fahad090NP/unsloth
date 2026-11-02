@@ -75,10 +75,7 @@ import {
   getStoredChatThread,
   listStoredChatMessages,
   listStoredChatThreads,
-  saveStoredChatThread,
-  syncStoredChatMessages,
 } from "../utils/chat-history-storage";
-import { notifyChatHistoryUpdated } from "../api/chat-api";
 import { resolveChatInstructions, toolResultModelText } from "../api/chat-adapter";
 import { toolCallReplayArguments } from "../tool-call-arguments";
 import { codexLocalToolRoundId, startsNewCodexToolRound } from "../codex-reasoning";
@@ -321,7 +318,7 @@ function messageToText(msg: { content: unknown; attachments?: unknown }): string
   if (main) parts.push(main);
   if (Array.isArray(msg.attachments)) {
     for (const attachment of msg.attachments as { content?: unknown }[]) {
-      if (!attachment?.content) continue;
+      if (!attachment.content) continue;
       const attText = unwrapPastedTextContent(
         contentBlocksToText(attachment.content),
       );
@@ -336,7 +333,7 @@ function messageToMarkdown(msg: { content: unknown; attachments?: unknown }): st
   const blocks = contentBlocksToMarkdownBlocks(msg.content, normalizeToolResult);
   if (Array.isArray(msg.attachments)) {
     for (const attachment of msg.attachments as { content?: unknown }[]) {
-      if (!attachment?.content) continue;
+      if (!attachment.content) continue;
       blocks.push(
         ...contentBlocksToMarkdownBlocks(
           attachment.content,
@@ -380,7 +377,7 @@ function messageToOpenAI(msg: { role: unknown; content: unknown; attachments?: u
       const att = a as { content?: unknown };
       if (!Array.isArray(att.content)) return [];
       return (att.content as Record<string, unknown>[]).map((part) =>
-        part?.type === "text" && typeof part.text === "string"
+        part.type === "text" && typeof part.text === "string"
           ? { ...part, text: unwrapPastedTextContent(part.text) }
           : part,
       );
@@ -579,7 +576,7 @@ async function saveConversationAsProjectSource(
   if (!messages) return "skipped";
   const markdown = buildConversationMarkdown(
     messages.map((msg) => ({
-      role: String(msg.role ?? ""),
+      role: (msg.role ?? ""),
       // Project sources are retrieved into context, so strip renderer tokens.
       content: stripSearchImageTokens(messageToMarkdown(msg)),
     })),
@@ -731,7 +728,7 @@ export async function exportBulkConversationsMerged(
     const pairs = new Map<string, ThreadRecord[]>();
     for (const id of threadIds) {
       const thread = await getStoredChatThread(id);
-      conversations.push({ id, title: thread?.title?.trim() || id });
+      conversations.push({ id, title: thread?.title.trim() || id });
       if (thread?.pairId) {
         const halves = pairs.get(thread.pairId) ?? [];
         halves.push(thread);
@@ -742,7 +739,7 @@ export async function exportBulkConversationsMerged(
     for (const [pairId, halves] of pairs) {
       if (halves.length < 2) continue;
       const plans = planChatItemSources(
-        { id: pairId, title: halves[0].title?.trim() || pairId, type: "pair" },
+        { id: pairId, title: halves[0].title.trim() || pairId, type: "pair" },
         halves,
       );
       for (const plan of plans) pairedTitles.set(plan.id, plan.title);
@@ -891,7 +888,7 @@ function messageToPlainText(msg: {
   collect(msg.content);
   if (Array.isArray(msg.attachments)) {
     for (const attachment of msg.attachments as { content?: unknown }[]) {
-      collect(attachment?.content, true);
+      collect(attachment.content, true);
     }
   }
   return parts.join("\n\n").trim();
@@ -901,7 +898,7 @@ function mergeSameRoleTurns(turns: FineTuneMessage[]): FineTuneMessage[] {
   const merged: FineTuneMessage[] = [];
   for (const turn of turns) {
     const last = merged[merged.length - 1];
-    if (last?.role === turn.role) {
+    if (last.role === turn.role) {
       last.content += `\n\n${turn.content}`;
     } else {
       merged.push({ ...turn });
@@ -2518,7 +2515,7 @@ export function PromptStorageDialog({
   );
 
   const bulkExportDisabled =
-    (activeTab === "prompts" ? (promptEntries?.length ?? 0) : (promptLists?.length ?? 0)) === 0;
+    (activeTab === "prompts" ? (promptEntries.length ?? 0) : (promptLists.length ?? 0)) === 0;
 
   const openBulkExport = useCallback(() => {
     setExportCtx({

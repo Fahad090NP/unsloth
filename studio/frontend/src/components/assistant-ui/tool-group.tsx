@@ -11,10 +11,10 @@ import {
 } from "react";
 import { useAuiState } from "@assistant-ui/react";
 import { useMessageMemo } from "@/components/assistant-ui/use-message-memo";
-import { useChatRuntimeStore } from "@/features/chat/stores/chat-runtime-store";
-import { useChatPreferencesStore } from "@/features/chat/stores/chat-preferences-store";
+import { useChatRuntimeStore } from "@/features/chat";
+import { useChatPreferencesStore } from "@/features/chat";
 // eslint-disable-next-line no-restricted-imports -- this file is in the startup cycle; the chat barrel closes it.
-import { useReasoningRoundStore } from "@/features/chat/stores/reasoning-round-store";
+import { useReasoningRoundStore } from "@/features/chat";
 import {
   endsFoldedSpan,
   governingReasoningEnd,
@@ -24,7 +24,7 @@ import {
   toolOutputKey,
   useToolPaneScope,
   useUnresolvedToolPaneScope,
-} from "@/features/chat/tool-output-scope";
+} from "@/features/chat";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { cva, type VariantProps } from "class-variance-authority";
 import {
@@ -42,7 +42,7 @@ import {
   toolActivityOpen,
 } from "./tool-activity-open-state";
 // eslint-disable-next-line no-restricted-imports -- this file is in the startup cycle; the chat barrel closes it.
-import { foldIsActive } from "@/features/chat/utils/display-visibility";
+import { foldIsActive } from "@/features/chat";
 import { WrenchIcon } from "@/lib/wrench-icon";
 
 const ANIMATION_DURATION = 200;

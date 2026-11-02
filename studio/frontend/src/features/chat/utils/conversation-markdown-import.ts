@@ -108,7 +108,7 @@ function roleHeading(node: MarkdownNode | undefined, text: string) {
 
 function documentTitle(nodes: MarkdownNode[], index: number, text: string) {
   const node = nodes[index];
-  if (node?.type !== "heading" || node.depth !== 1) return;
+  if (node.type !== "heading" || node.depth !== 1) return;
   const start = node.position?.start.offset;
   const end = node.position?.end.offset;
   const firstMessage = roleHeading(nodes[index + 1], text);

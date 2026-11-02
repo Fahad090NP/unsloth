@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { useSettingsDialogStore } from "@/features/settings/stores/settings-dialog-store";
+import { useSettingsDialogStore } from "@/features/settings";
 import {
   applyDictationDictionary,
   recordRecentDictation,
@@ -130,13 +130,13 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
       !isTauri &&
       window.isSecureContext &&
       getSpeechRecognitionAPI() !== undefined &&
-      navigator.mediaDevices?.getUserMedia !== undefined
+      navigator.mediaDevices.getUserMedia !== undefined
     );
   }
 
   listen(): DictationAdapter.Session {
     const SpeechRecognitionAPI = getSpeechRecognitionAPI();
-    if (!SpeechRecognitionAPI || !navigator.mediaDevices?.getUserMedia) {
+    if (!SpeechRecognitionAPI || !navigator.mediaDevices.getUserMedia) {
       throw new Error("Speech recognition is not supported in this browser.");
     }
 
@@ -307,7 +307,7 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
       ) {
         const result = speechEvent.results[i];
         if (!result) continue;
-        const transcript = result[0]?.transcript ?? "";
+        const transcript = result[0].transcript ?? "";
         if (result.isFinal) {
           interimParts.delete(i);
           const corrected = applyDictationDictionary(transcript);
@@ -402,7 +402,7 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
           return;
         }
         const audioTrack = stream.getAudioTracks()[0];
-        if (audioTrack?.readyState !== "live") {
+        if (audioTrack.readyState !== "live") {
           throw new DOMException(
             "No live microphone track is available.",
             "NotFoundError",

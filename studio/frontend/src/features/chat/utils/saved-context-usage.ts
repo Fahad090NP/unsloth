@@ -48,7 +48,7 @@ function revisionOf(custom: Record<string, unknown> | undefined): number {
 export function withMessageRevision<T extends ThreadMessage["metadata"]>(metadata: T): T {
   return {
     ...metadata,
-    custom: { ...metadata?.custom, revision: revisionOf(metadata?.custom) + 1 },
+    custom: { ...metadata.custom, revision: revisionOf(metadata.custom) + 1 },
   };
 }
 
@@ -74,7 +74,7 @@ export function threadBranchRecords(messages: readonly ThreadMessage[]): BranchR
     id: message.id,
     role: message.role,
     content: message.content,
-    metadata: message.metadata?.custom,
+    metadata: message.metadata.custom,
   }));
 }
 

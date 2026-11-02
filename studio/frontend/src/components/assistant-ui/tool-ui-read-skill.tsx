@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { Spinner } from "@/components/ui/spinner";
-import { useToolAwaitingApproval } from "@/features/chat/tool-approval";
+import { useToolAwaitingApproval } from "@/features/chat";
 import { stringifyToolResult } from "@/lib/strip-ansi";
 import {
   type ToolCallMessagePartComponent,
@@ -35,12 +35,12 @@ const ReadSkillToolUIImpl: ToolCallMessagePartComponent = ({
   status,
   toolCallId,
 }) => {
-  const name = toolArgText((args as { name?: unknown })?.name) || "skill";
+  const name = toolArgText((args as { name?: unknown }).name) || "skill";
   const resource =
-    toolArgText((args as { resource?: unknown })?.resource) || "SKILL.md";
-  const isRunning = status?.type === "running";
+    toolArgText((args as { resource?: unknown }).resource) || "SKILL.md";
+  const isRunning = status.type === "running";
   const resultText = result == null ? "" : stringifyToolResult(result);
-  const isPreload = (args as { _studio_skill_load?: unknown })?._studio_skill_load === true;
+  const isPreload = (args as { _studio_skill_load?: unknown })._studio_skill_load === true;
   const preloadLoaded = resultText.startsWith("Complete SKILL.md read");
   const label = isPreload
     ? isRunning

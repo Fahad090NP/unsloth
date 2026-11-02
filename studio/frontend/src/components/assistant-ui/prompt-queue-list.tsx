@@ -327,8 +327,8 @@ export function PromptQueueList({
                           return;
                         }
                         const targets: Record<string, string | undefined> = {
-                          ArrowUp: previous?.id,
-                          ArrowDown: next?.id,
+                          ArrowUp: previous.id,
+                          ArrowDown: next.id,
                           Home: movableItems[0]?.id,
                           End: movableItems.at(-1)?.id,
                         };

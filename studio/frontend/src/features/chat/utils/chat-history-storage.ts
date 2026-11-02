@@ -468,7 +468,7 @@ async function dexieDbAbsent(): Promise<boolean> {
       null,
     );
     if (!Array.isArray(list)) return false;
-    return !list.some((entry) => entry?.name === DEXIE_DB_NAME);
+    return !list.some((entry) => entry.name === DEXIE_DB_NAME);
   } catch {
     return false;
   }

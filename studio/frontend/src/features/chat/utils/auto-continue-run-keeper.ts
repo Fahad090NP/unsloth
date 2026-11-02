@@ -20,7 +20,7 @@ const keeper = createAutoContinueLeaseKeeper({
     isRunning: (threadId) => {
       const state = useChatRuntimeStore.getState();
       return (
-        state.runningByThreadId[threadId] === true &&
+        state.runningByThreadId[threadId] &&
         !isImageGateRunOnly(state.runOwnerByThreadId[threadId])
       );
     },

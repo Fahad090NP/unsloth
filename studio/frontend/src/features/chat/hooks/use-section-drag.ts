@@ -246,7 +246,7 @@ export function useSectionDrag(
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onCancel);
       window.removeEventListener("keydown", onKey, true);
-      if (document.body.hasPointerCapture?.(pointerId)) {
+      if (document.body.hasPointerCapture(pointerId)) {
         document.body.releasePointerCapture(pointerId);
       }
     };

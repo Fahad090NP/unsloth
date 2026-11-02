@@ -240,7 +240,7 @@ export function pageLabel(pages: readonly number[]): string {
     let end = i;
     while (
       end + 1 < pages.length &&
-      pages[end + 1] === Number(pages[end]) + 1
+      pages[end + 1] === pages[end] + 1
     ) {
       end++;
     }

@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { documentKind, isMarkdown, sheetDelimiter } from "@/components/file-viewer/kind";
-import { isAudioAttachment } from "@/features/chat/attachment-content";
+import { isAudioAttachment } from "@/features/chat";
 
 export type AttachmentPreviewKind = "image" | "audio" | "video" | "text" | "document";
 

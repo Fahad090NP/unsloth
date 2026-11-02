@@ -194,7 +194,7 @@ const printTranscripts = (): void => {
 
 if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
   window.addEventListener("beforeprint", printTranscripts, { capture: true });
-  window.matchMedia?.("print")?.addEventListener?.(
+  window.matchMedia("print").addEventListener(
     "change",
     (event) => {
       if (event.matches) printTranscripts();

@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { isModEnter } from "@/features/settings/lib/keyboard-shortcuts";
+import { isModEnter } from "@/features/settings";
 import { useT } from "@/i18n";
 import {
   ChevronLeftStandardIcon,

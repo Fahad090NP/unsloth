@@ -6,7 +6,7 @@ import {
   imeOwnsInputKeydown,
   inputImeHandlers,
   newInputImeState,
-} from "@/features/chat/utils/composer-preferences";
+} from "@/features/chat";
 import {
   SidebarContent,
   SidebarFooter,

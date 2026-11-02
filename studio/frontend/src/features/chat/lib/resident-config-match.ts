@@ -251,13 +251,13 @@ const SETTING_CHECKS: SettingCheck[] = [
     mlxComparable: true,
     pinned: () => true,
     agrees: (c, s) =>
-      (c.mlxPleOffload ?? null) === normalizeMlxOffload(s.mlx_offload?.ple?.requested),
+      (c.mlxPleOffload ?? null) === normalizeMlxOffload(s.mlx_offload?.ple.requested),
   },
   {
     mlxComparable: true,
     pinned: () => true,
     agrees: (c, s) =>
-      (c.mlxExpertOffload ?? null) === normalizeMlxOffload(s.mlx_offload?.experts?.requested),
+      (c.mlxExpertOffload ?? null) === normalizeMlxOffload(s.mlx_offload?.experts.requested),
   },
   {
     // Always pinned: an unset mode resolves to the standing preference and the load sends it. Reading

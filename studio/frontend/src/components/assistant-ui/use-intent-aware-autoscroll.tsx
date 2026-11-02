@@ -3,7 +3,7 @@
 
 "use client";
 
-import { useChatPreferencesStore } from "@/features/chat/stores/chat-preferences-store";
+import { useChatPreferencesStore } from "@/features/chat";
 import { useAui, useAuiEvent } from "@assistant-ui/react";
 import {
   type ReactNode,
@@ -472,11 +472,11 @@ export function useIntentAwareAutoScroll(): {
       };
 
       const onTouchStart = (e: TouchEvent) => {
-        touchStartY = e.touches[0]?.clientY ?? 0;
+        touchStartY = e.touches[0].clientY ?? 0;
       };
 
       const onTouchMove = (e: TouchEvent) => {
-        const y = e.touches[0]?.clientY ?? 0;
+        const y = e.touches[0].clientY ?? 0;
         // Finger moves DOWN on the screen = content scrolls UP.
         if (
           y - touchStartY > TOUCH_MOVE_THRESHOLD_PX &&

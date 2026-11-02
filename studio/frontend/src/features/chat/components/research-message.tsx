@@ -44,7 +44,7 @@ export function ResearchMessage(): ReactElement | null {
   const session = useResearchRunStore((state) => state.sessions[runId]);
   const initialRun = metadata.researchRun;
   const ownsRun = researchReplyOwnsRun(
-    session?.run?.assistantMessageId,
+    session.run.assistantMessageId,
     messageId,
   );
 
@@ -55,12 +55,12 @@ export function ResearchMessage(): ReactElement | null {
     if (initialRun) {
       ingestResearchUpdate(initialRun);
     }
-    if (!session?.following) {
+    if (!session.following) {
       ensureResearchRunFollowed(runId, initialRun);
     }
-  }, [runId, initialRun, ownsRun, session?.following]);
+  }, [runId, initialRun, ownsRun, session.following]);
 
-  const run = ownsRun ? (session?.run ?? metadata.researchRun) : undefined;
+  const run = ownsRun ? (session.run ?? metadata.researchRun) : undefined;
   if (!run) {
     if (fallbackText.trim()) {
       return (
@@ -140,7 +140,7 @@ export function ResearchMessage(): ReactElement | null {
   const needsApproval = run.status === "awaiting_approval";
   // name the model call so long silent phases do not appear stalled.
   const liveDetail =
-    runningResearchActivityTitle(session?.activities) ??
+    runningResearchActivityTitle(session.activities) ??
     run.plan?.title ??
     "Building a rigorous research plan…";
   return (
@@ -177,7 +177,7 @@ export function ResearchMessage(): ReactElement | null {
                   : researchStatusLabel(run.status)}
           </p>
           <p className="mt-1 text-ui-12p5/relaxed text-muted-foreground">
-            {session?.error
+            {session.error
               ? session.error
               : failed
                 ? run.error

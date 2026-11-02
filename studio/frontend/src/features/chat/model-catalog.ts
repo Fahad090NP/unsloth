@@ -194,7 +194,7 @@ function snapshotNamespace(
   const merged: Record<string, ModelCatalogSnapshotEntry> = { ...bundled };
   for (const [id, entry] of Object.entries(served)) {
     // Older backends lack the context field, so fall back to the bundled value.
-    const context = entry.context ?? bundled[id]?.context;
+    const context = entry.context ?? bundled[id].context;
     merged[id] = context == null ? entry : { ...entry, context };
   }
   mergedNamespaces.set(providerType, merged);
@@ -243,7 +243,7 @@ export function setProviderModelCatalog(
   hydrateLiveCatalog();
   const entries: Record<string, ModelCatalogEntry> = {};
   for (const model of models) {
-    const id = model.id?.trim().toLowerCase();
+    const id = model.id.trim().toLowerCase();
     if (id) entries[id] = fromLiveModel(model);
   }
   LIVE_CATALOG.set(providerType, { fetchedAt, models: entries });
@@ -308,7 +308,7 @@ export function resolveModelCatalogEntry(
       if (!entry) continue;
       if (entry.contextLength != null || !snapshot) return entry;
       const fallback = candidates
-        .map((id) => snapshot[id]?.context)
+        .map((id) => snapshot[id].context)
         .find((context) => typeof context === "number" && context > 0);
       return fallback == null ? entry : { ...entry, contextLength: fallback };
     }

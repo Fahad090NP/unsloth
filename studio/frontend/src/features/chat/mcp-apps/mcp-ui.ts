@@ -70,7 +70,7 @@ export function mcpUiReplayImages(
   if (!isMcpUiToolResult(val, toolName) || !Array.isArray(val.images))
     return [];
   return val.images.filter(
-    (img) => typeof img?.data === "string" && typeof img?.mimeType === "string",
+    (img) => typeof img.data === "string" && typeof img.mimeType === "string",
   );
 }
 
@@ -122,7 +122,7 @@ export function toolResultParams(
   const content: Record<string, unknown>[] = [];
   for (const block of ui.content ?? []) {
     const embedded =
-      block?.type === "resource" &&
+      block.type === "resource" &&
       typeof block.resource === "object" &&
       block.resource !== null
         ? (block.resource as Record<string, unknown>)
@@ -130,7 +130,7 @@ export function toolResultParams(
     if (
       embedded
         ? embedded.blob !== undefined || embedded.text !== undefined
-        : block?.type !== "image" || block.data !== undefined
+        : block.type !== "image" || block.data !== undefined
     ) {
       content.push({ ...block });
       continue;
@@ -177,7 +177,7 @@ export function cspFrameQuery(csp: unknown): string {
 
 /** getRandomValues, not randomUUID (missing over plain-HTTP LAN); null without Web Crypto. */
 export function newBridgeToken(): string | null {
-  const bytes = globalThis.crypto?.getRandomValues?.(new Uint8Array(16));
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
   return bytes
     ? Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
     : null;

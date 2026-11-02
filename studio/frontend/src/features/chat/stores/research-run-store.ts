@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 // eslint-disable-next-line no-restricted-imports -- Avoid the auth barrel's React login page.
-import { AUTH_SESSION_CLEARED_EVENT } from "@/features/auth/session";
+import { AUTH_SESSION_CLEARED_EVENT } from "@/features/auth";
 import { followResearchRun, type ResearchRunUpdate } from "../api/research-api";
 import type {
   ResearchAction,
@@ -600,21 +600,21 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
         return state;
       }
       const activities = event
-        ? reduceActivity(previous?.activities ?? [], event)
-        : (previous?.activities ?? []);
-      const lastAppliedSeq = event?.id ?? previous?.lastAppliedSeq ?? 0;
+        ? reduceActivity(previous.activities ?? [], event)
+        : (previous.activities ?? []);
+      const lastAppliedSeq = event?.id ?? previous.lastAppliedSeq ?? 0;
       const settled = isSettledResearchRun(run, lastAppliedSeq);
       const session: ResearchSession = {
         run,
         activities,
         lastAppliedSeq,
-        following: settled ? false : (previous?.following ?? false),
-        connection: settled ? "idle" : (previous?.connection ?? "idle"),
-        error: settled ? null : (previous?.error ?? null),
+        following: settled ? false : (previous.following ?? false),
+        connection: settled ? "idle" : (previous.connection ?? "idle"),
+        error: settled ? null : (previous.error ?? null),
       };
       const currentLatestId = state.latestRunByThreadId[run.threadId];
       const currentLatestRun = currentLatestId
-        ? state.sessions[currentLatestId]?.run
+        ? state.sessions[currentLatestId].run
         : undefined;
       const shouldBecomeLatest =
         !currentLatestRun ||
@@ -627,7 +627,7 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
       // A finished run claims the chat's one research; running or stopped runs keep the toggle.
       const claimed = shouldBecomeLatest
         ? run.status === "completed" || run.status === "failed"
-        : Boolean(state.claimedThreadIds[run.threadId]);
+        : state.claimedThreadIds[run.threadId];
       return {
         sessions: { ...state.sessions, [run.id]: session },
         claimedThreadIds:
@@ -784,7 +784,7 @@ function compactReplayUpdates(
     const previous = compacted[compacted.length - 1];
     if (
       event &&
-      previous?.event &&
+      previous.event &&
       canCoalesceStreamEvent(previous.event, event)
     ) {
       const reasoningDelta =
@@ -944,7 +944,7 @@ export function openResearchRun(run: ResearchRun): void {
     ingestResearchUpdate(run);
   }
   const state = useResearchRunStore.getState();
-  if (state.sessions[run.id]?.run.status === "awaiting_approval") {
+  if (state.sessions[run.id].run.status === "awaiting_approval") {
     state.setPlanReviewOpen(run.id, true);
   }
   state.openPanel(run.id);
@@ -967,7 +967,7 @@ export async function* watchResearchRun(
   try {
     while (!signal?.aborted) {
       const session = useResearchRunStore.getState().sessions[runId];
-      if (session?.error && !ownedFollowers.has(runId)) {
+      if (session.error && !ownedFollowers.has(runId)) {
         throw new Error(session.error);
       }
       if (!session) return;
@@ -1007,8 +1007,8 @@ export function ensureResearchRunFollowed(
     state.setFollowing(runId, false, "idle");
     return;
   }
-  if (session?.error) return;
-  if (state.sessions[runId]?.following || ownedFollowers.has(runId)) return;
+  if (session.error) return;
+  if (state.sessions[runId].following || ownedFollowers.has(runId)) return;
   const controller = new AbortController();
   ownedFollowers.set(runId, controller);
   state.setFollowing(runId, true, "connecting");
@@ -1033,11 +1033,11 @@ export function ensureResearchRunFollowed(
       for await (const update of followResearchRun(runId, {
         initialRun,
         signal: controller.signal,
-        replayFrom: session?.lastAppliedSeq ?? 0,
+        replayFrom: session.lastAppliedSeq ?? 0,
       })) {
         if (update.source === "snapshot") {
           const appliedSeq =
-            useResearchRunStore.getState().sessions[runId]?.lastAppliedSeq ?? 0;
+            useResearchRunStore.getState().sessions[runId].lastAppliedSeq ?? 0;
           if (!replaying && update.run.lastEventSeq > appliedSeq) {
             replaying = true;
             useResearchRunStore
@@ -1081,13 +1081,13 @@ export function ensureResearchRunFollowed(
       if (stillOwnsFollow)
         ownedFollowers.delete(runId);
       if (stillOwnsFollow) {
-        const run = useResearchRunStore.getState().sessions[runId]?.run;
+        const run = useResearchRunStore.getState().sessions[runId].run;
         useResearchRunStore
           .getState()
           .setFollowing(
             runId,
             false,
-            terminalStatuses.has(run?.status ?? "") ? "idle" : "disconnected",
+            terminalStatuses.has(run.status ?? "") ? "idle" : "disconnected",
           );
       }
     }

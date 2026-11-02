@@ -3,7 +3,7 @@
 
 import { readGenerationProgress } from "./lib/generation-progress";
 import { useAppShellReadySignal } from "@/components/app-readiness";
-import { authFetch, getAuthSessionEpoch } from "@/features/auth";
+import { getAuthSessionEpoch } from "@/features/auth";
 import { isMcpToolOnly, mcpImageMappingsEnabled } from "./api/mcp-image";
 import { listMcpServers } from "./api/mcp-servers-api";
 import {
@@ -43,7 +43,7 @@ import {
   useRef,
 } from "react";
 import { toast } from "sonner";
-import { useBrowserAgentStore } from "@/features/browser/agent/agent-store";
+import { useBrowserAgentStore } from "@/features/browser";
 import { browserAgentToolsForTurn } from "@/features/browser/agent/tools";
 import { StudioDictationAdapter } from "./adapters/studio-dictation-adapter";
 import { StudioSpeechSynthesisAdapter } from "./adapters/studio-speech-synthesis-adapter";
@@ -201,10 +201,7 @@ import {
   cancelReplyFinishedNotification,
   notifyReplyFinished,
 } from "./utils/reply-finished-notification";
-import {
-  extractDeltaText,
-  parseAssistantContent,
-} from "./utils/parse-assistant-content";
+import { extractDeltaText } from "./utils/parse-assistant-content";
 import {
   chatContentPartAttachmentIdFromSignature,
   chatContentPartAttachmentSignature,
@@ -291,7 +288,6 @@ import {
   type RunCheckpointScheduler,
   createRunCheckpointScheduler,
 } from "./utils/run-checkpoint-scheduler";
-import { isAssistantLocalThreadId } from "./utils/thread-ids";
 import { sanitizeThreadScopedSettings } from "./utils/thread-scoped-settings";
 import { VideoAttachmentAdapter } from "./video-attachment-adapter";
 
@@ -1414,7 +1410,7 @@ function toThreadMessage(m: MessageRecord): ThreadMessage {
       },
     };
   }
-  const custom = (m.metadata!) ?? {};
+  const custom = m.metadata ?? {};
   const savedTiming = custom.timing as
     | import("@assistant-ui/react").MessageTiming
     | undefined;
@@ -1706,11 +1702,11 @@ function scheduleGenerationRecovery(
             if (!isTerminalChatGenerationRun(update.run)) {
               // Not awaited: awaiting holds /events closed, and /events marks the run attended.
               seededApprovals = toolRecovery.armSeededApprovals(
-                update.run.requestPayload?.session_id,
+                update.run.requestPayload.session_id,
                 (approvalId) =>
                   toolApprovalIsPending(
                     approvalId,
-                    typeof update.run.requestPayload?.session_id === "string"
+                    typeof update.run.requestPayload.session_id === "string"
                       ? update.run.requestPayload.session_id
                       : "",
                   ),
@@ -2042,7 +2038,7 @@ export async function persistTemporaryThread({
   unmarkThreadIncognito(threadId);
   try {
     const times = messages
-      .map(({ message }) => message.createdAt?.getTime?.())
+      .map(({ message }) => message.createdAt.getTime())
       .filter((time): time is number => typeof time === "number");
     const creation = temporaryThreadCreation.get(threadId);
     await ensureThreadRecord({
@@ -2064,7 +2060,7 @@ export async function persistTemporaryThread({
         message.role === "user"
           ? cloneAttachments(await persistAttachmentOriginals(message.attachments, epoch))
           : [];
-      const metadata = message.metadata?.custom as
+      const metadata = message.metadata.custom as
         | Record<string, unknown>
         | undefined;
       return {
@@ -2075,7 +2071,7 @@ export async function persistTemporaryThread({
         content: cloneContent(message.content),
         ...(attachments.length > 0 && { attachments }),
         ...(metadata && { metadata }),
-        createdAt: message.createdAt?.getTime?.() ?? Date.now(),
+        createdAt: message.createdAt.getTime() ?? Date.now(),
       };
     }));
     await syncStoredChatMessages(threadId, records, { pruneMissing: false });
@@ -2231,7 +2227,7 @@ function createStudioDbAdapter(
       const userText = titleTextOf(firstUser) || defaultTitle;
       const assistantText = extractTextParts(firstAssistant);
       const answeredWith = answeringCheckpoint(
-        firstAssistant?.metadata?.custom,
+        firstAssistant?.metadata.custom,
       );
 
       if (!autoTitle) {
@@ -2455,7 +2451,7 @@ function createPersistedRunAdapter(
       } else {
         yield await result;
       }
-      if (!options.abortSignal?.aborted) {
+      if (!options.abortSignal.aborted) {
         notifyReplyFinished();
       }
     },
@@ -2654,7 +2650,7 @@ function useStudioRuntimeAdapters(
                 return item;
               }
               const part = content[idx] as { type?: string };
-              if (part?.type !== "image" && part?.type !== "audio") return item;
+              if (part.type !== "image" && part.type !== "audio") return item;
               changed = true;
               return {
                 ...item,
@@ -2976,10 +2972,10 @@ function useStudioRuntimeAdapters(
             message.role === "user"
               ? cloneAttachments(message.attachments)
               : [];
-          const custom = message.metadata?.custom;
+          const custom = message.metadata.custom;
           const createdAt =
             existingMessage?.createdAt ??
-            message.createdAt?.getTime?.() ??
+            message.createdAt.getTime() ??
             Date.now();
           const existingMetadata = existingMessage?.metadata;
           const incomingRevision = Number(
@@ -3287,7 +3283,7 @@ function ThreadNewChatSwitch({
       try {
         recordedRemoteId = runtimeThreads?.threads
           .getItemById(recorded)
-          .getState()?.remoteId;
+          .getState().remoteId;
       } catch {
         recordedRemoteId = undefined;
       }
@@ -3728,7 +3724,7 @@ function ThreadContextUsageRecount({
   const promptSettings = useChatRuntimeStore((state) => currentContextUsageSettingsKey(state, browserTools));
   const threadSettingsPending = useChatRuntimeStore((s) => s.threadScopedSettingsPending);
   const threadLoading = useAuiState(({ thread }) => thread.isLoading);
-  const savedUsage = useAuiState(({ thread }) => thread.messages.at(-1)?.metadata?.custom?.contextUsage);
+  const savedUsage = useAuiState(({ thread }) => thread.messages.at(-1)?.metadata.custom.contextUsage);
   // When prompt settings last changed per thread and model: older saved counts priced another prompt.
   const promptChangedAtRef = useRef(new Map<string, number>());
   const pricedReasoningRef = useRef<{
@@ -3755,7 +3751,7 @@ function ThreadContextUsageRecount({
   const tipId = useAuiState(({ thread }) => thread.messages.at(-1)?.id);
   const tipRunning = useAuiState(({ thread }) => {
     const last = thread.messages.at(-1);
-    return last?.role === "assistant" && last.status?.type === "running";
+    return last?.role === "assistant" && last.status.type === "running";
   });
   const branchLength = useAuiState(({ thread }) => thread.messages.length);
   const branchRevision = useAuiState(({ thread }) => revisionTotal(thread.messages));
@@ -3778,13 +3774,13 @@ function ThreadContextUsageRecount({
     ) {
       promptChangedAtRef.current.set(JSON.stringify([activeThreadId, checkpoint]), Date.now());
     }
-    const stale = Boolean(
+    const stale = (
       previous?.threadId === activeThreadId &&
       previous.checkpoint === checkpoint &&
       previous.savedUsage === savedUsage &&
       !previous.pending &&
       !previous.loading &&
-      (previous.stale || previous.promptSettings !== promptSettings),
+      (previous.stale || previous.promptSettings !== promptSettings)
     );
     pricedReasoningRef.current = {
       threadId: activeThreadId,
@@ -3841,7 +3837,7 @@ function ThreadContextUsageRecount({
         messagesContainImage(messages) ||
         findLatestUserAudioBase64(messages) ||
         findLatestUserVideoBase64(messages) ||
-        (!store.loadedIsGguf && messages.some((message) => message.metadata?.custom?.contextTruncation))
+        (!store.loadedIsGguf && messages.some((message) => message.metadata.custom.contextTruncation))
       ) return;
     } catch {
       return;

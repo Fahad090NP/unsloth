@@ -1177,7 +1177,7 @@ export function ChatSettingsPanel({
                   {isUnifiedMemory ? (
                     <>
                       Context length is above Unsloth&apos;s free-memory estimate
-                      ({maxContextLength?.toLocaleString()} tokens). It may
+                      ({maxContextLength.toLocaleString()} tokens). It may
                       still load, but macOS may have to compress or swap other
                       apps and generation may slow down. Lower the context,
                       leave it on Auto, or set the KV cache to q8_0.
@@ -1185,7 +1185,7 @@ export function ChatSettingsPanel({
                   ) : (
                     <>
                       Context length exceeds the estimated VRAM capacity (
-                      {maxContextLength?.toLocaleString()} tokens). The
+                      {maxContextLength.toLocaleString()} tokens). The
                       model may use system RAM.
                     </>
                   )}

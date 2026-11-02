@@ -130,7 +130,7 @@ export const MessageTiming: FC<{
                   </span>
                 </div>
               )}
-              {st?.diffusion_parallel_tok_s != null && (
+              {st.diffusion_parallel_tok_s != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Speed (in-step)</span>
                   <span className="font-mono tabular-nums">
@@ -138,7 +138,7 @@ export const MessageTiming: FC<{
                   </span>
                 </div>
               )}
-              {st?.diffusion_effective_tok_s != null && (
+              {st.diffusion_effective_tok_s != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Effective</span>
                   <span className="font-mono tabular-nums">
@@ -146,7 +146,7 @@ export const MessageTiming: FC<{
                   </span>
                 </div>
               )}
-              {st?.diffusion_output_tok_s != null && (
+              {st.diffusion_output_tok_s != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Output</span>
                   <span className="font-mono tabular-nums">
@@ -154,18 +154,18 @@ export const MessageTiming: FC<{
                   </span>
                 </div>
               )}
-              {st?.diffusion_steps != null && (
+              {st.diffusion_steps != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Denoising</span>
                   <span className="font-mono tabular-nums">
                     {formatNumber(st.diffusion_steps)} steps
-                    {st?.diffusion_blocks != null
+                    {st.diffusion_blocks != null
                       ? `, ${formatNumber(st.diffusion_blocks)} block${st.diffusion_blocks === 1 ? "" : "s"}`
                       : ""}
                   </span>
                 </div>
               )}
-              {st?.diffusion_canvas != null && (
+              {st.diffusion_canvas != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Canvas</span>
                   <span className="font-mono tabular-nums">
@@ -173,7 +173,7 @@ export const MessageTiming: FC<{
                   </span>
                 </div>
               )}
-              {(st?.diffusion_wall_ms ?? st?.predicted_ms) != null && (
+              {(st.diffusion_wall_ms ?? st.predicted_ms) != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Generation</span>
                   <span className="font-mono tabular-nums">
@@ -189,7 +189,7 @@ export const MessageTiming: FC<{
                   </span>
                 </div>
               )}
-              {(st?.diffusion_prompt_n ?? st?.prompt_n) != null && (
+              {(st.diffusion_prompt_n ?? st.prompt_n) != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Prompt</span>
                   <span className="font-mono tabular-nums">
@@ -213,7 +213,7 @@ export const MessageTiming: FC<{
             </>
             ) : (
             <>
-              {st?.prompt_ms != null && (
+              {st.prompt_ms != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Prompt eval</span>
                   <span className="font-mono tabular-nums">
@@ -221,8 +221,8 @@ export const MessageTiming: FC<{
                   </span>
                 </div>
               )}
-              {(st?.prompt_n ?? 0) > 1 &&
-                st?.prompt_per_second != null &&
+              {(st.prompt_n ?? 0) > 1 &&
+                st.prompt_per_second != null &&
                 st.prompt_per_second > 0 && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Prompt speed</span>
@@ -231,7 +231,7 @@ export const MessageTiming: FC<{
                   </span>
                 </div>
               )}
-              {hasPredicted && st?.predicted_ms != null && (
+              {hasPredicted && st.predicted_ms != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Generation</span>
                   <span className="font-mono tabular-nums">
@@ -269,7 +269,7 @@ export const MessageTiming: FC<{
                   </span>
                 </div>
               )}
-              {st?.diffusion_steps != null && (
+              {st.diffusion_steps != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Denoising steps</span>
                   <span className="font-mono tabular-nums">
@@ -277,7 +277,7 @@ export const MessageTiming: FC<{
                   </span>
                 </div>
               )}
-              {st?.diffusion_blocks != null && (
+              {st.diffusion_blocks != null && (
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Blocks</span>
                   <span className="font-mono tabular-nums">

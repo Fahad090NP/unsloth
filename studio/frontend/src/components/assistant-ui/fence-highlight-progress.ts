@@ -64,9 +64,9 @@ export function advanceHighlightProgress(
       if (!group) {
         const length = Math.min(FENCE_CHUNK_LINES, lines.length - groupIndex * FENCE_CHUNK_LINES);
         const previous = progress.counts[groupIndex];
-        group = previous?.length === length
+        group = previous.length === length
           ? previous.slice()
-          : Array.from({ length }, (_, index) => previous?.[index] ?? 0);
+          : Array.from({ length }, (_, index) => previous[index] ?? 0);
         changed.set(groupIndex, group);
         counts[groupIndex] = group;
       }

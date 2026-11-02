@@ -4,7 +4,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/features/settings/stores/theme-store";
+import { useTheme } from "@/features/settings";
 import { apiUrl, isTauri } from "@/lib/api-base";
 import { openLink } from "@/lib/open-link";
 import { cn } from "@/lib/utils";
@@ -138,7 +138,7 @@ export function McpAppFrame(props: McpAppFrameProps) {
     return {
       token,
       html,
-      src: frameSrc(resource.ui?.csp),
+      src: frameSrc(resource.ui.csp),
       scope: resource.scope,
       fed: false,
     };

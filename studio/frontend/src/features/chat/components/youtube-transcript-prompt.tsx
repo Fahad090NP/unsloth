@@ -15,7 +15,7 @@ import {
 } from "../api/youtube-api";
 
 function preferredCaptionLanguages(): string[] {
-  const tags = [getLocale(), ...(globalThis.navigator?.languages ?? []), "en"];
+  const tags = [getLocale(), ...(globalThis.navigator.languages ?? []), "en"];
   return [
     ...new Set(tags.filter((tag) => typeof tag === "string" && tag)),
   ].slice(0, 8);

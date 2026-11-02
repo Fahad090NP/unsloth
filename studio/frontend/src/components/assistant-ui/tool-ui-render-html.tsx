@@ -37,7 +37,7 @@ const RenderHtmlToolUIImpl: ToolCallMessagePartComponent = ({
 
   // Success results start with "Rendered HTML canvas"; errors with "Error:".
   const errorText =
-    status?.type === "complete" &&
+    status.type === "complete" &&
     typeof result === "string" &&
     result.startsWith("Error:")
       ? result
