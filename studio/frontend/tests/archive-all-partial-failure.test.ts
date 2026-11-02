@@ -4,10 +4,13 @@
 // Promise.all rejects on the first failure, so without a catch the batch notification never runs.
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 
-register("./sidebar-items-resolver.mjs", import.meta.url);
+const sidebarItemsResolverHooks = (await import(new URL("./sidebar-items-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: sidebarItemsResolverHooks.resolve });
 
 const { recorder, resetRecorder } = await import(
   "./helpers/store-stubs/sidebar-items-deps.ts"

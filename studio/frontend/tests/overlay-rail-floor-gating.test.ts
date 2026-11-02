@@ -180,7 +180,7 @@ function branchConditions(literal: ts.Node): string[] {
 function paintedSurface(literal: ts.Node): string | null {
   let node: ts.Node | undefined = literal;
   while (node && !ts.isJsxAttribute(node)) node = node.parent;
-  const opening = node?.parent?.parent;
+  const opening = node.parent.parent;
   if (!opening || !ts.isJsxOpeningElement(opening)) return null;
   const owner = opening.parent;
   if (!ts.isJsxElement(owner)) return null;

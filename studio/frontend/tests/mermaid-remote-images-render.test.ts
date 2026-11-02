@@ -36,12 +36,12 @@ const doc = new DOMImplementation().createDocument(XHTML, "html", null) as unkno
 doc.body = doc.documentElement.appendChild(doc.createElementNS(XHTML, "body"));
 function querySelector(this: { getElementsByTagName(name: string): ArrayLike<{ getAttribute(name: string): string | null }> }, selector: string) {
   const id = /^#(.+)$|^\[id="(.+)"\]$/.exec(selector);
-  return Array.from(this.getElementsByTagName(id ? "*" : selector)).find((el) => !id || el.getAttribute("id") === (id[1] ?? id[2])) ?? null;
+  return Array.from(this.getElementsByTagName(id ? "*" : selector)).find((el) => !id || el.getAttribute("id") === id[1]);
 }
 const elementProto = Object.getPrototypeOf(doc.body) as Record<string, unknown>;
 (Object.getPrototypeOf(doc) as Record<string, unknown>).querySelector = querySelector;
 elementProto.querySelector = querySelector;
-Object.defineProperty(elementProto, "style", { value: { setProperty() {} } });
+Object.defineProperty(elementProto, "style", { value: { setProperty() { return undefined; } } });
 globals.document = doc;
 
 

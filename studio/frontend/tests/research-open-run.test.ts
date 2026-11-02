@@ -37,14 +37,14 @@ test("metadata-only awaiting-approval run is hydrated before its panel opens, wi
   resetResearchRunState();
   const originalFetch = globalThis.fetch;
   let requests = 0;
-  globalThis.fetch = async () => {
+  globalThis.fetch =  () => {
     requests++;
-    throw new Error("Unexpected request");
+    return Promise.reject(new Error("Unexpected request"));
   };
   const observed: (string | undefined)[] = [];
   const unsubscribe = useResearchRunStore.subscribe((state) => {
     if (state.openRunId)
-      observed.push(state.sessions[state.openRunId]?.run.threadId);
+      observed.push(state.sessions[state.openRunId].run.threadId);
   });
   try {
     openResearchRun(run);

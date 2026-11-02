@@ -2,12 +2,15 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
 // Each chat keeps its own browser tabs: switching chats swaps them, and a run in a chat off screen
 // opens its tab there without moving the panel on screen.
-register("./helpers/browser-store-resolver.mjs", import.meta.url);
+const browserStoreResolverHooks = (await import(new URL("./helpers/browser-store-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserStoreResolverHooks.resolve });
 const { chatKeyOfThread, chatTabs, currentEntry, useBrowserStore } = await import("../src/features/browser/store.ts");
 
 const urls = () =>
@@ -97,10 +100,10 @@ test("a new chat's tabs follow it to its id on the first save, and moving a tab 
   assert.deepEqual(urls(), ["https://draft.example/", "https://draft2.example/"]);
   // Other chats' tabs sit between in the full list; the strip order is what moves.
   const [first, second] = chatTabs(useBrowserStore.getState());
-  store.moveTab(second?.id ?? "", 0);
+  store.moveTab(second.id ?? "", 0);
   assert.deepEqual(
     chatTabs(useBrowserStore.getState()).map((tab) => tab.id),
-    [second?.id, first?.id],
+    [second.id, first.id],
   );
   // Opening the same address again focuses this chat's tab, never another chat's.
   store.closePanel();

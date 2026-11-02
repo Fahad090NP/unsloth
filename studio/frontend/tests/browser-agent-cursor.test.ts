@@ -2,10 +2,13 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
-register("./helpers/browser-executor-resolver.mjs", import.meta.url);
+const browserExecutorResolverHooks = (await import(new URL("./helpers/browser-executor-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserExecutorResolverHooks.resolve });
 const { runBrowserAction } = await import("../src/features/browser/agent/executor.ts");
 const { useBrowserAgentStore } = await import("../src/features/browser/agent/agent-store.ts");
 
@@ -26,9 +29,9 @@ const policy = { allowedDomains: [], blockedDomains: [] };
 const stills: unknown[] = [];
 
 async function cursorFlags(url: string): Promise<unknown[]> {
-  globals.__authFetch = async () => new Response(null, { status: 200 });
+  globals.__authFetch = () => new Response(null, { status: 200 });
   const flags: unknown[] = [];
-  globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
+  globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
     flags.push(op.cursor);
     stills.push(op.cursorStill);
     if (op.op === "status") return { installed: true, result: { ok: true, quietMs: 1000, requests: 0, doc: "r1" } };
@@ -63,10 +66,10 @@ test("turning the cursor off in Settings reaches the page on the next command", 
 /** From the page's answer to the click until the tab is told to navigate. */
 async function linkClickHold(showCursor: boolean, from: string): Promise<number> {
   useBrowserAgentStore.getState().setShowCursor(showCursor);
-  globals.__authFetch = async () => new Response(null, { status: 200 });
+  globals.__authFetch = () => new Response(null, { status: 200 });
   const link = { role: "link", name: "Docs", tag: "a", href: `${from}docs`, formMethod: "", formAction: "", formHasPassword: false, submits: false };
   let clickedAt = 0;
-  globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
+  globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
     if (op.op === "status") return { installed: true, result: { ok: true, quietMs: 1000, requests: 0, doc: "r1" } };
     if (op.op === "describe") return { installed: true, result: { ok: true, info: link, hit: "r5", sig: "s" } };
     if (op.op === "click") {

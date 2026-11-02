@@ -14,7 +14,7 @@ const { store } = installLocalStorageFake();
 
 const PERSIST_KEY = "unsloth.studio.downloads";
 Object.assign(globalThis.window, {
-  addEventListener: () => {},
+  addEventListener: () => { /* empty */ },
 });
 
 store.set(

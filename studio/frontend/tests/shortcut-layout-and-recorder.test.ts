@@ -128,7 +128,7 @@ test("stopGeneration ships on Mod+. and clashes with nothing", () => {
         assert.notEqual(
           defaultBindingFor(other, slot, mac),
           value,
-          `${other.id}.${slot} also ships on ${value} (mac=${mac})`,
+          `${other.id}.${slot} also ships on ${String(value)} (mac=${String(mac)})`,
         );
       }
     }
@@ -170,7 +170,7 @@ test("tab and window chords are flagged desktop-only, per platform", () => {
           defaultBindingFor(defOf(id), "primary", mac),
           mac,
         ),
-        `${id} (mac=${mac})`,
+        `${id} (mac=${String(mac)})`,
       );
     }
     assert.equal(isBrowserUnreachableBinding("Mod+Shift+KeyO", mac), false);

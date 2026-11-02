@@ -35,11 +35,11 @@ const DETECTING = { chat_only: true, hardware_detecting: true, version: "2026.1.
 const FULL = { ...CHAT_ONLY, chat_only: false, chat_only_reason: null };
 
 let reply: Record<string, unknown> | null = CHAT_ONLY;
-globalThis.fetch = (async () => {
+globalThis.fetch = ( () => {
   const body = reply;
-  if (body === null) throw new TypeError("Failed to fetch");
-  const res = { ok: true, json: async () => ({ ...body }), clone: () => res };
-  return res;
+  if (body === null) return Promise.reject(new TypeError("Failed to fetch"));
+  const res = { ok: true, json:  () => Promise.resolve(({ ...body })), clone: () => res };
+  return Promise.resolve(res);
 }) as unknown as typeof fetch;
 
 const { fetchDeviceType, forgetMeasuredVerdict, usePlatformStore } = await import(
@@ -62,7 +62,7 @@ test("a replaced backend's verdict is unmeasured until the new one answers", asy
   try {
     await fetchDeviceType({ force: true });
   } finally {
-    Date.now = realDateNow;
+    Object.assign(Date, { now: realDateNow });
   }
   s = usePlatformStore.getState();
   assert.equal(s.capabilitiesUnknown(), true, "a provisional reply ended the wait");

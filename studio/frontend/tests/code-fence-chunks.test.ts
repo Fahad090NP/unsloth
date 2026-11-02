@@ -133,7 +133,7 @@ test("source growth skips a body render only with the same nonempty tokens resul
     sameFenceBodyProps(previous, { ...previous, source: "line 0 grows" }),
     true,
   );
-  const nextResult = { tokens: previous.result!.tokens };
+  const nextResult = { tokens: (previous.result ?? assert.fail("expected a non-null value")).tokens };
   assert.equal(
     sameFenceBodyProps(previous, { ...previous, result: nextResult }),
     false,

@@ -774,7 +774,7 @@ test("a legacy GGUF directory recovers its sole saved variant and context", () =
   assert.equal(target.ggufVariant?.toLowerCase(), "q6_k");
   const meta = chatModelSwitchMeta(target, [option]);
   assert.equal(meta?.isGguf, true);
-  assert.equal(meta?.ggufVariant?.toLowerCase(), "q6_k");
+  assert.equal(meta.ggufVariant?.toLowerCase(), "q6_k");
   assert.equal(
     resolveInitialConfig(modelId, target.ggufVariant ?? undefined).config
       .customContextLength,
@@ -804,8 +804,8 @@ test("a legacy GGUF directory does not guess between saved variants", () => {
   ]);
   const meta = chatModelSwitchMeta({ modelId }, [option]);
   assert.equal(meta?.isGguf, false);
-  assert.equal(meta?.ggufVariant, undefined);
-  assert.equal(meta?.config, undefined);
+  assert.equal(meta.ggufVariant, undefined);
+  assert.equal(meta.config, undefined);
 });
 
 test("a legacy GGUF directory does not infer a quant from config alone", () => {

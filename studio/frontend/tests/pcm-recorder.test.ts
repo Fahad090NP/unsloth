@@ -249,11 +249,11 @@ test("stopping releases the audio graph and the context", () => {
   recorder.start();
   recorder.stop();
   assert.equal(context?.closed, true);
-  assert.equal(context?.processor.disconnected, true);
-  assert.equal(context?.gain.disconnected, true);
+  assert.equal(context.processor.disconnected, true);
+  assert.equal(context.gain.disconnected, true);
   // Routed through a muted gain: a ScriptProcessorNode has to reach the
   // destination to run, and the microphone must not be played back.
-  assert.equal(context?.gain.gain.value, 0);
+  assert.equal(context.gain.gain.value, 0);
 });
 
 test("a recording that collected nothing reports no bytes", () => {
@@ -342,11 +342,11 @@ test("a MediaRecorder that refuses to start falls back to PCM", () => {
     constructor() {
       constructed += 1;
     }
-    addEventListener(): void {}
+    addEventListener(): void { return undefined; }
     start(): void {
       throw startError;
     }
-    stop(): void {}
+    stop(): void { return undefined; }
   }
   Object.assign(globalThis, { MediaRecorder: RefusingMediaRecorder });
   const stream = { active: true } as unknown as MediaStream;

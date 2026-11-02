@@ -151,7 +151,7 @@ test("OpenClaw gets valid JSON with the transport set explicitly", () => {
         "unsloth-studio": {
           url: "http://127.0.0.1:8888/mcp/",
           transport: "streamable-http",
-          headers: { Authorization: "Bearer ${UNSLOTH_API_KEY}" },
+          headers: { Authorization: "Bearer $" + "{UNSLOTH_API_KEY}" },
         },
       },
     },
@@ -164,15 +164,15 @@ test("OpenClaw gets valid JSON with the transport set explicitly", () => {
   );
 });
 
-test("Hermes gets YAML with ${UNSLOTH_API_KEY} and the reload step", () => {
+test("Hermes gets YAML with $" + "{UNSLOTH_API_KEY} and the reload step", () => {
   const text = snippet("hermes").text;
-  assert.ok(text.includes('Authorization: "Bearer ${UNSLOTH_API_KEY}"'));
+  assert.ok(text.includes("Authorization: \"Bearer $" + "{UNSLOTH_API_KEY}\""));
   assert.match(text, /\/reload-mcp/);
   assert.deepEqual(yaml.load(text), {
     mcp_servers: {
       unsloth_studio: {
         url: "http://127.0.0.1:8888/mcp/",
-        headers: { Authorization: "Bearer ${UNSLOTH_API_KEY}" },
+        headers: { Authorization: "Bearer $" + "{UNSLOTH_API_KEY}" },
       },
     },
   });
@@ -216,7 +216,7 @@ test("DeepSeek Harness evaluates the key with !!js, or takes a plain string", ()
   const text = snippet("dsh").text;
   assert.ok(
     text.includes(
-      "Authorization: !!js '`Bearer ${process.env.UNSLOTH_API_KEY}`'",
+      "Authorization: !!js '`Bearer $" + "{process.env.UNSLOTH_API_KEY}`'",
     ),
   );
   assert.deepEqual(yaml.load(text, { schema: DSH_SCHEMA }), [
@@ -231,7 +231,7 @@ test("DeepSeek Harness evaluates the key with !!js, or takes a plain string", ()
             url: "http://127.0.0.1:8888/mcp/",
             headers: {
               Authorization: {
-                js: "`Bearer ${process.env.UNSLOTH_API_KEY}`",
+                js: "`Bearer $" + "{process.env.UNSLOTH_API_KEY}`",
               },
             },
           },
@@ -254,7 +254,7 @@ test("no snippet carries a key unless one is passed", () => {
           assert.equal(result.readsKeyEnv, true, `${agent.id} ${os}`);
           assert.match(result.text, /UNSLOTH_API_KEY/);
           assert.ok(
-            result.text.includes(mcpEndpointUrl(base)!),
+            result.text.includes(must(mcpEndpointUrl(base))),
             `${agent.id} ${os} ${base}`,
           );
         }
@@ -275,3 +275,8 @@ test("config-file agents say which file to edit", () => {
   assert.equal(snippet("vibe").configPath, "~/.vibe/config.toml");
   assert.equal(snippet("dsh").configPath, "~/.dsh/cordis.patch.yml");
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

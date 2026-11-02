@@ -15,13 +15,13 @@ function client(response: () => Response) {
     new URL("../src/features/settings/api/accounts.ts", import.meta.url),
     {
       "@/features/auth": {
-        authFetch: async (path: string, init?: RequestInit) => {
+        authFetch: (path: string, init?: RequestInit) => {
           requests.push({ path, init });
           return response();
         },
       },
       "@/features/auth/login-client": {
-        fetchAuthStatus: async () => {
+        fetchAuthStatus: () => {
           refreshed++;
         },
       },

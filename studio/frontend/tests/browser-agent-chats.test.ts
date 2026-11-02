@@ -2,12 +2,15 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
 // Chats use the browser tools side by side, each in its own tab. A chat off screen works on in the
 // background (native pages), leaving the user's tabs alone, and its questions wait in its own bar.
-register("./helpers/browser-executor-resolver.mjs", import.meta.url);
+const browserExecutorResolverHooks = (await import(new URL("./helpers/browser-executor-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserExecutorResolverHooks.resolve });
 const { runBrowserAction, STOPPED } = await import("../src/features/browser/agent/executor.ts");
 const { agentChat, endBrowserAgentRun, stopBrowserAgent, useBrowserAgentStore } = await import(
   "../src/features/browser/agent/agent-store.ts"
@@ -18,7 +21,7 @@ const globals = globalThis as Record<string, unknown>;
 const policy = { allowedDomains: [], blockedDomains: [] };
 interface Posted { action_id: string; result: { ok: boolean; url?: string; error?: string } }
 const posted: Posted[] = [];
-globals.__authFetch = async (_url: string, init: { body: string }) => {
+globals.__authFetch = (_url: string, init: { body: string }) => {
   posted.push(JSON.parse(init.body));
   return new Response(null, { status: 200 });
 };
@@ -27,9 +30,9 @@ const answer = (op: Record<string, unknown>) =>
     ? { ok: true, quietMs: 1000, doc: "d1" }
     : { ok: true, text: "page", links: [], width: 800, height: 600, doc: "d1" };
 // The page of a native view answers through browser_view_agent; a framed one through the frame.
-globals.__callNative = async (command: string, args: { command: { op: Record<string, unknown> } }) =>
+globals.__callNative = (command: string, args: { command: { op: Record<string, unknown> } }) =>
   command === "browser_view_agent" ? { installed: true, result: answer(args.command.op) } : null;
-globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => ({ installed: true, result: answer(op) });
+globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => ({ installed: true, result: answer(op) });
 const kept: string[] = [];
 // A page opened in the background reports its load a beat later.
 globals.__keep = (tabId: string) => {
@@ -97,7 +100,7 @@ test("a question in a chat off screen waits in that chat, with a toast; Stop the
   assert.ok(toasts.some((toast) => toast.options?.id === `browser-agent-question:${away}`));
   // Stop in the shown chat's bar leaves the other chat's question open.
   stopBrowserAgent(chatKeyOfThread("shown"));
-  assert.equal(agentChat(away).question?.id, question?.id);
+  assert.equal(agentChat(away).question?.id, question.id);
   stopBrowserAgent(away);
   await pending;
   assert.equal(resultOf("q1")?.error, STOPPED);

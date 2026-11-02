@@ -29,15 +29,15 @@ test("row forks retain the visible branch across settings settlement", async () 
       exports: {} as { forkChatRow: (item: { id: string }) => Promise<unknown> },
       crypto,
       ...liveThreadHead,
-      forkChatThread: async (id: string, args: { messageId?: string }) => {
+      forkChatThread:  (id: string, args: { messageId?: string }) => {
         calls.push("fork");
         assert.equal(id, "source");
         assert.equal(args.messageId, open ? "older-reply" : undefined);
-      },
-      settleThreadScopedSettingsForCopy: async () => {
+      return Promise.resolve(); },
+      settleThreadScopedSettingsForCopy:  () => {
         calls.push("settings");
         visible = false;
-      },
+      return Promise.resolve(); },
     };
     try {
       vm.runInNewContext(javascript, context);

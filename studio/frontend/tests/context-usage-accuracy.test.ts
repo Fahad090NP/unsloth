@@ -195,7 +195,7 @@ test("tagged local counts retain their exactness only under the reasoning mode t
   assert.equal(branchContextUsage(branch, LOCAL, 8192, 8192, on), branch[3].metadata?.contextUsage);
   const changed = branchContextUsage(branch, LOCAL, 8192, 8192, off);
   assert.equal(changed?.estimated, true);
-  assert.equal(changed?.totalTokens, 500);
+  assert.equal(changed.totalTokens, 500);
 });
 
 test("legacy saved counts remain exact on a local reasoning model", () => {
@@ -242,7 +242,7 @@ test("a research report replaces the handoff's count with an estimate from the p
   };
   const priced = branchContextUsage(branch, LOCAL, 8192, 8192);
   assert.equal(priced?.estimated, true);
-  assert.equal(priced?.totalTokens, 410);
+  assert.equal(priced.totalTokens, 410);
   assert.equal(branchContextUsage(branch.slice(2), LOCAL, 8192, 8192), null);
 });
 
@@ -274,7 +274,7 @@ test("an unanswered prompt is estimated on top of the reply before it", () => {
   const branch = conversation().slice(0, 3);
   const priced = branchContextUsage(branch, LOCAL, 8192, 8192);
   assert.equal(priced?.totalTokens, 310);
-  assert.equal(priced?.estimated, true);
+  assert.equal(priced.estimated, true);
 });
 
 test("counts another model, a summed cloud loop or a past-window figure produced are skipped", () => {
@@ -360,7 +360,7 @@ test("a count stops describing its branch once a turn above it is deleted", () =
   const afterDelete = [withPositions[0], withPositions[1], withPositions[3]];
   const priced = branchContextUsage(afterDelete, LOCAL, 8192, 8192);
   assert.equal(priced?.totalTokens, 310);
-  assert.equal(priced?.estimated, true);
+  assert.equal(priced.estimated, true);
   assert.equal(branchContextUsage(conversation().slice(0, 1).concat(conversation()[3]), LOCAL, 8192, 8192)?.totalTokens, 500);
 });
 
@@ -416,7 +416,7 @@ test("a count smaller than its own estimate scales the estimate down instead of 
   branch[3] = { ...branch[3], metadata: { contextUsage: { ...usage(19_000, CLOUD), messageCount: 20, estimatedTokens: 51_000 } } };
   const priced = branchContextUsage(branch, CLOUD, null, null);
   assert.equal(priced?.estimated, true);
-  assert.equal(priced?.totalTokens, 15);
+  assert.equal(priced.totalTokens, 15);
   const empty = calibrated().map((message) =>
     message.role === "assistant" ? { ...message, content: [] } : { ...message, content: [] },
   );

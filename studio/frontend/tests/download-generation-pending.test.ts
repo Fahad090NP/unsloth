@@ -57,7 +57,7 @@ test("a change seen between progress polls still reaches reconcile", () => {
   };
 
   const run = (sticky: boolean) => {
-    consumed.length = 0;
+    consumed.splice(0);
     rt.pendingGenerationChange = false;
     storedGeneration = 1;
     lastProgressAt = 0;

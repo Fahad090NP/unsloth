@@ -36,11 +36,11 @@ const MEASURED = {
 
 let reply: Record<string, unknown> = DETECTING;
 let fetches = 0;
-globalThis.fetch = (async () => {
+globalThis.fetch = (() => {
   fetches += 1;
   const body = reply;
-  const res = { ok: true, json: async () => ({ ...body }), clone: () => res };
-  return res;
+  const res = { ok: true, json: () => Promise.resolve(({ ...body })), clone: () => res };
+  return Promise.resolve(res);
 }) as unknown as typeof fetch;
 
 const { fetchDeviceType, usePlatformStore } = await import("../src/config/env.ts");
@@ -49,11 +49,11 @@ test("a slow non-Mac host converges out of the pending state", async () => {
   const realDateNow = Date.now;
   let clock = realDateNow();
   // Step the clock past the 5s detection window instead of waiting it out.
-  Date.now = () => (clock += 2000);
+  Reflect.set(Date, "now", () => (clock += 2000));
   try {
     await fetchDeviceType();
   } finally {
-    Date.now = realDateNow;
+    Reflect.set(Date, "now", realDateNow);
   }
 
   const stalled = usePlatformStore.getState();

@@ -296,7 +296,7 @@ test("the tab-search chord counts as browser-owned on both platforms", () => {
 });
 
 // The walk ends on a key coming up, so a window losing focus can strand it.
-test("the recent walk ends on losing the window, not just on keyup", async () => {
+test("the recent walk ends on losing the window, not just on keyup", () => {
   const at = APP_SIDEBAR.indexOf("const end = () =>");
   assert.ok(at !== -1, "the traversal listener moved");
   const body = APP_SIDEBAR.slice(at, APP_SIDEBAR.indexOf("}, []);", at));
@@ -322,7 +322,7 @@ test("the private-window chord is reserved and carries no default", () => {
   }
 });
 
-test("the workspace chords land where the guard lets them", async () => {
+test("the workspace chords land where the guard lets them", () => {
   assert.match(
     SRC__ROOT,
     /const chatOnlyMeasured = usePlatformStore\(\n\s*\(s\) => s\.isChatOnly\(\) && !s\.capabilitiesUnknown\(\),/,
@@ -490,7 +490,7 @@ test("no default takes a chord the browser owns without a reason", () => {
         assert.equal(
           isBrowserReservedBinding(value, mac),
           false,
-          `${def.id}.${slot} defaults to ${value}, which the browser owns (mac=${mac})`,
+          `${def.id}.${slot} defaults to ${value}, which the browser owns (mac=${String(mac)})`,
         );
       }
     }
@@ -553,7 +553,7 @@ test("a bare letter is refused but function keys stand alone", () => {
   assert.ok(isAcceptableBinding(enter, true));
 });
 
-test("bare Escape is the recorder's own exit, so only a prompt-gated row takes it", async () => {
+test("bare Escape is the recorder's own exit, so only a prompt-gated row takes it", () => {
   const bare = {
     code: "Escape",
     mod: false,
@@ -622,7 +622,9 @@ test("a key typing a letter answers as that letter, whatever its position", () =
   // Dvorak types x on the B position: Ctrl+X there is Cut (#14035).
   const dvorakX = keyEvent("KeyB", { ctrlKey: true, key: "x" });
   assert.equal(matchesBinding(sidebar, dvorakX, false), false);
-  assert.equal(formatBindingValue(bindingFromEvent(dvorakX, false)!), "Mod+KeyX");
+  const dvorakXBinding = bindingFromEvent(dvorakX, false);
+  assert.ok(dvorakXBinding);
+  assert.equal(formatBindingValue(dvorakXBinding), "Mod+KeyX");
   const dvorakB = keyEvent("KeyN", { ctrlKey: true, key: "b" });
   assert.equal(matchesBinding(sidebar, dvorakB, false), true);
   const recorded = bindingFromEvent(dvorakB, false);
@@ -662,7 +664,9 @@ test("a punctuation position also answers to the punctuation it types", () => {
   const dvorakSlash = keyEvent("BracketLeft", { ctrlKey: true, key: "/" });
   assert.equal(matchesBinding(slash, dvorakSlash, false), true);
   assert.equal(matchesBinding(slash, keyEvent("BracketLeft", { metaKey: true, key: "/" }), true), true);
-  assert.equal(formatBindingValue(bindingFromEvent(dvorakSlash, false)!), "Mod+BracketLeft");
+  const dvorakSlashBinding = bindingFromEvent(dvorakSlash, false);
+  assert.ok(dvorakSlashBinding);
+  assert.equal(formatBindingValue(dvorakSlashBinding), "Mod+BracketLeft");
   assert.equal(
     matchesBinding(slash, keyEvent("BracketLeft", { metaKey: true, altKey: true, key: "/" }), true),
     false,
@@ -731,7 +735,7 @@ test("on US QWERTY every key answers to its own position", () => {
           shiftKey,
           key: shiftKey ? withShift : plain,
         });
-        assert.equal(bindingFromEvent(event, mac)?.code, code, `${code} shift=${shiftKey}`);
+        assert.equal(bindingFromEvent(event, mac)?.code, code, `${code} shift=${String(shiftKey)}`);
       }
     }
   }
@@ -846,7 +850,7 @@ test("defaults ship without conflicts on either platform", () => {
         const owner = seen.get(value);
         assert.ok(
           owner === undefined || owner === def.id,
-          `${value} is claimed by both ${owner} and ${def.id} (mac=${mac})`,
+          `${value} is claimed by both ${owner ?? "unknown"} and ${def.id} (mac=${String(mac)})`,
         );
         seen.set(value, def.id);
       }
@@ -992,7 +996,7 @@ test("every locale overlay carries the shortcut strings", async () => {
   }
 });
 
-test("a cleared alternate keeps its row, so it can be restored", async () => {
+test("a cleared alternate keeps its row, so it can be restored", () => {
   // Clearing a slot stores null, so keying off the resolved value would hide its restore control.
   assert.match(
     KEYBOARD_SHORTCUTS_TAB,
@@ -1062,7 +1066,7 @@ test("a chord's surface does not come back open on the next visit", async () => 
 });
 
 // The sidebar clears selection on Escape outside the registry, so modified Escape must not reach it.
-test("only bare Escape drops the selection", async () => {
+test("only bare Escape drops the selection", () => {
   const at = APP_SIDEBAR.indexOf('if (event.key !== "Escape"');
   assert.notEqual(at, -1, "the selection listener moved");
   const block = APP_SIDEBAR.slice(at, APP_SIDEBAR.indexOf("clearSelection();", at));
@@ -1149,7 +1153,7 @@ test("the fork chord is registered where it mounts, not from an action bar", asy
 });
 
 // The tour's opener pins the picker and an effect unpins it when no tour runs.
-test("the model picker chord opens without the tour's pin", async () => {
+test("the model picker chord opens without the tour's pin", () => {
 
   assert.match(
     CHAT_PAGE,
@@ -1238,7 +1242,7 @@ test("one Escape does not both drop a selection and deny a tool call", async () 
   assert.ok(!body.includes(", true)"), "the listener moved to capture");
 });
 
-test("the composer chords outlive the recording bar", async () => {
+test("the composer chords outlive the recording bar", () => {
   // Dictation swaps ComposerRightControls out, so a chord registered there could never stop it.
   const controls = THREAD.indexOf("const ComposerRightControls:");
   assert.ok(controls !== -1, "the controls component moved");
@@ -1257,7 +1261,7 @@ test("the composer chords outlive the recording bar", async () => {
   );
 });
 
-test("a collapsed sidebar section is not published for the chords", async () => {
+test("a collapsed sidebar section is not published for the chords", () => {
   assert.match(
     APP_SIDEBAR,
     /chatListsOnScreen && pinnedOpen\n\s*\? pinnedRows\.flatMap\(/,
@@ -1315,7 +1319,7 @@ test("the copy chords keep their gesture across the read", async () => {
   }
 });
 
-test("the project picker chord is described by what it does", async () => {
+test("the project picker chord is described by what it does", () => {
   assert.match(CHAT_PAGE, /onSelectProject=\{openProjectLanding\}/);
   const at = EN.indexOf("openProjectPicker: {");
   const entry = EN.slice(at, EN.indexOf("},", at));
@@ -1323,7 +1327,7 @@ test("the project picker chord is described by what it does", async () => {
   assert.ok(entry.includes("project"));
 });
 
-test("the new-chat chords stay out of the auth flow", async () => {
+test("the new-chat chords stay out of the auth flow", () => {
   // /login has no shell and requireAuth bounces /chat straight back.
   for (const id of ["newChat", "newTemporaryChat", "newStandaloneChat"]) {
     // The id, not the whole call: two of the three wrap onto their own line.
@@ -1334,7 +1338,7 @@ test("the new-chat chords stay out of the auth flow", async () => {
   }
 });
 
-test("switching back to Chat lands on the view the user left", async () => {
+test("switching back to Chat lands on the view the user left", () => {
   const at = SRC__ROOT.indexOf('"switchToChat"');
   assert.ok(at !== -1, "switchToChat is registered");
   const call = SRC__ROOT.slice(at, SRC__ROOT.indexOf("\n  );", at) + 5);
@@ -1345,7 +1349,7 @@ test("switching back to Chat lands on the view the user left", async () => {
   assert.match(SRC__ROOT, /useState<ChatSearch>\(\{\}\)/);
 });
 
-test("opening a chat by chord drops the selection, as clicking a row does", async () => {
+test("opening a chat by chord drops the selection, as clicking a row does", () => {
   // Archive, pin and mark-unread prefer the selection, so a stale one hits off-screen rows.
   const at = APP_SIDEBAR.indexOf("function openChatItem(");
   const body = APP_SIDEBAR.slice(at, APP_SIDEBAR.indexOf("\n  }", at));
@@ -1356,7 +1360,7 @@ test("opening a chat by chord drops the selection, as clicking a row does", asyn
   );
 });
 
-test("effort chords only run for a model whose effort is read", async () => {
+test("effort chords only run for a model whose effort is read", () => {
   const at = CHAT_PAGE.indexOf("const shiftReasoningEffort");
   const body = CHAT_PAGE.slice(at, CHAT_PAGE.indexOf("useShortcut(\"cycleReasoningEffort\"", at));
   // enable_thinking models still list levels, but the request drops the effort.
@@ -1365,7 +1369,7 @@ test("effort chords only run for a model whose effort is read", async () => {
   assert.match(body, /!state\.supportsReasoning \|\| !isEffort/);
 });
 
-test("New chat inherits the project on screen, inferred or not", async () => {
+test("New chat inherits the project on screen, inferred or not", () => {
   assert.match(SRC__ROOT, /isChatRoute \? chatRuntime\.activeProjectId : null/);
   assert.match(CHAT_PAGE, /const projectId = thread\?\.projectId \?\? null;/);
   assert.match(CHAT_PAGE, /const projectId = threads\[0\]\?\.projectId \?\? null;/);
@@ -1409,7 +1413,7 @@ test("a Super chord off macOS records nothing rather than a different chord", ()
 });
 
 // Hints outside the shortcuts tab must follow rebinds and clears.
-test("the sidebar hints render the bound chord, not the shipped default", async () => {
+test("the sidebar hints render the bound chord, not the shipped default", () => {
   for (const literal of ['"⌘K"', '"Ctrl+K"', "<DropdownMenuShortcut>⌘,"]) {
     assert.ok(
       !APP_SIDEBAR.includes(literal),
@@ -1549,7 +1553,7 @@ test("auto-repeat only reaches the actions that walk a list", async () => {
   assert.equal(optedIn.length, walkers.length);
 });
 
-test("the published chat lists stop where the sidebar stops", async () => {
+test("the published chat lists stop where the sidebar stops", () => {
   // Plus the icon rail, which hides the groups in CSS rather than dropping them.
   assert.match(
     APP_SIDEBAR,
@@ -1590,7 +1594,7 @@ test("the published chat lists stop where the sidebar stops", async () => {
 });
 
 // Bulk chords prefer the selection, so one carried off screen would be invisible and live.
-test("a selection does not outlive the rows it was made on", async () => {
+test("a selection does not outlive the rows it was made on", () => {
   assert.match(
     APP_SIDEBAR,
     /if \(!chatRowsOnScreen\) \{\n\s*clearSelection\(\);\n\s*return;\n\s*\}/,
@@ -1670,7 +1674,7 @@ test("a selection does not outlive the rows it was made on", async () => {
 });
 
 // Acting clears the selection, so a repeated chord would otherwise hit the open chat.
-test("a selection chord does not fall through to the open chat", async () => {
+test("a selection chord does not fall through to the open chat", () => {
   assert.match(APP_SIDEBAR, /const SELECTION_ACTION_GRACE_MS = \d+;/);
   for (const id of ["archiveChat", "markChatUnread", "togglePinChat"]) {
     const body = sidebarShortcut(id);
@@ -1696,7 +1700,7 @@ test("a selection chord does not fall through to the open chat", async () => {
   assert.doesNotMatch(del, /withActiveChat\(/);
 });
 
-test("clearing every unread says what it cleared", async () => {
+test("clearing every unread says what it cleared", () => {
   const body = sidebarShortcut("clearAllUnreads");
   // Counted before the wipe, or the toast reports zero every time. Rows, not
   // threads: a Compare row is backed by two and would be cleared as two chats.
@@ -1747,7 +1751,7 @@ test("a parked tool request is keyed by its own approval, not call_0", async () 
 });
 
 // A dependency rebuilt each render re-runs the guard effect forever (React error #185).
-test("the rows the selection guard reads keep their identity", async () => {
+test("the rows the selection guard reads keep their identity", () => {
   for (const name of [
     "visibleProjectRecords",
     "pinnedRows",
@@ -1785,7 +1789,7 @@ test("the sidebar item lists are built once per change, not per render", async (
 });
 
 // Ctrl/Cmd-clicking a project selects no chat; that must not read as "no selection".
-test("the chat-only chords stand aside for a project selection", async () => {
+test("the chat-only chords stand aside for a project selection", () => {
   for (const id of ["archiveChat", "markChatUnread", "togglePinChat"]) {
     const body = sidebarShortcut(id);
     assert.ok(body, `${id} is gone`);
@@ -1816,11 +1820,12 @@ test("the chat walk's bracket pair is reserved on macOS only", () => {
     );
   }
   const walk = SHORTCUT_DEFS.find((def) => def.id === "nextChat");
-  assert.equal(defaultBindingFor(walk!, "primary", true), "Mod+Shift+BracketRight");
+  assert.ok(walk);
+  assert.equal(defaultBindingFor(walk, "primary", true), "Mod+Shift+BracketRight");
 });
 
 // The desktop signs out from the sidebar menu too, so its chord is offered there.
-test("the logout row is offered on the desktop build", async () => {
+test("the logout row is offered on the desktop build", () => {
   const logout = SHORTCUT_DEFS.find((def) => def.id === "logOut");
   assert.equal(logout?.webOnly, undefined);
   assert.deepEqual(SHORTCUT_DEFS.filter((def) => def.webOnly).map((def) => def.id), []);
@@ -1972,7 +1977,7 @@ test("a keystroke search never matches a chord missing a modifier it holds", () 
   }
 });
 
-test("the matcher finds every shipped default by its own chord and bare key", async () => {
+test("the matcher finds every shipped default by its own chord and bare key", () => {
   for (const def of SHORTCUT_DEFS) {
     for (const slot of SHORTCUT_SLOTS) {
       for (const mac of [true, false]) {

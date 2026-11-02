@@ -37,7 +37,8 @@ function pathExists(current: unknown, path: string[]): boolean {
   let node = current;
   for (const segment of path) {
     if (
-      node == null ||
+      node === null ||
+      node === undefined ||
       typeof node !== "object" ||
       Array.isArray(node) ||
       !(segment in node)
@@ -50,21 +51,23 @@ function pathExists(current: unknown, path: string[]): boolean {
 }
 
 export function deepMerge(
-  current: Record<string, unknown>,
-  patch: Record<string, unknown>,
+  currentArg: Record<string, unknown>,
+  patchArg: Record<string, unknown>,
 ): Record<string, unknown> {
+  let current = currentArg;
+  let patch = patchArg;
   // The backend's forget command: drop those keys first, never store the command.
   const { forgetInferenceParamsByModel: forget, ...rest } = patch;
   if (forget && typeof forget === "object") {
     const byModel = { ...(current.inferenceParamsByModel as Record<string, Record<string, unknown>>) };
     for (const [id, keys] of Object.entries(forget as Record<string, string[]>)) {
-      const entry = byModel[id];
+      const entry: Record<string, unknown> | undefined = byModel[id];
       if (!entry) continue;
       const kept = Object.fromEntries(
         Object.entries(entry).filter(([key]) => !keys.includes(key)),
       );
       if (Object.keys(kept).length > 0) byModel[id] = kept;
-      else delete byModel[id];
+      else Reflect.deleteProperty(byModel, id);
     }
     current = { ...current, inferenceParamsByModel: byModel };
     patch = rest;
@@ -94,7 +97,7 @@ function nextPutFailureResponse(): Response | null {
   return {
     ok: false,
     status: failure.status,
-    json: async () => ({ detail: failure.detail ?? "temporary failure" }),
+    json:  () => Promise.resolve(({ detail: failure.detail ?? "temporary failure" })),
   } as Response;
 }
 
@@ -109,12 +112,12 @@ export async function authFetch(
       return {
         ok: false,
         status: settingsHttp.conditionalStatus,
-        json: async () => ({
+        json:  () => Promise.resolve(({
           detail:
             settingsHttp.conditionalStatus === 405
               ? "Method Not Allowed"
               : "Not Found",
-        }),
+        })),
       } as Response;
     }
     const request = JSON.parse(init.body ?? "{}") as {
@@ -157,10 +160,10 @@ export async function authFetch(
   return {
     ok: true,
     status: 200,
-    json: async () => ({
+    json:  () => Promise.resolve(({
       settings: responseSettings,
       ...(applied !== undefined ? { applied } : {}),
-    }),
+    })),
   } as Response;
 }
 

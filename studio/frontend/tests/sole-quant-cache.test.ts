@@ -280,7 +280,7 @@ test("a repo already being read at the same key is not read again", async () => 
       calls += 1;
       return pending.promise;
     },
-    commit: () => {},
+    commit: () => {/* intentionally empty */},
   });
 
   reader.start([targetAt(A, "v1")]);
@@ -306,7 +306,7 @@ test("reads are capped at the worker count", async () => {
       });
       return gate.promise;
     },
-    commit: () => {},
+    commit: () => {/* intentionally empty */},
   });
 
   reader.start(

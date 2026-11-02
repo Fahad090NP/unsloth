@@ -43,7 +43,9 @@ const OTHER = "unsloth/Wan2.2-T2V-A14B-GGUF";
 
 const VIDEO_TASKS = ["text-to-video", "image-to-video"];
 const keepVideo = (r: Row) =>
-  r.pipelineTag != null && VIDEO_TASKS.includes(r.pipelineTag);
+  r.pipelineTag !== null &&
+  r.pipelineTag !== undefined &&
+  VIDEO_TASKS.includes(r.pipelineTag);
 
 const ids = (rows: Row[]) => rows.map((r) => r.id);
 
@@ -545,7 +547,7 @@ test("a vendor id resolves to the unsloth mirror that replaced it", () => {
   ]) {
     const hit = artifactForRepoId(vendor, IMAGE_CATALOG);
     assert.equal(hit?.artifact.repoId, mirror, vendor);
-    assert.equal(hit?.artifact.gated, undefined, vendor);
+    assert.equal(hit.artifact.gated, undefined, vendor);
     assert.equal(loadSpecFor(vendor, IMAGE_CATALOG)?.kind, "pipeline", vendor);
     assert.equal(groupForRepoId(vendor, IMAGE_CATALOG), groupForRepoId(mirror, IMAGE_CATALOG));
   }

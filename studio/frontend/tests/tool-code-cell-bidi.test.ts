@@ -23,22 +23,22 @@ const { ToolCodeCell } = loadWithStubs<typeof ToolCodeCellModule>(
     react: React,
     "react/jsx-runtime": jsxRuntime,
     "@/lib/copy-to-clipboard": {
-      copyToClipboard: async (text: string) => {
+      copyToClipboard:  (text: string) => {
         copied.push(text);
-        return false;
+        return Promise.resolve(false);
       },
     },
     "@/lib/escape-bidi-controls": escapeBidi,
     "@/lib/markdown-plugins": markdownPlugins,
     "@/lib/native-files": {
-      downloadFile: async (text: string) => {
+      downloadFile:  (text: string) => {
         downloaded.push(text);
-      },
+      return Promise.resolve(); },
       isDownloadCancelled: () => false,
     },
     "@/lib/tick-icon": { Tick02Icon: {} },
     "@/lib/copy-icon": { Copy01Icon: {} },
-    "@/lib/toast": { toast: { error() {} } },
+    "@/lib/toast": { toast: { error() {/* intentionally empty */} } },
     "@hugeicons/core-free-icons": { Copy01Icon: {}, Download01Icon: {} },
     "@/lib/folder-icons": { Copy01Icon: {}, Download01Icon: {} },
     "@hugeicons/react": { HugeiconsIcon: () => null },

@@ -58,9 +58,9 @@ test("migrates the complete legacy Qwen3.8 default snapshot", () => {
     migrated.settings.inferenceParamsByModel?.[QWEN38]?.presencePenalty,
     1.5,
   );
-  assert.equal(migrated.settings.inferenceParamsByModel?.[QWEN38]?.minP, 0);
+  assert.equal(migrated.settings.inferenceParamsByModel[QWEN38].minP, 0);
   assert.equal(migrated.settings.inferenceParams?.presencePenalty, 0);
-  assert.equal(migrated.settings.inferenceParams?.minP, 0.01);
+  assert.equal(migrated.settings.inferenceParams.minP, 0.01);
   assert.deepEqual(migrated.patch, {
     inferenceParamsByModel: {
       [QWEN38]: { minP: 0, presencePenalty: 1.5 },
@@ -104,7 +104,7 @@ test("migrates temperature and top-p for a non-thinking session", () => {
     migrated.settings.inferenceParamsByModel?.[QWEN38]?.temperature,
     0.7,
   );
-  assert.equal(migrated.settings.inferenceParamsByModel?.[QWEN38]?.topP, 0.8);
+  assert.equal(migrated.settings.inferenceParamsByModel[QWEN38].topP, 0.8);
   assert.deepEqual(migrated.patch, {
     inferenceParamsByModel: {
       [QWEN38]: {
@@ -150,7 +150,7 @@ test("migrates only the active model when several legacy Qwen rows are saved", (
     1.5,
   );
   assert.deepEqual(
-    migrated.settings.inferenceParamsByModel?.[qwen36Small],
+    migrated.settings.inferenceParamsByModel[qwen36Small],
     LEGACY_SNAPSHOT,
   );
   assert.equal(
@@ -174,7 +174,7 @@ test("normalizes a case-insensitive saved key to the active checkpoint", () => {
   );
   // The server merge only sets keys, so a dropped alias would stay legacy and replay later.
   assert.equal(
-    migrated.settings.inferenceParamsByModel?.[lowerCaseKey]?.presencePenalty,
+    migrated.settings.inferenceParamsByModel[lowerCaseKey].presencePenalty,
     1.5,
   );
   assert.deepEqual(migrated.patch?.inferenceParamsByModel?.[lowerCaseKey], {
@@ -182,7 +182,7 @@ test("normalizes a case-insensitive saved key to the active checkpoint", () => {
     presencePenalty: 1.5,
   });
   assert.deepEqual(
-    migrated.patch?.inferenceParamsByModel?.[QWEN38],
+    migrated.patch.inferenceParamsByModel[QWEN38],
     {
       ...LEGACY_SNAPSHOT,
       minP: 0,
@@ -281,9 +281,9 @@ test("migrates a global-only legacy install when ownership is established", () =
 
   assert.deepEqual(migrated.migratedModelIds, []);
   assert.equal(migrated.settings.inferenceParams?.temperature, 0.7);
-  assert.equal(migrated.settings.inferenceParams?.topP, 0.8);
-  assert.equal(migrated.settings.inferenceParams?.minP, 0);
-  assert.equal(migrated.settings.inferenceParams?.presencePenalty, 1.5);
+  assert.equal(migrated.settings.inferenceParams.topP, 0.8);
+  assert.equal(migrated.settings.inferenceParams.minP, 0);
+  assert.equal(migrated.settings.inferenceParams.presencePenalty, 1.5);
   assert.deepEqual(migrated.patch, {
     inferenceParams: {
       temperature: 0.7,

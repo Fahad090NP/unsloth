@@ -2,10 +2,13 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 
-register("./helpers/export-store-resolver.mjs", import.meta.url);
+const exportStoreResolverHooks = (await import(new URL("./helpers/export-store-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: exportStoreResolverHooks.resolve });
 
 const { selectExportProgressPercent, isExportPanelActive } = await import(
   "../src/features/export/stores/export-runtime-store.ts"

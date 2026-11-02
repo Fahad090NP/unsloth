@@ -94,13 +94,13 @@ test("a hand-opened block closes again in every phase and every setting", () => 
       assert.equal(
         resolveReasoningOpen(state),
         true,
-        `open failed for streaming=${isStreaming} visibility=${visibility}`,
+        `open failed for streaming=${String(isStreaming)} visibility=${String(visibility)}`,
       );
       state = applyToggle(state, false);
       assert.equal(
         resolveReasoningOpen(state),
         false,
-        `close failed for streaming=${isStreaming} visibility=${visibility}`,
+        `close failed for streaming=${String(isStreaming)} visibility=${String(visibility)}`,
       );
     }
   }

@@ -41,10 +41,10 @@ function permissionUi(
   const opened: [string, unknown][] = [];
   const links: string[] = [];
   const capabilityStub = {
-    loadSandboxCapability: async () => capability,
-    loadSettledSandboxCapability: async () => capability,
+    loadSandboxCapability: () => capability,
+    loadSettledSandboxCapability: () => capability,
     cachedSandboxCapability: () => null,
-    onSandboxCapabilityChange: () => () => {},
+    onSandboxCapabilityChange: () => () => { /* empty */ },
     sandboxReady: (value: NonNullable<Capability>) =>
       value.pythonOsIsolated && value.terminalOsIsolated,
     capabilityPending: () => false,
@@ -81,7 +81,7 @@ function permissionUi(
         useEffect: (effect: () => void) => { effect(); },
         useLayoutEffect: (effect: () => void) => { effect(); },
         // The capability hook starts at null; the menu sees the stubbed answer.
-        useState: (initial: unknown) => [initial === null ? capability : initial, () => {}],
+        useState: (initial: unknown) => [initial === null ? capability : initial, () => { /* empty */ }],
         useId: () => "id",
         useRef: (current: unknown) => ({ current }),
       },
@@ -144,7 +144,7 @@ function permissionUi(
       "./stores/chat-runtime-store": {
         useChatRuntimeStore: Object.assign(
           (selector: (state: unknown) => unknown) => selector(state),
-          { getState: () => state, subscribe: () => () => {} },
+          { getState: () => state, subscribe: () => () => { /* empty */ } },
         ),
       },
     },
@@ -157,14 +157,14 @@ for (const loginMode of ["single", "multi"]) {
     test(`${loginMode} permission menu allows full access only for the owner (${owner})`, () => {
       const ui = permissionUi(owner, "full", loginMode);
       const menu = ui.component.PermissionModeMenuItems({
-        onRequestFullAccess() {},
+        onRequestFullAccess() { /* empty */ },
       });
       const rows = menu.props.children as StubElement[];
       assert.equal(rows.length, owner ? 4 : 3);
       assert.deepEqual(ui.changes, owner ? [] : ["auto"]);
       const dialog = ui.component.FullAccessConfirmDialog({
         open: true,
-        onOpenChange() {},
+        onOpenChange() { /* empty */ },
       });
       assert.equal(dialog === null, !owner);
     });

@@ -6,6 +6,14 @@ import test from "node:test";
 
 import { readSrcAsync, registerBundlerResolver } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 registerBundlerResolver();
 
 const { scanFolderStatusCopy } = await import(
@@ -32,15 +40,15 @@ test("a denied folder says so instead of looking empty", () => {
 
 test("the permission hint names the screen that fixes it", () => {
   assert.match(
-    scanFolderStatusCopy("permission_denied", MAC)!.hint,
+    required(scanFolderStatusCopy("permission_denied", MAC)).hint,
     /System Settings > Privacy & Security > Files and Folders/,
   );
   assert.match(
-    scanFolderStatusCopy("permission_denied", WINDOWS)!.hint,
+    required(scanFolderStatusCopy("permission_denied", WINDOWS)).hint,
     /Controlled Folder Access/,
   );
   assert.match(
-    scanFolderStatusCopy("permission_denied", LINUX)!.hint,
+    required(scanFolderStatusCopy("permission_denied", LINUX)).hint,
     /permissions/i,
   );
 });

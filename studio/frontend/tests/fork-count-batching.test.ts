@@ -52,7 +52,7 @@ function freshStore(
     {
       "../api/chat-api": {
         CHAT_HISTORY_UPDATED_EVENT,
-        getThreadForkCounts: async (threadId: string) => {
+        getThreadForkCounts: (threadId: string) => {
           requests.push(threadId);
           return new Map(Object.entries(counts));
         },
@@ -97,7 +97,7 @@ test("a burst of history events collapses into one refresh", async (t) => {
   t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
   const unsubscribes = Array.from({ length: 200 }, () =>
-    store.subscribeForkCounts("thread-a", () => {}),
+    store.subscribeForkCounts("thread-a", () => { /* empty */ }),
   );
   await flush();
   assert.equal(requests.length, 1);
@@ -122,12 +122,12 @@ test("a burst of history events collapses into one refresh", async (t) => {
 
 test("badges churning under the hover autohide do not refetch the thread", async () => {
   const { store, requests } = freshStore({ m7: 3 });
-  const thread = store.subscribeForkCounts("thread-a", () => {});
+  const thread = store.subscribeForkCounts("thread-a", () => { /* empty */ });
   await flush();
   assert.deepEqual(requests, ["thread-a"]);
 
   for (let i = 0; i < 10; i++) {
-    const badge = store.subscribeForkCounts("thread-a", () => {});
+    const badge = store.subscribeForkCounts("thread-a", () => { /* empty */ });
     assert.equal(store.forkCountFor("thread-a", "m7"), 3);
     badge();
   }
@@ -144,8 +144,8 @@ test("badges churning under the hover autohide do not refetch the thread", async
 
 test("two threads on screen cost one request each", async () => {
   const { store, requests } = freshStore();
-  const a = store.subscribeForkCounts("thread-a", () => {});
-  const b = store.subscribeForkCounts("thread-b", () => {});
+  const a = store.subscribeForkCounts("thread-a", () => { /* empty */ });
+  const b = store.subscribeForkCounts("thread-b", () => { /* empty */ });
   await flush();
   assert.deepEqual(requests, ["thread-a", "thread-b"]);
   a();
@@ -169,7 +169,7 @@ test("a continuous stream costs one refresh per ceiling, not one per debounce wi
   mock.timers.enable({ apis: ["setTimeout"] });
   t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
-  const unsubscribe = store.subscribeForkCounts("thread-a", () => {});
+  const unsubscribe = store.subscribeForkCounts("thread-a", () => { /* empty */ });
   await flush();
   assert.equal(requests.length, 1, "the initial subscribe fetches once");
 
@@ -217,7 +217,7 @@ test("a chunk every debounce window cannot postpone a refresh forever", async (t
   mock.timers.enable({ apis: ["setTimeout"] });
   t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
-  const unsubscribe = store.subscribeForkCounts("thread-a", () => {});
+  const unsubscribe = store.subscribeForkCounts("thread-a", () => { /* empty */ });
   await flush();
   assert.equal(requests.length, 1, "the initial fetch");
 
@@ -239,7 +239,7 @@ test("a chunk every debounce window cannot postpone a refresh forever", async (t
     "the refresh never happened: a chunk per window postponed it indefinitely",
   );
   assert.ok(
-    (firedAfter!) <= store.FORK_COUNT_REFRESH_MAX_WAIT_MS + step,
+    ((firedAfter ?? assert.fail("expected a non-null value"))) <= store.FORK_COUNT_REFRESH_MAX_WAIT_MS + step,
     `the refresh waited ${firedAfter}ms, past the ${store.FORK_COUNT_REFRESH_MAX_WAIT_MS}ms bound`,
   );
   unsubscribe();
@@ -249,7 +249,7 @@ test("the ceiling does not fire while the burst is still inside the debounce win
   mock.timers.enable({ apis: ["setTimeout"] });
   t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
-  const unsubscribe = store.subscribeForkCounts("thread-a", () => {});
+  const unsubscribe = store.subscribeForkCounts("thread-a", () => { /* empty */ });
   await flush();
   assert.equal(requests.length, 1);
 
@@ -271,7 +271,7 @@ test("the ceiling restarts for the next burst rather than firing once per lifeti
   mock.timers.enable({ apis: ["setTimeout"] });
   t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
-  const unsubscribe = store.subscribeForkCounts("thread-a", () => {});
+  const unsubscribe = store.subscribeForkCounts("thread-a", () => { /* empty */ });
   await flush();
 
   for (let round = 0; round < 2; round++) {
@@ -296,7 +296,7 @@ test("unsubscribing cancels the ceiling as well as the trailing edge", async (t)
   mock.timers.enable({ apis: ["setTimeout"] });
   t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore();
-  const first = store.subscribeForkCounts("thread-a", () => {});
+  const first = store.subscribeForkCounts("thread-a", () => { /* empty */ });
   await flush();
   assert.equal(requests.length, 1);
 
@@ -304,7 +304,7 @@ test("unsubscribing cancels the ceiling as well as the trailing edge", async (t)
   fireHistoryUpdated();
   first();
 
-  const second = store.subscribeForkCounts("thread-b", () => {});
+  const second = store.subscribeForkCounts("thread-b", () => { /* empty */ });
   await flush();
   assert.deepEqual(
     requests,
@@ -328,7 +328,7 @@ test("a chat created in the app asks for its fork counts", async (t) => {
   t.after(() => { mock.timers.reset(); });
   const { store, requests } = freshStore({ m1: 2 });
 
-  const unsubscribe = store.subscribeForkCounts("__LOCALID_abc123", () => {});
+  const unsubscribe = store.subscribeForkCounts("__LOCALID_abc123", () => { /* empty */ });
   await flush();
   assert.deepEqual(requests, ["__LOCALID_abc123"]);
   assert.equal(store.forkCountFor("__LOCALID_abc123", "m1"), 2);
@@ -342,8 +342,8 @@ test("a temporary chat is the one thread that never asks", async (t) => {
   const { store, requests } = freshStore({ m1: 2 }, ["__LOCALID_temp"]);
 
   const stop = [
-    store.subscribeForkCounts("__LOCALID_temp", () => {}),
-    store.subscribeForkCounts("__LOCALID_saved", () => {}),
+    store.subscribeForkCounts("__LOCALID_temp", () => { /* empty */ }),
+    store.subscribeForkCounts("__LOCALID_saved", () => { /* empty */ }),
   ];
   await flush();
   assert.deepEqual(requests, ["__LOCALID_saved"]);
@@ -368,8 +368,8 @@ test("every subscribed thread refreshes, whatever its id looks like", async (t) 
   const { store, requests } = freshStore({ m1: 2 });
 
   const stop = [
-    store.subscribeForkCounts("__LOCALID_abc123", () => {}),
-    store.subscribeForkCounts("thread-saved", () => {}),
+    store.subscribeForkCounts("__LOCALID_abc123", () => { /* empty */ }),
+    store.subscribeForkCounts("thread-saved", () => { /* empty */ }),
   ];
   await flush();
   assert.deepEqual(requests.slice().sort(), [
@@ -377,7 +377,7 @@ test("every subscribed thread refreshes, whatever its id looks like", async (t) 
     "thread-saved",
   ]);
 
-  requests.length = 0;
+  requests.splice(0);
   fireHistoryUpdated();
   mock.timers.tick(store.FORK_COUNT_REFRESH_DEBOUNCE_MS);
   await flush();

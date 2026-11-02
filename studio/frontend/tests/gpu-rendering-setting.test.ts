@@ -192,10 +192,10 @@ async function withAnimationFrames<T>(
 
 test("the api calls the backend commands by name", async () => {
   const calls: [string, unknown][] = [];
-  const api = loadApi(true, async (command, args) => {
+  const api = loadApi(true, (command, args) => {
     calls.push([command, args]);
-    if (command === "relaunch_to_apply_gpu_rendering") return true;
-    return BASE;
+    if (command === "relaunch_to_apply_gpu_rendering") return Promise.resolve(true);
+    return Promise.resolve(BASE);
   });
 
   assert.deepEqual(await api.loadGpuRendering(), BASE);
@@ -216,17 +216,19 @@ test("the api calls the backend commands by name", async () => {
 
 test("renderer ready is a no-op outside Tauri and never throws", async () => {
   const calls: string[] = [];
-  const browser = loadApi(false, async (command) => {
+  const browser = loadApi(false, (command) => {
     calls.push(command);
-  });
+  
+  return Promise.resolve();
+});
   await withAnimationFrames(async (frames) => {
     await browser.notifyRendererReady();
     assert.equal(frames(), 0);
   });
   assert.deepEqual(calls, []);
 
-  const failing = loadApi(true, async () => {
-    throw new Error("unknown command renderer_ready");
+  const failing = loadApi(true, () => {
+    return Promise.reject(new Error("unknown command renderer_ready"));
   });
   await withAnimationFrames(() => failing.notifyRendererReady());
 });

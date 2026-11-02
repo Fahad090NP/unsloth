@@ -178,7 +178,7 @@ test("a marker naming a call the reply no longer shows falls back to the prompt"
 });
 
 test("the composer reads /compact before any send path, and only for GGUF or MLX", async () => {
-  const thread = await readSrc("components/assistant-ui/thread.tsx");
+  const thread = readSrc("components/assistant-ui/thread.tsx");
   const submit = thread.slice(thread.indexOf("const handleSubmit = useCallback("));
   const command = submit.indexOf("isCompactCommand(composerText)");
   assert.ok(command > 0);
@@ -187,7 +187,7 @@ test("the composer reads /compact before any send path, and only for GGUF or MLX
   assert.match(submit, /resumesThought\(\{/);
   assert.match(submit, /!runtime\.supportsTools \|\|/);
   assert.match(submit, /runtime\.incognito \|\| isThreadIncognito\(referenceThreadId\)/);
-  const adapter = await readSrc("features/chat/api/chat-adapter.ts");
+  const adapter = readSrc("features/chat/api/chat-adapter.ts");
   assert.match(adapter, /takeThreadCompactionRequest\(resolvedThreadId\) &&/);
   assert.match(adapter, /compactNow,\n\s+\}\),/);
   // Only a reset started by this request counts; a replayed manual epoch is not one.
@@ -362,7 +362,7 @@ test("the compact button does not queue empty, hidden, unsupported or busy chats
 
 test("the compact button requires tool capability for both local backends", () => {
   for (const mlx of [false, true]) {
-    const menu = compactMenu(`tools-${mlx}`);
+    const menu = compactMenu(`tools-${String(mlx)}`);
     menu.runtime.loadedIsGguf = !mlx;
     menu.runtime.loadedIsMlx = mlx;
     menu.runtime.supportsTools = false;
@@ -487,7 +487,7 @@ test("the compact button waits for a directly issued assistant run", async () =>
       assert.equal(isBusy(), false);
       menu.click();
       assert.equal(takeThreadCompactionRequest(id), true);
-      item.remoteId = siblingId;
+      Reflect.set(item, "remoteId", siblingId);
       const otherStarted = core.startRun({ parentId: null, sourceId: null, runConfig: {} });
       assert.equal(liveThreadRunning(id), false);
       assert.equal(liveThreadRunning(siblingId), true);

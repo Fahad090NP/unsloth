@@ -64,7 +64,7 @@ function setup() {
     resolve: (href: string) => new URL(href, "https://a.example/docs/page").href,
     post: (message: Record<string, unknown>) => message.type !== "linkClick" && posted.push(message),
     navigate: (url: string) => navigated.push(url),
-    followHash: () => {},
+    followHash: () => { /* empty */ },
   });
   const link = (attributes: Record<string, string>, connected = true) => {
     const anchor = new HTMLAnchorElement(attributes);
@@ -133,7 +133,7 @@ test("a download link the page fills in its own click handler saves the new file
     page.userClick(anchor);
     await settled(() => page.posted.length + page.navigated.length > 0);
     const [file] = page.posted;
-    saved.push(file?.blob instanceof Blob ? [file.name, await file.blob.text()] : page.navigated);
+    saved.push(file.blob instanceof Blob ? [file.name, await file.blob.text()] : page.navigated);
   }
   assert.deepEqual(saved, [["export.csv", "new"], ["export.csv", "new"]]);
 });
@@ -206,10 +206,10 @@ function shellNavigation(active = false) {
     nativeFetch: fetch,
     resolve: (href: string) => new URL(href, base).href,
     samePage: () => false,
-    followHash: () => {},
+    followHash: () => { /* empty */ },
     post: (message: Record<string, unknown>) => posted.push({ ...message }),
   }) as { navigate: (url: string, newTab?: boolean) => void };
-  return { open: window.open!, navigate, posted };
+  return { open: (window.open ?? assert.fail("expected a non-null value")), navigate, posted };
 }
 
 test("a file the page sends a window to, or opens, is saved; it would otherwise be dropped as an outside link", async () => {

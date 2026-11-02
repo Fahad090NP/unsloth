@@ -357,7 +357,8 @@ test("JSONL exports keep parallel tool calls in one assistant turn", () => {
 });
 
 test("JSONL exports keep a call without a result in the turn of the text after it", () => {
-  const { result: _omitted, ...unanswered } = toolCallPart("a", "first", "");
+  const unanswered = toolCallPart("a", "first", "");
+  Reflect.deleteProperty(unanswered, "result");
   const exported = structuredClone(
     messageToOpenAI({
       role: "assistant",

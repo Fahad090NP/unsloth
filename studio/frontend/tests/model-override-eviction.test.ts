@@ -20,14 +20,14 @@ async function bodyOf(
 ): Promise<Record<string, unknown>> {
   const bodies: Record<string, unknown>[] = [];
   const original = globalThis.fetch;
-  globalThis.fetch = (async (_url, init) => {
-    bodies.push(JSON.parse(String(init?.body)));
-    return Response.json({ overrides: {}, removed_keys: [] });
+  globalThis.fetch = ((_url, init) => {
+    bodies.push(JSON.parse(String(init?.body as string)));
+    return Promise.resolve(Response.json({ overrides: {}, removed_keys: [] }));
   });
   try {
     await overrides.putModelOverride("org/model", "Q4_K_M", config, options);
   } finally {
-    globalThis.fetch = original;
+    Reflect.set(globalThis, "fetch", original);
   }
   assert.equal(bodies.length, 1);
   return bodies[0];

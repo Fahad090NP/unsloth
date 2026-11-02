@@ -10,7 +10,6 @@ import test from "node:test";
 import type { InferenceStatusResponse } from "../src/features/chat/types/api.ts";
 import type { DiffusionStatus } from "../src/features/images/api.ts";
 import {
-  type SttStatusResponse,
   describeDiffusionStatus,
   describeInferenceStatus,
   describeSttStatus,

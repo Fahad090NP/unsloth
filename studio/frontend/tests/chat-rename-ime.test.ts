@@ -57,7 +57,7 @@ function handler(
   const code = ts.transpileModule(`return (${matches[0].getText(source)});`, {
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.None,
+      module: ts.ModuleKind.Preserve,
     },
   }).outputText;
   return new Function(...Object.keys(deps), code)(...Object.values(deps)) as (

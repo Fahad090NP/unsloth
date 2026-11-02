@@ -82,7 +82,7 @@ test("only verified model-copy rows expose Clear and retain individual locations
       "@hugeicons/core-free-icons": {},
       "@/lib/folder-icons": {},
       "@hugeicons/react": {},
-      "../api/caches": { loadCacheBreakdown: async () => copies },
+      "../api/caches": { loadCacheBreakdown: () => copies },
       "./hf-cache-model-clear": { HfCacheModelClear: "HfCacheModelClear" },
       "./storage-overview": {},
     },

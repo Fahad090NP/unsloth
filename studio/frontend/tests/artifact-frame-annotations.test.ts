@@ -8,9 +8,9 @@ import vm from "node:vm";
 
 const backend = readFileSync(new URL("../../backend/routes/inference.py", import.meta.url), "utf8");
 // Decode the Python string's escaped quotes/backslashes without importing the GPU backend.
-const shell = /_ARTIFACT_PREVIEW_FRAME_HTML = """([\s\S]*?)"""/.exec(backend)![1]
+const shell = (/_ARTIFACT_PREVIEW_FRAME_HTML = """([\s\S]*?)"""/.exec(backend) ?? assert.fail("expected a non-null value"))[1]
   .replace(/\\(["\\])/g, "$1");
-const script = /<script>([\s\S]*?)<\/script>/.exec(shell)![1];
+const script = (/<script>([\s\S]*?)<\/script>/.exec(shell) ?? assert.fail("expected a non-null value"))[1];
 
 function preview() {
   const listeners = new Map<string, ((event: unknown) => void)[]>();
@@ -20,7 +20,7 @@ function preview() {
   const parent = { postMessage: (value: Record<string, unknown>) => reports.push(value) };
   const context = vm.createContext({
     parent, URLSearchParams, location: { search: "?v=test" }, calls,
-    console: Object.fromEntries(["error", "warn", "info", "log", "debug"].map((level) => [level, () => {}])),
+    console: Object.fromEntries(["error", "warn", "info", "log", "debug"].map((level) => [level, () => { /* empty */ }])),
     addEventListener: (type: string, listener: (event: unknown) => void) => {
       listeners.set(type, [...(listeners.get(type) ?? []), listener]);
     },
@@ -28,7 +28,7 @@ function preview() {
       // A document meta CSP may prohibit new scripts after the HTML is written.
       createElement: () => { throw new Error("Inline scripts blocked by document CSP"); },
       open: () => { listeners.clear(); },
-      write: () => writes++, close: () => {}, addEventListener: () => {},
+      write: () => writes++, close: () => { /* empty */ }, addEventListener: () => { /* empty */ },
     },
   });
   context.window = context;

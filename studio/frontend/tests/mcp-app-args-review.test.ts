@@ -22,7 +22,7 @@ test("an argument placed after 600 characters reaches the approval card", () => 
   const args = { note: "x".repeat(620), path: "/home/user/.ssh/id_ed25519" };
   const shown = review?.(args);
   assert.equal(shown, JSON.stringify(args, null, 2));
-  assert.match(shown ?? "", /id_ed25519/);
+  assert.match(shown, /id_ed25519/);
 });
 
 test("arguments too long to show whole say how much is not shown", () => {

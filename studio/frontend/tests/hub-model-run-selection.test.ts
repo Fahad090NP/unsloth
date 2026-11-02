@@ -208,8 +208,8 @@ test("checkpoint handoffs use the whole-model Chat identity", () => {
   });
 
   assert.equal(request?.id, "Org/Model");
-  assert.equal(request?.meta.isLora, false);
-  assert.equal(request?.meta.isGguf, false);
+  assert.equal(request.meta.isLora, false);
+  assert.equal(request.meta.isGguf, false);
   assert.equal(
     createHubModelConfigHandoff({
       requestId: "request-checkpoint-variant",
@@ -392,8 +392,8 @@ test("matched Discover rows keep the Chat picker's local configuration identity"
   });
 
   assert.equal(request?.id, loadId);
-  assert.equal(request?.meta.source, "local");
-  assert.equal(request?.meta.loadId, loadId);
+  assert.equal(request.meta.source, "local");
+  assert.equal(request.meta.loadId, loadId);
 });
 
 test("opaque local loader identities remain unchanged on every desktop path style", () => {
@@ -424,7 +424,7 @@ test("opaque local loader identities remain unchanged on every desktop path styl
     });
 
     assert.equal(request?.id, loadId);
-    assert.equal(request?.meta.loadId, loadId);
+    assert.equal(request.meta.loadId, loadId);
   }
 });
 
@@ -500,10 +500,10 @@ test("an MLX precision folder runs before the repo is on device, through MLX", (
     },
   });
   assert.equal(request?.id, "orcarouter/Qwen3.8-27B-Uncensored-MLX");
-  assert.equal(request?.meta.ggufVariant, "6-bit");
-  assert.equal(request?.meta.isGguf, false);
-  assert.equal(request?.meta.isDownloaded, false);
-  assert.equal(request?.meta.expectedBytes, 22_800_000_000);
+  assert.equal(request.meta.ggufVariant, "6-bit");
+  assert.equal(request.meta.isGguf, false);
+  assert.equal(request.meta.isDownloaded, false);
+  assert.equal(request.meta.expectedBytes, 22_800_000_000);
 
   assert.equal(
     createHubModelConfigHandoff({

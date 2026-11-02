@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
 const data = new Map<string, string>([["unsloth.browser-account.v1", "account:b1:bob"]]);
@@ -22,7 +22,10 @@ Object.assign(globalThis, {
   },
 });
 
-register("./helpers/browser-store-resolver.mjs", import.meta.url);
+const browserStoreResolverHooks = (await import(new URL("./helpers/browser-store-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserStoreResolverHooks.resolve });
 const { useBrowserHistoryStore } = await import("../src/features/browser/history-store.ts");
 const { useBrowserPrefsStore } = await import("../src/features/browser/prefs-store.ts");
 const { useBrowserBookmarksStore } = await import("../src/features/browser/bookmarks-store.ts");
@@ -107,7 +110,7 @@ test("the agent's history access set in another window survives this one's chang
   useBrowserAgentStore.getState().setShowCursor(false);
   assert.equal(stored("unsloth_browser_agent").historyAccess, "never");
   assert.equal(useBrowserAgentStore.getState().historyAccess, "never");
-  assert.equal(useBrowserAgentStore.getState().chats["chat-1"]?.tabId, "tab-1");
+  assert.equal(useBrowserAgentStore.getState().chats["chat-1"].tabId, "tab-1");
 });
 
 test("clearing or removing history is saved at once, so another window's queued visit cannot bring it back", () => {
@@ -119,7 +122,7 @@ test("clearing or removing history is saved at once, so another window's queued 
   useBrowserHistoryStore.getState().recordVisit("https://example.net/", "Net");
   assert.deepEqual(urls(), ["https://example.com/", "https://example.org/"]);
   const org = useBrowserHistoryStore.getState().history.find((visit) => visit.url === "https://example.org/");
-  useBrowserHistoryStore.getState().removeVisit(org!.id);
+  useBrowserHistoryStore.getState().removeVisit((org ?? assert.fail("expected a non-null value")).id);
   assert.deepEqual(urls(), ["https://example.com/", "https://example.net/"]);
   useBrowserHistoryStore.getState().clearHistory();
   assert.deepEqual(urls(), []);

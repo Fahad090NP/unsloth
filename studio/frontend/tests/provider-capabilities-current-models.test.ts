@@ -188,11 +188,11 @@ test("every shipped effort ladder is ordered weakest first", () => {
       ...getExternalReasoningCapabilities(provider, model).reasoningEffortLevels,
     ];
     const ranks = levels.map((level) => scale.indexOf(level));
-    assert.ok(!ranks.includes(-1), `${model} lists a level off the scale: ${levels}`);
+    assert.ok(!ranks.includes(-1), `${model} lists a level off the scale: ${String(levels)}`);
     assert.deepEqual(
       ranks,
       [...ranks].sort((a, b) => a - b),
-      `${model} ladder is not weakest first: ${levels}`,
+      `${model} ladder is not weakest first: ${String(levels)}`,
     );
     assert.equal(new Set(levels).size, levels.length, `${model} repeats a level`);
   }
@@ -461,8 +461,8 @@ test("the Claude sampling panel offers only what the backend sends Anthropic", (
   ]) {
     const caps = getProviderCapabilities("anthropic", undefined, id);
     assert.equal(caps?.topP, false, id);
-    assert.equal(caps?.temperature, true, id);
-    assert.equal(caps?.topK, true, id);
+    assert.equal(caps.temperature, true, id);
+    assert.equal(caps.topK, true, id);
   }
   for (const id of [
     "claude-opus-4-7",
@@ -474,8 +474,8 @@ test("the Claude sampling panel offers only what the backend sends Anthropic", (
   ]) {
     const caps = getProviderCapabilities("anthropic", undefined, id);
     assert.equal(caps?.temperature, false, id);
-    assert.equal(caps?.topP, false, id);
-    assert.equal(caps?.topK, false, id);
+    assert.equal(caps.topP, false, id);
+    assert.equal(caps.topK, false, id);
   }
   assert.equal(
     getProviderCapabilities("custom", "chat_completions", "claude-opus-4-7")?.temperature,

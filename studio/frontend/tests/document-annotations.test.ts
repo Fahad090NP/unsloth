@@ -25,7 +25,7 @@ test("a sent message's annotations read back as they were made", () => {
   assert.ok(isAnnotationsContent(text));
   const parsed = parseAnnotationsContent(text);
   assert.equal(parsed?.file, "Copy of  NVIDIA  Asks.docx");
-  assert.deepEqual(parsed?.items, annotations.items);
+  assert.deepEqual(parsed.items, annotations.items);
 });
 
 test("other attachments are not taken for annotations", () => {

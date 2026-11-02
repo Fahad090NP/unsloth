@@ -343,7 +343,7 @@ function taintedBindings(
   const destructured = (n: ts.Node): ts.Node[] => {
     if (!ts.isBindingElement(n)) return [];
     if (seed(n)) return [n];
-    const declaration = n.parent?.parent;
+    const declaration = n.parent.parent;
     return declaration &&
       ts.isVariableDeclaration(declaration) &&
       declaration.initializer &&

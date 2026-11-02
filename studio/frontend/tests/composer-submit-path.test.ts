@@ -27,7 +27,7 @@ function lift(predicate: (node: ts.Node) => boolean) {
   return ts.transpileModule(`return (${matches[0].getText(source)});`, {
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.None,
+      module: ts.ModuleKind.Preserve,
     },
   }).outputText;
 }

@@ -28,19 +28,21 @@ function backend(
   return {
     unloaded,
     deps: {
-      readResident: async () => timeline[Math.min(read++, timeline.length - 1)],
-      unload: async (modelPath: string) => {
+      readResident: () => Promise.resolve(timeline[Math.min(read++, timeline.length - 1)]),
+      unload: (modelPath: string) => {
         unloaded.push(modelPath);
-      },
+      
+  return Promise.resolve();
+},
       matches: modelIdsMatch,
       cachedRow,
       ...(cachedAfter === null
         ? {}
         : {
-            readCached: async () =>
-              cachedRow && unloaded.length === 0
+            readCached: () =>
+              Promise.resolve(cachedRow && unloaded.length === 0
                 ? [...cachedAfter, cachedTarget]
-                : cachedAfter,
+                : cachedAfter),
           }),
     },
   };
@@ -167,12 +169,14 @@ function replacedBackend(
   return {
     unloaded,
     deps: {
-      readResident: async () => active,
-      unload: async (modelPath: string) => {
+      readResident: () => Promise.resolve(active),
+      unload: (modelPath: string) => {
         unloaded.push(modelPath);
-      },
+      
+  return Promise.resolve();
+},
       matches: modelIdsMatch,
-      readCached: async () => timeline[Math.min(read++, timeline.length - 1)],
+      readCached: () => Promise.resolve(timeline[Math.min(read++, timeline.length - 1)]),
     },
   };
 }

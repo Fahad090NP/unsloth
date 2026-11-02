@@ -69,8 +69,8 @@ test("a new live signature re-seeds the draft from the resident process", () => 
   );
   const reseeded = readModelConfigDraft(KEY);
   assert.equal(reseeded?.config.kvCacheDtype, "q4_0");
-  assert.equal(reseeded?.config.nParallel, 4);
-  assert.equal(reseeded?.appliedLiveSignature, "sig-b");
+  assert.equal(reseeded.config.nParallel, 4);
+  assert.equal(reseeded.appliedLiveSignature, "sig-b");
 });
 
 test("a one-time pick is shared by both editors until the draft is replaced or re-seeded", () => {
@@ -93,7 +93,7 @@ test("remember toggle keeps saved baseline until save", () => {
   setModelConfigDraftRemember(key, true);
   const draft = readModelConfigDraft(key);
   assert.equal(draft?.remember, true);
-  assert.equal(draft?.savedRemember, false);
+  assert.equal(draft.savedRemember, false);
 });
 
 // The sidebar keys off the checkpoint as /status spells it, the picker off the row's id.

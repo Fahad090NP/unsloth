@@ -66,7 +66,7 @@ test("dropping an unpinnable GPU keeps the order of the rest", () => {
 
 test("the ordering controls and their promise are withheld for diffusion", () => {
   const src = readSrc("features/model-picker/components/model-config-page.tsx");
-  const arrows = src.slice(src.indexOf("Move GPU ${d.index} earlier") - 900);
+  const arrows = src.slice(src.indexOf("Move GPU $" + "{d.index} earlier") - 900);
   assert.match(
     arrows.slice(0, 900),
     /!singleGpuInUse && !isDiffusion/,

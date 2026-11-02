@@ -22,7 +22,7 @@ function grab(source: string, pattern: RegExp, what: string): string {
   return m[1];
 }
 
-test("nav and Recents spinners land on one trailing column", async () => {
+test("nav and Recents spinners land on one trailing column",  () => {
 
   const navRow = grab(
     APP_SIDEBAR,
@@ -54,7 +54,7 @@ test("nav and Recents spinners land on one trailing column", async () => {
     !/data-testid="chat-row-spinner"[\s\S]{0,400}?className="ml-auto/.test(APP_SIDEBAR),
     "the chat spinner is back in the flow, where the row's padding-right moves it",
   );
-});
+return Promise.resolve(); });
 
 // The kebab overlays the row's right edge, so a spinner row must pad past it.
 // The spinner, the waiting-for-approval dot and the unread dot take turns in one slot; a dot off
@@ -111,8 +111,8 @@ test("every trailing mark yields to the row actions on hover, an open menu and k
 
 test("a working Recents row clears the kebab on hover", async () => {
   const [source, css] = await Promise.all([
-    atDefaultUiScale(readSrc("components/app-sidebar.tsx")),
-    atDefaultUiScale(readSrc("index.css")),
+    Promise.resolve(atDefaultUiScale(readSrc("components/app-sidebar.tsx"))),
+    Promise.resolve(atDefaultUiScale(readSrc("index.css"))),
   ]);
 
   const kebabInset =
@@ -226,8 +226,8 @@ test("a pending row is marked so both renderers can show its tooltip", async () 
 
 test("the expanded row and the flyout both show a pending tooltip", async () => {
   const [sidebar, appSidebar] = await Promise.all([
-    atDefaultUiScale(readSrc("components/ui/sidebar.tsx")),
-    atDefaultUiScale(readSrc("components/app-sidebar.tsx")),
+    Promise.resolve(atDefaultUiScale(readSrc("components/ui/sidebar.tsx"))),
+    Promise.resolve(atDefaultUiScale(readSrc("components/app-sidebar.tsx"))),
   ]);
 
   assert.match(
@@ -247,7 +247,7 @@ test("the expanded row and the flyout both show a pending tooltip", async () => 
   );
 });
 
-test("both capability rows carry a pending tooltip", async () => {
+test("both capability rows carry a pending tooltip",  () => {
   for (const row of ["train", "video"]) {
     const block = APP_SIDEBAR.slice(APP_SIDEBAR.indexOf(`    ${row}: {`));
     const body = block.slice(0, block.indexOf("\n    },"));
@@ -257,7 +257,7 @@ test("both capability rows carry a pending tooltip", async () => {
       `the ${row} row spins without saying why`,
     );
   }
-});
+return Promise.resolve(); });
 
 test("a measured row is left exactly as it was", async () => {
   const { resolveNavRowState } = await import("../src/components/nav-row-state.ts");
@@ -276,10 +276,10 @@ test("a measured row is left exactly as it was", async () => {
   assert.equal(working.disabled, undefined);
 });
 
-test("both nav render sites resolve pending the same way", async () => {
+test("both nav render sites resolve pending the same way",  () => {
   const resolves = APP_SIDEBAR.match(/const rowState = resolveNavRowState\(row\);/g) ?? [];
   assert.equal(resolves.length, 2, `expected both render sites to resolve, got ${resolves.length}`);
   for (const raw of ["disabled={row.disabled}", "tooltip={row.tooltip}", "spinner={row.spinner}"]) {
     assert.ok(!APP_SIDEBAR.includes(raw), `a render site still passes ${raw} unresolved`);
   }
-});
+return Promise.resolve(); });

@@ -15,7 +15,7 @@ let replayExpression = "";
 let payloadExpression = "";
 function visit(node: ts.Node): void {
   if (ts.isVariableDeclaration(node) && node.name.getText(tree) === "replayReasoning") {
-    replayExpression = node.initializer!.getText(tree);
+    replayExpression = (node.initializer ?? assert.fail("expected a non-null value")).getText(tree);
   }
   if (ts.isSpreadAssignment(node) && node.getText(tree).includes("providerSupportsPreserveThinking")) {
     payloadExpression = node.expression.getText(tree);

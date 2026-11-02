@@ -44,12 +44,12 @@ function loadAuthApi(options: {
       },
       "@/lib/account-transition": { accountTransitionPending: () => false },
       "./session": {
-        clearAuthTokens: () => {},
+        clearAuthTokens: () => {/* intentionally empty */},
         getAuthToken: () => "access-token",
         getRefreshToken: () => null,
         mustChangePassword: () => false,
-        setMustChangePassword: () => {},
-        storeAuthTokens: () => {},
+        setMustChangePassword: () => {/* intentionally empty */},
+        storeAuthTokens: () => {/* intentionally empty */},
       },
       "@tauri-apps/api/core": {
         invoke: async (command: string, args: Record<string, unknown>) => {
@@ -130,7 +130,7 @@ test("a backend that accepts late is reached instead of declared not running", a
         `${OLD_LADDER_ATTEMPTS} attempts would have declared it not running`,
     );
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
     await new Promise<void>((resolve) => server.close(() => { resolve(); }));
   }
 });
@@ -139,8 +139,8 @@ test("a backend the launcher still sees is not reported as not running", async (
   const port = 61799;
   const probed: Record<string, unknown>[] = [];
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => {
-    throw new TypeError("fetch failed");
+  globalThis.fetch =  () => {
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   try {
@@ -171,15 +171,15 @@ test("a backend the launcher still sees is not reported as not running", async (
     );
     assert.deepEqual(probed, [{ port }]);
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
 test("a backend the launcher cannot see either still says to relaunch", async () => {
   const port = 61800;
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => {
-    throw new TypeError("fetch failed");
+  globalThis.fetch =  () => {
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   try {
@@ -199,14 +199,14 @@ test("a backend the launcher cannot see either still says to relaunch", async ()
       undefined,
     );
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
 test("a presence probe that throws leaves the original verdict in place", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => {
-    throw new TypeError("fetch failed");
+  globalThis.fetch =  () => {
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   try {
@@ -226,15 +226,15 @@ test("a presence probe that throws leaves the original verdict in place", async 
     assert.ok(error instanceof Error);
     assert.equal(error.message, authApi.BACKEND_NOT_RUNNING_MESSAGE);
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
 test("no validated port yet means nothing is asked and nothing is claimed", async () => {
   const invoked: string[] = [];
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => {
-    throw new TypeError("fetch failed");
+  globalThis.fetch =  () => {
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   try {
@@ -254,14 +254,14 @@ test("no validated port yet means nothing is asked and nothing is claimed", asyn
     assert.equal(error.message, authApi.BACKEND_NOT_RUNNING_MESSAGE);
     assert.deepEqual(invoked, []);
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
 test("panels that all lose the backend at once share one native probe", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => {
-    throw new TypeError("fetch failed");
+  globalThis.fetch =  () => {
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   let probes = 0;
@@ -307,7 +307,7 @@ test("panels that all lose the backend at once share one native probe", async ()
     assert.ok(later instanceof Error);
     assert.equal(later.message, authApi.BACKEND_NOT_ANSWERING_MESSAGE);
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
@@ -378,9 +378,9 @@ test("a POST is not retried on the long ladder", async () => {
   const port = 61797;
   const originalFetch = globalThis.fetch;
   let attempts = 0;
-  globalThis.fetch = async () => {
+  globalThis.fetch =  () => {
     attempts += 1;
-    throw new TypeError("fetch failed");
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   try {
@@ -397,19 +397,22 @@ test("a POST is not retried on the long ladder", async () => {
       "the unsafe ladder still retries, as it always did",
     );
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
 test("a probe pending against the old port is not the answer about the new one", async () => {
   // setApiBase can move the port mid-probe, so a shared pending promise reports the old backend.
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => {
-    throw new TypeError("fetch failed");
+  globalThis.fetch =  () => {
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   const asked: number[] = [];
   let port = 61810;
+  const setPort = (next: number) => {
+    port = next;
+  };
   let releaseFirst: (() => void) | null = null;
   const firstProbeStarted = new Promise<void>((resolve) => {
     releaseFirst = resolve;
@@ -439,7 +442,7 @@ test("a probe pending against the old port is not the answer about the new one",
 
     const first = call();
     await firstProbeStarted;
-    port = 61811;
+    setPort(61811);
     const second = await call();
     const firstError = await first;
 
@@ -449,7 +452,7 @@ test("a probe pending against the old port is not the answer about the new one",
     assert.ok(firstError instanceof Error);
     assert.equal(firstError.message, authApi.BACKEND_NOT_RUNNING_MESSAGE);
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
@@ -461,9 +464,9 @@ test("a backend that is provably gone is reported without sleeping out the ladde
   const asked: string[] = [];
   const originalFetch = globalThis.fetch;
   let attempts = 0;
-  globalThis.fetch = async () => {
+  globalThis.fetch =  () => {
     attempts += 1;
-    throw new TypeError("fetch failed");
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   try {
@@ -493,7 +496,7 @@ test("a backend that is provably gone is reported without sleeping out the ladde
     );
     assert.deepEqual(asked, ["check_backend_is_gone", "check_backend_present"]);
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
@@ -502,9 +505,9 @@ test("a backend that is merely slow still gets every rung and the busy message",
   const originalFetch = globalThis.fetch;
   let attempts = 0;
   let goneProbes = 0;
-  globalThis.fetch = async () => {
+  globalThis.fetch =  () => {
     attempts += 1;
-    throw new TypeError("fetch failed");
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   try {
@@ -540,7 +543,7 @@ test("a backend that is merely slow still gets every rung and the busy message",
       "the fast path probed on more than the first failure",
     );
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
@@ -549,9 +552,9 @@ test("a shell too old for the command keeps the ladder it has today", async () =
   const port = 61822;
   const originalFetch = globalThis.fetch;
   let attempts = 0;
-  globalThis.fetch = async () => {
+  globalThis.fetch =  () => {
     attempts += 1;
-    throw new TypeError("fetch failed");
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   try {
@@ -571,7 +574,7 @@ test("a shell too old for the command keeps the ladder it has today", async () =
     assert.equal(error.message, authApi.BACKEND_NOT_RUNNING_MESSAGE);
     assert.equal(attempts, LONG_LADDER_ATTEMPTS);
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
@@ -580,9 +583,9 @@ test("the browser build asks nothing and behaves exactly as it did", async () =>
   const invoked: string[] = [];
   const originalFetch = globalThis.fetch;
   let attempts = 0;
-  globalThis.fetch = async () => {
+  globalThis.fetch =  () => {
     attempts += 1;
-    throw new TypeError("fetch failed");
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   try {
@@ -607,14 +610,14 @@ test("the browser build asks nothing and behaves exactly as it did", async () =>
       "the browser build reached for the native side",
     );
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
 test("panels that all lose the backend at once share one absence probe", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => {
-    throw new TypeError("fetch failed");
+  globalThis.fetch =  () => {
+    return Promise.reject(new TypeError("fetch failed"));
   };
 
   let probes = 0;
@@ -655,7 +658,7 @@ test("panels that all lose the backend at once share one absence probe", async (
       assert.equal(error.message, authApi.BACKEND_NOT_RUNNING_MESSAGE);
     }
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 
@@ -689,7 +692,7 @@ test("a port nobody here owns that binds late is given up on, and that is the tr
       `the ladder kept climbing for a port reported gone (${attempts} attempts)`,
     );
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
     await new Promise<void>((resolve) => server.close(() => { resolve(); }));
   }
 });

@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test, { type TestContext } from "node:test";
 import type * as chatRuntime from "../src/features/chat/stores/chat-runtime-store.ts";
 import { installLocalStorageFake } from "./helpers/kit.ts";
 
 const { store: storage } = installLocalStorageFake();
-register("./thread-sampling-resolver.mjs", import.meta.url);
+const threadSamplingResolverHooks = (await import(new URL("./thread-sampling-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: threadSamplingResolverHooks.resolve });
 
 const { settingsHttp } = await import("./helpers/store-stubs/settings-http.ts");
 const { threadRows } = await import(
@@ -41,7 +44,7 @@ async function boot(t: TestContext, hydrate = true): Promise<RuntimeModule> {
   storage.clear();
   storage.set("unsloth_chat_settings_imported_to_studio_db", "true");
   settingsHttp.settings = { rememberParamsPerModel: false };
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   threadRows.reset();
   useExternalProvidersStore.setState({ providers: [] });
   const runtime = (await import(
@@ -160,7 +163,7 @@ test("unloading does not overwrite a settled chat or its defaults", async (t) =>
   store.getState().setActiveThreadId(THREAD);
   store
     .getState()
-    .applyThreadScopedSettings(THREAD, threadRows.rows.get(THREAD)!);
+    .applyThreadScopedSettings(THREAD, (threadRows.rows.get(THREAD) ?? assert.fail("expected a non-null value")));
   assert.equal(store.getState().toolsEnabled, true);
   assert.equal(store.getState().codeToolsEnabled, true);
 });
@@ -218,7 +221,7 @@ for (const scope of ["defaults", "chat", "pending chat"] as const) {
       assert.equal(threadRows.rows.get(THREAD)?.deepResearchEnabled, true);
       store
         .getState()
-        .applyThreadScopedSettings(THREAD, threadRows.rows.get(THREAD)!);
+        .applyThreadScopedSettings(THREAD, (threadRows.rows.get(THREAD) ?? assert.fail("expected a non-null value")));
       assert.equal(store.getState().deepResearchEnabled, false);
     } else {
       assert.equal(storage.get("unsloth_chat_deep_research_enabled"), "true");
@@ -406,7 +409,7 @@ for (const scope of ["defaults", "chat"] as const) {
     store.getState().setCheckpoint("external::tools-provider::capable", null);
     assert.equal(store.getState().deepResearchEnabled, true);
     if (scope === "chat") {
-      store.getState().applyThreadScopedSettings(THREAD, threadRows.rows.get(THREAD)!);
+      store.getState().applyThreadScopedSettings(THREAD, (threadRows.rows.get(THREAD) ?? assert.fail("expected a non-null value")));
       assert.equal(store.getState().deepResearchEnabled, true);
     }
     store.getState().setDeepResearchEnabled(false);

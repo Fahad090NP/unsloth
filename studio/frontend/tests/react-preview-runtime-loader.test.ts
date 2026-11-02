@@ -42,11 +42,11 @@ const MANIFEST: PreviewRuntimeManifest = {
 
 function fetcher(overrides: Record<string, string> = {}) {
   const calls: string[] = [];
-  const fetchBytes = async (url: string) => {
+  const fetchBytes =  (url: string) => {
     calls.push(url);
     const body = overrides[url] ?? BODIES[url];
-    if (body === undefined) throw new Error("404");
-    return new TextEncoder().encode(body);
+    if (body === undefined) return Promise.reject(new Error("404"));
+    return Promise.resolve(new TextEncoder().encode(body));
   };
   return { calls, fetchBytes };
 }
@@ -88,7 +88,7 @@ test("an HTML fallback or a wrong length is refused, and a failed file is retrie
 });
 
 test("imports no file provides are named up front, worded like the frame's error", () => {
-  const loader = createRuntimeLoader(MANIFEST, async () => new Uint8Array());
+  const loader = createRuntimeLoader(MANIFEST,  () => Promise.resolve(new Uint8Array()));
   assert.deepEqual(loader.unknownImports(["react", "lucide-react"]), []);
   const [message, ...rest] = loader.unknownImports(["react", "@/components/ui/button", "@/components/ui/button"]);
   assert.equal(rest.length, 0);

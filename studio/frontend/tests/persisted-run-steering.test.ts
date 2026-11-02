@@ -49,7 +49,7 @@ function pendingRun(hasReservation = true) {
     ],
     useChatRuntimeStore: { getState: () => ({ activeThreadId: "chat" }) },
     findPreStreamRunReservation: () => (hasReservation ? "reservation" : null),
-    claimPreStreamRunReservation: () => {},
+    claimPreStreamRunReservation: () => { return undefined; },
     isPreStreamRunReservationCancelled: () => cancelled,
     releasePreStreamRunReservation: () => {
       released += 1;
@@ -57,7 +57,7 @@ function pendingRun(hasReservation = true) {
     waitForRunStartHistoryAppend: () => preflight,
     requestPromptQueueStop: (ids: string[]) => stops.push(ids),
     notifyPromptQueueRunFailed: (id: string) => failures.push(id),
-    adoptPreStreamRunReservation: () => {},
+    adoptPreStreamRunReservation: () => { return undefined; },
     notifyReplyFinished: () => {
       notified += 1;
     },
@@ -70,10 +70,12 @@ function pendingRun(hasReservation = true) {
     `${js}; return createPersistedRunAdapter;`,
   )(...Object.values(deps));
   const adapter = factory({
-    async *run() {
+    *run() {
       calls += 1;
       yield { content: "answer" };
-    },
+    
+  return Promise.resolve();
+},
   });
   const run = adapter.run({
     messages: [],

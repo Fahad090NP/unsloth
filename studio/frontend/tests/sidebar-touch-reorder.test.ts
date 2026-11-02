@@ -25,7 +25,7 @@ test("only sidebar-touch-reveal actions work on a coarse pointer", async () => {
   assert.match(coarse[1], /\.sidebar-row-action\.sidebar-touch-reveal/);
 });
 
-test("rows that reorder can open their menu on touch", async () => {
+test("rows that reorder can open their menu on touch",  () => {
   const source = APP_SIDEBAR;
 
   const chatActions = source.match(/"sidebar-row-action[^"]*"/g) ?? [];
@@ -41,9 +41,9 @@ test("rows that reorder can open their menu on touch", async () => {
     actionClassFor(source, "Project options"),
     /sidebar-touch-reveal/,
   );
-});
+return Promise.resolve(); });
 
-test("a folder row reserves the room its touch actions take", async () => {
+test("a folder row reserves the room its touch actions take",  () => {
   // Revealed without reserved padding, the buttons sit on top of the name.
   const source = APP_SIDEBAR;
   const row = /className="(sidebar-nav-btn h-\[33px\] rounded-full gap-\[8\.5px\][^"]*group-hover\/recent-item:pr-16[^"]*)"/.exec(
@@ -51,4 +51,4 @@ test("a folder row reserves the room its touch actions take", async () => {
   );
   assert.ok(row, "could not find the project folder row");
   assert.match(row[1], /\[@media\(pointer:coarse\)\]:pr-16/);
-});
+return Promise.resolve(); });

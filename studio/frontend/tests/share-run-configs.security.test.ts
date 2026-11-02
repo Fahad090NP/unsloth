@@ -524,21 +524,21 @@ function harness(sharedLinks = true) {
     {
       "@/lib/api-base": { isTauri: true },
       "@tanstack/react-router": {
-        useNavigate: () => async (to: (typeof navigations)[number]) =>
-          navigations.push(to),
+        useNavigate: () =>  (to: (typeof navigations)[number]) =>
+          Promise.resolve(navigations.push(to)),
       },
       react: { useEffect: (effect: () => () => void) => (cleanup = effect()) },
       "./deep-link-intent": { createDeepLinkIntentGate },
       "./parse-deep-link": { parseUnslothDeepLink },
       "@tauri-apps/api/core": {
-        invoke: async (command: string) => commands.push(command),
+        invoke:  (command: string) => Promise.resolve(commands.push(command)),
       },
       "@tauri-apps/plugin-deep-link": {
         getCurrent: () => startup,
-        onOpenUrl: async (callback: typeof listener) => {
+        onOpenUrl:  (callback: typeof listener) => {
           counts.subscriptions += 1;
           listener = callback;
-          return () => (counts.unsubscriptions += 1);
+          return Promise.resolve(() => (counts.unsubscriptions += 1));
         },
       },
     },

@@ -33,7 +33,7 @@ function barrelValueNames(
     if (!ts.isStringLiteral(specifier)) continue;
     const from = specifier.text;
     const clause = statement.importClause;
-    if (!clause || clause.isTypeOnly) continue;
+    if (!clause || clause.phaseModifier === ts.SyntaxKind.TypeKeyword) continue;
     if (clause.name && carriesBarrelValues(from, "default")) {
       names.add(clause.name.text);
     }
@@ -67,7 +67,7 @@ function namespaceImportNames(source: ts.SourceFile): Set<string> {
   for (const statement of source.statements) {
     if (!ts.isImportDeclaration(statement)) continue;
     const clause = statement.importClause;
-    if (!clause || clause.isTypeOnly) continue;
+    if (!clause || clause.phaseModifier === ts.SyntaxKind.TypeKeyword) continue;
     const bound = clause.namedBindings;
     if (bound && ts.isNamespaceImport(bound)) out.add(bound.name.text);
   }
@@ -202,7 +202,7 @@ function inRuntimeHeritage(node: ts.Node): boolean {
     current = parent;
     parent = parent.parent;
   }
-  if (parent?.expression !== current) return false;
+  if (parent.expression !== current) return false;
   const clause = parent.parent;
   if (!clause || !ts.isHeritageClause(clause)) return false;
   if (clause.token !== ts.SyntaxKind.ExtendsKeyword) return false;
@@ -714,7 +714,7 @@ function eagerReads(
         anchor = undefined;
         for (const clause of cls.heritageClauses ?? []) {
           if (clause.token !== ts.SyntaxKind.ExtendsKeyword) continue;
-          const base = clause.types[0]?.expression;
+          const base = clause.types[0].expression;
           if (base && ts.isIdentifier(base)) anchor = base;
         }
         current = anchor ? targets.classes.get(anchor.text) : undefined;
@@ -845,7 +845,7 @@ function isErasedEdge(statement: ts.ImportDeclaration | ts.ExportDeclaration): b
   if (ts.isImportDeclaration(statement)) {
     const clause = statement.importClause;
     if (!clause) return false;
-    if (clause.isTypeOnly) return true;
+    if (clause.phaseModifier === ts.SyntaxKind.TypeKeyword) return true;
     if (clause.name) return false;
     const bound = clause.namedBindings;
     if (!bound || ts.isNamespaceImport(bound)) return false;
@@ -1076,7 +1076,7 @@ function proneExportSets(
   for (let changed = true; changed; ) {
     changed = false;
     for (const file of files) {
-      const own = out.get(file)!;
+      const own = (out.get(file) ?? assert.fail("expected a non-null value"));
       for (const hop of hops.get(file) ?? []) {
         // An unresolved hop could publish anything, so it carries every name.
         const inner: ProneExports | undefined =
@@ -1198,7 +1198,7 @@ function barrelInitClosure(files: string[]): Set<string> {
   const seen = new Set<string>();
   const stack = [entry];
   while (stack.length > 0) {
-    const node = stack.pop()!;
+    const node = (stack.pop() ?? assert.fail("expected a non-null value"));
     for (const next of edges(node)) {
       if (!seen.has(next)) {
         seen.add(next);
@@ -1287,7 +1287,7 @@ test("no module-scope read of a chat barrel value", () => {
       const target = resolve(specifier.text, file);
       if (target === null) continue;
       const clause = statement.importClause;
-      if (!clause || clause.isTypeOnly) continue;
+      if (!clause || clause.phaseModifier === ts.SyntaxKind.TypeKeyword) continue;
       const bound = clause.namedBindings;
       if (!bound && !clause.name) continue;
       if (bound && ts.isNamespaceImport(bound)) continue;
@@ -1814,7 +1814,7 @@ test("barrel bindings are tracked through local re-export bridges", () => {
     });
 
   assert.deepEqual(
-    [...names(consumer, sources.get(consumer)!)],
+    [...names(consumer, (sources.get(consumer) ?? assert.fail("expected a non-null value")))],
     ["K"],
     "importing through the bridge must be treated as importing from the barrel",
   );
@@ -1860,7 +1860,7 @@ test("a bridge's own exports are not treated as barrel bindings", () => {
   const bearing = barrelBearingModules(sources, resolve);
   assert.deepEqual([...(bearing.get(bridge) ?? [])], ["K"], "only K comes from the barrel");
 
-  const names = barrelValueNames(parse(consumer, sources.get(consumer)!), (spec, exported) => {
+  const names = barrelValueNames(parse(consumer, (sources.get(consumer) ?? assert.fail("expected a non-null value"))), (spec, exported) => {
     if (spec === BARREL) return true;
     const target = resolve(spec, consumer);
     const carried = target === null ? undefined : bearing.get(target);
@@ -1878,8 +1878,8 @@ test("an eager call into an imported helper is followed across modules", () => {
     [safe, `import { K } from "${BARREL}";\nexport function read() { return 1; }\n`],
   ]);
   const build = (target: string) => {
-    const source = parse(target, sources.get(target)!);
-    const fn = exportedFunctions(source).get("read")!;
+    const source = parse(target, (sources.get(target) ?? assert.fail("expected a non-null value")));
+    const fn = (exportedFunctions(source).get("read") ?? assert.fail("expected a non-null value"));
     return { file: target, source, fn, names: barrelValueNames(source) };
   };
   const consumerText = `import { read } from "./helper";\nconst v = read();\n`;
@@ -1944,8 +1944,8 @@ test("an imported helper is entered with the caller's arguments, default import 
     [dflt, `import { K } from "${BARREL}";\nexport default function read() { return K; }\n`],
   ]);
   const build = (target: string, name: string) => {
-    const source = parse(target, sources.get(target)!);
-    const fn = exportedFunctions(source).get(name)!;
+    const source = parse(target, (sources.get(target) ?? assert.fail("expected a non-null value")));
+    const fn = (exportedFunctions(source).get(name) ?? assert.fail("expected a non-null value"));
     assert.ok(fn, `${target} must export ${name}`);
     return { file: target, source, fn, names: barrelValueNames(source) };
   };

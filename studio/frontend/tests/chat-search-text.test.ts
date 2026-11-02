@@ -3,12 +3,15 @@
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 
 import { installLocalStorageFake } from "./helpers/kit.ts";
 
-register("./chat-search-index-resolver.mjs", import.meta.url);
+const chatSearchIndexResolverHooks = (await import(new URL("./chat-search-index-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: chatSearchIndexResolverHooks.resolve });
 installLocalStorageFake();
 
 const { collapseWhitespace, stripBase64Runs } = await import(

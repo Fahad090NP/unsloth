@@ -45,7 +45,7 @@ test("a payload missing any number is rejected whole", () => {
     "host_left_gb",
   ]) {
     const partial: Record<string, unknown> = { ...GOOD };
-    delete partial[key];
+    Reflect.deleteProperty(partial, key);
     assert.equal(parseCarveoutAdvice(partial), null, key);
   }
 });

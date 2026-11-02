@@ -57,9 +57,9 @@ for (const requested of ["Org/Model", "org/model"]) {
       const original = ["Org/Model", pinKey("Org/Model", "Q8_0")];
       let pinned = [...original];
       let variantCalls = 0;
-      const inventory = async () => {
-        if (remaining === "unavailable") throw new Error("scan unavailable");
-        return {
+      const inventory = () => {
+        if (remaining === "unavailable") return Promise.reject(new Error("scan unavailable"));
+        return Promise.resolve({
           cached: remaining.endsWith("absent")
             ? []
             : [
@@ -74,9 +74,9 @@ for (const requested of ["Org/Model", "org/model"]) {
             remaining === "legacy-confirmation"
               ? undefined
               : !remaining.startsWith("unconfirmed"),
-        };
+        });
       };
-      const modelsInventory = async () => ({
+      const modelsInventory = () => Promise.resolve(({
         cached:
           remaining === "non-gguf-survivor"
             ? [
@@ -89,14 +89,14 @@ for (const requested of ["Org/Model", "org/model"]) {
               ]
             : [],
         scan_confirmed: true,
-      });
+      }));
       const run = compile(
         async () => (await inventory()).cached,
         inventory,
         modelsInventory,
-        async () => {
+        () => {
           variantCalls += 1;
-          return {
+          return Promise.resolve({
             variants: [
               {
                 quant:
@@ -111,7 +111,7 @@ for (const requested of ["Org/Model", "org/model"]) {
                   remaining !== "non-gguf-survivor",
               },
             ],
-          };
+          });
         },
         pinnedQuantEntries,
         {

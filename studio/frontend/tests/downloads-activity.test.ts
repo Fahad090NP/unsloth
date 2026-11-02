@@ -13,7 +13,7 @@ test("the desktop quit warning sees a download from any source, sent once per ch
     {
       "@/lib/api-base": { isTauri: true },
       "@tauri-apps/api/core": {
-        invoke: async (
+        invoke: (
           command: string,
           args: { kind: string; active: boolean },
         ) => {

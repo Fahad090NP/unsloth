@@ -38,7 +38,7 @@ const mlxRepo = {
 test("startup restores a remembered MLX precision folder", async () => {
   const candidate = await resolve(mlxRepo, "6-bit", () => false);
   assert.equal(candidate?.ggufVariant, "6-bit");
-  assert.equal(candidate?.kind, "model");
+  assert.equal(candidate.kind, "model");
 });
 
 test("a failed precision falls back to the repo root, then stops", async () => {

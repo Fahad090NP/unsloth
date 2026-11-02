@@ -25,7 +25,7 @@ class NativeXHR extends EventTarget {
     this.calls.push(["open", ...args]);
     this.state = 1;
   }
-  setRequestHeader() {}
+  setRequestHeader() { /* empty */ }
   send(...args: unknown[]) {
     this.calls.push(["send", ...args]);
   }
@@ -342,7 +342,7 @@ test("a write past the panel's body limit stays the browser's, as before relayin
 
 test("aborting an upload whose stream stalls rejects the fetch at once", async () => {
   const t = setup(NativeXHR, "https://site.test/", false, () => true);
-  const stream = new ReadableStream({ pull: () => new Promise(() => {}) });
+  const stream = new ReadableStream({ pull: () => new Promise(() => { /* empty */ }) });
   const controller = new AbortController();
   const write = t.window.fetch("/upload", { method: "POST", body: stream, duplex: "half", signal: controller.signal } as RequestInit);
   await tick();
@@ -568,7 +568,7 @@ test("an XHR's Document body is sent serialized, as UTF-8 HTML or XML", async ()
     xhr.open("POST", "/soap");
     xhr.send(document);
     await tick();
-    const sent = t.posted.at(-1)!;
+    const sent = (t.posted.at(-1) ?? assert.fail("expected a non-null value"));
     assert.equal(new TextDecoder().decode(sent.body as ArrayBuffer), markup);
     assert.deepEqual(plain(sent.headers), [["Content-Type", type]]);
   }
@@ -588,7 +588,7 @@ test("an XHR's text body relabels the page's charset as the UTF-8 it is sent in"
     xhr.setRequestHeader("Content-Type", type);
     xhr.send(body);
     await tick();
-    assert.deepEqual(plain((t.posted.at(-1)!).headers), [["Content-Type", sent]]);
+    assert.deepEqual(plain(((t.posted.at(-1) ?? assert.fail("expected a non-null value"))).headers), [["Content-Type", sent]]);
   }
 });
 

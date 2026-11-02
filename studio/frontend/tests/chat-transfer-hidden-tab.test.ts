@@ -34,7 +34,7 @@ test("throttled hidden samples do not hold a stale rate once progress stops", ()
     let rate = 0;
     const poll = (t: number, b: number, hidden: boolean) => {
       if (dropWhileHidden && hidden) {
-        samples.length = 0;
+        samples.splice(0);
         rate = 0;
         return;
       }

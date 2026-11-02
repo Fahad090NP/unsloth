@@ -217,8 +217,8 @@ test("appending a different color cannot replace unchanged prefix token spans", 
     token("d", "#e45649", "#e06c75"),
     token("e", "#e45649", "#e06c75"),
   ];
-  const before = fenceLineForeground(prefix)!;
-  const after = fenceLineForeground(grown)!;
+  const before = (fenceLineForeground(prefix) ?? assert.fail("expected a non-null value"));
+  const after = (fenceLineForeground(grown) ?? assert.fail("expected a non-null value"));
   assert.equal(after.light, before.light);
   assert.equal(after.dark, before.dark);
   assert.deepEqual(after.inherited.slice(0, prefix.length), before.inherited);

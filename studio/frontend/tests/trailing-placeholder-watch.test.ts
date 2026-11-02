@@ -37,16 +37,16 @@ test("the watch admits every fragment the strip would cut", () => {
     "$",
     "{",
     "}",
-    "${",
-    "${x}",
+    "\${",
+    "\${x}",
     "a",
     " ",
     "\n",
     "x}",
-    "${a",
+    "\${a",
     "b}c",
     "}}",
-    "${}",
+    "\${}",
   ];
   const random = mulberry32(20260817);
   let cuts = 0;
@@ -90,7 +90,7 @@ test("the watch admits every fragment the strip would cut, on prose", () => {
     "}\n",
     "\n",
     "text and more text ",
-    "a `${x}` in a sentence ",
+    "a `\${x}` in a sentence ",
     "closing }\n",
   ];
   const random = mulberry32(7);
@@ -130,9 +130,9 @@ test("the watch admits every fragment the strip would cut, on prose", () => {
 test("a fragment split across arrivals is still admitted", () => {
   for (const pieces of [
     ["a ", "$", "{", "x", "}"],
-    ["a ", "${", "x}"],
-    ["a ", "${x", "}"],
-    ["a ", "${x}"],
+    ["a ", "\${", "x}"],
+    ["a ", "\${x", "}"],
+    ["a ", "\${x}"],
     ["a ", "$", "{x}", "  "],
   ]) {
     const watch = createTrailingPlaceholderWatch();

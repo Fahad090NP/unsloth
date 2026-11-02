@@ -176,6 +176,10 @@ test("a v5 record is out of a pre-v5 build's reach in the first place", () => {
       cacheRam: _cacheRam,
       ...known
     } = map[key];
+    void _loadMode;
+    void _specDraftCacheDtype;
+    void _ctxCheckpoints;
+    void _cacheRam;
     map[key] = known;
     rewrote = true;
   }
@@ -240,7 +244,7 @@ test("the one-time backfill now uploads a tuning-only config", async () => {
   const puts: Record<string, unknown>[] = [];
   setAuthFetchHandler((_input, init) => {
     if (init?.method === "PUT") {
-      puts.push(JSON.parse(String(init.body)));
+      puts.push(JSON.parse((init.body as unknown as string)));
       return new Response(JSON.stringify({ overrides: {} }), { status: 200 });
     }
     return new Response(
@@ -278,7 +282,7 @@ test("the backfill offers an Ollama tag's settings even after the v1 pass ran", 
   const puts: unknown[] = [];
   setAuthFetchHandler((_input, init) => {
     if (init?.method === "PUT") {
-      puts.push(JSON.parse(String(init.body)).model_id);
+      puts.push(JSON.parse((init.body as unknown as string)).model_id);
     }
     return new Response(JSON.stringify({ overrides: {} }), { status: 200 });
   });
@@ -314,7 +318,7 @@ test("the backfill offers non-GGUF weights, keyed by repo id, after the v2 pass 
   const puts: unknown[] = [];
   setAuthFetchHandler((_input, init) => {
     if (init?.method === "PUT") {
-      puts.push(JSON.parse(String(init.body)).model_id);
+      puts.push(JSON.parse((init.body as unknown as string)).model_id);
     }
     return new Response(JSON.stringify({ overrides: {} }), { status: 200 });
   });

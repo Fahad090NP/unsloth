@@ -175,7 +175,7 @@ function createElement(spec: ElementSpec, parent: StubElement | null = null) {
       return Object.hasOwn(element.attributeOverrides, name);
     },
     getAttribute(name: string) {
-      return element.attributeOverrides[name] ?? null;
+      return element.attributeOverrides[name];
     },
     closest(selector: string) {
       let node: StubElement | null = element;
@@ -209,7 +209,7 @@ function createElement(spec: ElementSpec, parent: StubElement | null = null) {
       element.attributeOverrides[name] = value;
     },
     removeAttribute(name: string) {
-      delete element.attributeOverrides[name];
+      Reflect.deleteProperty(element.attributeOverrides, name);
     },
     get parentElement() {
       return element.parent;
@@ -217,7 +217,7 @@ function createElement(spec: ElementSpec, parent: StubElement | null = null) {
     get nextElementSibling() {
       if (!element.parent) return null;
       const index = element.parent.children.indexOf(element);
-      return element.parent.children[index + 1] ?? null;
+      return element.parent.children[index + 1];
     },
     querySelectorAll(selector: string) {
       const wanted = selector.split(",").map((name) => name.trim());
@@ -401,7 +401,7 @@ function createEnvironment(options: {
         return {
           width: 0,
           height: 0,
-          getContext: () => ({ drawImage() {} }),
+          getContext: () => ({ drawImage() {/* intentionally empty */} }),
           toDataURL: () =>
             "data:image/webp;base64," +
             (options.frameDataBody ?? "retained-frame"),
@@ -444,11 +444,11 @@ function createEnvironment(options: {
         },
         toggleAttribute(name: string, force: boolean) {
           if (force) element.attributes[name] = "";
-          else delete element.attributes[name];
+          else Reflect.deleteProperty(element.attributes, name);
           return force;
         },
         getAttribute(name: string) {
-          return element.attributes[name] ?? null;
+          return element.attributes[name];
         },
         querySelectorAll(selector?: string) {
           if (
@@ -487,7 +487,7 @@ function createEnvironment(options: {
     Date,
     JSON,
     Object,
-    clearTimeout() {
+    clearTimeout() {/* intentionally empty */
       // Timer bookkeeping is outside this lifecycle test.
     },
     document,
@@ -508,10 +508,10 @@ function createEnvironment(options: {
       (element as unknown) === documentElement
         ? documentElement.style
         : {
-            display: element.spec?.display ?? "block",
-            visibility: element.spec?.visibility ?? "visible",
-            overflowX: element.spec?.overflowX ?? "visible",
-            overflowY: element.spec?.overflowY ?? "visible",
+            display: element.spec.display ?? "block",
+            visibility: element.spec.visibility ?? "visible",
+            overflowX: element.spec.overflowX ?? "visible",
+            overflowY: element.spec.overflowY ?? "visible",
           },
     innerHeight: options.viewport?.height ?? 900,
     innerWidth: options.viewport?.width ?? 1440,
@@ -574,7 +574,7 @@ function createEnvironment(options: {
       const children = host.shadow.children;
       const root = children[children.length - 1];
       const body = (
-        root?.children as Record<string, unknown>[] | undefined
+        root.children as Record<string, unknown>[] | undefined
       )?.find((child) => child.tagName === "BODY");
       return {
         host,
@@ -586,17 +586,17 @@ function createEnvironment(options: {
         inlineStyles: children
           .filter((child) => child.tagName === "STYLE")
           .map((child) => child.textContent as string),
-        html: (body?.innerHTML ?? root?.innerHTML ?? "") as string,
+        html: (body?.innerHTML ?? root.innerHTML ?? "") as string,
         bodyTag: (body?.tagName ?? "") as string,
-        rootClass: (root?.className ?? "") as string,
-        rootTag: (root?.tagName ?? "") as string,
-        rootAttributes: (root?.attributes ?? {}) as Record<string, string>,
+        rootClass: (root.className ?? "") as string,
+        rootTag: (root.tagName ?? "") as string,
+        rootAttributes: (root.attributes ?? {}) as Record<string, string>,
         rootTokens: ((
-          root?.style as
+          root.style as
             | { values?: Record<string, string> }
             | undefined
         )?.values ?? {}),
-        rootVisibility: (root?.style as { visibility?: string } | undefined)
+        rootVisibility: (root.style as { visibility?: string } | undefined)
           ?.visibility,
       };
     },
@@ -953,10 +953,10 @@ test("positions the retained host before development CSS arrives", () => {
     storage: outgoing.storage,
   });
   assert.equal(incoming.shell?.hostStyle.position, "fixed");
-  assert.equal(incoming.shell?.hostStyle.inset, "0");
-  assert.equal(incoming.shell?.hostStyle.zIndex, "2147483647");
-  assert.equal(incoming.shell?.hostStyle.pointerEvents, "none");
-  assert.equal(incoming.shell?.hostStyle.background, "var(--background)");
+  assert.equal(incoming.shell.hostStyle.inset, "0");
+  assert.equal(incoming.shell.hostStyle.zIndex, "2147483647");
+  assert.equal(incoming.shell.hostStyle.pointerEvents, "none");
+  assert.equal(incoming.shell.hostStyle.background, "var(--background)");
 });
 
 test("restores scroll offsets again after linked styles load", () => {
@@ -1038,7 +1038,7 @@ test("carries the appearance customization so the shell paints in its own colors
     "--background": "#241b2f",
     "--font-sans": '"Inter"',
   });
-  assert.deepEqual(appearance?.attributes, { "data-contrast-adjust": "" });
+  assert.deepEqual(appearance.attributes, { "data-contrast-adjust": "" });
 
   const incoming = createEnvironment({
     navigationType: "reload",
@@ -1113,7 +1113,7 @@ test("loads selected imported fonts before revealing the shell", async () => {
     ],
   );
   await new Promise<void>((resolve) => setImmediate(resolve));
-  assert.equal(incoming.shell?.rootVisibility, "visible");
+  assert.equal(incoming.shell.rootVisibility, "visible");
 });
 
 test("drops the retained shell's animations instead of pausing them", () => {
@@ -1156,15 +1156,15 @@ test("builds the retained shell inside a closed shadow tree", () => {
   });
   assert.equal(incoming.shell?.mode, "closed");
   assert.equal(
-    incoming.shell?.html,
+    incoming.shell.html,
     '<div id="root"><main>Existing chat</main></div>',
   );
   // Selectors do not cross the boundary, so the copy needs its own styles.
-  assert.deepEqual(incoming.shell?.stylesheets, [
+  assert.deepEqual(incoming.shell.stylesheets, [
     "/assets/index-abc123.css",
     "/assets/chat-def456.css",
   ]);
-  assert.match(incoming.shell?.rootClass ?? "", /^reload-snapshot-shell /);
+  assert.match(incoming.shell.rootClass, /^reload-snapshot-shell /);
 });
 
 test("roots the copy in an html element so html-anchored rules still match", () => {
@@ -1184,8 +1184,8 @@ test("roots the copy in an html element so html-anchored rules still match", () 
     storage: outgoing.storage,
   });
   assert.equal(incoming.shell?.rootTag, "HTML");
-  assert.equal(incoming.shell?.bodyTag, "BODY");
-  assert.deepEqual(incoming.shell?.rootAttributes, {
+  assert.equal(incoming.shell.bodyTag, "BODY");
+  assert.deepEqual(incoming.shell.rootAttributes, {
     "data-palette": "classic",
     "data-contrast-adjust": "",
   });
@@ -1219,7 +1219,7 @@ test("gives the copy's root the live root's viewport gates, so width-gated rules
   incoming.changeRootAttribute("data-mq-min-width-48rem", null);
   incoming.changeRootAttribute("data-mq-min-width-64rem", "");
   incoming.changeRootAttribute("data-palette", "changed");
-  assert.deepEqual(incoming.shell?.rootAttributes, {
+  assert.deepEqual(incoming.shell.rootAttributes, {
     "data-palette": "classic",
     "data-mq-min-width-40rem": "",
     "data-mq-min-width-64rem": "",
@@ -1230,7 +1230,7 @@ test("gives the copy's root the live root's viewport gates, so width-gated rules
   incoming.runAnimationFrame();
   assert.equal(incoming.observingAttributes, false);
   incoming.changeRootAttribute("data-mq-min-width-40rem", null);
-  assert.equal(incoming.shell?.rootAttributes["data-mq-min-width-40rem"], "");
+  assert.equal(incoming.shell.rootAttributes["data-mq-min-width-40rem"], "");
 });
 
 test("freezes the design tokens onto the copy's own root", () => {
@@ -1254,7 +1254,7 @@ test("freezes the design tokens onto the copy's own root", () => {
     storage: outgoing.storage,
   });
   assert.equal(incoming.shell?.rootTokens["--font-heading"], '"Hellix"');
-  assert.equal(incoming.shell?.rootTokens["--tracking-normal"], "0em");
+  assert.equal(incoming.shell.rootTokens["--tracking-normal"], "0em");
 });
 
 test("carries live form state, except what sensitive fields hide", () => {

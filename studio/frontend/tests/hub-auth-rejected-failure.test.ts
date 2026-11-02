@@ -41,9 +41,9 @@ function installWindow() {
 test("a 401 is a refused token; 403, 404, 429 and 5xx are not", () => {
   const rejected = hubAuthFailure({ status: 401 }, HF);
   assert.equal(rejected?.kind, "auth-rejected");
-  assert.equal(rejected?.status, 401);
-  assert.equal(rejected?.origin, HF);
-  assert.match(rejected?.message ?? "", /refused the saved Hugging Face token/);
+  assert.equal(rejected.status, 401);
+  assert.equal(rejected.origin, HF);
+  assert.match(rejected.message, /refused the saved Hugging Face token/);
   for (const status of [403, 404, 429, 500, 502, 503]) {
     assert.equal(hubAuthFailure({ status }, HF), null, `status ${status}`);
   }
@@ -91,11 +91,11 @@ test("a 401 answer does not back the Hub off or record an outage", async () => {
   installWindow();
   markRemoteNetworkOnline();
   const original = globalThis.fetch;
-  globalThis.fetch = (async () =>
-    new Response(JSON.stringify({ error: "OAuth token verification failed" }), {
+  globalThis.fetch = (() =>
+    Promise.resolve(new Response(JSON.stringify({ error: "OAuth token verification failed" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
-    }));
+    })));
   try {
     const response = await fetchWithTimeout(`${HF}/api/models?search=qwen`, {}, 1_000);
     assert.equal(response.status, 401);
@@ -103,17 +103,17 @@ test("a 401 answer does not back the Hub off or record an outage", async () => {
     assert.equal(getHubPhase(HF), "available");
     assert.equal(getLastHubFailure(HF), null);
   } finally {
-    globalThis.fetch = original;
+    Reflect.set(globalThis, "fetch", original);
   }
 });
 
 test("the discovery feed names a refused token instead of an unreachable Hub", async () => {
-  const search = await readText("../src/features/hub/hooks/use-discover-search.ts");
+  const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   assert.match(
     search,
     /isDiscoverTab\s*\?\s*\(failure \?\? hubAuthFailure\(\{ message: rawSearchError \}\)\)\s*:\s*null,/,
   );
-  const states = await readText("../src/features/hub/catalog/catalog-states.tsx");
+  const states = readText("../src/features/hub/catalog/catalog-states.tsx");
   const describe = states.slice(
     states.indexOf("function describeFailure"),
     states.indexOf("\nfunction UseModelScopeButton"),

@@ -27,9 +27,9 @@ function harness(options: { failFirstLoad?: boolean } = {}) {
         initialize(config: unknown) {
           calls.push(["initialize", config]);
         },
-        async render(id: string, source: string) {
+        render(id: string, source: string) {
           calls.push(["render", id, source]);
-          return { svg: `<svg>${source}</svg>` };
+          return Promise.resolve({ svg: `<svg>${source}</svg>` });
         },
       };
       return {

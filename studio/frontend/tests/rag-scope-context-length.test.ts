@@ -97,7 +97,7 @@ test("an external request NEVER reports a window, whatever is resident", () => {
       ragScopeContextLength({ isExternalRequest: true,
         loadedContextLength: a, maxSeqLength: b }),
       undefined,
-      `leaked with ${a}/${b}`);
+      `leaked with ${String(a)}/${String(b)}`);
   }
 });
 
@@ -105,7 +105,7 @@ test("a local request reports the first field that is set, in order", () => {
   for (const a of VALUES) for (const b of VALUES) {
     const got = ragScopeContextLength({ isExternalRequest: false,
       loadedContextLength: a, maxSeqLength: b });
-    assert.equal(got, a ?? b ?? undefined, `${a}/${b}`);
+    assert.equal(got, a ?? b ?? undefined, `${String(a)}/${String(b)}`);
   }
 });
 
@@ -114,7 +114,10 @@ test("the result is only ever a number or undefined, never null", () => {
     for (const ext of [true, false]) {
       const got = ragScopeContextLength({ isExternalRequest: ext,
         loadedContextLength: a, maxSeqLength: null });
-      assert.ok(got === undefined || typeof got === "number", `got ${got}`);
+      assert.ok(
+        got === undefined || typeof got === "number",
+        `got ${String(got)}`,
+      );
       assert.notEqual(got, null);
     }
   }

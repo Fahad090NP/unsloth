@@ -44,7 +44,7 @@ test("a broken stream does not treat partial text as a completed transcript", as
   await assert.rejects(
     readTranscriptStream(
       stream('{"type":"progress","text":"partial"}\n'),
-      () => {},
+      () => {/* intentionally empty */},
     ),
     /before the result arrived/,
   );
@@ -54,7 +54,7 @@ test("server failures reach the caller", async () => {
   await assert.rejects(
     readTranscriptStream(
       stream('{"type":"error","message":"Model unavailable"}\n'),
-      () => {},
+      () => {/* intentionally empty */},
     ),
     /Model unavailable/,
   );
@@ -65,7 +65,7 @@ test("a failed save still delivers the complete transcript", async () => {
     stream(
       '{"type":"complete","text":"keep me","model":"tiny","record":null}\n',
     ),
-    () => {},
+    () => {/* intentionally empty */},
   );
   assert.equal(result.text, "keep me");
   assert.equal(result.record, null);

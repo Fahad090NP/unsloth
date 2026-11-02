@@ -42,17 +42,17 @@ function switcher(options: { plan?: Plan | Error; current?: boolean; saveError?:
     embeddingModelOwner: (model: string) => string;
   }>(new URL("../src/features/settings/lib/switch-embedding-model.ts", import.meta.url), {
     "../api/embedding-model": {
-      resolveEmbeddingModel: async () => {
-        if (options.plan instanceof Error) throw options.plan;
-        return options.plan;
+      resolveEmbeddingModel:  () => {
+        if (options.plan instanceof Error) return Promise.reject(options.plan);
+        return Promise.resolve(options.plan);
       },
-      updateEmbeddingModelSettings: async (
+      updateEmbeddingModelSettings:  (
         model: string,
         opts: { ggufRepo: unknown; backend: unknown },
       ) => {
-        if (options.saveError) throw options.saveError;
+        if (options.saveError) return Promise.reject(options.saveError);
         saves.push({ model, ggufRepo: opts.ggufRepo, backend: opts.backend });
-        return {};
+        return Promise.resolve({});
       },
     },
     "../stores/embedding-model-store": {
@@ -201,18 +201,18 @@ test("On device explains itself and says when the model is not loaded", () => {
 
 test("ejecting frees the model through the shared residency path", async () => {
   const calls: unknown[] = [];
-  const unload = async () => ({ loaded: false });
+  const unload =  () => Promise.resolve(({ loaded: false }));
   const mod = loadWithStubs<{ ejectEmbeddingModel: () => Promise<void> }>(
     new URL("../src/features/settings/lib/switch-embedding-model.ts", import.meta.url),
     {
       "../api/embedding-model": {
-        resolveEmbeddingModel: async () => null,
+        resolveEmbeddingModel:  () => Promise.resolve(null),
         unloadEmbeddingModel: unload,
-        updateEmbeddingModelSettings: async () => null,
+        updateEmbeddingModelSettings:  () => Promise.resolve(null),
       },
       "../stores/embedding-model-store": {
         useEmbeddingModelStore: {
-          getState: () => ({ applyResidency: async (request: unknown) => calls.push(request) }),
+          getState: () => ({ applyResidency:  (request: unknown) => Promise.resolve(calls.push(request)) }),
         },
       },
     },

@@ -36,7 +36,7 @@ function collectUpdates(): string[] {
   const seen: string[] = [];
   events.addEventListener(PROJECT_SOURCES_UPDATED_EVENT, (event) => {
     seen.push(
-      String((event as CustomEvent<{ projectId?: string }>).detail?.projectId),
+      String((event as CustomEvent<{ projectId?: string }>).detail.projectId),
     );
   });
   return seen;
@@ -160,7 +160,7 @@ test("an ingest that fails after the upload is not left silent", async () => {
     (t) => t.message === "Couldn't index Unparsable.md",
   );
   assert.equal(failure?.kind, "error");
-  assert.equal(failure?.description, "Could not parse the document");
+  assert.equal(failure.description, "Could not parse the document");
   assert.equal(seen.filter((id) => id === "p4").length, 2);
 });
 

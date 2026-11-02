@@ -6,14 +6,17 @@
 // keeps the provider's own image_generation.
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 
 import { installLocalStorageFake, readSrc } from "./helpers/kit.ts";
 
 const { store: localStorageFake } = installLocalStorageFake();
 localStorageFake.set("unsloth_chat_settings_imported_to_studio_db", "true");
-register("./thread-sampling-resolver.mjs", import.meta.url);
+const threadSamplingResolverHooks = (await import(new URL("./thread-sampling-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: threadSamplingResolverHooks.resolve });
 await import("./helpers/store-stubs/settings-http.ts");
 await import("./helpers/store-stubs/chat-history-storage.ts");
 

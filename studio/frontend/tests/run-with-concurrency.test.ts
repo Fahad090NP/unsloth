@@ -35,16 +35,16 @@ test("never runs more than the limit at once", async () => {
 
 test("a limit above the item count still runs every item once", async () => {
   const seen: number[] = [];
-  await runWithConcurrency([1, 2, 3], 99, async (n) => {
+  await runWithConcurrency([1, 2, 3], 99,  (n) => {
     seen.push(n);
-  });
+  return Promise.resolve(); });
   assert.deepEqual(seen.sort(), [1, 2, 3]);
 });
 
 test("an empty list resolves without running anything", async () => {
   let ran = false;
-  await runWithConcurrency([], 4, async () => {
+  await runWithConcurrency([], 4,  () => {
     ran = true;
-  });
+  return Promise.resolve(); });
   assert.equal(ran, false);
 });

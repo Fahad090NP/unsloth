@@ -63,11 +63,11 @@ const STANDING = {
   splitRatio: null,
   // The comparator must normalize the speculative mode on both sides.
   normalizeSpeculative: (v: string | null | undefined) =>
-    v == null || !String(v).trim()
+    v === null || v === undefined || !v.trim()
       ? null
-      : String(v).trim().toLowerCase() === "default"
+      : v.trim().toLowerCase() === "default"
         ? "auto"
-        : String(v).trim().toLowerCase(),
+        : v.trim().toLowerCase(),
 };
 
 const matches = (
@@ -1642,7 +1642,7 @@ test("a runtime_error resident does not claim its draft depth is the default", (
     assert.equal(
       matches({ ...DEFAULTS, spec_fallback_reason: reason }, BLANK),
       true,
-      `${reason} must still adopt a default-against-default pick`,
+      `${String(reason)} must still adopt a default-against-default pick`,
     );
   }
 });

@@ -67,8 +67,8 @@ for (const task of [null, "text-generation", "image-text-to-text", "text-to-imag
       const unpinRepo = () => { pinned = []; };
       const usePinnedModelsStore = { getState: () => ({ pinned, togglePinned, unpinRepo }) };
       const reconcile = compile(helperFunction("reconcileGgufPinsAfterDelete"), {
-        fetchCachedGgufInventory: async () => ({ cached: [{ repo_id: repoId }], scan_confirmed: true }),
-        listGgufVariants: async () => ({ variants: chat || wholeRepo ? [{ quant: surviving, downloaded: true, partial: false }] : [] }),
+        fetchCachedGgufInventory: () => Promise.resolve(({ cached: [{ repo_id: repoId }], scan_confirmed: true })),
+        listGgufVariants: () => Promise.resolve(({ variants: chat || wholeRepo ? [{ quant: surviving, downloaded: true, partial: false }] : [] })),
         usePinnedModelsStore, pinnedQuantEntries, modelIdsMatchForPicker, ggufVariantsMatchForPicker,
       });
       let reconciliations = 0;
@@ -85,8 +85,8 @@ for (const task of [null, "text-generation", "image-text-to-text", "text-to-imag
         mediaPageForTask: (value: string | null) => value && !["text-generation", "image-text-to-text"].includes(value) ? "images" : null,
         isChatGgufTask, usePinnedModelsStore, pinKey, togglePinned, togglePinnedQuant: togglePinned, unpinRepo,
         reconcileGgufPinsAfterDelete: async (...args: unknown[]) => { reconciliations++; assert.equal(args[1], "hf_fixture_token"); await reconcile(...args); },
-        onDeleteVariant: async () => {}, deleteCachedModel: async () => {}, deleteCachedDataset: async () => {},
-        refreshCachedLists: () => {}, prunePinnedQuantValidation: () => {}, setRefreshKey: () => {},
+        onDeleteVariant: () => Promise.resolve(), deleteCachedModel: () => Promise.resolve(), deleteCachedDataset: () => Promise.resolve(),
+        refreshCachedLists: () => { return undefined; }, prunePinnedQuantValidation: () => { return undefined; }, setRefreshKey: () => { return undefined; },
         // Memoized On Device rows reach the picker's callbacks through its actions holder.
         actions: {
           get: () => ({

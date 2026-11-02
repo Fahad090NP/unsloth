@@ -131,7 +131,8 @@ test("dataset cache reconciliation reruns for usability inputs but not cache sta
     reconciliationSource,
     (call) =>
       call.expression.getText(reconciliationSource) === "useEffect" &&
-      call.arguments[0] != null &&
+      call.arguments[0] !== null &&
+      call.arguments[0] !== undefined &&
       datasetFetch.pos >= call.arguments[0].pos &&
       datasetFetch.end <= call.arguments[0].end,
   );

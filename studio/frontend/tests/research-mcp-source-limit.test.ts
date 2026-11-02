@@ -48,7 +48,7 @@ test("MCP research sources stay within the backend request limit", () => {
   );
   assert.deepEqual(
     JSON.parse(
-      localStorageFake.get("unsloth_chat_deep_research_mcp_sources") || "[]",
+      localStorageFake.get("unsloth_chat_deep_research_mcp_sources") ?? "[]",
     ),
     sources.slice(0, MAX_RESEARCH_MCP_SOURCES),
   );

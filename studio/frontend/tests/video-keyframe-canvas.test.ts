@@ -127,7 +127,7 @@ test("snapping never leaves the pixel cap, and matches the backend at its edges"
   assert.deepEqual(matchedCanvas(0.25, 1, ltx25), [448, 1920]);
   assert.deepEqual(matchedCanvas(3.045, 1, ltx25), [1664, 512]);
   for (const defaults of [ltx25, h3]) {
-    const multiple = defaults.resolution_multiple ?? 1;
+    const multiple = defaults.resolution_multiple;
     for (let i = 2500; i <= 40000; i += 7) {
       const canvas = matchedCanvas(i / 10000, 1, defaults);
       assert.ok(canvas);

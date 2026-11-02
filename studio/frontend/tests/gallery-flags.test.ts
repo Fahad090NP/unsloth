@@ -114,10 +114,10 @@ test("with nothing pinned a merged generation still leads", () => {
 const judging = (knownIds: ReadonlySet<string>) => ({ knownIds, canJudgeUnpinned: true });
 
 const pager =
-  (all: ReturnType<typeof item>[], pageSize: number) => async (offset: number) => ({
+  (all: ReturnType<typeof item>[], pageSize: number) => (offset: number) => Promise.resolve(({
     items: all.slice(offset, offset + pageSize),
     hasMore: offset + pageSize < all.length,
-  });
+  }));
 
 test("a pinned first row does not mask a newly saved record", async () => {
   const listing = [item("pin", 5, true), item("fresh", 9), item("old", 1)];
@@ -229,26 +229,28 @@ test("different keys are not serialized against each other", async () => {
     await new Promise((r) => setTimeout(r, 20));
     events.push("a");
   });
-  const fast = serializeById("img:b", async () => {
+  const fast = serializeById("img:b", () => {
     events.push("b");
-  });
+  
+  return Promise.resolve();
+});
   await Promise.all([slow, fast]);
   assert.deepEqual(events, ["b", "a"]);
 });
 
 test("a failure does not break the key's chain", async () => {
-  const failed = serializeById("img:c", async () => {
-    throw new Error("nope");
+  const failed = serializeById("img:c", () => {
+    return Promise.reject(new Error("nope"));
   });
   await assert.rejects(failed, /nope/);
-  assert.equal(await serializeById("img:c", async () => "ran"), "ran");
+  assert.equal(await serializeById("img:c", () => Promise.resolve("ran")), "ran");
 });
 
 test("the rejection reaches the caller that queued it", async () => {
-  await serializeById("img:d", async () => "ok");
+  await serializeById("img:d", () => Promise.resolve("ok"));
   await assert.rejects(
-    serializeById("img:d", async () => {
-      throw new Error("second failed");
+    serializeById("img:d", () => {
+      return Promise.reject(new Error("second failed"));
     }),
     /second failed/,
   );
@@ -290,13 +292,13 @@ test("a page fetch re-reads its offset when the shelf shortens mid request", asy
     () => loaded.length,
     () => epoch,
     () => 0,
-    async (offset) => {
+    (offset) => {
       requested.push(offset);
       if (requested.length === 1) {
         shelf = shelf.filter((id) => id !== "d");
         loaded = loaded.filter((id) => id !== "d");
       }
-      return shelf.slice(offset, offset + 2);
+      return Promise.resolve(shelf.slice(offset, offset + 2));
     },
   );
   assert.ok(result);
@@ -311,10 +313,10 @@ test("a page fetch gives up rather than spinning when the shelf keeps moving", a
     () => loaded,
     () => 0,
     () => 0,
-    async () => {
+    () => {
       calls += 1;
       loaded -= 1;
-      return [];
+      return Promise.resolve([]);
     },
   );
   assert.equal(result, null);
@@ -351,10 +353,10 @@ test("a gallery load is discarded when a pin lands while it is in flight", async
   let fetches = 0;
   const result = await fetchWhileStable(
     () => epoch,
-    async () => {
+    () => {
       fetches += 1;
       if (fetches === 1) epoch += 1;
-      return [item("a", 1, fetches > 1)];
+      return Promise.resolve([item("a", 1, fetches > 1)]);
     },
   );
   assert.equal(fetches, 2);
@@ -367,10 +369,10 @@ test("a gallery load gives up rather than overwriting a strip that keeps changin
   let fetches = 0;
   const result = await fetchWhileStable(
     () => epoch,
-    async () => {
+    () => {
       fetches += 1;
       epoch += 1;
-      return "stale";
+      return Promise.resolve("stale");
     },
   );
   assert.equal(result, null);
@@ -388,17 +390,17 @@ test("a page fetch is refused when an archive is merely IN FLIGHT", async () => 
     () => loaded,
     () => epoch,
     () => 0,
-    async (offset) => {
+    (offset) => {
       if (seen.length === 0) {
         epoch += 1;
         const page = shortened.slice(offset, offset + 2);
         seen.push(page);
-        return page;
+        return Promise.resolve(page);
       }
       loaded = 1;
       const page = shortened.slice(offset, offset + 2);
       seen.push(page);
-      return page;
+      return Promise.resolve(page);
     },
   );
   assert.deepEqual(seen[0], ["b", "a"], "the first read did skip the boundary record");
@@ -418,14 +420,14 @@ test("a page fetch is refused while a shelf mutation is still pending", async ()
     () => loaded,
     () => epoch,
     () => pending,
-    async (offset) => {
+    (offset) => {
       const page = shortened.slice(offset, offset + 2);
       seen.push(page);
       if (seen.length === 1) {
         pending = 0;
         loaded = 1;
       }
-      return page;
+      return Promise.resolve(page);
     },
   );
   assert.deepEqual(seen[0], ["b", "a"], "the first read did skip the boundary record");
@@ -494,7 +496,7 @@ test("a manual key compares in seconds against ISO timestamps too", () => {
 const row = (id: string, page: "s" | "m", pinned = false) => ({ id, created_at: 0, pinned, page });
 const onPage =
   (page: "s" | "m") =>
-  <T extends { page: string }>(i: T) =>
+  (i: { page: string }) =>
     i.page === page;
 const placed = <T extends FlaggableItem & { page: string }>(
   shelf: T[],

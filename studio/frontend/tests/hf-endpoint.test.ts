@@ -151,18 +151,18 @@ test("the ModelScope adapter gets the Unsloth session, never the Hugging Face to
   const sent: (string | null)[] = [];
   let session: string | null = "expired";
   const realFetch = globalThis.fetch;
-  globalThis.fetch = (async (_input: unknown, init?: RequestInit) => {
+  globalThis.fetch = ((_input: unknown, init?: RequestInit) => {
     const auth = new Headers(init?.headers).get("authorization");
     sent.push(auth);
-    return new Response("[]", { status: auth === "Bearer expired" ? 401 : 200 });
+    return Promise.resolve(new Response("[]", { status: auth === "Bearer expired" ? 401 : 200 }));
   });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
     value: { getItem: (key: string) => (key === "unsloth_auth_token" ? session : null) },
   });
-  setHubSessionRefresh(async () => {
+  setHubSessionRefresh(() => {
     session = "fresh";
-    return true;
+    return Promise.resolve(true);
   });
   const hfToken = { headers: { Authorization: "Bearer hf_x" } };
   try {
@@ -176,9 +176,9 @@ test("the ModelScope adapter gets the Unsloth session, never the Hugging Face to
     await fetchWithTimeout(`${adapter}/api/models/a/c`, hfToken);
     assert.equal(answer.status, 200);
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
     Reflect.deleteProperty(globalThis, "localStorage");
-    setHubSessionRefresh(async () => false);
+    setHubSessionRefresh(() => Promise.resolve(false));
     resetHfEndpoints();
   }
   assert.deepEqual(sent, [
@@ -197,16 +197,16 @@ test("a relay to a custom endpoint gets the session, and the Hugging Face token 
   const sent: (string | null)[][] = [];
   let refreshes = 0;
   const realFetch = globalThis.fetch;
-  globalThis.fetch = (async (input: string, init?: RequestInit) => {
+  globalThis.fetch = ((input: string, init?: RequestInit) => {
     const headers = new Headers(init?.headers);
     sent.push([headers.get("authorization"), headers.get("x-hf-authorization")]);
     const gated = input.includes("gated");
     const stale = input.includes("stale") && headers.get("authorization") === "Bearer session";
-    return new Response("[]", { status: gated || stale ? 401 : 200, headers: gated ? { "X-Hub-Upstream": "1" } : {} });
+    return Promise.resolve(new Response("[]", { status: gated || stale ? 401 : 200, headers: gated ? { "X-Hub-Upstream": "1" } : {} }));
   }) as typeof fetch;
   let session = "session";
   Object.defineProperty(globalThis, "localStorage", { configurable: true, value: { getItem: () => session } });
-  setHubSessionRefresh(async () => Boolean((session = `fresh${++refreshes}`)));
+  setHubSessionRefresh(() => Promise.resolve(Boolean((session = `fresh${++refreshes}`))));
   const hfToken = { headers: { Authorization: "Bearer hf_x" } };
   try {
     setHfEndpoints(relay, datasets, "huggingface", { endpoint: true, datasetsServer: true });
@@ -218,9 +218,9 @@ test("a relay to a custom endpoint gets the session, and the Hugging Face token 
     await fetchWithTimeout(`${datasets}/splits?dataset=a/c`, hfToken);
     await fetchWithTimeout("https://huggingface.co/api/models", hfToken);
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
     Reflect.deleteProperty(globalThis, "localStorage");
-    setHubSessionRefresh(async () => false);
+    setHubSessionRefresh(() => Promise.resolve(false));
     resetHfEndpoints();
   }
   assert.equal(refreshes, 1);

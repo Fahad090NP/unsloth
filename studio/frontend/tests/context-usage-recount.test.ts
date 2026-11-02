@@ -48,7 +48,7 @@ function message(
 }
 
 function deferred() {
-  let release = () => {};
+  let release = () => { /* empty */ };
   const promise = new Promise<void>((resolve) => {
     release = resolve;
   });
@@ -105,7 +105,7 @@ function harness() {
             ...world.historyFields,
           };
         },
-        buildLocalTokenCountExtras: async () => world.extras,
+        buildLocalTokenCountExtras: () => world.extras,
         buildLocalTokenCountReasoning: () => world.reasoning,
         findLatestUserAudioBase64: () => null,
         findLatestUserVideoBase64: () => null,
@@ -172,14 +172,14 @@ test("successive triggers share a completed count after an estimate is restored"
   await h.refreshContextUsage();
   await h.refreshContextUsage();
   h.state.contextUsage = {
-    ...h.state.contextUsage!,
+    ...(h.state.contextUsage ?? assert.fail("expected a non-null value")),
     totalTokens: 20,
     estimated: true,
   };
   await h.refreshContextUsage();
   assert.equal(h.world.requests.length, 1);
-  assert.equal(h.state.contextUsage?.totalTokens, 42);
-  assert.equal(h.state.contextUsage?.estimated, undefined);
+  assert.equal(h.state.contextUsage.totalTokens, 42);
+  assert.equal(h.state.contextUsage.estimated, undefined);
 });
 
 test("request changes and explicit invalidation each obtain a new count", async () => {
@@ -311,7 +311,7 @@ test("a failed count still retries a changed branch without explicit invalidatio
 test("a completed request cache preserves a newer exact generation count", async () => {
   const h = harness();
   await h.refreshContextUsage();
-  const completed = { ...h.state.contextUsage!, totalTokens: 80 };
+  const completed = { ...(h.state.contextUsage ?? assert.fail("expected a non-null value")), totalTokens: 80 };
   h.state.contextUsage = completed;
   await h.refreshContextUsage();
   assert.equal(h.world.requests.length, 1);
@@ -324,7 +324,7 @@ test("a cached count cannot replace usage published while history was resolving"
   const gate = deferred();
   h.world.historyGate = gate.promise;
   const second = h.refreshContextUsage();
-  const completed = { ...h.state.contextUsage!, totalTokens: 80 };
+  const completed = { ...(h.state.contextUsage ?? assert.fail("expected a non-null value")), totalTokens: 80 };
   h.state.contextUsage = completed;
   gate.release();
   await second;

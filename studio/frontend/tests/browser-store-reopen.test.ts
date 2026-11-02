@@ -2,10 +2,13 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
-register("./helpers/browser-store-resolver.mjs", import.meta.url);
+const browserStoreResolverHooks = (await import(new URL("./helpers/browser-store-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserStoreResolverHooks.resolve });
 const { browserFile, cachePage, cachedPage, currentEntry, sentPosts, setNativeWebHistory, useBrowserStore } = await import(
   "../src/features/browser/store.ts"
 );
@@ -16,7 +19,7 @@ test("reopening a rewritten file shows its new bytes; an unchanged one keeps its
   const shown = () => {
     const tab = useBrowserStore.getState().tabs[0];
     const entry = tab && currentEntry(tab);
-    return entry?.kind === "file" ? entry.fileId : null;
+    return entry.kind === "file" ? entry.fileId : null;
   };
   open("version 1");
   const first = shown();
@@ -102,15 +105,15 @@ test("a reload keeps where the page's router moved it on the same site, and nowh
   const id = useBrowserStore.getState().activeTabId ?? "";
   const tab = () => useBrowserStore.getState().tabs.find((candidate) => candidate.id === id);
   const url = () => {
-    const entry = currentEntry(tab()!);
+    const entry = currentEntry((tab() ?? assert.fail("expected a non-null value")));
     return entry.kind === "web" ? entry.url : "";
   };
-  const length = tab()!.history.length;
+  const length = (tab() ?? assert.fail("expected a non-null value")).history.length;
   store.updateTab(id, { displayUrl: "https://huggingface.co/models?search=qwen" });
   store.reload(id);
   assert.equal(url(), "https://huggingface.co/models?search=qwen");
   // Replaced, not pushed: Back still leaves the site.
-  assert.equal(tab()!.history.length, length);
+  assert.equal((tab() ?? assert.fail("expected a non-null value")).history.length, length);
   // A page can't report another site and have Reload load it.
   store.updateTab(id, { displayUrl: "https://evil.example/" });
   store.reload(id);
@@ -121,7 +124,7 @@ test("a reload at the router's address keeps the pages ahead in Forward", () => 
   const store = useBrowserStore.getState();
   store.openUrl("https://huggingface.co/models", { newTab: true });
   const id = useBrowserStore.getState().activeTabId ?? "";
-  const tab = () => useBrowserStore.getState().tabs.find((candidate) => candidate.id === id)!;
+  const tab = () => (useBrowserStore.getState().tabs.find((candidate) => candidate.id === id) ?? assert.fail("expected a non-null value"));
   const url = () => {
     const entry = currentEntry(tab());
     return entry.kind === "web" ? entry.url : "";
@@ -156,11 +159,11 @@ test("a dragged tab moves to where it is dropped, keeping which tab is open", ()
     });
   const [first] = useBrowserStore.getState().tabs;
   const active = useBrowserStore.getState().activeTabId;
-  store.moveTab(first?.id ?? "", 2);
+  store.moveTab(first.id ?? "", 2);
   assert.deepEqual(hosts(), ["b", "c", "a"]);
-  store.moveTab(first?.id ?? "", 99);
+  store.moveTab(first.id ?? "", 99);
   assert.deepEqual(hosts(), ["b", "c", "a"]);
-  store.moveTab(first?.id ?? "", 0);
+  store.moveTab(first.id ?? "", 0);
   assert.deepEqual(hosts(), ["a", "b", "c"]);
   assert.equal(useBrowserStore.getState().activeTabId, active);
 });
@@ -170,13 +173,13 @@ test("a duplicated form result asks before posting again; a duplicated page just
   store.openUrl("https://example.com/order", { method: "POST", body: "item=1" });
   store.openUrl("https://example.com/page", { newTab: true });
   const [posted, page] = useBrowserStore.getState().tabs.slice(-2);
-  store.duplicateTab(posted?.id ?? "");
-  store.duplicateTab(page?.id ?? "");
+  store.duplicateTab(posted.id ?? "");
+  store.duplicateTab(page.id ?? "");
   const copyOf = (id: string | undefined) => {
     const tabs = useBrowserStore.getState().tabs;
     return tabs[tabs.findIndex((tab) => tab.id === id) + 1];
   };
-  const [postTab, pageTab] = [copyOf(posted?.id), copyOf(page?.id)];
+  const [postTab, pageTab] = [copyOf(posted.id), copyOf(page.id)];
   assert.ok(postTab && pageTab);
   const postCopy = currentEntry(postTab);
   assert.equal(postCopy.kind === "web" && postCopy.method, "POST");
@@ -235,16 +238,16 @@ test("going Back to a keyed file restores its key, so its card finds the tab aga
   store.duplicateTab(tabId);
   const copy = useBrowserStore.getState().tabs.find((candidate) => candidate.id !== tabId && candidate.history.some((entry) => entry.kind === "file" && entry.name === "page.html"));
   assert.equal(copy?.openKey, null);
-  store.navigate(copy?.id ?? "", { url: "https://example.com/" });
-  store.goBack(copy?.id ?? "");
-  assert.equal(useBrowserStore.getState().tabs.find((candidate) => candidate.id === copy?.id)?.openKey, null);
+  store.navigate(copy.id ?? "", { url: "https://example.com/" });
+  store.goBack(copy.id ?? "");
+  assert.equal(useBrowserStore.getState().tabs.find((candidate) => candidate.id === copy.id)?.openKey, null);
 });
 
 test("a page's link that turns out to be a download leaves that page showing", () => {
   const store = useBrowserStore.getState();
   store.openUrl("https://a.example/page", { newTab: true });
   const tabId = useBrowserStore.getState().activeTabId ?? "";
-  const tab = () => useBrowserStore.getState().tabs.find((candidate) => candidate.id === tabId)!;
+  const tab = () => (useBrowserStore.getState().tabs.find((candidate) => candidate.id === tabId) ?? assert.fail("expected a non-null value"));
   const page = currentEntry(tab());
   store.navigate(tabId, { url: "https://cdn.example/setup.zip", from: "https://a.example/page" });
   const file = currentEntry(tab());
@@ -331,7 +334,7 @@ test("a file opened at a page asks for it again on every reopen, and a reopen wi
     { store.openFile({ blob: new Blob(["%PDF"]), name: "guide.pdf", key: "rag:doc-1", ...(page ? { page } : {}) }); };
   const target = () => {
     const state = useBrowserStore.getState();
-    return state.fileViews[state.activeTabId ?? ""]?.pageTarget ?? null;
+    return state.fileViews[state.activeTabId ?? ""].pageTarget ?? null;
   };
   open(3);
   const first = target();

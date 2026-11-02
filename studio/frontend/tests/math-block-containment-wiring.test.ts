@@ -203,7 +203,7 @@ test("no comment anywhere claims this feature ships off", () => {
     for (const pattern of STALE) {
       assert.ok(
         !pattern.test(text),
-        `${name} still documents the old off-by-default behaviour (${pattern})`,
+        `${name} still documents the old off-by-default behaviour (${String(pattern)})`,
       );
     }
   }

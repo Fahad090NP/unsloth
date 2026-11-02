@@ -211,7 +211,7 @@ test("the floor notes outrank every verdict, in their own order", () => {
     {},
   );
   assert.equal(both.advisory?.tone, "warn");
-  assert.match(both.advisory?.text ?? "", /attention dimensions/);
+  assert.match(both.advisory.text, /attention dimensions/);
   const drafter = fit(
     { drafterKvUnsized: true, moeOffloadUnmodelled: true, totalBytes: 900 * GB },
     {},
@@ -219,7 +219,7 @@ test("the floor notes outrank every verdict, in their own order", () => {
   assert.match(drafter.advisory?.text ?? "", /remote draft model or vision component/);
   const moe = fit({ moeOffloadUnmodelled: true, gpuBytes: 8 * GB, totalBytes: 900 * GB }, {});
   assert.equal(moe.advisory?.tone, "muted");
-  assert.match(moe.advisory?.text ?? "", /Expert layers/);
+  assert.match(moe.advisory.text, /Expert layers/);
 });
 
 test("the floor marker follows either unsizable case", () => {
@@ -239,7 +239,7 @@ test("both pools overflowing never recommends moving more layers to the GPU", ()
   for (const gpuGb of [24, 30]) {
     const result = fit({ gpuBytes: gpuGb * GB, totalBytes: (gpuGb + 70) * GB }, {});
     assert.equal(result.advisory?.text, ADVISORY_TEXTS.totalExceeds);
-    assert.doesNotMatch(result.advisory?.text ?? "", /fewer CPU layers/);
+    assert.doesNotMatch(result.advisory.text, /fewer CPU layers/);
   }
 });
 
@@ -293,8 +293,8 @@ test("pressure advice does not shift layers into another pressured pool", () => 
       { freeGpuCapacityGb: freeGpu, usableSystemRamGb: freeHost },
     );
     assert.equal(result.advisory?.tone, "warn");
-    assert.doesNotMatch(result.advisory?.text ?? "", /layers|offload/);
-    assert.match(result.advisory?.text ?? "", /shorter context or smaller model/);
+    assert.doesNotMatch(result.advisory.text, /layers|offload/);
+    assert.match(result.advisory.text, /shorter context or smaller model/);
   }
 });
 
@@ -457,7 +457,7 @@ test("the KV caption survives a field that is not a number", () => {
 test("the draft cache note reads its OWN placement, not the target cache's", () => {
   // --spec-draft-ngl 0 moves the drafter; --no-kv-offload moves the target.
   assert.equal(resolveDraftCacheNote(0, 4 * GB), "host RAM");
-  assert.equal(resolveDraftCacheNote(1 * GB, 4 * GB), "1.00 GiB on GPU");
+  assert.equal(resolveDraftCacheNote(Number(GB), 4 * GB), "1.00 GiB on GPU");
   assert.equal(resolveDraftCacheNote(4 * GB, 4 * GB), undefined);
   assert.equal(resolveDraftCacheNote(Number.NaN, 4 * GB), "host RAM");
 });
@@ -471,7 +471,7 @@ test("an unsizable pass-through adapter marks the total a floor", () => {
   assert.equal(bounded.bounded, true);
   assert.equal(bounded.prefix, "≥ ");
   assert.equal(bounded.advisory?.tone, "warn");
-  assert.match(bounded.advisory?.text ?? "", /adapter or control vector/);
+  assert.match(bounded.advisory.text, /adapter or control vector/);
   const sized = resolveMemoryFit(
     { ...SIZED, totalBytes: 8 * GB, gpuBytes: 8 * GB },
     IDLE_DISCRETE,
@@ -594,7 +594,7 @@ test("an unpinned context over the card is not an overage when the floor fits", 
     result.advisory?.text,
     "Estimated at the full 40,960-token context. Auto context will shrink it to fit.",
   );
-  assert.equal(result.advisory?.tone, "muted");
+  assert.equal(result.advisory.tone, "muted");
 });
 
 test("a pinned context over the card still exceeds, as does an older backend's answer", () => {
@@ -626,7 +626,7 @@ test("a floor over the card is a real overage, and the note does not send the us
   assert.equal(result.gpuFit, "exceeds");
   assert.equal(result.advisory?.tone, "warn");
   assert.equal(
-    result.advisory?.text,
+    result.advisory.text,
     "Exceeds GPU memory even at the shortest context the loader tries, so some layers will run on the CPU and generation will be slower.",
   );
 });
@@ -726,7 +726,7 @@ const SMALL_HOST = { systemRamCapacityGb: 16, totalCapacityGb: 23.2, usableSyste
 
 test("a context whose GPU share fits is opened native, so its host share is too", () => {
   const result = fit(
-    { gpuBytes: 2 * GB, totalBytes: 30 * GB, nCtx: 262144, ...floorAt(1 * GB) },
+    { gpuBytes: 2 * GB, totalBytes: 30 * GB, nCtx: 262144, ...floorAt(Number(GB)) },
     { ...EIGHT_GB_CARD, ...SMALL_HOST },
   );
   assert.equal(result.hostShareBytes, 28 * GB);

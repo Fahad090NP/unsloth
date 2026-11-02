@@ -28,7 +28,7 @@ function jsonResponse(status: number, body: unknown, kind: string | null = "prot
     get bodyReads() {
       return reads;
     },
-    async json() {
+    json() {
       reads += 1;
       if (reads > 1) {
         throw new TypeError("Body has already been consumed.");
@@ -50,7 +50,7 @@ function harness(response: ReturnType<typeof jsonResponse>) {
         {},
       ),
       "@/features/auth": {
-        authFetch: async (url: string, init?: RequestInit) => {
+        authFetch: (url: string, init?: RequestInit) => {
           requests.push({ url, init });
           return response;
         },
@@ -62,22 +62,22 @@ function harness(response: ReturnType<typeof jsonResponse>) {
       "../types": {},
       "../types/api": {},
       "../utils/chat-history-revision": {
-        notifyChatHistoryUpdated: () => {},
+        notifyChatHistoryUpdated: () => { /* empty */ },
         isCoalescedHistoryEvent: () => false,
       },
       "../utils/openapi-support": { readAdvertisedPatchGuards: () => null },
-      "../utils/load-warning-toast": { showLoadWarning: () => {} },
+      "../utils/load-warning-toast": { showLoadWarning: () => { /* empty */ } },
       "../lib/load-request": {},
       "./generation-length.ts": {},
       "./gguf-variants-request": {},
-      "./padded-response": { assertCompletedPaddedBody: () => {} },
-      "@/features/hf-auth": { prepareHfTokenForUse: async () => undefined },
+      "./padded-response": { assertCompletedPaddedBody: () => { /* empty */ } },
+      "@/features/hf-auth": { prepareHfTokenForUse: () => undefined },
       "@/features/igpu-carveout": {
-        dismissCarveoutAdviceForModel: () => {},
-        showCarveoutAdvice: () => {},
+        dismissCarveoutAdviceForModel: () => { /* empty */ },
+        showCarveoutAdvice: () => { /* empty */ },
       },
       "@/features/hub/lib/abort-signals": {
-        disposableTimeoutSignal: () => ({ signal: new AbortController().signal, dispose: () => {} }),
+        disposableTimeoutSignal: () => ({ signal: new AbortController().signal, dispose: () => { /* empty */ } }),
       },
       "@/features/hub/lib/hub-token-header": { hubTokenHeader: () => ({}) },
       "@/features/hub/lib/network": { isHuggingFaceOffline: () => false },
@@ -118,7 +118,7 @@ test("a 409 becomes the typed error, carrying the server's wording", async () =>
 test("the body is read exactly once", async () => {
   const response = jsonResponse(409, { detail: "nope" });
   const { module } = harness(response);
-  await module.saveChatMessage(message).catch(() => {});
+  await module.saveChatMessage(message).catch(() => { /* empty */ });
   assert.equal(response.bodyReads, 1);
 });
 

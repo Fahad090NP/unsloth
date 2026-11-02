@@ -2,6 +2,20 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
+
+interface PersistedState {
+  state: {
+    jobs: Record<
+      string,
+      {
+        transport?: string;
+        cancelTransport?: string;
+        presentation?: unknown;
+        downloadDir?: string;
+      }
+    >;
+  };
+}
 import test from "node:test";
 
 import type { ManagedDownload } from "../src/features/hub/download-manager/download-manager-types.ts";
@@ -87,11 +101,11 @@ const { presentedProgress } = await import(
 test("reload hydration keeps only a resolved active transport", () => {
   const jobs = getState().jobs;
   assert.equal(
-    jobs[jobKeyOf("model", "org/http-model", null)]?.transport,
+    jobs[jobKeyOf("model", "org/http-model", null)].transport,
     "http",
   );
   assert.equal(
-    jobs[jobKeyOf("model", "org/auto-model", null)]?.transport,
+    jobs[jobKeyOf("model", "org/auto-model", null)].transport,
     undefined,
   );
 });
@@ -120,21 +134,21 @@ test("the active transport is written with the persisted job", () => {
   assert.ok(flushPersistedState);
   flushPersistedState();
 
-  const persisted = JSON.parse(store.get(PERSIST_KEY) ?? "null");
+  const persisted = JSON.parse(store.get(PERSIST_KEY) ?? "null") as PersistedState;
   assert.equal(persisted.state.jobs[key].transport, "xet");
 });
 
 test("a fallback run's cancel marker survives the reload too", () => {
   const jobs = getState().jobs;
   const job = jobs[jobKeyOf("model", "org/fallback-model", null)];
-  assert.equal(job?.transport, "http");
-  assert.equal(job?.cancelTransport, "xet");
+  assert.equal(job.transport, "http");
+  assert.equal(job.cancelTransport, "xet");
 });
 
 test("an unresolved persisted marker is dropped, not trusted", () => {
   const jobs = getState().jobs;
   assert.equal(
-    jobs[jobKeyOf("model", "org/bad-marker-model", null)]?.cancelTransport,
+    jobs[jobKeyOf("model", "org/bad-marker-model", null)].cancelTransport,
     undefined,
   );
 });
@@ -142,7 +156,7 @@ test("an unresolved persisted marker is dropped, not trusted", () => {
 test("reload hydration keeps a valid companion-only presentation", () => {
   assert.deepEqual(
     getState().jobs[jobKeyOf("model", "org/presented-model", null)]
-      ?.presentation,
+      .presentation,
     {
       label: "MTP companion",
       filename: "mtp-shared-Q8_0.gguf",
@@ -174,7 +188,7 @@ test("the cancel marker is written with the persisted job", () => {
   assert.ok(flushPersistedState);
   flushPersistedState();
 
-  const persisted = JSON.parse(store.get(PERSIST_KEY) ?? "null");
+  const persisted = JSON.parse(store.get(PERSIST_KEY) ?? "null") as PersistedState;
   assert.equal(persisted.state.jobs[key].transport, "http");
   assert.equal(persisted.state.jobs[key].cancelTransport, "xet");
 });
@@ -207,9 +221,9 @@ test("a companion-only presentation is written for reload and Resume", () => {
   assert.ok(flushPersistedState);
   flushPersistedState();
 
-  const persisted = JSON.parse(store.get(PERSIST_KEY) ?? "null");
+  const persisted = JSON.parse(store.get(PERSIST_KEY) ?? "null") as PersistedState;
   assert.deepEqual(persisted.state.jobs[key].presentation, presentation);
-  assert.deepEqual(getState().jobs[key]?.presentation, presentation);
+  assert.deepEqual(getState().jobs[key].presentation, presentation);
 });
 
 test("growing a plan freezes the old cached prefix before changing totals", () => {
@@ -238,7 +252,7 @@ test("growing a plan freezes the old cached prefix before changing totals", () =
 
   setExpectedBytesForJob("model", "org/growing-plan", "Q4_K_M", 200);
   const job = getState().jobs[key];
-  assert.equal(job?.presentation?.cachedPlanPrefixBytes, 100);
+  assert.equal(job.presentation?.cachedPlanPrefixBytes, 100);
   assert.equal(job && presentedProgress(job).downloadedBytes, 5);
 });
 
@@ -268,7 +282,7 @@ test("the first known plan total stabilizes an adopted companion", () => {
 
   setExpectedBytesForJob("model", "org/adopted-plan", "Q4_K_M", 120);
   const job = getState().jobs[key];
-  assert.equal(job?.presentation?.cachedPlanPrefixBytes, 100);
+  assert.equal(job.presentation?.cachedPlanPrefixBytes, 100);
   assert.equal(job && presentedProgress(job).downloadedBytes, 5);
 });
 
@@ -326,10 +340,10 @@ test("an external job counts too, since a quit kills its transfer as well", () =
 test("a Download to folder survives the reload and is written back", () => {
   // Lost, a cancel after the reload would resume into whatever folder is picked now.
   const key = jobKeyOf("model", "org/pinned-model", null);
-  assert.equal(getState().jobs[key]?.downloadDir, "/mnt/e/AI/Models");
+  assert.equal(getState().jobs[key].downloadDir, "/mnt/e/AI/Models");
   putJob({ ...getState().jobs[key], downloadedBytes: 30 });
   assert.ok(flushPersistedState);
   flushPersistedState();
-  const persisted = JSON.parse(store.get(PERSIST_KEY) ?? "null");
+  const persisted = JSON.parse(store.get(PERSIST_KEY) ?? "null") as PersistedState;
   assert.equal(persisted.state.jobs[key].downloadDir, "/mnt/e/AI/Models");
 });

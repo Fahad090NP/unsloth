@@ -149,7 +149,7 @@ test("the reasoning header says Worked for", async () => {
   assert.ok(!reasoning.includes("Thought for"), "the old label is still rendered");
 });
 
-test("a chat row carries its own actions, revealed by hovering it", async () => {
+test("a chat row carries its own actions, revealed by hovering it", () => {
   const start = PAGE.indexOf("{chats.map((chat) => {");
   assert.notEqual(start, -1, "the chat list moved");
   const row = PAGE.slice(start, PAGE.indexOf("</DropdownMenu>", start));

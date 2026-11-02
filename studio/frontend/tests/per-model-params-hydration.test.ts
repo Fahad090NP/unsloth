@@ -22,7 +22,7 @@ const { useChatRuntimeStore } = await import(
 const { mergeBackendRecommendedInference } = await import(
   "../src/features/chat/presets/preset-policy.ts"
 );
-const { DEFAULT_INFERENCE_PARAMS } = await import(
+await import(
   "../src/features/chat/types/runtime.ts"
 );
 const { REMEMBERED_MAX_TOKENS_MAX } = await import(
@@ -91,22 +91,22 @@ test("a status response that beats hydration keeps the model's settings", async 
   assert.equal(hydrated.params.systemPrompt, "Be terse.");
   assert.equal(hydrated.params.topP, 0.5);
 
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   useChatRuntimeStore
     .getState()
     .setParams({ ...useChatRuntimeStore.getState().params, checkpoint: LLAMA });
   await settled();
   for (const put of settingsHttp.puts) {
     assert.equal(
-      (put.inferenceParamsByModel as Record<string, unknown>)?.[QWEN],
+      (put.inferenceParamsByModel as Record<string, unknown>)[QWEN],
       undefined,
       "the recommendation is not written over the tuning",
     );
   }
   const held = useChatRuntimeStore.getState().paramsByModel[QWEN];
-  assert.equal(held?.temperature, 0.2, "the tuning this browser still holds");
-  assert.equal(held?.maxTokens, 4096);
-  assert.equal(held?.systemPrompt, "Be terse.");
+  assert.equal(held.temperature, 0.2, "the tuning this browser still holds");
+  assert.equal(held.maxTokens, 4096);
+  assert.equal(held.systemPrompt, "Be terse.");
 });
 
 // A status poll re-applies the recommendation on every refresh.
@@ -232,9 +232,9 @@ test("the context length is not part of what a model remembers", () => {
   );
 
   const remembered = useChatRuntimeStore.getState().paramsByModel[LLAMA];
-  assert.equal(remembered?.temperature, 0.33, "its sampling is remembered");
+  assert.equal(remembered.temperature, 0.33, "its sampling is remembered");
   assert.equal(
-    "maxSeqLength" in (remembered ?? {}),
+    "maxSeqLength" in (remembered),
     false,
     "its context is not, so nothing replays over the loaded one",
   );
@@ -328,7 +328,7 @@ test("a visible switch remembers the model being left", () => {
   useChatRuntimeStore.getState().setCheckpoint(LLAMA);
 
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[QWEN]?.temperature,
+    useChatRuntimeStore.getState().paramsByModel[QWEN].temperature,
     0.77,
   );
 });
@@ -421,7 +421,7 @@ test("clearing the checkpoint remembers the model being dropped", () => {
   useChatRuntimeStore.getState().clearCheckpoint();
 
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[LLAMA]?.temperature,
+    useChatRuntimeStore.getState().paramsByModel[LLAMA].temperature,
     0.11,
   );
 });
@@ -493,11 +493,11 @@ test("an edit made before hydration is kept by the model's entry", async () => {
   const hydrated = useChatRuntimeStore.getState();
   assert.equal(hydrated.params.temperature, 0.33, "the fence held");
   assert.equal(
-    hydrated.paramsByModel[QWEN]?.temperature,
+    hydrated.paramsByModel[QWEN].temperature,
     0.33,
     "and the entry took the edit rather than the value it was written before",
   );
-  assert.equal(hydrated.paramsByModel[QWEN]?.systemPrompt, "stale");
+  assert.equal(hydrated.paramsByModel[QWEN].systemPrompt, "stale");
 
   applyStatus(QWEN);
   assert.equal(
@@ -565,7 +565,7 @@ test("turning the memory off is persisted and hydrated back", async () => {
     settingsHydrated: true,
     rememberParamsPerModel: true,
   });
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   useChatRuntimeStore.getState().setRememberParamsPerModel(false);
   await settled();
   assert.equal(
@@ -660,7 +660,7 @@ test("turning the memory off keeps the settings on screen", async () => {
     },
   });
   await settled();
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
 
   const store = useChatRuntimeStore.getState();
   store.setParams(
@@ -679,8 +679,8 @@ test("turning the memory off keeps the settings on screen", async () => {
   const written: Record<string, unknown> = {};
   for (const put of settingsHttp.puts) Object.assign(written, put);
   const globals = written.inferenceParams as Record<string, unknown>;
-  assert.equal(globals?.temperature, 0.11);
-  assert.equal(globals?.systemPrompt, "B");
+  assert.equal(globals.temperature, 0.11);
+  assert.equal(globals.systemPrompt, "B");
 });
 
 test("the loaded context caps a global budget with no entry to replay", async () => {
@@ -739,7 +739,7 @@ test("a browser that only read an entry does not write it back", async () => {
         keys.add(id);
       }
     }
-    settingsHttp.puts.length = 0;
+    settingsHttp.puts.splice(0);
     return [...keys];
   };
   await perModelWrites();
@@ -756,7 +756,7 @@ test("a browser that only read an entry does not write it back", async () => {
   assert.equal(useChatRuntimeStore.getState().params.temperature, 0.7);
 
   // Only the moved key is sent, so another tab's changes are not overwritten.
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   const editing = useChatRuntimeStore.getState();
   editing.setParams({ ...editing.params, temperature: 0.42 });
   await settled();
@@ -770,7 +770,7 @@ test("a browser that only read an entry does not write it back", async () => {
       >,
     );
   }
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   assert.deepEqual(patch, { [LLAMA]: { temperature: 0.42 } });
 
   const leaving = useChatRuntimeStore.getState();
@@ -790,7 +790,7 @@ test("a model with no entry is still seeded when it is left", async () => {
     },
   });
   await settled();
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
 
   const store = useChatRuntimeStore.getState();
   store.setParams({ ...store.params, checkpoint: LLAMA });
@@ -805,7 +805,7 @@ test("a model with no entry is still seeded when it is left", async () => {
       >,
     );
   }
-  assert.equal(written[QWEN]?.temperature, 0.31);
+  assert.equal(written[QWEN].temperature, 0.31);
 });
 
 // One-level merging would drop the first of two one-field patches.
@@ -828,7 +828,7 @@ test("two edits to one model inside a debounce window both survive", async () =>
     },
   });
   await settled();
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
 
   const first = useChatRuntimeStore.getState();
   first.setParams({ ...first.params, temperature: 0.42 });
@@ -885,9 +885,9 @@ function writtenFor(modelId: string): Record<string, unknown> {
   for (const put of settingsHttp.puts) {
     Object.assign(
       written,
-      (put.inferenceParamsByModel as Record<string, Record<string, unknown>>)?.[
+      (put.inferenceParamsByModel as Record<string, Record<string, unknown>>)[
         modelId
-      ] ?? {},
+      ],
     );
   }
   return written;
@@ -904,7 +904,7 @@ test("Max Tokens left on Max stays Max at a larger context", async () => {
     params: { ...useChatRuntimeStore.getState().params, checkpoint: QWEN },
   });
   await settled();
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   loadAt(QWEN, 30000);
   useChatRuntimeStore.getState().clearCheckpoint();
   await settled();
@@ -918,7 +918,7 @@ test("Max Tokens left on Max stays Max at a larger context", async () => {
   const store = useChatRuntimeStore.getState();
   store.setParams({ ...store.params, temperature: 0.33 });
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[QWEN]?.maxTokens,
+    useChatRuntimeStore.getState().paramsByModel[QWEN].maxTokens,
     REMEMBERED_MAX_TOKENS_MAX,
   );
   loadAt(QWEN, 8192);
@@ -935,7 +935,7 @@ test("turning the memory on records Max as Max", async () => {
   });
   loadAt(QWEN, 30000);
   await settled();
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   useChatRuntimeStore.getState().setRememberParamsPerModel(true);
   await settled();
 
@@ -983,7 +983,7 @@ test("a remembered Max is the window after a restart", async () => {
   assert.equal(useChatRuntimeStore.getState().params.maxTokens, 30000);
 });
 
-test("a Max Tokens chosen below Max still replays as chosen", async () => {
+test("a Max Tokens chosen below Max still replays as chosen", () => {
   useChatRuntimeStore.setState({
     settingsHydrated: true,
     rememberParamsPerModel: true,
@@ -1010,7 +1010,7 @@ test("an external model's cap is remembered as a number", () => {
   loadAt(EXTERNAL, 8192);
   useChatRuntimeStore.getState().clearCheckpoint();
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[EXTERNAL]?.maxTokens,
+    useChatRuntimeStore.getState().paramsByModel[EXTERNAL].maxTokens,
     8192,
   );
 });
@@ -1036,7 +1036,7 @@ test("a compare load keeps Max as Max when the next pane loads", () => {
     .setCheckpoint(LLAMA, null, { maxTokensCap: 8192 });
 
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[QWEN]?.maxTokens,
+    useChatRuntimeStore.getState().paramsByModel[QWEN].maxTokens,
     REMEMBERED_MAX_TOKENS_MAX,
   );
   loadAt(QWEN, 35000);
@@ -1054,13 +1054,13 @@ test("a chosen cap clamped to a smaller window stays the chosen cap", () => {
   loadAt(QWEN, 35000);
   const store = useChatRuntimeStore.getState();
   store.setParams({ ...store.params, maxTokens: 30000 });
-  assert.equal(useChatRuntimeStore.getState().paramsByModel[QWEN]?.maxTokens, 30000);
+  assert.equal(useChatRuntimeStore.getState().paramsByModel[QWEN].maxTokens, 30000);
 
   for (const smaller of [20000, 30000]) {
     loadAt(QWEN, smaller);
     useChatRuntimeStore.getState().clearCheckpoint();
     assert.equal(
-      useChatRuntimeStore.getState().paramsByModel[QWEN]?.maxTokens,
+      useChatRuntimeStore.getState().paramsByModel[QWEN].maxTokens,
       30000,
     );
     loadAt(QWEN, 50000);
@@ -1071,7 +1071,7 @@ test("a chosen cap clamped to a smaller window stays the chosen cap", () => {
   const chosen = useChatRuntimeStore.getState();
   chosen.setParams({ ...chosen.params, maxTokens: 50000 });
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[QWEN]?.maxTokens,
+    useChatRuntimeStore.getState().paramsByModel[QWEN].maxTokens,
     REMEMBERED_MAX_TOKENS_MAX,
   );
   loadAt(QWEN, 60000);

@@ -2,20 +2,23 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 import { installLocalStorageFake } from "./helpers/kit.ts";
 
 const browser = installLocalStorageFake();
 browser.store.set("unsloth_chat_settings_imported_to_studio_db", "true");
-register("./thread-sampling-resolver.mjs", import.meta.url);
+const threadSamplingResolverHooks = (await import(new URL("./thread-sampling-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: threadSamplingResolverHooks.resolve });
 const STORE = new URL("../src/features/chat/stores/chat-runtime-store.ts", import.meta.url).href;
 const { settingsHttp } = await import("./helpers/store-stubs/settings-http.ts");
 type Runtime = typeof import("../src/features/chat/stores/chat-runtime-store.ts");
 
 async function boot(name: string) {
   settingsHttp.settings = {};
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   const module = await import(`${STORE}?scenario=${name}`) as Runtime;
   const state = () => module.useChatRuntimeStore.getState();
   state().setPermissionMode("auto");

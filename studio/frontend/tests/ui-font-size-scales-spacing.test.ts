@@ -208,7 +208,7 @@ test("no hand-set length above a hairline skips the scale", () => {
     "features/profile/components/stats/token-activity-card.tsx",
   ]);
   const LENGTH =
-    /(?<=[\s"'`:!(\[])-?(?:size|w|h|min-w|min-h|max-w|max-h|basis|gap|gap-x|gap-y|space-x|space-y|p|px|py|pt|pb|pl|pr|ps|pe|m|mx|my|mt|mb|ml|mr|ms|me|top|bottom|left|right|inset|inset-x|inset-y|start|end|translate-x|translate-y)-\[(\d*\.?\d+)(px|rem)\]/g;
+    /(?<=[\s"'`:!([])-?(?:size|w|h|min-w|min-h|max-w|max-h|basis|gap|gap-x|gap-y|space-x|space-y|p|px|py|pt|pb|pl|pr|ps|pe|m|mx|my|mt|mb|ml|mr|ms|me|top|bottom|left|right|inset|inset-x|inset-y|start|end|translate-x|translate-y)-\[(\d*\.?\d+)(px|rem)\]/g;
   const bare = SOURCES.filter(
     (file) => /\.tsx?$/.test(file) && !FIXED_BY_DESIGN.has(file),
   ).flatMap((file) =>
@@ -379,7 +379,7 @@ test("a menu's height cap keeps Radix's available height", () => {
     /<(DropdownMenuContent|DropdownMenuSubContent|SelectContent|ContextMenuContent|ContextMenuSubContent)\b([^>]*)>/g;
   for (const file of SOURCES) {
     for (const [, tag, props] of readSrc(file).matchAll(menu)) {
-      for (const [cap] of (props ?? "").matchAll(/max-h-\S+/g)) {
+      for (const [cap] of (props).matchAll(/max-h-\S+/g)) {
         assert.match(
           cap,
           /var\(--radix-[a-z-]+-content-available-height\)/,
@@ -430,7 +430,7 @@ test("a scaled sheet width stops at the viewport", () => {
   const sheet = /<SheetContent\b([^>]*)>/g;
   for (const file of SOURCES.filter((f) => f.endsWith(".tsx"))) {
     for (const [, props] of readSrc(file).matchAll(sheet)) {
-      for (const [width] of (props ?? "").matchAll(/(?<![\w:-])w-\[[^\]\s"]*ui-space-scale[^\]\s"]*\]/g)) {
+      for (const [width] of (props).matchAll(/(?<![\w:-])w-\[[^\]\s"]*ui-space-scale[^\]\s"]*\]/g)) {
         assert.match(width, /^w-\[min\(.*,100vw\)\]$/, `${file} ${width} can pass the viewport`);
       }
     }
@@ -442,12 +442,12 @@ test("resizable panels render their layout width at the browser scale", () => {
   assert.equal(sidebar.match(/"--sidebar-width": `\$\{width \* widthScale\}px`/g)?.length, 2);
   assert.ok(
     readSrc("features/chat/chat-settings-sheet.tsx").includes(
-      '"--chat-settings-width": `${settingsWidth * settingsScale}px`',
+      '"--chat-settings-width": `\${settingsWidth * settingsScale}px`',
     ),
   );
   const handle = readSrc("components/ui/panel-resize-handle.tsx");
-  assert.ok(handle.includes("paint(`${pendingRef.current * scaleRef.current}px`)"));
-  assert.ok(handle.includes("paint(`${committedRef.current * scaleRef.current}px`)"));
+  assert.ok(handle.includes("paint(`\${pendingRef.current * scaleRef.current}px`)"));
+  assert.ok(handle.includes("paint(`\${committedRef.current * scaleRef.current}px`)"));
   assert.ok(handle.includes("const next = drag.startWidth + delta / scaleRef.current"));
   // Only the browser scale: desktop zoom already scales every px.
   assert.ok(

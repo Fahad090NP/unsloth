@@ -26,11 +26,11 @@ test("a second caller waits rather than running alongside the first", async () =
     await first.promise;
     active -= 1;
   });
-  const b = run(async () => {
+  const b = run( () => {
     active += 1;
     peak = Math.max(peak, active);
     active -= 1;
-  });
+  return Promise.resolve(); });
 
   await Promise.resolve();
   assert.equal(active, 1);
@@ -42,12 +42,12 @@ test("a second caller waits rather than running alongside the first", async () =
 test("a rejected task does not block the next one", async () => {
   const run = createSerialQueue();
   let ran = false;
-  const failed = run(async () => {
-    throw new Error("read failed");
+  const failed = run( () => {
+    return Promise.reject(new Error("read failed"));
   });
-  const after = run(async () => {
+  const after = run( () => {
     ran = true;
-    return 7;
+    return Promise.resolve(7);
   });
   await assert.rejects(failed, /read failed/);
   assert.equal(await after, 7);
@@ -59,9 +59,9 @@ test("tasks run in the order they were queued", async () => {
   const order: number[] = [];
   await Promise.all(
     [1, 2, 3].map((n) =>
-      run(async () => {
+      run( () => {
         order.push(n);
-      }),
+      return Promise.resolve(); }),
     ),
   );
   assert.deepEqual(order, [1, 2, 3]);

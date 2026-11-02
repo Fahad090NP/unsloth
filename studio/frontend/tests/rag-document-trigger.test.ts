@@ -36,7 +36,7 @@ const { RagDocumentTrigger } = loadWithStubs<typeof TriggerModule>(
     },
     "./source-file": {
       asViewerFile: (file: File) => file,
-      fetchSourceFile: async () => null,
+      fetchSourceFile:  () => Promise.resolve(null),
       isViewableSource: (name: string) => /\.(pdf|docx|md|txt|rtf)$/.test(name),
     },
   },

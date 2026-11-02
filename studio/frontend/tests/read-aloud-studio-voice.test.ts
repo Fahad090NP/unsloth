@@ -47,17 +47,17 @@ function load(
     ),
     {
       "@/features/auth": {
-        authFetch: async (input: string, init?: { body?: string }) => {
+        authFetch:  (input: string, init?: { body?: string }) => {
           if (input === "/v1/models") {
-            if (models instanceof Error) throw models;
-            return { ok: true, status: 200, json: async () => models };
+            if (models instanceof Error) return Promise.reject(models);
+            return Promise.resolve({ ok: true, status: 200, json:  () => Promise.resolve(models) });
           }
           posted.push(JSON.parse(init?.body ?? "{}"));
-          return {
+          return Promise.resolve({
             ok: reply.status < 400,
             status: reply.status,
-            json: async () => reply.body,
-          };
+            json:  () => Promise.resolve(reply.body),
+          });
         },
       },
       "../../settings/api/openai-model-catalog": modelCatalog,
@@ -71,7 +71,7 @@ function load(
       "../stores/external-providers-store": {
         useExternalProvidersStore: { getState: () => ({}) },
       },
-      "../api/providers-api": { encryptProviderApiKey: async () => "" },
+      "../api/providers-api": { encryptProviderApiKey:  () => Promise.resolve("") },
       "../external-providers": { getExternalProviderApiKey: () => "" },
       "@/features/settings/stores/voice-settings-store": {
         useVoiceSettingsStore: {
@@ -83,7 +83,7 @@ function load(
       },
       "@/lib/toast": {
         toast: {
-          error: () => {},
+          error: () => {/* intentionally empty */},
           warning: (message: string) => warnings.push(message),
         },
       },

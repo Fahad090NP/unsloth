@@ -18,7 +18,7 @@ const api = loadWithStubs<typeof import("../src/features/audio/api.ts")>(
   new URL("../src/features/audio/api.ts", import.meta.url),
   {
     "@/features/auth": {
-      authFetch: async () => reply,
+      authFetch: () => reply,
       getAuthToken: () => "t",
     },
     "@/lib/account-transition": { accountTransitionPending: () => false },

@@ -77,7 +77,7 @@ test("a closing run longer than the opener agrees across the handover", () => {
     assert.equal(after?.source, "x = 1", `a ${closeRun}-backtick close must not leak delimiters`);
     assert.equal(
       markdownBlockFallback("```python\nx = 1").text,
-      after?.source,
+      after.source,
       "and the streaming scanner must already have said the same thing",
     );
   }

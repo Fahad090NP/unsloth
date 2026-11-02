@@ -13,7 +13,7 @@ import { loadWithStubs } from "./helpers/module-stubs.ts";
 
 function environment(pointerEvents = true) {
   const target = Object.assign(new EventTarget(), {
-    ...(pointerEvents ? { PointerEvent: function PointerEvent() {} } : {}),
+    ...(pointerEvents ? { PointerEvent: function PointerEvent() { return undefined; } } : {}),
   });
   const document = Object.assign(new EventTarget(), { hidden: false });
   const send = (type: string, fields: Record<string, unknown> = {}, node: EventTarget = target) => {
@@ -62,11 +62,11 @@ test("replacing the sole queued fence cannot lose a stationary held scrollbar", 
     blocked: h.state.held,
     commit: (callback) => { commits += 1; callback(); },
   });
-  const cancel = queue.add(() => true, () => {});
+  const cancel = queue.add(() => true, () => { return undefined; });
   h.send("pointerdown", mouse);
   cancel();
   assert.equal(queue.pending(), 0);
-  queue.add(() => true, () => {});
+  queue.add(() => true, () => { return undefined; });
   const run = () => {
     const callback = callbacks.values().next().value;
     assert.ok(callback);

@@ -19,12 +19,12 @@ test("gallery delete accepts an externally removed image but still reports real 
   for (const status of [200, 404, 401, 403, 500]) {
     const context = {
       exports: {} as { deleteGalleryImage: (id: string) => Promise<void> },
-      authFetch: async (url: string, init: RequestInit) => {
+      authFetch: (url: string, init: RequestInit) => {
         assert.equal(url, "/api/inference/images/gallery/missing-png");
         assert.equal(init.method, "DELETE");
-        return new Response(null, { status });
+        return Promise.resolve(new Response(null, { status }));
       },
-      readFastApiError: async () => `HTTP ${status}`,
+      readFastApiError: () => Promise.resolve(`HTTP ${status}`),
     };
     runInNewContext(code, context);
     const deletion = context.exports.deleteGalleryImage("missing-png");

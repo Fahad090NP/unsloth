@@ -34,7 +34,7 @@ const ready = {
 test("every nonterminal backend load phase counts as in flight on page open", () => {
   const models = readFileSync(new URL("../../backend/models/inference.py", import.meta.url), "utf8");
   const response = models.slice(models.indexOf("class DiffusionLoadProgressResponse"));
-  const phases = [.../Literal\[([^\]]+)\]/.exec(response)![1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  const phases = [...must(/Literal\[([^\]]+)\]/.exec(response))[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
   const nonterminal = phases.filter((p) => p !== "ready" && p !== "error");
   assert.ok(nonterminal.includes("saving_chat_context"));
   for (const phase of nonterminal) assert.equal(isLoadInFlightPhase(phase), true, phase);
@@ -114,7 +114,7 @@ test("the mount probe publishes the finished build's status before the reconcile
   const newBuild = { ...ready, component_files: { vae: "new-vae.safetensors" } };
   store.clear();
   rememberPendingImageLoad({ ...zImage, fieldFiles: newFiles });
-  const resumed = finishedLoadTarget(null, newBuild)!;
+  const resumed = must(finishedLoadTarget(null, newBuild));
   rememberLoadedImageComponents(resumed, newBuild);
   rememberImageModel({ ...zImage, ...newFiles });
   forgetStaleResidentComponents(newBuild);
@@ -162,3 +162,8 @@ test("a retired snapshot's load resumed after a page reload is recovered as what
   const redirected = finishedLoadTarget(null, asBase);
   assert.deepEqual([redirected?.repoId, redirected?.kind], ["black-forest-labs/flux-3-image-klein", "pipeline"]);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

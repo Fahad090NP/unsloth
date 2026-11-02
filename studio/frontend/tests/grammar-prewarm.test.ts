@@ -63,19 +63,19 @@ test("one step per idle task, each tokenizing one more line, sample by sample", 
   const h = harness();
   h.prewarm.start();
   assert.equal(h.idle.length, 1);
-  h.idle.shift()!();
+  must(h.idle.shift())();
   assert.deepEqual(h.calls.map((call) => call.code), ["# a\n"]);
-  h.idle.shift()!();
-  h.idle.shift()!();
+  must(h.idle.shift())();
+  must(h.idle.shift())();
   assert.deepEqual(h.calls.map((call) => [call.language, call.code]), [
     ["python", "# a\n"],
     ["python", "# a\nimport os\n"],
     ["css", "/* b */\n"],
   ]);
-  h.idle.shift()!();
-  h.idle.shift()!();
+  must(h.idle.shift())();
+  must(h.idle.shift())();
   assert.equal(h.calls.length, 5);
-  h.idle.shift()!();
+  must(h.idle.shift())();
   assert.equal(h.idle.length, 0, "the chain ends after the last line");
   h.prewarm.start();
   assert.equal(h.idle.length, 0, "and never restarts");
@@ -85,40 +85,40 @@ test("a stream or recent input defers the step without tokenizing", () => {
   let quiet = false;
   const h = harness({ quiet: () => quiet });
   h.prewarm.start();
-  h.idle.shift()!();
+  must(h.idle.shift())();
   assert.equal(h.calls.length, 0);
   assert.equal(h.waits.length, 1);
   assert.equal(h.waits[0].ms, PREWARM_RETRY_MS);
   quiet = true;
-  h.waits.shift()!.callback();
+  must(h.waits.shift()).callback();
   assert.equal(h.calls.length, 1);
 });
 
 test("a grammar still loading advances when its late callback fires, or after the guard", () => {
   const h = harness({ sync: false });
   h.prewarm.start();
-  h.idle.shift()!();
+  must(h.idle.shift())();
   assert.equal(h.calls.length, 1);
   assert.equal(h.idle.length, 0);
   assert.equal(h.waits.length, 1);
   assert.equal(h.waits[0].ms, PREWARM_GUARD_MS);
-  h.lates.shift()!();
+  must(h.lates.shift())();
   assert.equal(h.idle.length, 1, "the late result schedules the next step");
   assert.equal(h.waits.length, 0, "and cancels the guard");
-  h.idle.shift()!();
-  h.waits.shift()!.callback();
+  must(h.idle.shift())();
+  must(h.waits.shift()).callback();
   assert.equal(h.idle.length, 1, "the guard alone also advances");
 });
 
 test("cancel during a grammar load stops the chain, and a restart runs exactly one chain", () => {
   const h = harness({ sync: false });
   h.prewarm.start();
-  h.idle.shift()!();
+  must(h.idle.shift())();
   assert.equal(h.calls.length, 1);
   assert.equal(h.waits.length, 1, "the guard is armed while the grammar loads");
   h.prewarm.cancel();
   assert.equal(h.waits.length, 0, "cancel disarms the guard");
-  h.lates.shift()!();
+  must(h.lates.shift())();
   assert.equal(h.idle.length, 0, "a late result for the cancelled step does not resume the chain");
   h.prewarm.start();
   assert.equal(h.idle.length, 1, "start schedules one chain");
@@ -127,8 +127,13 @@ test("cancel during a grammar load stops the chain, and a restart runs exactly o
 test("languages the main thread already warmed are skipped and cancel stops the chain", () => {
   const h = harness({ skip: (language) => language === "python" });
   h.prewarm.start();
-  h.idle.shift()!();
+  must(h.idle.shift())();
   assert.deepEqual(h.calls.map((call) => call.language), ["css"]);
   h.prewarm.cancel();
   assert.equal(h.idle.length, 0);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

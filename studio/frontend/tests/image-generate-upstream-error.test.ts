@@ -9,7 +9,7 @@ register("./helpers/settings-api-resolver.mjs", import.meta.url);
 
 const originalFetch = globalThis.fetch;
 afterEach(() => {
-  globalThis.fetch = originalFetch;
+  Reflect.set(globalThis, "fetch", originalFetch);
 });
 
 const { cancelDiffusionGeneration, generateDiffusionImage, GenerateResponseLostError } = await import(
@@ -17,8 +17,8 @@ const { cancelDiffusionGeneration, generateDiffusionImage, GenerateResponseLostE
 );
 
 function respond(status: number, body: string, contentType: string) {
-  globalThis.fetch = (async () =>
-    new Response(body, { status, headers: { "content-type": contentType } }));
+  globalThis.fetch = (() =>
+    Promise.resolve(new Response(body, { status, headers: { "content-type": contentType } })));
 }
 
 test("a JSON 502 from the app shows the upstream reason instead of waiting for a lost run", async () => {
@@ -44,12 +44,12 @@ test("a proxy's HTML 502 is still a lost response", async () => {
 
 test("Stop on a connection run targets the connection, a local Stop does not", async () => {
   const urls: string[] = [];
-  globalThis.fetch = (async (input: RequestInfo | URL) => {
-    urls.push(String(input));
-    return new Response(JSON.stringify({ cancelled: true }), {
+  globalThis.fetch = ((input: RequestInfo | URL) => {
+    urls.push(String(input as string));
+    return Promise.resolve(new Response(JSON.stringify({ cancelled: true }), {
       status: 200,
       headers: { "content-type": "application/json" },
-    });
+    }));
   });
   const { cancelConnectionImageGeneration } = await import(
     "../src/features/images/connection-cancel.ts"

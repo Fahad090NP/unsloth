@@ -91,7 +91,7 @@ test("the close is at least three, not exactly three", () => {
   const four = getCodeFence("```python\nx = 1\n````\n");
   assert.equal(four?.source, "x = 1");
   assert.ok(
-    !/```$/m.test(four?.source ?? ""),
+    !/```$/m.test(four.source ?? ""),
     "no delimiter may be left inside the body",
   );
   const five = getCodeFence("```python\nx = 1\n`````\n");

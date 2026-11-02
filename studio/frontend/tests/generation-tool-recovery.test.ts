@@ -394,7 +394,7 @@ test("the live adapter saves identities for ordinary, approval and provider card
         resolvedThreadId: "thread",
         sandboxSessionId: "session",
         // The run's key when the call parks, which can differ from the one captured at send.
-        serverCancel: () => {},
+        serverCancel: () => { return undefined; },
         liveThreadKey: () => "thread-live",
         cancelId: "cancel-1",
         generationRunId,
@@ -409,8 +409,8 @@ test("the live adapter saves identities for ordinary, approval and provider card
         mergeToolProvenance: () => undefined,
         useChatRuntimeStore: {
           getState: () => ({
-            clearToolLiveOutput() {},
-            clearToolFullOutput() {},
+            clearToolLiveOutput() { return undefined; },
+            clearToolFullOutput() { return undefined; },
             setToolConfirmation: (
               id: string,
               _approvalId: string,
@@ -512,12 +512,12 @@ async function recoverRun(
   const generationRecoveries = new Map();
   const runtime = {
     models: [],
-    registerThreadServerCancel() {},
-    setThreadRunning() {},
-    clearThreadServerCancel() {},
+    registerThreadServerCancel() { return undefined; },
+    setThreadRunning() { return undefined; },
+    clearThreadServerCancel() { return undefined; },
     // The real store has these; a stand-in missing them would make approval recovery look broken.
-    setToolConfirmation() {},
-    clearToolConfirmation() {},
+    setToolConfirmation() { return undefined; },
+    clearToolConfirmation() { return undefined; },
   };
   const run = {
     id: "run",
@@ -548,11 +548,13 @@ async function recoverRun(
     RUN_CHECKPOINT_INTERVAL_MS,
     generationRecoveries,
     useChatRuntimeStore: { getState: () => runtime },
-    cancelChatGenerationRun: async () => {},
+    cancelChatGenerationRun: () => Promise.resolve(),
     budgetImpliesTruncation: () => false,
-    saveStoredChatMessage: async (message: (typeof snapshots)[number]) => {
+    saveStoredChatMessage: (message: (typeof snapshots)[number]) => {
       snapshots.push(structuredClone(message));
-    },
+    
+  return Promise.resolve();
+},
     followChatGenerationRun: async function* (
       _id: string,
       followOptions: { replayFrom: number },
@@ -575,7 +577,7 @@ async function recoverRun(
     },
     restoredAssistantStatus: () => ({ type: "complete", reason: "stop" }),
     isTerminalChatGenerationRun: () => !options.stallBefore,
-    forgetServerActiveGenerationRun() {},
+    forgetServerActiveGenerationRun() { return undefined; },
     ChatGenerationStalledError,
   });
   vm.runInContext(executable, context);
@@ -669,11 +671,11 @@ test("the recovery scheduler persists provider compaction metadata", async () =>
     content: "Earlier conversation summary",
     encrypted_content: "opaque-compaction",
   });
-  assert.equal(metadata?.providerCompactionAfterToolCalls, 1);
-  assert.equal(metadata?.providerCompactionProviderType, "anthropic");
-  assert.equal(metadata?.providerCompactionModelId, "claude-test");
+  assert.equal(metadata.providerCompactionAfterToolCalls, 1);
+  assert.equal(metadata.providerCompactionProviderType, "anthropic");
+  assert.equal(metadata.providerCompactionModelId, "claude-test");
   assert.equal(
-    metadata?.providerCompactionConnectionKey,
+    metadata.providerCompactionConnectionKey,
     providerCompactionConnectionKey(
       "provider-a",
       "https://api.anthropic.com/v1",

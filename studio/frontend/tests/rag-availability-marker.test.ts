@@ -182,7 +182,7 @@ test("the KB list's own 200 does not overrule its marker", () => {
 });
 
 // four call sites, because three of them bypass ragRequest
-test("every RAG response path reports availability", async () => {
+test("every RAG response path reports availability",  () => {
   assert.match(
     RAG_API,
     /import \{ noteRagAvailability, noteRagResponse \} from "\.\/rag-availability";/,
@@ -223,9 +223,9 @@ test("every RAG response path reports availability", async () => {
       `${generator} opens its stream outside the budgeted opener`,
     );
   }
-});
+return Promise.resolve(); });
 
-test("listKnowledgeBases reads the marker before returning the array", async () => {
+test("listKnowledgeBases reads the marker before returning the array",  () => {
   const list = functionBody(RAG_API, "listKnowledgeBases");
   assert.match(
     list,
@@ -237,10 +237,10 @@ test("listKnowledgeBases reads the marker before returning the array", async () 
     /noteRagAvailability\(data\);\n\s*return data\.knowledgeBases/,
     "the marker is read after the return, or not at all",
   );
-});
+return Promise.resolve(); });
 
-test("the dialog stops offering a Create button that can only 503", async () => {
-  const src = await readSrc("features/rag/components/knowledge-base-dialog.tsx");
+test("the dialog stops offering a Create button that can only 503", () => {
+  const src = readSrc("features/rag/components/knowledge-base-dialog.tsx");
   assert.match(
     src,
     /const ragUnavailable = useRagAvailabilityStore\(\(s\) => s\.isUnavailable\(\)\);/,
@@ -285,8 +285,8 @@ test("the dialog stops offering a Create button that can only 503", async () => 
 });
 
 // The queue reschedules on probe failure with no cap, so a broken RAG host never dispatched.
-test("a queued prompt is not held forever by a probe that can never succeed", async () => {
-  const src = await readSrc("components/assistant-ui/thread.tsx");
+test("a queued prompt is not held forever by a probe that can never succeed", () => {
+  const src = readSrc("components/assistant-ui/thread.tsx");
   assert.match(
     src,
     /import \{ useRagAvailabilityStore \} from "@\/features\/rag\/api\/rag-availability";/,
@@ -314,8 +314,8 @@ test("a queued prompt is not held forever by a probe that can never succeed", as
 });
 
 // useRagToolDisabled is a model-capability gate, deliberately false with no model loaded.
-test("host availability is kept out of the model-capability gate", async () => {
-  const src = await readSrc("features/chat/hooks/use-rag-tool-disabled.ts");
+test("host availability is kept out of the model-capability gate", () => {
+  const src = readSrc("features/chat/hooks/use-rag-tool-disabled.ts");
   assert.ok(
     !src.includes("rag-availability"),
     "the sqlite-vec verdict was folded into the tool-capability hook",

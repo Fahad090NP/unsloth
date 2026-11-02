@@ -113,7 +113,7 @@ test("the document-wide observer follows the modal in and out", () => {
   assert.equal(notified, 1);
   const stacked = stackedObserver();
   assert.ok(stacked, "a modal is up, so stacking has to be watched");
-  assert.equal(stacked?.init.attributeOldValue, true);
+  assert.equal(stacked.init.attributeOldValue, true);
 
   closeModal();
   assert.equal(getModalLayer(), false);

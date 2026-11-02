@@ -553,7 +553,7 @@ test("an id with a complete copy is never also marked partial", () => {
     ) && read("../src/features/hub/index.ts").includes("partialSetFromRows"),
   );
   assert.ok(
-    dedupe.includes('return `${normalizedRepo}\\0${modelFormat ?? "unknown"}`'),
+    dedupe.includes("return `$" + "{normalizedRepo}\\0" + "{modelFormat ?? \"unknown\"}`"),
     "repo plus format, which is what lets one id be both",
   );
 });

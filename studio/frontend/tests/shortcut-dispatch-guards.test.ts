@@ -13,6 +13,14 @@ import {
   registerBundlerResolver,
 } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 registerBundlerResolver();
 
 const {
@@ -50,33 +58,33 @@ test("a keydown mid-IME-composition is not a chord", () => {
   assert.equal(isImeComposing(keydown({})), false);
 });
 
-test("the dispatcher checks composition before it matches anything", async () => {
+test("the dispatcher checks composition before it matches anything",  () => {
   // Before the match and preventDefault, so the candidate window keeps its key.
   assert.match(
     USE_SHORTCUT,
     /if \(isImeComposing\(event\)\) return;\n\s*const hit = bindings\.find/,
   );
-});
+return Promise.resolve(); });
 
 // Bare Tab moves focus; binding it would make the card's own buttons unreachable.
 test("bare Tab is refused even for a prompt-gated action", () => {
-  assert.equal(isAcceptableBinding(parseBinding("Tab")!, true), false);
-  assert.equal(isAcceptableBinding(parseBinding("Shift+Tab")!, true), false);
-  assert.equal(isAcceptableBinding(parseBinding("Tab")!, false), false);
+  assert.equal(isAcceptableBinding(required(parseBinding("Tab")), true), false);
+  assert.equal(isAcceptableBinding(required(parseBinding("Shift+Tab")), true), false);
+  assert.equal(isAcceptableBinding(required(parseBinding("Tab")), false), false);
 });
 
 test("Tab held with a modifier is still a chord", () => {
-  assert.equal(isAcceptableBinding(parseBinding("Ctrl+Tab")!, false), true);
-  assert.equal(isAcceptableBinding(parseBinding("Mod+Tab")!, false), true);
-  assert.equal(isAcceptableBinding(parseBinding("Mod+Shift+Tab")!, false), true);
+  assert.equal(isAcceptableBinding(required(parseBinding("Ctrl+Tab")), false), true);
+  assert.equal(isAcceptableBinding(required(parseBinding("Mod+Tab")), false), true);
+  assert.equal(isAcceptableBinding(required(parseBinding("Mod+Shift+Tab")), false), true);
 });
 
 test("refusing Tab does not disturb the other bare-key rules", () => {
-  assert.equal(isAcceptableBinding(parseBinding("Enter")!, true), true);
-  assert.equal(isAcceptableBinding(parseBinding("Escape")!, true), true);
-  assert.equal(isAcceptableBinding(parseBinding("KeyG")!, false), false);
-  assert.equal(isAcceptableBinding(parseBinding("F5")!, false), true);
-  assert.equal(isAcceptableBinding(parseBinding("Shift+Escape")!, false), true);
+  assert.equal(isAcceptableBinding(required(parseBinding("Enter")), true), true);
+  assert.equal(isAcceptableBinding(required(parseBinding("Escape")), true), true);
+  assert.equal(isAcceptableBinding(required(parseBinding("KeyG")), false), false);
+  assert.equal(isAcceptableBinding(required(parseBinding("F5")), false), true);
+  assert.equal(isAcceptableBinding(required(parseBinding("Shift+Escape")), false), true);
 });
 
 function withElements(...els: { closest: (selector: string) => unknown }[]) {
@@ -114,7 +122,7 @@ test("every match under a modal is still not the foreground", () => {
   assert.equal(isSurfaceInForeground(".aui-composer-input"), false);
 });
 
-test("dictation asks at press time, not through enabled", async () => {
+test("dictation asks at press time, not through enabled",  () => {
   const at = THREAD.indexOf('useShortcut(\n    "startDictation"');
   assert.notEqual(at, -1, "the dictation chord lost its call site");
   const body = THREAD.slice(at, THREAD.indexOf("\n  );", at));
@@ -123,17 +131,17 @@ test("dictation asks at press time, not through enabled", async () => {
     body,
     /\(\) => \{\n\s*\/\/[\s\S]*?if \(!isSurfaceInForeground\(COMPOSER_INPUT_SELECTOR\)\) return;/,
   );
-});
+return Promise.resolve(); });
 
-test("both copy chords report a failed write", async () => {
+test("both copy chords report a failed write",  () => {
   assert.match(
     APP_SIDEBAR,
     /} else if \(empty\.value\) \{[\s\S]*?\} else \{[\s\S]*?toast\.error\("Could not copy this chat\."\)/,
   );
   assert.match(APP_SIDEBAR, /toast\.error\("Could not copy the session id\."\)/);
-});
+return Promise.resolve(); });
 
-test("the sandbox probe does not skip a chat that is out of a project", async () => {
+test("the sandbox probe does not skip a chat that is out of a project",  () => {
   const at = CHAT_ROW_MENU.indexOf("async function sandboxSessionIdsHolding");
   assert.notEqual(at, -1);
   const body = CHAT_ROW_MENU.slice(at, CHAT_ROW_MENU.indexOf("\n}", at));
@@ -142,7 +150,7 @@ test("the sandbox probe does not skip a chat that is out of a project", async ()
     body,
     /if \(await sandboxHasFiles\(candidate\)\) held\.push\(candidate\);/,
   );
-});
+return Promise.resolve(); });
 
 test("both composers gate dictation on the foreground", async () => {
   for (const path of [
@@ -161,7 +169,7 @@ test("both composers gate dictation on the foreground", async () => {
   }
 });
 
-test("route shortcuts stay idle while Settings is open", async () => {
+test("route shortcuts stay idle while Settings is open",  () => {
   const source = ts.createSourceFile(
     "__root.tsx",
     SRC__ROOT,
@@ -215,7 +223,7 @@ test("route shortcuts stay idle while Settings is open", async () => {
     SRC__ROOT,
     /const routeShortcutEnabled = !isAuthFlowRoute && !settingsDialogOpen;/,
   );
-});
+return Promise.resolve(); });
 
 // A module store outlives the sidebar, so sign-out must reset it.
 test("signing out drops the previous account's navigation state", async () => {
@@ -229,11 +237,11 @@ test("signing out drops the previous account's navigation state", async () => {
   );
 });
 
-test("the selection latch is keyed by action", async () => {
+test("the selection latch is keyed by action",  () => {
   assert.match(APP_SIDEBAR, /selectionActedRef = useRef<\{ id: ShortcutId; at: number \} \| null>/);
   assert.match(APP_SIDEBAR, /last\?\.id === id &&/);
   assert.doesNotMatch(APP_SIDEBAR, /followsSelectionAction\(\)/);
-});
+return Promise.resolve(); });
 
 test("both composers answer to the shared selector", async () => {
   const shared = await readSrcAsync("features/chat/shared-composer.tsx");
@@ -312,7 +320,7 @@ test("an absent surface is not a covered one", () => {
 });
 
 // Window-level chords stay registered under a dialog, so check foreground at press time.
-test("the sidebar's mutating chords refuse to fire under a dialog", async () => {
+test("the sidebar's mutating chords refuse to fire under a dialog",  () => {
   for (const id of [
     "archiveChat",
     "markChatUnread",
@@ -335,9 +343,9 @@ test("the sidebar's mutating chords refuse to fire under a dialog", async () => 
     APP_SIDEBAR,
     /document\.querySelector\(SIDEBAR_SELECTOR\) === null &&\n\s*isSurfaceBackgrounded\("#root"\)/,
   );
-});
+return Promise.resolve(); });
 
-test("the sandbox probe leaves the shared project folder alone", async () => {
+test("the sandbox probe leaves the shared project folder alone",  () => {
   const at = CHAT_ROW_MENU.indexOf("async function sandboxSessionIdsHolding(");
   assert.notEqual(at, -1);
   const body = CHAT_ROW_MENU.slice(at, CHAT_ROW_MENU.indexOf("\n}", at));
@@ -346,10 +354,10 @@ test("the sandbox probe leaves the shared project folder alone", async () => {
   assert.doesNotMatch(body, /candidates\.add\(/);
   assert.equal(APP_SIDEBAR.split("sandboxSessionIdsHolding(ids)").length - 1, 1);
   assert.equal(OPEN_CHAT_FOLDER.split("sandboxSessionIdsHolding(ids)").length - 1, 1);
-});
+return Promise.resolve(); });
 
 // An effort the model does not list makes indexOf return -1.
-test("an unlisted reasoning effort steps to the first supported level", async () => {
+test("an unlisted reasoning effort steps to the first supported level",  () => {
   const at = CHAT_PAGE.indexOf("const current = levels.indexOf(state.reasoningEffort);");
   assert.notEqual(at, -1);
   const body = CHAT_PAGE.slice(at, at + 700);
@@ -358,7 +366,7 @@ test("an unlisted reasoning effort steps to the first supported level", async ()
     /if \(current === -1\) \{\n\s*state\.setReasoningEffort\(levels\[0\]\);/,
     "an unlisted effort still counts a step off an index that is not in the list",
   );
-});
+return Promise.resolve(); });
 
 // Decline can be rebound to a typing key, so only non-typing chords keep the composer pass.
 test("only a chord that types nothing keeps the composer exception", () => {
@@ -379,13 +387,13 @@ test("only a chord that types nothing keeps the composer exception", () => {
   assert.equal(typesInTextField({ ...bare("KeyA"), shift: true }), true);
 });
 
-test("the dispatcher drops the exception for a typing chord", async () => {
+test("the dispatcher drops the exception for a typing chord",  () => {
   assert.match(
     USE_SHORTCUT,
     /const exception = typesInTextField\(hit\) \? undefined : textFieldException;/,
   );
   assert.match(USE_SHORTCUT, /isTextEntryFocused\(exception\)/);
-});
+return Promise.resolve(); });
 
 // Keydowns are swallowed while recording and Escape may be a chord, so provide an exit.
 test("recording can be left from the keyboard", async () => {
@@ -399,7 +407,7 @@ test("recording can be left from the keyboard", async () => {
   assert.ok(exit < swallow, "the exit is swallowed before it is read");
 });
 
-test("the header pickers do not open behind a dialog", async () => {
+test("the header pickers do not open behind a dialog",  () => {
   for (const id of ["openModelPicker", "openProjectPicker"]) {
     const at = CHAT_PAGE.indexOf(`"${id}",`);
     assert.notEqual(at, -1, `${id} is gone`);
@@ -413,7 +421,7 @@ test("the header pickers do not open behind a dialog", async () => {
     CHAT_PAGE,
     /const chatUncovered = \(\) => !isSurfaceBackgrounded\(COMPOSER_INPUT_SELECTOR\);/,
   );
-});
+return Promise.resolve(); });
 
 test("both composers refuse to attach from behind a modal", async () => {
   for (const path of [
@@ -450,7 +458,7 @@ test("a tool call cannot be answered from behind a dialog", async () => {
   );
 });
 
-test("selection and clipboard chords stop at a covered sidebar", async () => {
+test("selection and clipboard chords stop at a covered sidebar",  () => {
   for (const id of ["selectAllChats", "copyChatAsMarkdown", "copySessionId"]) {
     const at = APP_SIDEBAR.search(new RegExp(`useShortcut\\(\\n?\\s*"${id}",`));
     assert.notEqual(at, -1, `${id} is gone`);
@@ -460,7 +468,7 @@ test("selection and clipboard chords stop at a covered sidebar", async () => {
       `${id} acts behind an open dialog`,
     );
   }
-});
+return Promise.resolve(); });
 
 // resolveNavRowState leaves pending rows enabled, so chords must match their rows.
 test("the workspace chords wait on the same verdict their rows do", async () => {
@@ -474,7 +482,7 @@ test("the workspace chords wait on the same verdict their rows do", async () => 
   );
 });
 
-test("the remaining chat-page chords stop at a covered surface", async () => {
+test("the remaining chat-page chords stop at a covered surface",  () => {
   for (const id of [
     "cycleReasoningEffort",
     "increaseReasoningEffort",
@@ -494,7 +502,7 @@ test("the remaining chat-page chords stop at a covered surface", async () => {
     THREAD.slice(at, at + 320),
     /if \(!isSurfaceInForeground\(COMPOSER_INPUT_SELECTOR\)\) return;/,
   );
-});
+return Promise.resolve(); });
 
 // A non-modal popover leaves the composer in the foreground.
 test("the send chords stand aside in any text field but the composer", async () => {

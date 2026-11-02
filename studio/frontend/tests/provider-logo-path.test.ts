@@ -45,7 +45,7 @@ test("every supported connection resolves to an existing public asset", () => {
   ]) {
     const path = providerLogoPath(type);
     assert.ok(path?.startsWith("/"), type);
-    assert.ok(existsSync(new URL(`../public${path}`, import.meta.url)), `${type}: ${path}`);
+    assert.ok(existsSync(new URL(`../public${String(path)}`, import.meta.url)), `${type}: ${String(path)}`);
   }
 });
 

@@ -11,7 +11,6 @@ import ts from "@typescript/typescript6";
 
 const SRC = fileURLToPath(new URL("../src", import.meta.url));
 const DATA_TAB = path.join(SRC, "features/settings/tabs/data-tab.tsx");
-const RECIPE_MODULE = /finetune-recipe/;
 const ACTION_FINE_TUNE_IMPORT =
   /await import\(\s*"\.\.\/components\/finetune-recipe"\s*\)/g;
 

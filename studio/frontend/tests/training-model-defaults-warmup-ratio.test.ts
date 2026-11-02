@@ -87,7 +87,7 @@ test("every shipped model default carries its warmup into the patch", () => {
   const ratioOnly = configs.filter(
     ({ config }) =>
       config.training?.warmup_ratio !== undefined &&
-      config.training?.warmup_steps === undefined,
+      config.training.warmup_steps === undefined,
   );
   assert.ok(
     ratioOnly.length > 0,

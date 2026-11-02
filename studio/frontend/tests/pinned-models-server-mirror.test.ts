@@ -42,7 +42,7 @@ function serve(server: Server): { puts: Record<string, unknown>[] } {
   const puts: Record<string, unknown>[] = [];
   setAuthFetchHandler((_url, init) => {
     if (init?.method === "PUT") {
-      const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+      const body = JSON.parse(String(init.body as string)) as Record<string, unknown>;
       puts.push(body);
       Object.assign(server, body);
     }

@@ -160,7 +160,7 @@ test.beforeEach(() => {
   native.setNativePathHandler(null);
   sent = null;
   auth.setAuthFetchHandler((_url, init) => {
-    sent = init?.body ? JSON.parse(String(init.body)) : null;
+    sent = init?.body ? JSON.parse(String(init.body as string)) : null;
     return new Response("{}", {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -180,8 +180,8 @@ test("the non-GGUF context and MLX cache width reach the backend", async () => {
     maxSeqLength: 4096,
     mlxKvQuant: "tq-4",
   });
-  assert.equal(sent!.max_seq_length, 4096);
-  assert.equal(sent!.mlx_kv_quant, "tq-4");
+  assert.equal(must(sent).max_seq_length, 4096);
+  assert.equal(must(sent).mlx_kv_quant, "tq-4");
 });
 
 test("every field sent is also a field the hook re-fetches for", () => {
@@ -232,3 +232,8 @@ test("the fitted window survives the wire, and its absence reads as null", async
   assert.equal(await fitted({ available: true, n_ctx: 24576, context_fitted: 24576 }), 24576);
   assert.equal(await fitted({ available: true, n_ctx: 262144 }), null);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

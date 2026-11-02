@@ -186,7 +186,7 @@ test("the real preference store persists all controls and restores them on reloa
   prefs.getState().setShowContextWindowUsage(false);
   prefs.getState().setSendShortcut("mod-enter");
   prefs.getState().setFollowUpBehavior("steer");
-  const saved = store.get("unsloth_chat_preferences")!;
+  const saved = (store.get("unsloth_chat_preferences") ?? assert.fail("expected a non-null value"));
   const expected = {
     plainTextComposer: false,
     showContextWindowUsage: false,

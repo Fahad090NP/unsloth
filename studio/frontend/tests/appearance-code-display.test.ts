@@ -9,11 +9,11 @@ import { readSrc } from "./helpers/kit.ts";
 const attributes = new Set<string>();
 (globalThis as { document?: unknown }).document = {
   documentElement: {
-    style: { setProperty() {}, removeProperty() {} },
+    style: { setProperty() { /* empty */ }, removeProperty() { /* empty */ } },
     setAttribute: (name: string) => attributes.add(name),
     removeAttribute: (name: string) => attributes.delete(name),
     toggleAttribute: (name: string, on: boolean) => (on ? attributes.add(name) : attributes.delete(name)),
-    classList: { toggle() {} },
+    classList: { toggle() { /* empty */ } },
   },
 };
 

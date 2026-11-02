@@ -22,10 +22,10 @@ function loadApi(): CurrentDateApi {
     ),
     {
       "@/features/auth": {
-        authFetch: async () => new Response(null, { status: 500 }),
+        authFetch: () => new Response(null, { status: 500 }),
       },
       "@/lib/format-fastapi-error": {
-        readFastApiError: async (_response: Response, fallback: string) =>
+        readFastApiError: (_response: Response, fallback: string) =>
           fallback,
       },
     },

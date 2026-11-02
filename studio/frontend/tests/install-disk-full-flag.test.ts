@@ -43,8 +43,8 @@ const MESSAGE =
 
 async function failInstall(order: "event-first" | "reject-first") {
   const state = { status: "", error: null as string | null, diskFull: false };
-  let reject: (reason: string) => void = () => {};
-  const noop = () => {};
+  let reject: (reason: string) => void = () => { return undefined; };
+  const noop = () => { return undefined; };
   const scope: Record<string, unknown> = {
     authFailureRef: { current: null },
     statusRef: { current: "not-installed" },
@@ -116,7 +116,7 @@ async function installArgs(
   chatOnlyRef = { current: false },
 ): Promise<unknown> {
   let args: unknown;
-  const noop = () => {};
+  const noop = () => { return undefined; };
   const scope: Record<string, unknown> = {
     elevationResumeRef: { current: null },
     chatOnlyRef,

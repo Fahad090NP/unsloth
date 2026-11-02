@@ -41,7 +41,7 @@ test("prefill frames read into store shape, clamped, and give a whole percent", 
     tok_per_s: 1326.4,
   });
   assert.equal(update?.phase, "prefill");
-  if (update?.phase !== "prefill") return;
+  if (update.phase !== "prefill") return;
   assert.deepEqual(update.prefill, { processed: 5316, total: 5316, cached: 7000, tokPerS: 1326.4 });
   assert.equal(prefillPercent({ processed: 2048, total: 5316, cached: 0, tokPerS: null }), 38);
   assert.equal(prefillPercent({ processed: 10, total: null, cached: null, tokPerS: null }), null);
@@ -74,7 +74,7 @@ test("malformed frames are dropped rather than drawn as NaN", () => {
 test("decode frames keep draft acceptance only when both counts are there", () => {
   const update = readGenerationProgress({ phase: "decode", tokens: 40, tok_per_s: 90, draft_n: 23, draft_accepted: 30 });
   assert.equal(update?.phase, "decode");
-  if (update?.phase !== "decode") return;
+  if (update.phase !== "decode") return;
   assert.deepEqual(update.decode, { tokens: 40, tokPerS: 90, draftN: 23, draftAccepted: 23 });
 });
 

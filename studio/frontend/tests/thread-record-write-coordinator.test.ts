@@ -111,8 +111,8 @@ test("settles all work already observed for a thread", async () => {
   const writes = coordinator();
   const first = deferred();
   const second = deferred();
-  writes.observe("thread-1", first.promise);
-  writes.observe("thread-1", second.promise);
+  writes.observe("thread-1", first.promise).catch((error: unknown) => { throw error; });
+  writes.observe("thread-1", second.promise).catch((error: unknown) => { throw error; });
 
   let settled = false;
   const waiting = writes.settleCurrent("thread-1").then(() => {

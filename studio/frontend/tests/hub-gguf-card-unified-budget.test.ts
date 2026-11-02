@@ -216,7 +216,7 @@ test("an over-budget quant on a Mac points at the Metal budget, not the VRAM Bud
   );
   assert.equal(trigger?.props.fit, "marginal");
   const tooltip = elements(
-    (trigger?.type as (props: unknown) => unknown)(trigger?.props),
+    (trigger.type as (props: unknown) => unknown)(trigger.props),
   ).flatMap((node) => [node.props.children].flat());
   assert.ok(tooltip.some((child) => String(child).includes("VRAM Budget")));
 });

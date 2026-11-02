@@ -33,8 +33,8 @@ test("starts task searches concurrently and yields deterministic priority rounds
       if (task === "primary") {
         await primaryGate.promise;
       }
-      yield { name: `${task}-1` };
-      yield { name: `${task}-2` };
+      yield { name: `${String(task)}-1` };
+      yield { name: `${String(task)}-2` };
     },
   );
 

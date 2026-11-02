@@ -4,13 +4,16 @@
 // Backend modules are stubbed to throw so a delete without remoteId cannot hit them silently.
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 
 import type { ExportedMessageRepository } from "@assistant-ui/react";
 
 // The resolver adds vite's extensionless resolution and stubs the chat api and history storage.
-register("./helpers/delete-thread-message-resolver.mjs", import.meta.url);
+const deleteThreadMessageResolverHooks = (await import(new URL("./helpers/delete-thread-message-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: deleteThreadMessageResolverHooks.resolve });
 
 const { deleteThreadMessage } = await import(
   "../src/features/chat/utils/delete-thread-message.ts"

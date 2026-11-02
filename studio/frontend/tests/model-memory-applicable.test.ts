@@ -38,11 +38,11 @@ const BASE = {
 
 let nextBody: Record<string, unknown> = { ...BASE };
 
-globalThis.fetch = (async () =>
-  new Response(JSON.stringify(nextBody), {
+globalThis.fetch = (() =>
+  Promise.resolve(new Response(JSON.stringify(nextBody), {
     status: 200,
     headers: { "Content-Type": "application/json" },
-  }));
+  })));
 
 const { loadModelMemorySettings } = await import(
   "../src/features/settings/api/model-memory.ts"

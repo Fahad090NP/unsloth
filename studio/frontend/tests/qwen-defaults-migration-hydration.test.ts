@@ -102,8 +102,8 @@ test("hydration replaces and persists the stale Qwen3.8 default snapshot", async
   const hydrated = useChatRuntimeStore.getState();
   assert.equal(hydrated.params.minP, 0);
   assert.equal(hydrated.params.presencePenalty, 1.5);
-  assert.equal(hydrated.paramsByModel[QWEN38]?.minP, 0);
-  assert.equal(hydrated.paramsByModel[QWEN38]?.presencePenalty, 1.5);
+  assert.equal(hydrated.paramsByModel[QWEN38].minP, 0);
+  assert.equal(hydrated.paramsByModel[QWEN38].presencePenalty, 1.5);
 
   await sleep(600);
   assert.deepEqual(modelPut(), {
@@ -130,7 +130,7 @@ test("active-model adoption retries a migration deferred during hydration", asyn
 
   await useChatRuntimeStore.getState().hydratePersistedSettings();
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[QWEN38]?.presencePenalty,
+    useChatRuntimeStore.getState().paramsByModel[QWEN38].presencePenalty,
     0,
   );
 
@@ -148,8 +148,8 @@ test("active-model adoption retries a migration deferred during hydration", asyn
   await sleep(50);
 
   const migrated = useChatRuntimeStore.getState();
-  assert.equal(migrated.paramsByModel[QWEN38]?.minP, 0);
-  assert.equal(migrated.paramsByModel[QWEN38]?.presencePenalty, 1.5);
+  assert.equal(migrated.paramsByModel[QWEN38].minP, 0);
+  assert.equal(migrated.paramsByModel[QWEN38].presencePenalty, 1.5);
   assert.equal(
     settingsHttp.puts.some((put) => put.inferenceParams !== undefined),
     false,
@@ -220,7 +220,7 @@ test("a confirming read preserves a newer edit from another tab", async () => {
   await useChatRuntimeStore.getState().hydratePersistedSettings();
 
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[QWEN38]?.presencePenalty,
+    useChatRuntimeStore.getState().paramsByModel[QWEN38].presencePenalty,
     0.4,
   );
   assert.equal(hasModelPut(), false);
@@ -254,7 +254,7 @@ test("atomic migration persistence rejects an edit after confirmation", async ()
   await useChatRuntimeStore.getState().hydratePersistedSettings();
 
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[QWEN38]?.presencePenalty,
+    useChatRuntimeStore.getState().paramsByModel[QWEN38].presencePenalty,
     0.4,
   );
   assert.equal(settingsHttp.puts.length, 0);
@@ -332,7 +332,7 @@ test("returning from a custom preset retries the guarded migration", async () =>
   const state = useChatRuntimeStore.getState();
   assert.equal(state.params.minP, 0);
   assert.equal(state.params.presencePenalty, 1.5);
-  assert.equal(state.paramsByModel[QWEN38]?.presencePenalty, 1.5);
+  assert.equal(state.paramsByModel[QWEN38].presencePenalty, 1.5);
   assert.equal(hasModelPut(), true);
 });
 
@@ -369,7 +369,7 @@ test("restoring the final modified field retries after the parameter edit", asyn
   const state = useChatRuntimeStore.getState();
   assert.equal(state.params.minP, 0);
   assert.equal(state.params.presencePenalty, 1.5);
-  assert.equal(state.paramsByModel[QWEN38]?.presencePenalty, 1.5);
+  assert.equal(state.paramsByModel[QWEN38].presencePenalty, 1.5);
   assert.equal(hasModelPut(), true);
 });
 
@@ -408,7 +408,7 @@ test("a model switch during the confirming read leaves the former row untouched"
   await hydration;
 
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[QWEN38]?.presencePenalty,
+    useChatRuntimeStore.getState().paramsByModel[QWEN38].presencePenalty,
     0,
   );
   assert.equal(hasModelPut(), false);
@@ -483,7 +483,7 @@ test("resident-model adoption does not claim a global beside model memory", asyn
     >;
   };
   assert.equal(persisted.inferenceParams?.minP, 0.01);
-  assert.equal(persisted.inferenceParams?.presencePenalty, 0);
+  assert.equal(persisted.inferenceParams.presencePenalty, 0);
   assert.equal(
     persisted.inferenceParamsByModel?.[QWEN38]?.presencePenalty,
     1.5,
@@ -637,7 +637,7 @@ test("deferred global ownership cannot follow a later checkpoint", async () => {
     inferenceParams?: { presencePenalty?: number; minP?: number };
   };
   assert.equal(persisted.inferenceParams?.presencePenalty, 0);
-  assert.equal(persisted.inferenceParams?.minP, 0.01);
+  assert.equal(persisted.inferenceParams.minP, 0.01);
 });
 
 test("local migration preserves an active thread's sampling override", async () => {
@@ -670,9 +670,9 @@ test("local migration preserves an active thread's sampling override", async () 
 
   const migrated = useChatRuntimeStore.getState();
   assert.equal(migrated.params.presencePenalty, 0);
-  assert.equal(migrated.paramsByModel[QWEN38]?.presencePenalty, 1.5);
-  assert.equal(migrated.paramsByModel[QWEN38]?.temperature, 0.6);
-  assert.equal(migrated.paramsByModel[QWEN38]?.topP, 0.95);
+  assert.equal(migrated.paramsByModel[QWEN38].presencePenalty, 1.5);
+  assert.equal(migrated.paramsByModel[QWEN38].temperature, 0.6);
+  assert.equal(migrated.paramsByModel[QWEN38].topP, 0.95);
   migrated.applyThreadScopedSettings(null, {});
   assert.equal(useChatRuntimeStore.getState().params.minP, 0);
   assert.equal(useChatRuntimeStore.getState().params.presencePenalty, 1.5);
@@ -748,8 +748,8 @@ test("a first user model load during hydration does not claim prior globals", as
   );
   settingsHttp.release?.();
   await hydration;
-  settingsHttp.gate = null;
-  settingsHttp.release = null;
+  Object.assign(settingsHttp, { gate: null });
+  Object.assign(settingsHttp, { release: null });
 
   const hydrated = useChatRuntimeStore.getState();
   assert.equal(hydrated.params.minP, 0);
@@ -791,7 +791,7 @@ test("a normalized migration patch stays within the loaded context", async () =>
 
   const migrated = useChatRuntimeStore.getState();
   assert.equal(migrated.params.maxTokens, 4096);
-  assert.equal(migrated.paramsByModel[QWEN38]?.presencePenalty, 1.5);
+  assert.equal(migrated.paramsByModel[QWEN38].presencePenalty, 1.5);
 });
 
 test("deferred adoption migrates the authoritative global when memory is off", async () => {

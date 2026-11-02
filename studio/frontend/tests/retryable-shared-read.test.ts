@@ -24,12 +24,12 @@ test("shares an in-flight read and its successful result", async () => {
 
 test("retries after a failed read", async () => {
   let calls = 0;
-  const read = createRetryableSharedRead(async () => {
+  const read = createRetryableSharedRead( () => {
     calls += 1;
     if (calls === 1) {
-      throw new Error("temporary failure");
+      return Promise.reject(new Error("temporary failure"));
     }
-    return "thread";
+    return Promise.resolve("thread");
   });
 
   await assert.rejects(read(), /temporary failure/);
@@ -40,7 +40,7 @@ test("retries after a failed read", async () => {
 test("retries after a successful value marked as non-cacheable", async () => {
   let attempts = 0;
   const read = createRetryableSharedRead(
-    async () => ++attempts,
+     () => Promise.resolve(++attempts),
     (value) => value > 1,
   );
 
@@ -82,9 +82,9 @@ test("an undefined record still counts as a cached value", async () => {
   // undefined is an answer, not a miss, so it must not be re-read.
   let calls = 0;
   const read = createRetryableSharedRead(
-    async () => {
+     () => {
       calls += 1;
-      return { thread: undefined, cacheable: true };
+      return Promise.resolve({ thread: undefined, cacheable: true });
     },
     (result) => result.cacheable,
   );

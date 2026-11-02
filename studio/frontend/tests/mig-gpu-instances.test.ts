@@ -19,9 +19,9 @@ const hooks = loadWithStubs<typeof GpuHooks>(
     react: {
       useState: (initial: unknown) => [
         typeof initial === "function" ? initial() : initial,
-        () => {},
+        () => { return undefined; },
       ],
-      useEffect: () => {},
+      useEffect: () => { return undefined; },
       useMemo: (read: () => unknown) => read(),
     },
     "./use-system": { getCachedSystemInfo: () => snapshot },

@@ -4,6 +4,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 // Mirrors the gate in use-chat-model-runtime.ts, apply-inference-status-to-store.ts and llama_cpp.py.
 const SIZE_RE = /(?:^|[-_.])(\d+\.?\d*)\s*([bm])(?:$|[-_.])/;
 
@@ -84,5 +92,5 @@ test("all four copies of the gate pattern stay in sync", () => {
   ];
   for (const found of patterns) assert.ok(found, "size gate pattern not found");
   const expected = SIZE_RE.source;
-  for (const found of patterns) assert.equal(found![1], expected);
+  for (const found of patterns) assert.equal(required(found)[1], expected);
 });

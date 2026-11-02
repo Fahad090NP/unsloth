@@ -18,7 +18,7 @@ test("only an explicit grant shows the notice", async (t) => {
   const urls: string[] = [];
   const answer = (respond: () => Response) =>
     { setAuthFetchHandler((url, init) => {
-      urls.push(`${init?.method} ${url}`);
+      urls.push(`${String(init?.method)} ${url}`);
       return respond();
     }); };
 

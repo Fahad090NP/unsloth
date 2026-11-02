@@ -4,6 +4,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { MusicInputs } from "../src/features/audio/music/music-policy.ts";
+import type { MusicModeRule } from "../src/features/audio/music/music-types.ts";
 import { registerBundlerResolver } from "./helpers/kit.ts";
 
 registerBundlerResolver();
@@ -88,15 +90,18 @@ function caps(raw: unknown) {
 
 const PATHLIKE = /"(path|voice_ref|file|audio_path|trim)"\s*:/;
 
-// biome-ignore lint/suspicious/noExplicitAny: fixtures stand in for any mode rule and draft.
-function inputs(rule: any, overrides: any = {}) {
-  return {
+function inputs(
+  rule: MusicModeRule,
+  overrides: Record<string, unknown> = {},
+): MusicInputs {
+  const fixture = {
     rule,
     description: "",
     lyrics: "",
     ...structuredClone(DEFAULT_MUSIC_DRAFTS),
     ...overrides,
   };
+  return fixture as MusicInputs;
 }
 
 test("status parsing keeps known modes and drops malformed ones", () => {

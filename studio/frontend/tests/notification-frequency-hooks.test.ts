@@ -6,6 +6,7 @@ import test, { mock } from "node:test";
 
 import { installLocalStorageFake } from "./helpers/kit.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
+import type * as NotificationFrequency from "../src/hooks/use-notification-frequency.ts";
 
 const { store } = installLocalStorageFake();
 const DAY = 24 * 60 * 60 * 1000;
@@ -71,7 +72,7 @@ function fakeReact() {
 function load() {
   const fake = fakeReact();
   const mod = loadWithStubs<
-    typeof import("../src/hooks/use-notification-frequency.ts")
+    typeof NotificationFrequency
   >(new URL("../src/hooks/use-notification-frequency.ts", import.meta.url), {
     react: fake.react,
   });
@@ -125,8 +126,8 @@ test("a hidden tab does not use up the quiet period", () => {
   store.clear();
   const doc = {
     visibilityState: "hidden",
-    addEventListener() {},
-    removeEventListener() {},
+    addEventListener() { return undefined; },
+    removeEventListener() { return undefined; },
   };
   Object.assign(globalThis, { document: doc });
   mock.timers.enable({

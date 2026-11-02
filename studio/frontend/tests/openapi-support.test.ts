@@ -120,9 +120,9 @@ function countingProbe(result: GuardProbe) {
   const calls: number[] = [];
   return {
     calls,
-    probe: async () => {
+    probe: () => {
       calls.push(1);
-      return result;
+      return Promise.resolve(result);
     },
   };
 }
@@ -155,8 +155,8 @@ test("without a flag (older backend) the schema probe decides as before", async 
 
 test("the flag and the schema probe agree on what a current backend serves", async () => {
   const schema = readGuardProbe(true, documentWith(GUARDED));
-  const flag = await resolveGuardProbe(true, async () => {
-    throw new Error("must not probe");
+  const flag = await resolveGuardProbe(true, () => {
+    return Promise.reject(new Error("must not probe"));
   });
   assert.deepEqual(flag, schema);
 });

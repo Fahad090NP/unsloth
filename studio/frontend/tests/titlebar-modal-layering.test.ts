@@ -41,14 +41,14 @@ const COMPONENTS = readdirSync(join(import.meta.dirname, "../src"), {
 function zIndex(block: string): number {
   const match = Z_INDEX_PATTERN.exec(block);
   if (!match) throw new Error(`no z-index class in ${block}`);
-  return Number(match[1] ?? match[2]);
+  return Number(match[1]);
 }
 
 test("titlebar decoration stays below modal backdrops and window controls", async () => {
   const [titlebar, dialog, alertDialog] = await Promise.all([
-    readSrc("components/tauri/window-titlebar.tsx"),
-    readSrc("components/ui/dialog.tsx"),
-    readSrc("components/ui/alert-dialog.tsx"),
+    Promise.resolve(readSrc("components/tauri/window-titlebar.tsx")),
+    Promise.resolve(readSrc("components/ui/dialog.tsx")),
+    Promise.resolve(readSrc("components/ui/alert-dialog.tsx")),
   ]);
 
   const decoration = DECORATION_PATTERN.exec(titlebar);
@@ -70,8 +70,8 @@ test("titlebar decoration stays below modal backdrops and window controls", asyn
   }
 });
 
-test("below-titlebar decoration is not trapped in the titlebar stacking context", async () => {
-  const titlebar = await readSrc("components/tauri/window-titlebar.tsx");
+test("below-titlebar decoration is not trapped in the titlebar stacking context", () => {
+  const titlebar = readSrc("components/tauri/window-titlebar.tsx");
   const decorationIndex = titlebar.indexOf(
     'data-slot="window-titlebar-decoration"',
   );
@@ -123,9 +123,9 @@ test("dialogs that set their own top still centre below the window chrome", () =
 
 test("the titlebar dims for viewport backdrops without a :has() on the document root", async () => {
   const [styles, titlebar, tour] = await Promise.all([
-    readSrc("index.css"),
-    readSrc("components/tauri/window-titlebar.tsx"),
-    readSrc("features/tour/components/guided-tour.tsx"),
+    Promise.resolve(readSrc("index.css")),
+    Promise.resolve(readSrc("components/tauri/window-titlebar.tsx")),
+    Promise.resolve(readSrc("features/tour/components/guided-tour.tsx")),
   ]);
 
   assert.doesNotMatch(styles.replace(/\/\*[\s\S]*?\*\//g, ""), DOCUMENT_ROOT_HAS_PATTERN);

@@ -86,7 +86,7 @@ test("a closing tag split across two, three and four arrivals is seen", () => {
 
 test("tags delivered one character per arrival are seen", () => {
   assertAgreesOnStream(
-    [..."prefix <think>thought</think> answer"],
+    Array.from("prefix <think>thought</think> answer"),
     "one character per arrival",
   );
 });
@@ -122,7 +122,7 @@ test("repeated reasoning blocks track the last tag, not the first", () => {
 
 test("a near miss is not mistaken for a tag", () => {
   assertAgreesOnStream(
-    [..."<thin> <think > </thin> <thinks> <think>x</think >"],
+    Array.from("<thin> <think > </thin> <thinks> <think>x</think >"),
     "near misses",
   );
 });
@@ -138,9 +138,9 @@ test("a stream seeded with a continuation partial is tracked", () => {
 test("a suffix removed from the buffer is accounted for", () => {
   // The adapter strips a trailing ${...} fragment, so the buffer can shrink.
   const cases: { steps: string[]; label: string }[] = [
-    { steps: ["<think>a", "<think>a ${x}", "<think>a"], label: "plain strip" },
+    { steps: ["<think>a", "<think>a \${x}", "<think>a"], label: "plain strip" },
     {
-      steps: ["<think>a</think>", "<think>a</think> ${x}", "<think>a</think>"],
+      steps: ["<think>a</think>", "<think>a</think> \${x}", "<think>a</think>"],
       label: "strip after a close",
     },
     {
@@ -174,9 +174,9 @@ test("append then strip within one arrival is tracked", () => {
     "<think>",
     "reasoning ",
     "</think>",
-    " answer ${x}",
+    " answer \${x}",
     " continues",
-    "<think>more ${y}",
+    "<think>more \${y}",
     "</think>",
   ];
   const strip = (text: string): string => text.replace(/\s*\$\{[^}]*\}\s*$/, "");
@@ -274,7 +274,7 @@ test("tracker agrees with a full rescan on random streams with strips", () => {
 
 test("the adapter's own order, append the delta then retract the strip, is tracked", () => {
   const random = mulberry32(20260817);
-  const alphabet = ["<think>", "</think>", "x", " ", "<thi", "nk>", "}", "${a}"];
+  const alphabet = ["<think>", "</think>", "x", " ", "<thi", "nk>", "}", "\${a}"];
   for (let seed = 0; seed < 400; seed += 1) {
     const tracker = createThinkTagTracker();
     let text = "";

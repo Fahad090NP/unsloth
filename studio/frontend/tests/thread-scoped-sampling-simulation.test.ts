@@ -67,14 +67,15 @@ async function sweep(
   strict = true,
 ): Promise<void> {
   const failures: string[] = [];
-  for (const ops of orderings) {
+  await orderings.reduce<Promise<void>>(async (previous, ops) => {
+    await previous;
     const violations = await runScenario(ops, tick, strict);
     for (const violation of violations) {
       failures.push(
         `[${violation.invariant}] after ${violation.step} in ${ops.join(" > ")}: ${violation.detail}`,
       );
     }
-  }
+  }, Promise.resolve());
   assert.deepEqual(
     failures.slice(0, 12),
     [],
@@ -260,7 +261,8 @@ test("the pinned values really are stored on the chat's own row", async (t) => {
     ["hydrate", "openA", "editTemp", "editPrompt", "openB", "reopenA"],
     (ms) => { t.mock.timers.tick(ms); },
   );
-  const row = threadRows.rows.get("A")!;
+  const row = threadRows.rows.get("A");
+  assert.ok(row);
   assert.equal(row.temperature, 1.37);
   assert.equal(row.systemPrompt, "CHAT A ONLY 5f3a");
   for (const key of SAMPLING_KEYS) {
@@ -287,14 +289,18 @@ test("I4: a model's recommendation reaches the installation and the model's memo
   const sent = JSON.stringify(settingsHttp.puts);
   assert.match(sent, /"temperature":0\.31/);
   assert.match(sent, /"topP":0\.41/);
-  const remembered = JSON.parse(
-    JSON.stringify(
-      (settingsHttp.puts.find((put) => "inferenceParamsByModel" in put)
-        ?.inferenceParamsByModel as Record<string, unknown>) ?? {},
-    ),
-  ) as Record<string, Record<string, unknown>>;
-  assert.equal(remembered[QWEN]?.temperature, MODEL_DEFAULTS.temperature);
-  assert.equal(remembered[QWEN]?.systemPrompt, INSTALLATION.systemPrompt);
+  const withModels = settingsHttp.puts.find(
+    (put) => "inferenceParamsByModel" in put,
+  );
+  const remembered =
+    withModels === undefined
+      ? {}
+      : (withModels.inferenceParamsByModel as Record<
+          string,
+          Record<string, unknown>
+        >);
+  assert.equal(remembered[QWEN].temperature, MODEL_DEFAULTS.temperature);
+  assert.equal(remembered[QWEN].systemPrompt, INSTALLATION.systemPrompt);
 });
 
 let raceScenario = 0;
@@ -306,7 +312,9 @@ async function raceWorld() {
   settingsHttp.gate = null;
   settingsHttp.release = null;
   threadRows.reset();
-  const mod = await import(`${STORE_URL}?scenario=race${raceScenario}`);
+  const mod = (await import(
+    `${STORE_URL}?scenario=race${raceScenario}`
+  )) as typeof import("../src/features/chat/stores/chat-runtime-store.ts");
   const { sanitizeThreadScopedSettings } = await import(
     "../src/features/chat/utils/thread-scoped-settings.ts"
   );
@@ -382,7 +390,8 @@ test("B2: an edit made while the chat's own read is out is stored on that chat",
   assert.equal(w.store().params.temperature, 1.37);
   assert.equal(w.store().params.systemPrompt, "HELD EDIT 5f3a");
   assert.equal(w.store().params.topP, 0.33);
-  const row = threadRows.rows.get("A")!;
+  const row = threadRows.rows.get("A");
+  assert.ok(row);
   assert.equal(row.temperature, 1.37);
   assert.equal(row.systemPrompt, "HELD EDIT 5f3a");
   assert.doesNotMatch(JSON.stringify(settingsHttp.puts), /HELD EDIT 5f3a/);
@@ -437,7 +446,8 @@ test("B4: a model load landing during the pairing window does not take the chat'
   await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   assert.equal(w.store().params.temperature, 1.37, "the load took the edit");
-  const row = threadRows.rows.get("A")!;
+  const row = threadRows.rows.get("A");
+  assert.ok(row);
   assert.equal(
     row.temperature,
     1.37,
@@ -492,7 +502,8 @@ test("B4c: a falsy held edit is not treated as no edit at all", async (t) => {
   assert.equal(params.minP, 0);
   assert.equal(params.topK, -1);
   assert.equal(params.systemPrompt, "");
-  const row = threadRows.rows.get("A")!;
+  const row = threadRows.rows.get("A");
+  assert.ok(row);
   assert.equal(row.temperature, 0);
   assert.equal(row.minP, 0);
   assert.equal(row.topK, -1);
@@ -581,7 +592,7 @@ test("B7: a tab closing with a held edit beacons it to the chat it was made in",
   const beaconed = JSON.parse(
     localStorageFake.get("unsloth_chat_thread_settings_replay") ?? "{}",
   ) as Record<string, { settingsPatch?: Record<string, unknown> }>;
-  assert.deepEqual(beaconed.A?.settingsPatch, {
+  assert.deepEqual(beaconed.A.settingsPatch, {
     temperature: 1.37,
     systemPrompt: "HELD EDIT 5f3a",
   });

@@ -31,7 +31,7 @@ const DAY = 86_400_000;
 const now = new Date(2026, 8, 27, 12).getTime();
 
 const chats: ChatEntry[] = [
-  { id: "a", type: "single", title: "Café planning", createdAt: now - 40 * DAY, updatedAt: now - 1 * DAY, projectId: "p1" },
+  { id: "a", type: "single", title: "Café planning", createdAt: now - 40 * DAY, updatedAt: now - Number(DAY), projectId: "p1" },
   { id: "b", type: "single", title: "bug triage", createdAt: now - 3 * DAY, updatedAt: now, isFork: true },
   { id: "c", type: "compare", title: "Model shootout", createdAt: now - 2 * DAY, updatedAt: now - 2 * DAY, projectId: "p2" },
   { id: "d", type: "single", title: "Archive me", createdAt: now - 90 * DAY, updatedAt: now - 60 * DAY },
@@ -391,7 +391,7 @@ test("an empty Library opens on Chats whatever the start tab", () => {
   assert.match(page, /!\(preferred === "favorites" && hasStarredChats\)/);
 });
 
-test("sections have created and last modified dates, and Last modified is the default", async () => {
+test("sections have created and last modified dates, and Last modified is the default", () => {
   const stats = { chats: 1, projects: 0, lastActive: 50 };
   const section = { id: "s", name: "S", createdAt: 10, modifiedAt: 80 };
   assert.equal(sectionTime(section, stats, "created"), 10);

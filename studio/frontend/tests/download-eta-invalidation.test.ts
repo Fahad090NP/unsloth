@@ -12,7 +12,7 @@ import {
 
 registerBundlerResolver();
 installLocalStorageFake();
-Object.assign(globalThis.window, { addEventListener: () => {} });
+Object.assign(globalThis.window, { addEventListener: () => { /* empty */ } });
 
 const { getState, putJob, jobKeyOf, setExpectedBytesForJob } = await import(
   "../src/features/hub/download-manager/download-manager-state.ts"

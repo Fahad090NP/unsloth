@@ -117,14 +117,14 @@ test("audio and video with a file of their own stream; the rest keep a blob", ()
     ["attachment:m:a", "video"], ["upload:abc", "image"], ["upload:abc", "pdf"], ["upload:abc", null],
     ["model:training:/x", "video"], ["upload", "video"], [":upload", "video"],
   ] as const) {
-    assert.equal(streamsPreview(id, body), false, `${id} ${body}`);
+    assert.equal(streamsPreview(id, body), false, `${id} ${String(body)}`);
   }
 });
 
 const utf8 = (text: string) => new TextEncoder().encode(text);
 const bytes = (...values: number[]) => new Uint8Array(values);
 const utf16le = (text: string) =>
-  bytes(0xff, 0xfe, ...[...text].flatMap((c) => [c.charCodeAt(0) & 0xff, c.charCodeAt(0) >> 8]));
+  bytes(0xff, 0xfe, ...Array.from(text, (c) => c.charCodeAt(0)).flatMap((c) => [c & 0xff, c >> 8]));
 
 test("notes decode by their BOM and save back in the same shape", () => {
   const cases: [Uint8Array, string, string, boolean, string, string, string][] = [

@@ -42,8 +42,8 @@ test("every fetchedFrom is a mirror the backend actually fetches the vendor id f
   assert.ok(declared.length > 0, "no catalog row declares fetchedFrom any more");
   for (const artifact of declared) {
     assert.ok(
-      pairs.has(`${artifact.repoId} -> ${artifact.fetchedFrom}`),
-      `${artifact.repoId} declares fetchedFrom ${artifact.fetchedFrom}, which is not in _GATED_MIRROR_PAIRS`,
+      pairs.has(`${artifact.repoId} -> ${String(artifact.fetchedFrom)}`),
+      `${artifact.repoId} declares fetchedFrom ${String(artifact.fetchedFrom)}, which is not in _GATED_MIRROR_PAIRS`,
     );
     assert.notEqual(artifact.gated, true, `${artifact.repoId}: a mirrored row is not gated for the user`);
   }

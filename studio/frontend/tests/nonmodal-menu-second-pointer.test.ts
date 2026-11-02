@@ -119,14 +119,14 @@ class FakeDocument {
   }
 
   dispatchEvent(event: FakeEvent): void {
-    event.stopped = false;
-    event.prevented = false;
-    event.stopPropagation = () => {
-      event.stopped = true;
-    };
-    event.preventDefault = () => {
-      event.prevented = true;
-    };
+    Reflect.set(event, "stopped", false);
+    Reflect.set(event, "prevented", false);
+    Reflect.set(event, "stopPropagation", () => {
+      Reflect.set(event, "stopped", true);
+    });
+    Reflect.set(event, "preventDefault", () => {
+      Reflect.set(event, "prevented", true);
+    });
     for (const phase of [this.capturing, this.bubbling]) {
       for (const fn of [...(phase.get(event.type) ?? [])]) {
         if (event.stopped) return;

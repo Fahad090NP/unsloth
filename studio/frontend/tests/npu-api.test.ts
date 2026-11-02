@@ -15,9 +15,9 @@ function client(response: () => Response) {
     new URL("../src/features/npu/api.ts", import.meta.url),
     {
       "@/features/auth": {
-        authFetch: async (path: string, init?: RequestInit) => {
+        authFetch: (path: string, init?: RequestInit) => {
           requests.push({ path, init });
-          return response();
+          return Promise.resolve(response());
         },
       },
       "@/lib/format-fastapi-error": formatFastApiError,
@@ -69,7 +69,7 @@ test("download rejects on an error event", async () => {
     sse(['data: {"event":"error","error":"disk full"}\n\n']),
   );
   await assert.rejects(
-    c.api.downloadNpuModel("qwen3-0.6b-FLM", () => {}),
+    c.api.downloadNpuModel("qwen3-0.6b-FLM", () => { return undefined; }),
     /disk full/,
   );
 });
@@ -77,7 +77,7 @@ test("download rejects on an error event", async () => {
 test("download rejects a stream that ends before completing", async () => {
   const c = client(() => sse(['data: {"event":"progress","percent":5}\n\n']));
   await assert.rejects(
-    c.api.downloadNpuModel("qwen3-0.6b-FLM", () => {}),
+    c.api.downloadNpuModel("qwen3-0.6b-FLM", () => { return undefined; }),
     /ended before it completed/,
   );
 });

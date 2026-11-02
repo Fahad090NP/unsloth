@@ -89,7 +89,7 @@ const ENTRY: RegistryEntry = {
 };
 
 test("a plan-listed slug carries its own vision flag into the capability map", async () => {
-  const loaded = await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
   const codexCapabilitiesWithPlanModels = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const capabilities = codexCapabilitiesWithPlanModels(
     ENTRY,
@@ -100,12 +100,12 @@ test("a plan-listed slug carries its own vision flag into the capability map", a
     undefined,
   );
   assert.equal(capabilities?.["gpt-5.7-nova"].vision, false);
-  assert.equal(capabilities?.["gpt-5.7-eos"].vision, true);
-  assert.deepEqual(capabilities?.["gpt-5.4"], { vision: true, studio_tools: true });
+  assert.equal(capabilities["gpt-5.7-eos"].vision, true);
+  assert.deepEqual(capabilities["gpt-5.4"], { vision: true, studio_tools: true });
 });
 
 test("a curated fallback never rewrites the capability map", async () => {
-  const loaded = await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
   const codexCapabilitiesWithPlanModels = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   assert.equal(
     codexCapabilitiesWithPlanModels(
@@ -119,7 +119,7 @@ test("a curated fallback never rewrites the capability map", async () => {
 });
 
 test("a plan that describes nothing new never overrides the registry", async () => {
-  const loaded = await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
   const codexCapabilitiesWithPlanModels = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const capabilities = codexCapabilitiesWithPlanModels(
     ENTRY,
@@ -127,12 +127,12 @@ test("a plan that describes nothing new never overrides the registry", async () 
     undefined,
   );
   assert.deepEqual(capabilities?.["gpt-5.4"], { vision: true, studio_tools: true });
-  assert.deepEqual(capabilities?.["gpt-5.7-nova"], { vision: false });
+  assert.deepEqual(capabilities["gpt-5.7-nova"], { vision: false });
 });
 
 
 test("another connection's learned slug survives this one's catalog", async () => {
-  const loaded = await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
   const codexCapabilitiesWithPlanModels = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const capabilities = codexCapabilitiesWithPlanModels(
     ENTRY,
@@ -140,12 +140,12 @@ test("another connection's learned slug survives this one's catalog", async () =
     { "gpt-5.7-nova": { vision: false } },
   );
   assert.deepEqual(capabilities?.["gpt-5.7-nova"], { vision: false });
-  assert.deepEqual(capabilities?.["gpt-5.7-eos"], { vision: true });
+  assert.deepEqual(capabilities["gpt-5.7-eos"], { vision: true });
 });
 
 
 test("a saved slug the plan still returns survives losing its picker slot", async () => {
-  const loaded = await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
   const resolve = loaded.resolveCodexPickerModels as Resolve;
   const { catalog, selected } = resolve(
     CURATED,
@@ -161,7 +161,7 @@ test("a saved slug the plan still returns survives losing its picker slot", asyn
 });
 
 test("a slug the plan no longer returns at all is retired", async () => {
-  const loaded = await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
   const resolve = loaded.resolveCodexPickerModels as Resolve;
   const { selected } = resolve(
     CURATED,
@@ -173,7 +173,7 @@ test("a slug the plan no longer returns at all is retired", async () => {
 
 
 test("a hidden saved slug still contributes its capability", async () => {
-  const loaded = await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
   const capabilities = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const resolved = capabilities(
     ENTRY,
@@ -189,7 +189,7 @@ test("a hidden saved slug still contributes its capability", async () => {
 
 
 test("a reauthorization answer retires nothing and describes nothing", async () => {
-  const loaded = await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
   const resolve = loaded.resolveCodexPickerModels as Resolve;
   const capabilities = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const { selected } = resolve(
@@ -209,7 +209,7 @@ test("a reauthorization answer retires nothing and describes nothing", async () 
 
 test("a catalog that arrives before the registry does not rewrite what is learned", async () => {
   // Writing before the registry loads would drop the studio_tools wildcard and persisted flags.
-  const loaded = await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
   const codexCapabilitiesWithPlanModels = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const stored = {
     "gpt-5.4": { vision: true, studio_tools: true },

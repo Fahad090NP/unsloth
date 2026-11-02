@@ -52,7 +52,7 @@ test("releasing an id nobody holds is a no-op on the same set", () => {
   assert.equal(release(empty, "p1"), empty);
 });
 
-test("the detail panes do not own a mutation lock", async () => {
+test("the detail panes do not own a mutation lock", () => {
   // Panes are keyed by entry.id, so a useState lock resets on every row switch.
   assert.doesNotMatch(
     PROMPT_STORAGE_DIALOG,
@@ -69,7 +69,7 @@ test("the detail panes do not own a mutation lock", async () => {
 });
 
 // React may defer a functional updater, so the ref, not the updater's outcome, decides.
-test("the lock decides from the ref, not from a scheduled updater", async () => {
+test("the lock decides from the ref, not from a scheduled updater", () => {
   assert.match(PROMPT_STORAGE_DIALOG, /const mutatingRef = useRef<ReadonlySet<string>>/);
   assert.match(
     PROMPT_STORAGE_DIALOG,
@@ -111,7 +111,7 @@ test("list drafts compare by items, not by identity", () => {
 });
 
 // Creates have no id to lock on yet; unguarded they duplicated and swallowed failures.
-test("both create paths are guarded and report failure", async () => {
+test("both create paths are guarded and report failure", () => {
   // Forms are conditionally mounted, so the guard lives above them.
   assert.equal(
     PROMPT_STORAGE_DIALOG.split("= useCreateGuard();").length - 1,
@@ -139,7 +139,7 @@ test("both create paths are guarded and report failure", async () => {
 });
 
 // Clearing the draft before refetch flashes the pre-save text.
-test("a save clears its draft only after the refreshed entry is in", async () => {
+test("a save clears its draft only after the refreshed entry is in", () => {
   assert.equal(
     PROMPT_STORAGE_DIALOG.split("await onRefresh();\n        onSaved(submitted);").length - 1,
     2,
@@ -153,7 +153,7 @@ test("a save clears its draft only after the refreshed entry is in", async () =>
 });
 
 // The parent reselects during render while the deleted row is still listed.
-test("a delete clears its selection only after the row is gone", async () => {
+test("a delete clears its selection only after the row is gone", () => {
   const leadIns = PROMPT_STORAGE_DIALOG.split("onDeleted(entry.id);").slice(0, -1);
   assert.equal(leadIns.length, 2, "both detail panes should clear a deleted row");
   for (const before of leadIns) {
@@ -171,7 +171,7 @@ test("a delete clears its selection only after the row is gone", async () => {
 });
 
 // DialogContent is overflow-hidden, so a guessed min height clips controls on narrow dialogs.
-test("the dialog body claims no height it has to guess", async () => {
+test("the dialog body claims no height it has to guess", () => {
   assert.doesNotMatch(
     PROMPT_STORAGE_DIALOG,
     /min-h-\[[^\]]*dvh/,
@@ -186,7 +186,7 @@ test("the dialog body claims no height it has to guess", async () => {
 });
 
 // Fields stay editable during a create, so only reset a draft that still matches.
-test("a create resets its draft only if it still holds what was sent", async () => {
+test("a create resets its draft only if it still holds what was sent", () => {
   assert.match(PROMPT_STORAGE_DIALOG, /samePromptDraft\(prev, submitted\) \? emptyPromptDraft\(\) : prev/);
   assert.match(PROMPT_STORAGE_DIALOG, /sameListDraft\(prev, submitted\) \? emptyListDraft\(\) : prev/);
   assert.doesNotMatch(
@@ -207,7 +207,7 @@ test("an empty draft does not match a submitted one", () => {
 });
 
 // One textarea per item scales badly and lists hold 10000 items, so the editor must wait.
-test("an oversized list waits to be asked before mounting its editor", async () => {
+test("an oversized list waits to be asked before mounting its editor", () => {
   assert.match(PROMPT_STORAGE_DIALOG, /const EDITOR_ROW_LIMIT = \d+;/);
   const limit = Number(/const EDITOR_ROW_LIMIT = (\d+);/.exec(PROMPT_STORAGE_DIALOG)?.[1]);
   assert.ok(limit > 0 && limit < 500, `${limit} is not a limit that avoids the freeze`);
@@ -230,7 +230,7 @@ test("an oversized list waits to be asked before mounting its editor", async () 
 });
 
 // A create outlives its form, so completion only touches the view its form still owns.
-test("a finished create only moves the view its own form still owns", async () => {
+test("a finished create only moves the view its own form still owns", () => {
   assert.equal(
     PROMPT_STORAGE_DIALOG.split("onCreated(id, submitted, mounted.current);").length - 1,
     2,
@@ -249,7 +249,7 @@ test("a finished create only moves the view its own form still owns", async () =
 });
 
 // searchQuery is shared across tabs, so only correct the visible tab's selection.
-test("only the visible tab's selection is corrected", async () => {
+test("only the visible tab's selection is corrected", () => {
   assert.match(PROMPT_STORAGE_DIALOG, /if \(activeTab === "prompts"\) \{\n\s+if \(filteredPrompts\.length === 0\)/);
   assert.match(PROMPT_STORAGE_DIALOG, /const selectTab = useCallback\(\(tab: Tab\) => \{/);
   assert.doesNotMatch(
@@ -261,7 +261,7 @@ test("only the visible tab's selection is corrected", async () => {
 });
 
 // StrictMode replays effect setup/cleanup, so the mounted flag must be set in setup.
-test("the New form's mounted flag is set in effect setup", async () => {
+test("the New form's mounted flag is set in effect setup", () => {
   assert.equal(
     PROMPT_STORAGE_DIALOG.split("mounted.current = true;").length - 1,
     2,
@@ -290,7 +290,7 @@ test("no id can be crafted to collide across the two kinds", () => {
   assert.notEqual(lockKey("list", "prompt:abc"), lockKey("prompt", "abc"));
 });
 
-test("both panes take their lock through lockKey", async () => {
+test("both panes take their lock through lockKey", () => {
   assert.equal(PROMPT_STORAGE_DIALOG.split('runMutation(lockKey("prompt", entry.id)').length - 1, 2);
   assert.equal(PROMPT_STORAGE_DIALOG.split('runMutation(lockKey("list", entry.id)').length - 1, 2);
   assert.doesNotMatch(

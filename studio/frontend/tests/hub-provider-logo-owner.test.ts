@@ -63,7 +63,7 @@ test("no org is claimed by two providers", () => {
       assert.equal(
         seen.get(key),
         undefined,
-        `${owner} is claimed by both ${seen.get(key)} and ${provider.id}`,
+        `${owner} is claimed by both ${String(seen.get(key))} and ${provider.id}`,
       );
       seen.set(key, provider.id);
     }

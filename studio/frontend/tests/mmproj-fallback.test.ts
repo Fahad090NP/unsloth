@@ -160,7 +160,7 @@ test("every CPU fallback reason says why the model is on the CPU", () => {
   const noDevice = loadFallbackNotice("X loaded", "vulkan_no_device", null);
   assert.equal(noDevice.title, "X loaded on CPU");
   assert.equal(noDevice.description, cpuFallbackMessage("vulkan_no_device"));
-  assert.match(noDevice.description ?? "", /No usable Vulkan GPU was found/);
+  assert.match(noDevice.description, /No usable Vulkan GPU was found/);
   assert.equal(noDevice.degraded, true);
 
   const stall = loadFallbackNotice("X loaded", "vulkan_startup_stall", "cpu_offload");

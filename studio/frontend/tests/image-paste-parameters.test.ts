@@ -251,7 +251,7 @@ test("pasted text needs a settings line; a bare prompt is not parameters", () =>
     "a cat\r\nNegative prompt: dog\r\nSteps: 12, Seed: 9",
   );
   assert.equal(crlf?.negative_prompt, "dog");
-  assert.equal(crlf?.steps, 12);
+  assert.equal(crlf.steps, 12);
   assert.equal(
     pastedParameters(JSON.stringify({ prompt: "x", steps: 4 }))?.steps,
     4,
@@ -308,9 +308,9 @@ test("LoRA tags pasted before a LoRA-capable model is resident match the whole l
     { name: "missing", weight: 1 },
   ];
   let fetched = 0;
-  const fetchAll = async () => {
+  const fetchAll = () => {
     fetched += 1;
-    return local;
+    return Promise.resolve(local);
   };
   // No catalog on the page yet: the installed adapter is found, not reported missing.
   assert.deepEqual(await matchLoraTagsForImport(tags, false, [], fetchAll), {
@@ -331,8 +331,8 @@ test("LoRA tags pasted before a LoRA-capable model is resident match the whole l
   });
   assert.equal(fetched, 1);
   // The list cannot be read: nothing is called missing.
-  const failed = await matchLoraTagsForImport(tags, false, [], async () => {
-    throw new Error("offline");
+  const failed = await matchLoraTagsForImport(tags, false, [], () => {
+    return Promise.reject(new Error("offline"));
   });
   assert.deepEqual(failed.unmatched, []);
   assert.deepEqual(failed.notes, [

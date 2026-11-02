@@ -102,11 +102,11 @@ function harness(name = "ThreadContextUsageRecount") {
       state.contextUsage = next;
       writes.push(next);
     },
-    setThreadContextUsage: () => {},
+    setThreadContextUsage: () => { /* empty */ },
   };
   const world = {
     mainThreadId: "thread-a",
-    thread: { isLoading: false, messages: [reply(state.contextUsage!)] },
+    thread: { isLoading: false, messages: [reply((state.contextUsage ?? assert.fail("expected a non-null value")))] },
     recounts: [] as unknown[],
     image: false,
     audio: false,
@@ -227,8 +227,8 @@ test("an effective reasoning change still estimates and recounts the loaded bran
   h.render();
   h.state.reasoningKey = contextUsageReasoningKey({ enable_thinking: false });
   h.render();
-  assert.equal(h.state.contextUsage?.estimated, true);
-  assert.equal(h.state.contextUsage?.totalTokens, 42);
+  assert.equal(h.state.contextUsage.estimated, true);
+  assert.equal(h.state.contextUsage.totalTokens, 42);
   assert.equal(h.world.recounts.length, 1);
 });
 
@@ -256,8 +256,8 @@ for (const unavailable of [null, "image", "audio", "video", "unloaded", "compact
     h.state.reasoningKey = disabled;
     h.state.queuedSettingsEpoch += 1;
     h.render();
-    assert.equal(h.state.contextUsage?.estimated, true);
-    assert.ok((h.state.contextUsage?.totalTokens ?? 0) > 600);
+    assert.equal(h.state.contextUsage.estimated, true);
+    assert.ok((h.state.contextUsage.totalTokens ?? 0) > 600);
     assert.equal(h.world.recounts.length, unavailable === null ? 1 : 0);
     h.state.reasoningKey = enabled;
     h.state.queuedSettingsEpoch += 1;
@@ -275,7 +275,7 @@ test("changing reasoning after opening a legacy chat estimates and recounts its 
   h.render();
   h.state.reasoningKey = contextUsageReasoningKey({ enable_thinking: false });
   h.render();
-  assert.equal(h.state.contextUsage?.estimated, true);
+  assert.equal(h.state.contextUsage.estimated, true);
   assert.equal(h.world.recounts.length, 1);
 });
 
@@ -305,8 +305,8 @@ for (const setting of ["systemPrompt", "chatTemplate", "tools"] as const) {
     h.state.reasoningKey = enabled;
     h.state.queuedSettingsEpoch += 1;
     h.render();
-    assert.equal(h.state.contextUsage?.estimated, true);
-    assert.equal(h.state.contextUsage?.totalTokens, 1990);
+    assert.equal(h.state.contextUsage.estimated, true);
+    assert.equal(h.state.contextUsage.totalTokens, 1990);
     assert.equal(h.world.recounts.length, recounts + 1);
   });
 }
@@ -335,13 +335,13 @@ for (const setting of ["enabled", "historyAccess", "scriptAccess"] as const) {
     assert.deepEqual(h.world.recounts, []);
     h.state.reasoningKey = disabled;
     h.render();
-    assert.equal(h.state.contextUsage?.estimated, true);
+    assert.equal(h.state.contextUsage.estimated, true);
     assert.equal(h.world.recounts.length, 1);
     h.state.contextUsage = usage(1990, disabled);
     h.state.reasoningKey = enabled;
     h.render();
-    assert.equal(h.state.contextUsage?.estimated, true);
-    assert.equal(h.state.contextUsage?.totalTokens, 1990);
+    assert.equal(h.state.contextUsage.estimated, true);
+    assert.equal(h.state.contextUsage.totalTokens, 1990);
     assert.equal(h.world.recounts.length, 2);
   });
 }
@@ -391,13 +391,13 @@ for (const setting of ["imageToolsEnabled", "localImageModelReady", "localVideoM
     assert.deepEqual(h.world.recounts, []);
     h.state.reasoningKey = disabled;
     h.render();
-    assert.equal(h.state.contextUsage?.estimated, true);
+    assert.equal(h.state.contextUsage.estimated, true);
     assert.equal(h.world.recounts.length, 1);
     h.state.contextUsage = usage(1990, disabled);
     h.state.reasoningKey = enabled;
     h.render();
-    assert.equal(h.state.contextUsage?.estimated, true);
-    assert.equal(h.state.contextUsage?.totalTokens, 1990);
+    assert.equal(h.state.contextUsage.estimated, true);
+    assert.equal(h.state.contextUsage.totalTokens, 1990);
     assert.equal(h.world.recounts.length, 2);
   });
 }
@@ -466,7 +466,7 @@ test("switching to a reply priced before a prompt change recounts it", () => {
   const recounts = h.world.recounts.length;
   h.world.thread.messages = [{ ...reply(usage(84, contextUsageReasoningKey({}))), id: "sibling" }];
   h.render();
-  assert.equal(h.state.contextUsage?.estimated, true);
+  assert.equal(h.state.contextUsage.estimated, true);
   assert.equal(h.world.recounts.length, recounts + 1);
 });
 
@@ -487,8 +487,8 @@ test("batched tool and reasoning changes cannot restore the old prompt count", (
   h.state.reasoningKey = enabled;
   h.state.queuedSettingsEpoch += 1;
   h.render();
-  assert.equal(h.state.contextUsage?.estimated, true);
-  assert.equal(h.state.contextUsage?.totalTokens, 1990);
+  assert.equal(h.state.contextUsage.estimated, true);
+  assert.equal(h.state.contextUsage.totalTokens, 1990);
   assert.equal(h.world.recounts.length, recounts + 1);
 });
 
@@ -505,7 +505,7 @@ test("thinking toggles that also update sampling and preserve settings retain th
   h.state.params.temperature = 0.7;
   h.state.queuedSettingsEpoch += 3;
   h.render();
-  assert.equal(h.state.contextUsage?.estimated, true);
+  assert.equal(h.state.contextUsage.estimated, true);
   h.state.reasoningKey = enabled;
   h.state.params.temperature = 0.6;
   h.state.queuedSettingsEpoch += 2;
@@ -551,7 +551,7 @@ test("deleting an attachment invalidates exact usage when only the branch revisi
   h.render();
   assert.equal(h.world.thread.messages.at(-1), tip);
   assert.equal(h.world.thread.messages.length, length);
-  assert.equal(h.state.contextUsage?.estimated, true);
+  assert.equal(h.state.contextUsage.estimated, true);
   assert.deepEqual(h.world.recounts, [{ threadId: "thread-a" }]);
   h.render();
   assert.equal(h.world.recounts.length, 1);
@@ -567,8 +567,8 @@ test("hydrating the saved reasoning settings keeps legacy usage exact", () => {
   h.state.reasoningKey = contextUsageReasoningKey({ enable_thinking: false });
   h.state.threadScopedSettingsPending = false;
   h.render();
-  assert.equal(h.state.contextUsage?.totalTokens, 84);
-  assert.equal(h.state.contextUsage?.estimated, undefined);
+  assert.equal(h.state.contextUsage.totalTokens, 84);
+  assert.equal(h.state.contextUsage.estimated, undefined);
   assert.deepEqual(h.world.recounts, []);
 });
 
@@ -612,18 +612,18 @@ test("finishing history loading restores exact usage after reasoning settings se
   h.state.contextUsage = { ...usage(10), estimated: true };
   h.world.thread = { isLoading: true, messages: [] };
   h.render();
-  h.world.recounts.length = 0;
+  h.world.recounts.splice(0);
   h.state.threadScopedSettingsPending = false;
   h.state.reasoningKey = contextUsageReasoningKey({ enable_thinking: true });
   h.render();
-  assert.equal(h.state.contextUsage?.estimated, true);
+  assert.equal(h.state.contextUsage.estimated, true);
   h.world.thread = {
     isLoading: false,
     messages: [reply(usage(84, h.state.reasoningKey))],
   };
   h.render();
-  assert.equal(h.state.contextUsage?.totalTokens, 84);
-  assert.equal(h.state.contextUsage?.estimated, undefined);
+  assert.equal(h.state.contextUsage.totalTokens, 84);
+  assert.equal(h.state.contextUsage.estimated, undefined);
   assert.deepEqual(h.world.recounts, []);
 });
 
@@ -648,7 +648,7 @@ test("the registered branch belongs to the active thread and must finish loading
   h.world.mainThreadId = "blank-thread";
   h.world.thread.messages = [];
   assert.equal(h.readBranch(), null);
-  h.world.mainThreadId = h.state.activeThreadId!;
+  h.world.mainThreadId = (h.state.activeThreadId ?? assert.fail("expected a non-null value"));
   assert.equal(h.readBranch(), h.world.thread.messages);
   h.world.thread.isLoading = true;
   assert.equal(h.readBranch(), null);

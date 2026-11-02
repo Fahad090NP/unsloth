@@ -9,6 +9,14 @@ import test from "node:test";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 import { skillLoadCardEvent } from "../src/features/chat/api/skill-load-event.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 interface Module {
   resolveToolConfirmation: (
     sessionId: string,
@@ -24,8 +32,8 @@ function jsonResponse(status: number, body: unknown) {
     status,
     ok: status >= 200 && status < 300,
     headers: { get: () => null },
-    async json() {
-      return body;
+     json() {
+      return Promise.resolve(body);
     },
   };
 }
@@ -42,9 +50,9 @@ function harness(response: ReturnType<typeof jsonResponse>, epoch = { value: 0 }
       ),
       "@/features/auth": {
         getAuthSessionEpoch: () => epoch.value,
-        authFetch: async (url: string, init?: RequestInit) => {
+        authFetch:  (url: string, init?: RequestInit) => {
           requests.push({ url, init });
-          return response;
+          return Promise.resolve(response);
         },
       },
       "@/lib/format-fastapi-error": {
@@ -54,20 +62,20 @@ function harness(response: ReturnType<typeof jsonResponse>, epoch = { value: 0 }
       "../types": {},
       "../types/api": {},
       "../utils/chat-history-revision": {
-        notifyChatHistoryUpdated: () => {},
+        notifyChatHistoryUpdated: () => {/* intentionally empty */},
         isCoalescedHistoryEvent: () => false,
       },
       "../utils/openapi-support": { readAdvertisedPatchGuards: () => null },
-      "../utils/load-warning-toast": { showLoadWarning: () => {} },
+      "../utils/load-warning-toast": { showLoadWarning: () => {/* intentionally empty */} },
       "../lib/load-request": {},
       "./generation-length.ts": {},
       "./gguf-variants-request": {},
-      "./padded-response": { assertCompletedPaddedBody: () => {} },
-      "@/features/hf-auth": { prepareHfTokenForUse: async () => undefined },
+      "./padded-response": { assertCompletedPaddedBody: () => {/* intentionally empty */} },
+      "@/features/hf-auth": { prepareHfTokenForUse:  () => Promise.resolve(undefined) },
       "@/features/settings/low-disk-check": { checkDiskSpace: () => Promise.resolve() },
       "@/features/igpu-carveout": {
-        dismissCarveoutAdviceForModel: () => {},
-        showCarveoutAdvice: () => {},
+        dismissCarveoutAdviceForModel: () => {/* intentionally empty */},
+        showCarveoutAdvice: () => {/* intentionally empty */},
       },
       "@/features/hub/lib/abort-signals": {},
       "@/features/hub/lib/hub-token-header": { hubTokenHeader: () => ({}) },
@@ -173,7 +181,7 @@ test("Full Access needs an explicit server acknowledgment, including on an older
   }
   const { module, requests } = harness(jsonResponse(200, { resolved: true, full_access_granted: true }));
   assert.equal(await module.resolveToolConfirmation("sess", "a1", "allow", true), true);
-  assert.deepEqual(JSON.parse(String(requests[0].init!.body)), {
+  assert.deepEqual(JSON.parse((required(requests[0].init).body as unknown as string)), {
     session_id: "sess", approval_id: "a1", decision: "allow", permission_mode: "full",
   });
 });
@@ -181,7 +189,7 @@ test("Full Access needs an explicit server acknowledgment, including on an older
 test("a Full Access acknowledgment cannot cross an authentication session change", async () => {
   const epoch = { value: 0 };
   const response = jsonResponse(200, { resolved: true, full_access_granted: true });
-  response.json = async () => { epoch.value += 1; return { resolved: true, full_access_granted: true }; };
+  response.json =  () => { epoch.value += 1; return Promise.resolve({ resolved: true, full_access_granted: true }); };
   const { module } = harness(response, epoch);
   assert.equal(await module.resolveToolConfirmation("sess", "a1", "allow", true), false);
 });

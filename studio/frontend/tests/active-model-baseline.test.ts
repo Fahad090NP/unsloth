@@ -39,7 +39,7 @@ function useActiveConfigFor(patch: Record<string, unknown>, gguf = true) {
       },
     },
   );
-  return useActiveModelConfig().config!;
+  return (useActiveModelConfig().config ?? assert.fail("expected a non-null value"));
 }
 
 function configsEqual(persistedMode: string) {

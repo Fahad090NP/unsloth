@@ -57,7 +57,7 @@ function storedMessages(
 function loadExporters(
   stored: StoredMessage[],
   downloads: string[] = [],
-  onRead: () => void = () => {},
+  onRead: () => void = () => {/* intentionally empty */},
 ) {
   const javascript = ts.transpileModule(
     [
@@ -78,13 +78,13 @@ function loadExporters(
   ).outputText;
   const context = {
     exports: {},
-    toast: { info: () => {} },
-    listStoredChatMessages: async () => {
+    toast: { info: () => {/* intentionally empty */} },
+    listStoredChatMessages:  () => {
       onRead();
-      return stored;
+      return Promise.resolve(stored);
     },
-    getStoredChatThread: async () => undefined,
-    settleThreadScopedSettingsForCopy: async () => {},
+    getStoredChatThread:  () => Promise.resolve(undefined),
+    settleThreadScopedSettingsForCopy:  () => {return Promise.resolve(); },
     ...liveThreadHead,
     savedBranchHead: () => undefined,
     orderByParentChain,
@@ -93,10 +93,10 @@ function loadExporters(
     messageToText: (message: StoredMessage) => message.content,
     csvEscape: (value: string) => value,
     exportTs: () => "ts",
-    conversationBasename: async () => "conversation",
-    downloadBlob: async (body: string) => {
+    conversationBasename:  () => Promise.resolve("conversation"),
+    downloadBlob:  (body: string) => {
       downloads.push(body);
-    },
+    return Promise.resolve(); },
   } as Record<string, unknown>;
   vm.runInNewContext(javascript, context);
   return context.__exporters as Exporters;
@@ -212,7 +212,7 @@ test("ShareGPT exports nothing from the replaced branch while an edited first pr
 
 test("ShareGPT keeps the picked branch when the chat is switched during the export", async () => {
   const downloads: string[] = [];
-  let unregister = () => {};
+  let unregister = () => {/* intentionally empty */};
   const exporters = loadExporters(regenerated, downloads, () => { unregister(); });
   unregister = liveThreadHead.registerLiveThreadView({
     threads: () => ({ getState: () => ({ mainThreadId: "thread" }) }),

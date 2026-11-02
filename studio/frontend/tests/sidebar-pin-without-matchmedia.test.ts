@@ -25,9 +25,12 @@ function stubWindow(matchMedia?: (query: string) => unknown) {
 }
 
 let loads = 0;
-async function load() {
+type SidebarPin = typeof import("../src/hooks/use-sidebar-pin.ts");
+async function load(): Promise<SidebarPin> {
   loads += 1;
-  return await import(`../src/hooks/use-sidebar-pin.ts?load=${loads}`);
+  return (await import(
+    `../src/hooks/use-sidebar-pin.ts?load=${loads}`
+  )) as SidebarPin;
 }
 
 test("the pin module imports, holds and releases where there is no matchMedia", async () => {

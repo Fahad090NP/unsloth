@@ -53,9 +53,9 @@ function harness() {
       },
       "./api": {
         NpuDownloadError,
-        listNpuDownloads: async () => {
-          if (!backend.reachable) throw new Error("Failed to fetch");
-          return running;
+        listNpuDownloads: () => {
+          if (!backend.reachable) return Promise.reject(new Error("Failed to fetch"));
+          return Promise.resolve(running);
         },
         downloadNpuModel: pull(false),
         followNpuModelDownload: pull(true),
@@ -126,7 +126,7 @@ test("a broken stream follows the pull the backend still runs, and the quit warn
 test("a backend that cannot be asked yet is followed again, not given up on", async (t) => {
   const clock = mockedClock(t);
   const { store, pulls, toasts, activity, backend } = harness();
-  void store.followNpuDownload("qwen3-8b-FLM");
+  store.followNpuDownload("qwen3-8b-FLM").catch(() => undefined);
   backend.reachable = false;
   pulls[0].finish(new TypeError("Failed to fetch"));
   await until(() => pulls.length === 2, clock);
@@ -168,7 +168,7 @@ test("a pull stalled on the backend is still followed, at most every 5 s", async
   const { store, pulls, toasts, activity, running } = harness();
   const id = "gemma3-1b-FLM";
   running.push({ model: id, percent: 40 });
-  void store.followNpuDownload(id);
+  store.followNpuDownload(id).catch(() => undefined);
   pulls[0].finish(new Error("network error"));
   for (let i = 1; i <= 7; i++) {
     await until(() => pulls.length === i + 1, clock);
@@ -311,7 +311,7 @@ test("progress outlives the picker and one stream serves every follower", async 
 
 test("a repeated percent leaves the store untouched", () => {
   const { store, pulls } = harness();
-  void store.followNpuDownload("gemma3-4b-FLM");
+  store.followNpuDownload("gemma3-4b-FLM").catch(() => undefined);
   pulls[0].onProgress({ event: "progress", percent: 7 });
   let notified = 0;
   const stop = store.useNpuCatalogStore.subscribe(() => notified++);
@@ -323,7 +323,7 @@ test("a repeated percent leaves the store untouched", () => {
 
 test("following a backend pull never starts one and opens at its last percent", () => {
   const { store, pulls } = harness();
-  void store.followNpuDownload("gemma3-4b-FLM", { follow: true, percent: 61 });
+  store.followNpuDownload("gemma3-4b-FLM", { follow: true, percent: 61 }).catch(() => undefined);
   assert.equal(pulls[0].follow, true);
   assert.equal(
     store.useNpuCatalogStore.getState().progress["gemma3-4b-FLM"],
@@ -348,14 +348,14 @@ test("a followed pull that ended before its stream opened reports how it ended",
 test("a failed pull is reported once, clears its progress, and the next try streams anew", async () => {
   const { store, pulls, listings, toasts } = harness();
   const job = store.followNpuDownload("llama3.2-1b-FLM");
-  void store.followNpuDownload("llama3.2-1b-FLM");
+  store.followNpuDownload("llama3.2-1b-FLM").catch(() => undefined);
   pulls[0].finish(new Error("connection reset"));
   await until(() => listings.length === 1);
   listings[0].resolve([]);
   assert.equal(await job, false);
   assert.deepEqual(toasts, ["Could not download llama3.2-1b-FLM"]);
   assert.deepEqual(store.useNpuCatalogStore.getState().progress, {});
-  void store.followNpuDownload("llama3.2-1b-FLM");
+  store.followNpuDownload("llama3.2-1b-FLM").catch(() => undefined);
   assert.equal(pulls.length, 2);
 });
 

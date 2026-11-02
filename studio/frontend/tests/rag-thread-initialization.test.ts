@@ -9,6 +9,14 @@ import {
   type StubElement,
 } from "./helpers/module-stubs.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const ID = "__LOCALID_attachment";
 const SAVED_ID = "saved-target";
 const OUTGOING_ID = "__LOCALID_outgoing";
@@ -59,14 +67,14 @@ function harness(
   const state = {
     ragEnabled: true,
     ragPanelHidden: false,
-    setRagPanelHidden() {},
-    setRagPanelFileCount() {},
+    setRagPanelHidden() {/* intentionally empty */},
+    setRagPanelFileCount() {/* intentionally empty */},
     ragSource: options.ragSource ?? { type: "thread" },
     activeProjectId: null,
     projectAttachmentTarget: "thread",
     projectAttachmentTargetByThread: {},
     adoptPendingProjectAttachmentTarget: (id: string) => adopted.push(id),
-    clearPendingProjectAttachmentTarget() {},
+    clearPendingProjectAttachmentTarget() {/* intentionally empty */},
   };
   const store = Object.assign(
     (select: (s: typeof state) => unknown) => select(state),
@@ -182,7 +190,7 @@ function harness(
       "@/features/chat/stores/chat-preferences-store": {
         useChatPreferencesStore: (
           select: (s: { filesPanelCollapsed: boolean; setFilesPanelCollapsed: () => void }) => unknown,
-        ) => select({ filesPanelCollapsed: false, setFilesPanelCollapsed: () => {} }),
+        ) => select({ filesPanelCollapsed: false, setFilesPanelCollapsed: () => {/* intentionally empty */} }),
       },
       "@/features/chat/hooks/use-rag-tool-disabled": {
         useRagToolDisabled: () => false,
@@ -193,9 +201,9 @@ function harness(
         isThreadIncognito: () => incognito,
         isPastedTextFile: () => false,
         annotationsOfFile: () => null,
-        getStoredChatThread: async () => {
+        getStoredChatThread:  () => {
           threadReads += 1;
-          return options.row;
+          return Promise.resolve(options.row);
         },
         subscribeChatHistoryUpdated: (listener: (typeof announce)[number]) => {
           announce.push(listener);
@@ -227,8 +235,8 @@ function harness(
       "@/components/ui/dropdown-menu": {},
       "@/components/ui/alert-dialog": {},
       "../api/rag-api": {
-        listKnowledgeBases: async () => [{ id: "kb-1", name: "Product docs" }],
-        subscribeKnowledgeBasesChanged: () => () => {},
+        listKnowledgeBases:  () => Promise.resolve([{ id: "kb-1", name: "Product docs" }]),
+        subscribeKnowledgeBasesChanged: () => () => {/* intentionally empty */},
       },
       "../api/rag-availability": {
         useRagAvailabilityStore: (
@@ -256,7 +264,7 @@ function harness(
       "./knowledge-base-dialog": { KnowledgeBaseDialog: "KnowledgeBaseDialog" },
       "./source-file": {
         asViewerFile: (file: File) => file,
-        fetchSourceFile: async () => null,
+        fetchSourceFile:  () => Promise.resolve(null),
         isViewableSource: () => false,
       },
       "./staged-source": { EXPIRY_GRACE_MS: 30_000 },
@@ -269,20 +277,22 @@ function harness(
           token: intent.path.token,
           name: intent.displayLabel,
         }),
-        useRagDocuments: (scope: unknown) => ({
-          ...(scopes.push(scope), {}),
-          documents: [],
-          uploading: false,
-          hasIndexing: false,
-          loading: false,
-          upload: async (_files: unknown, resolve: () => Promise<Scope>) => {
-            try {
-              uploads.push(await resolve());
-            } catch (error) {
-              errors.push((error as Error).message);
-            }
-          },
-        }),
+        useRagDocuments: (scope: unknown) => {
+          scopes.push(scope);
+          return {
+            documents: [],
+            uploading: false,
+            hasIndexing: false,
+            loading: false,
+            upload: async (_files: unknown, resolve: () => Promise<Scope>) => {
+              try {
+                uploads.push(await resolve());
+              } catch (error) {
+                errors.push((error as Error).message);
+              }
+            },
+          };
+        },
       },
     },
   );
@@ -298,9 +308,9 @@ function harness(
     });
   }
   function pick() {
-    const addCard = findComponent(tree, "AddFilesCard")!;
+    const addCard = required(findComponent(tree, "AddFilesCard"));
     (addCard.props.onClick as () => void)();
-    pickedFiles!([new File(["document"], "report.docx")]);
+    required(pickedFiles)([new File(["document"], "report.docx")]);
   }
   return {
     render,
@@ -505,7 +515,7 @@ function findComponent(node: unknown, name: string): StubElement | undefined {
 }
 
 function manageFiles(tree: StubElement): StubElement {
-  const panel = findComponent(tree, "ChatFilesPanel")!;
+  const panel = required(findComponent(tree, "ChatFilesPanel"));
   return panel.props.headerControls as StubElement;
 }
 
@@ -524,16 +534,19 @@ test("a native drop into a knowledge base chat offers to add the files to that k
   assert.deepEqual(app.uploads, []);
   assert.equal(app.initializeCalls, 0);
   assert.deepEqual(app.errors, []);
-  assert.equal(kbDialog(app.tree)!.props.open, false);
+  assert.equal(required(kbDialog(app.tree)).props.open, false);
 
   assert.equal(app.toasts.length, 1);
   const [{ title, data }] = app.toasts;
   assert.equal(title, 'Add "report.docx" to "Product docs"?');
   assert.equal(data.action?.label, "Add");
-  assert.ok(data.duration! > 60_000, `duration ${data.duration}`);
+  assert.ok(
+    data.duration !== undefined && data.duration > 60_000,
+    `duration ${String(data.duration)}`,
+  );
   data.action.onClick();
   app.render();
-  const dialog = kbDialog(app.tree)!;
+  const dialog = required(kbDialog(app.tree));
   assert.equal(dialog.props.open, true);
   assert.deepEqual(dialog.props.focus, {
     kbId: "kb-1",
@@ -542,7 +555,7 @@ test("a native drop into a knowledge base chat offers to add the files to that k
 
   (dialog.props.onOpenChange as (open: boolean) => void)(false);
   app.render();
-  assert.equal(kbDialog(app.tree)!.props.open, false);
+  assert.equal(required(kbDialog(app.tree)).props.open, false);
 });
 
 test("the drop's Add still opens its knowledge base after the chat's source moves", async () => {
@@ -554,9 +567,9 @@ test("the drop's Add still opens its knowledge base after the chat's source move
   await flush();
   app.setRagSource({ type: "thread" });
   app.render();
-  app.toasts[0].data.action!.onClick();
+  required(app.toasts[0].data.action).onClick();
   app.render();
-  const dialog = kbDialog(app.tree)!;
+  const dialog = required(kbDialog(app.tree));
   assert.equal(dialog.props.open, true);
   assert.deepEqual(dialog.props.focus, {
     kbId: "kb-1",
@@ -570,7 +583,7 @@ test("the knowledge base panel opens that knowledge base without uploading anyth
   app.render();
   (manageFiles(app.tree).props.onClick as () => void)();
   app.render();
-  const dialog = kbDialog(app.tree)!;
+  const dialog = required(kbDialog(app.tree));
   assert.equal(dialog.props.open, true);
   assert.deepEqual(dialog.props.focus, { kbId: "kb-1" });
 });
@@ -593,7 +606,7 @@ test("an open dialog keeps its place when deleting the active knowledge base mov
     root: Symbol.for("Fragment"),
     first: "KnowledgeBaseDialog",
   });
-  assert.equal(kbDialog(app.tree)!.props.open, true);
+  assert.equal(required(kbDialog(app.tree)).props.open, true);
 });
 
 test("leaving the chat dismisses a drop's offer, whose Add could no longer open anything", async () => {

@@ -18,9 +18,9 @@ interface AuthApi {
 async function emittedHeaders(init?: RequestInit): Promise<Headers> {
   const originalFetch = globalThis.fetch;
   let received = new Headers();
-  globalThis.fetch = async (_input, fetchInit) => {
+  globalThis.fetch = (_input, fetchInit) => {
     received = new Headers(fetchInit?.headers);
-    return new Response(null, { status: 200 });
+    return Promise.resolve(new Response(null, { status: 200 }));
   };
   try {
     const authApi = loadWithStubs<AuthApi>(
@@ -29,19 +29,19 @@ async function emittedHeaders(init?: RequestInit): Promise<Headers> {
         "@/lib/api-base": { apiUrl: (path: string) => path, isTauri: false },
         "@/lib/account-transition": { accountTransitionPending: () => false },
         "./session": {
-          clearAuthTokens: () => {},
+          clearAuthTokens: () => { return undefined; },
           getAuthToken: () => "access-token",
           getRefreshToken: () => null,
           mustChangePassword: () => false,
-          setMustChangePassword: () => {},
-          storeAuthTokens: () => {},
+          setMustChangePassword: () => { return undefined; },
+          storeAuthTokens: () => { return undefined; },
         },
       },
     );
     await authApi.authFetch("/api/models/download-progress?repo_id=org/repo", init);
     return received;
   } finally {
-    globalThis.fetch = originalFetch;
+    Reflect.set(globalThis, "fetch", originalFetch);
   }
 }
 

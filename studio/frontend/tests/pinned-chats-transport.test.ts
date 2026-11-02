@@ -29,27 +29,36 @@ function fixture(error: unknown = unsupported()) {
   const tombstones = new Set<string>();
   const readLegacy = () => legacy.slice();
   const options = {
-    load: async () => {
+    load: () => {
       loads += 1;
-      if (loadFailure) throw loadFailure;
-      return remote?.slice();
+      if (loadFailure)
+        return Promise.reject(
+          loadFailure instanceof Error ? loadFailure : new Error(String(loadFailure)),
+        );
+      return Promise.resolve(remote?.slice());
     },
-    compareAndSet: async (expected: string[] | undefined, next: string[], operation?: PinOperation) => {
+    compareAndSet: (expected: string[] | undefined, next: string[], operation?: PinOperation) => {
       remoteCalls += 1;
-      if (failure) throw failure;
+      if (failure)
+        return Promise.reject(
+          failure instanceof Error ? failure : new Error(String(failure)),
+        );
       if (operation && acknowledged.has(operation.operationId))
-        return { pinnedIds: remote?.slice(), applied: true };
+        return Promise.resolve({ pinnedIds: remote?.slice(), applied: true });
       const applied = JSON.stringify(expected) === JSON.stringify(remote);
       if (applied) {
         remote = next.slice();
         if (operation) acknowledged.add(operation.operationId);
       }
-      return { pinnedIds: remote?.slice(), applied };
+      return Promise.resolve({ pinnedIds: remote?.slice(), applied });
     },
-    migrateLegacy: async (ids: string[]) => {
-      if (failure) throw failure;
+    migrateLegacy: (ids: string[]) => {
+      if (failure)
+        return Promise.reject(
+          failure instanceof Error ? failure : new Error(String(failure)),
+        );
       remote = [...new Set([...(remote ?? []), ...ids.filter((id) => !tombstones.has(id))])];
-      return remote.slice();
+      return Promise.resolve(remote.slice());
     },
     readLegacy,
     readFallback: () => fallback && structuredClone(fallback),
@@ -276,7 +285,7 @@ test("replay conflict retries are bounded and leave the recovery journal intact"
   f.upgrade();
   let conflicts = 0;
   const transport = createPinnedChatsTransport({ ...f.options,
-    compareAndSet: async () => { conflicts += 1; return { applied: false, pinnedIds: ["racer"] }; },
+    compareAndSet: () => { conflicts += 1; return Promise.resolve({ applied: false, pinnedIds: ["racer"] }); },
   });
   // The saved view stands in until the replay can land.
   assert.deepEqual(await transport.load(), ["new", "legacy"]);
@@ -325,8 +334,8 @@ test("stale recovery after reset cannot clear the durable fallback", async () =>
 test("malformed remote responses are rejected without entering fallback", async () => {
   const f = fixture();
   const transport = createPinnedChatsTransport({ ...f.options,
-    load: async () => ["duplicate", "duplicate"],
-    compareAndSet: async () => ({ applied: true, pinnedIds: undefined }),
+    load: () => Promise.resolve(["duplicate", "duplicate"]),
+    compareAndSet: () => Promise.resolve(({ applied: true, pinnedIds: undefined })),
   });
   await assert.rejects(transport.load(), /Invalid pinned chats response/);
   await assert.rejects(transport.compareAndSet([], ["new"], pin("bad", ["new"])), /Invalid pinned chats response/);
@@ -348,14 +357,14 @@ test("orphan-only migration may leave pins absent before a valid operation is re
   await f.sync.setPinned(["new"], true);
   f.upgrade();
   const transport = createPinnedChatsTransport({ ...f.options,
-    migrateLegacy: async () => undefined,
+    migrateLegacy: () => Promise.resolve(undefined),
   });
   assert.deepEqual(await transport.load(), ["new"]);
   assert.equal(f.fallback, undefined);
 
   const fresh = fixture();
   const noValidLegacy = createPinnedChatsTransport({ ...fresh.options,
-    migrateLegacy: async () => undefined,
+    migrateLegacy: () => Promise.resolve(undefined),
   });
   assert.equal(await noValidLegacy.migrateLegacy(["orphan"]), undefined);
   assert.equal(fresh.fallback, undefined);
@@ -371,17 +380,17 @@ test("upgrade replay skips a pin whose chat was unpinned (deleted) later in the 
     operations: [pin("01", ["pair"]), pin("02", ["pair"], false), pin("03", ["new"])],
   };
   const transport = createPinnedChatsTransport({
-    load: async () => remote.slice(),
-    compareAndSet: async (expected, next, operation) => {
+    load: () => Promise.resolve(remote.slice()),
+    compareAndSet: (expected, next, operation) => {
       if (operation) sent.push(operation);
       // The upgraded server never learned the deleted comparison's pair ID.
-      if (next.includes("pair")) return { pinnedIds: remote.slice(), applied: false };
-      if (JSON.stringify(expected) !== JSON.stringify(remote)) return { pinnedIds: remote.slice(), applied: false };
+      if (next.includes("pair")) return Promise.resolve({ pinnedIds: remote.slice(), applied: false });
+      if (JSON.stringify(expected) !== JSON.stringify(remote)) return Promise.resolve({ pinnedIds: remote.slice(), applied: false });
       if (operation && !operation.pinned) operation.ids.forEach((id) => tombstones.add(id));
       remote = next.slice();
-      return { pinnedIds: remote.slice(), applied: true };
+      return Promise.resolve({ pinnedIds: remote.slice(), applied: true });
     },
-    migrateLegacy: async () => remote.slice(),
+    migrateLegacy: () => Promise.resolve(remote.slice()),
     readLegacy: () => [],
     readFallback: () => fallback && structuredClone(fallback),
     writeFallback: (value) => { fallback = value && structuredClone(value); },
@@ -411,20 +420,20 @@ test("an upgrade replay retries a trimmed bulk pin under the same ID", async () 
     operations: [pin("01", ["a", "b"]), pin("02", ["a"], false)],
   };
   const transport = createPinnedChatsTransport({
-    load: async () => remote.slice(),
-    compareAndSet: async (expected, next, operation) => {
+    load: () => Promise.resolve(remote.slice()),
+    compareAndSet: (expected, next, operation) => {
       if (operation) ids.push(operation.operationId);
-      if (operation && seen.has(operation.operationId)) return { pinnedIds: remote.slice(), applied: true };
-      if (JSON.stringify(expected) !== JSON.stringify(remote)) return { pinnedIds: remote.slice(), applied: false };
+      if (operation && seen.has(operation.operationId)) return Promise.resolve({ pinnedIds: remote.slice(), applied: true });
+      if (JSON.stringify(expected) !== JSON.stringify(remote)) return Promise.resolve({ pinnedIds: remote.slice(), applied: false });
       remote = next.slice();
       if (operation) seen.add(operation.operationId);
       if (operation?.pinned && loseResponse) {
         loseResponse = false;
-        throw new TypeError("connection reset");
+        return Promise.reject(new TypeError("connection reset"));
       }
-      return { pinnedIds: remote.slice(), applied: true };
+      return Promise.resolve({ pinnedIds: remote.slice(), applied: true });
     },
-    migrateLegacy: async () => remote.slice(),
+    migrateLegacy: () => Promise.resolve(remote.slice()),
     readLegacy: () => [],
     readFallback: () => fallback && structuredClone(fallback),
     writeFallback: (value) => { fallback = value && structuredClone(value); },
@@ -448,16 +457,16 @@ test("a replay the server keeps refusing still lets a later unpin cancel that pi
     operations: [pin("01", ["pair"])],
   };
   const options = {
-    load: async () => remote.slice(),
-    compareAndSet: async (expected: string[] | undefined, next: string[]) => {
+    load: () => Promise.resolve(remote.slice()),
+    compareAndSet: (expected: string[] | undefined, next: string[]) => {
       // A legacy comparison still awaiting import: the upgraded server cannot place it.
       if (next.includes("pair") || JSON.stringify(expected) !== JSON.stringify(remote)) {
-        return { pinnedIds: remote.slice(), applied: false };
+        return Promise.resolve({ pinnedIds: remote.slice(), applied: false });
       }
       remote = next.slice();
-      return { pinnedIds: remote.slice(), applied: true };
+      return Promise.resolve({ pinnedIds: remote.slice(), applied: true });
     },
-    migrateLegacy: async () => remote.slice(),
+    migrateLegacy: () => Promise.resolve(remote.slice()),
     readLegacy: () => [],
     readFallback: () => fallback && structuredClone(fallback),
     writeFallback: (value: PinnedChatsFallbackState | undefined) => {
@@ -495,14 +504,14 @@ test("upgrade replay sends each fenced ID once", async () => {
     operations: [pin("p", ["chat"]), { ...pin("u", ["chat"], false), cancels: ["p"] }],
   };
   const transport = createPinnedChatsTransport({
-    load: async () => remote.slice(),
-    compareAndSet: async (expected, next, operation) => {
+    load: () => Promise.resolve(remote.slice()),
+    compareAndSet: (expected, next, operation) => {
       if (operation) sent.push(operation);
-      if (JSON.stringify(expected) !== JSON.stringify(remote)) return { pinnedIds: remote.slice(), applied: false };
+      if (JSON.stringify(expected) !== JSON.stringify(remote)) return Promise.resolve({ pinnedIds: remote.slice(), applied: false });
       remote = next.slice();
-      return { pinnedIds: remote.slice(), applied: true };
+      return Promise.resolve({ pinnedIds: remote.slice(), applied: true });
     },
-    migrateLegacy: async () => remote.slice(),
+    migrateLegacy: () => Promise.resolve(remote.slice()),
     readLegacy: () => [],
     readFallback: () => fallback && structuredClone(fallback),
     writeFallback: (value) => { fallback = value && structuredClone(value); },

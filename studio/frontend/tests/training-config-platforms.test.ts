@@ -81,7 +81,7 @@ test("gradient_checkpointing only ever maps to a value the picker can show", () 
       if (mapped !== undefined) {
         assert.ok(
           ["none", "true", "unsloth", "mlx"].includes(mapped as string),
-          `${deviceType}: ${JSON.stringify(value)} mapped to ${String(mapped)}`,
+          `${deviceType}: ${JSON.stringify(value)} mapped to ${(mapped as unknown as string)}`,
         );
       }
       if (typeof value === "boolean") {

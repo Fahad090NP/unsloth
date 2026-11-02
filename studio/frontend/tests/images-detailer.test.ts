@@ -78,7 +78,7 @@ test("a recipe's non-default guide_size_for and drop_size survive restore and ar
   assert.equal(restored.options.dropSize, 32);
   const field = detailerRequestField(true, true, { ...DETAILER_DEFAULTS, ...restored.options });
   assert.equal(field.detailer?.guide_size_for, "crop_region");
-  assert.equal(field.detailer?.drop_size, 32);
+  assert.equal(field.detailer.drop_size, 32);
   // A record without them restores FaceDetailer's defaults, never a stale stored value.
   const plain = restoredDetailer({ detailer: { targets: "face" } });
   assert.deepEqual([plain.options.guideSizeFor, plain.options.dropSize], ["bbox", 10]);
@@ -254,7 +254,7 @@ test("a recorded Detailer negative prompt and CFG restore and are sent again (AD
   assert.equal(restored.options.guidance, 4.5);
   const field = detailerRequestField(true, true, { ...DETAILER_DEFAULTS, ...restored.options });
   assert.equal(field.detailer?.negative_prompt, "blurry eyes");
-  assert.equal(field.detailer?.guidance, 4.5);
+  assert.equal(field.detailer.guidance, 4.5);
   // From an AUTOMATIC1111 infotext: separate negative prompt and CFG scale.
   const parsed = parseA1111Parameters(
     "girl\nSteps: 28, CFG scale: 7, Seed: 1, Size: 512x768, ADetailer model: face_yolov8n.pt, " +
@@ -265,7 +265,7 @@ test("a recorded Detailer negative prompt and CFG restore and are sent again (AD
   const fromPaste = restoredDetailer(recipeSettings(parsed, { width: 512, height: 768, steps: 28, guidance: 7 }));
   const sent = detailerRequestField(true, true, { ...DETAILER_DEFAULTS, ...fromPaste.options }).detailer;
   assert.equal(sent?.negative_prompt, "blurry");
-  assert.equal(sent?.guidance, 5.5);
+  assert.equal(sent.guidance, 5.5);
   // A record without them clears an override left from an earlier restore.
   const plain = restoredDetailer({ detailer: record });
   assert.equal(plain.options.negativePrompt, "");
@@ -303,8 +303,8 @@ test("an imported default ADetailer run does not keep geometry stored from an ea
   const custom = restoredDetailer({ detailer: { targets: "face", crop_factor: 4, guide_size: 768, max_size: 1536 } });
   const resent = detailerRequestField(true, true, { ...DETAILER_DEFAULTS, ...custom.options }).detailer;
   assert.equal(resent?.crop_factor, 4);
-  assert.equal(resent?.guide_size, 768);
-  assert.equal(resent?.max_size, 1536);
+  assert.equal(resent.guide_size, 768);
+  assert.equal(resent.max_size, 1536);
 });
 
 test("the Detailer's own CFG sends the main negative prompt it inherits", () => {

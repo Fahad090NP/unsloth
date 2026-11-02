@@ -109,7 +109,7 @@ const HOSTS: Host[] = [
 
 // 22/24 lands in the 0.90-0.97 band the budget change moves.
 const FOOTPRINTS = [
-  { label: "tiny", weightsBytes: 2 * GB, kvBytes: 1 * GB },
+  { label: "tiny", weightsBytes: 2 * GB, kvBytes: Number(GB) },
   { label: "half", weightsBytes: 8 * GB, kvBytes: 4 * GB },
   { label: "at the 0.90/0.97 seam", weightsBytes: 20 * GB, kvBytes: 2 * GB },
   { label: "hopeless", weightsBytes: 180 * GB, kvBytes: 40 * GB },
@@ -224,11 +224,11 @@ test("P4: a shared or unified pool is never counted twice", () => {
 
 test("P5: a CPU-only host draws nothing rather than a zero-width bar", () => {
   for (const platform of ALL) {
-    const host = HOSTS.find((h) => h.label === "CPU only")!;
+    const host = must(HOSTS.find((h) => h.label === "CPU only"));
     const cap = capacityFor(host);
     const bar = computeModelMemory({
       weightsBytes: 4 * GB,
-      kvBytes: 1 * GB,
+      kvBytes: Number(GB),
       gpuGb: cap.gpuCapacityGb,
     });
     assert.equal(bar.status, "unknown", `${platform}: CPU-only host drew a VRAM bar`);
@@ -276,3 +276,8 @@ test("hostile and malformed figures never become a confident verdict", () => {
     assert.equal(classifyMemoryFit(8 * GB, evil), "unknown");
   }
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

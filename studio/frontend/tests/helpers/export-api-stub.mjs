@@ -17,7 +17,7 @@ function record(name) {
 }
 
 export function resetStub() {
-  calls.length = 0;
+  calls.splice(0);
   responses.clear();
 }
 

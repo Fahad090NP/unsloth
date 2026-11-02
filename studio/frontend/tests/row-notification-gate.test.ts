@@ -39,7 +39,7 @@ function fakeClient() {
       };
     },
     on() {
-      return () => {};
+      return () => {/* intentionally empty */};
     },
     threads: () => ({ getState: () => threads }),
     thread: () => ({
@@ -233,13 +233,15 @@ test("a fingerprint that throws reaches every row", () => {
       heard[index] += 1;
     }),
   );
-  const original = console.error;
-  console.error = () => {};
+  const original = globalThis.console.error;
+  globalThis.console.error = () => {
+    /* intentionally empty */
+  };
   try {
     broken = true;
     fake.publish({ composer: { ...fake.composer(), text: "x" } });
   } finally {
-    console.error = original;
+    Object.assign(globalThis.console, { error: original });
   }
   assert.deepEqual(heard, [1, 1]);
   for (const r of release) r();
@@ -249,8 +251,8 @@ test("the gate holds the parent subscription only while a row is subscribed", ()
   const fake = fakeClient();
   const gate = createRowNotificationGate(fake.client);
   assert.equal(fake.parentSubscriptions(), 0);
-  const a = gate.row(0).subscribe(() => {});
-  const b = gate.row(1).subscribe(() => {});
+  const a = gate.row(0).subscribe(() => {/* intentionally empty */});
+  const b = gate.row(1).subscribe(() => {/* intentionally empty */});
   assert.equal(fake.parentSubscriptions(), 1);
   a();
   assert.equal(fake.parentSubscriptions(), 1);
@@ -267,8 +269,7 @@ test("a row client is stable per index and inherits every scope from its parent"
     () => { getState: () => State }
   >;
   assert.equal(row.thread().getState(), fake.thread());
-  assert.notEqual(
-    (row as unknown as AssistantClient).subscribe,
-    fake.client.subscribe,
-  );
+  const gatedSubscribe: unknown = Reflect.get(row, "subscribe");
+  const fakeSubscribe: unknown = Reflect.get(fake.client, "subscribe");
+  assert.notEqual(gatedSubscribe, fakeSubscribe);
 });

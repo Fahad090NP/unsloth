@@ -597,7 +597,7 @@ test("grid metadata: one every-cell-agrees rule for Flux shift, fitted size, see
   // The importer restores the Flux shift pair the grid writes.
   const recipe = parseA1111Parameters(gridInfotext({ prompt: "p", fields: [["Steps", 4], ["Base shift", 0.5], ["Max shift", 1.15]], axes: [] }));
   assert.equal(recipe?.base_shift, 0.5);
-  assert.equal(recipe?.max_shift, 1.15);
+  assert.equal(recipe.max_shift, 1.15);
 });
 
 test("grid cells are decoded and drawn one at a time; missing and failed cells keep the placeholder", async () => {
@@ -818,7 +818,7 @@ test("variation seed table: a Var. strength sweep shares one seed across every c
   for (const [typed, keepRandomSeeds, seedFieldEmpty, expected] of rows) {
     const run = createCompareRun(p, ctx, { keepRandomSeeds, seedFieldEmpty, rng: () => 0.25, variationSeed: typed });
     const reqs = p.order.map((_, i) => run.request(i, base(), 7));
-    const label = `typed ${typed}, keep ${keepRandomSeeds}, empty ${seedFieldEmpty}`;
+    const label = `typed ${String(typed)}, keep ${String(keepRandomSeeds)}, empty ${String(seedFieldEmpty)}`;
     assert.deepEqual(reqs.map((r) => (r as unknown as Record<string, unknown>).variation_seed), expected, label);
     const fields = Object.fromEntries(gridRecipeFields(p, run.requests, { steps: 25, guidance: 6, width: 1024, height: 1024, model: "m" }));
     assert.equal(fields["Variation seed"], expected[0], label);
@@ -977,7 +977,7 @@ test("grid metadata records the Hires fix every cell ran, in A1111 names, and dr
   assert.equal(fields["Hires CFG Scale"], 7);
   const parsed = parseA1111Parameters(gridParameters(steps, sdxl(), [base({ hires })], { ...form, keepRandomSeeds: false }));
   assert.equal(parsed?.hires_scale, 1.5);
-  assert.equal(parsed?.hires_guidance, 7);
+  assert.equal(parsed.hires_guidance, 7);
   const mixed = Object.fromEntries(gridRecipeFields(steps, [base({ hires }), base()], form));
   assert.equal("Hires upscale" in mixed, false);
   assert.equal("Hires upscale" in Object.fromEntries(gridRecipeFields(steps, [base()], form)), false);

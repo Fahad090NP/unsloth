@@ -26,7 +26,11 @@ test("toasts and the composer read one shadow variable", () => {
     .map(([selector, body]) => [selector, /box-shadow:\s*([^;]+);/.exec(body)?.[1].replace(/\s*!important$/, "").trim()]);
   assert.ok(shadows.length >= 3, "the composers and the toast set a shadow");
   for (const [selector, shadow] of shadows) {
-    assert.equal(shadow, "var(--composer-shadow)", `${selector} uses the shared shadow`);
+    assert.equal(
+      shadow,
+      "var(--composer-shadow)",
+      `${String(selector)} uses the shared shadow`,
+    );
   }
 });
 

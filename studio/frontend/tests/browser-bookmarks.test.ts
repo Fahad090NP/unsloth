@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
 const data = new Map<string, string>([["unsloth.browser-account.v1", "account:b1:bob"]]);
@@ -13,10 +13,13 @@ const localStorage = {
 };
 Object.assign(globalThis, {
   localStorage,
-  window: { localStorage, location: { protocol: "http:" }, addEventListener: () => {} },
+  window: { localStorage, location: { protocol: "http:" }, addEventListener: () => { /* empty */ } },
 });
 
-register("./helpers/browser-store-resolver.mjs", import.meta.url);
+const browserStoreResolverHooks = (await import(new URL("./helpers/browser-store-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserStoreResolverHooks.resolve });
 const { useBrowserBookmarksStore } = await import("../src/features/browser/bookmarks-store.ts");
 
 test("bookmarks persist under the account that saved them", () => {
@@ -30,7 +33,7 @@ test("a page is bookmarked once, and the next one goes where the last was moved"
   const first = store.addBookmark("https://example.com/", "Again");
   assert.equal(first?.title, "Example");
   assert.equal(useBrowserBookmarksStore.getState().bookmarks.length, 1);
-  store.updateBookmark(first?.id ?? "", { title: "  Renamed  ", folder: "other" });
+  store.updateBookmark(first.id ?? "", { title: "  Renamed  ", folder: "other" });
   const second = store.addBookmark("https://example.org/", "Org");
   assert.equal(second?.folder, "other");
   assert.equal(useBrowserBookmarksStore.getState().bookmarks[0]?.title, "Renamed");

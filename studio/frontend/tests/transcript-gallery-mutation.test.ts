@@ -3,8 +3,18 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
+
+interface RenderedGallery {
+  mutate: (
+    task: () => Promise<void>,
+    removed: readonly string[] | null,
+  ) => Promise<void>;
+  refresh: () => Promise<void>;
+  setArchived: (archived: boolean) => void;
+}
 
 test("pending transcript mutations use the current view and deletion callback", async () => {
   const source = readSrc("features/audio/transcript-gallery.tsx");
@@ -29,12 +39,15 @@ test("pending transcript mutations use the current view and deletion callback", 
     statements.join("\n") + "\nreturn { mutate, refresh, setArchived };",
     { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
   );
-  for (const { initialView, nextView, removed } of [
-    { initialView: false, nextView: true, removed: ["deleted"] },
-    { initialView: true, nextView: false, removed: ["deleted"] },
-    { initialView: false, nextView: false, removed: ["deleted"] },
-    { initialView: false, nextView: true, removed: null },
-  ]) {
+  await (
+    [
+      { initialView: false, nextView: true, removed: ["deleted"] },
+      { initialView: true, nextView: false, removed: ["deleted"] },
+      { initialView: false, nextView: false, removed: ["deleted"] },
+      { initialView: false, nextView: true, removed: null },
+    ] as const
+  ).reduce<Promise<void>>(async (previous, { initialView, nextView, removed }) => {
+    await previous;
     const state: unknown[] = [];
     const refs: { current: unknown }[] = [];
     const requests: boolean[] = [];
@@ -46,7 +59,7 @@ test("pending transcript mutations use the current view and deletion callback", 
       currentId: "deleted",
       latest: null,
       autoSelect: false,
-      onSelect: () => {},
+      onSelect: () => undefined,
       onDelete: (ids: unknown) => deletions.push(["stale", ids]),
       useState: (initial: unknown) => {
         const index = stateIndex++;
@@ -58,22 +71,27 @@ test("pending transcript mutations use the current view and deletion callback", 
           },
         ];
       },
-      useRef: (initial: unknown) => refs[refIndex++] ??= { current: initial },
+      useRef: (initial: unknown) => {
+        const index = refIndex++;
+        refs[index] ??= { current: initial };
+        return refs[index];
+      },
       useCallback: (callback: unknown) => callback,
       useLayoutEffect: (effect: () => void) => { effect(); },
-      useEffect: () => {},
-      listTranscripts: async (archived: boolean) => {
+      useEffect: () => undefined,
+      listTranscripts: (archived: boolean) => {
         requests.push(archived);
-        return { transcripts: [{ id: String(archived) }], next_cursor: null };
+        return Promise.resolve({
+          transcripts: [{ id: String(archived) }],
+          next_cursor: null,
+        });
       },
       toast: { error: (message: string) => assert.fail(message) },
     };
     const render = () => {
       stateIndex = 0;
       refIndex = 0;
-      return new Function(...Object.keys(scope), outputText)(
-        ...Object.values(scope),
-      );
+      return runInNewContext(outputText, { ...scope }) as RenderedGallery;
     };
     render().setArchived(initialView);
     const before = render();
@@ -92,7 +110,7 @@ test("pending transcript mutations use the current view and deletion callback", 
     assert.deepEqual(requests, [nextView, nextView]);
     assert.deepEqual(state[0], [{ id: String(nextView) }]);
     assert.deepEqual(deletions, [["current", removed]]);
-  }
+  }, Promise.resolve());
 });
 
 test("a failed view switch does not leave the other view's rows on screen", async () => {
@@ -131,8 +149,8 @@ test("a failed view switch does not leave the other view's rows on screen", asyn
     currentId: null,
     latest: null,
     autoSelect: false,
-    onSelect: () => {},
-    onDelete: () => {},
+    onSelect: () => undefined,
+    onDelete: () => undefined,
     useState: (initial: unknown) => {
       const index = stateIndex++;
       if (!(index in state)) state[index] = initial;
@@ -143,25 +161,29 @@ test("a failed view switch does not leave the other view's rows on screen", asyn
         },
       ];
     },
-    useRef: (initial: unknown) => refs[refIndex++] ??= { current: initial },
+    useRef: (initial: unknown) => {
+      const index = refIndex++;
+      refs[index] ??= { current: initial };
+      return refs[index];
+    },
     useCallback: (callback: unknown) => callback,
     useLayoutEffect: (effect: () => void) => { effect(); },
-    useEffect: () => {},
-    listTranscripts: async (archived: boolean) => {
-      if (failNext) throw new Error("Could not load transcripts.");
-      return {
+    useEffect: () => undefined,
+    listTranscripts: (archived: boolean) => {
+      if (failNext) {
+        return Promise.reject(new Error("Could not load transcripts."));
+      }
+      return Promise.resolve({
         transcripts: [{ id: String(archived) }],
-        next_cursor: `cursor-${archived}`,
-      };
+        next_cursor: `cursor-${String(archived)}`,
+      });
     },
     toast: { error: (message: string) => errors.push(message) },
   };
   const render = () => {
     stateIndex = 0;
     refIndex = 0;
-    return new Function(...Object.keys(scope), outputText)(
-      ...Object.values(scope),
-    );
+    return runInNewContext(outputText, { ...scope }) as RenderedGallery;
   };
 
   render().setArchived(false);

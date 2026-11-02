@@ -45,7 +45,7 @@ const parkedStart = (approvalId: string) => ({
   },
 });
 
-test("a call that parks after the tab reattaches arms its own card", async () => {
+test("a call that parks after the tab reattaches arms its own card", () => {
   const spy = spyConfirmations();
   const carried: { at: number; part: unknown }[] = [];
   const recovery = createGenerationToolRecovery(carried, "run-1", 0, spy.hooks);
@@ -152,7 +152,7 @@ test("the seed and the frame can name the same call without raising two cards", 
   assert.equal(spy.live.get("sess-1:thread-1:appr-1")?.approvalId, "appr-1");
 });
 
-test("the decision goes away when the call gets a result", async () => {
+test("the decision goes away when the call gets a result", () => {
   const spy = spyConfirmations();
   const carried: { at: number; part: unknown }[] = [];
   const recovery = createGenerationToolRecovery(carried, "run-1", 0, spy.hooks);
@@ -181,7 +181,7 @@ test("the decision goes away when the call gets a result", async () => {
 
 // Answered in another tab: this one must stop offering the decision as soon as the backend says so,
 // not at tool_end, which only comes after the tool has run.
-test("the decision goes away when another tab approves the call", async () => {
+test("the decision goes away when another tab approves the call", () => {
   const spy = spyConfirmations();
   const carried: { at: number; part: unknown }[] = [];
   const recovery = createGenerationToolRecovery(carried, "run-1", 0, spy.hooks);
@@ -209,7 +209,7 @@ test("the decision goes away when another tab approves the call", async () => {
   assert.equal(after.result, undefined, "the card keeps running until tool_end");
 });
 
-test("an approval older than the snapshot leaves the seeded check in charge", async () => {
+test("an approval older than the snapshot leaves the seeded check in charge", () => {
   const spy = spyConfirmations();
   const carried: { at: number; part: unknown }[] = [];
   const recovery = createGenerationToolRecovery(carried, "run-1", 5, spy.hooks);
@@ -231,7 +231,7 @@ test("an approval older than the snapshot leaves the seeded check in charge", as
   assert.equal(carried.length, 0, "an approval frame never mints a card");
 });
 
-test("a call that never needed a decision arms nothing", async () => {
+test("a call that never needed a decision arms nothing", () => {
   const spy = spyConfirmations();
   const carried: { at: number; part: unknown }[] = [];
   createGenerationToolRecovery(carried, "run-1", 0, spy.hooks).apply(
@@ -298,7 +298,7 @@ test("a run that ends without a tool_end still takes its cards down", async () =
   assert.deepEqual(spy.resolved, ["sess-1:thread-1:appr-9"]);
 });
 
-test("the run-level sweep only takes down cards this recovery armed", async () => {
+test("the run-level sweep only takes down cards this recovery armed", () => {
   const spy = spyConfirmations();
   const recovery = createGenerationToolRecovery(
     seededParkedCard(),
@@ -320,7 +320,7 @@ test("a call the user already answered is not re-armed on reopen", async () => {
     spy.hooks,
   );
 
-  await recovery.armSeededApprovals("sess-1", async () => false);
+  await recovery.armSeededApprovals("sess-1", () => Promise.resolve(false));
   assert.deepEqual(
     spy.registered,
     [],
@@ -338,7 +338,7 @@ test("a call that really is still parked is armed as before", async () => {
     spy.hooks,
   );
 
-  await recovery.armSeededApprovals("sess-1", async () => true);
+  await recovery.armSeededApprovals("sess-1", () => Promise.resolve(true));
   assert.equal(spy.registered.length, 1);
   assert.equal(spy.live.size, 1);
 });
@@ -352,8 +352,8 @@ test("a check that cannot be answered still arms the card", async () => {
     spy.hooks,
   );
 
-  await recovery.armSeededApprovals("sess-1", async () => {
-    throw new Error("network down");
+  await recovery.armSeededApprovals("sess-1", () => {
+    return Promise.reject(new Error("network down"));
   });
   assert.equal(
     spy.registered.length,
@@ -396,7 +396,7 @@ test("a card finished while its status request was in flight is not armed afterw
     spy.hooks,
   );
 
-  let release: (value: boolean) => void = () => {};
+  let release: (value: boolean) => void = () => { return undefined; };
   const gate = new Promise<boolean>((resolve) => {
     release = resolve;
   });
@@ -438,7 +438,7 @@ test("a call approved while its status request was in flight is not armed afterw
     spy.hooks,
   );
 
-  let release: (value: boolean) => void = () => {};
+  let release: (value: boolean) => void = () => { return undefined; };
   const gate = new Promise<boolean>((resolve) => {
     release = resolve;
   });
@@ -485,7 +485,7 @@ test("a card still unresolved when the status request returns is armed as before
     40,
     spy.hooks,
   );
-  await recovery.armSeededApprovals("sess-1", async () => true);
+  await recovery.armSeededApprovals("sess-1", () => Promise.resolve(true));
   assert.deepEqual(spy.registered, [
     {
       partId: "sess-1:thread-1:appr-10",

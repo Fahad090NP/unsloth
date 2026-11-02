@@ -41,7 +41,7 @@ function load(
     providers = [{ id: "conn-1", hasApiKey: true }],
     legacyKey = "",
     voice = "af_sky",
-    encrypt = async (key: string) => `enc(${key})`,
+    encrypt =  (key: string) => Promise.resolve(`enc(${key})`),
     beforeAuthenticatedRetry,
     toSpeech = (text: string) => text,
   }: {
@@ -70,25 +70,29 @@ function load(
     ),
     {
       "@/features/auth": {
-        authFetch: async (
+        authFetch:  (
           input: string,
           init: { body: string },
           options?: { beforeRetry?: () => void },
         ) => {
           // The Unsloth Studio engine first lists the loaded models; it is not a speech request.
           if (input === "/v1/models") {
-            return { ok: true, json: async () => ({ data: [] }) };
+            return Promise.resolve({
+              ok: true,
+              json: () => Promise.resolve({ data: [] }),
+            });
           }
           if (beforeAuthenticatedRetry) {
             beforeAuthenticatedRetry();
             options?.beforeRetry?.();
           }
           posted.push(init.body);
-          return {
+          return Promise.resolve({
             ok: true,
             headers: { get: () => "audio/wav" },
-            arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
-          };
+            arrayBuffer: () =>
+              Promise.resolve(new Uint8Array([1, 2, 3]).buffer),
+          });
         },
       },
       // The Unsloth Studio engine's model lookup.
@@ -127,7 +131,7 @@ function load(
           }),
         },
       },
-      "@/lib/toast": { toast: { error: () => {} } },
+      "@/lib/toast": { toast: { error: () => {/* intentionally empty */} } },
       "@/features/audio/audio-workspace-constants": { TTS_MAX_TOKENS: 8192 },
     },
   );
@@ -256,7 +260,7 @@ test("custom TTS does not send a captured legacy key after the connection change
 });
 
 test("custom TTS rechecks the connection switch before an authenticated retry", async () => {
-  let disableConnections = () => {};
+  let disableConnections = () => {/* intentionally empty */};
   const loaded = load(true, {
     beforeAuthenticatedRetry: () => { disableConnections(); },
   });
@@ -274,20 +278,20 @@ test("authFetch invokes its policy guard after refresh and before retry", async 
   let refreshToken: string | null = "refresh-token";
   const fetched: string[] = [];
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async (input) => {
-    const url = String(input);
+  globalThis.fetch =  (input) => {
+    const url = (input as unknown as string);
     fetched.push(url);
     if (url === "/api/auth/refresh") {
-      return new Response(
+      return Promise.resolve(new Response(
         JSON.stringify({
           access_token: "fresh-access",
           refresh_token: "fresh-refresh",
           must_change_password: false,
         }),
         { status: 200, headers: { "content-type": "application/json" } },
-      );
+      ));
     }
-    return new Response(null, { status: fetched.length === 1 ? 401 : 200 });
+    return Promise.resolve(new Response(null, { status: fetched.length === 1 ? 401 : 200 }));
   };
 
   try {
@@ -304,7 +308,7 @@ test("authFetch invokes its policy guard after refresh and before retry", async 
           getAuthToken: () => accessToken,
           getRefreshToken: () => refreshToken,
           mustChangePassword: () => false,
-          setMustChangePassword: () => {},
+          setMustChangePassword: () => {/* intentionally empty */},
           storeAuthTokens: (access: string, refresh: string) => {
             accessToken = access;
             refreshToken = refresh;
@@ -330,7 +334,7 @@ test("authFetch invokes its policy guard after refresh and before retry", async 
       "/api/auth/refresh",
     ]);
   } finally {
-    globalThis.fetch = originalFetch;
+    Object.assign(globalThis, { fetch: originalFetch });
   }
 });
 

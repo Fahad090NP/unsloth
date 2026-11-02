@@ -77,12 +77,12 @@ function loadBuilder(
   ).outputText;
   const context = {
     exports: {},
-    toast: { info: () => {} },
-    listStoredChatThreads: async () =>
+    toast: { info: () => { /* empty */ } },
+    listStoredChatThreads: () =>
       Object.keys(chats).map((id) => ({ id })),
-    listStoredChatMessages: async (id: string) => chats[id],
-    getStoredChatThread: async () => undefined,
-    settleThreadScopedSettingsForCopy: async () => {},
+    listStoredChatMessages: (id: string) => chats[id],
+    getStoredChatThread: () => undefined,
+    settleThreadScopedSettingsForCopy: async () => { /* empty */ },
     ...liveThreadHead,
     savedBranchHead: (id: string, raw: StoredMessage[]) =>
       resolveSavedBranchHead(raw, savedHeads[id]),

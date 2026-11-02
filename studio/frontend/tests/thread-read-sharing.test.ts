@@ -8,6 +8,14 @@ import * as abortSignals from "../src/features/hub/lib/abort-signals.ts";
 import { skillLoadCardEvent } from "../src/features/chat/api/skill-load-event.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 interface Row { id: string; title: string }
 interface Module {
   getChatThread: (
@@ -48,8 +56,8 @@ function harness() {
                   status,
                   ok: status >= 200 && status < 300,
                   headers: { get: () => null },
-                  async json() {
-                    return body;
+                   json() {
+                    return Promise.resolve(body);
                   },
                 }); },
               reject,
@@ -62,20 +70,20 @@ function harness() {
       "../types": {},
       "../types/api": {},
       "../utils/chat-history-revision": {
-        publishChatHistoryRevision: () => {},
+        publishChatHistoryRevision: () => {/* intentionally empty */},
         CHAT_HISTORY_REVISION_KEY: "unsloth_chat_history_revision",
       },
       "../utils/openapi-support": { readAdvertisedPatchGuards: () => null },
-      "../utils/load-warning-toast": { showLoadWarning: () => {} },
+      "../utils/load-warning-toast": { showLoadWarning: () => {/* intentionally empty */} },
       "../lib/load-request": {},
       "./generation-length.ts": {},
       "./gguf-variants-request": {},
-      "./padded-response": { assertCompletedPaddedBody: () => {} },
-      "@/features/hf-auth": { prepareHfTokenForUse: async () => undefined },
+      "./padded-response": { assertCompletedPaddedBody: () => {/* intentionally empty */} },
+      "@/features/hf-auth": { prepareHfTokenForUse:  () => Promise.resolve(undefined) },
       "@/features/settings/low-disk-check": { checkDiskSpace: () => Promise.resolve() },
       "@/features/igpu-carveout": {
-        dismissCarveoutAdviceForModel: () => {},
-        showCarveoutAdvice: () => {},
+        dismissCarveoutAdviceForModel: () => {/* intentionally empty */},
+        showCarveoutAdvice: () => {/* intentionally empty */},
       },
       "@/features/hub/lib/abort-signals": abortSignals,
       "@/features/hub/lib/hub-token-header": { hubTokenHeader: () => ({}) },
@@ -103,9 +111,9 @@ test("concurrent shared reads of one thread make one request and share its recor
 
 test("a read is only shared when asked: the default stays a private request", async () => {
   const { module, requests } = harness();
-  void module.getChatThread("t1", { share: true });
-  void module.getChatThread("t1");
-  void module.getChatThread("t1", { bounded: true });
+  module.getChatThread("t1", { share: true }).catch((error: unknown) => { throw error; });
+  module.getChatThread("t1").catch((error: unknown) => { throw error; });
+  module.getChatThread("t1", { bounded: true }).catch((error: unknown) => { throw error; });
   assert.equal(requests().length, 3);
   for (const r of requests()) r.resolve(200, row);
   await tick();
@@ -117,7 +125,7 @@ test("there is no TTL: a shared read after the request settled starts a new one"
   requests()[0].resolve(200, row);
   await first;
   await tick();
-  void module.getChatThread("t1", { share: true });
+  module.getChatThread("t1", { share: true }).catch((error: unknown) => { throw error; });
   assert.equal(requests().length, 2);
   requests()[1].resolve(200, row);
   await tick();
@@ -161,7 +169,7 @@ test("one reader's deadline detaches that reader alone, and a retry starts a fre
   const quiet = module.getChatThread("t1", { share: true });
   const bounded = module.getChatThread("t1", { share: true, timeoutMs: 1 });
   // AbortSignal.timeout's timer does not hold the event loop open (seen on Node 22 CI).
-  const alive = setTimeout(() => {}, 10_000);
+  const alive = setTimeout(() => {/* intentionally empty */}, 10_000);
   await assert.rejects(bounded, (e: DOMException) => e.name === "TimeoutError");
   clearTimeout(alive);
   assert.equal(requests()[0].init?.signal?.aborted, false);
@@ -192,10 +200,10 @@ test("a thread write settling drops that thread's in-flight read, so a later rea
   const older = module.getChatThread("t1", { share: true });
   const patch = module.updateChatThread("t1", { title: "renamed" });
   await tick();
-  const patchRequest = pending.find((p) => p.init?.method === "PATCH")!;
+  const patchRequest = required(pending.find((p) => p.init?.method === "PATCH"));
   patchRequest.resolve(200, { ...row, title: "renamed" });
   await patch;
-  void module.getChatThread("t1", { share: true });
+  module.getChatThread("t1", { share: true }).catch((error: unknown) => { throw error; });
   assert.equal(requests().length, 2);
   requests()[0].resolve(200, row);
   requests()[1].resolve(200, { ...row, title: "renamed" });
@@ -205,12 +213,12 @@ test("a thread write settling drops that thread's in-flight read, so a later rea
 
 test("a message save in another thread leaves this thread's shared read joinable", async () => {
   const { module, pending, requests } = harness();
-  void module.getChatThread("t1", { share: true });
+  module.getChatThread("t1", { share: true }).catch((error: unknown) => { throw error; });
   const save = module.saveChatMessage({ id: "m1", threadId: "other" });
   await tick();
-  pending.find((p) => p.init?.method === "PUT")!.resolve(200, { id: "m1", threadId: "other" });
+  required(pending.find((p) => p.init?.method === "PUT")).resolve(200, { id: "m1", threadId: "other" });
   await save;
-  void module.getChatThread("t1", { share: true });
+  module.getChatThread("t1", { share: true }).catch((error: unknown) => { throw error; });
   assert.equal(requests().length, 1);
   requests()[0].resolve(200, row);
   await tick();
@@ -235,8 +243,8 @@ test("title regeneration sends the recency option while an ordinary rename omits
     const write = module.updateChatThread("t1", { title: "New title" },
       regenerate ? { expectedTitle: "T", preserveTitleModifiedAt: true } : undefined);
     await tick();
-    const request = pending.find((p) => p.init?.method === "PATCH")!;
-    assert.deepEqual(JSON.parse(String(request.init?.body)), regenerate
+    const request = required(pending.find((p) => p.init?.method === "PATCH"));
+    assert.deepEqual(JSON.parse((request.init?.body as unknown as string)), regenerate
       ? { title: "New title", expectedTitle: "T", preserveTitleModifiedAt: true }
       : { title: "New title" });
     request.resolve(200, { ...row, title: "New title" });

@@ -47,13 +47,13 @@ test("a stored split is protected from clients that do not understand it", () =>
   store.clear();
   savePerModelConfig(MODEL, VARIANT, configured());
   const [entry] = Object.values(
-    JSON.parse(store.get("unsloth_model_configs")!),
+    JSON.parse(must(store.get("unsloth_model_configs"))),
   ) as { version: number }[];
   assert.ok(entry.version > 9);
   store.clear();
   savePerModelConfig(MODEL, VARIANT, { ...configured(), tensorSplit: null });
   const [withoutSplit] = Object.values(
-    JSON.parse(store.get("unsloth_model_configs")!),
+    JSON.parse(must(store.get("unsloth_model_configs"))),
   ) as { version: number }[];
   assert.equal(withoutSplit.version, 1);
 });
@@ -194,3 +194,8 @@ test("an unpinned split survives a reload that stays unpinned", async () => {
   assert.equal(reconcileTensorSplit([0, 0], null, null), null);
   assert.equal(reconcileTensorSplit([3], null, null), null);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

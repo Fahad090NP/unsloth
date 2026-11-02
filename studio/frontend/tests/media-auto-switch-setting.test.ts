@@ -38,12 +38,12 @@ const API = {
 let nextBody: Record<string, unknown> = { ...API };
 const bodies: string[] = [];
 
-globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
-  if (init?.body) bodies.push(String(init.body));
-  return new Response(JSON.stringify(nextBody), {
+globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
+  if (init?.body) bodies.push(String(init.body as string));
+  return Promise.resolve(new Response(JSON.stringify(nextBody), {
     status: 200,
     headers: { "Content-Type": "application/json" },
-  });
+  }));
 });
 
 const {
@@ -55,7 +55,8 @@ const {
 
 test("a backend without the field reads as off, not as the chat toggle", async () => {
   invalidateOpenAIAutoSwitchSettings();
-  const { media_auto_switch_model: _switch, ...older } = API;
+  const older = { ...API };
+  Reflect.deleteProperty(older, "media_auto_switch_model");
   nextBody = older;
   const settings = await loadOpenAIAutoSwitchSettings();
   assert.equal(settings.enabled, true);

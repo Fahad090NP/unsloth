@@ -127,7 +127,7 @@ function chatWithModelFor(lora: { audio_type: string; export_type: string }, dev
     "@/features/audio/workflows": workflows,
     "@/features/auth": { getAuthSessionEpoch: () => 0 },
     "@/features/chat": {
-      listLoras: async () => ({ loras: [{ adapter_path: "/out/my-voice", ...lora }] }),
+      listLoras: () => Promise.resolve(({ loras: [{ adapter_path: "/out/my-voice", ...lora }] })),
     },
     "@/features/model-picker": {},
     "@/i18n": { translate: (key: string) => key },
@@ -144,7 +144,7 @@ function chatWithModelFor(lora: { audio_type: string; export_type: string }, dev
     "./start-chat": {},
   });
   const item = { name: "my-voice", model: { path: "/out/my-voice", origin: "training", exportType: "merged" } };
-  return chatWithModel(async (to) => void navigations.push(to), item).then(() => ({ navigations, toasts }));
+  return chatWithModel((to) => Promise.resolve(void navigations.push(to)), item).then(() => ({ navigations, toasts }));
 }
 
 test("Chat with a speech fine-tune loads it on its Audio page with its audio type", async () => {
@@ -219,7 +219,7 @@ test("the card player stops a clip whose card is gone and reports a failed strea
     "@/i18n": { translate: (key: string) => key },
     "@/lib/toast": { toast: { error: (title: unknown) => toasts.push(title) } },
     react: { useSyncExternalStore: (_subscribe: unknown, get: () => boolean) => get() },
-    "./api": { errorMessage: String, fetchLibraryStreamUrl: async () => "blob:clip" },
+    "./api": { errorMessage: String, fetchLibraryStreamUrl: () => Promise.resolve("blob:clip") },
   });
   const playing = (id: string) => playback.useLibraryAudioPlaying(id);
 

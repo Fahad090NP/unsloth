@@ -12,13 +12,13 @@ const onDisk = new Set<string>();
 const calls: string[] = [];
 (globalThis as { window?: unknown }).window = {
   __TAURI_INTERNALS__: {
-    invoke: async (command: string, args: { id?: string }) => {
+    invoke: (command: string, args: { id?: string }) => {
       calls.push(command);
       if (command === "browser_file_local_copy") {
         onDisk.add("copy");
-        return { id: "copy", path: "/cache/open-with/copy/clip.mp4" };
+        return Promise.resolve({ id: "copy", path: "/cache/open-with/copy/clip.mp4" });
       }
-      if (!onDisk.has(args.id ?? "")) throw "The file is no longer there.";
+      if (!onDisk.has(args.id ?? "")) return Promise.reject(new Error("The file is no longer there."));
     },
   },
 };

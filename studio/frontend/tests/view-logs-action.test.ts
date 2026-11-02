@@ -11,6 +11,7 @@ import {
   useSettingsDialogStore,
 } from "../src/features/settings/stores/settings-dialog-store.ts";
 import { en } from "../src/i18n/locales/en.ts";
+import type * as ViewLogsAction from "../src/features/settings/lib/view-logs-action.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
 const RUNNER_LOG =
@@ -42,7 +43,7 @@ test("the action opens Logs on the family that failed", () => {
   reset();
   const translated: string[] = [];
   const { viewLogsAction } = loadWithStubs<
-    typeof import("../src/features/settings/lib/view-logs-action.ts")
+    typeof ViewLogsAction
   >(ACTION_URL, {
     "@/i18n": {
       translate: (key: string) => {
@@ -81,7 +82,7 @@ test("the action opens Logs on the family that failed", () => {
 
 test("only a GGUF load is explained by a runner log; everything else is in the server log", () => {
   const { loadFailureLogFamily } = loadWithStubs<
-    typeof import("../src/features/settings/lib/view-logs-action.ts")
+    typeof ViewLogsAction
   >(ACTION_URL, {
     "@/i18n": { translate: (k: string) => k },
     "../stores/settings-dialog-store": { useSettingsDialogStore: store },
@@ -98,7 +99,7 @@ test("only a GGUF load is explained by a runner log; everything else is in the s
       assert.equal(
         loadFailureLogFamily(notGguf, diffusion, RUNNER_LOG),
         "server",
-        `isGguf=${notGguf} isDiffusion=${diffusion}`,
+        `isGguf=${String(notGguf)} isDiffusion=${String(diffusion)}`,
       );
     }
   }
@@ -106,7 +107,7 @@ test("only a GGUF load is explained by a runner log; everything else is in the s
 
 test("a load whose diagnostic names no runner log has none to open", () => {
   const { loadFailureLogFamily } = loadWithStubs<
-    typeof import("../src/features/settings/lib/view-logs-action.ts")
+    typeof ViewLogsAction
   >(ACTION_URL, {
     "@/i18n": { translate: (k: string) => k },
     "../stores/settings-dialog-store": { useSettingsDialogStore: store },
@@ -118,7 +119,7 @@ test("a load whose diagnostic names no runner log has none to open", () => {
         assert.equal(
           loadFailureLogFamily(gguf, diffusion, noPath),
           "server",
-          `isGguf=${gguf} isDiffusion=${diffusion} path=${String(noPath)}`,
+          `isGguf=${String(gguf)} isDiffusion=${String(diffusion)} path=${String(noPath)}`,
         );
       }
     }
@@ -161,7 +162,7 @@ test("the family and the path are read from the same diagnostic", () => {
 test("the exact log the diagnostic named is carried, and wins over family recency", () => {
   reset();
   const { viewLogsAction, failureLogPath } = loadWithStubs<
-    typeof import("../src/features/settings/lib/view-logs-action.ts")
+    typeof ViewLogsAction
   >(ACTION_URL, {
     "@/i18n": { translate: (k: string) => k },
     "../stores/settings-dialog-store": { useSettingsDialogStore: store },
@@ -212,7 +213,7 @@ test("closing the dialog drops the request, like every other pending one", () =>
 test("an account that cannot open Logs is offered no action at all", () => {
   reset();
   const { viewLogsAction } = loadWithStubs<
-    typeof import("../src/features/settings/lib/view-logs-action.ts")
+    typeof ViewLogsAction
   >(ACTION_URL, {
     "@/i18n": { translate: (k: string) => k },
     "../stores/settings-dialog-store": { useSettingsDialogStore: store },
@@ -284,7 +285,7 @@ test("an older in-flight refresh does not consume a newer request", async () => 
 test("only a generation failure the server logged offers its log", () => {
   reset();
   const { generationFailureLogsAction } = loadWithStubs<
-    typeof import("../src/features/settings/lib/view-logs-action.ts")
+    typeof ViewLogsAction
   >(ACTION_URL, {
     "@/i18n": { translate: (key: string) => key },
     "../stores/settings-dialog-store": { useSettingsDialogStore: store },

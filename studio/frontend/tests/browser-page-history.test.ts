@@ -2,11 +2,14 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 import { readSrc } from "./helpers/kit.ts";
 
-register("./helpers/browser-store-resolver.mjs", import.meta.url);
+const browserStoreResolverHooks = (await import(new URL("./helpers/browser-store-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserStoreResolverHooks.resolve });
 const { parseFrameMessage } = await import("../src/features/browser/frame-message.ts");
 const { useBrowserStore } = await import("../src/features/browser/store.ts");
 

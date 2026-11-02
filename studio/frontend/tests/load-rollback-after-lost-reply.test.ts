@@ -78,16 +78,16 @@ function realAuthFetch(port: number): AuthApi {
     },
     "@/lib/account-transition": { accountTransitionPending: () => false },
     "./session": {
-      clearAuthTokens: () => {},
+      clearAuthTokens: () => { return undefined; },
       getAuthToken: () => "access-token",
       getRefreshToken: () => null,
       mustChangePassword: () => false,
-      setMustChangePassword: () => {},
-      storeAuthTokens: () => {},
+      setMustChangePassword: () => { return undefined; },
+      storeAuthTokens: () => { return undefined; },
     },
     "@tauri-apps/api/core": {
-      invoke: async () => {
-        throw new Error("not Tauri");
+      invoke: () => {
+        return Promise.reject(new Error("not Tauri"));
       },
     },
   });
@@ -109,21 +109,21 @@ function realLoadModel(auth: AuthApi): ChatApi {
     "../types": {},
     "../types/api": {},
     "../utils/chat-history-revision": {
-      notifyChatHistoryUpdated: () => {},
+      notifyChatHistoryUpdated: () => { return undefined; },
       isCoalescedHistoryEvent: () => false,
     },
     "../utils/openapi-support": { readAdvertisedPatchGuards: () => null },
-    "../utils/load-warning-toast": { showLoadWarning: () => {} },
+    "../utils/load-warning-toast": { showLoadWarning: () => { return undefined; } },
     "../lib/load-request": loadWithStubs(
       new URL("../src/features/chat/lib/load-request.ts", import.meta.url),
       { "./server-tuning-fields": {} },
     ),
     "./generation-length.ts": {},
     "./gguf-variants-request": {},
-    "@/features/hf-auth": { prepareHfTokenForUse: async () => ({ proceed: true }) },
+    "@/features/hf-auth": { prepareHfTokenForUse: () => Promise.resolve(({ proceed: true })) },
     "@/features/igpu-carveout": {
-      dismissCarveoutAdviceForModel: () => {},
-      showCarveoutAdvice: () => {},
+      dismissCarveoutAdviceForModel: () => { return undefined; },
+      showCarveoutAdvice: () => { return undefined; },
     },
     "@/features/hub/lib/abort-signals": {},
     "@/features/hub/lib/hub-token-header": { hubTokenHeader: () => ({}) },
@@ -184,7 +184,7 @@ test("a completed load is not an error at all", async () => {
 
 test("non-errors and untagged errors keep the rollback", () => {
   for (const value of [null, undefined, "boom", 0, {}, new Error("x"), new TypeError("x")]) {
-    assert.equal(shouldRestorePreviousModel(value), true, String(value));
+    assert.equal(shouldRestorePreviousModel(value), true, String(value as string));
   }
   assert.equal(
     shouldRestorePreviousModel(Object.assign(new Error("x"), { unslothTransportFailure: "yes" })),

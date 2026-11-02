@@ -9,13 +9,12 @@ export {
   scopedDownloadInventoryKind,
 } from "../../../src/features/hub/download-manager/download-manager-types.ts";
 
-export function clearCompletedInventoryHint(): void {
-}
+export function clearCompletedInventoryHint(): void { /* empty */ }
 
 export const useDownloadManagerStore = Object.assign(
   () => ({ jobs: {} }),
   {
     getState: () => ({ jobs: {} }),
-    subscribe: () => () => {},
+    subscribe: () => () => { /* empty */ },
   },
 );

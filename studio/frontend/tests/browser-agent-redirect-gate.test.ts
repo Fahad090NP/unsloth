@@ -4,10 +4,13 @@
 // A search engine's redirect link opens its target (the store unwraps it), so the new-site
 // question has to be about the target, not about the search engine the link starts on.
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
-register("./helpers/browser-executor-resolver.mjs", import.meta.url);
+const browserExecutorResolverHooks = (await import(new URL("./helpers/browser-executor-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserExecutorResolverHooks.resolve });
 const { runBrowserAction } = await import("../src/features/browser/agent/executor.ts");
 const { answerQuestion, useBrowserAgentStore } = await import("../src/features/browser/agent/agent-store.ts");
 const { chatKeyOfThread, useBrowserStore } = await import("../src/features/browser/store.ts");
@@ -16,10 +19,10 @@ const globals = globalThis as Record<string, unknown>;
 useBrowserStore.subscribe(({ tabs }) => {
   for (const tab of tabs) if (tab.loading) queueMicrotask(() => { useBrowserStore.getState().updateTab(tab.id, { loading: false }); });
 });
-globals.__authFetch = async () => new Response(null, { status: 200 });
+globals.__authFetch = () => new Response(null, { status: 200 });
 const policy = { allowedDomains: [], blockedDomains: [] };
 let links: string[] = [];
-globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
+globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
   if (op.op === "status") return { installed: true, result: { ok: true, quietMs: 1000, doc: "r1" } };
   return { installed: true, result: { ok: true, text: "page", links } };
 };
@@ -115,7 +118,7 @@ test("a clicked search-result redirect link opens its target without a question"
   const link = { role: "link", name: "Result", tag: "a", href: wrapped, formMethod: "", formAction: "", formHasPassword: false, submits: false };
   const original = globals.__frameAgent;
   links = [wrapped];
-  globals.__frameAgent = async (tabId: string, op: Record<string, unknown>) => {
+  globals.__frameAgent = (tabId: string, op: Record<string, unknown>) => {
     if (op.op === "describe") return { installed: true, result: { ok: true, info: link, hit: "r5", sig: "s" } };
     if (op.op === "click") return { installed: true, result: { ok: true, navigate: wrapped } };
     return (original as (t: string, o: Record<string, unknown>) => unknown)(tabId, op);

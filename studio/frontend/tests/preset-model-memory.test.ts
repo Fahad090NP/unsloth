@@ -126,7 +126,7 @@ test("picking Default with a model loaded goes back to that model's recommendati
   await settled();
   assert.equal(
     (stored().inferenceParamsByModel as Record<string, { temperature?: number }>)[GEMMA]
-      ?.temperature,
+      .temperature,
     0.2,
     "a slider edit is stored for the model",
   );
@@ -225,7 +225,7 @@ test("a preset pick keeps the model's remembered Fast mode", async () => {
   pickPreset(CUSTOM);
   await settled();
   const local = useChatRuntimeStore.getState().paramsByModel[GEMMA];
-  assert.equal(local?.fastMode, true);
+  assert.equal(local.fastMode, true);
   assert.deepEqual(presetOwnedKeys(local), []);
   const byModel = stored().inferenceParamsByModel as Record<string, Record<string, unknown>>;
   assert.equal(byModel[GEMMA].fastMode, true);
@@ -283,7 +283,7 @@ test("a model first loaded under a custom preset files later edits as themselves
 // Another tab may have set a key the pick does not own, so the pick names keys, not the row.
 test("a preset pick asks the server to drop only the preset's keys", async () => {
   loadOrPoll(GEMMA);
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   pickPreset(DEFAULT);
   await settled();
   const forget = settingsHttp.puts.find((put) => put.forgetInferenceParamsByModel)
@@ -303,8 +303,8 @@ test("a model reloaded under the user's own edits is remembered whole again", ()
   const loaded = useChatRuntimeStore.getState();
   loaded.setParams({ ...loaded.params, topK: 7 });
   const entry = useChatRuntimeStore.getState().paramsByModel[GEMMA];
-  assert.equal(entry?.topK, 7);
-  assert.equal(entry?.temperature, 0.4, "the whole snapshot, not just the moved key");
+  assert.equal(entry.topK, 7);
+  assert.equal(entry.temperature, 0.4, "the whole snapshot, not just the moved key");
 });
 
 // A status poll for the model already on screen replaces none of the preset's values.
@@ -328,7 +328,7 @@ test("a preset pick writes the whole preset to the installation defaults", async
   loadOrPoll(GEMMA);
   pickPreset(CUSTOM);
   await settled();
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   pickPreset(CUSTOM);
   await settled();
   const written = Object.assign(
@@ -350,7 +350,7 @@ test("a preset picked inside a chat leaves the model's remembered sampling alone
   store.setActiveThreadId("chat-1");
   beginThreadScopedPairing("chat-1");
   pickPreset(CUSTOM);
-  assert.equal(useChatRuntimeStore.getState().paramsByModel[GEMMA]?.temperature, 0.2);
+  assert.equal(useChatRuntimeStore.getState().paramsByModel[GEMMA].temperature, 0.2);
   // The chat kept the sampling, so the model is not marked: a later edit it owns files whole.
   useChatRuntimeStore.setState({ paramsByModel: {} });
   const inChat = useChatRuntimeStore.getState();

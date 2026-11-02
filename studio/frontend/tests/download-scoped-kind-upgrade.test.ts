@@ -92,12 +92,12 @@ test("a scoped safetensors job keeps the model classification", () => {
 });
 
 test("an explicitly stored kind still wins over the file list", () => {
-  assert.equal(job("org/explicit", "@diffusion")?.inventoryKind, "gguf");
+  assert.equal(job("org/explicit", "@diffusion").inventoryKind, "gguf");
 });
 
 test("a scoped job with no files stays unclassified", () => {
   assert.equal(
-    job("org/unknown-scope", "@diffusion")?.inventoryKind,
+    job("org/unknown-scope", "@diffusion").inventoryKind,
     undefined,
   );
 });

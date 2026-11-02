@@ -18,7 +18,7 @@ test("a row that starts mid-line takes only the tokens it shows", () => {
   const line = [token("const "), token("value"), token(" = 1;")];
   const clipped = clipLineTokens(line, 3, "st value");
   assert.deepEqual(clipped?.map((t) => t.content), ["st ", "value"]);
-  assert.equal(clipped?.[1], line[1], "an untouched token keeps its identity");
+  assert.equal(clipped[1], line[1], "an untouched token keeps its identity");
 });
 
 test("tokens that do not spell the row are refused, so stale colours never show", () => {

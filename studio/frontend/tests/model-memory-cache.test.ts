@@ -84,8 +84,8 @@ test("concurrent reads share one request", async () => {
 test("a 404 is an absent route, not a failed read", async () => {
   calls = [];
   const original = globalThis.fetch;
-  globalThis.fetch = (async () =>
-    new Response("{}", { status: 404 }));
+  globalThis.fetch = (() =>
+    Promise.resolve(new Response("{}", { status: 404 })));
   await assert.rejects(
     loadModelMemorySettings({ force: true }),
     (error: Error) => {
@@ -93,8 +93,8 @@ test("a 404 is an absent route, not a failed read", async () => {
       return true;
     },
   );
-  globalThis.fetch = (async () =>
-    new Response("boom", { status: 503 }));
+  globalThis.fetch = (() =>
+    Promise.resolve(new Response("boom", { status: 503 })));
   await assert.rejects(
     loadModelMemorySettings({ force: true }),
     (error: Error) => {
@@ -102,7 +102,7 @@ test("a 404 is an absent route, not a failed read", async () => {
       return true;
     },
   );
-  globalThis.fetch = original;
+  Reflect.set(globalThis, "fetch", original);
 });
 
 test("a forced read does not join one already in flight", async () => {
@@ -181,7 +181,7 @@ test("a displaced read neither publishes nor frees the slot", async () => {
     );
   } finally {
     stop();
-    globalThis.fetch = original;
+    Reflect.set(globalThis, "fetch", original);
   }
 });
 
@@ -202,11 +202,11 @@ test("a later read is NOT served from a cache", async () => {
 test("a failed read does not wedge the in-flight slot", async () => {
   calls = [];
   const original = globalThis.fetch;
-  globalThis.fetch = (async () => {
-    throw new Error("offline");
+  globalThis.fetch = (() => {
+    return Promise.reject(new Error("offline"));
   });
   await assert.rejects(loadModelMemorySettings());
-  globalThis.fetch = original;
+  Reflect.set(globalThis, "fetch", original);
   const after = await loadModelMemorySettings();
   assert.equal(after.keepResident, false);
 });
@@ -215,15 +215,15 @@ test("only the fields actually set are sent, so the switches save independently"
   calls = [];
   const bodies: string[] = [];
   const original = globalThis.fetch;
-  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
-    bodies.push(String(init?.body ?? ""));
-    return new Response(JSON.stringify(API), {
+  globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
+    bodies.push(String(init?.body ?? "" as string));
+    return Promise.resolve(new Response(JSON.stringify(API), {
       status: 200,
       headers: { "Content-Type": "application/json" },
-    });
+    }));
   });
   await updateModelMemorySettings({ keepResident: true });
-  globalThis.fetch = original;
+  Reflect.set(globalThis, "fetch", original);
   assert.deepEqual(JSON.parse(bodies[0] ?? "{}"), { keep_resident: true });
 });
 
@@ -259,14 +259,14 @@ test("saving model memory drops the auto-switch cache", async () => {
 test("a read invalidated in flight returns the post-write value, not the stale one", async () => {
   autoSwitch.invalidateOpenAIAutoSwitchSettings();
   nextBody = { ...API, idle_unload_active: true };
-  release = () => {};
+  release = () => { return undefined; };
   const pending = autoSwitch.loadOpenAIAutoSwitchSettings();
 
   autoSwitch.invalidateOpenAIAutoSwitchSettings();
   nextBody = { ...API, idle_unload_active: false };
   const resume = release;
   release = null;
-  resume?.();
+  resume();
 
   const settings = await pending;
   assert.equal(
@@ -285,7 +285,7 @@ test("a caller arriving after the invalidation does not adopt the pre-write read
   // A post-write caller must not share the pre-write GET; "disarmed" clears the checkpoint.
   autoSwitch.invalidateOpenAIAutoSwitchSettings();
   nextBody = { ...API, idle_unload_active: true };
-  release = () => {};
+  release = () => { return undefined; };
   const before = autoSwitch.loadOpenAIAutoSwitchSettings();
   const resume = release;
   release = null;
@@ -293,7 +293,7 @@ test("a caller arriving after the invalidation does not adopt the pre-write read
   autoSwitch.invalidateOpenAIAutoSwitchSettings();
   nextBody = { ...API, idle_unload_active: false };
   const after = autoSwitch.loadOpenAIAutoSwitchSettings();
-  resume?.();
+  resume();
 
   assert.equal(
     (await after).idleUnloadActive,

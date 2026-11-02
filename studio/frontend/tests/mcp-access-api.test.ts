@@ -18,9 +18,9 @@ function client(response: () => Response) {
     new URL("../src/features/settings/api/mcp-access.ts", import.meta.url),
     {
       "@/features/auth": {
-        authFetch: async (path: string, init?: RequestInit) => {
+        authFetch: (path: string, init?: RequestInit) => {
           requests.push({ path, init });
-          return response();
+          return Promise.resolve(response());
         },
       },
       "@/lib/format-fastapi-error": formatFastApiError,

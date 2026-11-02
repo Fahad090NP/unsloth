@@ -125,7 +125,7 @@ test("images, audio and documents are never mistaken for video", () => {
 function fileMatchesAccept(file: { name: string; type: string }, accept: string) {
   if (accept === "*") return true;
   const allowed = accept.split(",").map((t) => t.trim().toLowerCase());
-  const ext = `.${file.name.split(".").pop()!.toLowerCase()}`;
+  const ext = `.${must(file.name.split(".").pop()).toLowerCase()}`;
   const mime = file.type.toLowerCase();
   for (const t of allowed) {
     if (t.startsWith(".") && t === ext) return true;
@@ -328,3 +328,8 @@ test("an old persisted thread with no file parts at all is unaffected", () => {
   ];
   assert.equal(findLatestUserVideoBase64(legacy as never), undefined);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

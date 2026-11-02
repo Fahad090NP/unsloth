@@ -33,14 +33,14 @@ function server(initial?: string[]) {
     get value() {
       return value?.slice();
     },
-    load: async () => value?.slice(),
-    compareAndSet: async (expected: string[] | undefined, next: string[]) => {
+    load: () => Promise.resolve(value?.slice()),
+    compareAndSet: (expected: string[] | undefined, next: string[]) => {
       calls.push({ expected: expected?.slice(), next: next.slice() });
       const applied = JSON.stringify(value) === JSON.stringify(expected);
       if (applied) {
         value = next.slice();
       }
-      return { applied, pinnedIds: value?.slice() };
+      return Promise.resolve({ applied, pinnedIds: value?.slice() });
     },
   };
 }
@@ -293,9 +293,9 @@ test("refresh requests coalesce while the server read is pending", async () => {
 test("repeated compare-and-set conflicts stop after a bounded number of attempts", async () => {
   const backend = server([]);
   let calls = 0;
-  backend.compareAndSet = async () => {
+  backend.compareAndSet = () => {
     calls += 1;
-    return { applied: false, pinnedIds: ["remote"] };
+    return Promise.resolve({ applied: false, pinnedIds: ["remote"] });
   };
   const a = client(backend);
   await a.sync.refresh();
@@ -581,8 +581,8 @@ test("explicit session reset clears the old journal while normal reset retains i
   const backend = server([]);
   const disk = journal();
   const a = durableClient(backend, disk, {
-    compareAndSet: async () => {
-      throw new Error("offline");
+    compareAndSet: () => {
+      return Promise.reject(new Error("offline"));
     },
   });
   await assert.rejects(a.sync.setPinned(["private-intent"], true));
@@ -613,7 +613,7 @@ test("legacy merge runs even when server pins exist and preserves durable unpin 
         legacy = [];
         return backend.value;
       },
-      publish: () => {},
+      publish: () => { return undefined; },
     });
   }
   const a = mergingClient(["legacy-A", "removed"]);
@@ -640,7 +640,7 @@ test("malformed loaded snapshots never replace the last valid published state", 
     const backend = server(["valid"]);
     let loadBad = false;
     const a = durableClient(backend, journal(), {
-      load: async () => (loadBad ? (bad as string[]) : backend.value),
+      load: () => Promise.resolve((loadBad ? (bad as string[]) : backend.value)),
     });
     await a.sync.refresh();
     loadBad = true;
@@ -661,8 +661,8 @@ test("malformed CAS snapshots and applied flags are rejected without corrupting 
     const backend = server(["valid"]);
     const disk = journal();
     const a = durableClient(backend, disk, {
-      compareAndSet: async () =>
-        response as { applied: boolean; pinnedIds: string[] },
+      compareAndSet: () =>
+        Promise.resolve(response as { applied: boolean; pinnedIds: string[] }),
     });
     await a.sync.refresh();
     await assert.rejects(
@@ -678,7 +678,7 @@ test("malformed migration and pending journal data are rejected before writes", 
   const backend = server(["valid"]);
   const badMigration = durableClient(backend, journal(), {
     readLegacy: () => ["old"],
-    migrateLegacy: async () => "string" as unknown as string[],
+    migrateLegacy: () => Promise.resolve("string" as unknown as string[]),
   });
   await assert.rejects(badMigration.sync.refresh(), PinnedChatsValidationError);
   assert.deepEqual(badMigration.visible, []);
@@ -703,9 +703,9 @@ test("orphaned legacy IDs may leave server state absent without blocking new pin
   let migrations = 0;
   const a = durableClient(backend, journal(), {
     readLegacy: () => ["deleted-legacy-thread"],
-    migrateLegacy: async () => {
+    migrateLegacy: () => {
       migrations += 1;
-      return backend.value;
+      return Promise.resolve(backend.value);
     },
   });
   await a.sync.refresh();
@@ -762,15 +762,15 @@ test("unpinning a chat the server cannot place yet cancels its queued pin instea
   const operations: PinOperation[] = [];
   let visible: string[] = [];
   const sync = createPinnedChatsSync({
-    load: async () => value.slice(),
-    compareAndSet: async (expected, next, operation) => {
+    load: () => Promise.resolve(value.slice()),
+    compareAndSet: (expected, next, operation) => {
       if (operation) operations.push(operation);
       // A comparison deleted before its legacy import: the server never acknowledges its pin.
       if (next.includes("pair") || JSON.stringify(expected) !== JSON.stringify(value)) {
-        return { applied: false, pinnedIds: value.slice() };
+        return Promise.resolve({ applied: false, pinnedIds: value.slice() });
       }
       value = next.slice();
-      return { applied: true, pinnedIds: value.slice() };
+      return Promise.resolve({ applied: true, pinnedIds: value.slice() });
     },
     readLegacy: () => [],
     publish: (ids) => { visible = ids; },
@@ -810,13 +810,13 @@ test("an unpin that cancels a queued pin sends that pin's ID so a delayed copy i
   const sent: PinOperation[] = [];
   let offline = true;
   const sync = createPinnedChatsSync({
-    load: async () => value.slice(),
-    compareAndSet: async (expected, next, operation) => {
-      if (offline) throw new Error("offline");
+    load: () => Promise.resolve(value.slice()),
+    compareAndSet: (expected, next, operation) => {
+      if (offline) return Promise.reject(new Error("offline"));
       if (operation) sent.push(operation);
-      if (JSON.stringify(expected ?? []) !== JSON.stringify(value)) return { applied: false, pinnedIds: value.slice() };
+      if (JSON.stringify(expected ?? []) !== JSON.stringify(value)) return Promise.resolve({ applied: false, pinnedIds: value.slice() });
       value = next.slice();
-      return { applied: true, pinnedIds: value.slice() };
+      return Promise.resolve({ applied: true, pinnedIds: value.slice() });
     },
     readLegacy: () => [],
     publish: () => undefined,
@@ -836,18 +836,18 @@ test("trimming an already-committed bulk pin does not repin what another client 
   const seen = new Set<string>();
   let loseResponse = true;
   const sync = createPinnedChatsSync({
-    load: async () => value.slice(),
-    compareAndSet: async (expected, next, operation) => {
+    load: () => Promise.resolve(value.slice()),
+    compareAndSet: (expected, next, operation) => {
       const id = operation && (operation.serverId ?? operation.operationId);
-      if (id && seen.has(id)) return { applied: true, pinnedIds: value.slice() };
-      if (JSON.stringify(expected ?? []) !== JSON.stringify(value)) return { applied: false, pinnedIds: value.slice() };
+      if (id && seen.has(id)) return Promise.resolve({ applied: true, pinnedIds: value.slice() });
+      if (JSON.stringify(expected ?? []) !== JSON.stringify(value)) return Promise.resolve({ applied: false, pinnedIds: value.slice() });
       value = next.slice();
       if (id) seen.add(id);
       if (loseResponse) {
         loseResponse = false;
-        throw new TypeError("connection reset");
+        return Promise.reject(new TypeError("connection reset"));
       }
-      return { applied: true, pinnedIds: value.slice() };
+      return Promise.resolve({ applied: true, pinnedIds: value.slice() });
     },
     readLegacy: () => [],
     publish: () => undefined,
@@ -869,10 +869,10 @@ test("an unpin over an original and its trimmed copy fences their shared server 
   ];
   let journal = structuredClone(queued);
   const sync = createPinnedChatsSync({
-    load: async () => [],
-    compareAndSet: async (_expected, _next, operation) => {
+    load: () => Promise.resolve([]),
+    compareAndSet: (_expected, _next, operation) => {
       if (operation) sent.push(operation);
-      return { applied: false, pinnedIds: [] };
+      return Promise.resolve({ applied: false, pinnedIds: [] });
     },
     readLegacy: () => [],
     readPending: () => structuredClone(journal),

@@ -45,8 +45,8 @@ function loadRows(): Rows {
     "@hugeicons/react": { HugeiconsIcon: noop },
     "../api/caches": {
       bulkPurgeKeys: () => [],
-      loadCacheInventory: async () => null,
-      purgeCaches: async () => null,
+      loadCacheInventory: () => null,
+      purgeCaches: () => null,
     },
     "./hf-cache-model-clear": { HfCacheModelClear: "HfCacheModelClear" },
     "./storage-overview": { SettingsCardRow: noop },
@@ -193,7 +193,7 @@ function driveRows(options: {
     "../api/caches": {
       bulkPurgeKeys: () => ["uv"],
       loadCacheInventory: options.load,
-      purgeCaches: options.purge ?? (async () => ({})),
+      purgeCaches: options.purge ?? (() => ({})),
     },
     "./hf-cache-model-clear": { HfCacheModelClear: "HfCacheModelClear" },
     "./storage-overview": { SettingsCardRow: "SettingsCardRow" },
@@ -317,7 +317,7 @@ test("a clear waits for the measurement that is replacing the rows", async () =>
       element.type === "Button" &&
       // The dialog's confirm: the row triggers are size="sm".
       element.props?.variant === "destructive" &&
-      element.props?.size === undefined,
+      element.props.size === undefined,
   );
   assert.equal(confirm.length, 1);
   assert.equal(confirm[0].props?.disabled, true);
@@ -352,7 +352,7 @@ test("a measurement that failed leaves the clears disabled", async () => {
     (element) =>
       element.type === "Button" &&
       element.props?.variant === "destructive" &&
-      element.props?.size === undefined,
+      element.props.size === undefined,
   );
   assert.equal(destructive[0].props?.disabled, true);
 });

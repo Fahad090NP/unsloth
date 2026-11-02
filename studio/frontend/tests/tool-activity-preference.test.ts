@@ -203,7 +203,7 @@ test("always expanded keeps a card open through running, finished and answered",
         hasText,
       }),
       true,
-      `closed itself at running=${isRunning} hasText=${hasText}`,
+      `closed itself at running=${String(isRunning)} hasText=${String(hasText)}`,
     );
   }
 });
@@ -483,7 +483,7 @@ test("always expanded opens a card that mounted with nothing running", () => {
 const sourceOf = async (path: string): Promise<ts.SourceFile> =>
   ts.createSourceFile(
     path,
-    await readText(path),
+    await Promise.resolve(readText(path)),
     ts.ScriptTarget.Latest,
     true,
     ts.ScriptKind.TSX,
@@ -491,7 +491,7 @@ const sourceOf = async (path: string): Promise<ts.SourceFile> =>
 
 function walk(node: ts.Node, visit: (node: ts.Node) => void): void {
   visit(node);
-  node.forEachChild((child) => walk(child, visit));
+  node.forEachChild((child) => { walk(child, visit); });
 }
 
 function find(root: ts.Node, match: (node: ts.Node) => boolean): ts.Node[] {
@@ -590,7 +590,7 @@ test("the shared hook resolves through the preference and the shared policy", as
       node.expression.text === "resolveToolActivityOpen",
   )[0] as ts.CallExpression | undefined;
   assert.ok(resolve, "the hook does not call the shared policy");
-  const passed = identifiersIn(resolve.arguments[0] ?? resolve);
+  const passed = identifiersIn(resolve.arguments[0]);
   for (const field of [
     "currentOpen",
     "visibility",
@@ -864,7 +864,7 @@ test("the Python script cell moves inside the collapsible when tool calls are co
       scope,
       (node) =>
         ts.isJsxExpression(node) &&
-        !!node.expression &&
+        node.expression !== undefined &&
         ts.isBinaryExpression(node.expression) &&
         node.expression.operatorToken.kind ===
           ts.SyntaxKind.AmpersandAmpersandToken &&

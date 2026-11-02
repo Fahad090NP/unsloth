@@ -146,7 +146,7 @@ process.exit(Number(process.env.FAKE_BUN_EXIT || 0));
       upper === "UNSLOTH_TYPECHECK" ||
       upper === "FORCE_COLOR"
     ) {
-      delete env[key];
+      Reflect.deleteProperty(env, key);
     }
   }
   env.PATH = join(root, "bin") + delimiter + dirname(process.execPath);

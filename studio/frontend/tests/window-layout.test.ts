@@ -273,10 +273,10 @@ test("reserves the outer window frame inside the work area", async () => {
   };
   const measured = await measureWindowLayout(
     {
-      currentMonitor: async () => monitor,
-      primaryMonitor: async () => monitor,
-      innerSize: async () => ({ width: 760, height: 560 }),
-      outerSize: async () => ({ width: 776, height: 577 }),
+      currentMonitor: () => Promise.resolve(monitor),
+      primaryMonitor: () => Promise.resolve(monitor),
+      innerSize: () => Promise.resolve({ width: 760, height: 560 }),
+      outerSize: () => Promise.resolve({ width: 776, height: 577 }),
     },
     () => true,
   );
@@ -367,13 +367,13 @@ test("remeasures a restored window after show on its compact secondary", async (
   });
   const primary = monitor("roomy primary", 1920, 1040, 1);
   const secondary = monitor("compact secondary", 1366, 728, 1.25);
-  const currentMonitor = async () => {
+  const currentMonitor = () => {
     events.push(`current:${visible ? "visible" : "hidden"}`);
-    return visible ? secondary : null;
+    return Promise.resolve(visible ? secondary : null);
   };
-  const primaryMonitor = async () => {
+  const primaryMonitor = () => {
     events.push("primary");
-    return primary;
+    return Promise.resolve(primary);
   };
   const measure = () =>
     measureWindowLayout({ currentMonitor, primaryMonitor }, () => true);
@@ -388,20 +388,22 @@ test("remeasures a restored window after show on its compact secondary", async (
   await finalizeAppWindowLayout({
     restored: true,
     measured,
-    show: async () => {
+    show: () => {
       events.push("show");
       visible = true;
-      return true;
+      return Promise.resolve(true);
     },
     measure,
-    setMinimumConstraints: async (minimum) => {
+    setMinimumConstraints: (minimum) => {
       events.push("constraints");
       constrainedMinimum = minimum;
+      return Promise.resolve();
     },
-    enforceBounds: async (bounds) => {
+    enforceBounds: (bounds) => {
       events.push("enforce");
       enforcementBounds = bounds;
       savedSize = constrainWindowSize(savedSize, bounds.minimum, bounds);
+      return Promise.resolve();
     },
     isCurrent: () => true,
   });
@@ -437,25 +439,28 @@ test("restored geometry settles before the window becomes visible", async () => 
   await finalizeAppWindowLayout({
     restored: true,
     measured,
-    show: async () => {
+    show: () => {
       events.push("show");
       assert.deepEqual(currentSize, { width: 1200, height: 800 });
-      return true;
+      return Promise.resolve(true);
     },
-    waitForSettled: async () => {
+    waitForSettled: () => {
       events.push("settled");
       currentSize = { width: 1200, height: 800 };
+      return Promise.resolve();
     },
-    measure: async () => {
+    measure: () => {
       events.push("measure");
-      return measured;
+      return Promise.resolve(measured);
     },
-    setMinimumConstraints: async () => {
+    setMinimumConstraints: () => {
       events.push("constraints");
+      return Promise.resolve();
     },
-    enforceBounds: async (bounds) => {
+    enforceBounds: (bounds) => {
       events.push("enforce");
       currentSize = constrainWindowSize(currentSize, bounds.minimum, bounds);
+      return Promise.resolve();
     },
     isCurrent: () => true,
   });
@@ -485,22 +490,25 @@ test("a natively restored window is shown without waiting, then settles", async 
     restored: true,
     nativeRestored: true,
     measured,
-    show: async () => {
+    show: () => {
       events.push("show");
-      return true;
+      return Promise.resolve(true);
     },
-    waitForSettled: async () => {
+    waitForSettled: () => {
       events.push("settled");
+      return Promise.resolve();
     },
-    measure: async () => {
+    measure: () => {
       events.push("measure");
-      return measured;
+      return Promise.resolve(measured);
     },
-    setMinimumConstraints: async () => {
+    setMinimumConstraints: () => {
       events.push("constraints");
+      return Promise.resolve();
     },
-    enforceBounds: async () => {
+    enforceBounds: () => {
       events.push("enforce");
+      return Promise.resolve();
     },
     isCurrent: () => true,
   });
@@ -528,19 +536,21 @@ test("preserves restored geometry while an autostart window stays hidden", async
   await finalizeAppWindowLayout({
     restored: true,
     measured,
-    show: async () => {
+    show: () => {
       events.push("show");
-      return false;
+      return Promise.resolve(false);
     },
-    measure: async () => {
+    measure: () => {
       events.push("measure");
-      return measured;
+      return Promise.resolve(measured);
     },
-    setMinimumConstraints: async () => {
+    setMinimumConstraints: () => {
       events.push("constraints");
+      return Promise.resolve();
     },
-    enforceBounds: async () => {
+    enforceBounds: () => {
       events.push("enforce");
+      return Promise.resolve();
     },
     isCurrent: () => true,
   });
@@ -559,19 +569,15 @@ test("stale layouts do not show the window", async () => {
       monitor: null,
       frameSize: { width: 0, height: 0 },
     },
-    show: async () => {
+    show: () => {
       shown = true;
-      return true;
+      return Promise.resolve(true);
     },
-    measure: async () => {
-      throw new Error("stale layouts must not remeasure");
-    },
-    setMinimumConstraints: async () => {
-      throw new Error("stale layouts must not set constraints");
-    },
-    enforceBounds: async () => {
-      throw new Error("stale layouts must not enforce bounds");
-    },
+    measure: () => Promise.reject(new Error("stale layouts must not remeasure")),
+    setMinimumConstraints: () =>
+      Promise.reject(new Error("stale layouts must not set constraints")),
+    enforceBounds: () =>
+      Promise.reject(new Error("stale layouts must not enforce bounds")),
     isCurrent: () => false,
   });
 
@@ -586,15 +592,16 @@ function fakeMinimumSizeWindow(restored: boolean) {
     unlistened: 0,
   };
   const applier = createMinimumSizeApplier({
-    isRestored: async () => state.restored,
-    onResized: async (handler) => {
+    isRestored: () => Promise.resolve(state.restored),
+    onResized: (handler) => {
       state.handlers.push(handler);
-      return () => {
+      return Promise.resolve(() => {
         state.unlistened += 1;
-      };
+      });
     },
-    applyFloor: async (minimum) => {
+    applyFloor: (minimum) => {
       state.applied.push(minimum);
+      return Promise.resolve();
     },
   });
   const resize = async (nextRestored: boolean) => {
@@ -634,13 +641,14 @@ test("a restore during listener setup still applies the floor", async () => {
   const applied: { width: number; height: number }[] = [];
   let restored = false;
   const applier = createMinimumSizeApplier({
-    isRestored: async () => restored,
-    onResized: async () => {
+    isRestored: () => Promise.resolve(restored),
+    onResized: () => {
       restored = true;
-      return () => undefined;
+      return Promise.resolve(() => undefined);
     },
-    applyFloor: async (minimum) => {
+    applyFloor: (minimum) => {
       applied.push(minimum);
+      return Promise.resolve();
     },
   });
   await applier.apply({ width: 900, height: 600 });

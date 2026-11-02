@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
 
 import { installLocalStorageFake, registerBundlerResolver } from "./helpers/kit.ts";
+import type * as PerModelConfig from "../src/features/model-picker/model-config/per-model-config.ts";
 
 registerBundlerResolver();
 const { store } = installLocalStorageFake();
@@ -35,9 +36,7 @@ const CTX = 4096;
 async function freshModule() {
   const url = pathToFileURL(MODULE_PATH);
   url.search = `?fresh=${Math.random()}`;
-  return (await import(url.href)) as typeof import(
-    "../src/features/model-picker/model-config/per-model-config.ts"
-  );
+  return (await import(url.href)) as typeof PerModelConfig;
 }
 
 function seedLegacy(entry: Record<string, unknown>, key = LEGACY_KEY): void {

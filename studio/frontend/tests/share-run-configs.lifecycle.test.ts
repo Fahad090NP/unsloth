@@ -95,7 +95,7 @@ function harness(loadParser?: () => typeof links | Promise<typeof links>) {
   });
   const pending = inbox.getSnapshot();
   assert.ok(pending);
-  const navigationResult = deferred<void>();
+  const navigationResult = deferred<undefined>();
   const runtime = {
     params: { checkpoint: "" },
     activeGgufVariant: null,
@@ -236,7 +236,7 @@ for (const [pathname, newChatId] of [
   ["/hub", null],
   ["/settings", "current-draft"],
 ] as const) {
-  test(`review keeps the new chat and its draft from ${pathname}: ${newChatId}`, async () => {
+  test(`review keeps the new chat and its draft from ${pathname}: ${String(newChatId)}`, async () => {
     const app = harness();
     app.runtime.params.checkpoint = target.id;
     delete app.nav.pending.value.model;
@@ -528,7 +528,7 @@ for (const [desktop, before, after] of [
   [true, true, false],
   [false, false, true],
 ] as const) {
-  test(`session changes keep or cancel a pending link once: desktop=${desktop} signedIn=${before}/${after}`, async () => {
+  test(`session changes keep or cancel a pending link once: desktop=${String(desktop)} signedIn=${String(before)}/${String(after)}`, async () => {
     const app = sessionHarness({ desktop });
     if (before) app.signIn();
     const doc = app.loadDocument();
@@ -588,7 +588,7 @@ for (const [url, cleaned, valid, decode] of [
   [`?run=1#run?v=1&${argsQuery}`, "", true, true],
   ["?run=1#run?v=1&selectedGpuIds=%5B1%2C1%5D", "", false, true],
 ] as const) {
-  test(`startup consumes ${url} once (router decoding: ${decode})`, async () => {
+  test(`startup consumes ${url} once (router decoding: ${String(decode)})`, async () => {
     const app = sessionHarness({ url: `http://localhost/chat${url}` });
     const doc = app.loadDocument();
     if (decode) {

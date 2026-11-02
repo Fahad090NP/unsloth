@@ -52,8 +52,8 @@ test("it is not a modal, so it holds an id and a finite duration", () => {
   showCarveoutAdvice(ADVICE);
   assert.equal(calls[0].options?.id, IGPU_CARVEOUT_TOAST_ID);
   assert.ok(
-    Number.isFinite(calls[0].options?.duration) &&
-      (calls[0].options?.duration!) > 5000,
+    Number.isFinite(calls[0].options.duration) &&
+      (must(calls[0].options.duration)) > 5000,
     "long enough to read an action, short enough to leave on its own",
   );
 });
@@ -63,10 +63,10 @@ test("the action is styled down from sonner's filled default", () => {
   reset();
   showCarveoutAdvice(ADVICE);
   const classes = (calls[0].options?.classNames as { actionButton?: string })
-    ?.actionButton;
+    .actionButton;
   assert.equal(classes, IGPU_CARVEOUT_ACTION_CLASS);
-  assert.match(classes ?? "", /!justify-self-end/);
-  assert.match(classes ?? "", /!border-0/);
+  assert.match(classes, /!justify-self-end/);
+  assert.match(classes, /!border-0/);
 });
 
 test("a second load replaces the notice rather than stacking one over it", () => {
@@ -105,7 +105,7 @@ test("the action posts the allocation it was dismissed at", async () => {
     seen.push({
       url,
       method: init?.method,
-      body: init?.body ? JSON.parse(String(init.body)) : null,
+      body: init?.body ? JSON.parse(String(init.body as string)) : null,
     });
     return new Response(JSON.stringify({ dismissed_at_gb: 32 }), { status: 200 });
   });
@@ -189,3 +189,8 @@ test("either identity the load was known by takes the notice down", () => {
   dismissCarveoutAdviceForModel("unsloth/gemma-3-27b");
   assert.equal(calls.filter((call) => call.kind === "dismiss").length, 0);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

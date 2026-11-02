@@ -48,13 +48,13 @@ function restoreSettingsWith(negativeCapable: boolean) {
     DEFAULT_SAMPLER: "default",
     AUTOMATIC_SCHEDULE: "automatic",
     samplerOptions: [],
-    changeSamplerChoice: () => {},
+    changeSamplerChoice: () => { return undefined; },
     // Its return value is read, so it cannot be a recording no-op.
     enhanceRestoreFor,
     restoredInpaintMaskOptions,
     restoredDetailer,
     detailerNotApplied,
-    toast: { success: () => {} },
+    toast: { success: () => { return undefined; } },
   };
   // Every closure name the callback reads that is not a real global resolves to a recording no-op,
   // so a new dependency of restoreSettings (#13569 added changeSamplerChoice / samplerOptions) does

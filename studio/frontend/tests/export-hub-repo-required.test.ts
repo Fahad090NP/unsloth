@@ -36,7 +36,7 @@ const runState = {
   result: null,
   error: null,
   summary: null,
-  requestCancel: async () => {},
+  requestCancel: async () => { /* empty */ },
 };
 
 const { ExportRunPanel } = loadWithStubs<typeof ExportRunPanelModule>(
@@ -87,22 +87,22 @@ const props: Props = {
   baseModelName: "unsloth/Qwen3-0.6B",
   isAdapter: false,
   destination: "hub",
-  onDestinationChange: () => {},
+  onDestinationChange: () => { /* empty */ },
   saveDirectory: "exports/qwen",
   saveDirectoryInput: "",
   defaultSaveDirectory: "exports/qwen",
   saveDirectoryOverridden: false,
-  onSaveDirectoryChange: () => {},
+  onSaveDirectoryChange: () => { /* empty */ },
   hfUsername: "nilay",
-  onHfUsernameChange: () => {},
+  onHfUsernameChange: () => { /* empty */ },
   modelName: "qwen-gguf",
-  onModelNameChange: () => {},
+  onModelNameChange: () => { /* empty */ },
   hfToken: "",
-  onHfTokenChange: () => {},
+  onHfTokenChange: () => { /* empty */ },
   privateRepo: false,
-  onPrivateRepoChange: () => {},
-  onStart: () => {},
-  onClose: () => {},
+  onPrivateRepoChange: () => { /* empty */ },
+  onStart: () => { /* empty */ },
+  onClose: () => { /* empty */ },
 };
 
 function startButton(overrides: Partial<Props>): string {

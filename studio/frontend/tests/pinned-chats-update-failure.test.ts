@@ -6,7 +6,7 @@
 
 import assert from "node:assert/strict";
 import { register } from "node:module";
-import test from "node:test";
+import test, { type TestContext } from "node:test";
 
 // See helpers/auth-stub.mjs.
 register("./helpers/settings-api-resolver.mjs", import.meta.url);
@@ -72,9 +72,9 @@ function stalled(init?: RequestInit): Response {
 }
 
 type Handler = (url: string, init?: RequestInit) => Promise<Response>;
-let handle: Handler = async () => json({});
+let handle: Handler = () => Promise.resolve(json({}));
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
-  handle(String(input), init));
+  handle(String(input as string), init));
 
 /** The pins routes over an in-memory list; `down` makes every request fail like authFetch would. */
 function pinsServer() {
@@ -95,7 +95,7 @@ function pinsServer() {
     }
     if (url.endsWith("/api/chat/pins")) return json({ pinnedIds: server.pins });
     if (url.endsWith("/api/chat/settings/compare-and-set")) {
-      const body = JSON.parse(String(init?.body));
+      const body = JSON.parse(String(init?.body as string));
       const applied =
         JSON.stringify(body.expected.pinnedChatIds ?? server.pins) ===
         JSON.stringify(server.pins);
@@ -113,11 +113,11 @@ function pinRuntime() {
   const raised: unknown[] = [];
   const toasted: unknown[] = [];
   const sync = createPinnedChatsSync({
-    load: api.load,
+    load: api.load.bind(api),
     compareAndSet: api.compareAndSet,
     readLegacy: () => [],
     isRetryable: isRetryablePinError,
-    publish: () => {},
+    publish: () => { return undefined; },
     onError: (error) => {
       raised.push(error);
       if (!isPinFailureUnderDesktopUpdate(error)) toasted.push(error);
@@ -154,11 +154,11 @@ test("only failures from the stopped backend are pin update failures", () => {
 
 test("a pin read whose body the shutdown cut off is an update failure", async () => {
   const { api } = pinRuntime();
-  handle = async () => interrupted();
+  handle = () => Promise.resolve(interrupted());
   const leave = followDesktopUpdateScreen(true, false, noResync);
   let failure: unknown;
   try {
-    failure = await api.load().then(() => assert.fail("expected the read to fail"), (e) => e);
+    failure = await api.load().then(() => assert.fail("expected the read to fail"), (e: unknown) => e);
   } finally {
     leave();
   }
@@ -168,13 +168,13 @@ test("a pin read whose body the shutdown cut off is an update failure", async ()
 
 test("a pin write whose body the shutdown cut off is an update failure", async () => {
   const { api } = pinRuntime();
-  handle = async () => interrupted();
+  handle = () => Promise.resolve(interrupted());
   const leave = followDesktopUpdateScreen(true, false, noResync);
   let failure: unknown;
   try {
     failure = await api
       .compareAndSet([], ["a"])
-      .then(() => assert.fail("expected the write to fail"), (e) => e);
+      .then(() => assert.fail("expected the write to fail"), (e: unknown) => e);
   } finally {
     leave();
   }
@@ -184,21 +184,21 @@ test("a pin write whose body the shutdown cut off is an update failure", async (
 
 /** Runs `call` against a backend that sends 200 headers and stalls, until the 10s timeout fires. */
 async function timedOutAfterHeaders(
-  t: import("node:test").TestContext,
+  t: TestContext,
   call: (api: ReturnType<typeof createChatPinsApi>) => Promise<unknown>,
 ): Promise<unknown> {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const { api } = pinRuntime();
   let stalledRequests = 0;
-  handle = async (url, init) => {
+  handle = (url, init) => {
     // The pins routes predate this backend: fall back to /api/chat/settings.
-    if (url.includes("/api/chat/pins")) return new Response(null, { status: 404 });
+    if (url.includes("/api/chat/pins")) return Promise.resolve(new Response(null, { status: 404 }));
     stalledRequests += 1;
-    return stalled(init);
+    return Promise.resolve(stalled(init));
   };
   const leave = followDesktopUpdateScreen(true, false, noResync);
   try {
-    const failure = call(api).then(() => assert.fail("expected a timeout"), (e) => e);
+    const failure = call(api).then(() => assert.fail("expected a timeout"), (e: unknown) => e);
     while (stalledRequests === 0) await new Promise((r) => setImmediate(r));
     t.mock.timers.tick(10_000);
     return await failure;
@@ -227,10 +227,10 @@ test("a legacy pin migration that times out after 200 headers is an update failu
 
 test("a malformed pin response still reports under the update screen", async () => {
   const { api } = pinRuntime();
-  handle = async () => new Response('{"pinnedIds": [', { status: 200 });
+  handle = () => Promise.resolve(new Response('{"pinnedIds": [', { status: 200 }));
   const leave = followDesktopUpdateScreen(true, false, noResync);
   try {
-    const failure = await api.load().then(() => assert.fail("expected the read to fail"), (e) => e);
+    const failure = await api.load().then(() => assert.fail("expected the read to fail"), (e: unknown) => e);
     assert.ok(failure instanceof SyntaxError);
     assert.equal(isPinFailureUnderDesktopUpdate(failure), false);
   } finally {
@@ -243,7 +243,7 @@ async function queueTwoEditsWhileDown(
   server: ReturnType<typeof pinsServer>,
 ) {
   await runtime.sync.refresh();
-  server.down = true;
+  Reflect.set(server, "down", true);
   return await Promise.allSettled([
     runtime.sync.setPinned(["a"], true),
     runtime.sync.setPinned(["b"], true),
@@ -291,13 +291,13 @@ test("a queued write that times out after 200 headers stays silent with the edit
   await runtime.sync.refresh();
   t.mock.timers.enable({ apis: ["setTimeout"] });
   let stalledWrites = 0;
-  handle = async (url, init) => {
+  handle = (url, init) => {
     if (url.endsWith("/api/chat/settings/compare-and-set")) {
       stalledWrites += 1;
-      return stalled(init);
+      return Promise.resolve(stalled(init));
     }
     // The recovery read finds the backend gone.
-    throw transport();
+    return Promise.reject(transport());
   };
   const leave = followDesktopUpdateScreen(true, false, noResync);
   try {

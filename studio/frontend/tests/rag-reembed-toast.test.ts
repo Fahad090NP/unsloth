@@ -54,9 +54,9 @@ test("signing out forgets the job and stops polling for it", async (t) => {
   setAuthFetchHandler(offline);
   await useReembedStore.getState().cancel(); // leaves the state to reconcile
   serve({ ...stale, job: job("running", 0, "j11") });
-  void useReembedStore.getState().load(); // answered after signing out
+  useReembedStore.getState().load().catch((error: unknown) => { throw error; }); // answered after signing out
   setAuthFetchHandler(offline);
-  void useReembedStore.getState().start(); // fails after signing out
+  useReembedStore.getState().start().catch((error: unknown) => { throw error; }); // fails after signing out
   signOut();
   await useReembedStore.getState().load(); // a read that fails once signed out
   serve({ ...idle, job: job("completed", 0, "j11") });
@@ -73,8 +73,8 @@ test("a save that leaves documents stale offers Re-embed, which starts the job",
     saved.options?.description,
     "3 documents were indexed with a different embedding model, so semantic search skips them.",
   );
-  assert.equal(saved.options?.duration, 10_000);
-  saved.options?.action?.onClick();
+  assert.equal(saved.options.duration, 10_000);
+  saved.options.action?.onClick();
   assert.deepEqual(posted, ["/api/rag/reembed"]);
 });
 
@@ -144,7 +144,7 @@ test("a status reply older than a start reply is replaced by a fresh read", asyn
   assert.equal(useReembedStore.getState().status?.job?.id, "j3");
   const saved = calls.at(-1)?.options;
   assert.equal(saved?.description?.startsWith("2 documents"), true);
-  assert.equal(saved?.action, undefined);
+  assert.equal(saved.action, undefined);
 });
 
 test("a late start reply neither hides its job nor announces its end twice", async (t) => {

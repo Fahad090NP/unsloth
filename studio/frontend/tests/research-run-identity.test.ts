@@ -63,20 +63,20 @@ function sseResponse(frames: string[]): Response {
 function stubFetch(frames: string[], finalSnapshot: AnyRecord): () => void {
   const original = globalThis.fetch;
   let streamed = false;
-  globalThis.fetch = (async (input: RequestInfo | URL) => {
-    const url = String(input);
+  globalThis.fetch = ( (input: RequestInfo | URL) => {
+    const url = (input as unknown as string);
     if (url.includes("/events")) {
       if (streamed) {
         // A second connect would loop forever; hand back an empty stream instead.
-        return sseResponse([]);
+        return Promise.resolve(sseResponse([]));
       }
       streamed = true;
-      return sseResponse(frames);
+      return Promise.resolve(sseResponse(frames));
     }
-    return new Response(JSON.stringify(finalSnapshot), {
+    return Promise.resolve(new Response(JSON.stringify(finalSnapshot), {
       status: 200,
       headers: { "content-type": "application/json" },
-    });
+    }));
   });
   return () => {
     globalThis.fetch = original;

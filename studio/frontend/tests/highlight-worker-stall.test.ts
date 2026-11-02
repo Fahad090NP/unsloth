@@ -61,7 +61,7 @@ function setup(t: TestContext): { client: Client; drain: () => void } {
   t.after(() => {
     delete scope.Worker;
   });
-  t.mock.method(console, "warn", () => {});
+  t.mock.method(console, "warn", () => { return undefined; });
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const client = loadWithStubs<Client>(
     new URL("../src/components/assistant-ui/use-reasoning-highlight.ts", import.meta.url),
@@ -105,7 +105,7 @@ test("a whole-fence request waits out a slow boot and the worker that was late a
     client.requestFullHighlight("<div></div>", "html", (result) => mounted.push(result)),
     "a fence that mounts during the stall queues on the same worker",
   );
-  assert.equal(client.requestFullHighlight("<b></b>", "html", () => {}, true), null, "speculation is not sent to a late worker");
+  assert.equal(client.requestFullHighlight("<b></b>", "html", () => { return undefined; }, true), null, "speculation is not sent to a late worker");
   assert.equal(FakeWorker.made.length, 1);
   booting.send({ ready: true });
   assert.equal(client.highlightWorkerState(), "ready");
@@ -145,7 +145,7 @@ test("a crashed worker fails every waiting request, whole-fence ones included, a
   assert.equal(crashed.terminated, true);
   drain();
   assert.deepEqual(fence, [null]);
-  assert.equal(client.requestFullHighlight("<html></html>", "html", () => {}), null);
+  assert.equal(client.requestFullHighlight("<html></html>", "html", () => { return undefined; }), null);
   assert.equal(FakeWorker.made.length, 1);
 });
 
@@ -173,7 +173,7 @@ test("a fence the main thread could tokenize does not wait out a late boot", asy
   drain();
   assert.deepEqual(short, [null], "handed back, so it is tokenized on the main thread as it would be without a worker");
   assert.deepEqual(long, [], "a fence too long for the main thread keeps waiting");
-  assert.equal(client.requestFullHighlight("<b></b>", "html", () => {}, false, false), null, "while the worker is late, short fences never queue on it");
+  assert.equal(client.requestFullHighlight("<b></b>", "html", () => { return undefined; }, false, false), null, "while the worker is late, short fences never queue on it");
 });
 
 test("a ready worker that sends nothing while a fence waits is treated as late until it answers", async (t) => {
@@ -222,7 +222,7 @@ test("a busy worker that keeps answering is never declared silent", async (t) =>
 
 test("a late worker that idles out is replaced, so the next long fence is coloured again", async (t) => {
   const { client } = setup(t);
-  const cancel = client.requestFullHighlight("<html></html>", "html", () => {});
+  const cancel = client.requestFullHighlight("<html></html>", "html", () => { return undefined; });
   assert.ok(cancel);
   const [late] = FakeWorker.made;
   late.send({ ready: true });
@@ -231,10 +231,10 @@ test("a late worker that idles out is replaced, so the next long fence is colour
   assert.equal(client.highlightWorkerState(), "stalled");
   cancel();
   t.mock.timers.tick(5_000);
-  assert.equal(client.requestFullHighlight("<p></p>", "html", () => {}, false, false), null);
+  assert.equal(client.requestFullHighlight("<p></p>", "html", () => { return undefined; }, false, false), null);
   t.mock.timers.tick(5_000);
   assert.equal(late.terminated, true, "with nothing left waiting, the late worker idles out, however many callers it turned away meanwhile");
   assert.equal(client.highlightWorkerState(), "untested");
-  assert.ok(client.requestFullHighlight("<html></html>", "html", () => {}), "the next long fence gets a worker again");
+  assert.ok(client.requestFullHighlight("<html></html>", "html", () => { return undefined; }), "the next long fence gets a worker again");
   assert.equal(FakeWorker.made.length, 2);
 });

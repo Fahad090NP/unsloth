@@ -70,9 +70,9 @@ function hubPageRefresh(coalesce: boolean) {
 
 async function settledEarly(promise: Promise<void>): Promise<boolean> {
   let done = false;
-  void promise.then(() => {
+  promise.then(() => {
     done = true;
-  });
+  }).catch(() => undefined);
   await flush();
   return done;
 }
@@ -80,7 +80,7 @@ async function settledEarly(promise: Promise<void>): Promise<boolean> {
 test("the initial safety read waits out a newer focus refresh", async () => {
   const hub = hubPageRefresh(true);
   const initialRead = hub.refresh();
-  hub.refresh();
+  hub.refresh().catch(() => undefined);
 
   hub.deliver(0);
   assert.equal(
@@ -102,7 +102,7 @@ test("the initial safety read waits out a newer focus refresh", async () => {
 test("without coalescing the dropped response releases stale state", async () => {
   const hub = hubPageRefresh(false);
   const initialRead = hub.refresh();
-  hub.refresh();
+  hub.refresh().catch(() => undefined);
 
   hub.deliver(0);
   assert.equal(await settledEarly(initialRead), true);
@@ -113,8 +113,8 @@ test("every dropped response in a chain waits for the one read that wins", async
   // Focus and visibilitychange can fire as a pair, so several reads may overlap.
   const hub = hubPageRefresh(true);
   const initialRead = hub.refresh();
-  hub.refresh();
-  hub.refresh();
+  hub.refresh().catch(() => undefined);
+  hub.refresh().catch(() => undefined);
 
   hub.deliver(0);
   hub.deliver(1);
@@ -129,7 +129,7 @@ test("every dropped response in a chain waits for the one read that wins", async
 test("responses that land out of order still leave the store on the newest read", async () => {
   const hub = hubPageRefresh(true);
   const initialRead = hub.refresh();
-  hub.refresh();
+  hub.refresh().catch(() => undefined);
 
   hub.deliver(1);
   hub.deliver(0);

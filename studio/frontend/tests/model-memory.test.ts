@@ -54,7 +54,7 @@ test("weights fit but context pushes past the budget", () => {
 test("oversized weights are not blamed on the context", () => {
   const result = computeModelMemory({
     weightsBytes: 20 * GB,
-    kvBytes: 1 * GB,
+    kvBytes: Number(GB),
     gpuGb: GPU_GB,
   });
   assert.equal(result.status, "model-exceeds");
@@ -119,7 +119,7 @@ test("KV and speculative reserve are separate segments", () => {
   const result = computeModelMemory({
     weightsBytes: 6 * GB,
     kvBytes: 2 * GB,
-    specBytes: 1 * GB,
+    specBytes: Number(GB),
     gpuGb: GPU_GB,
   });
   assert.equal(result.kvGb, 2);

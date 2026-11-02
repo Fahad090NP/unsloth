@@ -82,7 +82,7 @@ function fixture(t: TestContext, refreshes: Refresh[]) {
   };
   t.after(() => {
     globalThis.window = previousWindow;
-    globalThis.fetch = previousFetch;
+    Object.assign(globalThis, { fetch: previousFetch });
     globalThis.setTimeout = previousSetTimeout;
     Date.now = previousNow;
     assert.equal(unexpected, 0, "a refresh ran past its script");

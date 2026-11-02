@@ -47,8 +47,8 @@ export function notifyChatHistoryUpdated(): void {
   recorder.events.push("notify");
 }
 
-export async function listStoredChatThreads(): Promise<StubThread[]> {
-  return recorder.threads;
+export  function listStoredChatThreads(): Promise<StubThread[]> {
+  return Promise.resolve(recorder.threads);
 }
 
 export async function updateStoredChatThread(
@@ -69,26 +69,26 @@ export async function updateStoredChatThread(
   return { id: threadId, archived: true };
 }
 
-export async function listStoredChatThreadsWithMessages(): Promise<StubThread[]> {
-  return [];
+export  function listStoredChatThreadsWithMessages(): Promise<StubThread[]> {
+  return Promise.resolve([]);
 }
-export async function deleteStoredChatThreads(): Promise<void> {}
+export  function deleteStoredChatThreads(): Promise<void> {return Promise.resolve(); }
 export function isExpectedBackgroundChatStorageError(): boolean {
   return false;
 }
-export function clearComposerDraft(): void {}
-export async function offerToDeleteKeptSandboxes(): Promise<void> {}
-export async function stopChatThread(): Promise<void> {}
-export function markChatThreadsDeleted(): void {}
-export function notifyChatThreadsDeleted(): void {}
-export function removeChatThreadTombstones(): void {}
-export function requestPromptQueueStop(): void {}
-export async function repairLegacyChatTitles(): Promise<void> {}
+export function clearComposerDraft(): void {/* intentionally empty */}
+export  function offerToDeleteKeptSandboxes(): Promise<void> {return Promise.resolve(); }
+export  function stopChatThread(): Promise<void> {return Promise.resolve(); }
+export function markChatThreadsDeleted(): void {/* intentionally empty */}
+export function notifyChatThreadsDeleted(): void {/* intentionally empty */}
+export function removeChatThreadTombstones(): void {/* intentionally empty */}
+export function requestPromptQueueStop(): void {/* intentionally empty */}
+export  function repairLegacyChatTitles(): Promise<void> {return Promise.resolve(); }
 
 const inertStore = {
   getState: () => ({
-    setActiveThreadId: () => {},
-    cancelIfRunning: () => {},
+    setActiveThreadId: () => {/* intentionally empty */},
+    cancelIfRunning: () => {/* intentionally empty */},
   }),
 };
 export const useChatRuntimeStore = inertStore;

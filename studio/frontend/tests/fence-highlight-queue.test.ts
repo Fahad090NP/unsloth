@@ -89,7 +89,7 @@ test("cancellation removes only its entry and cancels the last scheduled callbac
   assert.equal(h.queue.pending(), 1);
   h.run();
   assert.equal(calls, 1);
-  const stale = h.allCallbacks.at(-1)!;
+  const stale = (h.allCallbacks.at(-1) ?? assert.fail("expected a non-null value"));
   cancelSecond();
   assert.equal(h.callbacks.size, 0);
   stale();
@@ -130,7 +130,7 @@ test("flush bypasses blocking and finishes pending fences in one commit", () => 
 
 test("a canceled entry stays canceled when its running step returns unfinished", () => {
   const h = harness();
-  let cancel = () => {};
+  let cancel = () => { /* empty */ };
   cancel = h.queue.add(() => { cancel(); return false; }, () => assert.fail());
   h.run();
   assert.equal(h.queue.pending(), 0);
@@ -151,7 +151,7 @@ test("a running step can flush without requeueing itself or canceled siblings", 
 test("flush tolerates cleanup, recursive flush and newly registered fences", () => {
   const h = harness();
   const finished: string[] = [];
-  let cancelSecond = () => {};
+  let cancelSecond = () => { /* empty */ };
   h.queue.add(() => assert.fail(), () => {
     finished.push("first");
     cancelSecond();

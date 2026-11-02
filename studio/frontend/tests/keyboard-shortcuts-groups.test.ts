@@ -26,7 +26,7 @@ test("every action sits in exactly one section of the shortcuts tab", () => {
       assert.equal(
         seen.has(id),
         false,
-        `${id} is in ${seen.get(id)} and ${group.id}`,
+        `${id} is in ${String(seen.get(id))} and ${group.id}`,
       );
       seen.set(id, group.id);
     }

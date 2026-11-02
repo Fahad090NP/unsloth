@@ -3,7 +3,6 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import remend from "remend";
 
 import {
   IncrementalMarkdownCache,
@@ -42,7 +41,7 @@ function assertRepairMatches(text: string, chunk = 192): void {
     const render = cache.update(text.slice(0, end));
     const context = contextOf(cache);
     assert.equal(
-      context.bold || context.singleAsterisk || context.singleUnderscore,
+      context.bold ?? context.singleAsterisk ?? context.singleUnderscore,
       false,
       "reply must not need a marker context for remend(tail) to be the reference",
     );
@@ -141,7 +140,11 @@ test("a fence that never closes stays live and is never committed away", () => {
 });
 
 function repairCharacters(text: string, chunk = 256): number {
-  const realSubstring = String.prototype.substring;
+  const realSubstring = Reflect.get(String.prototype, "substring") as (
+    this: string,
+    start: number,
+    end?: number,
+  ) => string;
   let counted = 0;
   String.prototype.substring = function counting(
     this: string,

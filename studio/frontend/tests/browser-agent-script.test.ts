@@ -2,10 +2,13 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
-register("./helpers/browser-executor-resolver.mjs", import.meta.url);
+const browserExecutorResolverHooks = (await import(new URL("./helpers/browser-executor-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserExecutorResolverHooks.resolve });
 const { runBrowserAction } = await import("../src/features/browser/agent/executor.ts");
 const { agentChat, answerQuestion, useBrowserAgentStore } = await import("../src/features/browser/agent/agent-store.ts");
 // Actions without a scope act for the chat on screen.
@@ -16,12 +19,12 @@ const policy = { allowedDomains: [], blockedDomains: [] };
 
 test("a script approved after Run scripts was set to Never does not run", async () => {
   const posted: { result: { ok: boolean; error?: string } }[] = [];
-  globals.__authFetch = async (_url: string, init: { body: string }) => {
+  globals.__authFetch = (_url: string, init: { body: string }) => {
     posted.push(JSON.parse(init.body));
     return new Response(null, { status: 200 });
   };
   const sent: string[] = [];
-  globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
+  globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
     sent.push(String(op.op));
     if (op.op === "status") return { installed: true, result: { ok: true, quietMs: 1000, doc: "r1" } };
     return { installed: true, result: { ok: true, text: "page", links: [] } };

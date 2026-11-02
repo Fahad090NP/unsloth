@@ -205,8 +205,8 @@ test("the interrupted restore keeps the partial body untouched", () => {
 });
 
 const stalledStreamFetch = (): typeof fetch =>
-  (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = String(input);
+  ( (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = (input as unknown as string);
     if (url.includes("/events")) {
       const body = new ReadableStream({
         start(controller) {
@@ -215,15 +215,15 @@ const stalledStreamFetch = (): typeof fetch =>
           });
         },
       });
-      return new Response(body, {
+      return Promise.resolve(new Response(body, {
         status: 200,
         headers: { "content-type": "text/event-stream" },
-      });
+      }));
     }
-    return new Response(JSON.stringify(run("running", 0)), {
+    return Promise.resolve(new Response(JSON.stringify(run("running", 0)), {
       status: 200,
       headers: { "content-type": "application/json" },
-    });
+    }));
   });
 
 test("the follower throws on its own deadline instead of returning silently", async () => {
@@ -237,6 +237,7 @@ test("the follower throws on its own deadline instead of returning silently", as
         stallTimeoutMs: 40,
       })) {
         // drain
+        void _update;
       }
     },
     (error: unknown) =>
@@ -257,13 +258,14 @@ test("a caller Stop still ends the follow cleanly", async () => {
     stallTimeoutMs: 60_000,
   })) {
     // drain
+    void _update;
   }
 });
 
 test("the follower gives up on a run that makes no progress", async () => {
   let opened = 0;
-  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = String(input);
+  globalThis.fetch = ( (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = (input as unknown as string);
     if (url.includes("/events")) {
       opened += 1;
       const body = new ReadableStream({
@@ -273,15 +275,15 @@ test("the follower gives up on a run that makes no progress", async () => {
           });
         },
       });
-      return new Response(body, {
+      return Promise.resolve(new Response(body, {
         status: 200,
         headers: { "content-type": "text/event-stream" },
-      });
+      }));
     }
-    return new Response(JSON.stringify(run("running", 0)), {
+    return Promise.resolve(new Response(JSON.stringify(run("running", 0)), {
       status: 200,
       headers: { "content-type": "application/json" },
-    });
+    }));
   });
 
   const updates: string[] = [];
@@ -306,8 +308,8 @@ test("the follower gives up on a run that makes no progress", async () => {
 test("progress rearms the deadline instead of ending the follow", async () => {
   const frames = [1, 2, 3];
   let follows = 0;
-  globalThis.fetch = (async (input: RequestInfo | URL) => {
-    const url = String(input);
+  globalThis.fetch = ( (input: RequestInfo | URL) => {
+    const url = (input as unknown as string);
     if (url.includes("/events")) {
       const seq = frames[follows] ?? 0;
       follows += 1;
@@ -331,19 +333,19 @@ test("progress rearms the deadline instead of ending the follow", async () => {
           controller.close();
         },
       });
-      return new Response(body, {
+      return Promise.resolve(new Response(body, {
         status: 200,
         headers: { "content-type": "text/event-stream" },
-      });
+      }));
     }
-    return new Response(
+    return Promise.resolve(new Response(
       JSON.stringify(
         follows >= frames.length
           ? run("completed", 3)
           : run("running", follows),
       ),
       { status: 200, headers: { "content-type": "application/json" } },
-    );
+    ));
   });
 
   const seen: number[] = [];
@@ -601,7 +603,7 @@ test("advancing keep-alive stamps hold the follower open through a long preparat
   let close: (() => void) | undefined;
   const encoder = new TextEncoder();
   const original = globalThis.fetch;
-  globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+  globalThis.fetch = ( (_url: string, init?: RequestInit) => {
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
         push = (chunk) => { controller.enqueue(chunk); };
@@ -611,10 +613,10 @@ test("advancing keep-alive stamps hold the follower open through a long preparat
         );
       },
     });
-    return new Response(body, {
+    return Promise.resolve(new Response(body, {
       status: 200,
       headers: { "content-type": "text/event-stream" },
-    });
+    }));
   }) as typeof fetch;
 
   try {
@@ -686,7 +688,7 @@ test("a repeated keep-alive stamp does NOT hold the follower open", async () => 
   let push: ((chunk: Uint8Array) => void) | undefined;
   const encoder = new TextEncoder();
   const original = globalThis.fetch;
-  globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+  globalThis.fetch = ( (_url: string, init?: RequestInit) => {
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
         push = (chunk) => { controller.enqueue(chunk); };
@@ -695,10 +697,10 @@ test("a repeated keep-alive stamp does NOT hold the follower open", async () => 
         );
       },
     });
-    return new Response(body, {
+    return Promise.resolve(new Response(body, {
       status: 200,
       headers: { "content-type": "text/event-stream" },
-    });
+    }));
   }) as typeof fetch;
 
   try {
@@ -711,6 +713,7 @@ test("a repeated keep-alive stamp does NOT hold the follower open", async () => 
           stallTimeoutMs: 200,
         })) {
           // The run never progresses; only the deadline can end this.
+          void _u;
         }
       } catch (error) {
         stalled = error instanceof api.ChatGenerationStalledError;
@@ -747,8 +750,8 @@ test("a frozen stamp does not rearm across SSE reconnects", async () => {
   const encoder = new TextEncoder();
   const original = globalThis.fetch;
   let connections = 0;
-  globalThis.fetch = (async (url: string, init?: RequestInit) => {
-    if (String(url).includes("/events")) {
+  globalThis.fetch = ( (url: string, init?: RequestInit) => {
+    if (url.includes("/events")) {
       connections += 1;
       const body = new ReadableStream<Uint8Array>({
         start(controller) {
@@ -756,16 +759,16 @@ test("a frozen stamp does not rearm across SSE reconnects", async () => {
           controller.close();
         },
       });
-      init?.signal?.addEventListener("abort", () => {});
-      return new Response(body, {
+      init?.signal?.addEventListener("abort", () => {/* intentionally empty */});
+      return Promise.resolve(new Response(body, {
         status: 200,
         headers: { "content-type": "text/event-stream" },
-      });
+      }));
     }
-    return new Response(
+    return Promise.resolve(new Response(
       JSON.stringify({ id: "r", status: "running", lastEventSeq: 0, updatedAt: 7 }),
       { status: 200, headers: { "content-type": "application/json" } },
-    );
+    ));
   }) as typeof fetch;
 
   try {
@@ -777,6 +780,7 @@ test("a frozen stamp does not rearm across SSE reconnects", async () => {
           stallTimeoutMs: 2_500,
         })) {
           // Never terminal; only the deadline can end this.
+          void _u;
         }
       } catch (error) {
         stalled = error instanceof api.ChatGenerationStalledError;

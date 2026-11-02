@@ -132,7 +132,7 @@ function harness(options: Partial<typeof defaults> = {}) {
           await delay(o.delayMs);
           const query = new URL(url, "http://localhost").searchParams;
           const [repo, ...rest] = ["repo_id", "local_path", "offline"].map(
-            (key) => `${query.get(key)}`,
+            (key) => `${query.get(key) ?? ""}`,
           );
           requests.push([repo, ...rest]);
           if (o.listingErrors.includes(repo)) throw new Error("unavailable");
@@ -142,7 +142,7 @@ function harness(options: Partial<typeof defaults> = {}) {
               ? o.localResponse
               : {
                   variants: listed,
-                  default_variant: listed[0]?.quant,
+                  default_variant: listed[0].quant,
                   resolved_locally: o.resolvedLocally,
                 };
           return new Response(JSON.stringify(body), { status: o.status });
@@ -164,7 +164,7 @@ function harness(options: Partial<typeof defaults> = {}) {
             default_variant:
               "defaultVariant" in options
                 ? o.defaultVariant
-                : o.hubVariants[0]?.quant,
+                : o.hubVariants[0].quant,
             dependencies_resolved: o.hubMetadataAvailable,
           };
         },
@@ -561,14 +561,14 @@ test("imports report changes, the linked model and only variants retained by tar
 
 test("a shared context imports without touching the pinned sequence length", async (t) => {
   for (const customContextLength of [8192, null]) {
-    const link = `unsloth://run?v=1&customContextLength=${customContextLength}`;
+    const link = `unsloth://run?v=1&customContextLength=${String(customContextLength)}`;
     const parsed = parseRunConfigLink(link);
     assert.ok(parsed.kind === "valid");
     const app = importHarness(t, parsed.value.config);
     await app.run();
     const config = app.draft()?.config;
     assert.equal(config?.customContextLength, customContextLength);
-    assert.equal(config?.maxSeqLength, 4096);
+    assert.equal(config.maxSeqLength, 4096);
     assert.deepEqual(app.imports[0][0], { customContextLength });
   }
 });

@@ -60,7 +60,9 @@ setAuthFetchHandler((input, init) => {
     });
   }
   if (url === "/api/settings/hub/source") {
-    source = JSON.parse(String(init?.body)).source;
+    source = (
+      JSON.parse(init?.body as string) as { source: "huggingface" | "modelscope" }
+    ).source;
     return json({
       hf_endpoint: "",
       datasets_server_follows_endpoint: false,

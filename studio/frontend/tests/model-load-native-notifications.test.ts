@@ -83,10 +83,10 @@ async function load(options: EnvOptions) {
   if (webview !== "absent") {
     windowStub.Notification = {
       permission: webview,
-      async requestPermission() {
+      requestPermission() {
         webviewRequests.count += 1;
         (windowStub.Notification as { permission: string }).permission = answer;
-        return answer;
+        return Promise.resolve(answer);
       },
     };
   }

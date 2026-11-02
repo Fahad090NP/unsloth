@@ -51,7 +51,7 @@ function loadStorage() {
           rows.set(record.id, record);
           return Promise.resolve(record);
         },
-        notifyChatHistoryUpdated: () => {},
+        notifyChatHistoryUpdated: () => { return undefined; },
       },
       "../db": {
         DEXIE_DB_NAME: "unsloth-chat",
@@ -66,8 +66,8 @@ function loadStorage() {
       },
       "./chat-thread-tombstones": {
         isChatThreadDeleted: () => false,
-        markChatThreadDeleted: () => {},
-        markChatThreadsDeleted: () => {},
+        markChatThreadDeleted: () => { return undefined; },
+        markChatThreadsDeleted: () => { return undefined; },
       },
       "./thread-record-write-coordinator": {
         ThreadRecordWriteCoordinator: class {
@@ -76,7 +76,7 @@ function loadStorage() {
           }
         },
       },
-      "../stores/fork-boundary-store": { setForkBoundary: () => {} },
+      "../stores/fork-boundary-store": { setForkBoundary: () => { return undefined; } },
     },
   );
   return { storage, requests };

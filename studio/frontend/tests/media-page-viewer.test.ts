@@ -61,17 +61,17 @@ test("a signed link refused with 401 or 403 is minted afresh once; other statuse
       [{ "/old": 401, "/new": 401 }, ["/old", "/new"], 401],
     ] as const) {
       const seen: string[] = [];
-      globalThis.fetch = (async (url: string) => {
+      globalThis.fetch = ((url: string) => {
         seen.push(url);
         const status = (statuses as Record<string, number>)[url];
-        return new Response(status === 200 ? "clip" : null, { status });
+        return Promise.resolve(new Response(status === 200 ? "clip" : null, { status }));
       }) as typeof fetch;
-      const response = await fetchWithFreshLink("/old", async () => "/new");
+      const response = await fetchWithFreshLink("/old", () => Promise.resolve("/new"));
       assert.equal(response.status, final);
       assert.deepEqual(seen, asked);
     }
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
   }
 });
 

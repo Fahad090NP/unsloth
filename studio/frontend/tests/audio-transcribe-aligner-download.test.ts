@@ -38,7 +38,7 @@ test("nothing is staged when the run can start now", () => {
   assert.equal(alignerDownloadEntry(QWEN3, false), null);
   assert.equal(
     alignerDownloadEntry(
-      { ...QWEN3, aligner: { ...QWEN3.aligner!, downloaded: true } },
+      { ...QWEN3, aligner: { ...(QWEN3.aligner ?? assert.fail("expected a non-null value")), downloaded: true } },
       true,
     ),
     null,

@@ -51,7 +51,7 @@ const harness = (overrides: Partial<Parameters<typeof createFenceSpeculator<Gate
     },
   });
   const gates = new Map<string, Gate>();
-  const gate_ = (name: string) => gates.get(name)!;
+  const gate_ = (name: string) => (gates.get(name) ?? assert.fail("expected a non-null value"));
   const make = (name: string, at: number, chars?: number, language?: string) => {
     const g = gate(name, at, chars, language);
     gates.set(name, g);
@@ -77,11 +77,11 @@ test("the nearest warmed fence goes first, one at a time, until the budget is sp
   h.runIdle();
   assert.deepEqual([...h.settled.keys()].map((g) => g.name), ["near"]);
   assert.equal(h.idle.length, 0, "nothing else is picked while one is in flight");
-  h.settled.get(near)!(true);
+  (h.settled.get(near) ?? assert.fail("expected a non-null value"))(true);
   assert.equal(h.speculator.snapshot().seeded, 1);
   h.runIdle();
   assert.deepEqual([...h.settled.keys()].map((g) => g.name), ["near", "middle"]);
-  h.settled.get(middle)!(true);
+  (h.settled.get(middle) ?? assert.fail("expected a non-null value"))(true);
   h.runIdle();
   assert.deepEqual([...h.settled.keys()].map((g) => g.name), ["near", "middle", "far"]);
 });
@@ -104,7 +104,7 @@ test("a language the main thread has not warmed waits instead of being seeded", 
   assert.equal(h.waits.length, 1);
   assert.equal(h.waits[0].ms, 1000);
   h.warmed.add("python");
-  h.waits.shift()!.callback();
+  (h.waits.shift() ?? assert.fail("expected a non-null value")).callback();
   assert.deepEqual([...h.settled.keys()].map((g) => g.name), ["cold"]);
 });
 
@@ -122,7 +122,7 @@ test("removing the in-flight fence cancels it and frees the slot; removing a see
   assert.equal(h.speculator.snapshot().inFlight, false);
   h.runIdle();
   assert.ok(h.settled.has(b));
-  h.settled.get(b)!(true);
+  (h.settled.get(b) ?? assert.fail("expected a non-null value"))(true);
   assert.equal(h.speculator.snapshot().seededChars, 1000);
   h.speculator.remove(b);
   assert.equal(h.speculator.snapshot().seededChars, 0);
@@ -137,11 +137,11 @@ test("the character budget skips a nearer fence that does not fit and the fence 
   const tiny = h.make("tiny", 9, 10);
   for (const g of [big, near, small, tiny]) h.speculator.add(g);
   h.runIdle();
-  h.settled.get(big)!(true);
+  (h.settled.get(big) ?? assert.fail("expected a non-null value"))(true);
   assert.equal(h.speculator.snapshot().seededChars, 1400);
   h.runIdle();
   assert.deepEqual([...h.settled.keys()].map((g) => g.name), ["big", "small"], "the 200-character fence is nearer but would pass 1500, so the 50-character one is picked");
-  h.settled.get(small)!(true);
+  (h.settled.get(small) ?? assert.fail("expected a non-null value"))(true);
   h.runIdle();
   assert.equal(h.settled.has(tiny), false, "two seeded fences is the fence budget");
 });
@@ -154,7 +154,7 @@ test("a failed speculation spends no budget", () => {
   h.speculator.add(a);
   h.speculator.add(b);
   h.runIdle();
-  h.settled.get(a)!(false);
+  (h.settled.get(a) ?? assert.fail("expected a non-null value"))(false);
   assert.deepEqual([h.speculator.snapshot().seeded, h.speculator.snapshot().seededChars], [0, 0]);
   h.runIdle();
   assert.ok(h.settled.has(b), "the next fence still fits");
@@ -169,10 +169,10 @@ test("a pause while the worker is late keeps every candidate, and speculation re
   h.runIdle();
   assert.equal(h.settled.size, 0);
   assert.equal(h.speculator.snapshot().candidates, 3);
-  h.waits.shift()!.callback();
+  (h.waits.shift() ?? assert.fail("expected a non-null value")).callback();
   assert.equal(h.speculator.snapshot().candidates, 3, "still paused, nothing dropped");
   busy = false;
-  h.waits.shift()!.callback();
+  (h.waits.shift() ?? assert.fail("expected a non-null value")).callback();
   assert.deepEqual([...h.settled.keys()].map((g) => g.name), ["a"]);
 });
 
@@ -187,9 +187,9 @@ test("a stream defers the pick, a disabled worker drops every candidate, and a t
   assert.equal(h.settled.size, 0);
   assert.equal(h.waits.length, 1);
   busy = false;
-  h.waits.shift()!.callback();
+  (h.waits.shift() ?? assert.fail("expected a non-null value")).callback();
   assert.ok(h.settled.has(a));
-  h.settled.get(a)!(false);
+  (h.settled.get(a) ?? assert.fail("expected a non-null value"))(false);
   const thrower: Gate = { name: "t", at: 0, chars: 10, language: "js", speculate: () => { throw new Error("boom"); } };
   h.speculator.add(thrower);
   h.runIdle();
@@ -210,7 +210,7 @@ test("with several slots, one idle task launches nearest first up to the limit a
   assert.deepEqual([...h.settled.keys()].map((g) => g.name), ["a", "b", "c"]);
   assert.equal(h.speculator.snapshot().inFlightCount, 3);
   assert.equal(h.idle.length, 0, "a full set of slots schedules nothing more");
-  h.settled.get(gates[1])!(true);
+  (h.settled.get(gates[1]) ?? assert.fail("expected a non-null value"))(true);
   assert.equal(h.idle.length, 1, "a settled slot asks for one more idle task");
   h.runIdle();
   assert.deepEqual([...h.settled.keys()].map((g) => g.name), ["a", "b", "c", "d"]);
@@ -231,9 +231,9 @@ test("characters and fences in flight count against the budget, so concurrency n
   for (const g of [a, b, c, d]) h.speculator.add(g);
   h.runIdle();
   assert.deepEqual([...h.settled.keys()].map((g) => g.name), ["a", "b", "d"], "the third 100-char fence would pass 250 with two in flight, the 40-char one fits");
-  h.settled.get(a)!(true);
-  h.settled.get(b)!(true);
-  h.settled.get(d)!(true);
+  (h.settled.get(a) ?? assert.fail("expected a non-null value"))(true);
+  (h.settled.get(b) ?? assert.fail("expected a non-null value"))(true);
+  (h.settled.get(d) ?? assert.fail("expected a non-null value"))(true);
   h.runIdle();
   assert.equal(h.settled.has(c), false, "three seeded fences is the fence budget");
 });
@@ -246,7 +246,7 @@ test("a settle for a fence that is no longer in flight is ignored and ranking re
   h.speculator.add(a);
   h.speculator.add(b);
   h.runIdle();
-  const settleA = h.settled.get(a)!;
+  const settleA = (h.settled.get(a) ?? assert.fail("expected a non-null value"));
   h.speculator.remove(a);
   settleA(true);
   assert.equal(h.speculator.snapshot().seeded, 0, "a late settle for a removed fence does not count");

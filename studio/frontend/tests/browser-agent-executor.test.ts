@@ -2,10 +2,13 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
-register("./helpers/browser-executor-resolver.mjs", import.meta.url);
+const browserExecutorResolverHooks = (await import(new URL("./helpers/browser-executor-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserExecutorResolverHooks.resolve });
 const { runBrowserAction } = await import("../src/features/browser/agent/executor.ts");
 const { useBrowserStore } = await import("../src/features/browser/store.ts");
 
@@ -16,12 +19,12 @@ interface Posted { result: { ok: boolean; url?: string; text?: string; error?: s
 /** Runs one navigate with the page answering `status` through `onStatus`; returns the posted result. */
 async function navigate(id: string, url: string, onStatus: (tabId: string, call: number) => number) {
   const posted: Posted[] = [];
-  globals.__authFetch = async (_url: string, init: { body: string }) => {
+  globals.__authFetch = (_url: string, init: { body: string }) => {
     posted.push(JSON.parse(init.body));
     return new Response(null, { status: 200 });
   };
   let calls = 0;
-  globals.__frameAgent = async (tabId: string, op: Record<string, unknown>) => {
+  globals.__frameAgent = (tabId: string, op: Record<string, unknown>) => {
     if (op.op === "status") return { installed: true, result: { ok: true, requests: onStatus(tabId, ++calls), quietMs: 1000 } };
     return { installed: true, result: { ok: true, text: "Qwen models", links: [] } };
   };

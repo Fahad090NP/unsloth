@@ -26,8 +26,8 @@ function editLibraryImageWith({ fail = false, epochAfterRead = 0 } = {}) {
     "@/lib/api-base": { isTauri: false },
     "@/lib/image-fit": {
       MAX_UPLOAD_IMAGE_SIDE: 4096,
-      blobToDataUrl: async () => "data:image/png;base64,AAAA",
-      fitImageDataUrl: async (dataUrl: string) => `${dataUrl}#fit`,
+      blobToDataUrl: () => Promise.resolve("data:image/png;base64,AAAA"),
+      fitImageDataUrl: (dataUrl: string) => Promise.resolve(`${dataUrl}#fit`),
     },
     "@/lib/native-files": {},
     "@/lib/toast": { toast: { error: (title: unknown) => errors.push(title) } },
@@ -38,17 +38,17 @@ function editLibraryImageWith({ fail = false, epochAfterRead = 0 } = {}) {
     "./api": {
       LibraryFileTooLarge: class extends Error {},
       errorMessage: (error: unknown) => String(error),
-      libraryItemFile: async () => {
-        if (fail) throw new Error("gone");
+      libraryItemFile: () => {
+        if (fail) return Promise.reject(new Error("gone"));
         epoch = epochAfterRead;
-        return new Blob(["x"], { type: "image/png" });
+        return Promise.resolve(new Blob(["x"], { type: "image/png" }));
       },
     },
     "./file-kind": {},
     "./file-name": {},
     "./start-chat": {},
   });
-  return editLibraryImage(async (to) => void navigations.push(to), { name: "cat.png" }).then(() => ({
+  return editLibraryImage((to) => Promise.resolve(void navigations.push(to)), { name: "cat.png" }).then(() => ({
     offered,
     navigations,
     errors,
@@ -94,10 +94,10 @@ test("Edit image keeps only the newest click when an earlier read finishes last"
     "@/lib/image-fit": {
       MAX_UPLOAD_IMAGE_SIDE: 4096,
       blobToDataUrl: async (blob: Blob) => `data:${await blob.text()}`,
-      fitImageDataUrl: async (dataUrl: string) => dataUrl,
+      fitImageDataUrl: (dataUrl: string) => Promise.resolve(dataUrl),
     },
     "@/lib/native-files": {},
-    "@/lib/toast": { toast: { error: () => {} } },
+    "@/lib/toast": { toast: { error: () => { return undefined; } } },
     "@/lib/video-utils": {},
     "@/stores/image-edit-handoff": {
       useImageEditHandoffStore: { getState: () => ({ offer: (url: string) => offered.push(url) }) },
@@ -112,7 +112,7 @@ test("Edit image keeps only the newest click when an earlier read finishes last"
     "./file-name": {},
     "./start-chat": {},
   });
-  const navigate = async () => {};
+  const navigate = () => Promise.resolve();
   const first = editLibraryImage(navigate, { name: "first" });
   const second = editLibraryImage(navigate, { name: "second" });
   reads.get("second")?.(new Blob(["second"]));

@@ -5,6 +5,19 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { createServer, type ViteDevServer } from "vite";
 
+interface Provider {
+  id: string;
+  providerType: string;
+  name: string;
+  baseUrl: string;
+  models: string[];
+  availableModels: string[];
+  hasApiKey: boolean;
+  autoReloadModels: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
 let vite: ViteDevServer;
 before(async () => {
   vite = await createServer({
@@ -17,9 +30,14 @@ after(async () => {
 });
 
 test("the preference is llama.cpp only and survives a backend sync", async () => {
-  const { mergeLocalProviderOptions } = await vite.ssrLoadModule(
+  const { mergeLocalProviderOptions } = (await vite.ssrLoadModule(
     "/src/features/chat/sync-external-providers.ts",
-  );
+  )) as {
+    mergeLocalProviderOptions: (
+      existing: object | undefined,
+      options: { providerType: string },
+    ) => { autoReloadModels?: boolean };
+  };
   const merge = (existing: object | undefined, providerType: string) =>
     mergeLocalProviderOptions(existing, { providerType }).autoReloadModels;
   assert.equal(merge(undefined, "llama_cpp"), undefined);
@@ -28,9 +46,15 @@ test("the preference is llama.cpp only and survives a backend sync", async () =>
 });
 
 test("a reload keeps manual IDs and picks, drops removed IDs and enables new ones", async () => {
-  const { mergeReloadedModels } = await vite.ssrLoadModule(
+  const { mergeReloadedModels } = (await vite.ssrLoadModule(
     "/src/features/chat/llama-cpp-auto-reload.ts",
-  );
+  )) as {
+    mergeReloadedModels: (
+      manual: string[],
+      previous: string[],
+      available: string[],
+    ) => string[];
+  };
   assert.deepEqual(
     mergeReloadedModels(["manual", "alpha"], ["alpha", "beta"], ["beta", "gamma"]),
     ["manual", "gamma"],
@@ -51,7 +75,10 @@ test("the monitor reloads on first contact and each reconnect only", async () =>
   const originals = [globalThis.window, globalThis.localStorage, globalThis.fetch] as const;
   Object.defineProperty(globalThis, "window", {
     configurable: true,
-    value: { addEventListener() {}, removeEventListener() {} },
+    value: {
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    },
   });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
@@ -61,32 +88,49 @@ test("the monitor reloads on first contact and each reconnect only", async () =>
       removeItem: (key: string) => storage.delete(key),
     },
   });
-  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+  globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
     calls++;
-    const url = String(input);
+    const url = String(input as string);
     if (url.includes("/api/providers/models")) {
-      return served === null
-        ? Response.json({ detail: "connection refused" }, { status: 502 })
-        : Response.json(served.map((id) => ({ id })));
+      return Promise.resolve(
+        served === null
+          ? Response.json({ detail: "connection refused" }, { status: 502 })
+          : Response.json(served.map((id) => ({ id }))),
+      );
     }
     if (init?.method === "PUT") {
-      const body = JSON.parse(String(init.body));
+      const body = JSON.parse(init.body as string) as {
+        models: string[];
+        available_models: string[];
+      };
       puts.push(body);
       Object.assign(saved, body);
-      return Response.json({ id: "p", ...saved });
+      return Promise.resolve(Response.json({ id: "p", ...saved }));
     }
     if (url.replace(/\/$/, "").endsWith("/api/providers")) {
-      return Response.json([{ id: "p", base_url: "http://llama/v1", ...saved }]);
+      return Promise.resolve(
+        Response.json([{ id: "p", base_url: "http://llama/v1", ...saved }]),
+      );
     }
     throw new Error(`unexpected ${url}`);
-  });
+  }) as typeof fetch;
 
-  const { startLlamaCppAutoReload } = await vite.ssrLoadModule(
+  const { startLlamaCppAutoReload } = (await vite.ssrLoadModule(
     "/src/features/chat/llama-cpp-auto-reload.ts",
-  );
-  const { providerSavesInFlight, useExternalProvidersStore: store } = await vite.ssrLoadModule(
-    "/src/features/chat/stores/external-providers-store.ts",
-  );
+  )) as { startLlamaCppAutoReload: (intervalMs: number) => () => void };
+  const { providerSavesInFlight, useExternalProvidersStore: store } =
+    (await vite.ssrLoadModule(
+      "/src/features/chat/stores/external-providers-store.ts",
+    )) as {
+      providerSavesInFlight: Set<string>;
+      useExternalProvidersStore: {
+        setState: (state: {
+          connectionsEnabled?: boolean;
+          providers?: Provider[];
+        }) => void;
+        getState: () => { providers: Provider[] };
+      };
+    };
   store.setState({
     connectionsEnabled: true,
     providers: [{
@@ -172,5 +216,5 @@ test("the monitor reloads on first contact and each reconnect only", async () =>
   assert.equal(calls, callsAtStop, "stopped monitor makes no requests");
   Object.defineProperty(globalThis, "window", { configurable: true, value: originals[0] });
   Object.defineProperty(globalThis, "localStorage", { configurable: true, value: originals[1] });
-  globalThis.fetch = originals[2];
+  Reflect.set(globalThis, "fetch", originals[2]);
 });

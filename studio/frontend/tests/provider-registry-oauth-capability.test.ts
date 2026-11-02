@@ -8,12 +8,12 @@ import test from "node:test";
 register("./helpers/settings-api-resolver.mjs", import.meta.url);
 
 const requests: string[] = [];
-globalThis.fetch = (async (input: RequestInfo | URL) => {
-  requests.push(String(input));
-  return new Response("[]", {
+globalThis.fetch = ((input: RequestInfo | URL) => {
+  requests.push(String(input as string));
+  return Promise.resolve(new Response("[]", {
     status: 200,
     headers: { "Content-Type": "application/json" },
-  });
+  }));
 });
 
 const { listProviderRegistry } = await import(

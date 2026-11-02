@@ -3,9 +3,12 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 
-register("./helpers/toast-resolver.mjs", import.meta.url);
+const toastResolverHooks = (await import(new URL("./helpers/toast-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: toastResolverHooks.resolve });
 
 let route = "/chat";
 Object.defineProperty(globalThis, "window", {
@@ -32,10 +35,10 @@ const {
 } = await import("../src/features/hub/download-manager/start-toast.ts");
 
 function reset(at = "/chat") {
-  calls.length = 0;
+  calls.splice(0);
   route = at;
   dismissStartToasts();
-  calls.length = 0;
+  calls.splice(0);
 }
 
 // Compare a copy: assert narrows `calls` to never[] and breaks later typechecks.
@@ -64,7 +67,7 @@ test("a start toast is keyed on its job so finalize can drop it", () => {
 test("leaving the surface that raised it drops it", () => {
   reset("/chat");
   showStartToast("model:repo:q4", MESSAGE);
-  calls.length = 0;
+  calls.splice(0);
 
   route = "/hub";
   dismissStartToasts();
@@ -72,7 +75,7 @@ test("leaving the surface that raised it drops it", () => {
     { kind: "dismiss", id: startToastId("model:repo:q4") },
   ]);
 
-  calls.length = 0;
+  calls.splice(0);
   route = "/settings";
   dismissStartToasts();
   assert.deepEqual(raised(), []);
@@ -93,7 +96,7 @@ test("a raise that lands after the user left is dropped", () => {
 test("a toast raised on the route it landed on stays", () => {
   reset("/hub");
   showStartToast("model:repo:q4", MESSAGE);
-  calls.length = 0;
+  calls.splice(0);
 
   dismissStartToasts();
   assert.deepEqual(raised(), []);
@@ -105,7 +108,7 @@ test("a later model selection drops start toasts without a route change", () => 
     title: "Restarting this download",
     description: "The partial can't be resumed.",
   });
-  calls.length = 0;
+  calls.splice(0);
 
   dismissStartToastsForModelSelection();
   assert.deepEqual(raised(), [
@@ -120,12 +123,12 @@ test("a model pick preserves dataset notices and their delayed raises", () => {
   showStartToast(modelKey, MESSAGE);
   showStartToast(datasetKey, MESSAGE);
   const startedForSelection = currentStartToastSelectionEpoch();
-  calls.length = 0;
+  calls.splice(0);
 
   dismissStartToastsForModelSelection();
   assert.deepEqual(raised(), [{ kind: "dismiss", id: startToastId(modelKey) }]);
 
-  calls.length = 0;
+  calls.splice(0);
   showStartToast(datasetKey, MESSAGE, "/hub", startedForSelection);
   assert.equal(calls[0]?.kind, "info");
   assert.equal(calls[0]?.options?.id, startToastId(datasetKey));
@@ -136,7 +139,7 @@ test("a delayed start cannot reappear after the next model selection", () => {
   const startedForSelection = currentStartToastSelectionEpoch();
 
   dismissStartToastsForModelSelection();
-  calls.length = 0;
+  calls.splice(0);
   showStartToast("model:old-repo:q4", MESSAGE, "/chat", startedForSelection);
 
   assert.deepEqual(raised(), []);

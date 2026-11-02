@@ -35,7 +35,7 @@ const message = {
 test("tool-only images never reach the model but become mcp_image", () => {
   const visible = modelVisibleMessage(message);
   assert.deepEqual(
-    visible.attachments?.map((a) => a.id),
+    visible.attachments.map((a) => a.id),
     ["a2"],
   );
   assert.ok(!JSON.stringify(visible).includes(PRIVATE));

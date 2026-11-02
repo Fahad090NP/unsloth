@@ -905,7 +905,7 @@ test("leaving CPT while the new model's defaults are loading does not restore th
   await waitForModelDefaults("old/llama");
 
   useTrainingConfigStore.getState().setTrainingMethod("cpt");
-  setAuthFetchHandler(() => new Promise<Response>(() => {}));
+  setAuthFetchHandler(() => new Promise<Response>(() => {/* intentionally empty */}));
   useTrainingConfigStore.getState().selectTrainingModel("new/audio", "audio");
   useTrainingConfigStore.getState().setTrainingMethod("qlora");
   assert.equal(useTrainingConfigStore.getState().trainOnCompletions, false);
@@ -915,7 +915,7 @@ test("an image dataset picked inside CPT restores assistant-only training for a 
   useTrainingConfigStore.getState().reset();
   setAuthFetchHandler((input, init) => {
     if (input === "/api/hub/datasets/check-format") {
-      const { dataset_name } = JSON.parse(String(init?.body));
+      const { dataset_name } = JSON.parse((init?.body as unknown as string));
       return Response.json({
         columns: ["messages"],
         detected_format: "chatml",
@@ -1209,7 +1209,7 @@ test("an image split picked inside CPT preserves the assistant-only choice after
   useTrainingConfigStore.getState().reset();
   setAuthFetchHandler((input, init) =>
     input === "/api/hub/datasets/check-format"
-      ? datasetCheck(JSON.parse(String(init?.body)).train_split === "images")
+      ? datasetCheck(JSON.parse((init?.body as unknown as string)).train_split === "images")
       : completionModel("org/vision", true),
   );
   useTrainingConfigStore.getState().selectTrainingModel("org/vision", "vision");
@@ -1379,7 +1379,7 @@ test("user opt-outs survive capability refresh and reset returns to enabled defa
   assert.equal(useTrainingConfigStore.getState().trainOnCompletions, true);
 });
 
-test("YAML opt-outs survive a raw-text or streaming round trip", async () => {
+test("YAML opt-outs survive a raw-text or streaming round trip",  () => {
   useTrainingConfigStore.getState().reset();
   useTrainingConfigStore.getState().applyConfigPatch({ training: { packing: false, train_on_completions: false } });
   useTrainingConfigStore.getState().setDatasetFormat("raw");
@@ -1389,7 +1389,7 @@ test("YAML opt-outs survive a raw-text or streaming round trip", async () => {
   assert.equal(useTrainingConfigStore.getState().packing, false);
   assert.equal(useTrainingConfigStore.getState().trainOnCompletions, false);
   assert.deepEqual(useTrainingConfigStore.getState().trainingToggleChoices, { packing: false, trainOnCompletions: false });
-});
+return Promise.resolve(); });
 
 test("an unanswered assistant-only default returns when leaving raw text", () => {
   useTrainingConfigStore.getState().reset();

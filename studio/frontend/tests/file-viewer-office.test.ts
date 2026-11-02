@@ -95,8 +95,8 @@ test("xlsx: reads only the parts and rows it keeps", () => {
     "customXml/item1.xml": strToU8("<x/>"),
   });
   const [sheet] = readXlsx(declareHuge(zip, "customXml/item1.xml"));
-  assert.equal(sheet?.rows.length, 5000);
-  assert.equal(sheet?.truncated, true);
+  assert.equal(sheet.rows.length, 5000);
+  assert.equal(sheet.truncated, true);
 });
 
 test("xlsx: sheet XML read as text", () => {
@@ -108,7 +108,7 @@ test("xlsx: sheet XML read as text", () => {
 </sheetData></worksheet>`),
   );
   assert.deepEqual(
-    sheet?.rows.map((row) => row.map((cell) => cell?.text)),
+    sheet.rows.map((row) => row.map((cell) => cell?.text)),
     [["a & B<c></row>"], ["7"], ["=SUM(B3,C:C,3:3)*2+$C$1+'A1'!A2+T[[#This Row],[Q1]]"]],
   );
 });
@@ -117,7 +117,7 @@ test("xlsx: lowercase cell references land in their columns", () => {
   const [sheet] = readXlsx(
     workbook(`<worksheet xmlns="${MAIN}"><sheetData><row r="1"><c r="a1"><v>1</v></c><c r="c1"><v>3</v></c></row></sheetData></worksheet>`),
   );
-  assert.deepEqual(sheet?.rows.map((row) => Array.from(row, (cell) => cell?.text)), [["1", undefined, "3"]]);
+  assert.deepEqual(sheet.rows.map((row) => Array.from(row, (cell) => cell?.text)), [["1", undefined, "3"]]);
 });
 
 test("pptx: tables capped, SmartArt read, pictures as Blobs", () => {
@@ -148,11 +148,11 @@ test("pptx: tables capped, SmartArt read, pictures as Blobs", () => {
     "ppt/media/clip.mp4": new Uint8Array(8),
   });
   const [table, diagram, image] = readPptx(declareHuge(zip, "ppt/media/clip.mp4")).slides[0].boxes;
-  assert.equal(image?.image?.type, "image/png");
-  assert.deepEqual(image?.crop, { l: 0.25, t: 0, r: 0, b: -0.1 });
-  assert.equal(table?.table?.length, 501);
-  assert.deepEqual(table?.table?.at(-1), ["…"]);
-  assert.deepEqual(diagram?.paragraphs?.map((p) => p.text), ["Plan"]);
+  assert.equal(image.image?.type, "image/png");
+  assert.deepEqual(image.crop, { l: 0.25, t: 0, r: 0, b: -0.1 });
+  assert.equal(table.table?.length, 501);
+  assert.deepEqual(table.table.at(-1), ["…"]);
+  assert.deepEqual(diagram.paragraphs?.map((p) => p.text), ["Plan"]);
 });
 
 for (const cache of ["<v></v>", "<v/>", "<s:v xmlns:s=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" />"]) {
@@ -164,9 +164,9 @@ for (const cache of ["<v></v>", "<v/>", "<s:v xmlns:s=\"http://schemas.openxmlfo
         <c r="C1"><f>1-1</f><v>0</v></c>
       </row></sheetData></worksheet>`,
     ));
-    assert.equal(sheet?.rows[0]?.[0]?.text ?? "", "");
-    assert.equal(sheet?.rows[0]?.[1]?.text, "ready");
-    assert.equal(sheet?.rows[0]?.[2]?.text, "0");
+    assert.equal(sheet.rows[0]?.[0]?.text ?? "", "");
+    assert.equal(sheet.rows[0]?.[1]?.text, "ready");
+    assert.equal(sheet.rows[0]?.[2]?.text, "0");
   });
 }
 
@@ -182,12 +182,12 @@ test("xlsx: preserves formula fallback for uncalculated cells and shared followe
       <c r="G1"><f t="shared" si="0"/><v/></c>
     </row></sheetData></worksheet>`,
   ));
-  const row = sheet?.rows[0];
-  for (const col of [0, 1, 2]) assert.equal(row?.[col]?.text, "=SUM(1,2)");
-  assert.equal(row?.[3]?.text, '=IF(1=1,"",42)');
-  assert.equal(row?.[4]?.text ?? "", "");
-  assert.equal(row?.[5]?.text ?? "", "");
-  assert.equal(row?.[6]?.text, '=IF(C1=0,"",C1)');
+  const row = sheet.rows[0];
+  for (const col of [0, 1, 2]) assert.equal(row[col]?.text, "=SUM(1,2)");
+  assert.equal(row[3]?.text, '=IF(1=1,"",42)');
+  assert.equal(row[4]?.text ?? "", "");
+  assert.equal(row[5]?.text ?? "", "");
+  assert.equal(row[6]?.text, '=IF(C1=0,"",C1)');
 });
 
 
@@ -212,7 +212,7 @@ test("xlsx: out-of-range date values do not prevent reading the workbook", () =>
       </styleSheet>`),
     },
   ));
-  assert.deepEqual(sheet?.rows[0]?.map((cell) => cell?.text), ["1700000000", "Mar-23", "42"]);
+  assert.deepEqual(sheet.rows[0]?.map((cell) => cell?.text), ["1700000000", "Mar-23", "42"]);
 });
 
 test("pptx: maxSlides stops reading after that many slides", () => {

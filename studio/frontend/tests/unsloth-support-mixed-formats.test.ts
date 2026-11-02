@@ -4,6 +4,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { classifyUnslothSupport } from "../src/features/hub/lib/unsloth-support.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const GPT2 = ["pytorch", "tf", "jax", "tflite", "onnx", "safetensors"];
 const MINILM = ["pytorch", "tf", "rust", "onnx", "safetensors", "openvino"];
 
@@ -50,7 +58,7 @@ for (const deviceType of ["mac", "cuda"]) {
         deviceType,
       });
       assert.equal(result.status, "unsupported");
-      assert.doesNotMatch(result.reason!, /ONNX/);
+      assert.doesNotMatch(required(result.reason), /ONNX/);
     });
   }
 

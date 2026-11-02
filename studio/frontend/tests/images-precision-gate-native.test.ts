@@ -64,7 +64,7 @@ test("the Images page gates Precision on the engine, not on model_kind alone", (
     true,
     ts.ScriptKind.TSX,
   );
-  void tree;
+  tree;
   // Pinned on the native-engine exclusion, not the kind test beside it.
   const gate = source.includes("&& !isNativeEngineStatus(status)");
   assert.ok(

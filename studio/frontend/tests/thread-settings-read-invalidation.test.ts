@@ -13,7 +13,7 @@ const runtime = await import("../src/features/chat/stores/chat-runtime-store.ts"
 
 const tick = () => new Promise<void>((resolve) => setImmediate(resolve));
 const pending = () => ({
-  promise: new Promise<null>(() => {}),
+  promise: new Promise<null>(() => {/* intentionally empty */}),
   controller: new AbortController(),
   readers: 1,
   startedAt: performance.now(),

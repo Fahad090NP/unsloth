@@ -42,10 +42,10 @@ test("Settings opens Advanced without focusing Parallel Slots or changing the lo
   const request = runSettingsRequest(resident, "settings", 999);
   const slots = slotsSettingsRequest(resident, "slots", 999);
   assert.equal(request?.focus, "advanced");
-  assert.equal(request?.id, resident.checkpoint);
-  assert.equal(request?.meta.loadId, resident.loadId);
-  assert.equal(request?.meta.nativePathToken, "token");
-  assert.deepEqual(request?.meta, slots?.meta);
+  assert.equal(request.id, resident.checkpoint);
+  assert.equal(request.meta.loadId, resident.loadId);
+  assert.equal(request.meta.nativePathToken, "token");
+  assert.deepEqual(request.meta, slots?.meta);
   assert.equal(runSettingsRequest(resident, "expired", 1_000), null);
   assert.equal(residentHasRunSettings(null), false);
 });

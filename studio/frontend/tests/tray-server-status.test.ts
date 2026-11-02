@@ -57,7 +57,7 @@ function actionableStatuses(hook: string): string[] {
   ].sort();
 }
 
-test("every status the hook commits is also pushed to the tray", async () => {
+test("every status the hook commits is also pushed to the tray",  () => {
   const hook = USE_TAURI_BACKEND;
 
   // setStatus is reached only through these three.
@@ -76,9 +76,9 @@ test("every status the hook commits is also pushed to the tray", async () => {
       `${name} leaves the tray showing the previous state`,
     );
   }
-});
+return Promise.resolve(); });
 
-test("a tray sync never surfaces on the web build or on a binary without the command", async () => {
+test("a tray sync never surfaces on the web build or on a binary without the command",  () => {
   const hook = USE_TAURI_BACKEND;
   const sync = hookFunction(hook, "syncTrayStatus");
 
@@ -94,9 +94,9 @@ test("a tray sync never surfaces on the web build or on a binary without the com
     /\.catch\(\(\) => \{\}\)/,
     "a rejected tray sync escapes as an unhandled rejection",
   );
-});
+return Promise.resolve(); });
 
-test("the tray offers a click exactly when the listener would act on it", async () => {
+test("the tray offers a click exactly when the listener would act on it",  () => {
   const hook = USE_TAURI_BACKEND;
   const rust = MAIN;
 
@@ -105,9 +105,9 @@ test("the tray offers a click exactly when the listener would act on it", async 
     actionableStatuses(hook),
     "a tray toggle is clickable for a status the renderer silently drops, or greyed for one it would have handled",
   );
-});
+return Promise.resolve(); });
 
-test("an unlisted status falls through rather than going unhandled", async () => {
+test("an unlisted status falls through rather than going unhandled",  () => {
   const rust = MAIN;
   const table = trayToggleLabel(rust);
 
@@ -131,7 +131,7 @@ test("an unlisted status falls through rather than going unhandled", async () =>
       `main.rs enables the tray for "${status}", which is not a BackendStatus`,
     );
   }
-});
+return Promise.resolve(); });
 
 // The command list passed to .invoke_handler: either written inline, or built inside a
 // closure that gates the caller first (`let handler = tauri::generate_handler![...]`), which
@@ -157,7 +157,7 @@ function registeredCommands(rust: string): string {
   assert.fail("the generate_handler! list in main.rs is never closed");
 }
 
-test("set_tray_server_status is registered, so the invoke can be answered", async () => {
+test("set_tray_server_status is registered, so the invoke can be answered",  () => {
   const rust = MAIN;
   const handler = registeredCommands(rust);
   assert.match(
@@ -170,9 +170,9 @@ test("set_tray_server_status is registered, so the invoke can be answered", asyn
     /(?<!\w)set_tray_server_status(?!\w)/,
     "the tray sync command is defined but not registered, so every invoke rejects",
   );
-});
+return Promise.resolve(); });
 
-test("the tray toggle starts clickable, for a frontend older than this binary", async () => {
+test("the tray toggle starts clickable, for a frontend older than this binary",  () => {
   const rust = MAIN;
   const built = /MenuItemBuilder::with_id\("toggle", "([^"]*)"\)([\s\S]{0,40}?)\.build\(app\)/.exec(rust);
   assert.ok(built, "the toggle item is no longer built with a literal label");
@@ -182,4 +182,4 @@ test("the tray toggle starts clickable, for a frontend older than this binary", 
     /\.enabled\(false\)/,
     "an old frontend bundle would leave this tray toggle permanently disabled",
   );
-});
+return Promise.resolve(); });

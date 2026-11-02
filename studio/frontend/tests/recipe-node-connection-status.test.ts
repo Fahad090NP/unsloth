@@ -106,7 +106,7 @@ test("every node's status matches the per-node edge scan on random graphs", () =
             ),
           },
           scanEdges(id, config, edges, configs),
-          `seed ${seed}, node ${id}, kind ${config?.kind}`,
+          `seed ${seed}, node ${id}, kind ${String(config?.kind)}`,
         );
       }
     }

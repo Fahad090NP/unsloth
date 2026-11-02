@@ -530,7 +530,7 @@ test("every block reason the backend can emit has a message", () => {
       );
       assert.ok(
         msg && msg.length > 0,
-        `no message for ${reason} (desktop=${isDesktop})`,
+        `no message for ${reason} (desktop=${String(isDesktop)})`,
       );
     }
   }

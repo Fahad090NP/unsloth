@@ -44,11 +44,11 @@ function harness(
     {
       "../api/chat-api": {
         ChatMessageProtectedError: class extends Error {},
-        saveChatMessage: async (message: unknown) => message,
-        notifyChatHistoryUpdated: () => {},
-        syncChatMessages: async (_threadId: string, messages: unknown[]) =>
+        saveChatMessage: (message: unknown) => message,
+        notifyChatHistoryUpdated: () => { /* empty */ },
+        syncChatMessages: (_threadId: string, messages: unknown[]) =>
           options.syncedMessages ?? messages,
-        getChatThread: async (id: string) => {
+        getChatThread: (id: string) => {
           threadReads.push(id);
           if (threadReads.length >= (options.failReadsFrom ?? Infinity)) {
             throw new Error("offline");
@@ -57,16 +57,16 @@ function harness(
           return queued === undefined ? thread : queued;
         },
         // Echoes the record like the real endpoint; returning nothing breaks the legacy re-import.
-        saveChatThread: async (t: unknown) => t,
+        saveChatThread: (t: unknown) => t,
       },
       "../db": {
         DEXIE_DB_NAME: "test",
         db: {
           threads: {
-            get: async (id: string) => options.legacyThreads?.[id],
+            get: (id: string) => options.legacyThreads?.[id],
           },
           messages: {
-            where: () => ({ equals: () => ({ toArray: async () => [] }) }),
+            where: () => ({ equals: () => ({ toArray: () => [] }) }),
           },
         },
       },
@@ -84,13 +84,13 @@ function harness(
       },
       "./thread-record-write-coordinator": {
         ThreadRecordWriteCoordinator: class {
-          async settleCurrent() {}
+          async settleCurrent() { /* empty */ }
           async write(_id: string, fn: () => Promise<unknown>) {
             return await fn();
           }
-          observe() {}
-          closeAdmission() {}
-          confirmFinalState() {}
+          observe() { /* empty */ }
+          closeAdmission() { /* empty */ }
+          confirmFinalState() { /* empty */ }
           hasPending() {
             return false;
           }

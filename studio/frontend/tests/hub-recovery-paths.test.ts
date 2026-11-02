@@ -18,7 +18,7 @@ function body(source: string, start: string, end: string): string {
 }
 
 test("clients with their own request keep their own reachability", async () => {
-  const page = await readText("../src/features/hub/hub-page.tsx");
+  const page = readText("../src/features/hub/hub-page.tsx");
   assert.match(page, /const online = useOnlineStatus\(\);/);
   assert.ok(
     !page.includes('useHubAvailability().phase'),
@@ -27,15 +27,15 @@ test("clients with their own request keep their own reachability", async () => {
 });
 
 test("the panel still reads the classified cause, not that boolean", async () => {
-  const page = await readText("../src/features/hub/hub-page.tsx");
+  const page = readText("../src/features/hub/hub-page.tsx");
   assert.match(page, /searchFailure,/);
-  const search = await readText("../src/features/hub/hooks/use-discover-search.ts");
+  const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   assert.match(search, /const \{ phase, failure \} = useHubAvailability\(\);/);
   assert.match(search, /const online = phase === "available";/);
 });
 
 test("a dead feed is restarted by Load more, not left inert", async () => {
-  const search = await readText("../src/features/hub/hooks/use-discover-search.ts");
+  const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   const fn = body(search, "const fetchMore = useCallback", "\n  }, [");
   assert.ok(fn.includes("needsRestart()"), "it has to notice the dead iterator");
   assert.ok(fn.includes("retrySearch()"), "and rebuild rather than resume");
@@ -45,7 +45,7 @@ test("a dead feed is restarted by Load more, not left inert", async () => {
 });
 
 test("the restart is not allowed to defeat the backoff", async () => {
-  const search = await readText("../src/features/hub/hooks/use-discover-search.ts");
+  const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   const fn = body(search, "const fetchMore = useCallback", "\n  }, [");
   // Only the explicit Retry clears the window; the scroll path would re-probe a dead origin.
   assert.ok(!fn.includes("clearRemoteBackoff"), "the auto path must not clear it");
@@ -54,13 +54,13 @@ test("the restart is not allowed to defeat the backoff", async () => {
 });
 
 test("rows on screen do not hide that the feed failed", async () => {
-  const lists = await readText("../src/features/hub/catalog/models-catalog-lists.tsx");
+  const lists = readText("../src/features/hub/catalog/models-catalog-lists.tsx");
   assert.match(lists, /\{\(hasMore \|\| searchError \|\| searchFailure\) && \(/);
   const footer = body(lists, "<DiscoverFetchMoreFooter", "/>");
   assert.ok(footer.includes("failed={Boolean(searchError || searchFailure)}"));
   assert.ok(footer.includes("onRetry={onRetry}"));
 
-  const states = await readText("../src/features/hub/catalog/catalog-states.tsx");
+  const states = readText("../src/features/hub/catalog/catalog-states.tsx");
   // To the next declaration: the prop destructuring contains a "\n}" of its own.
   const fn = body(
     states,
@@ -72,7 +72,7 @@ test("rows on screen do not hide that the feed failed", async () => {
 });
 
 test("a live backoff is not bypassed by typing", async () => {
-  const search = await readText("../src/features/hub/hooks/use-discover-search.ts");
+  const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   // Each ungated attempt failed and re-armed the 30s window, so it never elapsed.
   for (const m of search.matchAll(/enabled: ([^,\n]+),/g)) {
     const gate = m[1].includes("canProbe") || search.includes("paused: !canProbe");
@@ -82,17 +82,17 @@ test("a live backoff is not bypassed by typing", async () => {
 });
 
 test("gating the search again does not re-hide the error", async () => {
-  const paginated = await readText(
+  const paginated = readText(
     "../src/features/hub/hooks/use-hub-paginated-search.ts",
   );
   const disabled = body(paginated, "if (!enabled) {", "\n    // Same query");
   assert.ok(!disabled.includes('error: null'), "disabling must not erase the cause");
-  const search = await readText("../src/features/hub/hooks/use-discover-search.ts");
+  const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   assert.match(search, /const searchError = isDiscoverTab \? rawSearchError : null;/);
 });
 
 test("a footer retained over an outage can still act", async () => {
-  const lists = await readText("../src/features/hub/catalog/models-catalog-lists.tsx");
+  const lists = readText("../src/features/hub/catalog/models-catalog-lists.tsx");
   const footer = body(lists, "<DiscoverFetchMoreFooter", "/>");
   assert.ok(
     footer.includes("failed={Boolean(searchError || searchFailure)}"),
@@ -105,13 +105,13 @@ test("a footer retained over an outage can still act", async () => {
 });
 
 test("the retained footer names the cause, not just the staleness", async () => {
-  const lists = await readText("../src/features/hub/catalog/models-catalog-lists.tsx");
+  const lists = readText("../src/features/hub/catalog/models-catalog-lists.tsx");
   const footer = body(lists, "<DiscoverFetchMoreFooter", "/>");
   assert.ok(
     footer.includes("failureText={searchFailure?.message ?? searchError ?? \"\"}"),
     "the classified cause has to reach the one control that persists",
   );
-  const states = await readText("../src/features/hub/catalog/catalog-states.tsx");
+  const states = readText("../src/features/hub/catalog/catalog-states.tsx");
   const fn = body(
     states,
     "export function DiscoverFetchMoreFooter",
@@ -124,7 +124,7 @@ test("the retained footer names the cause, not just the staleness", async () => 
 });
 
 test("the notice outlives the backoff window, not the other way round", async () => {
-  const lists = await readText("../src/features/hub/catalog/models-catalog-lists.tsx");
+  const lists = readText("../src/features/hub/catalog/models-catalog-lists.tsx");
   // `online` is a 30s TTL that flips back on a timer; the notice keys on the cause instead.
   const footer = body(lists, "<DiscoverFetchMoreFooter", "/>");
   assert.ok(!/failed=\{[^}]*!online/.test(footer), "a timer must not retire it");
@@ -132,7 +132,7 @@ test("the notice outlives the backoff window, not the other way round", async ()
     !lists.includes('{(hasMore || searchError || !online) && ('),
     "nor take the whole footer off screen",
   );
-  const network = await readText("../src/features/hub/lib/network.ts");
+  const network = readText("../src/features/hub/lib/network.ts");
   const online = body(network, "export function markRemoteNetworkOnline", "\nexport function markRemoteNetworkOffline");
   assert.ok(online.includes("lastFailureByOrigin.delete(origin)"), "success clears it");
   const fetchFn = body(network, "export async function fetchWithTimeout", "\n  } catch");
@@ -140,7 +140,7 @@ test("the notice outlives the backoff window, not the other way round", async ()
 });
 
 test("a row the mapper rejects is not treated as an outage", async () => {
-  const paginated = await readText(
+  const paginated = readText(
     "../src/features/hub/hooks/use-hub-paginated-search.ts",
   );
   // A mapper throw is not a dead iterator: next() already handed the item over.
@@ -155,7 +155,7 @@ test("a row the mapper rejects is not treated as an outage", async () => {
 });
 
 test("pausing dataset fetches leaves the rendered rows alone", async () => {
-  const datasets = await readText(
+  const datasets = readText(
     "../src/features/hub/hooks/use-hub-dataset-search.ts",
   );
   // This hook's `enabled` also empties the rendered rows, so it cannot be gated on the backoff.
@@ -165,7 +165,7 @@ test("pausing dataset fetches leaves the rendered rows alone", async () => {
     "the pause has to reach the request and stop there",
   );
 
-  const search = await readText("../src/features/hub/hooks/use-discover-search.ts");
+  const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   const call = body(search, "const datasetSearch = useHubDatasetSearch", "\n  });");
   assert.ok(
     call.includes("enabled: isDiscoverTab && isDatasetMode"),

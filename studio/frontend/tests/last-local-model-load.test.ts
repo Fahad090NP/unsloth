@@ -24,17 +24,17 @@ let backend: Backend = { record: null };
 let puts: Record<string, unknown>[] = [];
 let serverSkewMs = 0;
 
-globalThis.fetch = (async (_input: string, init?: RequestInit) => {
+globalThis.fetch = ((_input: string, init?: RequestInit) => {
   if (init?.signal?.aborted) {
-    throw Object.assign(new Error("aborted"), { name: "AbortError" });
+    return Promise.reject(Object.assign(new Error("aborted"), { name: "AbortError" }));
   }
   const status = backend.status ?? 200;
   const serverNow = Date.now() + serverSkewMs;
   if (status !== 200) {
-    return { ok: false, status, json: async () => ({}) } as Response;
+    return Promise.resolve({ ok: false, status, json: () => Promise.resolve(({})) } as Response);
   }
   if (init?.method === "PUT") {
-    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    const body = JSON.parse(String(init.body as string)) as Record<string, unknown>;
     puts.push(body);
     const shifted =
       typeof body.loaded_at === "number" && typeof body.client_now === "number"
@@ -50,17 +50,17 @@ globalThis.fetch = (async (_input: string, init?: RequestInit) => {
       backend.record = { ...body, loaded_at: shifted };
       delete (backend.record as { client_now?: unknown }).client_now;
     }
-    return {
+    return Promise.resolve({
       ok: true,
       status: 200,
-      json: async () => ({ ...(backend.record ?? {}), server_now: serverNow }),
-    } as Response;
+      json: () => Promise.resolve(({ ...(backend.record ?? {}), server_now: serverNow })),
+    } as Response);
   }
-  return {
+  return Promise.resolve({
     ok: true,
     status: 200,
-    json: async () => ({ ...(backend.record ?? {}), server_now: serverNow }),
-  } as Response;
+    json: () => Promise.resolve(({ ...(backend.record ?? {}), server_now: serverNow })),
+  } as Response);
 }) as typeof fetch;
 
 function reset(): void {

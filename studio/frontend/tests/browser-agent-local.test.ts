@@ -2,10 +2,13 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
-register("./helpers/browser-executor-resolver.mjs", import.meta.url);
+const browserExecutorResolverHooks = (await import(new URL("./helpers/browser-executor-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserExecutorResolverHooks.resolve });
 const { runBrowserAction } = await import("../src/features/browser/agent/executor.ts");
 const { currentEntry, useBrowserStore } = await import("../src/features/browser/store.ts");
 
@@ -18,11 +21,11 @@ interface Posted { result: { ok: boolean; url?: string; error?: string } }
 
 async function navigate(id: string, url: string) {
   const posted: Posted[] = [];
-  globals.__authFetch = async (_url: string, init: { body: string }) => {
+  globals.__authFetch = (_url: string, init: { body: string }) => {
     posted.push(JSON.parse(init.body));
     return new Response(null, { status: 200 });
   };
-  globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
+  globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
     if (op.op === "status") return { installed: true, result: { ok: true, requests: 0, quietMs: 1000 } };
     return { installed: true, result: { ok: true, text: "Local dev app", links: [] } };
   };
@@ -36,7 +39,7 @@ async function navigate(id: string, url: string) {
 
 test("the agent opens a local address only once the user has typed it in the address bar", async () => {
   const commands: string[] = [];
-  globals.__callNative = async (command: string) => void commands.push(command);
+  globals.__callNative = (command: string) => void commands.push(command);
   globals.__native = true;
   const refused = await navigate("a3", "http://localhost:7860/");
   globals.__native = false;
@@ -83,15 +86,15 @@ test("the agent opens a local address only once the user has typed it in the add
 test("a run keeps its own granted tab when another tab of the chat has the same local origin", async () => {
   globals.__native = false;
   const store = useBrowserStore.getState();
-  const first = store.openTabIn(store.chat, "http://localhost:7870/")!;
-  const second = store.openTabIn(store.chat, "http://localhost:7870/")!;
+  const first = (store.openTabIn(store.chat, "http://localhost:7870/") ?? assert.fail("expected a non-null value"));
+  const second = (store.openTabIn(store.chat, "http://localhost:7870/") ?? assert.fail("expected a non-null value"));
   globals.__granted = new Map([[second, "http://localhost:7870"]]);
   assert.equal((await navigate("b1", "http://localhost:7870/a")).ok, true);
   assert.equal(useBrowserStore.getState().activeTabId, second);
   globals.__granted = new Map([[first, "http://localhost:7870"], [second, "http://localhost:7870"]]);
   assert.equal((await navigate("b2", "http://localhost:7870/b")).ok, true);
   assert.equal(useBrowserStore.getState().activeTabId, second);
-  const entry = currentEntry(useBrowserStore.getState().tabs.find((tab) => tab.id === second)!);
+  const entry = currentEntry((useBrowserStore.getState().tabs.find((tab) => tab.id === second) ?? assert.fail("expected a non-null value")));
   assert.equal(entry.kind === "web" ? entry.url : undefined, "http://localhost:7870/b");
   store.closeTab(first);
   store.closeTab(second);

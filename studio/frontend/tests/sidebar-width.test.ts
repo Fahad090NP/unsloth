@@ -14,10 +14,10 @@ const stubWindow = {
   location: { protocol: "http:" },
   localStorage: {
     getItem: () => null,
-    setItem: () => {},
+    setItem: () => {/* intentionally empty */},
   },
-  addEventListener: () => {},
-  removeEventListener: () => {},
+  addEventListener: () => {/* intentionally empty */},
+  removeEventListener: () => {/* intentionally empty */},
 };
 (globalThis as { window?: unknown }).window = stubWindow;
 

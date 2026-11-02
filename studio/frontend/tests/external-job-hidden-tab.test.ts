@@ -13,7 +13,7 @@ import {
 
 registerBundlerResolver();
 installLocalStorageFake();
-Object.assign(globalThis.window, { addEventListener: () => {} });
+Object.assign(globalThis.window, { addEventListener: () => { /* empty */ } });
 
 const visibility = { hidden: false };
 Object.defineProperty(globalThis, "document", {
@@ -45,7 +45,7 @@ test("a hidden tab's throttled samples never become a published rate", () => {
       repoId: "org/stt-mirror",
       variant: null,
       expectedBytes: 8_000 * MB,
-      cancel: () => {},
+      cancel: () => { /* empty */ },
     });
 
     visibility.hidden = false;
@@ -88,7 +88,7 @@ test("package installation activity stays indeterminate and keeps cancellation",
     await import("../src/features/hub/download-manager/external-jobs.ts");
   Object.assign(globalThis.window, {
     setTimeout: () => 1,
-    clearTimeout: () => {},
+    clearTimeout: () => { /* empty */ },
   });
   let cancelled = false;
   const key = "engine:vllm";

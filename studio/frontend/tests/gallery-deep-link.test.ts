@@ -12,10 +12,12 @@ test("a gallery that keeps failing ends the lookup after a few tries", async () 
     has: () => false,
     count: () => 50,
     hasMore: () => true,
-    refresh: async () => {},
-    loadMore: async () => {
+    refresh: () => Promise.resolve(),
+    loadMore: () => {
       requests += 1;
-    },
+    
+  return Promise.resolve();
+},
     busy: () => false,
     cancelled: () => false,
   });
@@ -29,12 +31,16 @@ test("pages keep loading until the item arrives", async () => {
     has: () => loaded >= 150,
     count: () => loaded,
     hasMore: () => true,
-    refresh: async () => {
+    refresh: () => {
       loaded = 50;
-    },
-    loadMore: async () => {
+    
+  return Promise.resolve();
+},
+    loadMore: () => {
       loaded += 50;
-    },
+    
+  return Promise.resolve();
+},
     busy: () => false,
     cancelled: () => false,
   });

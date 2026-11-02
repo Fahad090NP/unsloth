@@ -15,7 +15,7 @@ import {
 register("./helpers/vite-env-loader.mjs", import.meta.url);
 registerBundlerResolver();
 installLocalStorageFake();
-Object.assign(globalThis.window as object, { addEventListener: () => {} });
+Object.assign(globalThis.window as object, { addEventListener: () => {/* intentionally empty */} });
 
 const { ingestResearchUpdate, resetResearchRunState, useResearchRunStore } =
   await import("../src/features/chat/stores/research-run-store.ts");
@@ -42,12 +42,13 @@ function run(overrides: AnyRecord = {}): AnyRecord {
   };
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: the store's run shape is exercised structurally
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ingest = ingestResearchUpdate as any;
+const ingest = ingestResearchUpdate as unknown as (
+  run: AnyRecord,
+  event?: AnyRecord,
+) => void;
 
 const claimed = (threadId = "thread-1") =>
-  Boolean(useResearchRunStore.getState().claimedThreadIds[threadId]);
+  useResearchRunStore.getState().claimedThreadIds[threadId];
 
 test("a run still going keeps the toggle, a finished one takes it", () => {
   resetResearchRunState();

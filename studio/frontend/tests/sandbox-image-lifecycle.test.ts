@@ -8,6 +8,14 @@ import ts from "@typescript/typescript6";
 
 import { readSrc } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 interface Load { status: string; url?: string; blob?: unknown }
 
 function imageHook() {
@@ -82,7 +90,7 @@ function imageHook() {
       return context.exports.useSandboxImage(url).state;
     },
     commit() {
-      while (pending.length) pending.shift()!();
+      while (pending.length) required(pending.shift())();
     },
     unmount() {
       effects.forEach((effect) => effect.cleanup?.());
@@ -94,7 +102,7 @@ const flush = async () => {
   for (let i = 0; i < 8; i++) await Promise.resolve();
 };
 const imageBlob = { type: "image/png" };
-const response = { ok: true, blob: async () => imageBlob };
+const response = { ok: true, blob:  () => Promise.resolve(imageBlob) };
 
 for (const previous of ["loaded", "failed"] as const) {
   test(`A to B to A does not reuse a cancelled ${previous} result`, async () => {

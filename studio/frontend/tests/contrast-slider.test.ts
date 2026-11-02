@@ -482,7 +482,7 @@ test("surfaces the stylesheet paints take the panel muted text too", () => {
     ".hub-download-panel",
     ".hub-download-fab",
   ]) {
-    assert.ok(always[1]?.includes(surface), `${surface} is not a panel`);
+    assert.ok(always[1].includes(surface), `${surface} is not a panel`);
     assert.match(
       CSS + HUB_CSS,
       new RegExp(
@@ -508,7 +508,7 @@ test("surfaces the stylesheet paints take the panel muted text too", () => {
   assert.match(reset[2] ?? "", /var\(--contrast-target\) var\(--contrast-text-mix\)/);
   const cards = /html\[data-contrast-adjust\]\.dark :is\(\.dark\\:bg-card([^)]*)\) \{/.exec(CSS);
   for (const surface of dark) {
-    assert.ok(reset[1]?.includes(surface), `${surface} page panes are not reset`);
+    assert.ok(reset[1].includes(surface), `${surface} page panes are not reset`);
     assert.ok(cards?.[1]?.includes(surface), `${surface} is not a panel in dark`);
   }
   assert.ok(CSS.indexOf(cards?.[0] ?? "@") > CSS.indexOf(reset[0]));

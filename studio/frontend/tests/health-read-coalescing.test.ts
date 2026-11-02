@@ -35,9 +35,9 @@ let fallback: Record<string, unknown> | null = UNAUTHED;
 globalThis.fetch = (async (_url: string, init?: { headers?: Record<string, string> }) => {
   calls.push(init?.headers?.Authorization ?? null);
   await new Promise((resolve) => setTimeout(resolve, 5));
-  const body = replies.length ? replies.shift()! : fallback;
+  const body = replies.length ? must(replies.shift()) : fallback;
   if (body === null) throw new TypeError("Failed to fetch");
-  const res = { ok: true, json: async () => ({ ...body }), clone: () => res };
+  const res = { ok: true, json: () => Promise.resolve(({ ...body })), clone: () => res };
   return res;
 }) as unknown as typeof fetch;
 
@@ -124,7 +124,7 @@ test("a read sent to another backend URL is not shared (desktop port change)", a
     const p2 = fetchDeviceType();
     await Promise.all([p1, p2]);
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
     resetApiBase();
   }
   assert.deepEqual(urls, ["http://127.0.0.1:8901/api/health", "http://127.0.0.1:8902/api/health"]);
@@ -150,3 +150,8 @@ test("a failed read gives every joined caller the local fallback", async () => {
   await fetchDeviceType();
   assert.equal(calls.length <= 2, true);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

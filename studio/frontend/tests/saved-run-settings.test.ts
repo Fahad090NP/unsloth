@@ -34,8 +34,8 @@ test("a one-time load is remembered per quant until a regular load clears it", (
   saved.noteRunSettingsLoadedOnce(MODEL, "Q4_K_M", { name: "Other", sent });
   const noted = saved.getRunSettingsLoadedOnce(MODEL, "q4_k_m");
   assert.equal(noted?.name, "Other");
-  assert.equal(noted?.sent.maxSeqLength, 8192);
-  assert.equal(noted?.sent.customContextLength, 4096);
+  assert.equal(noted.sent.maxSeqLength, 8192);
+  assert.equal(noted.sent.customContextLength, 4096);
   assert.equal(saved.getRunSettingsLoadedOnce(MODEL, "Q8_0"), null);
   // Stored, so it survives a refresh while the model stays loaded.
   assert.ok(store.get(saved.LOADED_ONCE_RUN_SETTINGS_STORAGE_KEY));

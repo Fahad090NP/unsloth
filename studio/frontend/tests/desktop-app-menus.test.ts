@@ -23,7 +23,7 @@ const CHORDS = readSrc("app/app-menu-chords.ts");
 const ROOT = readSrc("app/routes/__root.tsx");
 
 const rowsOf = (table: string) =>
-  [...new RegExp(`const ${table}: &\\[Row\\] = &\\[([\\s\\S]*?)\\];`).exec(APP_MENU)![1].matchAll(
+  [...(new RegExp(`const ${table}: &\\[Row\\] = &\\[([\\s\\S]*?)\\];`).exec(APP_MENU) ?? assert.fail("expected a non-null value"))[1].matchAll(
     /Row::Action\(\s*"([a-z-]+)"/g,
   )].map((m) => m[1]);
 const fileActions = rowsOf("FILE_ROWS");
@@ -34,7 +34,7 @@ const helpActions = rowsOf("HELP_ROWS");
 const rustActions = [...fileActions, ...viewActions, ...goActions, ...helpActions];
 const HELP = readSrc("components/help-actions.ts");
 const actionsOf = (source: string, type: string) =>
-  [...new RegExp(`export type ${type} =([^;]+);`).exec(source)![1].matchAll(/"([a-z-]+)"/g)].map(
+  [...(new RegExp(`export type ${type} =([^;]+);`).exec(source) ?? assert.fail("expected a non-null value"))[1].matchAll(/"([a-z-]+)"/g)].map(
     (m) => m[1],
   );
 assert.match(CHORDS, /export type AppMenuAction =\s*\| HelpAction/);
@@ -61,7 +61,7 @@ test("the menus and the renderer name the same actions", () => {
     "help-system-status",
     "help-send-feedback",
   ]);
-  const helpGroups = [.../HELP_GROUPS[^=]*=([\s\S]*?);/.exec(HELP)![1].matchAll(/"([a-z-]+)"/g)].map(
+  const helpGroups = [...(/HELP_GROUPS[^=]*=([\s\S]*?);/.exec(HELP) ?? assert.fail("expected a non-null value"))[1].matchAll(/"([a-z-]+)"/g)].map(
     (m) => m[1],
   );
   assert.deepEqual(helpGroups, helpActions, "the sidebar's Help lists the menu's items in order");
@@ -86,7 +86,7 @@ test("Go > Settings lists every Settings page, in the dialog's order", () => {
   const tabs = [...dialog.slice(dialog.indexOf("const TABS")).matchAll(/id: "([a-z-]+)"/g)].map((m) => m[1]);
   assert.deepEqual(settingsActions, tabs.slice(0, settingsActions.length).map((tab) => `settings-${tab}`));
   const store = readSrc("features/settings/stores/settings-dialog-store.ts");
-  const known = [.../SETTINGS_TABS = \[([\s\S]*?)\]/.exec(store)![1].matchAll(/"([a-z-]+)"/g)].map((m) => m[1]);
+  const known = [...(/SETTINGS_TABS = \[([\s\S]*?)\]/.exec(store) ?? assert.fail("expected a non-null value"))[1].matchAll(/"([a-z-]+)"/g)].map((m) => m[1]);
   assert.deepEqual([...settingsActions].sort(), known.map((tab) => `settings-${tab}`).sort());
   assert.match(CHORDS, /export type SettingsMenuAction = `settings-\$\{SettingsTab\}`;/);
   assert.match(ROOT, /`settings-\$\{tab\}`,\s*!isAuthFlowRoute && settingsTabVisible\(tab, isOwner\)/);
@@ -166,7 +166,13 @@ test("Open Folder still lands on Sources after a visit during the link", () => {
   const m = new Function(
     `${stripTypeScriptTypes(dropzone.slice(dropzone.indexOf("const projectsWithPendingSources"), dropzone.indexOf("/** Upload staged files"))).replace(/^export /gm, "")}
     return { markProjectSourcesPending, hasProjectSourcesPending, consumeProjectSourcesPending, noteProjectLandingMounted, isProjectLandingMounted };`,
-  )();
+  )() as {
+    markProjectSourcesPending: (id: string) => void;
+    hasProjectSourcesPending: (id: string) => boolean;
+    consumeProjectSourcesPending: (id: string) => () => void;
+    noteProjectLandingMounted: (id: string) => () => void;
+    isProjectLandingMounted: (id: string) => boolean;
+  };
   const mount = (id: string) => (m.consumeProjectSourcesPending(id), m.noteProjectLandingMounted(id));
   const settle = (id: string) => {
     if (!m.isProjectLandingMounted(id)) m.markProjectSourcesPending(id);

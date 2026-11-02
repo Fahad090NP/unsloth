@@ -18,7 +18,7 @@ const PLUGINS = [
 ].map((script) => `(function () { ${script} })();`);
 
 function nativeFn(name: string) {
-  return { [name]() {} }[name];
+  return { [name]() { /* empty */ } }[name];
 }
 
 function loadDocument(label: string, { guarded }: { guarded: boolean }) {
@@ -37,7 +37,7 @@ function loadDocument(label: string, { guarded }: { guarded: boolean }) {
     dispatchEvent: target.dispatchEvent.bind(target),
     __TAURI_INTERNALS__: {
       metadata: { currentWebview: { label } },
-      invoke: async (command: string) => void invoked.push(command),
+      invoke: (command: string) => void invoked.push(command),
     },
   };
   window.window = window;

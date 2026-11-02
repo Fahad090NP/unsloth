@@ -12,6 +12,14 @@ import {
 } from "../src/features/chat/utils/reasoning-duration.ts";
 import { extractDeltaText } from "../src/features/chat/utils/parse-assistant-content.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const separatedReasoning = [
   { type: "reasoning" },
   { type: "tool-call" },
@@ -185,7 +193,7 @@ test("never persists a hole when one delta reveals several groups", () => {
   tracker.finishGroup();
 
   const metadata = tracker.metadata();
-  const durations = metadata.reasoningDurations!;
+  const durations = required(metadata.reasoningDurations);
   assert.equal(durations.length, 2);
   assert.ok(durations.every((value) => typeof value === "number"));
   assert.deepEqual(JSON.parse(JSON.stringify(durations)), [0, 4]);

@@ -106,13 +106,13 @@ function loadExporters(
   ).outputText;
   const context = {
     exports: {},
-    toast: { info: () => {} },
-    listStoredChatMessages: async () => stored,
-    getStoredChatThread: async (id: string) =>
-      threads.find((thread) => thread.id === id),
-    resolveChatInstructions: async () => "",
+    toast: { info: () => { return undefined; } },
+    listStoredChatMessages: () => Promise.resolve(stored),
+    getStoredChatThread: (id: string) =>
+      Promise.resolve(threads.find((thread) => thread.id === id)),
+    resolveChatInstructions: () => Promise.resolve(""),
     threadScopedDefault: () => undefined,
-    settleThreadScopedSettingsForCopy: async () => {},
+    settleThreadScopedSettingsForCopy: () => Promise.resolve(),
     buildNamedConversationsMarkdown,
     CONVERSATION_MARKDOWN_MIME_TYPE,
     canMergeConversationExport,
@@ -130,13 +130,15 @@ function loadExporters(
     csvDocument,
     CSV_MIME,
     exportTs: () => "ts",
-    conversationBasename: async () => "conversation",
-    downloadBlob: async (body: string) => {
+    conversationBasename: () => Promise.resolve("conversation"),
+    downloadBlob: (body: string) => {
       downloads.push(body);
-    },
-    saveMarkdownAsProjectSource: async (_projectId: string, body: string) => {
+    
+  return Promise.resolve();
+},
+    saveMarkdownAsProjectSource: (_projectId: string, body: string) => {
       sources.push(body);
-      return true;
+      return Promise.resolve(true);
     },
   } as Record<string, unknown>;
   vm.runInNewContext(javascript, context);
@@ -160,7 +162,7 @@ async function markdownOutputs(
           getState: () => ({ messages: liveBranch.map((id) => ({ id })) }),
         }),
       })
-    : () => {};
+    : () => { return undefined; };
   try {
     const copied = await exporters.buildConversationMarkdownForThread("thread");
     await exporters.exportConversationMarkdown("thread");

@@ -34,7 +34,7 @@ function picked(name: string, path?: string): File {
   return file;
 }
 
-test("accepts exactly the extensions the backend accepts", async () => {
+test("accepts exactly the extensions the backend accepts", () => {
   const source = readText("../../backend/routes/training.py");
   const literals = (name: string) => {
     const match = new RegExp(`${name}\\s*=\\s*\\{([^}]+)\\}`).exec(source);

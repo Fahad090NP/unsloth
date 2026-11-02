@@ -46,7 +46,7 @@ test("a running download prices the remainder from its own progress", () => {
   const [row] = applyLiveGgufVariantStates([variant()], live() as never);
 
   assert.equal(row.partial, true);
-  assert.equal(row.download_remaining_bytes, 1 * GB);
+  assert.equal(row.download_remaining_bytes, Number(GB));
   assert.equal(ggufVariantTransferLabel(row), "1.0 GB left");
 });
 
@@ -56,7 +56,7 @@ test("progress replaces the remainder the one-time fetch measured", () => {
     live() as never,
   );
 
-  assert.equal(row.download_remaining_bytes, 1 * GB);
+  assert.equal(row.download_remaining_bytes, Number(GB));
 });
 
 test("a job that has moved no bytes keeps the measured remainder", () => {
@@ -223,7 +223,7 @@ test("a variant with no live job is returned untouched", () => {
 test("a reused mmproj does not come back as bytes still to fetch", () => {
   const [row] = applyLiveGgufVariantStates(
     [variant({ size_bytes: 5 * GB, download_size_bytes: 5 * GB })],
-    live({ expectedBytes: 4 * GB, transferredBytes: 1 * GB }) as never,
+    live({ expectedBytes: 4 * GB, transferredBytes: Number(GB) }) as never,
   );
 
   assert.equal(row.download_remaining_bytes, 3 * GB);

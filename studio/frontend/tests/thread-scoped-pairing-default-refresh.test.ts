@@ -75,7 +75,7 @@ test("a default published inside the pairing window survives the window closing"
   await settle();
 
   const sentTemperatures = settingsHttp.puts
-    .map((put) => (put.inferenceParams as Record<string, unknown>)?.temperature)
+    .map((put) => (put.inferenceParams as Record<string, unknown>).temperature)
     .filter((value) => value !== undefined);
   assert.deepEqual(
     sentTemperatures,

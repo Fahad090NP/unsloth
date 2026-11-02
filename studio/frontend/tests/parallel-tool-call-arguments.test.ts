@@ -253,7 +253,7 @@ function makeStream(mintPartIds = false): {
     };
     return { feed, parts: toolCallParts, resolveToolPartId, endRound };
   `;
-  const js = ts.transpileModule(`const mintPartIds = ${mintPartIds};` + body, {
+  const js = ts.transpileModule(`const mintPartIds = ${String(mintPartIds)};` + body, {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   }).outputText;
   return new Function(

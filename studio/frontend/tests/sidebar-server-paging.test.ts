@@ -36,7 +36,7 @@ function rows(count: number, prefix = "c"): Row[] {
 
 function fakeServer(all: () => Row[]) {
   const calls: { limit: number; cursor: string | null }[] = [];
-  const fetchPage = async (
+  const fetchPage =  (
     _query: unknown,
     limit: number,
     cursor: string | null,
@@ -45,12 +45,12 @@ function fakeServer(all: () => Row[]) {
     const list = all();
     const offset = cursor ? Number(cursor) : 0;
     const end = offset + limit;
-    return {
+    return Promise.resolve({
       rows: list.slice(offset, end),
       nextCursor: end < list.length ? String(end) : null,
       hasMore: end < list.length,
       total: list.length,
-    };
+    });
   };
   return { calls, fetchPage };
 }
@@ -117,7 +117,7 @@ test("a refresh re-reads the loaded window from the top in one request", async (
   await list.start();
   await list.loadMore();
   await list.loadMore();
-  server.calls.length = 0;
+  server.calls.splice(0, server.calls.length);
   data = [
     { id: "c300", updatedAt: 10_000 },
     ...data.filter((r) => r.id !== "c300"),
@@ -150,7 +150,7 @@ test("a refresh that reads the same rows renders nothing; one that reads a chang
 test("a page asked for while a history refresh is in flight loads after it, not never", async () => {
   const server = fakeServer(() => rows(200));
   let gate: Promise<void> | null = null;
-  let release = () => {};
+  let release = () => {/* intentionally empty */};
   const list = pager(async (query, limit, cursor) => {
     if (gate) await gate;
     return await server.fetchPage(query, limit, cursor);
@@ -181,7 +181,7 @@ test("a window past one request's cap is read in steps", async () => {
   assert.equal(list.getState().rows.length, 1000);
   assert.equal(list.getState().hasMore, false);
   assert.ok(server.calls.every((call) => call.limit <= 200));
-  server.calls.length = 0;
+  server.calls.splice(0, server.calls.length);
   await list.refresh();
   assert.deepEqual(
     server.calls.map((call) => call.limit),
@@ -222,17 +222,17 @@ test("a page landing after the query changed is dropped", async () => {
 });
 
 test("rows a page repeats are kept once", async () => {
-  const fetchPage = async (
+  const fetchPage =  (
     _q: unknown,
     limit: number,
     cursor: string | null,
-  ) => ({
+  ) => Promise.resolve(({
     rows: cursor
       ? [{ id: "c19", updatedAt: 0 }, ...rows(limit, "d")]
       : rows(limit),
     nextCursor: "x",
     hasMore: true,
-  });
+  }));
   const list = new RowPager<unknown, Row>(fetchPage, {}, "q", {
     initialLimit: 20,
     pageSize: 20,
@@ -258,7 +258,7 @@ test("a cursor the server rejects re-reads from the top through the page it aske
   await list.start();
   await list.loadMore();
   reject = true;
-  server.calls.length = 0;
+  server.calls.splice(0, server.calls.length);
   await list.loadMore();
   assert.equal(list.getState().error, null);
   assert.equal(list.getState().rows.length, 60);
@@ -352,7 +352,7 @@ function loadRowPages(options: {
   }));
   const groupThreads = (list: typeof threads, archived = false) =>
     list
-      .filter((t) => Boolean(t.archived) === archived)
+      .filter((t) => t.archived === archived)
       .map((t) => ({
         type: "single" as const,
         id: t.id,
@@ -372,16 +372,16 @@ function loadRowPages(options: {
       "@/features/auth": { getAuthSessionEpoch: () => 0 },
       "../api/chat-api": {
         CHAT_HISTORY_UPDATED_EVENT: "x",
-        fetchSidebarRows: async (request: {
+        fetchSidebarRows:  (request: {
           limit: number;
           cursor: string | null;
         }) => {
           requests.push(request);
-          if (options.server === "old") return null;
-          if (options.pages) return options.pages(request.cursor);
+          if (options.server === "old") return Promise.resolve(null);
+          if (options.pages) return Promise.resolve(options.pages(request.cursor));
           const offset = request.cursor ? Number(request.cursor) : 0;
           const end = offset + request.limit;
-          return {
+          return Promise.resolve({
             rows: [
               {
                 id: `s${offset}`,
@@ -395,20 +395,20 @@ function loadRowPages(options: {
             nextCursor: String(end),
             hasMore: true,
             total: 99,
-          };
+          });
         },
       },
       "../utils/chat-history-storage": {
-        listStoredChatThreads: async () => {
+        listStoredChatThreads:  () => {
           fullReads += 1;
-          return threads;
+          return Promise.resolve(threads);
         },
-        settleLegacyChatImport: async () => options.legacyDone ?? true,
+        settleLegacyChatImport:  () => Promise.resolve(options.legacyDone ?? true),
       },
       "../utils/repair-legacy-chat-titles": {
-        repairLegacyChatTitles: async (list: { id: string; title: string }[]) => {
+        repairLegacyChatTitles:  (list: { id: string; title: string }[]) => {
           repaired.push(list);
-          return 0;
+          return Promise.resolve(0);
         },
       },
       "../utils/chat-thread-tombstones": {
@@ -666,7 +666,7 @@ test("a hidden or hand-ordered section still loads its newest chat, which orders
   const src = readSrc("components/app-sidebar.tsx");
   assert.match(src, /\(hiddenSectionSet\.has\(section\.id\) \|\|\n\s*section\.sort === "manual" \|\|\n\s*ids\.length < members\.length\)/);
   assert.match(src, /slots\[`latest:\$\{section\.id\}`\] = \{\n\s*initialLimit: 1,\n\s*query: sidebarRowQuery\(\{ includeIds: members \}\),\n\s*lookupOnly: true,/);
-  const latest = src.indexOf("slots[`latest:${section.id}`]");
+  const latest = src.indexOf("slots[`latest:\${section.id}`]");
   assert.ok(latest > 0 && latest < src.indexOf("if (ids.length === 0 || hiddenSectionSet.has(section.id)) continue;"));
   // it is never paged past that row
   assert.match(src, /name === "recents" \|\| name\.startsWith\("latest:"\) \|\| !list\.hasMore/);
@@ -703,20 +703,20 @@ test("a running Compare pane keeps its opened pair row, which is opened by pair 
 });
 
 test("a page emptied by chats deleted here does not end the list: the next page still loads", async () => {
-  const fetchPage = async (_q: unknown, limit: number, cursor: string | null) => {
+  const fetchPage =  (_q: unknown, limit: number, cursor: string | null) => {
     const at = cursor ? Number(cursor) : 0;
-    return {
+    return Promise.resolve({
       rows: at === 0 ? [] : rows(limit, `p${at}-`),
       nextCursor: String(at + limit),
       hasMore: at < 60,
-    };
+    });
   };
   const list = new RowPager<unknown, Row>(fetchPage, {}, "q", { initialLimit: 20, pageSize: 20 });
   await list.start();
   assert.equal(list.getState().rows.length, 20, "the emptied first page ended the read");
   assert.equal(list.getState().rows[0].id, "p20-0");
   const stuck = new RowPager<unknown, Row>(
-    async () => ({ rows: [], nextCursor: "same", hasMore: true }),
+     () => Promise.resolve(({ rows: [], nextCursor: "same", hasMore: true })),
     {},
     "q",
     { initialLimit: 20, pageSize: 20 },
@@ -803,10 +803,10 @@ test("a page asked for just before a history refresh is read by that refresh ins
   assert.equal(list.getState().rows.length, 40, "the refresh re-read only the 20 already drawn");
 });
 
-test("a Compare row's panes are repaired with their own titles, not the row's", async () => {
+test("a Compare row's panes are repaired with their own titles, not the row's",  () => {
   const src = readSrc("features/chat/hooks/use-sidebar-row-pages.ts");
   assert.match(src, /title: row\.threadTitles\?\.\[index\] \?\? row\.title,/);
-});
+return Promise.resolve(); });
 
 test("a training refresh moves its offset by the server rows read, and a repeated run restarts it", () => {
   const src = readSrc("features/training/hooks/use-training-history-sidebar.ts");

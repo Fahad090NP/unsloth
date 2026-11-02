@@ -196,7 +196,7 @@ test("retained block and sandbox changes move Streamdown's render identity", () 
   assert.ok(streamdown, "chat <Streamdown> is missing");
   assert.equal(
     jsxAttribute(streamdown, "key")?.initializer?.getText(source),
-    "{`${messageId}:${incrementalCache.renderGeneration}:${renderKey}:${sandboxScopeKey}:${cut}`}",
+    "{`$" + "{messageId}:" + "{incrementalCache.renderGeneration}:" + "{renderKey}:" + "{sandboxScopeKey}:" + "{cut}`}",
   );
   assert.match(
     source.getText(),

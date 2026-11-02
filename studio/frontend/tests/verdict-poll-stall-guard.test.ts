@@ -111,7 +111,7 @@ function harness() {
   };
 }
 
-test("a read that is still outstanding holds the poll off", async () => {
+test("a read that is still outstanding holds the poll off",  () => {
   const poll = harness();
   assert.equal(poll.cadence, POLL_MS, "an unknown verdict polls at the wrong cadence");
   poll.tick();
@@ -120,7 +120,7 @@ test("a read that is still outstanding holds the poll off", async () => {
   poll.tick();
   assert.equal(poll.reads(), 1, "a second read was stacked on the first");
   poll.stop();
-});
+return Promise.resolve(); });
 
 test("a read that settles hands the guard back", async () => {
   const poll = harness();

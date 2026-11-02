@@ -57,7 +57,7 @@ const fileViewerStub = {
 
 const folderGroups = loadWithStubs<typeof FolderGroupsModule>(
   new URL("../src/features/rag/components/linked-folder-groups.ts", import.meta.url),
-  { react: React, "../api/rag-api": { listLinkedFolders: async () => [] } },
+  { react: React, "../api/rag-api": { listLinkedFolders: () => Promise.resolve([]) } },
 );
 
 const { ThreadDocumentsBar } = loadWithStubs<typeof BarModule>(
@@ -107,7 +107,7 @@ const { ThreadDocumentsBar } = loadWithStubs<typeof BarModule>(
     "@/features/chat/stores/chat-preferences-store": {
       useChatPreferencesStore: (
         select: (s: { filesPanelCollapsed: boolean; setFilesPanelCollapsed: () => void }) => unknown,
-      ) => select({ filesPanelCollapsed: false, setFilesPanelCollapsed: () => {} }),
+      ) => select({ filesPanelCollapsed: false, setFilesPanelCollapsed: () => { return undefined; } }),
     },
     "@/features/chat/hooks/use-rag-tool-disabled": gate,
     "@/features/chat": chatStub,
@@ -119,11 +119,11 @@ const { ThreadDocumentsBar } = loadWithStubs<typeof BarModule>(
     "@/lib/toast": { toast: () => undefined },
     "@/components/ui/dropdown-menu": new Proxy({}, { get: () => Passthrough }),
     "../api/rag-api": {
-      listKnowledgeBases: async () => [],
+      listKnowledgeBases: () => Promise.resolve([]),
       subscribeKnowledgeBasesChanged: () => () => undefined,
-      listProjectDocuments: async () => [PROJECT_DOC],
-      listLinkedFolders: async () => [],
-      listThreadDocuments: async () => [],
+      listProjectDocuments: () => Promise.resolve([PROJECT_DOC]),
+      listLinkedFolders: () => Promise.resolve([]),
+      listThreadDocuments: () => Promise.resolve([]),
     },
     "../api/rag-availability": {
       useRagAvailabilityStore: selectorStore({ isUnavailable: () => false }),
@@ -157,7 +157,7 @@ const { ThreadDocumentsBar } = loadWithStubs<typeof BarModule>(
       {
         "@/components/file-viewer": fileViewerStub,
         "@/features/chat": chatStub,
-        "../api/rag-api": { getDocumentFileUrl: async () => "" },
+        "../api/rag-api": { getDocumentFileUrl: () => Promise.resolve("") },
       },
     ),
     "./staged-source": { EXPIRY_GRACE_MS: 0 },
@@ -169,9 +169,9 @@ const { ThreadDocumentsBar } = loadWithStubs<typeof BarModule>(
         uploading: false,
         hasIndexing: false,
         loading: false,
-        upload: async () => undefined,
-        remove: async () => undefined,
-        retry: async () => undefined,
+        upload: () => Promise.resolve(undefined),
+        remove: () => Promise.resolve(undefined),
+        retry: () => Promise.resolve(undefined),
         canRetry: () => false,
       }),
     },

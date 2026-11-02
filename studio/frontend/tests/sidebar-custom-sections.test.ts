@@ -32,13 +32,21 @@ import {
 } from "../src/features/chat/stores/sidebar-organization-store.ts";
 import { readSrcAsync } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const APP_SIDEBAR = await readSrcAsync("components/app-sidebar.tsx");
 const EN = await readSrcAsync("i18n/locales/en.ts");
 
 function plannedDrop(outcome: SidebarDropOutcome): SidebarDropPlan {
   assert.ok(
     outcome !== null && outcome !== STAY,
-    `expected a drop plan, got ${String(outcome)}`,
+    `expected a drop plan, got ${(outcome as unknown as string)}`,
   );
   return outcome;
 }
@@ -85,7 +93,7 @@ test("a blank name makes no section and renames nothing", () => {
   resetStore();
   const store = useSidebarOrganizationStore.getState();
   assert.equal(store.createCustomSection("   "), null);
-  const id = store.createCustomSection("Keep")!;
+  const id = required(store.createCustomSection("Keep"));
   store.renameCustomSection(id, " \t ");
   assert.equal(useSidebarOrganizationStore.getState().customSections[0].name, "Keep");
   store.renameCustomSection(id, "Kept");
@@ -96,8 +104,8 @@ test("a blank name makes no section and renames nothing", () => {
 test("rows file into a section, move between sections, and come back out", () => {
   resetStore();
   const store = useSidebarOrganizationStore.getState();
-  const a = store.createCustomSection("A")!;
-  const b = store.createCustomSection("B")!;
+  const a = required(store.createCustomSection("A"));
+  const b = required(store.createCustomSection("B"));
   store.setChatsSection(["c1", "c2"], a);
   store.setProjectsSection(["p1"], a);
   store.setChatsSection(["c2"], b);
@@ -114,8 +122,8 @@ test("rows file into a section, move between sections, and come back out", () =>
 test("a section records when it was made, and renames and filings stamp it", () => {
   resetStore();
   const store = useSidebarOrganizationStore.getState();
-  const a = store.createCustomSection("A")!;
-  const b = store.createCustomSection("B")!;
+  const a = required(store.createCustomSection("A"));
+  const b = required(store.createCustomSection("B"));
   const stamp = (id: string, at: number) =>
     useSidebarOrganizationStore.setState((state) => ({
       customSections: state.customSections.map((section) =>
@@ -123,28 +131,28 @@ test("a section records when it was made, and renames and filings stamp it", () 
       ),
     }));
   const section = (id: string) =>
-    useSidebarOrganizationStore.getState().customSections.find((entry) => entry.id === id)!;
+    required(useSidebarOrganizationStore.getState().customSections.find((entry) => entry.id === id));
   assert.ok(section(a).createdAt && section(a).modifiedAt);
   stamp(a, 1);
   stamp(b, 1);
   store.renameCustomSection(a, "A");
   store.setChatsSection(["c1"], a);
-  assert.ok(section(a).modifiedAt! > 1);
+  assert.ok(required(section(a).modifiedAt) > 1);
   stamp(a, 1);
   store.setChatsSection(["c1"], a);
   assert.equal(section(a).modifiedAt, 1);
   store.setChatsSection(["c1"], b);
-  assert.ok(section(a).modifiedAt! > 1 && section(b).modifiedAt! > 1);
+  assert.ok(required(section(a).modifiedAt) > 1 && required(section(b).modifiedAt) > 1);
   stamp(a, 1);
   store.setProjectsSection(["p1"], a);
-  assert.ok(section(a).modifiedAt! > 1);
+  assert.ok(required(section(a).modifiedAt) > 1);
 });
 
 test("deleting a section returns its rows and forgets its order and visibility", () => {
   resetStore();
   const store = useSidebarOrganizationStore.getState();
-  const gone = store.createCustomSection("Gone")!;
-  const kept = store.createCustomSection("Kept")!;
+  const gone = required(store.createCustomSection("Gone"));
+  const kept = required(store.createCustomSection("Kept"));
   store.setChatsSection(["c1"], gone);
   store.setChatsSection(["c2"], kept);
   store.setProjectsSection(["p1"], gone);
@@ -162,9 +170,9 @@ test("deleting a section returns its rows and forgets its order and visibility",
 test("a section moves by dragging alone, and new sections open among the user's own", () => {
   resetStore();
   const store = useSidebarOrganizationStore.getState();
-  const c = store.createCustomSection("C")!;
-  const b = store.createCustomSection("B")!;
-  const a = store.createCustomSection("A")!;
+  const c = required(store.createCustomSection("C"));
+  const b = required(store.createCustomSection("B"));
+  const a = required(store.createCustomSection("A"));
   const order = () => {
     const state = useSidebarOrganizationStore.getState();
     return resolveSectionOrder(state.sectionOrder, state.customSections);
@@ -204,7 +212,7 @@ test("no sidebar list sorts by priority", () => {
 test("a dragged section lands on the edge it was dropped against", () => {
   resetStore();
   const store = useSidebarOrganizationStore.getState();
-  const s = store.createCustomSection("S")!;
+  const s = required(store.createCustomSection("S"));
   const P = PINNED_SECTION_KEY;
   const J = PROJECTS_SECTION_KEY;
   const order = () => {
@@ -219,7 +227,7 @@ test("a dragged section lands on the edge it was dropped against", () => {
   const before = useSidebarOrganizationStore.getState();
   store.moveSection(s, P, "top");
   assert.equal(useSidebarOrganizationStore.getState(), before);
-  const t2 = store.createCustomSection("T")!;
+  const t2 = required(store.createCustomSection("T"));
   assert.deepEqual(order(), [J, t2, s, P]);
   store.deleteCustomSection(s);
   assert.deepEqual(order(), [J, t2, P]);
@@ -248,7 +256,7 @@ test("a saved order is read over the sections that exist now", () => {
 test("Show toggles hide Projects and custom sections independently, never Pinned", () => {
   resetStore();
   const store = useSidebarOrganizationStore.getState();
-  const id = store.createCustomSection("S")!;
+  const id = required(store.createCustomSection("S"));
   store.setSectionHidden(id, true);
   store.setSectionHidden(id, true);
   assert.deepEqual(useSidebarOrganizationStore.getState().hiddenSections, [id]);
@@ -790,7 +798,7 @@ test("a row id named like an object built-in is unfiled until it is filed", () =
   };
   for (const map of views()) for (const id of ids) assert.equal(map[id], undefined);
   const store = useSidebarOrganizationStore.getState();
-  const a = store.createCustomSection("A")!;
+  const a = required(store.createCustomSection("A"));
   store.setChatsSection(ids, a);
   store.setProjectsSection(ids, a);
   for (const map of views()) for (const id of ids) assert.equal(map[id], a);
@@ -804,9 +812,16 @@ test("a row id named like an object built-in is unfiled until it is filed", () =
     useSidebarOrganizationStore.getInitialState(),
   );
   assert.equal(merged.sectionByChatId.__proto__, "s");
-  assert.equal(merged.sectionByChatId.toString, "s");
+  assert.equal(
+    (merged.sectionByChatId as unknown as Record<string, unknown>).toString,
+    "s",
+  );
   assert.equal(merged.sectionByChatId.constructor, undefined);
-  assert.equal(merged.sectionByProjectId.hasOwnProperty, undefined);
+  assert.equal(
+    (merged.sectionByProjectId as unknown as Record<string, unknown>)
+      .hasOwnProperty,
+    undefined,
+  );
   store.deleteCustomSection(a);
   for (const map of views()) for (const id of ids) assert.equal(map[id], undefined);
   resetStore();
@@ -940,7 +955,7 @@ test("signing in as another account drops the previous account's sections", asyn
       return request;
     },
   } as unknown as IDBFactory;
-  const changed = await transitionBrowserAccount({ username: "bob", accountId: "b2" }, "/chat", () => {}, {
+  const changed = await transitionBrowserAccount({ username: "bob", accountId: "b2" }, "/chat", () => {/* intentionally empty */}, {
     localStorage,
     sessionStorage: memory(),
     indexedDB,
@@ -1034,8 +1049,8 @@ test("a pinned page has no place in Recents, Projects or a folder", () => {
 test("pages file into sections, and a deleted section gives them back to Pinned", () => {
   resetStore();
   const store = useSidebarOrganizationStore.getState();
-  const gone = store.createCustomSection("Gone")!;
-  const kept = store.createCustomSection("Kept")!;
+  const gone = required(store.createCustomSection("Gone"));
+  const kept = required(store.createCustomSection("Kept"));
   store.setPagesSection(["a", "b"], gone);
   store.setPagesSection(["b"], kept);
   assert.deepEqual({ ...useSidebarOrganizationStore.getState().sectionByPageId }, { a: gone, b: kept });
@@ -1068,9 +1083,9 @@ test("undoing a removed section files its pages back into it", async () => {
   const { removeCustomSectionWithUndo } = await import("../src/features/chat/stores/remove-custom-section.ts");
   resetStore();
   const store = useSidebarOrganizationStore.getState();
-  const id = store.createCustomSection("Reading")!;
+  const id = required(store.createCustomSection("Reading"));
   store.setPagesSection(["pg"], id);
-  const section = useSidebarOrganizationStore.getState().customSections.find((s) => s.id === id)!;
+  const section = required(useSidebarOrganizationStore.getState().customSections.find((s) => s.id === id));
   const undo = removeCustomSectionWithUndo(section);
   assert.deepEqual({ ...useSidebarOrganizationStore.getState().sectionByPageId }, {});
   undo();

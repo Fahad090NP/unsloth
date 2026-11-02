@@ -14,6 +14,14 @@ import {
 } from "../vite-plugin-viewport-media.ts";
 import { readText } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const SM = "data-mq-min-width-40rem";
 const MD = "data-mq-min-width-48rem";
 const LG = "data-mq-min-width-64rem";
@@ -179,7 +187,7 @@ test("the boot script mirrors each query onto <html> and follows its changes", (
       },
     },
     window: {
-      addEventListener: () => {},
+      addEventListener: () => {/* intentionally empty */},
       matchMedia: (query: string) => {
         const list = { matches: query === "(min-width:40rem)", listeners: [] as (() => void)[] };
         lists.set(query, list);
@@ -200,7 +208,7 @@ test("the boot script mirrors each query onto <html> and follows its changes", (
     context,
   );
   assert.deepEqual([...attributes], [[SM, true], [LG, false]]);
-  const large = lists.get("(min-width:64rem)")!;
+  const large = required(lists.get("(min-width:64rem)"));
   large.matches = true;
   for (const listener of large.listeners) listener();
   assert.equal(attributes.get(LG), true);
@@ -215,7 +223,7 @@ test("boot script data cannot close an inline script and retains its exact runti
     '<!--<script>',
     '"];globalThis.injected=true;//',
     '\\";globalThis.injected=true;//',
-    '` ${globalThis.injected=true}',
+    '` \${globalThis.injected=true}',
     "quotes: \" ' \\; literal escapes: \\u003c \\u2028",
     String.fromCharCode(...Array.from({ length: 32 }, (_, i) => i)),
     "line\u2028paragraph\u2029end",
@@ -235,10 +243,10 @@ test("boot script data cannot close an inline script and retains its exact runti
       },
     },
     window: {
-      addEventListener: () => {},
+      addEventListener: () => {/* intentionally empty */},
       matchMedia: (query: string) => {
         observedQueries.push(query);
-        return { matches: true, addEventListener: () => {} };
+        return { matches: true, addEventListener: () => {/* intentionally empty */} };
       },
     },
   };
@@ -261,14 +269,14 @@ test("resize refreshes gates before app listeners even while existing media list
         listeners.push(listener);
       },
       matchMedia: () => {
-        const list = { matches, addEventListener: () => {} };
+        const list = { matches, addEventListener: () => {/* intentionally empty */} };
         lists.push(list);
         return list;
       },
     },
   });
   const observed: boolean[] = [];
-  listeners.push(() => observed.push(attributes.get(SM)!));
+  listeners.push(() => observed.push(required(attributes.get(SM))));
   for (const next of [true, false, true]) {
     matches = next;
     listeners.forEach((listener) => { listener(); });

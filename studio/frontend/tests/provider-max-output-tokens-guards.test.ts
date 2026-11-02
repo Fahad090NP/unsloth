@@ -192,7 +192,7 @@ test("a live Max Tokens is only lowered when the cap is actually known", () => {
   assert.equal(resolveExternalMaxTokensClamp({ ...base, maxTokens: 32768 }), null);
 
   const once = resolveExternalMaxTokensClamp(base);
-  assert.equal(resolveExternalMaxTokensClamp({ ...base, maxTokens: once! }), null);
+  assert.equal(resolveExternalMaxTokensClamp({ ...base, maxTokens: must(once) }), null);
 });
 
 // deliberately not a Custom row: that one type round-trips the same with or without the gate
@@ -296,3 +296,8 @@ test("the published ceiling is reported without the override folded in", () => {
     null,
   );
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

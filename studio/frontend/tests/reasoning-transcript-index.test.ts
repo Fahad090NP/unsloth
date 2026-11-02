@@ -14,6 +14,25 @@ import {
   REASONING_FRAGMENT_CHARACTERS,
 } from "../src/components/assistant-ui/reasoning-transcript-index.ts";
 
+type ReasoningRow = ReturnType<ReasoningTranscriptIndex["update"]>[number];
+type ReasoningCode = NonNullable<ReasoningRow["code"]>;
+
+function lastOf<T>(items: readonly T[]): T {
+  const value = items.at(-1);
+  assert.ok(value !== undefined);
+  return value;
+}
+
+function present<T>(value: T | null | undefined): T {
+  assert.ok(value !== null && value !== undefined);
+  return value;
+}
+
+function codeOf(row: ReasoningRow): ReasoningCode {
+  assert.ok(row.code);
+  return row.code;
+}
+
 test("reading anchors resolve rendered Markdown, not formatting delimiters", () => {
   const fragments = new ReasoningTranscriptIndex().update([
     "Before\n\nA **bold** thought.\n\nAfter",
@@ -94,17 +113,17 @@ test("a giant fence does not swallow the surrounding prose", () => {
   const source = `**Before**\n\n\`\`\`javascript\n${body}\n\`\`\`\n\n**After**`;
   const rows = new ReasoningTranscriptIndex().update([source]);
   assert.equal(rows[0].code, undefined);
-  assert.equal(rows.at(-1)!.code, undefined);
-  assert.match(rows.at(-1)!.text, /\*\*After\*\*/);
+  assert.equal(lastOf(rows).code, undefined);
+  assert.match(lastOf(rows).text, /\*\*After\*\*/);
   const code = rows.filter((row) => row.code);
   assert.ok(code.length > 100);
   assert.equal(
-    code.flatMap((row) => row.code!.lines.map((line) => line.text)).join("\n"),
+    code.flatMap((row) => codeOf(row).lines.map((line) => line.text)).join("\n"),
     body,
   );
   assert.ok(
     code.every(
-      (row) => row.code!.source === body && row.code!.language === "javascript",
+      (row) => codeOf(row).source === body && codeOf(row).language === "javascript",
     ),
   );
   assert.equal(code.filter((row) => row.first).length, 1);
@@ -121,7 +140,7 @@ test("streaming fences retain completed rows and normalize only their pending ta
     assert.equal(next[0], rows[0]);
     assert.equal(next[500], rows[500]);
     assert.equal(
-      next[0].code!.source,
+      codeOf(next[0]).source,
       body.replace(/\r\n/g, "\n").replace(/\n$/, ""),
     );
   }
@@ -152,7 +171,7 @@ test("incremental fence text matches Markdown indentation, CRLF, and closing sem
     }
     const expected = fromMarkdown(source).children[0];
     assert.equal(
-      index.update([source])[0].code!.source,
+      codeOf(index.update([source])[0]).source,
       expected.type === "code"
         ? expected.value.replace(/\r\n/g, "\n")
         : "not code",
@@ -164,10 +183,10 @@ test("bounded mermaid fences retain their specialized renderer while streaming",
   const index = new ReasoningTranscriptIndex();
   const prefix = "Earlier thought.\n\n".repeat(1000);
   const first = index.update([prefix + "```mermaid\ngraph TD\nA"]);
-  assert.equal(first.at(-1)!.code, undefined);
+  assert.equal(lastOf(first).code, undefined);
   const next = index.update([prefix + "```mermaid\ngraph TD\nA-->B\n```"]);
-  assert.equal(next.at(-1)!.code, undefined);
-  assert.match(next.at(-1)!.text, /A-->B/);
+  assert.equal(lastOf(next).code, undefined);
+  assert.match(lastOf(next).text, /A-->B/);
 });
 
 test("bounded SVG fences retain the existing sanitized preview renderer", () => {
@@ -176,8 +195,8 @@ test("bounded SVG fences retain the existing sanitized preview renderer", () => 
     const rows = new ReasoningTranscriptIndex().update([
       "Earlier thought.\n\n".repeat(1000) + svg,
     ]);
-    assert.equal(rows.at(-1)!.code, undefined);
-    assert.equal(rows.at(-1)!.text, svg);
+    assert.equal(lastOf(rows).code, undefined);
+    assert.equal(lastOf(rows).text, svg);
   }
 });
 
@@ -186,15 +205,15 @@ test("bounded HTML documents retain the established artifact renderer", () => {
   const rows = new ReasoningTranscriptIndex().update([
     "Earlier thought.\n\n".repeat(1000) + html,
   ]);
-  assert.equal(rows.at(-1)!.code, undefined);
-  assert.equal(rows.at(-1)!.text, html);
+  assert.equal(lastOf(rows).code, undefined);
+  assert.equal(lastOf(rows).text, html);
 });
 
 test("large fence completion follows its delimiter, not later streaming prose", () => {
   const index = new ReasoningTranscriptIndex();
   const open = "```js\n" + "const bird = true;\n".repeat(1000);
   const first = index.update([open])[0];
-  assert.equal(first.code!.incomplete, true);
+  assert.equal(codeOf(first).incomplete, true);
   for (const [suffix, incomplete] of [
     ["`", true],
     ["``", true],
@@ -205,7 +224,7 @@ test("large fence completion follows its delimiter, not later streaming prose", 
   ] as const) {
     const rows = index.update([open + suffix]);
     assert.equal(rows[0], first);
-    assert.equal(first.code!.incomplete, incomplete);
+    assert.equal(codeOf(first).incomplete, incomplete);
   }
 });
 
@@ -238,8 +257,8 @@ test("fence grammar and independent document boundaries survive streaming", () =
   const index = new ReasoningTranscriptIndex();
   const open = "````html\n<div>\n```example\n" + "code\n".repeat(5000);
   const before = index.update([open, "# Another document"]);
-  assert.equal(before.at(-1)!.text, "# Another document");
-  assert.equal(before.at(-1)!.code, undefined);
+  assert.equal(lastOf(before).text, "# Another document");
+  assert.equal(lastOf(before).code, undefined);
   const after = index.update([
     open + "</div>\n````\n\nNormal **prose**",
     "# Another document",
@@ -251,7 +270,7 @@ test("fence grammar and independent document boundaries survive streaming", () =
   assert.ok(
     after
       .filter((row) => row.code)
-      .every((row) => row.code!.source.includes("```example")),
+      .every((row) => codeOf(row).source.includes("```example")),
   );
 });
 
@@ -335,7 +354,7 @@ test("a quoted fence remains code when it crosses a rendering boundary", () => {
         quote.children.some((child) => child.type === "code"),
     );
   }
-  assert.match(rows.at(-1)!.text, /After/);
+  assert.match(lastOf(rows).text, /After/);
 });
 
 test("reference links retain document definitions across fragments and appends", () => {
@@ -346,26 +365,26 @@ test("reference links retain document definitions across fragments and appends",
   const rows = index.update([complete]);
   assert.equal(rows.map((row) => row.text).join(""), complete);
   assert.equal(rows[0], before[0]);
-  const link = rows.find((row) => row.text.includes("[Link]"))!;
+  const link = present(rows.find((row) => row.text.includes("[Link]")));
   const parsed = fromMarkdown(link.renderText ?? link.text);
   assert.ok(parsed.children.some((node) => node.type === "paragraph"));
   assert.ok(JSON.stringify(parsed).includes('"type":"linkReference"'));
   assert.ok(JSON.stringify(parsed).includes('"url":"https://example.org"'));
   assert.equal(rows[0].renderText, undefined);
   const independent = index.update([complete, "[Link][ref]"]);
-  assert.equal(independent.at(-1)!.renderText, undefined);
+  assert.equal(lastOf(independent).renderText, undefined);
 });
 
 test("reference definitions update pending URLs, honor first wins, and reset", () => {
   const index = new ReasoningTranscriptIndex();
   const source = "[ref]\n\n[ref]: https://example.org";
   const row = () => index.update([source])[0];
-  assert.match(row().renderText!, /https:\/\/example.org/);
+  assert.match(present(row().renderText), /https:\/\/example.org/);
   const updated = index.update([
     source + "/page\n\n[ref]: https://ignored.org",
   ]);
-  assert.match(updated[0].renderText!, /https:\/\/example.org\/page/);
-  assert.doesNotMatch(updated[0].renderText!, /ignored/);
+  assert.match(present(updated[0].renderText), /https:\/\/example.org\/page/);
+  assert.doesNotMatch(present(updated[0].renderText), /ignored/);
   assert.equal(
     index.update(["[ref]\n\nNo definition"])[0].renderText,
     undefined,
@@ -391,16 +410,18 @@ test("synthesized definitions preserve entities and document-first precedence", 
   const rows = new ReasoningTranscriptIndex().update([
     '[Link][ref]\n\n[ref]: https://example.org/?x=&amp;amp; "&amp;amp;"',
   ]);
-  const definition = fromMarkdown(rows[0].renderText!).children.find(
-    (node) => node.type === "definition",
-  )!;
+  const definition = present(
+    fromMarkdown(present(rows[0].renderText)).children.find(
+      (node) => node.type === "definition",
+    ),
+  );
   assert.equal(definition.url, "https://example.org/?x=&amp;");
   assert.equal(definition.title, "&amp;");
   const duplicates = new ReasoningTranscriptIndex().update([
     "[ref]: https://first.org\n\n> [ref]: https://second.org\n>\n> [Link][ref]",
   ]);
   assert.match(
-    duplicates.at(-1)!.renderText!,
+    present(lastOf(duplicates).renderText),
     /^\[ref\]: <https:\/\/first.org>/,
   );
 });
@@ -412,7 +433,8 @@ test("oversized quoted items keep their enclosing blockquote", () => {
   for (const row of rows) {
     const node = fromMarkdown(row.renderText ?? row.text).children[0];
     assert.equal(node.type, "blockquote");
-    if (node.type === "blockquote") assert.equal(node.children[0].type, "list");
+    assert.ok(node.type === "blockquote");
+    assert.equal(node.children[0].type, "list");
   }
 });
 
@@ -443,7 +465,7 @@ test("a list split between items does not invent a nested continuation", () => {
   for (const row of rows) {
     const list = fromMarkdown(row.renderText ?? row.text).children[0];
     assert.equal(list.type, "list");
-    if (list.type !== "list") continue;
+    assert.ok(list.type === "list");
     assert.equal(list.start, Number.parseInt(row.text));
     assert.equal(row.listContinuationDepth ?? 0, 0);
     assert.ok(

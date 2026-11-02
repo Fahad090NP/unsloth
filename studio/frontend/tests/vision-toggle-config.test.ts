@@ -12,6 +12,14 @@ import {
   registerBundlerResolver,
 } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 registerBundlerResolver();
 const { store } = installLocalStorageFake();
 
@@ -51,6 +59,7 @@ test("vision is on by default", () => {
 test("a blob written before the toggle existed still loads", () => {
   // Genuinely absent, as an older build's JSON has it.
   const { disableVision: _omitted, ...legacy } = DEFAULT_PER_MODEL_CONFIG;
+  void _omitted;
   assert.equal(
     normalizePerModelConfig(legacy as Record<string, unknown>).disableVision,
     false,
@@ -91,11 +100,11 @@ test("an older build cannot reach a vision-off record and erase it", () => {
   assert.equal(record.disableVision, true);
   assert.ok(
     (record.version as number) > PRE_VISION_CEILING,
-    `stamped v${record.version}; a pre-feature build (ceiling ${PRE_VISION_CEILING}) ` +
+    `stamped v${String(record.version)}; a pre-feature build (ceiling ${PRE_VISION_CEILING}) ` +
       "would accept this record, drop disableVision, and erase it on its next save",
   );
 
-  const map = JSON.parse(store.get(STORAGE_KEY)!) as Record<
+  const map = JSON.parse(required(store.get(STORAGE_KEY))) as Record<
     string,
     Record<string, unknown>
   >;
@@ -105,6 +114,7 @@ test("an older build cannot reach a vision-off record and erase it", () => {
       typeof map[key].version === "number" ? (map[key].version) : 0;
     if (version > PRE_VISION_CEILING) continue;
     const { disableVision: _dropped, ...known } = map[key];
+    void _dropped;
     map[key] = known;
     rewrote = true;
   }

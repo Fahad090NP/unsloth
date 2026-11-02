@@ -10,6 +10,18 @@ import {
   registerBundlerResolver,
 } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+function persisted(raw: string): Record<string, unknown> {
+  return (JSON.parse(raw) as { state?: Record<string, unknown> }).state ?? {};
+}
+
+
 registerBundlerResolver();
 const { store } = installLocalStorageFake();
 
@@ -79,7 +91,7 @@ test("a setter write round-trips through localStorage", () => {
   useSettingsPanelPrefsStore.getState().setFineTuneAction("export");
   const raw = store.get(KEY);
   assert.ok(raw, "nothing was written");
-  assert.equal(JSON.parse(raw).state.fineTuneAction, "export");
+  assert.equal(persisted(raw).fineTuneAction, "export");
 });
 
 test("the Agents command shell override persists and rejects unknown values", () => {
@@ -87,7 +99,7 @@ test("the Agents command shell override persists and rejects unknown values", ()
   assert.equal(useSettingsPanelPrefsStore.getState().agentsOs, "unix");
   const raw = store.get(KEY);
   assert.ok(raw);
-  assert.equal(JSON.parse(raw).state.agentsOs, "unix");
+  assert.equal(persisted(raw).agentsOs, "unix");
 
   const merged = useSettingsPanelPrefsStore.persist.getOptions().merge;
   assert.ok(merged);
@@ -113,7 +125,7 @@ test("a non-string model is refused rather than handed to the tab", () => {
 test("the Audio API tab persists and a non-string is dropped", () => {
   useSettingsPanelPrefsStore.getState().setApiAudioExample("clone");
   assert.equal(
-    JSON.parse(store.get(KEY)!).state.apiAudioExample,
+    persisted(required(store.get(KEY))).apiAudioExample,
     "clone",
   );
   const merged = useSettingsPanelPrefsStore.persist.getOptions().merge;
@@ -168,7 +180,7 @@ test("a record from a newer build falls back to defaults", () => {
 });
 
 // Settling in .finally let a superseded poll erase the saved model and quant.
-test("the status poll settles only on the read that applied", async () => {
+test("the status poll settles only on the read that applied",  () => {
   const sync = AGENTS_TAB.slice(
     AGENTS_TAB.indexOf("const sync = ()"),
     AGENTS_TAB.indexOf("const timer = window.setInterval"),
@@ -183,7 +195,7 @@ test("the status poll settles only on the read that applied", async () => {
     sync.indexOf(".catch("),
   );
   assert.match(applied, /setStatusSettled\(true\)/);
-});
+return Promise.resolve(); });
 
 test("Reset all local preferences clears this key", async () => {
   const source = await readSrcAsync("features/settings/tabs/general-tab.tsx");
@@ -199,7 +211,7 @@ test("Reset all local preferences clears this key", async () => {
 });
 
 // Endpoints disagree on repo-id casing, so the scope check normalizes.
-test("the remembered quant is scoped through modelKey, not an exact compare", async () => {
+test("the remembered quant is scoped through modelKey, not an exact compare",  () => {
   assert.match(
     AGENTS_TAB,
     /modelKey\(chosen\.model\) === modelKey\(model\)/,
@@ -213,7 +225,7 @@ test("the remembered quant is scoped through modelKey, not an exact compare", as
     [],
     "an exact repo-id compare on chosenVariant drops the quant on a casing difference",
   );
-});
+return Promise.resolve(); });
 
 test("an unreadable record leaves the defaults", () => {
   const merged = useSettingsPanelPrefsStore.persist.getOptions().merge;
@@ -228,7 +240,7 @@ test("an unreadable record leaves the defaults", () => {
 test("a dismissed driver notice round-trips, and a non-string record is dropped", () => {
   useSettingsPanelPrefsStore.getState().dismissDriverWarning("32.0.31041.1004");
   assert.equal(
-    JSON.parse(store.get(KEY)!).state.dismissedDriverWarning,
+    persisted(required(store.get(KEY))).dismissedDriverWarning,
     "32.0.31041.1004",
   );
   const merged = useSettingsPanelPrefsStore.persist.getOptions().merge;
@@ -258,7 +270,7 @@ test("the agent access (MCP) picks persist and reject unknown values", () => {
   s.setMcpOs("unix");
   const raw = store.get(KEY);
   assert.ok(raw);
-  const state = JSON.parse(raw).state;
+  const state = persisted(raw);
   assert.equal(state.mcpAgent, "dsh");
   assert.equal(state.mcpOs, "unix");
 

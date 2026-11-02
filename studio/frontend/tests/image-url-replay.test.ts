@@ -49,7 +49,7 @@ function replayedImageUrl(image: string): string {
     type: string;
     image_url?: { url: string };
   }[];
-  return parts[1].image_url!.url;
+  return must(parts[1].image_url).url;
 }
 
 test("an imported https image is replayed as the same url", () => {
@@ -70,3 +70,8 @@ test("a data url image is replayed unchanged", () => {
 test("bare base64 is still wrapped as a png data url", () => {
   assert.equal(replayedImageUrl("aGVsbG8="), "data:image/png;base64,aGVsbG8=");
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

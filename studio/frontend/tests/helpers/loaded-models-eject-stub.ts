@@ -87,7 +87,7 @@ export function requestScopedLocalPromptQueueStop(threadIds: string[]) {
 }
 
 export const useChatRuntimeStore = {
-  getState: () => ({ params: { checkpoint: null }, clearCheckpoint() {} }),
+  getState: () => ({ params: { checkpoint: null }, clearCheckpoint() { return undefined; } }),
 };
 
 export async function getDiffusionStatus() {

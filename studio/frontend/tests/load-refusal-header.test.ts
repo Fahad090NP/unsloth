@@ -17,7 +17,7 @@ import { loadWithStubs } from "./helpers/module-stubs.ts";
 register("./helpers/settings-api-resolver.mjs", import.meta.url);
 const originalFetch = globalThis.fetch;
 afterEach(() => {
-  globalThis.fetch = originalFetch;
+  Reflect.set(globalThis, "fetch", originalFetch);
 });
 
 const refusal = await import("../src/lib/multi-model-refusal.ts");
@@ -42,8 +42,8 @@ for (const [page, load] of LOADS) {
     ];
     for (const [status, headers, detail, want] of cases) {
       const body = JSON.stringify({ detail });
-      globalThis.fetch = (async () =>
-        new Response(body, { status, headers }));
+      globalThis.fetch = (() =>
+        Promise.resolve(new Response(body, { status, headers })));
       await assert.rejects(load(), (err: unknown) => {
         assert.ok(err instanceof refusal.LoadRequestError);
         assert.deepEqual(
@@ -111,7 +111,7 @@ test("a chat load refused inside a padded body is recognised by its wording", as
       "../src/lib/format-fastapi-error.ts"
     ),
     "@/features/hf-auth": {
-      prepareHfTokenForUse: async () => ({ proceed: true }),
+      prepareHfTokenForUse: () => Promise.resolve(({ proceed: true })),
     },
     "@/lib/model-lifecycle-events": {
       withModelLoadNotice: (_r: string, _m: string, run: () => unknown) =>

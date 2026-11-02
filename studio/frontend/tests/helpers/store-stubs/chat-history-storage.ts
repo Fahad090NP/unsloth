@@ -14,7 +14,7 @@ export const threadRows = {
   rows: new Map<string, Record<string, unknown>>(),
   failNext: false,
   reset(): void {
-    threadRows.writes.length = 0;
+    threadRows.writes.splice(0);
     threadRows.rows.clear();
     threadRows.failNext = false;
   },
@@ -23,7 +23,7 @@ export const threadRows = {
   },
 };
 
-export async function updateStoredChatThread(
+export function updateStoredChatThread(
   threadId: string,
   update: {
     settings?: Record<string, unknown>;
@@ -32,7 +32,7 @@ export async function updateStoredChatThread(
     settingsWriter?: string;
   },
   _options?: { signal?: AbortSignal },
-): Promise<void> {
+): void {
   if (threadRows.failNext) {
     threadRows.failNext = false;
     throw new Error("stubbed thread write failure");
@@ -48,11 +48,11 @@ export async function updateStoredChatThread(
   );
 }
 
-export async function ensureStoredChatThread(): Promise<void> {}
+export async function ensureStoredChatThread(): Promise<void> { /* empty */ }
 
-export async function getStoredChatThread(
+export function getStoredChatThread(
   threadId: string,
-): Promise<{ settings: Record<string, unknown> } | null> {
+): { settings: Record<string, unknown> } | null {
   const row = threadRows.rows.get(threadId);
   return row ? { settings: row } : null;
 }

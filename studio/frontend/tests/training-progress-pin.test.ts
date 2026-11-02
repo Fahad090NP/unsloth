@@ -19,7 +19,7 @@ const { useTrainingRuntimeStore, shouldShowTrainingView } = await import(
 
 function reset() {
   useTrainingRuntimeStore.setState(
-    useTrainingRuntimeStore.getInitialState?.() ?? {},
+    useTrainingRuntimeStore.getInitialState(),
     true,
   );
   // applyProgress ignores payloads whose job_id does not match.

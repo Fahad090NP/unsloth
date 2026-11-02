@@ -157,7 +157,7 @@ test("Open settings is the owner's only, and lands on Model memory", () => {
   assert.equal(useSettingsDialogStore.getState().open, false);
   const action = actionFor(true);
   assert.equal(action?.label, "Open settings");
-  action?.onClick();
+  action.onClick();
   const { open, activeTab, scrollTarget } = useSettingsDialogStore.getState();
   assert.deepEqual(
     [open, activeTab, scrollTarget],

@@ -11,13 +11,13 @@ import { readText } from "./helpers/kit.ts";
 const NOT_RENDERED = new Set(["aborted"]);
 
 test("every renderable Hub failure kind has a branch in the panel", async () => {
-  const network = await readText("../src/features/hub/lib/network.ts");
+  const network = readText("../src/features/hub/lib/network.ts");
   const decl = /export type HubFailureKind =([\s\S]*?);/.exec(network);
   assert.ok(decl, "could not find HubFailureKind in network.ts");
   const kinds = [...decl[1].matchAll(/"([a-z-]+)"/g)].map((m) => m[1]);
   assert.ok(kinds.length >= 5, `parsed too few kinds: ${kinds.join(", ")}`);
 
-  const states = await readText(
+  const states = readText(
     "../src/features/hub/catalog/catalog-states.tsx",
   );
   const start = states.indexOf("function describeFailure");

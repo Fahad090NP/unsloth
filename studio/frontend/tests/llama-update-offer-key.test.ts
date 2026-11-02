@@ -12,14 +12,14 @@ const { offerKey, offerKeyMatches } = loadWithStubs<typeof HookModule>(
   {
     react: {},
     "@/features/auth": {
-      authFetch: async () => null,
+      authFetch: () => Promise.resolve(null),
       getAuthToken: () => null,
     },
-    "@/hooks/use-hardware-info": { refreshHardwareInfo: async () => {} },
-    "@/lib/model-lifecycle-events": { notifyModelLifecycle() {} },
+    "@/hooks/use-hardware-info": { refreshHardwareInfo: () => Promise.resolve() },
+    "@/lib/model-lifecycle-events": { notifyModelLifecycle() { return undefined; } },
     "@/lib/llama-job-events": {
-      signalRunningLlamaJob() {},
-      subscribeToLlamaJobStarted: () => () => {},
+      signalRunningLlamaJob() { return undefined; },
+      subscribeToLlamaJobStarted: () => () => { return undefined; },
     },
     "@/lib/llama-job-lifecycle": lifecycle,
   },

@@ -62,7 +62,7 @@ function mountDraft(value: number, onDraft?: (value: number | null) => void) {
       event.handler = handler;
       return event.call;
     },
-    useLayoutEffect: (effect: () => (() => void) | void, deps: unknown[]) => {
+    useLayoutEffect: (effect: () => (() => void) | undefined, deps: unknown[]) => {
       const at = cursor++;
       const previous = slots[at] as unknown[] | undefined;
       if (
@@ -312,7 +312,7 @@ test("a removed capture target releases its pointer through the document", () =>
 });
 
 test("a draft callback that unmounts the row still commits the latest move", () => {
-  let remove = () => {};
+  let remove = () => {/* intentionally empty */};
   const held = mountDraft(0.5, (next) => {
     if (next !== null) remove();
   });

@@ -2,12 +2,15 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 
 // api-base derives isTauri at module evaluation; the resolver busts the import chain per case
 // and stubs the Tauri clipboard plugin.
-register("./helpers/clipboard-resolver.mjs", import.meta.url);
+const clipboardResolverHooks = (await import(new URL("./helpers/clipboard-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: clipboardResolverHooks.resolve });
 
 // Must be a file:// URL: Windows native paths fail with ERR_UNSUPPORTED_ESM_URL_SCHEME.
 const MODULE = new URL("../src/lib/copy-to-clipboard.ts", import.meta.url).href;
@@ -86,9 +89,9 @@ async function load(options: EnvOptions) {
         value: "",
         readOnly: false,
         style: {} as Record<string, string>,
-        setAttribute() {},
-        focus() {},
-        select() {},
+        setAttribute() { /* empty */ },
+        focus() { /* empty */ },
+        select() { /* empty */ },
       };
     },
     addEventListener(
@@ -163,10 +166,10 @@ async function load(options: EnvOptions) {
 
 const realWarn = console.warn;
 test.before(() => {
-  console.warn = () => {};
+  console.warn = () => { /* empty */ };
 });
 test.after(() => {
-  console.warn = realWarn;
+  Object.assign(console, { warn: realWarn });
 });
 
 test("web build writes through navigator.clipboard before yielding", async () => {

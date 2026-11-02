@@ -38,7 +38,7 @@ test("the rail's edge drops by the gutter, so the cards keep their inset", () =>
     /pointer-events-none fixed bottom-(\d+) right-(\d+)/g,
   );
   assert.equal(rails?.length, 2, "a rail left its bottom-right corner");
-  for (const rail of rails ?? []) {
+  for (const rail of rails) {
     const floor = Number((/bottom-(\d+)/.exec(rail))?.[1]);
     const edge = Number((/right-(\d+)/.exec(rail))?.[1]);
     assert.equal(
@@ -60,8 +60,8 @@ test("the cap grows by both gutters, so the cards' band is unchanged", () => {
     /max-h-\[(?:calc\()?100dvh(?:_-_(\d+)px\)|-var\(--studio-window-chrome-top,0px\)\))?\]/g,
   );
   assert.equal(caps?.length, 2, "a rail lost its cap");
-  for (const cap of caps ?? []) {
-    const trim = Number((/_-_(\d+)px/.exec(cap))?.[1] ?? 0);
+  for (const cap of caps) {
+    const trim = Number((/_-_(\d+)px/.exec(cap))?.[1]);
     assert.equal(
       trim,
       CARDS_BAND_TRIM - GUTTER_BOTTOM - GUTTER_TOP,

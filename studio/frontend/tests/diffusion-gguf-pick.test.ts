@@ -114,8 +114,8 @@ test("the newest pick owns the page, whatever order the listings land in", async
       resolve: () => listings[index].promise,
       isCurrent: () => guard.holds(token),
       onAmbiguous: () => log.push(`ambiguous:${index}`),
-      onResolved: () => {},
-      onNotStarted: () => {},
+      onResolved: () => { /* empty */ },
+      onNotStarted: () => { /* empty */ },
       load: (filename) => {
         log.push(`load:${index}:${filename}`);
         return Promise.resolve(true);

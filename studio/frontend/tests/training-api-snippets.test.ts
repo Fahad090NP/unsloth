@@ -179,7 +179,7 @@ test("every extra setting the form changes reaches the example, and nothing host
   const { extras } = trainingApiRequestFromPayload(full, null);
   for (const [key, route] of Object.entries(TRAINING_FIELD_ROUTE)) {
     const value = changed[key as keyof TrainingStartRequest];
-    if (route === "extra" && value != null) {
+    if (route === "extra" && value !== null && value !== undefined) {
       assert.deepEqual(extras[key], value, key);
     } else {
       assert.ok(!(key in extras), key);

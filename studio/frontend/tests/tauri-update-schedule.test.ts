@@ -87,12 +87,12 @@ function installBrowserClock() {
   let nextTimerId = 1;
 
   const windowStub = {
-    addEventListener: windowTarget.addEventListener,
-    removeEventListener: windowTarget.removeEventListener,
+    addEventListener: windowTarget.addEventListener.bind(windowTarget),
+    removeEventListener: windowTarget.removeEventListener.bind(windowTarget),
   };
   const documentStub = {
-    addEventListener: documentTarget.addEventListener,
-    removeEventListener: documentTarget.removeEventListener,
+    addEventListener: documentTarget.addEventListener.bind(documentTarget),
+    removeEventListener: documentTarget.removeEventListener.bind(documentTarget),
   };
   Object.defineProperty(documentStub, "hidden", {
     configurable: true,
@@ -275,7 +275,7 @@ function hookHarness(
     react: host.react,
     "@/lib/api-base": { isTauri: tauri },
     "@/lib/tauri-diagnostics": {
-      copySupportDiagnostics: async () => ({ copied: true }),
+      copySupportDiagnostics:  () => Promise.resolve(({ copied: true })),
     },
     "@/lib/tauri-updater": {
       checkDesktopUpdate: () => {
@@ -313,30 +313,30 @@ function hookHarness(
     },
     "@/lib/toast": { toast: { error: () => undefined } },
     "@tauri-apps/api/core": {
-      invoke: async (command: string) => {
+      invoke:  (command: string) => {
         if (command === "desktop_update_policy") {
-          return {
+          return Promise.resolve({
             mode: "in_app",
             releasePageBaseUrl: "https://example.com/",
             releaseTagPrefix: "v",
-          };
+          });
         }
-        if (command === "desktop_update_cleanup_armed") return true;
-        if (command === "confirm_backend_update") return updateConfirmed;
+        if (command === "desktop_update_cleanup_armed") return Promise.resolve(true);
+        if (command === "confirm_backend_update") return Promise.resolve(updateConfirmed);
         if (command === "start_backend_update") {
           backendUpdates += 1;
           if (backendUpdate === "fails")
-            throw new Error("backend update failed");
+            return Promise.reject(new Error("backend update failed"));
           queueMicrotask(() => { emit("update-complete"); });
-          return undefined;
+          return Promise.resolve(undefined);
         }
-        if (command === "set_renderer_activity") return undefined;
-        if (command === "mark_in_app_relaunch") return undefined;
-        throw new Error(`unexpected invoke: ${command}`);
+        if (command === "set_renderer_activity") return Promise.resolve(undefined);
+        if (command === "mark_in_app_relaunch") return Promise.resolve(undefined);
+        return Promise.reject(new Error(`unexpected invoke: ${command}`));
       },
     },
     "@tauri-apps/api/event": {
-      listen: async (
+      listen:  (
         name: string,
         callback: (event: { payload: unknown }) => void,
       ) => {
@@ -344,15 +344,15 @@ function hookHarness(
           events.get(name) ?? new Set<(event: { payload: unknown }) => void>();
         registered.add(callback);
         events.set(name, registered);
-        return () => {
+        return Promise.resolve(() => {
           registered.delete(callback);
-        };
+        });
       },
     },
     "@tauri-apps/plugin-process": {
-      relaunch: async () => {
+      relaunch:  () => {
         relaunches += 1;
-      },
+      return Promise.resolve(); },
     },
   });
   const controller = hook.useTauriUpdate();

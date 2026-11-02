@@ -10,7 +10,7 @@ const { loadHfDatasetSplits, normalizeDatasetSplitsError } = await import(
   "../src/hooks/hf-dataset-split-sources.ts"
 );
 const { resetHfEndpoints, setHfEndpoints } = await import("../src/lib/hf-endpoint.ts");
-const hub = async (): Promise<{ dataset: string; config: string; split: string }[]> => [];
+const hub = (): Promise<{ dataset: string; config: string; split: string }[]> => Promise.resolve([]);
 
 function args(overrides: Record<string, unknown> = {}) {
   return {
@@ -37,10 +37,10 @@ const remoteEntry = {
 test("cached dataset split resolution uses local metadata without a remote request", async () => {
   let remoteCalls = 0;
   const result = await loadHfDatasetSplits(args(), {
-    local: async () => [localEntry],
-    remote: async () => {
+    local: () => Promise.resolve([localEntry]),
+    remote: () => {
       remoteCalls += 1;
-      return [remoteEntry];
+      return Promise.resolve([remoteEntry]);
     },
     hub,
   });
@@ -52,8 +52,8 @@ test("cached dataset split resolution uses local metadata without a remote reque
 
 test("online resolution falls back to datasets-server when local metadata is absent", async () => {
   const result = await loadHfDatasetSplits(args(), {
-    local: async () => [],
-    remote: async () => [remoteEntry],
+    local: () => Promise.resolve([]),
+    remote: () => Promise.resolve([remoteEntry]),
     hub,
   });
 
@@ -64,10 +64,10 @@ test("online resolution falls back to datasets-server when local metadata is abs
 test("offline resolution exposes manual entry instead of attempting the network", async () => {
   let remoteCalls = 0;
   const result = await loadHfDatasetSplits(args({ online: false }), {
-    local: async () => [],
-    remote: async () => {
+    local: () => Promise.resolve([]),
+    remote: () => {
       remoteCalls += 1;
-      return [remoteEntry];
+      return Promise.resolve([remoteEntry]);
     },
     hub,
   });
@@ -82,11 +82,11 @@ test("an aborted local lookup cannot publish stale dataset options", async () =>
   const controller = new AbortController();
   await assert.rejects(
     loadHfDatasetSplits(args({ signal: controller.signal }), {
-      local: async () => {
+      local: () => {
         controller.abort();
-        return [localEntry];
+        return Promise.resolve([localEntry]);
       },
-      remote: async () => [remoteEntry],
+      remote: () => Promise.resolve([remoteEntry]),
       hub,
     }),
     (error: unknown) =>
@@ -99,14 +99,14 @@ test("a datasets-server that fails or knows nothing falls back to the repo files
     loadHfDatasetSplits(args({ preferLocalCache: false }), { local: hub, remote, hub: hubFetch });
   const fail = (message: string) => () => Promise.reject(new Error(message));
   for (const remote of [fail("Unexpected token '<'"), hub]) {
-    const result = await load(remote, async () => [remoteEntry]);
+    const result = await load(remote, () => Promise.resolve([remoteEntry]));
     assert.deepEqual([result.source, result.entries], ["hub", [remoteEntry]]);
   }
   const failed = await load(fail("Failed to fetch splits (502)"), fail("Dataset scripts are no longer supported"));
   assert.deepEqual([failed.source, (failed.error ?? "").includes('legacy custom script')], ["manual", true]);
   setHfEndpoints("http://127.0.0.1:8888/api/hub/modelscope", undefined, "modelscope");
   t.after(resetHfEndpoints);
-  assert.equal((await load(async () => [remoteEntry], async () => [remoteEntry])).source, "hub");
+  assert.equal((await load(() => Promise.resolve([remoteEntry]), () => Promise.resolve([remoteEntry]))).source, "hub");
 });
 
 test("a dataset missing on ModelScope keeps the backend's reason", () => {

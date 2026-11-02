@@ -12,7 +12,7 @@ const source = readSrc("components/assistant-ui/code-fence-defer.tsx");
 const declarations = source.slice(source.indexOf("let highlightWatching ="), source.indexOf("const highlightQuietIn ="));
 const lifecycle = source.slice(source.indexOf("const watchHighlighting ="), source.indexOf("const visibleHighlightLine ="));
 const compiled = ts.transpileModule(declarations + lifecycle.replace("export function queueFenceWork", "function queueFenceWork"), {
-  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
+  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.Preserve },
 }).outputText;
 
 function harness() {
@@ -87,7 +87,7 @@ function harness() {
     let count = 0;
     while (microtasks.length > 0) {
       assert.ok(++count < 100);
-      microtasks.shift()!();
+      (microtasks.shift() ?? assert.fail("expected a non-null value"))();
     }
   };
   return {

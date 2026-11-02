@@ -44,7 +44,7 @@ function browserWith(values: Record<string, string>) {
   } as Storage;
   const browser = {
     localStorage: storage,
-    sessionStorage: { length: 0, key: () => null, removeItem: () => {} },
+    sessionStorage: { length: 0, key: () => null, removeItem: () => { /* empty */ } },
     indexedDB: {
       deleteDatabase: () => {
         const request = {} as IDBOpenDBRequest;
@@ -54,7 +54,7 @@ function browserWith(values: Record<string, string>) {
         return request;
       },
     },
-    location: { replace: () => {} },
+    location: { replace: () => { /* empty */ } },
   } as unknown as Window;
   return { browser, data };
 }
@@ -65,7 +65,7 @@ test("an account switch drops the previous account's uploaded font bytes", async
     [APPEARANCE_KEY]: appearanceValue(),
   });
   assert.equal(
-    await transitionBrowserAccount("bob", "/chat", () => {}, b.browser),
+    await transitionBrowserAccount("bob", "/chat", () => { /* empty */ }, b.browser),
     true,
   );
   const persisted = b.data.get(APPEARANCE_KEY) ?? "";
@@ -90,7 +90,7 @@ test("appearance chrome that carries no fonts is left byte-identical", async () 
     [APPEARANCE_KEY]: plain,
     theme: "dark",
   });
-  await transitionBrowserAccount("bob", "/chat", () => {}, b.browser);
+  await transitionBrowserAccount("bob", "/chat", () => { /* empty */ }, b.browser);
   assert.equal(b.data.get(APPEARANCE_KEY), plain);
   assert.equal(b.data.get("theme"), "dark");
 });

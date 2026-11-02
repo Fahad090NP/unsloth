@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 
-export function applyPerModelConfigToRuntime(): void {}
+export function applyPerModelConfigToRuntime(): void { return undefined; }
 
 export function currentRuntimePerModelConfig(): Record<string, unknown> {
   return {};

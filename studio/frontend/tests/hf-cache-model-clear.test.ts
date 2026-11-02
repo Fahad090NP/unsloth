@@ -176,8 +176,8 @@ test("an in-flight delete stays open and cannot be submitted twice", async () =>
 
 test("a guarded server refusal keeps the selected-copy confirmation open", async () => {
   const run = drive({
-    remove: async () => {
-      throw new Error("Unload the model before deleting");
+    remove: () => {
+      return Promise.reject(new Error("Unload the model before deleting"));
     },
   });
   run.render().open();
@@ -198,9 +198,9 @@ test("successful model Clear uses the Hub API's normal inventory refresh and lif
     new URL("../src/features/hub/inventory/api.ts", import.meta.url),
     {
       "@/features/auth": {
-        authFetch: async (url: string, init?: RequestInit) => {
+        authFetch: (url: string, init?: RequestInit) => {
           requests.push({ url, init });
-          return new Response(null, { status: 200 });
+          return Promise.resolve(new Response(null, { status: 200 }));
         },
       },
       "@/features/hub/lib/abort-signals": {},
@@ -232,7 +232,7 @@ test("successful model Clear uses the Hub API's normal inventory refresh and lif
   assert.equal(requests.length, 1);
   assert.equal(requests[0].url, "/api/hub/delete-cached");
   assert.equal(requests[0].init?.method, "DELETE");
-  assert.deepEqual(JSON.parse(String(requests[0].init?.body)), {
+  assert.deepEqual(JSON.parse(String(requests[0].init.body as string)), {
     repo_id: "Org/Model",
     cache_path: "/cache/hub/models--Org--Model",
   });

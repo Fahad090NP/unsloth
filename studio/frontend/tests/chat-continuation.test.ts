@@ -1521,7 +1521,7 @@ test("a hold whose run never starts holds its lease for the life of the tab", as
   const keeper = createAutoContinueLeaseKeeper({
     signal: {
       isRunning: (threadId: string) => running.has(threadId),
-      subscribe: () => () => {},
+      subscribe: () => () => { /* empty */ },
     },
     renew: (messageId: string, holder: string, now: number) => {
       pending.push(tab.renew(messageId, holder, { now }));
@@ -1555,7 +1555,7 @@ test("a hold whose run never starts holds its lease for the life of the tab", as
   );
 });
 
-test("a claim whose run was never issued is left to lapse, not held", async () => {
+test("a claim whose run was never issued is left to lapse, not held", () => {
   // The claim resolves after the render and aui.thread() follows selection, so the bar must check
   // the message still exists before holding. Pinned at the source since there is no renderer.
   const claimed = THREAD.indexOf(
@@ -2199,7 +2199,7 @@ test("settling a hold that was never taken does nothing", () => {
   let attached = 0;
   const keeper = createAutoContinueLeaseKeeper({
     signal: runs.signal,
-    renew: () => {},
+    renew: () => { /* empty */ },
     release: () => {
       assert.fail("nothing was ever held");
     },
@@ -2447,7 +2447,7 @@ test("a real run on the thread the gate refused still owns its lease", async () 
   await tab.claim("m1", { now: start, holder: "__default" });
   keeper.hold("m1", "__default");
 
-  const streamingRun = () => {};
+  const streamingRun = () => { /* empty */ };
   runs.start("__default", streamingRun);
   clock = start + AUTO_CONTINUE_LEASE_RENEW_MS;
   keeper.tick();
@@ -2472,7 +2472,7 @@ test("a real run on the thread the gate refused still owns its lease", async () 
 
 test("only the gate's own tokens are read as a refusal", () => {
   const gateOwner = createImageGateRunOwner();
-  const runOwner = () => {};
+  const runOwner = () => { /* empty */ };
   assert.equal(isImageGateRunOnly([{ owner: gateOwner }]), true);
   assert.equal(isImageGateRunOnly([{ owner: runOwner }]), false);
   assert.equal(

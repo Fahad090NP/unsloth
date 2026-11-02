@@ -47,17 +47,17 @@ function harness() {
     ),
     {
       "../api/chat-api": {
-        saveChatMessage: async (record: Record<string, unknown>) => {
+        saveChatMessage: (record: Record<string, unknown>) => {
           saved.push(record);
           return record;
         },
-        listChatMessages: async () => [],
+        listChatMessages: () => [],
       },
       "@assistant-ui/core/internal": { MessageRepository: class {} },
       // Cut here so the passthrough never loads db.ts and its IndexedDB driver.
       "./chat-history-storage": {
-        ensureStoredChatThread: async () => undefined,
-        syncStoredChatMessages: async () => undefined,
+        ensureStoredChatThread: () => undefined,
+        syncStoredChatMessages: () => undefined,
       },
     },
     { relativePassthrough: true },
@@ -96,7 +96,7 @@ async function save(content: Part[], newText?: string) {
   const exported = thread(content);
   const text = newText ?? h.module.extractTaggedText(content);
   const result = await h.module.updateThreadMessage({
-    thread: { export: () => exported, import: () => {} },
+    thread: { export: () => exported, import: () => { /* empty */ } },
     messageId: "a0",
     remoteId: "remote-1",
     newText: text,
@@ -302,7 +302,7 @@ async function roundTrip(content: Part[]): Promise<Part[]> {
   return result;
 }
 
-const shapes: any[][] = [
+const shapes: Part[][] = [
   [{ type: "text", text: "A" }, tool("1"), { type: "text", text: "B" }],
   [tool("1"), { type: "text", text: "A" }],
   [{ type: "text", text: "A" }, tool("1")],
@@ -320,11 +320,11 @@ const shapes: any[][] = [
 test("a no-op save preserves the part sequence for every shape", async () => {
   for (const shape of shapes) {
     const out = await roundTrip(shape);
-    assert.deepEqual(out.map((p: any) => p.type), shape.map((p: any) => p.type),
-      `shape ${JSON.stringify(shape.map((p: any) => p.type))}`);
+    assert.deepEqual(out.map((p) => p.type), shape.map((p) => p.type),
+      `shape ${JSON.stringify(shape.map((p) => p.type))}`);
     assert.deepEqual(
-      out.filter((p: any) => p.type === "tool-call").map((p: any) => p.toolCallId),
-      shape.filter((p: any) => p.type === "tool-call").map((p: any) => p.toolCallId));
+      out.filter((p) => p.type === "tool-call").map((p) => p.toolCallId),
+      shape.filter((p) => p.type === "tool-call").map((p) => p.toolCallId));
   }
 });
 
@@ -332,7 +332,7 @@ test("a second no-op save changes nothing further (idempotent)", async () => {
   for (const shape of shapes) {
     const once = await roundTrip(shape);
     const twice = await roundTrip(once);
-    assert.deepEqual(twice.map((p: any) => p.type), once.map((p: any) => p.type));
+    assert.deepEqual(twice.map((p) => p.type), once.map((p) => p.type));
   }
 });
 
@@ -411,7 +411,7 @@ test("a code block quoting the marker syntax survives a no-op save", async () =>
 test("a no-op save returns the very same text, part for part", async () => {
   for (const shape of shapes) {
     assert.deepEqual(await roundTrip(shape), shape,
-      `shape ${JSON.stringify(shape.map((p: any) => p.type))}`);
+      `shape ${JSON.stringify(shape.map((p) => p.type))}`);
   }
 });
 

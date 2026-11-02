@@ -52,7 +52,13 @@ function frame(registry: Record<string, unknown> = {}) {
   vm.runInContext(previewBootstrap(AVAILABLE), context);
   const run = async (code: string) => {
     const promise = vm.runInContext(componentScript(code, "App.tsx"), context) as Promise<void>;
-    await promise.catch((error: Error) => errors.push(`${error.name}: ${error.message}`));
+    await promise.catch((error: unknown) => {
+      errors.push(
+        error instanceof Error
+          ? `${error.name}: ${error.message}`
+          : "unknown error",
+      );
+    });
   };
   return { run, errors, rendered };
 }

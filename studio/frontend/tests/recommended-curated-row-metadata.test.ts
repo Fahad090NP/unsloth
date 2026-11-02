@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { runInNewContext } from "node:vm";
 
 import ts from "@typescript/typescript6";
 
@@ -135,7 +136,7 @@ test("curated capabilities claim nothing they were not given, beyond the scope",
 test("an image group reports image generation, not video", () => {
   const caps = curatedCapabilitiesFor("Qwen/Qwen-Image-2512", IMAGE_CATALOG);
   assert.equal(caps?.imageGen, true);
-  assert.equal(caps?.videoGen, false);
+  assert.equal(caps.videoGen, false);
 });
 
 test("every video group whose description says audio declares the capability", () => {
@@ -338,6 +339,16 @@ test("seed rows carry the curated param count", () => {
 });
 
 
+interface RowElement {
+  props: {
+    className?: unknown;
+    onConfigure: () => void;
+    [key: string]: unknown;
+  };
+  children: RowElement[];
+}
+type RowFactory = (id: string, label: string) => RowElement;
+
 test("Hub settings configure the cached alias and share the row selection", () => {
   const compiled = ts.transpileModule(
     `const render = ${declarationText("renderHubModelRow")};`,
@@ -348,16 +359,19 @@ test("Hub settings configure the cached alias and share the row selection", () =
     createElement: (type: unknown, props: Record<string, unknown>, ...children: unknown[]) =>
       ({ type, props, children }),
   };
-  const render = new Function(
-    "React", "isKnownGgufRepo", "onConfigure", "downloadedRowShellClassName",
-    "isValueRow", "ROW_ACTIONS_CLASS", "ModelLoadSettingsAction", "cachedIdFor", "pipelineTagById",
-    `${compiled}; return render;`,
-  )(
-    React, () => false, (...args: unknown[]) => calls.push(args),
-    (selected: boolean) => selected ? "selected" : "idle", () => true,
-    "actions", "settings", (id: string) => id === "mirror/model" ? "vendor/model" : null,
-    new Map([["mirror/model", "text-generation"]]),
-  );
+  const render = runInNewContext(`${compiled}; return render;`, {
+    React,
+    isKnownGgufRepo: () => false,
+    onConfigure: (...args: unknown[]) => calls.push(args),
+    downloadedRowShellClassName: (selected: boolean) =>
+      selected ? "selected" : "idle",
+    isValueRow: () => true,
+    ROW_ACTIONS_CLASS: "actions",
+    ModelLoadSettingsAction: "settings",
+    cachedIdFor: (id: string) =>
+      id === "mirror/model" ? "vendor/model" : null,
+    pipelineTagById: new Map([["mirror/model", "text-generation"]]),
+  }) as RowFactory;
   const row = render("mirror/model", "model row");
   assert.equal(row.props.className, "selected");
   row.children[1].children[0].props.onConfigure();

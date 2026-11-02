@@ -43,7 +43,7 @@ function activeConfig(patch: Record<string, unknown> = {}) {
       },
     },
   );
-  const config = useActiveModelConfig().config!;
+  const config = (useActiveModelConfig().config ?? assert.fail("expected a non-null value"));
   const { currentRuntimePerModelConfig } = loadWithStubs<{
     currentRuntimePerModelConfig: () => NonNullable<
       ActiveModelConfigState["config"]

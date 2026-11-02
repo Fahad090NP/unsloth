@@ -46,7 +46,7 @@ test("resident estimates wait for fresh probes and discard obsolete refreshes", 
           }
         },
       },
-      "../api/memory-estimate": { fetchMemoryEstimate: async () => estimate },
+      "../api/memory-estimate": { fetchMemoryEstimate:  () => Promise.resolve(estimate) },
       "@/hooks/use-system": {
         fetchSystemInfo: (options: unknown) => {
           assert.deepEqual(options, { refreshMemory: true });

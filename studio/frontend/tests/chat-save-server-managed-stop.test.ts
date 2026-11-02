@@ -31,32 +31,32 @@ function harness(options: { rejectIds?: Set<string>; failWith?: Error } = {}) {
     {
       "../api/chat-api": {
         ChatMessageProtectedError: FakeProtectedError,
-        saveChatMessage: async (message: { id: string }) => {
+        saveChatMessage: (message: { id: string }) => {
           attempts.push(message.id);
           if (options.failWith) throw options.failWith;
           if (reject.has(message.id)) throw new FakeProtectedError("409");
           return message;
         },
-        notifyChatHistoryUpdated: () => {},
-        syncChatMessages: async (
+        notifyChatHistoryUpdated: () => { /* empty */ },
+        syncChatMessages: (
           _threadId: string,
           messages: unknown[],
         ) => messages,
-        getChatThread: async () => ({ id: "t1" }),
-        saveChatThread: async () => {},
+        getChatThread: () => ({ id: "t1" }),
+        saveChatThread: async () => { /* empty */ },
       },
       "../db": { DEXIE_DB_NAME: "test", db: {} },
       "./chat-thread-tombstones": { isChatThreadDeleted: () => false },
-      "../stores/fork-boundary-store": { setForkBoundary: () => {} },
+      "../stores/fork-boundary-store": { setForkBoundary: () => { /* empty */ } },
       "./thread-record-write-coordinator": {
         ThreadRecordWriteCoordinator: class {
-          async settleCurrent() {}
+          async settleCurrent() { /* empty */ }
           async write(_id: string, fn: () => Promise<unknown>) {
             return await fn();
           }
-          observe() {}
-          closeAdmission() {}
-          confirmFinalState() {}
+          observe() { /* empty */ }
+          closeAdmission() { /* empty */ }
+          confirmFinalState() { /* empty */ }
           hasPending() {
             return false;
           }

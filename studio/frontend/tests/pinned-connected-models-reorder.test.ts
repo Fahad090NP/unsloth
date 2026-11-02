@@ -32,7 +32,7 @@ function externalWrite(order: string[], notify = true) {
 }
 
 function storedOrder(): string[] {
-  return JSON.parse(storage.get(KEY)!);
+  return JSON.parse(must(storage.get(KEY)));
 }
 
 function drag() {
@@ -52,7 +52,7 @@ test("ordinary drags persist only on drop", () => {
 });
 
 for (const notify of [true, false]) {
-  test(`drop keeps the dragged order and remote additions, storage event=${notify}`, () => {
+  test(`drop keeps the dragged order and remote additions, storage event=${String(notify)}`, () => {
     reset();
     drag();
     externalWrite([C, A, B], notify);
@@ -74,7 +74,7 @@ test("drop respects remote removals and the latest additions", () => {
 });
 
 for (const notify of [true, false]) {
-  test(`cancel adopts remote changes without persisting the drag, storage event=${notify}`, () => {
+  test(`cancel adopts remote changes without persisting the drag, storage event=${String(notify)}`, () => {
     reset();
     drag();
     externalWrite([C, A], notify);
@@ -473,3 +473,8 @@ test("a peer removing a pin as the write fails does not make it ours", () => {
   pins.getState().togglePinnedConnected(D);
   assert.deepEqual(storedOrder(), [D, C, A]);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

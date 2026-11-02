@@ -46,63 +46,63 @@ interface Case {
   lostBefore: boolean;
 }
 
-const FULL = "return `Hi, ${name}!`";
+const FULL = "return `Hi, \${name}!`";
 
 const CASES: Case[] = [
   {
     name: "the reported reproduction, one character per arrival",
-    chunks: [...FULL],
+    chunks: Array.from(FULL),
     expect: FULL,
     lostBefore: true,
   },
   {
     // Mistral magistral leaks a fragment onto a finished answer; this is why the strip exists.
     name: "a fragment genuinely at the end of a finished reply is still removed",
-    chunks: ["The answer ", "is 42.", " ${answer}"],
+    chunks: ["The answer ", "is 42.", " \${answer}"],
     expect: "The answer is 42.",
     lostBefore: false,
   },
   {
     name: "nested placeholders",
-    chunks: [..."`${a${b}}`"],
-    expect: "`${a${b}}`",
+    chunks: Array.from("`\${a\${b}}`"),
+    expect: "`\${a\${b}}`",
     lostBefore: true,
   },
   {
     name: "several placeholders in one reply",
-    chunks: [..."const s = `${x} and ${y}`;"],
-    expect: "const s = `${x} and ${y}`;",
+    chunks: Array.from("const s = `\${x} and \${y}`;"),
+    expect: "const s = `\${x} and \${y}`;",
     lostBefore: true,
   },
   {
     name: "a placeholder split across two arrivals",
-    chunks: ["greet(`Hi, ${na", "me}", "!`)"],
-    expect: "greet(`Hi, ${name}!`)",
+    chunks: ["greet(`Hi, \${na", "me}", "!`)"],
+    expect: "greet(`Hi, \${name}!`)",
     lostBefore: true,
   },
   {
-    name: "an unterminated ${ is never touched",
-    chunks: [..."the shell wants ${HOME"],
-    expect: "the shell wants ${HOME",
+    name: "an unterminated \${ is never touched",
+    chunks: Array.from("the shell wants \${HOME"),
+    expect: "the shell wants \${HOME",
     lostBefore: false,
   },
   {
     name: "a placeholder inside a fenced code block",
-    chunks: ["```js\n", "const s = ", "`v=${v}", "`;\n", "```"],
-    expect: "```js\nconst s = `v=${v}`;\n```",
+    chunks: ["```js\n", "const s = ", "`v=\${v}", "`;\n", "```"],
+    expect: "```js\nconst s = `v=\${v}`;\n```",
     lostBefore: true,
   },
   {
     // `\r` is whitespace to the pattern, so CRLF gives the strip more places to fire.
     name: "CRLF line endings",
-    chunks: ["line one\r\n", "const t = `${q}", "`;\r\n", "line three"],
-    expect: "line one\r\nconst t = `${q}`;\r\nline three",
+    chunks: ["line one\r\n", "const t = `\${q}", "`;\r\n", "line three"],
+    expect: "line one\r\nconst t = `\${q}`;\r\nline three",
     lostBefore: true,
   },
   {
     name: "a template literal in the body and a leaked fragment on the end",
-    chunks: chunked("use `${name}` here. ${answer}", 2),
-    expect: "use `${name}` here.",
+    chunks: chunked("use `\${name}` here. \${answer}", 2),
+    expect: "use `\${name}` here.",
     lostBefore: true,
   },
 ];
@@ -124,7 +124,7 @@ test("the cases that discriminate really did lose text before", () => {
     assert.equal(
       before !== item.expect,
       item.lostBefore,
-      `${item.name}: expected lostBefore=${item.lostBefore}, but the ` +
+      `${item.name}: expected lostBefore=${String(item.lostBefore)}, but the ` +
         `per-arrival placement produced ${JSON.stringify(before)}`,
     );
   }
@@ -137,10 +137,10 @@ test("the cases that discriminate really did lose text before", () => {
 });
 
 test("the reported reproduction, character for character", () => {
-  assert.equal(replayPerArrival([...FULL]), "return `Hi,!`");
-  assert.equal(replayPerArrival([...FULL]).length, 13);
-  assert.equal(replayAtEnd([...FULL]), FULL);
-  assert.equal(replayAtEnd([...FULL]).length, 21);
+  assert.equal(replayPerArrival(Array.from(FULL)), "return `Hi,!`");
+  assert.equal(replayPerArrival(Array.from(FULL)).length, 13);
+  assert.equal(replayAtEnd(Array.from(FULL)), FULL);
+  assert.equal(replayAtEnd(Array.from(FULL)).length, 21);
 });
 
 test("the finished reply does not depend on how the stream was split", () => {
@@ -188,7 +188,7 @@ test("the finished reply is always a prefix of what the model sent", () => {
 
 test("the old placement spliced the middle out, which is why text vanished", () => {
   const whole = FULL;
-  const before = replayPerArrival([...whole]);
+  const before = replayPerArrival(Array.from(whole));
   assert.equal(before, "return `Hi,!`");
   assert.equal(
     whole.startsWith(before),
@@ -204,7 +204,7 @@ test("randomised replies keep the two placements apart", () => {
     seed = (seed * 1_103_515_245 + 12_345) & 0x7fffffff;
     return seed / 0x7fffffff;
   };
-  const alphabet = ["a", " ", "`", "$", "{", "}", "\n", "\r", "!", "${"];
+  const alphabet = ["a", " ", "`", "$", "{", "}", "\n", "\r", "!", "\${"];
 
   let lost = 0;
   let spliced = 0;
@@ -308,7 +308,7 @@ function replayRun(seed: string, chunks: readonly string[]): string {
   return produced ? stripTrailingTemplatePlaceholder(buffer) : buffer;
 }
 
-const SEEDED_PARTIAL = "greet(`Hi, ${name}";
+const SEEDED_PARTIAL = "greet(`Hi, \${name}";
 
 test("a continuation that adds nothing leaves the seeded partial alone", () => {
   // A Continue run that emits only a tool call holds just the seeded partial, the middle of a
@@ -318,9 +318,9 @@ test("a continuation that adds nothing leaves the seeded partial alone", () => {
 });
 
 test("a continuation that does add text is finished normally", () => {
-  assert.equal(replayRun(SEEDED_PARTIAL, ["!", "`)"]), "greet(`Hi, ${name}!`)");
+  assert.equal(replayRun(SEEDED_PARTIAL, ["!", "`)"]), "greet(`Hi, \${name}!`)");
   assert.equal(
-    replayRun("The answer is 42.", [" ${", "answer}"]),
+    replayRun("The answer is 42.", [" \${", "answer}"]),
     "The answer is 42.",
   );
 });

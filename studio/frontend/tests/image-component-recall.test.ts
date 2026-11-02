@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import ts from "@typescript/typescript6";
+import { compileFunction } from "node:vm";
 import {
   componentFieldsOwnerAfterLoad,
   componentFilesForModel,
@@ -30,6 +31,19 @@ const zImage = { repoId: "/comfy/models/diffusion_models", kind: "gguf", filenam
 const flux = { repoId: "/comfy/models/diffusion_models", kind: "single_file", filename: "flux.safetensors" } as const;
 const zFiles = { textEncoderFiles: ["../text_encoders/qwen_3_4b.safetensors"], vaeFile: "../vae/ae.safetensors" };
 
+function compile<T>(scope: Record<string, unknown>, body: string): T {
+  const factory = compileFunction(body, Object.keys(scope)) as (
+    ...args: unknown[]
+  ) => T;
+  return factory(...Object.values(scope));
+}
+
+function lastModel() {
+  const model = readImageModel();
+  assert.ok(model);
+  return model;
+}
+
 test("component files are stored per model and a load with none forgets them", () => {
   store.clear();
   rememberImageComponents(zImage, zFiles);
@@ -46,7 +60,7 @@ test("the component map keeps the 50 most recent models and survives bad storage
   store.clear();
   for (let i = 0; i < 60; i++)
     rememberImageComponents({ repoId: `org/m${i}`, kind: "gguf", filename: "m.gguf" }, { vaeFile: `vae${i}` });
-  assert.equal(JSON.parse(store.get("unsloth:images:component-files") ?? "[]").length, 50);
+  assert.equal((JSON.parse(store.get("unsloth:images:component-files") ?? "[]") as unknown[]).length, 50);
   assert.equal(readImageComponents({ repoId: "org/m9", kind: "gguf", filename: "m.gguf" }), null);
   rememberImageComponents({ repoId: "org/m10", kind: "gguf", filename: "m.gguf" }, { vaeFile: "vae10" });
   rememberImageComponents({ repoId: "org/new", kind: "gguf", filename: "m.gguf" }, { vaeFile: "new" });
@@ -101,7 +115,7 @@ test("a model pick fills the Advanced fields from that model, clears another mod
       setTextEncoderFiles: (v: string) => (state.te = v),
       setVaeFile: (v: string) => (state.vae = v),
     };
-    const pick = new Function(...Object.keys(scope), outputText)(...Object.values(scope));
+    const pick = compile<(model: unknown) => Record<string, string>>(scope, outputText);
     return { state, scope, pick };
   };
 
@@ -181,7 +195,7 @@ test("Reapply of a resident model sends that model's files, never the fields ano
         return Promise.resolve(true);
       },
     };
-    new Function(...Object.keys(scope), outputText)(...Object.values(scope))();
+    compile<() => void>(scope, outputText)();
     return { loads, state };
   };
 
@@ -241,7 +255,9 @@ test("a Load-mode footprint plans the shown model with its own files, a Download
       pickGuard: null,
       stage: null,
     };
-    const resolve = new Function(...Object.keys(scope), outputText)(...Object.values(scope));
+    const resolve = compile<
+      (repoId: string, opts: { ggufFilename: string }) => Promise<void>
+    >(scope, outputText);
     await resolve("org/other-GGUF", { ggufFilename: "o.gguf" });
     return planned[0];
   };
@@ -300,7 +316,7 @@ test("a Load anyway retry keeps the requested files, which a native load strips 
 test("an upgrade seeds the map from the last-model slot, so picking that model keeps its paths", () => {
   store.clear();
   rememberImageModel({ ...zImage, ...zFiles });
-  const remembered = readImageModel()!;
+  const remembered = lastModel();
   const initial = seedImageComponents(remembered);
   assert.deepEqual(initial, zFiles);
   assert.deepEqual(readImageComponents(zImage), zFiles);
@@ -398,8 +414,8 @@ test("the first loaded status forgets the remembered model's stale files and cle
   });
   assert.equal(readImageComponents(zImage), null);
   assert.deepEqual(readImageModel(), { ...zImage, familyOverride: "z-image" });
-  assert.deepEqual(seedImageComponents(readImageModel()!), {});
-  assert.deepEqual(recalledComponentFiles(readImageModel()!), {});
+  assert.deepEqual(seedImageComponents(lastModel()), {});
+  assert.deepEqual(recalledComponentFiles(lastModel()), {});
   rememberImageComponents(zImage, zFiles);
   rememberImageModel({ ...flux, vaeFile: "flux_ae.safetensors" });
   assert.ok(reconcileRememberedComponents(zImage, { ...resident, engine: "diffusers", component_files: {} }));
@@ -447,7 +463,7 @@ test("the first loaded status forgets the remembered model's stale files and cle
       setTextEncoderFiles: (v: string) => (state.te = v),
       setVaeFile: (v: string) => (state.vae = v),
     };
-    const reconcile = new Function(...Object.keys(scope), outputText)(...Object.values(scope));
+    const reconcile = compile<(status: object) => void>(scope, outputText);
     reconcile(status);
     reconcile(status);
     return { state, scope };
@@ -501,7 +517,7 @@ test("every settled loaded status forgets the resident model's stale files, not 
   rememberImageComponents(flux, { vaeFile: "../vae/flux_ae.safetensors" });
   assert.deepEqual(forgetStaleResidentComponents(fluxResident), { ...flux, familyOverride: "flux" });
   assert.deepEqual(readImageModel(), { ...flux, familyOverride: "flux" });
-  assert.deepEqual(recalledComponentFiles(readImageModel()!), {});
+  assert.deepEqual(recalledComponentFiles(lastModel()), {});
   rememberImageModel({ ...flux, vaeFile: "../vae/flux_ae.safetensors" });
   assert.ok(forgetStaleResidentComponents(fluxResident));
   assert.deepEqual(readImageModel(), { ...flux });
@@ -554,7 +570,7 @@ test("every settled loaded status forgets the resident model's stale files, not 
       forgetStaleResidentComponents,
       setRememberedModel,
     };
-    new Function(...Object.keys(scope), outputText)(...Object.values(scope))(fluxResident);
+    compile<(resident: object) => void>(scope, outputText)(fluxResident);
     return readImageComponents(flux);
   };
   rememberImageModel({ ...flux, vaeFile: "../vae/flux_ae.safetensors" });
@@ -578,7 +594,7 @@ test("a field edit reruns no resident cleanup against a cached status, so anothe
   let effect = "";
   const visit = (node: ts.Node) => {
     if (ts.isVariableDeclaration(node) && names.has(node.name.getText(tree))) declarations.push(`const ${node.getText(tree)};`);
-    if (ts.isExpressionStatement(node) && /^useEffect\(/.test(node.getText(tree)) && node.getText(tree).includes("reconcileResidentComponents(status)"))
+    if (ts.isExpressionStatement(node) && node.getText(tree).startsWith("useEffect(") && node.getText(tree).includes("reconcileResidentComponents(status)"))
       effect = node.getText(tree);
     ts.forEachChild(node, visit);
   };
@@ -602,7 +618,8 @@ test("a field edit reruns no resident cleanup against a cached status, so anothe
   const hooks: { value: unknown; deps?: unknown[] }[] = [];
   let hook = 0;
   let effectDeps: unknown[] | undefined;
-  const same = (a: unknown[] | undefined, b: unknown[]) => !!a && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
+  const same = (a: unknown[] | undefined, b: unknown[]) =>
+    a?.length === b.length && a.every((v, i) => Object.is(v, b[i]));
   const scope = {
     useRef: (value: unknown) => {
       const i = hook++;
@@ -624,20 +641,20 @@ test("a field edit reruns no resident cleanup against a cached status, so anothe
     componentFieldsOwner: { current: old },
     splitComponentFileList,
     componentFilesForModel,
-    setTextEncoderFiles: () => {},
-    setVaeFile: () => {},
+    setTextEncoderFiles: () => undefined,
+    setVaeFile: () => undefined,
     componentsReconciled: { current: false },
     initialLoadProbe: "idle",
     busy: null,
     rememberedModel: { ...zImage, ...old },
-    setRememberedModel: () => {},
+    setRememberedModel: () => undefined,
     reconcileRememberedComponents,
     forgetStaleResidentComponents,
     status: statusFor({ vae: "old-ae.safetensors" }) as object,
   };
   const render = () => {
     hook = 0;
-    new Function(...Object.keys(scope), outputText)(...Object.values(scope));
+    compile<void>(scope, outputText);
   };
   render();
   assert.deepEqual(readImageComponents(zImage), old);
@@ -670,7 +687,7 @@ test("a reload that changed one override keeps the other's saved path", () => {
   rememberImageModel({ ...zImage, ...zFiles });
   assert.deepEqual(reconcileRememberedComponents({ ...zImage, ...zFiles }, vaeOnly), { ...zImage, vaeFile: zFiles.vaeFile });
   assert.deepEqual(readImageModel(), { ...zImage, vaeFile: zFiles.vaeFile });
-  assert.deepEqual(recalledComponentFiles(readImageModel()!), { vaeFile: zFiles.vaeFile });
+  assert.deepEqual(recalledComponentFiles(lastModel()), { vaeFile: zFiles.vaeFile });
 
   store.clear();
   rememberImageModel({ ...zImage, ...zFiles });
@@ -707,7 +724,7 @@ test("a recovered pending load refills the Advanced fields the user has not touc
       matchesRememberedModel: () => true,
       withEngagedFamily: (target: object) => target,
       rememberImageModel,
-      setRememberedModel: () => {},
+      setRememberedModel: () => undefined,
       rememberLoadedImageComponents,
       componentFieldsOwnerAfterLoad,
       recoveredComponentFields,
@@ -716,7 +733,9 @@ test("a recovered pending load refills the Advanced fields the user has not touc
       setTextEncoderFiles: (v: string) => (state.te = v),
       setVaeFile: (v: string) => (state.vae = v),
     };
-    const remember = new Function(...Object.keys(scope), outputText)(...Object.values(scope));
+    const remember = compile<
+      (model: object, loadedModel: object, wasRecovered: boolean) => void
+    >(scope, outputText);
     remember({ ...zImage, ...zFiles, fieldFiles: zFiles }, loaded, recovered);
     return { state, scope };
   };

@@ -11,24 +11,34 @@ import {
   snapshotQueuedTextPrompt,
 } from "../src/features/chat/utils/queued-text-attachments.ts";
 import { readTextAttachmentOnce } from "../src/features/chat/text-attachment-accept.ts";
+import type * as AttachmentOriginals from "../src/features/chat/attachment-originals.ts";
+import type * as SandboxAttachments from "../src/features/chat/sandbox-attachments.ts";
+
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
 
 const accept = await import("../src/features/chat/open-document-accept.ts");
 const { TOOL_ONLY_ATTACHMENT_EXTENSIONS } = accept;
 const uploads: string[] = [];
-const originals = loadWithStubs<typeof import("../src/features/chat/attachment-originals.ts")>(
+const originals = loadWithStubs<typeof AttachmentOriginals>(
   new URL("../src/features/chat/attachment-originals.ts", import.meta.url),
   {
     "./api/chat-api": {
-      uploadChatAttachmentOriginal: async (file: File) => {
+      uploadChatAttachmentOriginal:  (file: File) => {
         uploads.push(file.name);
-        return { sha256: SHA, sizeBytes: 3 };
+        return Promise.resolve({ sha256: SHA, sizeBytes: 3 });
       },
     },
   },
 );
 const { persistAttachmentOriginals, reuseStagedUpload, withAttachmentOriginal } = originals;
 const { sandboxAttachmentPath, sandboxReader, withSandboxAttachmentPaths } =
-  loadWithStubs<typeof import("../src/features/chat/sandbox-attachments.ts")>(
+  loadWithStubs<typeof SandboxAttachments>(
     new URL("../src/features/chat/sandbox-attachments.ts", import.meta.url),
     { "./attachment-originals": originals, "./open-document-accept": accept },
   );
@@ -122,7 +132,7 @@ test("a thread past the request's limit carries its most recent files, not none"
   const { messages, sandboxAttachments } = withSandboxAttachmentPaths(all);
   assert.equal(sandboxAttachments.length, 64);
   assert.deepEqual(
-    [sandboxAttachments[0].name, sandboxAttachments.at(-1)!.name],
+    [sandboxAttachments[0].name, required(sandboxAttachments.at(-1)).name],
     ["f7.parquet", "f0.parquet"],
   );
   assert.equal(messages[6].attachments[0], all[6].attachments[0]);
@@ -156,7 +166,7 @@ test("a queued text file is uploaded before the python sandbox request", async (
     file,
     status: { type: "requires-action", reason: "composer-send" },
   } as never;
-  const queued = snapshotQueuedTextPrompt("analyze", [pending])!;
+  const queued = required(snapshotQueuedTextPrompt("analyze", [pending]));
   const prepared = await prepareQueuedPromptFiles(
     queued,
     (source, complete) =>

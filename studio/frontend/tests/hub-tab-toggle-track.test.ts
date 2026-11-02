@@ -28,20 +28,20 @@ const PANE_TRACK = new RegExp(
 test("the track reads its colour from the nearest surface", () => {
   const rule = /html\.dark \.hub-tab-toggle \{([^}]*)\}/.exec(HUB_CSS);
   assert.ok(rule);
-  assert.match(rule[1] ?? "", /background-color: var\(--hub-tab-track\)/);
+  assert.match(rule[1], /background-color: var\(--hub-tab-track\)/);
 });
 
 test("a track on an elevated panel sinks toward the page, not off the panel", () => {
   const rule = HUB_CSS.match(PANEL_TRACK);
   assert.ok(rule, "panel-scoped track is missing");
-  assert.match(rule[1] ?? "", /--hub-tab-track: [^;]*var\(--background\)/);
-  assert.doesNotMatch(rule[1] ?? "", /var\(--foreground\)/);
+  assert.match(rule[1], /--hub-tab-track: [^;]*var\(--background\)/);
+  assert.doesNotMatch(rule[1], /var\(--foreground\)/);
 });
 
 test("the page track is left on its own wash", () => {
   const base = PAGE_TRACK.exec(HUB_CSS);
   assert.ok(base);
-  assert.match(base[1] ?? "", /var\(--foreground\) calc\(6\.5%/);
+  assert.match(base[1], /var\(--foreground\) calc\(6\.5%/);
 });
 
 test("the panel track stops just under the panel rather than far below it", () => {
@@ -57,7 +57,7 @@ test("a page-coloured pane inside a panel gets the page track back", () => {
   assert.ok(pane, "page-coloured panes inside panels still sink the track");
   const page = PAGE_TRACK.exec(HUB_CSS);
   assert.equal(
-    pane[1]?.trim(),
+    pane[1].trim(),
     page?.[1]?.trim(),
     "pane and page tracks differ",
   );
@@ -91,13 +91,13 @@ test("no tab pins its hover to a colour that is only right in one theme", () => 
 test("an option menu rests at its trigger's tone, not the panel's", () => {
   const menu = /html\.dark \.hub-menu-instant \{([^}]*)\}/.exec(HUB_CSS);
   assert.ok(menu);
-  assert.match(menu[1] ?? "", /var\(--accent\) 60%, var\(--popover\)/);
+  assert.match(menu[1], /var\(--accent\) 60%, var\(--popover\)/);
 });
 
 test("a highlighted row still lifts clear of the lighter menu", () => {
   const row = /html\.dark \.hub-menu-instant \[data-slot="select-item"\]:focus,[\s\S]*?\{([^}]*)\}/.exec(HUB_CSS);
   assert.ok(row);
-  assert.match(row[1] ?? "", /var\(--foreground\) 6%, var\(--accent\)/);
+  assert.match(row[1], /var\(--foreground\) 6%, var\(--accent\)/);
 });
 
 test("a white pill in light mode stays put, having nowhere lighter to go", () => {
@@ -105,8 +105,8 @@ test("a white pill in light mode stays put, having nowhere lighter to go", () =>
   // so hovering the tab cannot move the pill off white.
   const pill = /export function SegmentedPill[\s\S]*?className=\{cn\(\s*"([^"]*)"/.exec(readSrc("components/segmented-control.tsx"));
   assert.ok(pill, "SegmentedPill not found");
-  assert.match(pill[1] ?? "", /\bhub-tab-toggle-pill\b/);
-  assert.match(pill[1] ?? "", /\bpointer-events-none\b/);
+  assert.match(pill[1], /\bhub-tab-toggle-pill\b/);
+  assert.match(pill[1], /\bpointer-events-none\b/);
   const tabs = readSrc(
     "features/model-picker/components/model-selector/pill-tabs.tsx",
   );
@@ -116,7 +116,7 @@ test("a white pill in light mode stays put, having nowhere lighter to go", () =>
 test("a button borrowing the pill look gets the hover the pill pins away", () => {
   const hover = /html\.dark \.hub-tab-toggle-pill\.hub-pill-action:hover \{([^}]*)\}/.exec(HUB_CSS);
   assert.ok(hover, "hub-pill-action hover rule is missing");
-  assert.match(hover[1] ?? "", /var\(--foreground\) 8%, var\(--accent\)/);
+  assert.match(hover[1], /var\(--foreground\) 8%, var\(--accent\)/);
 });
 
 test("pressing a borrowed pill returns it to the selection colour", () => {
@@ -134,6 +134,6 @@ test("pressing a borrowed pill returns it to the selection colour", () => {
 test("Search Hub is a borrowed pill, so it opts into the hover", () => {
   const button = /aria-label="Search more models on the Hub"[\s\S]{0,200}?className="([^"]*)"/.exec(PICKERS);
   assert.ok(button, "Search Hub button not found");
-  assert.match(button[1] ?? "", /\bhub-tab-toggle-pill\b/);
-  assert.match(button[1] ?? "", /\bhub-pill-action\b/);
+  assert.match(button[1], /\bhub-tab-toggle-pill\b/);
+  assert.match(button[1], /\bhub-pill-action\b/);
 });

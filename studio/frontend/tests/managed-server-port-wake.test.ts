@@ -53,9 +53,11 @@ test("without a notify the wait still polls, so a missed event cannot hang start
 
 test("a port already known skips the wait, and an aborted start reports aborted", async () => {
   let waited = false;
-  const wait = async () => {
+  const wait = () => {
     waited = true;
-  };
+  
+  return Promise.resolve();
+};
   assert.deepEqual(await waitForManagedServerPort(() => 8888, () => true, wait), {
     status: "ready",
     port: 8888,

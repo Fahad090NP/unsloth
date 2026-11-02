@@ -75,7 +75,7 @@ const props: Props = {
   isUnifiedMemory: false,
   singleMemoryPool: false,
   expanded: false,
-  onExpandedChange: () => {},
+  onExpandedChange: () => { return undefined; },
 };
 
 function render(overrides: Partial<Props> = {}): string {
@@ -101,7 +101,7 @@ test("the title and figures occupy separate rows", () => {
 test("the disclosure controls an existing breakdown in both states", () => {
   for (const expanded of [false, true]) {
     const html = render({ expanded });
-    assert.ok(html.includes(`aria-expanded="${expanded}"`));
+    assert.ok(html.includes(`aria-expanded="${String(expanded)}"`));
     const contentId = (/aria-controls="([^"]+)"/.exec(html))?.[1];
     assert.ok(contentId);
     assert.ok(html.includes(`id="${contentId}"`));
@@ -117,7 +117,7 @@ test("context checkpoints get their own host RAM row instead of inflating the KV
   const html = render({
     expanded: true,
     estimate: {
-      ...props.estimate!,
+      ...must(props.estimate),
       kvBytes: 16.584 * GIB + checkpoints,
       kvCheckpointBytes: checkpoints,
     },
@@ -132,7 +132,7 @@ test("context checkpoints get their own host RAM row instead of inflating the KV
 });
 
 test("MLX offload is noted on the Weights line", () => {
-  const html = render({ expanded: true, estimate: { ...props.estimate!, mlxExpertOffload: 0.5 } });
+  const html = render({ expanded: true, estimate: { ...must(props.estimate), mlxExpertOffload: 0.5 } });
   assert.match(html, /Weights[\s\S]*?experts\u00a050%\u00a0on\u00a0disk/);
   assert.doesNotMatch(render({ expanded: true }), /on\u00a0disk/);
 });
@@ -147,14 +147,14 @@ test("a shared pool shows the total without a duplicate GPU figure", () => {
 test("an unavailable estimate stays hidden", () => {
   assert.equal(render({ estimate: null }), "");
   assert.equal(
-    render({ estimate: { ...props.estimate!, available: false } }),
+    render({ estimate: { ...must(props.estimate), available: false } }),
     "",
   );
 });
 
 test("a RAM-only load shows one figure with CPU-appropriate guidance", () => {
   const html = render({
-    estimate: { ...props.estimate!, gpuBytes: 0, gpuLayers: 0, kvOnGpu: false },
+    estimate: { ...must(props.estimate), gpuBytes: 0, gpuLayers: 0, kvOnGpu: false },
     usableSystemRamGb: 2,
   });
   assert.match(html, />RAM<\/span>/);
@@ -218,7 +218,7 @@ test("the notes the row actually builds are left breakable", () => {
   assert.match(render({ expanded: true }), /12 of 28 layers on GPU/);
   const hostNote = resolveDraftCacheNote(0, 1e9);
   assert.equal(hostNote, "host RAM");
-  for (const note of ["256 of 257 layers on GPU", hostNote ?? ""]) {
+  for (const note of ["256 of 257 layers on GPU", hostNote]) {
     const spaces = (glueNoteItems(note).match(/ /g) || []).length;
     assert.ok(spaces > 0, `${note} has no break opportunity left`);
   }
@@ -233,3 +233,8 @@ test("gluing round-trips the note the row actually builds", () => {
   });
   assert.equal(glueNoteItems(note).replace(new RegExp(NBSP, "g"), " "), note);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

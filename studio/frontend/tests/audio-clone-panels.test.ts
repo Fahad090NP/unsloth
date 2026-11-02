@@ -283,7 +283,7 @@ test("IndexTTS2 emotion from text and from audio", () => {
     const sourceProblem = emotionSourceProblem(status);
     assert.ok(sourceProblem);
     assert.equal(
-      indexTts2EmotionLogic.validate?.({ ...base, mode: "audio", source, sourceProblem }, { text: "" }, ctx()),
+      indexTts2EmotionLogic.validate({ ...base, mode: "audio", source, sourceProblem }, { text: "" }, ctx()),
       sourceProblem,
     );
   }

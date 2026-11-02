@@ -353,7 +353,8 @@ test("Vary is disabled unless the selected image came off the exact loaded build
     );
   }
   // Older records: no schema_version (build not stored) or no engine (stored before it was recorded) cannot be checked.
-  const { schema_version: _drop, ...noSchema } = image;
+  const noSchema = { ...image };
+  Reflect.deleteProperty(noSchema, "schema_version");
   assert.match(varyBlockedReason(noSchema, true, SDXL, loaded) ?? "", /does not record which engine/);
   assert.match(varyBlockedReason({ ...image, engine: null }, true, SDXL, loaded) ?? "", /does not record which engine/);
   // The build check comes before the variation-seed one.

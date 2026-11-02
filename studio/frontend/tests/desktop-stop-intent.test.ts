@@ -131,7 +131,7 @@ test("the marker key belongs to nothing else in the app", async () => {
   );
 });
 
-test("the hook reaches storage only through the guarded helpers", async () => {
+test("the hook reaches storage only through the guarded helpers", () => {
   const hook = USE_TAURI_BACKEND;
 
   assert.doesNotMatch(
@@ -145,7 +145,7 @@ test("the hook reaches storage only through the guarded helpers", async () => {
   );
 });
 
-test("a persisted stop is honored before preflight runs", async () => {
+test("a persisted stop is honored before preflight runs", () => {
   const hook = USE_TAURI_BACKEND;
 
   const body = hook.slice(
@@ -170,7 +170,7 @@ test("a persisted stop is honored before preflight runs", async () => {
   );
 });
 
-test("stopping records the intent before the shutdown it can outlive", async () => {
+test("stopping records the intent before the shutdown it can outlive", () => {
   const hook = USE_TAURI_BACKEND;
   const body = hook.slice(
     hook.indexOf("async function stopServer()"),
@@ -198,7 +198,7 @@ test("stopping records the intent before the shutdown it can outlive", async () 
   );
 });
 
-test("a second stop cannot run while the first is in flight", async () => {
+test("a second stop cannot run while the first is in flight", () => {
   const hook = USE_TAURI_BACKEND;
 
   const tray = hook.slice(hook.indexOf('register<void>("tray-toggle-server"'));
@@ -224,7 +224,7 @@ test("a second stop cannot run while the first is in flight", async () => {
   );
 });
 
-test("every deliberate start drops the marker", async () => {
+test("every deliberate start drops the marker", () => {
   const hook = USE_TAURI_BACKEND;
 
   const managed = hook.slice(

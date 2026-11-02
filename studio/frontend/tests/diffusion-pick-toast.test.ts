@@ -3,9 +3,12 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 
-register("./helpers/toast-resolver.mjs", import.meta.url);
+const toastResolverHooks = (await import(new URL("./helpers/toast-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: toastResolverHooks.resolve });
 
 const { calls } = await import("./helpers/toast-stub.mjs");
 const { createPickToast } = await import("../src/lib/diffusion-pick-toast.ts");
@@ -18,7 +21,7 @@ interface Raise {
 }
 
 function make() {
-  calls.length = 0;
+  calls.splice(0);
   return createPickToast({
     describe: (phase, progress) =>
       progress ? `${phase} ${progress.downloadedBytes}/${progress.totalBytes}` : phase,
@@ -39,7 +42,7 @@ test("a pick raises its toast at once, before any plan or download", () => {
 });
 
 test("each pick keeps its model name through phase and progress updates", () => {
-  calls.length = 0;
+  calls.splice(0);
   const pick = createPickToast({
     describe: (phase, progress, modelName) => ({ phase, progress, modelName }),
   });
@@ -54,7 +57,7 @@ test("each pick keeps its model name through phase and progress updates", () => 
     );
   }
   const next = pick.show("another/model");
-  calls.length = 0;
+  calls.splice(0);
   pick.setPhase(id, "ready");
   pick.setPhase(next, "downloading", 2);
   assert.deepEqual(shown().map((c) => c.options?.description), [
@@ -69,7 +72,7 @@ test("a newer pick replaces the older toast, and the stale pick cannot touch it"
   assert.notEqual(older, newer);
   assert.deepEqual(shown()[1], { kind: "dismiss", id: older });
 
-  calls.length = 0;
+  calls.splice(0);
   pick.dismiss(older);
   pick.setPhase(older, "downloading", 1);
   assert.deepEqual(shown(), []);
@@ -79,7 +82,7 @@ test("a newer pick replaces the older toast, and the stale pick cannot touch it"
 test("progress shows only while downloading, and each phase starts from its own plan", () => {
   const pick = make();
   const id = pick.show();
-  calls.length = 0;
+  calls.splice(0);
   pick.progress({ downloadedBytes: 5, totalBytes: 10, plan: 1 });
   assert.deepEqual(shown(), [], "a queued or preparing pick showed another plan's bytes");
 
@@ -98,7 +101,7 @@ test("a download-only plan staged after the pick's own never shows in its toast"
   const id = pick.show();
   pick.setPhase(id, "downloading", 3);
   pick.progress({ downloadedBytes: 10, totalBytes: 10, plan: 3 });
-  calls.length = 0;
+  calls.splice(0);
 
   pick.progress({ downloadedBytes: 2, totalBytes: 50, plan: 4 });
   assert.deepEqual(shown(), [], "another plan's bytes reached the pick's toast");
@@ -115,7 +118,7 @@ test("the Images and Video toasts never share an id", () => {
   const videoId = video.show();
   assert.notEqual(imagesId, videoId);
 
-  calls.length = 0;
+  calls.splice(0);
   images.dismissAll();
   assert.deepEqual(shown(), [{ kind: "dismiss", id: imagesId }]);
   video.setPhase(videoId, "downloading", 1);
@@ -128,7 +131,7 @@ test("the load takes the toast over in place and later ticks leave it alone", ()
   pick.setPhase(id, "downloading", 1);
   assert.equal(pick.take(id), id);
 
-  calls.length = 0;
+  calls.splice(0);
   pick.progress({ downloadedBytes: 9, totalBytes: 10, plan: 1 });
   pick.dismissAll();
   assert.deepEqual(shown(), [], "the pick kept writing to the load's toast");
@@ -143,7 +146,7 @@ test("a toast the user closed is not raised again by the next tick", () => {
   assert.ok(closed);
   closed();
 
-  calls.length = 0;
+  calls.splice(0);
   pick.progress({ downloadedBytes: 3, totalBytes: 10, plan: 1 });
   assert.deepEqual(shown(), []);
   assert.equal(pick.take(id), undefined);
@@ -152,12 +155,12 @@ test("a toast the user closed is not raised again by the next tick", () => {
 test("a cancelled or retired pick drops its toast", () => {
   const pick = make();
   const id = pick.show();
-  calls.length = 0;
+  calls.splice(0);
   pick.dismiss(id);
   assert.deepEqual(shown(), [{ kind: "dismiss", id }]);
 
   const next = pick.show();
-  calls.length = 0;
+  calls.splice(0);
   pick.dismissAll();
   assert.deepEqual(shown(), [{ kind: "dismiss", id: next }]);
   pick.dismiss(undefined);

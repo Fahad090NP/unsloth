@@ -83,7 +83,7 @@ test("responses arriving in order still publish the newest", async () => {
 test("a lone refresh still publishes", async () => {
   const published: Row[][] = [];
   const refresh = makeRefresher(published);
-  await refresh(async () => INDEXING);
+  await refresh( () => Promise.resolve(INDEXING));
   assert.deepEqual(published, [INDEXING]);
 });
 

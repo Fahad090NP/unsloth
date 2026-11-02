@@ -89,7 +89,7 @@ test("pending controls cannot change the loaded placement or memory requirements
     8192,
   );
   assert.equal(defaults?.nParallel, null);
-  assert.equal(defaults?.llamaExtraArgs, null);
+  assert.equal(defaults.llamaExtraArgs, null);
 });
 
 test("missing baselines and recorded fallbacks withhold resident credit", () => {
@@ -131,8 +131,8 @@ test("fixed Manual layers and automatic layers retain their loaded meaning", () 
       loadedNCpuMoe: 4,
     });
     assert.equal(settings?.gpuMemoryMode, "manual");
-    assert.equal(settings?.gpuLayers, layers < 0 ? null : layers);
-    assert.equal(settings?.nCpuMoe, 4);
+    assert.equal(settings.gpuLayers, layers < 0 ? null : layers);
+    assert.equal(settings.nCpuMoe, 4);
   }
 });
 
@@ -146,21 +146,21 @@ test("an MLX resident is priced at its served window and loaded cache width", ()
     kvQuant: "4",
   });
   assert.equal(request?.maxSeqLength, 8192);
-  assert.equal(request?.mlxKvQuant, "4");
-  assert.equal(request?.mlxPleOffload, "off");
-  assert.equal(request?.mlxExpertOffload, "off");
+  assert.equal(request.mlxKvQuant, "4");
+  assert.equal(request.mlxPleOffload, "off");
+  assert.equal(request.mlxExpertOffload, "off");
   const offloaded = resolveResidentEstimateRequest(pending, settings, 8192, {
     kvQuant: null,
     pleOffload: 1,
     expertOffload: 0.5,
   });
   assert.equal(offloaded?.mlxPleOffload, 1);
-  assert.equal(offloaded?.mlxExpertOffload, 0.5);
+  assert.equal(offloaded.mlxExpertOffload, 0.5);
   const auto = resolveResidentEstimateRequest(pending, settings, 8192, {
     kvQuant: null,
   });
   assert.equal(auto?.maxSeqLength, 8192);
-  assert.equal(auto?.mlxKvQuant, null);
+  assert.equal(auto.mlxKvQuant, null);
   const gguf = resolveResidentEstimateRequest(pending, settings, 8192);
   assert.ok(gguf && !("maxSeqLength" in gguf) && !("mlxKvQuant" in gguf));
 });

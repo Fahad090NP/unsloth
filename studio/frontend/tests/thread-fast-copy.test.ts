@@ -450,7 +450,9 @@ interface FakeElement {
 }
 
 /** patchClipboardDeltas checks `instanceof HTMLElement`; only the prototype matters. */
-class FakeHtmlElement {}
+class FakeHtmlElement {
+  readonly isFakeHtmlElement = true;
+}
 
 Object.defineProperty(globalThis, "HTMLElement", {
   configurable: true,
@@ -611,10 +613,11 @@ function el(
       descendants(node).filter((child) => matchesSelector(child, selectors)),
     insertBefore(child, ref) {
       const at = ref === null ? -1 : childNodes.indexOf(ref);
-      childNodes.splice(at < 0 ? childNodes.length : at, 0, child);
-      child.parentNode = node;
+      const inserted = child;
+      childNodes.splice(at < 0 ? childNodes.length : at, 0, inserted);
+      inserted.parentNode = node;
       notifyMutation(node);
-      return child;
+      return inserted;
     },
     remove() {
       const parent = node.parentNode;
@@ -871,7 +874,7 @@ function documentOrder(
     return bOffset === aOffset ? 0 : bOffset < aOffset ? -1 : 1;
   }
   const parent = pa[depth - 1];
-  if (parent?.nodeType !== 1) return 0;
+  if (parent.nodeType !== 1) return 0;
   const kids = parent.childNodes;
   const ia = depth < pa.length ? kids.indexOf(pa[depth]) : aOffset;
   const ib = depth < pb.length ? kids.indexOf(pb[depth]) : bOffset;
@@ -889,7 +892,7 @@ const fakeDocument = {
         anchor = node;
         anchorAt = offset;
       },
-      setEnd() {},
+      setEnd() {/* intentionally empty */},
       comparePoint: (node: FakeNode, offset: number) =>
         anchor === null ? 0 : documentOrder(anchor, anchorAt, node, offset),
     };

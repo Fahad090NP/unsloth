@@ -19,10 +19,10 @@ test("only the saving phase reaches the toast, and a failed read keeps watching"
   let saving = 0;
   let reads = 0;
   const watch = save.watchSavingPhase(
-    async () => {
+    () => {
       const phase = phases[reads++] ?? "ready";
-      if (phase === "boom") throw new Error("offline");
-      return { phase };
+      if (phase === "boom") return Promise.reject(new Error("offline"));
+      return Promise.resolve({ phase });
     },
     () => saving++,
     FAST,
@@ -33,7 +33,7 @@ test("only the saving phase reaches the toast, and a failed read keeps watching"
 });
 
 test("a read still in flight at stop() is dropped, and stop() is idempotent", async () => {
-  let release: (value: { phase: unknown }) => void = () => {};
+  let release: (value: { phase: unknown }) => void = () => { return undefined; };
   let aborted = false;
   let saving = 0;
   let reads = 0;
@@ -86,7 +86,7 @@ for (const [path, read] of [
     ].map((pin) => load.indexOf(pin));
     assert.ok(
       order.every((at, i) => at > 0 && (i === 0 || at > order[i - 1])),
-      `out of order: ${order}`,
+      `out of order: ${String(order)}`,
     );
   });
 }

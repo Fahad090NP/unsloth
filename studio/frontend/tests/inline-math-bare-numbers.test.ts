@@ -181,11 +181,11 @@ test("a shell parameter right after a positional one stays text", () => {
     ['Run echo "$1$!" to print both.', "$1$!"],
     ['Run echo "$1$0" to print both.', "$1$0"],
     ['Run echo "$1$$" to print both.', "$1$$"],
-    ['Run echo "$1${2}" to print both.', "$1${2}"],
-    ['Run echo "$1${?}" to print both.', "$1${?}"],
-    ['Run echo "$1${_}" to print both.', "$1${_}"],
-    ['Run echo "$1${foo_bar}" to print both.', "$1${foo_bar}"],
-    ['Run echo "$1${foo:-${bar}}" to print both.', "$1${foo:-${bar}}"],
+    ["Run echo \"$1$" + "{2}\" to print both.", "$1$" + "{2}"],
+    ["Run echo \"$1$" + "{?}\" to print both.", "$1$" + "{?}"],
+    ["Run echo \"$1$" + "{_}\" to print both.", "$1$" + "{_}"],
+    ["Run echo \"$1$" + "{foo_bar}\" to print both.", "$1$" + "{foo_bar}"],
+    ["Run echo \"$1$" + "{foo:-" + "{bar}}\" to print both.", "$1$" + "{foo:-" + "{bar}}"],
     ['Run echo "$1$(date)" to print both.', "$1$(date)"],
     ['Run echo "$1$((n + 1))" to print both.', "$1$((n + 1))"],
     ['Run echo "$1$[n + 1]" to print both.', "$1$[n + 1]"],
@@ -209,10 +209,10 @@ test("a shell parameter right after a positional one stays text", () => {
   }
 
   const combined =
-    'Shell examples "$1$x", "$1$?", "$1${2}", and "$1$$" stay literal.';
+    "Shell examples \"$1$x\", \"$1$?\", \"$1$" + "{2}\", and \"$1$$\" stay literal.";
   const html = render(combined);
   assert.deepEqual(renderedMath(html), [], combined);
-  for (const literal of ["$1$x", "$1$?", "$1${2}", "$1$$"]) {
+  for (const literal of ["$1$x", "$1$?", "$1$" + "{2}", "$1$$"]) {
     assert.ok(
       visibleText(html).includes(literal),
       `${combined} lost ${literal}`,
@@ -223,7 +223,7 @@ test("a shell parameter right after a positional one stays text", () => {
 test("raw-text element bodies keep adjacent shell syntax byte-for-byte", () => {
   for (const source of [
     '<script>const value = "$1$x";</script>',
-    '<style>var { value: "$1${2}"; }</style>',
+    "<style>var { value: \"$1$" + "{2}\"; }</style>",
   ]) {
     assert.equal(preprocessLaTeX(source), source);
   }
@@ -250,7 +250,7 @@ test("protected regions do not leak shell quote state into later prose", () => {
 
 test("link destinations do not reset surrounding prose quote state", () => {
   const source =
-    'There are $3$ red balls and $5$ blue balls, so $3 + 5 = 8$ in total. The answer is $8$. Shell examples "$1$x", "$1$?", "$1${2}", "$1$$", "$1$(date)", and "$1$((n+1))" stay literal. The answer is $42$! Is it $3$? Quote check: echo "$1$" and **then** echo "ok". Reference check: "$42$[source](https://example.com)." Prose check: He said "The answer is $42$!" after a $10$-fold increase across $1$-$2$.';
+    "There are $3$ red balls and $5$ blue balls, so $3 + 5 = 8$ in total. The answer is $8$. Shell examples \"$1$x\", \"$1$?\", \"$1$" + "{2}\", \"$1$$\", \"$1$(date)\", and \"$1$((n+1))\" stay literal. The answer is $42$! Is it $3$? Quote check: echo \"$1$\" and **then** echo \"ok\". Reference check: \"$42$[source](https://example.com).\" Prose check: He said \"The answer is $42$!\" after a $10$-fold increase across $1$-$2$.";
   const html = render(source);
   assert.deepEqual(renderedMath(html), [
     "3",

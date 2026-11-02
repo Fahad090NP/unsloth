@@ -2,10 +2,13 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
-register("./helpers/browser-executor-resolver.mjs", import.meta.url);
+const browserExecutorResolverHooks = (await import(new URL("./helpers/browser-executor-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserExecutorResolverHooks.resolve });
 const { runBrowserAction } = await import("../src/features/browser/agent/executor.ts");
 const { answerQuestion, stopBrowserAgent, useBrowserAgentStore } = await import("../src/features/browser/agent/agent-store.ts");
 const { chatKeyOfThread, useBrowserStore } = await import("../src/features/browser/store.ts");
@@ -15,13 +18,13 @@ const globals = globalThis as Record<string, unknown>;
 useBrowserStore.subscribe(({ tabs }) => {
   for (const tab of tabs) if (tab.loading) queueMicrotask(() => { useBrowserStore.getState().updateTab(tab.id, { loading: false }); });
 });
-globals.__authFetch = async () => new Response(null, { status: 200 });
+globals.__authFetch = () => new Response(null, { status: 200 });
 const policy = { allowedDomains: [], blockedDomains: [] };
 const buy = { role: "button", name: "Buy now", tag: "button", href: "", formMethod: "", formAction: "", formHasPassword: false, submits: false };
 const sent: string[] = [];
 let info: Record<string, unknown> = buy;
 let onClick: (() => void) | null = null;
-globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
+globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
   sent.push(String(op.op));
   if (op.op === "status") return { installed: true, result: { ok: true, quietMs: 1000, doc: "r1" } };
   if (op.op === "describe") {
@@ -100,9 +103,9 @@ test("Always allow isn't offered or kept for a native Back whose destination is 
   const g = run("chat-g");
   show("chat-g");
   await navigate("g0", g);
-  const tabId = useBrowserAgentStore.getState().chats[chatOf("chat-g")]?.tabId ?? "";
+  const tabId = useBrowserAgentStore.getState().chats[chatOf("chat-g")].tabId ?? "";
   globals.__native = true;
-  globals.__callNative = async (command: string, args: { command: { op: Record<string, unknown> } }) =>
+  globals.__callNative = (command: string, args: { command: { op: Record<string, unknown> } }) =>
     command === "browser_view_agent" ? (globals.__frameAgent as (t: string, op: Record<string, unknown>) => unknown)(tabId, args.command.op) : null;
   try {
     // History from before this chat: the view can go back, but not to where.

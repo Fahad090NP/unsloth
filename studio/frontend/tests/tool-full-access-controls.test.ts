@@ -19,7 +19,7 @@ function harness({ owner = true, disclosure = false, grantedThread = "", scopedF
   const values: unknown[] = [];
   let index = 0, epoch = 0;
   let effects: (() => void)[] = [];
-  let answer: () => Promise<boolean> = async () => true;
+  let answer: () => Promise<boolean> =  () => Promise.resolve(true);
   const confirmation = {
     approvalId: "approval-a", sessionId: "project-shared", threadId: "chat-a",
     runId: "run-a", autoAllowKey: "project-shared:chat-a",
@@ -35,9 +35,11 @@ function harness({ owner = true, disclosure = false, grantedThread = "", scopedF
     chatPermissionChoiceVersion: 0,
     chatFullAccessGrants: grantedThread ? { other: { runId: "other", threadId: grantedThread, sessionId: "project-shared" } } : {},
     alwaysAllowToolsBySession: new Map(),
-    allowToolAlways: () => {},
+    allowToolAlways: () => {/* intentionally empty */},
     grantChatFullAccess: (grant: ChatFullAccessGrant) => { grants.push(grant); },
-    clearToolConfirmation: (id: string) => { delete state.toolConfirmations[id]; },
+    clearToolConfirmation: (id: string) => {
+      Reflect.deleteProperty(state.toolConfirmations, id);
+    },
   };
   const store = Object.assign((selector: (s: typeof state) => unknown) => selector(state), { getState: () => state });
   const module = loadWithStubs<{ ToolConfirmationControls: (props: unknown) => Node }>(
@@ -64,7 +66,7 @@ function harness({ owner = true, disclosure = false, grantedThread = "", scopedF
       },
       "@/features/chat/stores/chat-runtime-store": { useChatRuntimeStore: store },
       "@/features/settings": {
-        COMPOSER_INPUT_SELECTOR: "textarea", isSurfaceBackgrounded: () => false, useShortcut: () => {},
+        COMPOSER_INPUT_SELECTOR: "textarea", isSurfaceBackgrounded: () => false, useShortcut: () => {/* intentionally empty */},
       },
       "@/features/chat": {
         useChatActive: () => true,
@@ -118,7 +120,7 @@ test("Turn on upgrades the parked call before recording a grant for that chat", 
 });
 
 test("server failure or an unacknowledged legacy upgrade never records Full access", async () => {
-  for (const answer of [async () => false, async () => { throw new Error("offline"); }]) {
+  for (const answer of [ () => Promise.resolve(false),  () => { return Promise.reject(new Error("offline")); }]) {
     const h = harness();
     h.setAnswer(answer);
     click(h.get(h.render(), "Button", "Full Access"));

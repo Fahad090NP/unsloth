@@ -57,7 +57,7 @@ const { getState, jobKeyOf } = await import(
 test("a legacy record carrying counters is restored as held", () => {
   const jobs = getState().jobs;
   assert.equal(
-    jobs[jobKeyOf("model", "org/carried-model", "Q4_K_M")]?.measuredTransfer,
+    jobs[jobKeyOf("model", "org/carried-model", "Q4_K_M")].measuredTransfer,
     false,
   );
 });
@@ -65,7 +65,7 @@ test("a legacy record carrying counters is restored as held", () => {
 test("a legacy record with nothing counted stays unknown", () => {
   const jobs = getState().jobs;
   assert.equal(
-    jobs[jobKeyOf("model", "org/fresh-model", "Q4_K_M")]?.measuredTransfer,
+    jobs[jobKeyOf("model", "org/fresh-model", "Q4_K_M")].measuredTransfer,
     undefined,
   );
 });

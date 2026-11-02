@@ -29,7 +29,12 @@ const STANDING = {
   parallelSlots: 1,
   splitRatio: null,
   normalizeSpeculative: (value: string | null | undefined) =>
-    value == null || value === "" || value === "none" ? null : value,
+    value === null ||
+  value === undefined ||
+  value === "" ||
+  value === "none"
+    ? null
+    : value,
 };
 
 const residentRuntimeMatchesConfig = (
@@ -320,7 +325,7 @@ for (const [accelerator, base] of Object.entries(ACCELERATORS)) {
         string,
         unknown
       >;
-      delete status[field.statusKey];
+      Reflect.deleteProperty(status, field.statusKey);
       assert.equal(
         residentRuntimeMatchesConfig(status, {
           ...BLANK,

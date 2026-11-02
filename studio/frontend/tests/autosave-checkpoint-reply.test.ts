@@ -28,14 +28,14 @@ function harness() {
     new URL("../src/features/chat/utils/delete-thread-message.ts", import.meta.url),
     {
       "@assistant-ui/core/internal": { MessageRepository },
-      "../api/chat-api": { listChatMessages: async () => [] },
+      "../api/chat-api": { listChatMessages: () => [] },
       "./chat-history-storage": {
-        ensureStoredChatThread: async () => {},
-        saveStoredChatMessage: async (record: Record<string, unknown>) => {
+        ensureStoredChatThread: async () => { /* empty */ },
+        saveStoredChatMessage: (record: Record<string, unknown>) => {
           saved.push(record);
           return record;
         },
-        syncStoredChatMessages: async (_id: string, records: Record<string, unknown>[]) => {
+        syncStoredChatMessages: (_id: string, records: Record<string, unknown>[]) => {
           synced.push(records);
           return records;
         },

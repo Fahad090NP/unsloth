@@ -20,7 +20,7 @@ const SEED = ["gpt-5.4", "gpt-5.5"];
 
 before(async () => {
   vite = await createServer({ appType: "custom", server: { middlewareMode: true } });
-  const loaded = await vite.ssrLoadModule("/src/features/chat/sync-external-providers.ts");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/sync-external-providers.ts")) as typeof import("../src/features/chat/sync-external-providers.ts");
   resolveSyncedModelIds = loaded.resolveSyncedModelIds as Resolve;
 });
 

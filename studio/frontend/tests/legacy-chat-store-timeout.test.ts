@@ -28,10 +28,10 @@ const thread = (id: string): ThreadRecord => ({
 
 class StubWriteCoordinator {
   closeAdmission(): () => void {
-    return () => {};
+    return () => { return undefined; };
   }
 
-  confirmFinalState(): void {}
+  confirmFinalState(): void { return undefined; }
 
   idsRequiringFence(): string[] {
     return [];
@@ -51,39 +51,39 @@ function loadStorage(options: {
     ),
     {
       "../api/chat-api": {
-        buildBackendChatExport: async () => ({ threads: [], messages: [] }),
+        buildBackendChatExport: () => Promise.resolve(({ threads: [], messages: [] })),
         ChatThreadDeletedError: class extends Error {},
-        clearBackendChats: async () => ({
+        clearBackendChats: () => Promise.resolve(({
           deletedThreadIds: [],
           sandboxesKept: [],
-        }),
-        deleteChatThreads: async () => [],
+        })),
+        deleteChatThreads: () => Promise.resolve([]),
         listChatThreads: options.listServerThreads,
-        notifyChatHistoryUpdated: () => {},
+        notifyChatHistoryUpdated: () => { return undefined; },
       },
       "../db": {
         DEXIE_DB_NAME: "unsloth-chat",
         db: {
           threads: options.threads,
           messages: options.messages ?? {},
-          transaction: options.transaction ?? (async () => undefined),
+          transaction: options.transaction ?? (() => Promise.resolve(undefined)),
         },
       },
       "./chat-thread-tombstones": {
         isChatThreadDeleted: () => false,
-        markChatThreadDeleted: () => {},
-        markChatThreadsDeleted: () => {},
+        markChatThreadDeleted: () => { return undefined; },
+        markChatThreadsDeleted: () => { return undefined; },
       },
       "./thread-record-write-coordinator": {
         ThreadRecordWriteCoordinator: StubWriteCoordinator,
       },
-      "../stores/fork-boundary-store": { setForkBoundary: () => {} },
+      "../stores/fork-boundary-store": { setForkBoundary: () => { return undefined; } },
     },
   );
 }
 
 Object.assign(globalThis, {
-  indexedDB: { databases: async () => [{ name: "unsloth-chat" }] },
+  indexedDB: { databases: () => Promise.resolve([{ name: "unsloth-chat" }]) },
 });
 
 async function settlesWithin<T>(promise: Promise<T>): Promise<T> {
@@ -104,14 +104,14 @@ async function settlesWithin<T>(promise: Promise<T>): Promise<T> {
 }
 
 test("a stalled legacy store cannot hide server chats", async () => {
-  const never = () => new Promise<never>(() => {});
+  const never = () => new Promise<never>(() => { return undefined; });
   const stalledCollection = { toArray: never };
   let serverReads = 0;
   const storage = loadStorage({
     threads: { toCollection: () => stalledCollection },
-    listServerThreads: async () => {
+    listServerThreads: () => {
       serverReads += 1;
-      return [thread("server")];
+      return Promise.resolve([thread("server")]);
     },
   });
 
@@ -131,10 +131,10 @@ test("readable legacy chats remain available when the server fails", async () =>
   const legacy = thread("legacy");
   const storage = loadStorage({
     threads: {
-      toCollection: () => ({ toArray: async () => [legacy] }),
+      toCollection: () => ({ toArray: () => Promise.resolve([legacy]) }),
     },
-    listServerThreads: async () => {
-      throw new Error("server unavailable");
+    listServerThreads: () => {
+      return Promise.reject(new Error("server unavailable"));
     },
   });
 
@@ -142,13 +142,13 @@ test("readable legacy chats remain available when the server fails", async () =>
 });
 
 test("legacy maintenance operations settle when the store stalls", async () => {
-  const never = () => new Promise<never>(() => {});
+  const never = () => new Promise<never>(() => { return undefined; });
   const stalledTable = { count: never, toArray: never };
   const storage = loadStorage({
     messages: stalledTable,
     threads: stalledTable,
     transaction: never,
-    listServerThreads: async () => [],
+    listServerThreads: () => Promise.resolve([]),
   });
 
   assert.deepEqual(

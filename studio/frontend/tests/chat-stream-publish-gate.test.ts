@@ -49,7 +49,7 @@ function withStubbedScheduling(body: (scheduled: Scheduled) => void): void {
   };
   globals.setTimeout = (run, ms) => scheduled.timers.push({ run, ms });
   globals.clearTimeout = (handle) => {
-    scheduled.clearedTimers.push(handle!);
+    scheduled.clearedTimers.push((handle ?? assert.fail("expected a non-null value")));
   };
   try {
     body(scheduled);

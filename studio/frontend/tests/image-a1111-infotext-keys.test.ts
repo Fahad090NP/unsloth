@@ -131,8 +131,10 @@ function handling(key: string, value: string): Handling {
     (item) => !importNotApplied(base, "sdxl").includes(item),
   );
   if (reported.length > 0) return "reported";
-  const { parameters_not_applied: _a, ...rest } = r;
-  const { parameters_not_applied: _b, ...baseRest } = base;
+  const rest = { ...r };
+  Reflect.deleteProperty(rest, "parameters_not_applied");
+  const baseRest = { ...base };
+  Reflect.deleteProperty(baseRest, "parameters_not_applied");
   return JSON.stringify(rest) === JSON.stringify(baseRest) ? "ignored" : "applied";
 }
 

@@ -18,6 +18,14 @@ import {
 } from "../src/features/chat/utils/queued-text-attachments.ts";
 import { reorderPromptQueueItems } from "../src/features/chat/utils/prompt-queue-reorder.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 function pending(file: File): PendingAttachment {
   return {
     id: crypto.randomUUID(),
@@ -38,7 +46,7 @@ async function ready(
 
 test("uploaded text reaches dispatch with the same filename and content as a normal send", async () => {
   const attachment = await ready();
-  const snapshot = snapshotQueuedTextAttachments([attachment])!;
+  const snapshot = required(snapshotQueuedTextAttachments([attachment]));
   const message = queuedPromptMessage(
     normalizeQueuedPrompt({ prompt: "  summarize  ", attachments: snapshot }),
   );
@@ -68,7 +76,7 @@ test("queueing uses decoded bytes without another asynchronous file read", async
   file.text = () => {
     throw new Error("must not decode with File.text");
   };
-  const snapshot = snapshotQueuedTextAttachments([attachment])!;
+  const snapshot = required(snapshotQueuedTextAttachments([attachment]));
   assert.deepEqual(snapshot[0].content, [
     { type: "text", text: "<attachment name=windows.txt>\nHi\n</attachment>" },
   ]);
@@ -76,14 +84,14 @@ test("queueing uses decoded bytes without another asynchronous file read", async
 
 test("queued files survive until dispatch preparation without leaking into the message", async () => {
   const file = new File(["a,b"], "data.csv", { type: "text/csv" });
-  const item = snapshotQueuedTextPrompt("analyze", [await ready(file)])!;
+  const item = required(snapshotQueuedTextPrompt("analyze", [await ready(file)]));
   assert.equal(item.attachmentFiles?.[0], file);
   const prepared = await prepareQueuedPromptFiles(
     item,
-    async (_source, attachment) => ({
+     (_source, attachment) => Promise.resolve(({
       ...attachment,
       original: { sha256: "ab".repeat(32), sizeBytes: file.size },
-    }) as never,
+    }) as never),
   );
   assert.equal(prepared.attachmentFiles, undefined);
   assert.deepEqual(
@@ -94,16 +102,16 @@ test("queued files survive until dispatch preparation without leaking into the m
   await assert.rejects(
     prepareQueuedPromptFiles(
       { prompt: "analyze", attachmentFiles: [file] },
-      async (_source, attachment) => attachment,
+       (_source, attachment) => Promise.resolve(attachment),
     ),
     /Queued attachment snapshot is inconsistent/,
   );
 });
 
 test("attachment-only messages, including an empty file, survive queue filtering", async () => {
-  const attachments = snapshotQueuedTextAttachments([
+  const attachments = required(snapshotQueuedTextAttachments([
     await ready(new File([""], "empty.txt")),
-  ])!;
+  ]));
   const items = [" ", { prompt: "  ", attachments }, "next"]
     .map(normalizeQueuedPrompt)
     .filter(queuedPromptHasContent);
@@ -142,10 +150,10 @@ test("undecoded, running, failed and unsupported attachments cannot slip into a 
 
 test("mixed uploads and pastes preserve file order and paste metadata", async () => {
   const paste = createPastedTextFile("pasted body");
-  const attachments = snapshotQueuedTextAttachments([
+  const attachments = required(snapshotQueuedTextAttachments([
     await ready(),
     await ready(paste),
-  ])!;
+  ]));
   assert.deepEqual(
     attachments.map((a) => a.name),
     ["notes.txt", paste.name],
@@ -158,14 +166,14 @@ test("mixed uploads and pastes preserve file order and paste metadata", async ()
 
 test("editing, reordering and removing prompts keeps each file with its own message", async () => {
   const source = await ready();
-  const attachments = snapshotQueuedTextAttachments([source])!;
+  const attachments = required(snapshotQueuedTextAttachments([source]));
   // later composer attachment changes must not alter the queued snapshot.
   source.name = "changed.txt";
   source.content = [{ type: "text", text: "changed" }];
   const first = { id: "first", prompt: "original", attachments };
   const second = { id: "second", prompt: "next" };
   first.prompt = "edited";
-  const moved = reorderPromptQueueItems([first, second], 0, 1, 0)!;
+  const moved = required(reorderPromptQueueItems([first, second], 0, 1, 0));
   assert.equal(moved[1], first);
   assert.equal(queuedPromptMessage(moved[1]).attachments[0].name, "notes.txt");
   assert.deepEqual(queuedPromptMessage(moved[1]).content, [

@@ -91,9 +91,9 @@ test("Clear all deletes the history only after the in-app confirmation", async (
   let nativeConfirms = 0;
   const previousWindow = (globalThis as { window?: unknown }).window;
   (globalThis as { window?: unknown }).window = {
-    confirm: async () => {
+    confirm:  () => {
       nativeConfirms += 1;
-      return false;
+      return Promise.resolve(false);
     },
   };
   try {
@@ -103,8 +103,8 @@ test("Clear all deletes the history only after the in-app confirmation", async (
         currentId: null,
         latest: null,
         autoSelect: false,
-        onSelect: () => {},
-        onDelete: () => {},
+        onSelect: () => {/* intentionally empty */},
+        onDelete: () => {/* intentionally empty */},
         canSelect: () => true,
         sendHandlersFor: () => ({}),
       },
@@ -133,11 +133,11 @@ test("Clear all deletes the history only after the in-app confirmation", async (
       useRef: (initial: unknown) => (refs[refIndex++] ??= { current: initial }),
       useCallback: (callback: unknown) => callback,
       useLayoutEffect: (effect: () => void) => { effect(); },
-      useEffect: () => {},
-      deleteTranscript: async (...args: unknown[]) => {
+      useEffect: () => {/* intentionally empty */},
+      deleteTranscript:  (...args: unknown[]) => {
         deletes.push(args);
-      },
-      listTranscripts: async () => ({ transcripts: [], next_cursor: null }),
+      return Promise.resolve(); },
+      listTranscripts:  () => Promise.resolve(({ transcripts: [], next_cursor: null })),
       toast: { error: (message: string) => assert.fail(message) },
     });
     const view = () => {

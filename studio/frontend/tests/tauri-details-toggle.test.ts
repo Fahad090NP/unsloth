@@ -26,7 +26,7 @@ test("the shared detail toggle puts a custom down chevron after its label", asyn
   const summary = summaryForLabel(await source("log-details.tsx"), "{showLabel}");
 
   assert.match(summary, /\blist-none\b/);
-  assert.match(summary, /\[&::\-webkit-details-marker\]:hidden/);
+  assert.match(summary, /\[&::-webkit-details-marker\]:hidden/);
   assert.match(summary, /\bflex\b/);
   assert.ok(
     summary.indexOf("<HugeiconsIcon") > summary.indexOf("{hideLabel}") &&

@@ -23,7 +23,7 @@ for (const [desktop, loginMode, change, expected] of [
     globalThis.localStorage = storage;
     globalThis.window = {
       localStorage: storage,
-      addEventListener() {},
+      addEventListener() { /* empty */ },
     } as unknown as Window & typeof globalThis;
     t.after(() => {
       globalThis.window = previousWindow;
@@ -72,7 +72,7 @@ for (const [desktop, loginMode, token, change, expected] of [
     globalThis.localStorage = storage;
     globalThis.window = {
       localStorage: storage,
-      addEventListener() {},
+      addEventListener() { /* empty */ },
     } as unknown as Window & typeof globalThis;
     t.after(() => {
       globalThis.window = previousWindow;
@@ -82,7 +82,7 @@ for (const [desktop, loginMode, token, change, expected] of [
       new URL("../src/features/auth/session.ts", import.meta.url),
       {
         "@/lib/api-base": { isTauri: desktop },
-        "@/lib/account-transition": { installAccountTransitionListener: () => {} },
+        "@/lib/account-transition": { installAccountTransitionListener: () => { /* empty */ } },
         "./login-client": { getLoginMode: () => loginMode },
         "./session-events": {},
       },

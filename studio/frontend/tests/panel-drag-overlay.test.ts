@@ -40,7 +40,7 @@ Object.assign(globalThis, {
     querySelector: (selector: string) =>
       body.find(
         (child) =>
-          `[data-slot="${child.attributes.get("data-slot")}"]` === selector,
+          `[data-slot="${String(child.attributes.get("data-slot"))}"]` === selector,
       ) ?? null,
   },
 });

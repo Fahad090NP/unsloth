@@ -28,7 +28,8 @@ const CAPS: ExternalReasoningCapabilities = {
   supportsReasoningOff: true,
   reasoningEffortLevels: ["low", "medium", "high"],
 };
-type RuntimeModule = typeof import("../src/features/chat/stores/chat-runtime-store.ts");
+import type * as ChatRuntimeStore from "../src/features/chat/stores/chat-runtime-store.ts";
+type RuntimeModule = typeof ChatRuntimeStore;
 const runtimeUrl = new URL("../src/features/chat/stores/chat-runtime-store.ts", import.meta.url).href;
 
 // Drain the previous store copy's 400 ms debounced write, or it lands in the next test's stubs.
@@ -44,7 +45,7 @@ async function boot(scenario: string, paired: boolean | null = true): Promise<Ru
   storageData.set("unsloth_chat_settings_imported_to_studio_db", "true");
   useModelReasoningEffortStore.getState().syncFromStorage();
   settingsHttp.settings = { rememberParamsPerModel: false, reasoningEffort: "medium" };
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   threadRows.reset();
   const runtime = await import(`${runtimeUrl}?scenario=${scenario}`) as RuntimeModule;
   const store = runtime.useChatRuntimeStore;
@@ -54,7 +55,7 @@ async function boot(scenario: string, paired: boolean | null = true): Promise<Ru
   if (paired !== null) store.getState().setActiveThreadId(THREAD);
   if (paired) store.getState().applyThreadScopedSettings(THREAD, { reasoningEffort: "medium" });
   else if (paired === false) runtime.beginThreadScopedPairing(THREAD);
-  settingsHttp.puts.length = 0;
+  settingsHttp.puts.splice(0);
   previousRuntime = runtime;
   return runtime;
 }

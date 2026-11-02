@@ -223,7 +223,7 @@ test("the composed attacher marks the tree and then runs the maths renderer", ()
   const fakeMathAttacher = (options: unknown) => {
     optionsSeen = options;
     return (tree: HastNode) => {
-      seen.push(marked(tree.children?.[0]!) ? "marked" : "unmarked");
+      seen.push(marked(must(tree.children?.[0])) ? "marked" : "unmarked");
     };
   };
 
@@ -334,3 +334,8 @@ test("running the guard twice adds nothing the second time", () => {
     1,
   );
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

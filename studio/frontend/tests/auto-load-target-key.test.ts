@@ -8,6 +8,24 @@ import { fileURLToPath } from "node:url";
 
 import ts from "@typescript/typescript6";
 
+interface AutoLoadSource {
+  listVariants: () => Promise<unknown>;
+}
+
+interface AutoLoadHelpers {
+  buildAutoLoadSources: (
+    rows: { repo_id: string; load_id?: string; cache_path?: string; size_bytes?: number }[],
+    empty: unknown[],
+    localRows: unknown[],
+    limit: number,
+  ) => AutoLoadSource[];
+  resolveAutoLoadCandidate: (
+    logical: AutoLoadSource,
+    quant: string,
+    fallback: () => boolean,
+  ) => Promise<{ ggufVariant: string; loadId: string }>;
+}
+
 // Lifted from chat-adapter.ts source; importing it would drag in the stores and toast layer.
 const adapterPath = fileURLToPath(
   new URL("../src/features/chat/api/chat-adapter.ts", import.meta.url),
@@ -71,7 +89,7 @@ test("startup remembers an inactive quant through the logical chat inventory tar
   const cachePath = "/cache/default/models--Org--Model";
   const scopes: (string | undefined)[] = [];
   const helpers = compile(
-    async (_id: string, _token: undefined, options: { localPath?: string }) => {
+    (_id: string, _token: undefined, options: { localPath?: string }) => {
       scopes.push(options.localPath);
       const quants = options.localPath === repoId ? ["Q6_K", "Q8_0"] : ["Q6_K"];
       return { variants: quants.map((quant, i) => ({
@@ -80,7 +98,7 @@ test("startup remembers an inactive quant through the logical chat inventory tar
     },
     () => true,
     () => true,
-  );
+  ) as AutoLoadHelpers;
   const rows = [{ repo_id: repoId, load_id: repoId, cache_path: cachePath, size_bytes: 300 }];
   const [logical] = helpers.buildAutoLoadSources(rows, [], [], 8192);
   const candidate = await helpers.resolveAutoLoadCandidate(logical, "Q8_0", () => false);

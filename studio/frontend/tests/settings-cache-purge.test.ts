@@ -41,14 +41,14 @@ function loadApi(responder: (url: string, init?: RequestInit) => Response): {
     new URL("../src/features/settings/api/caches.ts", import.meta.url),
     {
       "@/features/auth": {
-        authFetch: async (url: string, init?: RequestInit) => {
+        authFetch:  (url: string, init?: RequestInit) => {
           requests.push({ url, init });
-          return responder(url, init);
+          return Promise.resolve(responder(url, init));
         },
       },
       "@/lib/format-fastapi-error": {
-        readFastApiError: async (_response: Response, fallback: string) =>
-          fallback,
+        readFastApiError:  (_response: Response, fallback: string) =>
+          Promise.resolve(fallback),
       },
     },
   );
@@ -179,7 +179,7 @@ test("a purge posts cache keys and nothing that could be a path", async () => {
   assert.equal(requests.length, 1);
   assert.equal(requests[0].url, "/api/settings/caches/purge");
   assert.equal(requests[0].init?.method, "POST");
-  const body = JSON.parse(String(requests[0].init?.body));
+  const body = JSON.parse((requests[0].init.body as unknown as string));
   assert.deepEqual(Object.keys(body), ["keys"]);
   assert.deepEqual(body.keys, ["uv", "triton"]);
 });

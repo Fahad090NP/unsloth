@@ -30,8 +30,8 @@ test("a thread with no research reply answers false", () => {
 test("only a string run id counts, which is what the composer's gate meant", () => {
   // A non-string run id is a half-written metadata blob and must not count.
   for (const id of [undefined, null, 0, 1, true, {}, ["run_1"]]) {
-    assert.equal(messageHasResearchRunId(withRun(id)), false, String(id));
-    assert.equal(threadHasResearchMessage([withRun(id)]), false, String(id));
+    assert.equal(messageHasResearchRunId(withRun(id)), false, (id as unknown as string));
+    assert.equal(threadHasResearchMessage([withRun(id)]), false, (id as unknown as string));
   }
   assert.equal(messageHasResearchRunId(withRun("")), true);
 });

@@ -17,12 +17,12 @@ test("a compare row carries each pane's model once and its latest edit", () => {
     { ...base, id: "b", pairId: "pair", modelId: "m2", modifiedAt: 9 },
     { ...base, id: "c", pairId: "pair", modelId: "m1" },
   ]);
-  assert.deepEqual(row?.modelIds, ["m1", "m2"]);
-  assert.equal(row?.modifiedAt, 9);
+  assert.deepEqual(row.modelIds, ["m1", "m2"]);
+  assert.equal(row.modifiedAt, 9);
 });
 
 test("a never edited chat has no modified time", () => {
   const [row] = groupThreads([{ ...base, id: "a", modelId: "m1", modifiedAt: null }]);
-  assert.deepEqual(row?.modelIds, ["m1"]);
-  assert.equal("modifiedAt" in (row ?? {}), false);
+  assert.deepEqual(row.modelIds, ["m1"]);
+  assert.equal("modifiedAt" in (row), false);
 });

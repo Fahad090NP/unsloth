@@ -8,8 +8,8 @@ import { readSrc } from "./helpers/kit.ts";
 
 // The store pulls in zustand persist and Tauri, so the stepping is lifted out and run on its own.
 const STORE = readSrc("features/settings/stores/interface-scale-store.ts");
-const steps = JSON.parse(/INTERFACE_ZOOM_STEPS = (\[[^\]]+\])/.exec(STORE)![1]) as number[];
-const range = /min: (\d+),\s*max: (\d+),\s*default: (\d+)/.exec(STORE)!.slice(1).map(Number);
+const steps = JSON.parse(must(/INTERFACE_ZOOM_STEPS = (\[[^\]]+\])/.exec(STORE))[1]) as number[];
+const range = must(/min: (\d+),\s*max: (\d+),\s*default: (\d+)/.exec(STORE)).slice(1).map(Number);
 const stepInterfaceScale = (scale: number, direction: 1 | -1): number =>
   (direction > 0
     ? steps.find((step) => step > scale)
@@ -39,3 +39,8 @@ test("the function the menu runs matches the one tested here", () => {
   assert.match(STORE, /INTERFACE_ZOOM_STEPS\.find\(\(step\) => step > scale\)/);
   assert.match(STORE, /\[\.\.\.INTERFACE_ZOOM_STEPS\]\.reverse\(\)\.find\(\(step\) => step < scale\)/);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

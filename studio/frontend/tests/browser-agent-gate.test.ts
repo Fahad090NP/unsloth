@@ -248,7 +248,7 @@ test("stored permissions are checked, so a bad value never reads as allow", () =
   assert.deepEqual(Object.keys(checked.sites).sort(), ["canvas.example", "example.com"]);
   // A rule saved before Unlabelled clicks existed reads as ask.
   assert.deepEqual(checked.sites["example.com"], { browsing: "allow", actions: "ask", downloads: "ask", unlabelled: "ask" });
-  assert.equal(checked.sites["canvas.example"]?.unlabelled, "allow");
+  assert.equal(checked.sites["canvas.example"].unlabelled, "allow");
   assert.equal(ruleFor("https://app.canvas.example/", checked).rule.unlabelled, "allow");
   assert.equal(ruleFor("https://other.example/", checked).rule.unlabelled, "ask");
 });

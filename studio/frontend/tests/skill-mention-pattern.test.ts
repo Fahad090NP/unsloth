@@ -8,7 +8,7 @@ import test from "node:test";
 import { SKILL_MENTION_PATTERN } from "../src/features/chat/api/skill-tools.ts";
 
 const names = (text: string): string[] =>
-  [...text.matchAll(SKILL_MENTION_PATTERN)].map((match) => match[2] ?? "");
+  [...text.matchAll(SKILL_MENTION_PATTERN)].map((match) => match[2]);
 
 test("spec-shaped names at a word boundary are mentions", () => {
   assert.deepEqual(names("@probe-alpha"), ["probe-alpha"]);

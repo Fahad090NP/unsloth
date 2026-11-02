@@ -58,7 +58,7 @@ function chunk(type: string, data: number[] = []): number[] {
     (len >>> 16) & 255,
     (len >>> 8) & 255,
     len & 255,
-    ...[...type].map((c) => c.charCodeAt(0)),
+    ...Array.from(type, (c) => c.charCodeAt(0)),
     ...data,
     1,
     2,
@@ -66,7 +66,7 @@ function chunk(type: string, data: number[] = []): number[] {
     4,
   ];
 }
-const latin1 = (s: string) => [...s].map((c) => c.charCodeAt(0));
+const latin1 = (s: string) => Array.from(s, (c) => c.charCodeAt(0));
 const utf8 = (s: string) => [...new TextEncoder().encode(s)];
 function png(...chunks: number[][]): Uint8Array<ArrayBuffer> {
   return new Uint8Array([
@@ -478,7 +478,7 @@ test("a ComfyUI Flux graph imports through SamplerCustomAdvanced and FluxGuidanc
   };
   const flux = parseComfyPrompt(JSON.stringify(ksampler));
   assert.equal(flux?.prompt, "beautiful scenery nature glass bottle");
-  assert.equal(flux?.guidance, 3.5);
+  assert.equal(flux.guidance, 3.5);
 });
 
 // A little-endian EXIF block holding one UserComment, as a non-piexif writer lays it out.
@@ -608,7 +608,7 @@ test("imported steps, CFG and strength land inside the request bounds; A1111 str
     "a cat\nSteps: 150, CFG scale: 30, Seed: 5, Size: 512x512, Denoising strength: 0.45",
   );
   assert.equal(parsed?.strength, 0.45);
-  const settings = recipeSettings(parsed ?? { prompt: "" }, defaults);
+  const settings = recipeSettings(parsed, defaults);
   assert.equal(settings.steps, 100);
   assert.equal(settings.guidance, 20);
   assert.equal(settings.strength, 0.45);
@@ -631,7 +631,7 @@ test("sampler and schedule come back from the recipe and from A1111 labels", () 
     "a cat\nSteps: 20, Sampler: Euler a, Schedule type: Exponential, CFG scale: 7, Seed: 1",
   );
   assert.equal(parsed?.sampler, "euler_a");
-  assert.equal(parsed?.schedule_type, "exponential");
+  assert.equal(parsed.schedule_type, "exponential");
   // Unknown labels stay as written so the import can say it did not apply them.
   assert.equal(
     parseA1111Parameters("a cat\nSteps: 20, Sampler: UniPC")?.sampler,
@@ -698,7 +698,7 @@ test("an unmapped ComfyUI sampler is kept by name; prototype names map to nothin
   assert.equal(parseComfyPrompt(graph("uni_pc", "normal"))?.schedule_type, undefined);
   const hostile = parseComfyPrompt(graph("constructor", "toString"));
   assert.equal(hostile?.sampler, "constructor");
-  assert.equal(hostile?.schedule_type, undefined);
+  assert.equal(hostile.schedule_type, undefined);
 });
 
 test("the import names a sampler or schedule the loaded model does not offer", () => {
@@ -768,7 +768,7 @@ test("ComfyUI's SDXL, SD3 and Flux text encoders import their prompt", () => {
     graph({ class_type: "CLIPTextEncodeSDXL", inputs: { text_g: "a castle on a hill", text_l: "castle", width: 1024 } }),
   );
   assert.equal(sdxl?.prompt, "a castle on a hill");
-  assert.equal(sdxl?.negative_prompt, "lowres");
+  assert.equal(sdxl.negative_prompt, "lowres");
   const sd3 = parseComfyPrompt(
     graph({ class_type: "CLIPTextEncodeSD3", inputs: { clip_l: "c", clip_g: "c", t5xxl: "a detailed castle" } }),
   );
@@ -777,21 +777,21 @@ test("ComfyUI's SDXL, SD3 and Flux text encoders import their prompt", () => {
     graph({ class_type: "CLIPTextEncodeFlux", inputs: { clip_l: "castle", t5xxl: "a castle at dawn", guidance: 4 } }),
   );
   assert.equal(flux?.prompt, "a castle at dawn");
-  assert.equal(flux?.guidance, 4);
+  assert.equal(flux.guidance, 4);
 });
 
 test("pre-1.9 AUTOMATIC1111 sampler names carry their schedule; denoising strength means img2img", () => {
   const legacy = parseA1111Parameters("a cat\nSteps: 20, Sampler: DPM++ 2M Karras, CFG scale: 7, Seed: 1, Size: 512x512");
   assert.equal(legacy?.sampler, "dpmpp_2m");
-  assert.equal(legacy?.schedule_type, "karras");
+  assert.equal(legacy.schedule_type, "karras");
   // An explicit Schedule type wins over the suffix.
   const both = parseA1111Parameters("a cat\nSteps: 20, Sampler: Euler a, Schedule type: Uniform, CFG scale: 7");
   assert.equal(both?.sampler, "euler_a");
-  assert.equal(both?.schedule_type, "uniform");
+  assert.equal(both.schedule_type, "uniform");
   assert.equal(parseA1111Parameters("a cat\nSteps: 20, Sampler: UniPC Karras")?.sampler, "UniPC");
   const img2img = parseA1111Parameters("a cat\nSteps: 20, CFG scale: 7, Seed: 1, Denoising strength: 0.4");
   assert.equal(img2img?.workflow, "img2img");
-  assert.equal(img2img?.strength, 0.4);
+  assert.equal(img2img.strength, 0.4);
   // txt2img hires fix: the strength belongs to the hires pass, so it is not restored.
   const hires = parseA1111Parameters(
     "a cat\nSteps: 20, CFG scale: 7, Seed: 1, Denoising strength: 0.7, Hires upscale: 2, Hires upscaler: Latent",

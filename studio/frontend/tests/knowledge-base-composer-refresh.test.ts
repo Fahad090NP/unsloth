@@ -19,7 +19,7 @@ function harness() {
   const state = {
     ragEnabled: true,
     ragSource: { type: "kb", kbId: "kb-1" } as unknown,
-    setRagEnabled() {},
+    setRagEnabled() { return undefined; },
     setRagSource(source: unknown) {
       state.ragSource = source;
       sources.push(source);
@@ -89,7 +89,7 @@ function harness() {
           new Promise<Rows>((resolve) => pending.push(resolve)),
         subscribeKnowledgeBasesChanged: (onChanged: () => void) => {
           listeners.push(onChanged);
-          return () => {};
+          return () => { return undefined; };
         },
       },
       "./knowledge-base-dialog": { KnowledgeBaseDialog: "KnowledgeBaseDialog" },

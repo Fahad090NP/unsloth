@@ -24,6 +24,9 @@ const STORE = new URL(
   import.meta.url,
 ).href;
 
+type ChatPreferencesModule =
+  typeof import("../src/features/chat/stores/chat-preferences-store.ts");
+
 interface Env {
   tauri: boolean;
   enabled: boolean;
@@ -55,7 +58,7 @@ function memoryStorage(): Storage {
     getItem: (key) => items.get(key) ?? null,
     key: (index) => [...items.keys()][index] ?? null,
     removeItem: (key) => void items.delete(key),
-    setItem: (key, value) => void items.set(key, String(value)),
+    setItem: (key, value) => void items.set(key, value),
   };
 }
 
@@ -84,7 +87,7 @@ async function load(env: Env) {
   const windowStub: Record<string, unknown> = {
     location: { protocol: tauri ? "tauri:" : "http:" },
     localStorage: storage,
-    focus() {},
+    focus() {/* intentionally empty */},
   };
   if (tauri) {
     windowStub.__TAURI_INTERNALS__ = {};
@@ -92,15 +95,15 @@ async function load(env: Env) {
   if (permission !== "absent") {
     const api = function (title: string, options?: NotificationOptions) {
       created.push({ title, options });
-      return { close() {}, onclick: null };
+      return { close() {/* intentionally empty */}, onclick: null };
     } as unknown as {
       permission: string;
       requestPermission: () => Promise<string>;
     };
     api.permission = permission;
-    api.requestPermission = async () => {
+    api.requestPermission =  () => {
       api.permission = answer;
-      return answer;
+      return Promise.resolve(answer);
     };
     windowStub.Notification = api;
   }
@@ -119,7 +122,9 @@ async function load(env: Env) {
   control.backend = backend;
 
   generation += 1;
-  const store = await import(`${STORE}?bust=${generation}`);
+  const store = (await import(
+    `${STORE}?bust=${generation}`
+  )) as ChatPreferencesModule;
   store.useChatPreferencesStore.setState({ notifyWhenReplyFinishes: enabled });
   const mod = (await import(`${MODULE}?bust=${generation}`)) as {
     notifyReplyFinished: () => void;
@@ -144,9 +149,9 @@ async function settle(sent: () => number = () => 0, expected = 0) {
 }
 
 test("off by default, including installs that never saw the setting", async () => {
-  const { useChatPreferencesStore } = await import(
+  const { useChatPreferencesStore } = (await import(
     `${STORE}?bust=default`
-  );
+  )) as ChatPreferencesModule;
   assert.equal(
     useChatPreferencesStore.getInitialState().notifyWhenReplyFinishes,
     false,
@@ -369,10 +374,9 @@ test("the setting is a searchable switch in Chat settings that reverts when refu
   assert.match(row, /checked=\{notifyWhenReplyFinishes\}/);
   assert.match(row, /requestReplyFinishedPermission\(\)/);
   assert.match(row, /setNotifyWhenReplyFinishes\(false\)/);
-  const { SETTINGS_SEARCH_INDEX } = await import(
-    new URL("../src/features/settings/settings-search.ts", import.meta.url)
-      .href
-  );
+  const { SETTINGS_SEARCH_INDEX } = (await import(
+    new URL("../src/features/settings/settings-search.ts", import.meta.url).href
+  )) as typeof import("../src/features/settings/settings-search.ts");
   assert.ok(
     SETTINGS_SEARCH_INDEX.chat.includes("settings.chat.replyNotification"),
   );

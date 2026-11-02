@@ -45,7 +45,7 @@ function recorder(temporary: Set<string>) {
   ).useBranchHeadRecorder;
   return {
     writes,
-    render(next: View) {
+    render: (next: View) => {
       view = next;
       runRecorder();
     },
@@ -95,44 +95,44 @@ function sidebar(deleteResult: () => Promise<string[]>) {
   const module = loadWithStubs<DeleteModule>(
     new URL("../src/features/chat/hooks/use-chat-sidebar-items.ts", import.meta.url),
     {
-      react: { useEffect: () => {}, useMemo: () => {}, useState: () => [] },
+      react: { useEffect: () => {/* intentionally empty */}, useMemo: () => {/* intentionally empty */}, useState: () => [] },
       "../api/chat-api": {
         CHAT_HISTORY_UPDATED_EVENT: "chat-history-updated",
-        notifyChatHistoryUpdated: () => {},
+        notifyChatHistoryUpdated: () => {/* intentionally empty */},
       },
       "../stores/chat-runtime-store": {
-        useChatRuntimeStore: { getState: () => ({ setActiveThreadId: () => {} }) },
+        useChatRuntimeStore: { getState: () => ({ setActiveThreadId: () => {/* intentionally empty */} }) },
       },
       "../utils/chat-history-storage": { deleteStoredChatThreads: deleteResult },
       "../utils/branch-head": { clearBranchHead: (id: string) => cleared.push(id) },
-      "../utils/composer-draft": { clearComposerDraft: () => {} },
-      "../utils/offer-kept-sandbox-files": { offerToDeleteKeptSandboxes: () => {} },
-      "../utils/stop-chat-thread": { stopChatThread: () => {} },
+      "../utils/composer-draft": { clearComposerDraft: () => {/* intentionally empty */} },
+      "../utils/offer-kept-sandbox-files": { offerToDeleteKeptSandboxes: () => {/* intentionally empty */} },
+      "../utils/stop-chat-thread": { stopChatThread: () => {/* intentionally empty */} },
       "../utils/chat-thread-tombstones": {
-        markChatThreadsDeleted: () => {},
+        markChatThreadsDeleted: () => {/* intentionally empty */},
         notifyChatThreadsDeleted: (ids: string[]) => notified.push(ids),
         removeChatThreadTombstones: (ids: string[]) => restored.push(ids),
       },
-      "../utils/prompt-queue-boundary": { requestPromptQueueStop: () => {} },
-      "../utils/repair-legacy-chat-titles": { repairLegacyChatTitles: () => {} },
+      "../utils/prompt-queue-boundary": { requestPromptQueueStop: () => {/* intentionally empty */} },
+      "../utils/repair-legacy-chat-titles": { repairLegacyChatTitles: () => {/* intentionally empty */} },
     },
   );
   return { ...module, cleared, restored, notified };
 }
 
 test("deleting a chat clears its saved branch once the delete holds", async () => {
-  const { deleteChatItems, cleared, notified } = sidebar(async () => []);
-  await deleteChatItems([{ type: "single", id: "t" }], undefined, () => {});
+  const { deleteChatItems, cleared, notified } = sidebar( () => Promise.resolve([]));
+  await deleteChatItems([{ type: "single", id: "t" }], undefined, () => {/* intentionally empty */});
   assert.deepEqual(cleared, ["t"]);
   assert.deepEqual(notified, [["t"]]);
 });
 
 test("a rejected delete keeps the saved branch of the chat it brings back", async () => {
-  const { deleteChatItems, cleared, restored, notified } = sidebar(async () => {
-    throw new Error("delete failed");
+  const { deleteChatItems, cleared, restored, notified } = sidebar( () => {
+    return Promise.reject(new Error("delete failed"));
   });
   await assert.rejects(
-    deleteChatItems([{ type: "single", id: "t" }], undefined, () => {}),
+    deleteChatItems([{ type: "single", id: "t" }], undefined, () => {/* intentionally empty */}),
     /delete failed/,
   );
   assert.deepEqual(restored, [["t"]]);

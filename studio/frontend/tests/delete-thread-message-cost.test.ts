@@ -46,22 +46,22 @@ function harness(): Harness {
     {
       "@assistant-ui/core/internal": { MessageRepository },
       "../api/chat-api": {
-        listChatMessages: async () => {
+        listChatMessages: () => {
           calls.push("listChatMessages");
           return stored;
         },
       },
       "./chat-history-storage": {
-        ensureStoredChatThread: async () => {
+        ensureStoredChatThread: () => {
           calls.push("ensureStoredChatThread");
         },
-        syncStoredChatMessages: async (
+        syncStoredChatMessages: (
           _threadId: string,
           records: Record<string, unknown>[],
           options: { pruneMissing?: boolean },
         ) => {
           calls.push("syncStoredChatMessages");
-          synced.push({ records, pruneMissing: options?.pruneMissing });
+          synced.push({ records, pruneMissing: options.pruneMissing });
           return records;
         },
       },
@@ -116,7 +116,7 @@ async function deleteFrom(
   return imported as unknown as Exported;
 }
 
-test("records share the message's parts instead of deep-cloning the thread", async () => {
+test("records share the message's parts instead of deep-cloning the thread", () => {
   const h = harness();
   const source = message("u0", "user", {
     attachments: [{ id: "att-1", type: "file", name: "a.txt" }],

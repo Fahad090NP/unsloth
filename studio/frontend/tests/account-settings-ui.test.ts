@@ -107,7 +107,7 @@ function tab(
     },
     "../components/change-password-dialog": {
       ChangePasswordDialog: "ChangePasswordDialog",
-      useOwnPasswordPending: () => [options.ownerPasswordPending ?? false, () => {}],
+      useOwnPasswordPending: () => [options.ownerPasswordPending ?? false, () => { /* empty */ }],
     },
     "@hugeicons/core-free-icons": {},
     "@/lib/folder-icons": {},
@@ -147,7 +147,7 @@ function tab(
       ].map((name) => [name, name]),
     ),
     "@/lib/copy-to-clipboard": {
-      copyToClipboard: async (value: string) => {
+      copyToClipboard: (value: string) => {
         calls.push(`copy:${value}`);
         return true;
       },
@@ -174,30 +174,30 @@ function tab(
         }
         return accounts;
       },
-      createAccount: async (username: string) => {
+      createAccount: (username: string) => {
         calls.push(`create:${username}`);
         return setup;
       },
-      regenerateSetupCode: async (accountId: string) => {
+      regenerateSetupCode: (accountId: string) => {
         calls.push(`regenerate:${accountId}`);
         if (mutationError) throw new Error(mutationError);
         return { ...setup, setup_code: "regenerated-secret" };
       },
-      setAccountActive: async (accountId: string, active: boolean) => {
+      setAccountActive: (accountId: string, active: boolean) => {
         calls.push(`active:${accountId}:${active}`);
         accounts[1].is_active = active;
       },
-      deleteAccount: async (accountId: string) => {
+      deleteAccount: (accountId: string) => {
         calls.push(`delete:${accountId}`);
         accounts.splice(1);
       },
-      setOwnerLoginAlias: async (alias: string | null) => {
+      setOwnerLoginAlias: (alias: string | null) => {
         calls.push(`alias:${alias}`);
         const stored = alias?.trim().toLowerCase() || null;
         accounts[0].login_alias = stored;
         return stored;
       },
-      setAccountModelAllowlist: async (
+      setAccountModelAllowlist: (
         accountId: string,
         allowlist: string[] | null,
       ) => {
@@ -226,7 +226,7 @@ function tab(
 const confirm = async (tree: unknown) => {
   const action = nodes(tree).find((node) => node.type === "AlertDialogAction");
   assert.ok(action);
-  (action.props.onClick as (event: unknown) => void)({ preventDefault() {} });
+  (action.props.onClick as (event: unknown) => void)({ preventDefault() { /* empty */ } });
   await tick();
 };
 const click = async (tree: unknown, label: string) => {
@@ -295,7 +295,7 @@ test("create shows a copyable expiring setup code once and regeneration replaces
   });
   tree = ui.render();
   const form = nodes(tree).find((node) => node.type === "form");
-  (form?.props.onSubmit as (event: unknown) => void)({ preventDefault() {} });
+  (form?.props.onSubmit as (event: unknown) => void)({ preventDefault() { /* empty */ } });
   await tick();
   tree = ui.render();
   assert.ok(ui.calls.includes("create:alice"));
@@ -447,7 +447,7 @@ test("a one-time setup code can always be dismissed, even while its refresh is s
   });
   const form = nodes(ui.render()).find((node) => node.type === "form");
   assert.ok(form);
-  (form.props.onSubmit as (event: unknown) => void)({ preventDefault() {} });
+  (form.props.onSubmit as (event: unknown) => void)({ preventDefault() { /* empty */ } });
   await tick();
   await tick();
 
@@ -468,17 +468,17 @@ test("a one-time setup code can always be dismissed, even while its refresh is s
   const input2 = nodes(ui2.render()).find(
     (node) => node.props.id === "new-account-username",
   );
-  (input2!.props.onChange as (event: unknown) => void)({
+  ((input2 ?? assert.fail("expected a non-null value")).props.onChange as (event: unknown) => void)({
     target: { value: "bob" },
   });
   const form2 = nodes(ui2.render()).find((node) => node.type === "form");
-  (form2!.props.onSubmit as (event: unknown) => void)({ preventDefault() {} });
+  ((form2 ?? assert.fail("expected a non-null value")).props.onSubmit as (event: unknown) => void)({ preventDefault() { /* empty */ } });
   await tick();
   await tick();
   tree2 = ui2.render();
   assert.match(content(tree2), /one-time-secret/);
   const dialog = nodes(tree2).find((node) => node.type === "Dialog");
-  (dialog!.props.onOpenChange as (open: boolean) => void)(false);
+  ((dialog ?? assert.fail("expected a non-null value")).props.onOpenChange as (open: boolean) => void)(false);
   await tick();
   assert.doesNotMatch(content(ui2.render()), /one-time-secret/);
   ui.releaseRefresh();
@@ -516,7 +516,7 @@ test("an account the API reports without a creation date shows a dash, not the e
     (node) => node.props["data-testid"] === "account-alice",
   );
   assert.match(
-    content(nodes(aliceRow!).find((node) => node.type === "time")),
+    content(nodes((aliceRow ?? assert.fail("expected a non-null value"))).find((node) => node.type === "time")),
     /2026/,
     "a real timestamp must still render",
   );
@@ -541,19 +541,19 @@ test("model access edits one account's allowlist and an empty list restores ever
         nodes(node.props.children).some((child) => child.type === "Textarea"),
     );
     assert.ok(form);
-    (form.props.onSubmit as (event: unknown) => void)({ preventDefault() {} });
+    (form.props.onSubmit as (event: unknown) => void)({ preventDefault() { /* empty */ } });
     await tick();
     await tick();
   };
-  (textarea()!.props.onChange as (event: unknown) => void)({
+  ((textarea() ?? assert.fail("expected a non-null value")).props.onChange as (event: unknown) => void)({
     target: { value: " unsloth/* \nGoogle/gemma-3-1b-it, " },
   });
   await submit();
   tree = view.render();
   assert.ok(content(tree).includes(en.settings.accounts.modelAccessLimited));
   await click(tree, en.settings.accounts.modelAccess);
-  assert.equal(textarea()!.props.value, "unsloth/*\nGoogle/gemma-3-1b-it");
-  (textarea()!.props.onChange as (event: unknown) => void)({ target: { value: "  " } });
+  assert.equal((textarea() ?? assert.fail("expected a non-null value")).props.value, "unsloth/*\nGoogle/gemma-3-1b-it");
+  ((textarea() ?? assert.fail("expected a non-null value")).props.onChange as (event: unknown) => void)({ target: { value: "  " } });
   await submit();
   assert.deepEqual(
     view.calls.filter((call) => call.startsWith("models:")),

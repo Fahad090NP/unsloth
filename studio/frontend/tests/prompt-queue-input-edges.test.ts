@@ -190,7 +190,7 @@ test("no key is both a queue chord and a guard-retiring keystroke", () => {
             assert.equal(
               chord && retires,
               false,
-              `${k} ctrl=${ctrlKey} meta=${metaKey} alt=${altKey} shift=${shiftKey}`,
+              `${k} ctrl=${String(ctrlKey)} meta=${String(metaKey)} alt=${String(altKey)} shift=${String(shiftKey)}`,
             );
           }
         }

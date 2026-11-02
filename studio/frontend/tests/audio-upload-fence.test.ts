@@ -17,11 +17,11 @@ class FakeXhr {
   open(_method: string, url: string) {
     sent.push(url);
   }
-  setRequestHeader() {}
+  setRequestHeader() { /* empty */ }
   send() {
     this.onload?.();
   }
-  abort() {}
+  abort() { /* empty */ }
 }
 (globalThis as Record<string, unknown>).XMLHttpRequest = FakeXhr;
 
@@ -33,7 +33,7 @@ const { uploadAudioInput } = loadWithStubs<{
   ) => Promise<{ id: string }>;
 }>(new URL("../src/features/audio/api.ts", import.meta.url), {
   "@/features/auth": {
-    authFetch: async () => {
+    authFetch: () => {
       throw new Error(
         "Another tab is switching accounts; this tab will reload.",
       );
@@ -44,7 +44,7 @@ const { uploadAudioInput } = loadWithStubs<{
   "@/lib/api-base": { apiUrl: (path: string) => path },
   "@/lib/format-fastapi-error": {
     formatApiErrorBody: () => null,
-    readFastApiError: async () => "error",
+    readFastApiError: () => "error",
   },
   "./audio-run-request": {
     buildAudioRunBody: () => ({}),
@@ -56,7 +56,7 @@ const { uploadAudioInput } = loadWithStubs<{
 test("a reference upload with progress waits out another tab's account switch", async () => {
   await assert.rejects(
     uploadAudioInput(new Blob(["x"], { type: "audio/wav" }), "a.wav", {
-      onProgress: () => {},
+      onProgress: () => { /* empty */ },
     }),
     /switching accounts/,
   );

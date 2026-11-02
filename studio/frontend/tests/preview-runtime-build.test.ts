@@ -38,9 +38,9 @@ test("exactly the five runtime files, hashed, under assets/preview-runtime", () 
   for (const f of files) {
     const hash = createHash("sha256").update(f.code).digest("hex").slice(0, 10);
     assert.equal(f.fileName, `assets/preview-runtime/${f.name}.${hash}.js`);
-    assert.equal(manifest.files[f.name]?.url, f.fileName);
+    assert.equal(manifest.files[f.name].url, f.fileName);
     // The loader compares this against the response body, so it is UTF-8 bytes, not UTF-16 units.
-    assert.equal(manifest.files[f.name]?.bytes, Buffer.byteLength(f.code));
+    assert.equal(manifest.files[f.name].bytes, Buffer.byteLength(f.code));
   }
   assert.deepEqual(Object.keys(manifest.files).sort(), [
     "lucide-react",
@@ -82,14 +82,14 @@ test("versions are the locked ones, and Tailwind's browser build matches the app
     readFileSync(join(ROOT, "package-lock.json"), "utf8"),
   ) as { packages: Record<string, { version: string }> };
   const locked = (name: string) =>
-    lock.packages[`node_modules/${name}`]?.version;
-  assert.equal(manifest.files.react?.version, locked("react"));
+    lock.packages[`node_modules/${name}`].version;
+  assert.equal(manifest.files.react.version, locked("react"));
   assert.equal(locked("react-dom"), locked("react"));
-  assert.equal(manifest.files["lucide-react"]?.version, locked("lucide-react"));
-  assert.equal(manifest.files.recharts?.version, locked("recharts"));
-  assert.equal(manifest.files.motion?.version, locked("motion"));
+  assert.equal(manifest.files["lucide-react"].version, locked("lucide-react"));
+  assert.equal(manifest.files.recharts.version, locked("recharts"));
+  assert.equal(manifest.files.motion.version, locked("motion"));
   assert.equal(
-    manifest.files.tailwind?.version,
+    manifest.files.tailwind.version,
     locked("@tailwindcss/browser"),
   );
   assert.equal(locked("@tailwindcss/browser"), locked("tailwindcss"));
@@ -98,7 +98,7 @@ test("versions are the locked ones, and Tailwind's browser build matches the app
 test("each file carries one licence line naming what it bundles, and no other legal comments", () => {
   for (const f of files) {
     const [banner] = f.code.split("\n", 1);
-    assert.match(banner ?? "", /^\/\*! .+@\d+\.\d+\.\d+ .*\*\/$/, f.name);
+    assert.match(banner, /^\/\*! .+@\d+\.\d+\.\d+ .*\*\/$/, f.name);
     assert.equal(f.code.split("/*!").length - 1, 1, f.name);
   }
   assert.ok(code("react").startsWith("/*! react-dom@"));
@@ -169,26 +169,26 @@ test("the files register module namespaces, React first and shared", () => {
   // CommonJS packages: `default` is the exports object and its keys are named exports too.
   assert.equal(typeof react.useState, "function");
   assert.equal(react.useState, reactDefault.useState);
-  assert.equal(react.version, manifest.files.react?.version);
-  assert.equal(typeof r["react-dom/client"]?.createRoot, "function");
-  assert.equal(typeof r["react-dom"]?.createPortal, "function");
-  assert.equal(typeof r["react/jsx-runtime"]?.jsx, "function");
-  assert.equal(r["react/jsx-runtime"]?.Fragment, react.Fragment);
+  assert.equal(react.version, manifest.files.react.version);
+  assert.equal(typeof r["react-dom/client"].createRoot, "function");
+  assert.equal(typeof r["react-dom"].createPortal, "function");
+  assert.equal(typeof r["react/jsx-runtime"].jsx, "function");
+  assert.equal(r["react/jsx-runtime"].Fragment, react.Fragment);
   // Icons and charts are forwardRef components, read through the one shared React.
   const forwardRef = (
     react.forwardRef as (f: () => null) => { $$typeof: symbol }
   )(() => null).$$typeof;
   assert.equal(
-    (r["lucide-react"]?.Camera as { $$typeof: symbol }).$$typeof,
+    (r["lucide-react"].Camera as { $$typeof: symbol }).$$typeof,
     forwardRef,
   );
   assert.equal(
-    (r.recharts?.LineChart as { $$typeof: symbol }).$$typeof,
+    (r.recharts.LineChart as { $$typeof: symbol }).$$typeof,
     forwardRef,
   );
-  assert.equal(typeof r["motion/react"]?.motion, "function");
-  assert.equal(r["framer-motion"]?.motion, r["motion/react"]?.motion);
-  assert.equal(typeof r.motion?.animate, "function");
+  assert.equal(typeof r["motion/react"].motion, "function");
+  assert.equal(r["framer-motion"].motion, r["motion/react"].motion);
+  assert.equal(typeof r.motion.animate, "function");
 });
 
 test("a library loaded before React says so", () => {
@@ -246,7 +246,7 @@ test("the plugin serves the manifest module and the files, and 404s anything els
         handler?.({ url }, res, reject);
       },
     );
-  const react = manifest.files.react?.url ?? "";
+  const react = manifest.files.react.url;
   const ok = await get(`/${react.slice(prefix.length - 1)}?v=1`);
   assert.equal(ok.status, 200);
   assert.match(String(ok.type), /^text\/javascript/);

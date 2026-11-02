@@ -39,7 +39,7 @@ function stubHub(opts: {
 }) {
   const sent: Sent[] = [];
   const realFetch = globalThis.fetch;
-  globalThis.fetch = (async (input: string | Request, init?: RequestInit) => {
+  globalThis.fetch = ((input: string | Request, init?: RequestInit) => {
     // As fetch does: init.headers, when given, replace a Request's own.
     const isRequest = input instanceof Request;
     const headers = new Headers(init?.headers ?? (isRequest ? input.headers : undefined));
@@ -52,30 +52,30 @@ function stubHub(opts: {
     const upstream: Record<string, string> = viaRelay ? { "X-Hub-Upstream": "1" } : {};
     if (hubToken) {
       if (opts.tokenStatus !== undefined) {
-        return new Response("{}", { status: opts.tokenStatus, headers: upstream });
+        return Promise.resolve(new Response("{}", { status: opts.tokenStatus, headers: upstream }));
       }
       if (opts.rejectedToken && hubToken === `Bearer ${opts.rejectedToken}`) {
-        return new Response('{"error":"Invalid credentials in Authorization header"}', {
+        return Promise.resolve(new Response('{"error":"Invalid credentials in Authorization header"}', {
           status: 401,
           headers: {
             ...upstream,
             "X-Error-Message": "OAuth token verification failed: Invalid Compact JWS",
             "WWW-Authenticate": 'Bearer realm="Authentication required"',
           },
-        });
+        }));
       }
-      return new Response('[{"id":"private/model"}]', { status: 200, headers: upstream });
+      return Promise.resolve(new Response('[{"id":"private/model"}]', { status: 200, headers: upstream }));
     }
     const status = opts.anonymousStatus ?? 200;
-    return new Response(status === 200 ? '[{"id":"unsloth/Qwen3-0.6B-GGUF"}]' : "{}", {
+    return Promise.resolve(new Response(status === 200 ? '[{"id":"unsloth/Qwen3-0.6B-GGUF"}]' : "{}", {
       status,
       headers: upstream,
-    });
+    }));
   }) as typeof fetch;
   return {
     sent,
     restore: () => {
-      globalThis.fetch = realFetch;
+      Reflect.set(globalThis, "fetch", realFetch);
     },
   };
 }
@@ -164,15 +164,15 @@ test("403, 404, 429 and 5xx answer for the resource, not the token, and are neve
 test("a network failure propagates without a retry", async () => {
   const realFetch = globalThis.fetch;
   let calls = 0;
-  globalThis.fetch = (async () => {
+  globalThis.fetch = (() => {
     calls += 1;
-    throw new TypeError("Failed to fetch");
+    return Promise.reject(new TypeError("Failed to fetch"));
   });
   try {
     await assert.rejects(fetchHub(API, withToken(OAUTH)), TypeError);
     assert.equal(calls, 1);
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
   }
 });
 
@@ -210,7 +210,7 @@ test("through the Studio relay, only the endpoint's own 401 retries, and the ses
     configurable: true,
     value: { getItem: () => "session" },
   });
-  setHubSessionRefresh(async () => false);
+  setHubSessionRefresh(() => Promise.resolve(false));
   try {
     setHfEndpoints(relay, null, "huggingface", { endpoint: true });
     const response = await fetchHub(`${relay}/api/models?search=qwen`, withToken(OAUTH));
@@ -233,15 +233,15 @@ test("a relay 401 without the upstream marker is the session, not the token", as
   const relay = "http://127.0.0.1:8888/api/hub/proxy";
   const realFetch = globalThis.fetch;
   let calls = 0;
-  globalThis.fetch = (async () => {
+  globalThis.fetch = (() => {
     calls += 1;
-    return new Response("{}", { status: 401 });
+    return Promise.resolve(new Response("{}", { status: 401 }));
   });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
     value: { getItem: () => "session" },
   });
-  setHubSessionRefresh(async () => false);
+  setHubSessionRefresh(() => Promise.resolve(false));
   try {
     setHfEndpoints(relay, null, "huggingface", { endpoint: true });
     const response = await fetchHub(`${relay}/api/models`, withToken(OAUTH));
@@ -249,7 +249,7 @@ test("a relay 401 without the upstream marker is the session, not the token", as
     assert.equal(calls, 1);
     assert.equal(isHfTokenRejected(OAUTH), false);
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
     Reflect.deleteProperty(globalThis, "localStorage");
   }
 });
@@ -266,14 +266,14 @@ test("a different token starts clean", () => {
   assert.equal(isHfTokenRejected(OAUTH), false);
 });
 
-test("OAuth tokens are redacted from notifications and diagnostics", async () => {
+test("OAuth tokens are redacted from notifications and diagnostics", () => {
   for (const file of ["../src/lib/native-notifications.ts", "../src/lib/tauri-diagnostics.ts"]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
     const patterns = [...source.matchAll(/\/(\\bhf_[^/]+)\/g?/g)].map((m) => new RegExp(m[1]));
     assert.ok(patterns.length > 0, file);
     for (const pattern of patterns) {
       const match = `token ${OAUTH} end`.match(pattern);
-      assert.equal(match?.[0], OAUTH, `${file}: ${pattern} must cover the whole OAuth token`);
+      assert.equal(match?.[0], OAUTH, `${file}: ${String(pattern)} must cover the whole OAuth token`);
       assert.equal(`token ${CLASSIC} end`.match(pattern)?.[0], CLASSIC);
     }
   }
@@ -369,7 +369,7 @@ test("through the relay, a Request's own token is dropped from the anonymous ret
     configurable: true,
     value: { getItem: () => "session" },
   });
-  setHubSessionRefresh(async () => false);
+  setHubSessionRefresh(() => Promise.resolve(false));
   try {
     setHfEndpoints(relay, null, "huggingface", { endpoint: true });
     const request = new Request(`${relay}/api/models?search=qwen`, {
@@ -494,22 +494,22 @@ test("clearing a refusal is not reported as a new one", () => {
 test("a failed anonymous probe keeps the Hub's 401 instead of throwing", async () => {
   const realFetch = globalThis.fetch;
   let calls = 0;
-  globalThis.fetch = (async () => {
+  globalThis.fetch = (() => {
     calls += 1;
     if (calls === 1) {
-      return new Response("{}", {
+      return Promise.resolve(new Response("{}", {
         status: 401,
         headers: { "X-Error-Message": "OAuth token verification failed: Invalid Compact JWS" },
-      });
+      }));
     }
-    throw new TypeError("Failed to fetch");
+    return Promise.reject(new TypeError("Failed to fetch"));
   });
   try {
     const response = await fetchHub("https://huggingface.co/api/models", withToken(OAUTH));
     assert.equal(response.status, 401);
     assert.equal(isHfTokenRejected(OAUTH), false);
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
   }
 });
 
@@ -553,20 +553,20 @@ test("a slow anonymous probe does not reinstate a refusal a newer tokened succes
     assert.equal(isHfTokenRejected(OAUTH), false);
     assert.equal(hasRejectedHfToken(), false);
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
   }
 });
 
 test("an abort while the anonymous probe is in flight rejects instead of returning the 401", async () => {
   const realFetch = globalThis.fetch;
   const controller = new AbortController();
-  globalThis.fetch = (async (_input: string | Request, init?: RequestInit) => {
+  globalThis.fetch = ((_input: string | Request, init?: RequestInit) => {
     const authorization = new Headers(init?.headers).get("authorization");
     if (authorization) {
-      return new Response("{}", { status: 401, headers: { "X-Error-Message": "Invalid credentials" } });
+      return Promise.resolve(new Response("{}", { status: 401, headers: { "X-Error-Message": "Invalid credentials" } }));
     }
     controller.abort();
-    throw new DOMException("The operation was aborted.", "AbortError");
+    return Promise.reject(new DOMException("The operation was aborted.", "AbortError"));
   }) as typeof fetch;
   try {
     await assert.rejects(
@@ -574,6 +574,6 @@ test("an abort while the anonymous probe is in flight rejects instead of returni
       (error: Error) => error.name === "AbortError",
     );
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
   }
 });

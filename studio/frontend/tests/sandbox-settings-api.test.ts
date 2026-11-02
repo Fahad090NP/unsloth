@@ -33,10 +33,10 @@ function loadApi(respond: (call: Call) => Response): {
     ),
     {
       "@/features/auth": {
-        authFetch: async (url: string, init?: RequestInit) => {
+        authFetch:  (url: string, init?: RequestInit) => {
           const call = { url, init };
           calls.push(call);
-          return respond(call);
+          return Promise.resolve(respond(call));
         },
       },
       "@/lib/format-fastapi-error": {
@@ -275,7 +275,7 @@ test("the memory limit maps to camelCase, and an older backend without it maps t
 test("a memory limit save sends only memory_limit_gb", async () => {
   const { api, calls } = loadApi(() => json(WINDOWS_STATUS));
   await api.updateSandboxSettings({ memoryLimitGb: 24 }, "fallback");
-  assert.deepEqual(JSON.parse(String(calls[0].init?.body)), {
+  assert.deepEqual(JSON.parse((calls[0].init?.body as unknown as string)), {
     memory_limit_gb: 24,
   });
 });
@@ -303,7 +303,7 @@ test("a save sends only the fields it changes, in snake_case, and reports restor
     "fallback",
   );
   assert.equal(calls[0].init?.method, "PUT");
-  assert.deepEqual(JSON.parse(String(calls[0].init?.body)), {
+  assert.deepEqual(JSON.parse((calls[0].init.body as unknown as string)), {
     allow_dacl_fallback: false,
   });
   assert.equal(status.restored, 2);

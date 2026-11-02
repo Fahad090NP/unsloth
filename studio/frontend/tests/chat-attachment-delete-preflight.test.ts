@@ -20,7 +20,7 @@ function loadEvents(forge: "ok" | "fails", loads: string[]): Events {
     md: {
       sha256: {
         create: () => ({
-          update: () => {},
+          update: () => { /* empty */ },
           digest: () => ({ toHex: () => "00" }),
         }),
       },

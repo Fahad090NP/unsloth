@@ -5,14 +5,17 @@
 // be filed under the chat, or its row keeps the spinner instead of the approval mark.
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 
 import { installLocalStorageFake, readSrc } from "./helpers/kit.ts";
 
 const { store: localStorageFake } = installLocalStorageFake();
 localStorageFake.set("unsloth_chat_settings_imported_to_studio_db", "true");
-register("./thread-sampling-resolver.mjs", import.meta.url);
+const threadSamplingResolverHooks = (await import(new URL("./thread-sampling-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: threadSamplingResolverHooks.resolve });
 await import("./helpers/store-stubs/settings-http.ts");
 await import("./helpers/store-stubs/chat-history-storage.ts");
 
@@ -21,7 +24,7 @@ const { useChatRuntimeStore } = await import(
 );
 
 test("a run adopted before its call parks resolves to the chat's key", () => {
-  const owner = () => {};
+  const owner = () => { /* empty */ };
   useChatRuntimeStore.getState().setThreadRunning("__default", true, { owner });
   useChatRuntimeStore.getState().adoptDefaultThreadRun("chat-late");
   assert.equal(

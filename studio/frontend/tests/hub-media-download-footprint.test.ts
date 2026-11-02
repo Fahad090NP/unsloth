@@ -17,15 +17,15 @@ const GGUF_REPO = "unsloth/Qwen-Image-2.1-GGUF";
 let planBody: Record<string, unknown> = {};
 const requests: { url: string; body: Record<string, unknown> }[] = [];
 
-globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
   requests.push({
-    url: String(input),
-    body: JSON.parse(String(init?.body ?? "{}")),
+    url: String(input as string),
+    body: JSON.parse(String(init?.body ?? "{}" as string)),
   });
-  return new Response(JSON.stringify(planBody), {
+  return Promise.resolve(new Response(JSON.stringify(planBody), {
     status: 200,
     headers: { "Content-Type": "application/json" },
-  });
+  }));
 });
 
 const {

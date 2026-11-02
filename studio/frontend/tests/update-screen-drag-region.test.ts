@@ -40,13 +40,13 @@ function render(status: React.ComponentProps<typeof UpdateScreen>["status"]) {
       logs: [],
       progress: 0,
       error: status === "error" ? "boom" : null,
-      onRetry() {},
-      onSkipRestart() {},
-      onCopyDiagnostics: async () => ({
+      onRetry() {/* intentionally empty */},
+      onSkipRestart() {/* intentionally empty */},
+      onCopyDiagnostics:  () => Promise.resolve(({
         ok: true,
         report: "",
         source: "tauri" as const,
-      }),
+      })),
     }),
   );
 }

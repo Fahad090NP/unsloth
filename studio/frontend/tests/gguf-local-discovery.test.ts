@@ -47,9 +47,9 @@ test("the cached single-quant client sends local-only discovery while navigator 
     configurable: true,
   });
   const calls: URL[] = [];
-  setAuthFetchHandler(async (url) => {
+  setAuthFetchHandler((url) => {
     calls.push(new URL(String(url), "http://localhost"));
-    return new Response(JSON.stringify(cached));
+    return Promise.resolve(new Response(JSON.stringify(cached)));
   });
   try {
     const result = await listGgufVariants("Org/OnlineWebview", undefined, {
@@ -67,15 +67,15 @@ test("the cached single-quant client sends local-only discovery while navigator 
 
 test("a cache-preferred answer cannot replace a dependency-proven local-only answer", async () => {
   const calls: URL[] = [];
-  setAuthFetchHandler(async (url) => {
+  setAuthFetchHandler((url) => {
     const request = new URL(String(url), "http://localhost");
     calls.push(request);
-    return new Response(
+    return Promise.resolve(new Response(
       JSON.stringify({
         ...cached,
         dependencies_resolved: request.searchParams.get("offline") === "true",
       }),
-    );
+    ));
   });
   const preferred = await listGgufVariants("Org/ModeSwitch", undefined, {
     preferLocalCache: true,

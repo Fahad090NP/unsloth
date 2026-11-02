@@ -17,6 +17,14 @@ import {
   RAG_UPLOAD_ACCEPT,
 } from "../src/features/rag/types/rag.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const split = (list: string) => list.split(",").map((ext) => ext.trim());
 
 test("the composer takes every document type chat with files parses", () => {
@@ -74,7 +82,7 @@ test("a failed read cancels the send, and a textless tool-only type falls back t
     new URL("../src/components/assistant-ui/attachment-preview.tsx", import.meta.url),
     "utf8",
   );
-  const webPage = new RegExp(/const WEB_PAGE_NAME = \/(.+)\/i;/.exec(preview)![1], "i");
+  const webPage = new RegExp(required(/const WEB_PAGE_NAME = \/(.+)\/i;/.exec(preview))[1], "i");
   assert.ok(webPage.test("page.html"));
   assert.ok(!webPage.test("page.xhtml"), "extracted .xhtml text must not render as markup");
 });

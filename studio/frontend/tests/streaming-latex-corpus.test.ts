@@ -6,7 +6,6 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import remend from "remend";
 import { parseMarkdownIntoBlocks } from "streamdown";
 
 import { stabilizeStreamingMarkdown } from "../src/components/assistant-ui/streaming-markdown.ts";

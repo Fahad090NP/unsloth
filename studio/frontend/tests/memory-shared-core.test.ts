@@ -47,9 +47,9 @@ test("the two size formatters take DIFFERENT units, and say so in their names", 
 test("no formatter renders a number that does not exist", () => {
   // Figures come off the wire; NaN or negative must not read as measurements.
   for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, -5, undefined]) {
-    assert.equal(formatGiB(bad!), "0 GiB");
-    assert.equal(formatBytesGiB(bad!), "0.00 GiB");
-    assert.equal(formatKvRate(bad!), "0 KiB");
+    assert.equal(formatGiB(must(bad)), "0 GiB");
+    assert.equal(formatBytesGiB(must(bad)), "0.00 GiB");
+    assert.equal(formatKvRate(must(bad)), "0 KiB");
   }
 });
 
@@ -170,7 +170,7 @@ test("an absent or unusable budget falls back rather than refusing everything", 
       classifyGgufFit(bytes, {
         gpuGb: 24,
         systemRamGb: 64,
-        budgetFraction: bad!,
+        budgetFraction: must(bad),
       }),
       withDefault,
       `budgetFraction=${String(bad)} must fall back to the shared default`,
@@ -182,7 +182,7 @@ test("an absent or unusable budget falls back rather than refusing everything", 
   );
 });
 
-test("the badge's call sites read the live fraction", async () => {
+test("the badge's call sites read the live fraction", () => {
   // Asserted on source because the .tsx call sites cannot render here.
   const card = readSrc("features/hub/catalog/gguf-download-card.tsx");
   assert.match(
@@ -233,7 +233,7 @@ test("marginal stays on the raw card, or the band cannot be reached", async () =
   );
 });
 
-test("every fit-scoring surface reads the saved budget, not just the Hub card", async () => {
+test("every fit-scoring surface reads the saved budget, not just the Hub card", () => {
   // The On Device card shows a bar and a classifyGgufFit-sorted menu; both need the fraction.
   for (const rel of [
     "features/hub/catalog/gguf-download-card.tsx",
@@ -253,7 +253,7 @@ test("every fit-scoring surface reads the saved budget, not just the Hub card", 
   }
 });
 
-test("the budget read is shared, not one request per mounted card", async () => {
+test("the budget read is shared, not one request per mounted card", () => {
   // loadVramBudgetSettings has no cache, so a per-card call would GET once per card.
   const source = readSrc("hooks/use-vram-budget-fraction.ts");
   assert.match(
@@ -307,7 +307,12 @@ test("a total below the weights never lowers the estimate", async () => {
     assert.equal(
       ggufVariantFitSizeBytes({ size_bytes: bytes, download_size_bytes }),
       bytes,
-      `a total of ${download_size_bytes} must not score below the weights`,
+      `a total of ${String(download_size_bytes)} must not score below the weights`,
     );
   }
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

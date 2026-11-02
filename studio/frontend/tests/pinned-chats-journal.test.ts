@@ -167,8 +167,8 @@ test("fallback combines separate baselines before replaying explicit unpin and p
   );
   const saved = createPinnedChatsJournal(storage, "session").readFallback();
   assert.deepEqual(saved?.baseIds, ["a", "removed", "c", "remote"]);
-  assert.deepEqual(saved?.operations, [unpin, added]);
-  assert.deepEqual(saved?.pinnedIds, ["added", "a", "c", "remote"]);
+  assert.deepEqual(saved.operations, [unpin, added]);
+  assert.deepEqual(saved.pinnedIds, ["added", "a", "c", "remote"]);
 });
 
 test("completed fallback replay acknowledges only entries observed before another tab wrote", () => {
@@ -181,7 +181,7 @@ test("completed fallback replay acknowledges only entries observed before anothe
   first.writeFallback(undefined);
   const saved = createPinnedChatsJournal(storage, "session").readFallback();
   assert.deepEqual(saved?.operations, [b]);
-  assert.deepEqual(saved?.pinnedIds, ["b", "base"]);
+  assert.deepEqual(saved.pinnedIds, ["b", "base"]);
 });
 
 test("a fallback seed can be replaced with a durable explicit operation", () => {
@@ -276,7 +276,7 @@ test("sign-out keeps an older backend's local saves for the next session's basel
   const storage = new MemoryStorage();
   const before = createPinnedChatsJournal(storage, "server|session-1");
   before.writeFallback(fallback(["legacy"], [pin("01", "new"), pin("02", "legacy", false)]));
-  preserveFallbackPins(storage, before.readFallback);
+  preserveFallbackPins(storage, before.readFallback.bind(before));
   before.clear();
   assert.equal(before.readFallback(), undefined);
   assert.deepEqual(readLegacyPinnedChatIds(storage), ["new"]);
@@ -287,22 +287,22 @@ test("sign-out keeps an older backend's local saves for the next session's basel
 test("a tab holding a pin another tab's unpin cancelled does not replay it", async () => {
   const storage = new MemoryStorage();
   let server: string[] = [];
-  const save = async (expected: string[] | undefined, next: string[]) => {
-    if (JSON.stringify(expected ?? []) !== JSON.stringify(server)) return { applied: false, pinnedIds: server.slice() };
+  const save = (expected: string[] | undefined, next: string[]) => {
+    if (JSON.stringify(expected ?? []) !== JSON.stringify(server)) return Promise.resolve({ applied: false, pinnedIds: server.slice() });
     server = next.slice();
-    return { applied: true, pinnedIds: server.slice() };
+    return Promise.resolve({ applied: true, pinnedIds: server.slice() });
   };
   function tab(online: () => boolean) {
     const disk = createPinnedChatsJournal(storage, "server|session");
     return createPinnedChatsSync({
-      load: async () => server.slice(),
+      load: () => Promise.resolve(server.slice()),
       compareAndSet: async (expected, next) => {
         if (!online()) throw new Error("offline");
         return await save(expected, next);
       },
       readLegacy: () => [],
-      readPending: disk.readPending,
-      writePending: disk.writePending,
+      readPending: disk.readPending.bind(disk),
+      writePending: disk.writePending.bind(disk),
       publish: () => undefined,
     });
   }
@@ -325,23 +325,23 @@ test("a tab finishing an earlier intent does not recreate one another tab cancel
   let release!: () => void;
   let holding = false;
   const hold = new Promise<void>((resolve) => { release = resolve; });
-  const save = async (expected: string[] | undefined, next: string[]) => {
-    if (JSON.stringify(expected ?? []) !== JSON.stringify(server)) return { applied: false, pinnedIds: server.slice() };
+  const save = (expected: string[] | undefined, next: string[]) => {
+    if (JSON.stringify(expected ?? []) !== JSON.stringify(server)) return Promise.resolve({ applied: false, pinnedIds: server.slice() });
     server = next.slice();
-    return { applied: true, pinnedIds: server.slice() };
+    return Promise.resolve({ applied: true, pinnedIds: server.slice() });
   };
   function tab(delayed: boolean) {
     const disk = createPinnedChatsJournal(storage, "server|session");
     return createPinnedChatsSync({
-      load: async () => server.slice(),
+      load: () => Promise.resolve(server.slice()),
       compareAndSet: async (expected, next) => {
         const result = await save(expected, next);
         if (delayed && holding) await hold;
         return result;
       },
       readLegacy: () => [],
-      readPending: disk.readPending,
-      writePending: disk.writePending,
+      readPending: disk.readPending.bind(disk),
+      writePending: disk.writePending.bind(disk),
       publish: () => undefined,
     });
   }
@@ -371,7 +371,7 @@ test("a conflicting pin is not retried once another tab cancelled it", async () 
   function tab(name: "a" | "b") {
     const disk = createPinnedChatsJournal(storage, "server|session");
     return createPinnedChatsSync({
-      load: async () => server.slice(),
+      load: () => Promise.resolve(server.slice()),
       compareAndSet: async (expected, next) => {
         if (name === "a" && firstA) {
           firstA = false;
@@ -383,8 +383,8 @@ test("a conflicting pin is not retried once another tab cancelled it", async () 
         return { applied: true, pinnedIds: server.slice() };
       },
       readLegacy: () => [],
-      readPending: disk.readPending,
-      writePending: disk.writePending,
+      readPending: disk.readPending.bind(disk),
+      writePending: disk.writePending.bind(disk),
       publish: () => undefined,
     });
   }
@@ -407,18 +407,18 @@ test("unpinning one chat of a queued bulk pin keeps the rest and unblocks the qu
   let server: string[] = [];
   const disk = createPinnedChatsJournal(storage, "server|session");
   const sync = createPinnedChatsSync({
-    load: async () => server.slice(),
-    compareAndSet: async (expected, next) => {
+    load: () => Promise.resolve(server.slice()),
+    compareAndSet: (expected, next) => {
       // A legacy comparison still awaiting import: the server cannot place it yet.
       if (next.includes("unimported") || JSON.stringify(expected ?? []) !== JSON.stringify(server)) {
-        return { applied: false, pinnedIds: server.slice() };
+        return Promise.resolve({ applied: false, pinnedIds: server.slice() });
       }
       server = next.slice();
-      return { applied: true, pinnedIds: server.slice() };
+      return Promise.resolve({ applied: true, pinnedIds: server.slice() });
     },
     readLegacy: () => [],
-    readPending: disk.readPending,
-    writePending: disk.writePending,
+    readPending: disk.readPending.bind(disk),
+    writePending: disk.writePending.bind(disk),
     publish: () => undefined,
   });
   await sync.refresh();
@@ -438,17 +438,17 @@ test("an older intent another tab journaled replays before this tab's newer one"
   let online = false;
   const disk = createPinnedChatsJournal(storage, "server|session");
   const a = createPinnedChatsSync({
-    load: async () => server.slice(),
-    compareAndSet: async (expected, next) => {
-      if (!online) throw new Error("offline");
+    load: () => Promise.resolve(server.slice()),
+    compareAndSet: (expected, next) => {
+      if (!online) return Promise.reject(new Error("offline"));
       writes.push(next.slice());
-      if (JSON.stringify(expected ?? []) !== JSON.stringify(server)) return { applied: false, pinnedIds: server.slice() };
+      if (JSON.stringify(expected ?? []) !== JSON.stringify(server)) return Promise.resolve({ applied: false, pinnedIds: server.slice() });
       server = next.slice();
-      return { applied: true, pinnedIds: server.slice() };
+      return Promise.resolve({ applied: true, pinnedIds: server.slice() });
     },
     readLegacy: () => [],
-    readPending: disk.readPending,
-    writePending: disk.writePending,
+    readPending: disk.readPending.bind(disk),
+    writePending: disk.writePending.bind(disk),
     publish: () => undefined,
   });
   await a.refresh().catch(() => undefined);
@@ -472,20 +472,20 @@ test("a twice-trimmed offline bulk pin keeps its place ahead of the unpins that 
   function client() {
     const disk = createPinnedChatsJournal(storage, "server|session");
     return createPinnedChatsSync({
-      load: async () => server.slice(),
-      compareAndSet: async (expected, next, operation) => {
-        if (!online) throw new Error("offline");
+      load: () => Promise.resolve(server.slice()),
+      compareAndSet: (expected, next, operation) => {
+        if (!online) return Promise.reject(new Error("offline"));
         const id = operation && (operation.serverId ?? operation.operationId);
-        if (id && acknowledged.has(id)) return { applied: true, pinnedIds: server.slice() };
-        if (JSON.stringify(expected ?? []) !== JSON.stringify(server)) return { applied: false, pinnedIds: server.slice() };
+        if (id && acknowledged.has(id)) return Promise.resolve({ applied: true, pinnedIds: server.slice() });
+        if (JSON.stringify(expected ?? []) !== JSON.stringify(server)) return Promise.resolve({ applied: false, pinnedIds: server.slice() });
         server = next.slice();
         if (id) acknowledged.add(id);
         operation?.cancels?.forEach((cancelled) => acknowledged.add(cancelled));
-        return { applied: true, pinnedIds: server.slice() };
+        return Promise.resolve({ applied: true, pinnedIds: server.slice() });
       },
       readLegacy: () => [],
-      readPending: disk.readPending,
-      writePending: disk.writePending,
+      readPending: disk.readPending.bind(disk),
+      writePending: disk.writePending.bind(disk),
       publish: () => undefined,
     });
   }

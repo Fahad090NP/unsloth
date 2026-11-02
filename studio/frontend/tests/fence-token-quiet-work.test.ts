@@ -12,7 +12,7 @@ interface Props { source: string; language: string | null; enabled: boolean; str
 interface Effect { deps: unknown[]; cleanup?: () => void }
 const source = readSrc("components/assistant-ui/markdown-text.tsx");
 const hookSource = source.slice(source.indexOf("function useFenceTokens("), source.indexOf("\n/**", source.indexOf("function useFenceTokens(")));
-const compiled = ts.transpileModule(hookSource, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
+const compiled = ts.transpileModule(hookSource, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.Preserve } }).outputText;
 
 function harness(initial: Partial<Props> = {}) {
   const slots: unknown[] = [];
@@ -65,7 +65,7 @@ function harness(initial: Partial<Props> = {}) {
     fenceNeedsQuietWork: (_language: unknown, _source: unknown, streaming: boolean) =>
       !streaming && options.mode === "defer" && !options.force && !options.recent,
     queueFenceWork: (work: () => void) => {
-      if (options.force) { work(); return () => {}; }
+      if (options.force) { work(); return () => { /* empty */ }; }
       jobs.add(work);
       return () => { jobs.delete(work); };
     },

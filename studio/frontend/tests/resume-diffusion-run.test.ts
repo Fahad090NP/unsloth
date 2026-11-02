@@ -6,6 +6,14 @@ import test from "node:test";
 
 import type { DiffusionTrainingRunDetail } from "../src/features/images/api.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const { buildDiffusionResumePayload, resumeActionLabel } = await import(
   "../src/features/images/train/resume-diffusion-run.ts"
 );
@@ -82,7 +90,7 @@ test("refuses a record with no output directory rather than guessing one", () =>
 
 test("refuses a record whose stored settings are incomplete", () => {
   const run = stoppedRun();
-  delete (run.config!).base_model;
+  delete (required(run.config)).base_model;
   assert.throws(() => buildDiffusionResumePayload(run), /settings are incomplete/);
 });
 

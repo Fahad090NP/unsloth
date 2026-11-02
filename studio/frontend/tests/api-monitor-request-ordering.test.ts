@@ -60,7 +60,7 @@ test("clearing invalidates details that were already in flight", async () => {
   });
 
   generation += 1;
-  details.length = 0;
+  details.splice(0);
   pending.resolve("late secret");
   await receive;
 

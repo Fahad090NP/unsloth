@@ -21,12 +21,12 @@ installLocalStorageFake();
 let nextBody: unknown = {};
 const requests: { method: string; body: unknown }[] = [];
 
-globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
   requests.push({
     method: init?.method ?? "GET",
-    body: init?.body ? JSON.parse(String(init.body)) : undefined,
+    body: init?.body ? JSON.parse(String(init.body as string)) : undefined,
   });
-  return new Response(JSON.stringify(nextBody), { status: 200 });
+  return Promise.resolve(new Response(JSON.stringify(nextBody), { status: 200 }));
 });
 
 const {
@@ -146,7 +146,7 @@ test("the row is a three-item Select and the idle row closes the section", () =>
     collect(last);
   }
   const lastTag = lastTags[0] ?? null;
-  assert.equal(lastTag?.tagName.getText(), "MediaIdleUnloadSetting");
+  assert.equal(lastTag.tagName.getText(), "MediaIdleUnloadSetting");
   assert.match(
     lastTag ? (attr(lastTag, "residencyKey") ?? "") : "",
     /keepResident/,

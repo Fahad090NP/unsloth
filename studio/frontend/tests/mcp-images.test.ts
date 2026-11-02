@@ -359,13 +359,13 @@ test("a marker target is charged one picture per round, so every round keeps one
   const messages = Array.from({ length: 8 }, (_, n) => round(n)).flat();
 
   const parts = imagesPerToolResult(boundMcpImageEnvelopes(messages));
-  assert.ok(parts.some((n) => n === 0), `default still strips old rounds: ${parts}`);
+  assert.ok(parts.some((n) => n === 0), `default still strips old rounds: ${String(parts)}`);
 
   const markers = imagesPerToolResult(
     boundMcpImageEnvelopes(messages, { localMarkers: true }),
   );
   assert.equal(markers.length, 8);
-  assert.ok(markers.every((n) => n >= 1), `every round keeps a candidate: ${markers}`);
+  assert.ok(markers.every((n) => n >= 1), `every round keeps a candidate: ${String(markers)}`);
   // Spares ride with the newest rounds only; the rest carry exactly their one.
   assert.equal(markers[markers.length - 1], 3);
   assert.equal(markers[0], 1);
@@ -380,7 +380,7 @@ test("consecutive results are one batch on a marker target and share one charge"
   assert.equal(markers.length, 24);
   for (let n = 0; n < 8; n++) {
     const batch = markers.slice(n * 3, n * 3 + 3);
-    assert.ok(batch.some((k) => k >= 1), `round ${n} keeps a candidate: ${batch}`);
+    assert.ok(batch.some((k) => k >= 1), `round ${n} keeps a candidate: ${String(batch)}`);
   }
 });
 

@@ -7,11 +7,11 @@ import test from "node:test";
 import { readSrc } from "./helpers/kit.ts";
 
 test("gallery overlay actions follow interaction state instead of stale mouse focus", async () => {
-  const [menu, imagesPage, videoPage] = await Promise.all([
+  const [menu, imagesPage, videoPage] = [
     readSrc("components/gallery-item-menu.tsx"),
     readSrc("features/images/images-page.tsx"),
     readSrc("features/video/video-page.tsx"),
-  ]);
+  ];
 
   const closedClasses =
     /:\s*"([^"]*opacity-0[^"]*)"/.exec(menu)?.[1].split(" ") ?? [];

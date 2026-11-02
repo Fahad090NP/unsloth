@@ -295,10 +295,10 @@ test("a record further behind the server than the catch-up window resumes from t
   const oldest = now - CATCH_UP_MS;
   const runs = [finished("older", oldest - 60_000), finished("recent", oldest + 60_000)];
   const asked: (number | null)[] = [];
-  const fetchAnswer = async (since: number | null) => {
+  const fetchAnswer =  (since: number | null) => {
     asked.push(since);
     const after = runs.filter((run) => since !== null && (run.finishedAt ?? 0) >= since);
-    return { now, runs: after, more: false, activeRuns: 0, nextRunAt: null };
+    return Promise.resolve({ now, runs: after, more: false, activeRuns: 0, nextRunAt: null });
   };
   const resumed = await collectFinishedRuns({ since: now - 3 * CATCH_UP_MS, ids: [] }, fetchAnswer);
   assert.deepEqual(asked, [now - 3 * CATCH_UP_MS, oldest]);
@@ -346,10 +346,10 @@ function finished(id: string, finishedAt: number): ScheduledTasksApi.FinishedSch
 test("results past one answer are read a page at a time and announced once", async () => {
   const runs = [finished("a", 1_000), finished("b", 2_000), finished("c", 3_000)];
   const asked: (number | null)[] = [];
-  const fetchAnswer = async (since: number | null) => {
+  const fetchAnswer =  (since: number | null) => {
     asked.push(since);
     const after = runs.filter((run) => since !== null && (run.finishedAt ?? 0) >= since);
-    return { now: 100_000, runs: after.slice(0, 2), more: after.length > 2, activeRuns: 0, nextRunAt: null };
+    return Promise.resolve({ now: 100_000, runs: after.slice(0, 2), more: after.length > 2, activeRuns: 0, nextRunAt: null });
   };
   const { fresh, seen, last } = await collectFinishedRuns({ since: 0, ids: [] }, fetchAnswer);
   assert.deepEqual(asked, [0, 2_000]);
@@ -390,9 +390,9 @@ test("of an account's tabs, the first to claim a run announces it, and the recor
 
 test("a backlog longer than one poll reads is picked up again shortly", async () => {
   let pages = 0;
-  const endless = async () => {
+  const endless =  () => {
     pages += 1;
-    return { now: 100_000, runs: [finished(`run-${pages}`, pages)], more: true, activeRuns: 0, nextRunAt: null };
+    return Promise.resolve({ now: 100_000, runs: [finished(`run-${pages}`, pages)], more: true, activeRuns: 0, nextRunAt: null });
   };
   const { fresh, seen, last } = await collectFinishedRuns(null, endless);
   assert.equal(pages, 10);
@@ -440,13 +440,13 @@ function client(respond: (path: string, init?: RequestInit) => Response) {
     new URL("../src/features/scheduled-tasks/api.ts", import.meta.url),
     {
       "@/features/auth": {
-        authFetch: async (path: string, init?: RequestInit) => {
+        authFetch:  (path: string, init?: RequestInit) => {
           requests.push({
             method: init?.method ?? "GET",
             path,
             body: typeof init?.body === "string" ? JSON.parse(init.body) : undefined,
           });
-          return respond(path, init);
+          return Promise.resolve(respond(path, init));
         },
         getAuthSessionEpoch: () => 1,
       },
@@ -473,7 +473,7 @@ test("the client reaches every scheduled task route", async () => {
     named: false,
   });
   await c.api.updateScheduledTask("a/b", { enabled: false });
-  assert.equal(await c.api.deleteScheduledTask("t1"), undefined);
+  await c.api.deleteScheduledTask("t1");
   await c.api.runScheduledTaskNow("t1");
   await c.api.getScheduledTaskActivity(null);
   await c.api.getScheduledTaskActivity(42);
@@ -518,7 +518,7 @@ test("a task change reaches the account's other tabs, and a deletion has Recents
             historyRefreshes += 1;
           },
         },
-        "./api": { deleteScheduledTask: async () => undefined },
+        "./api": { deleteScheduledTask:  () => Promise.resolve(undefined) },
         "./results": {
           SCHEDULED_TASKS_CHANGED_EVENT: "changed",
           SCHEDULED_TASKS_WRITTEN_KEY: "written",
@@ -629,9 +629,9 @@ test("an edit answered after a refresh that landed meanwhile reads the list agai
         "@/features/chat": { notifyChatHistoryUpdated: () => undefined },
         "./api": {
           updateScheduledTask: () => new Promise((resolve) => (answer = resolve)),
-          listScheduledTasks: async () => {
+          listScheduledTasks:  () => {
             lists += 1;
-            return { tasks: [{ ...completed, title: lists > 1 ? "Renamed" : "Old" }], now: 0 };
+            return Promise.resolve({ tasks: [{ ...completed, title: lists > 1 ? "Renamed" : "Old" }], now: 0 });
           },
         },
         "./results": {
@@ -647,7 +647,10 @@ test("an edit answered after a refresh that landed meanwhile reads the list agai
     await tasks.getState().refresh();
     answer({ ...completed, title: "Renamed", status: "active", nextRunAt: 5 });
     await pending;
-    for (let i = 0; i < 5 && lists < 2; i += 1) await Promise.resolve();
+    await [0, 1, 2, 3, 4].reduce<Promise<void>>(async (previous) => {
+      await previous;
+      if (lists < 2) await Promise.resolve();
+    }, Promise.resolve());
     assert.equal(lists, 2);
     await new Promise((resolve) => setTimeout(resolve, 0));
     const [task] = tasks.getState().tasks;
@@ -708,7 +711,7 @@ test("a write that drops a list refresh in flight asks for the list again", asyn
             if (lists === 1) return new Promise((resolve) => (firstList = resolve));
             return Promise.resolve({ tasks: [{ id: "t1", lastRun: { id: "r1", status: "succeeded" } }], now: 0 });
           },
-          runScheduledTaskNow: async () => ({ id: "r1", createdAt: 1, finishedAt: null, status: "queued" }),
+          runScheduledTaskNow:  () => Promise.resolve(({ id: "r1", createdAt: 1, finishedAt: null, status: "queued" })),
         },
         "./results": {
           SCHEDULED_TASKS_CHANGED_EVENT: "changed",

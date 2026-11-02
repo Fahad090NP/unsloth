@@ -388,7 +388,7 @@ test("a long text paste is swallowed and handed over as a file", async () => {
 test("normal pastes and file pastes fall through untouched", () => {
   const shortPaste = pasteEvent(clipboard("hello"));
   assert.equal(
-    pasteLongTextAsFile(shortPaste, () => {}),
+    pasteLongTextAsFile(shortPaste, () => { return undefined; }),
     false,
   );
   assert.equal(shortPaste.defaultPrevented, false);
@@ -400,13 +400,13 @@ test("normal pastes and file pastes fall through untouched", () => {
     ]),
   );
   assert.equal(
-    pasteLongTextAsFile(withFile, () => {}),
+    pasteLongTextAsFile(withFile, () => { return undefined; }),
     false,
   );
   assert.equal(withFile.defaultPrevented, false);
 
   assert.equal(
-    pasteLongTextAsFile(pasteEvent(null), () => {}),
+    pasteLongTextAsFile(pasteEvent(null), () => { return undefined; }),
     false,
   );
 });
@@ -456,7 +456,7 @@ test("native image and file payloads stay on the file paste path", () => {
     clipboard(text, [], { types: ["text/plain", "image/svg+xml"] }),
   );
   assert.equal(
-    pasteLongTextAsFile(svg, () => {}),
+    pasteLongTextAsFile(svg, () => { return undefined; }),
     false,
   );
   assert.equal(svg.defaultPrevented, false);
@@ -468,7 +468,7 @@ test("native image and file payloads stay on the file paste path", () => {
     }),
   );
   assert.equal(
-    pasteLongTextAsFile(copiedFiles, () => {}),
+    pasteLongTextAsFile(copiedFiles, () => { return undefined; }),
     false,
   );
 
@@ -476,7 +476,7 @@ test("native image and file payloads stay on the file paste path", () => {
     clipboard(text, [], { types: ["text/plain", "text/html"] }),
   );
   assert.equal(
-    pasteLongTextAsFile(richText, () => {}),
+    pasteLongTextAsFile(richText, () => { return undefined; }),
     true,
   );
 });
@@ -679,7 +679,6 @@ test("a keyboard reporting no code falls back to the key", () => {
 });
 
 test("the composer reads the chord from the keydown and clears it", async () => {
-  const { readFile } = await import("node:fs/promises");
   const thread = await readSrcAsync("components/assistant-ui/thread.tsx");
   // A paste event has no modifiers; capture the keydown so inputProps keeps its onKeyDown.
   assert.match(thread, /onKeyDownCapture=\{notePlainPasteChord\}/);
@@ -771,7 +770,6 @@ test("every locale keeps the shortcut in the threshold description", async () =>
 test("the settings label names the chord the composer accepts", async () => {
   const { formatBindingLabel } =
     await import("../src/features/settings/lib/keyboard-shortcuts.ts");
-  const { readFile } = await import("node:fs/promises");
   for (const mac of [true, false]) {
     const binding = {
       code: "KeyV",

@@ -69,9 +69,9 @@ const status = {
 function checkBaselines(state: typeof loaded) {
   const settings = selectResidentEstimateSettings(state);
   assert.equal(settings?.cacheTypeKv, "q4_0");
-  assert.equal(settings?.speculativeType, "mtp");
-  assert.equal(settings?.specDraftNMax, 8);
-  assert.equal(settings?.tensorParallel, true);
+  assert.equal(settings.speculativeType, "mtp");
+  assert.equal(settings.specDraftNMax, 8);
+  assert.equal(settings.tensorParallel, true);
 }
 
 test("same-model external reload advances resident pricing and clean controls", () => {

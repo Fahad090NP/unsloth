@@ -25,12 +25,12 @@ test("a failing OpenRouter connection leaves the catalog for the next connection
   catalog.setModelsDevCatalog({ fetched_at: Date.now() / 1000, providers: {} });
   const asked: string[] = [];
   const realFetch = globalThis.fetch;
-  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
-    const { provider_id: providerId } = JSON.parse(String(init?.body));
+  globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
+    const { provider_id: providerId } = JSON.parse(String(init?.body as string));
     asked.push(providerId);
-    return providerId === "expired-key"
+    return Promise.resolve(providerId === "expired-key"
       ? Response.json({ detail: "Invalid API key" }, { status: 502 })
-      : Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["low", "high"] } }]);
+      : Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["low", "high"] } }]));
   });
   try {
     await refreshProviderModelCatalogs([
@@ -39,7 +39,7 @@ test("a failing OpenRouter connection leaves the catalog for the next connection
       { id: "second-working-key", providerType: "openrouter" },
     ]);
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
   }
   assert.deepEqual(asked, ["expired-key", "working-key"]);
   assert.deepEqual(catalog.resolveModelCatalogEntry("openrouter", "acme/fresh")?.efforts, ["low", "high"]);
@@ -54,12 +54,12 @@ test("an OpenRouter connection on a gateway base URL never writes the shared cat
   catalog.setModelsDevCatalog({ fetched_at: Date.now() / 1000, providers: {} });
   const asked: string[] = [];
   const realFetch = globalThis.fetch;
-  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
-    const { provider_id: providerId } = JSON.parse(String(init?.body));
+  globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
+    const { provider_id: providerId } = JSON.parse(String(init?.body as string));
     asked.push(providerId);
-    return providerId === "gateway"
+    return Promise.resolve(providerId === "gateway"
       ? Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["max"] } }])
-      : Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["low", "high"] } }]);
+      : Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["low", "high"] } }]));
   });
   try {
     await refreshProviderModelCatalogs([
@@ -67,7 +67,7 @@ test("an OpenRouter connection on a gateway base URL never writes the shared cat
       { id: "openrouter", providerType: "openrouter", baseUrl: "https://openrouter.ai/api/v1/" },
     ]);
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
   }
   try {
     assert.deepEqual(asked, ["openrouter"]);
@@ -93,9 +93,9 @@ test("editing a connection refreshes the catalog with the saved base URL, not th
   const catalog = await vite.ssrLoadModule("/src/features/chat/model-catalog.ts");
   const asked: string[] = [];
   const realFetch = globalThis.fetch;
-  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
-    asked.push(JSON.parse(String(init?.body)).provider_id);
-    return Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["low", "high"] } }]);
+  globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
+    asked.push(JSON.parse(String(init?.body as string)).provider_id);
+    return Promise.resolve(Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["low", "high"] } }]));
   });
   try {
     await refreshProviderModelCatalogs([
@@ -103,7 +103,7 @@ test("editing a connection refreshes the catalog with the saved base URL, not th
     ]);
     assert.deepEqual(asked, ["edited"]);
   } finally {
-    globalThis.fetch = realFetch;
+    Reflect.set(globalThis, "fetch", realFetch);
     catalog.clearProviderModelCatalog("openrouter");
   }
 });

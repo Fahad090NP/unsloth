@@ -46,10 +46,10 @@ function harness(exported: ExportedMessageRepository, failure?: Error) {
     new URL("../src/features/chat/utils/delete-thread-message.ts", import.meta.url),
     {
       "@assistant-ui/core/internal": { MessageRepository },
-      "../api/chat-api": { listChatMessages: async () => { reads++; return []; } },
+      "../api/chat-api": { listChatMessages: () => { reads++; return []; } },
       "./chat-history-storage": {
-        ensureStoredChatThread: async () => { reads++; },
-        syncStoredChatMessages: async (_id: string, records: MessageRecord[]) => {
+        ensureStoredChatThread: () => { reads++; },
+        syncStoredChatMessages: (_id: string, records: MessageRecord[]) => {
           if (failure) throw failure;
           persisted = JSON.parse(JSON.stringify(records));
           return persisted;
@@ -90,7 +90,7 @@ for (const deleted of ["a1", "u1"]) {
     await h.remove(deleted);
     assert.deepEqual(original, before, "deletion mutated the original repository");
     assert.ok(h.live().some((m) => m.id === "a2"), "the later answer must survive");
-    for (const records of [h.live(), h.persisted()!]) {
+    for (const records of [h.live(), (h.persisted() ?? assert.fail("expected a non-null value"))]) {
       const count = priced(records);
       assert.ok(!count || count.estimated, "the deleted history's count was restored as exact");
     }
@@ -104,7 +104,7 @@ test("deleting an older answer invalidates cloud legacy usage without requiring 
   original.messages[3].message.metadata.custom.contextUsage = { ...legacyUsage, modelId: cloud };
   const h = harness(original);
   await h.remove("a1");
-  const records = h.persisted()!;
+  const records = (h.persisted() ?? assert.fail("expected a non-null value"));
   const count = priced(records, "a2", cloud);
   assert.ok(!count || count.estimated);
   assert.equal(savedUsage.estimateBranch(orderBySelectedBranch(records, "a2"))?.estimated, true);
@@ -116,7 +116,7 @@ test("deleting a hidden sibling preserves the untouched branch's exact legacy us
   const h = harness(original);
   await h.remove("alternative");
   assert.equal(priced(h.live()), legacyUsage);
-  assert.deepEqual(priced(h.persisted()!), legacyUsage);
+  assert.deepEqual(priced((h.persisted() ?? assert.fail("expected a non-null value"))), legacyUsage);
   assert.equal(h.live().some((m) => m.metadata?.revision), false);
 });
 
@@ -126,7 +126,7 @@ test("deleting a leaf leaves earlier completed usage valid", async () => {
   const h = harness(original);
   await h.remove("u2");
   assert.equal(priced(h.live(), "a1"), legacyUsage);
-  assert.deepEqual(priced(h.persisted()!, "a1"), legacyUsage);
+  assert.deepEqual(priced((h.persisted() ?? assert.fail("expected a non-null value")), "a1"), legacyUsage);
 });
 
 test("deleting a prompt with sibling replies invalidates every surviving descendant branch", async () => {
@@ -140,7 +140,7 @@ test("deleting a prompt with sibling replies invalidates every surviving descend
   await h.remove("u1");
   assert.deepEqual(h.live().map((m) => m.id).sort(), ["a2", "a2b", "u2", "u2b"]);
   for (const head of ["a2", "a2b"]) {
-    const count = priced(h.persisted()!, head);
+    const count = priced((h.persisted() ?? assert.fail("expected a non-null value")), head);
     assert.ok(!count || count.estimated, `${head} retained a pre-delete exact count`);
   }
 });

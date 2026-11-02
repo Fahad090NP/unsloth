@@ -83,7 +83,7 @@ test("a dropped connected model is named, never shown as its raw id", () => {
     providerType: "openai",
     state: "dropped",
   });
-  assert.doesNotMatch(missing?.modelName ?? "", /external::/);
+  assert.doesNotMatch(missing.modelName ?? "", /external::/);
 });
 
 test("the pick from the report is named, never shown as its raw id", () => {
@@ -93,9 +93,9 @@ test("the pick from the report is named, never shown as its raw id", () => {
     [connection({ availableModels: ["llama3.2"] })],
   );
   assert.equal(missing?.modelName, "kimi-k2.5");
-  assert.equal(missing?.providerName, "Ollama");
-  assert.equal(missing?.providerType, "ollama");
-  assert.doesNotMatch(missing?.modelName ?? "", /external::/);
+  assert.equal(missing.providerName, "Ollama");
+  assert.equal(missing.providerType, "ollama");
+  assert.doesNotMatch(missing.modelName ?? "", /external::/);
 });
 
 test("a connection that dropped every model still names the model", () => {
@@ -417,7 +417,7 @@ test("the dropped-model strings are translated everywhere", async () => {
       string,
       { picker?: Record<string, string> }
     >;
-    const picker = Object.values(module).find((value) => value?.picker)?.picker;
+    const picker = Object.values(module).find((value) => value.picker)?.picker;
     assert.ok(picker, `${locale} has no picker section`);
     assert.equal(typeof picker.modelDropped, "string", locale);
     assert.equal(typeof picker.modelDroppedByProvider, "string", locale);

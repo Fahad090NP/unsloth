@@ -246,7 +246,7 @@ test("updates queued during grammar load settle on the newest source", async () 
     "a queued update was not highlighted",
   );
 
-  const latest = await reference(blocks.at(-1)!, "python");
+  const latest = await reference((blocks.at(-1) ?? assert.fail("expected a non-null value")), "python");
   assert.deepEqual(seen.at(-1)?.tokens, latest.tokens);
 });
 
@@ -318,11 +318,11 @@ test("a failed grammar load releases pending callbacks before retry", async () =
     }
     await withTimeout(failed, 500, "the invalid grammar load did not fail");
   } finally {
-    console.error = originalError;
+    Object.assign(console, { error: originalError });
   }
 
   const retried = await highlightOnce(plugin, {
-    code: blocks.at(-1)!,
+    code: (blocks.at(-1) ?? assert.fail("expected a non-null value")),
     language,
     themes: validThemes,
   });
@@ -369,7 +369,7 @@ test("a transiently failed grammar load is retried under the same cache key", as
     );
     await withTimeout(failed, 500, "the invalid grammar load did not fail");
   } finally {
-    console.error = originalError;
+    Object.assign(console, { error: originalError });
   }
 
   light.settings = [];
@@ -644,13 +644,13 @@ test("a block that keeps failing to tokenize does not fill the cache", async () 
 
   const originalError = console.error;
   try {
-    console.error = () => {};
+    console.error = () => { /* empty */ };
     for (let render = 0; render < 600; render += 1) {
       plugin.highlight({ code: "broken = 1\n", language, themes: nameless });
       if (render === 0) await new Promise((resolve) => setTimeout(resolve, 50));
     }
   } finally {
-    console.error = originalError;
+    Object.assign(console, { error: originalError });
   }
 
   await highlightOnce(plugin, { code: "later = 2\n", language, themes: THEMES });
@@ -703,11 +703,11 @@ test("cover reports what the cache leaves untokenized, and never tokenizes", asy
   const covered = PYTHON.slice(0, streamedTo).split("\n").length - 1;
   assert.deepEqual(cover.result?.tokens.slice(0, covered), full.tokens.slice(0, covered), "the committed lines carry their real colours");
   assert.deepEqual(
-    cover.result?.tokens.slice(covered).map((line) => line.map((token) => token.content).join("")),
+    cover.result.tokens.slice(covered).map((line) => line.map((token) => token.content).join("")),
     settled.slice(streamedTo).split("\n"),
     "the rest is every remaining line, plain",
   );
-  assert.equal(cover.result?.tokens.length, full.tokens.length, "the same lines as the finished fence, so its body keeps its shape");
+  assert.equal(cover.result.tokens.length, full.tokens.length, "the same lines as the finished fence, so its body keeps its shape");
   assert.equal(plugin.cached({ code: settled, language, themes: THEMES }), null, "asking created no cache entry");
   const exact = await highlightOnce(plugin, { code: settled, language, themes: THEMES });
   assert.deepEqual(plugin.cover({ code: settled, language, themes: THEMES }), { uncovered: 0, result: exact });

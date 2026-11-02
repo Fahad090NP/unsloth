@@ -191,7 +191,7 @@ test("S3 restores only saved bucket settings", async () => {
 });
 
 test("late model details preserve settings captured by a new CPT transition", async () => {
-  let release: (response: Response) => void = () => {};
+  let release: (response: Response) => void = () => {/* intentionally empty */};
   setAuthFetchHandler(
     () =>
       new Promise<Response>((resolve) => {

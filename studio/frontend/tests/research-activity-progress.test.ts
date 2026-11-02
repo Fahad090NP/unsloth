@@ -11,7 +11,9 @@ register("./helpers/vite-env-loader.mjs", import.meta.url);
 registerBundlerResolver();
 installLocalStorageFake();
 // The store registers a session-cleared listener at import.
-Object.assign(globalThis.window as object, { addEventListener: () => {} });
+Object.assign(globalThis.window as object, {
+  addEventListener: () => undefined,
+});
 
 const {
   ingestResearchUpdate,
@@ -68,7 +70,7 @@ function reset(): void {
 }
 
 function activities() {
-  return useResearchRunStore.getState().sessions[RUN_ID]?.activities ?? [];
+  return useResearchRunStore.getState().sessions[RUN_ID].activities;
 }
 
 // STREAM_EVENT_FLUSH_MS in the store, which does not export it.
@@ -76,9 +78,10 @@ function flushCoalescedDeltas(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 120));
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: the store's event shape is exercised structurally
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ingest = ingestResearchUpdate as any;
+const ingest = ingestResearchUpdate as unknown as (
+  run: AnyRecord,
+  event?: AnyRecord,
+) => void;
 
 test("a planning phase produces a live row before the plan exists", () => {
   reset();
@@ -241,17 +244,20 @@ test("a legacy run's reasoning rows still close without phase brackets", async (
 test("consecutive legacy calls close each other, leaving one spinner", async () => {
   reset();
   ingest(run({ status: "running" }));
-  for (const [id, phase, callId] of [
-    [1, "decision", "B"],
-    [2, "synthesis_audit", "C"],
-    [3, "synthesis", "D"],
-  ] as const) {
+  await (
+    [
+      [1, "decision", "B"],
+      [2, "synthesis_audit", "C"],
+      [3, "synthesis", "D"],
+    ] as const
+  ).reduce<Promise<void>>(async (previous, [id, phase, callId]) => {
+    await previous;
     ingest(
       run({ status: "running" }),
       event(id, "reasoning.updated", { phase, callId, reasoningDelta: "x" }),
     );
     await flushCoalescedDeltas();
-  }
+  }, Promise.resolve());
 
   const running = activities().filter((a) => a.state === "running");
   assert.deepEqual(
@@ -381,8 +387,8 @@ test("a stalled watcher does not stop events reaching the store", async () => {
     draft: plan,
   });
   const next = await iterator.next();
-  assert.equal(next.value?.status, "awaiting_approval");
-  await iterator.return?.(undefined);
+  assert.equal(next.value.status, "awaiting_approval");
+  await iterator.return(undefined);
 });
 
 test("the watcher stops once the run settles", async () => {
@@ -412,7 +418,7 @@ test("a follower that gave up surfaces instead of parking the watcher", async ()
   const consume = (async () => {
     try {
       for await (const snapshot of watchResearchRun(RUN_ID)) {
-        void snapshot;
+        assert.ok(snapshot);
       }
     } catch (error) {
       threw = error;
@@ -427,7 +433,8 @@ test("a follower that gave up surfaces instead of parking the watcher", async ()
   ]);
 
   assert.equal(exited, true);
-  assert.equal((threw as Error)?.message, "Research run not found");
+  assert.ok(threw instanceof Error);
+  assert.equal(threw.message, "Research run not found");
 });
 
 // The park resolves immediately while dirty is set, so an absent session froze the tab.
@@ -514,6 +521,7 @@ test("a completed fetch step is not labelled as having found nothing", () => {
   );
 
   const step = activities().find((a) => a.kind === "step");
-  assert.equal(step?.state, "complete");
-  assert.equal(step?.detail, "Page read");
+  assert.ok(step);
+  assert.equal(step.state, "complete");
+  assert.equal(step.detail, "Page read");
 });

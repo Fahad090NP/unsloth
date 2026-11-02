@@ -2,11 +2,14 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 import type { HighlightOptions, HighlightResult, ThemeInput } from "@streamdown/code";
 
-register("./shiki-tokenization-resolver.mjs", import.meta.url);
+const shikiTokenizationResolverHooks = (await import(new URL("./shiki-tokenization-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: shikiTokenizationResolverHooks.resolve });
 const { createCodePlugin } = await import("../src/components/assistant-ui/code-plugin.ts");
 const { tokenized } = await import("./shiki-tokenization-counter.mts");
 
@@ -39,7 +42,7 @@ test("settled fences that extend one another each get exact tokens once, and the
   const effectPass = [a, b, c].map((code) => plugin.highlightExact(options(code)));
   for (let i = 0; i < 3; i += 1) {
     assert.ok(warmPass[i], `fence ${i} answered synchronously`);
-    assert.deepEqual(warmPass[i]!.tokens, expected[i].tokens, `fence ${i} has every line coloured`);
+    assert.deepEqual((warmPass[i] ?? assert.fail("expected a non-null value")).tokens, expected[i].tokens, `fence ${i} has every line coloured`);
     assert.equal(effectPass[i], warmPass[i], `fence ${i} is served from its own entry on the second pass`);
   }
   assert.ok(

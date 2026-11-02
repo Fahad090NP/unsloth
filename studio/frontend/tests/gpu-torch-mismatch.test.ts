@@ -430,9 +430,9 @@ test("a settled inventory poll collects the refresh it triggered", () => {
   // The backend's 60s-TTL read only schedules the refresh, so a follow-up read is needed.
   assert.match(sidebarSrc, /const INVENTORY_FOLLOW_UP_MS = (\d+);/);
   const followUp = Number(
-    /const INVENTORY_FOLLOW_UP_MS = (\d+);/.exec(sidebarSrc)![1],
+    must(/const INVENTORY_FOLLOW_UP_MS = (\d+);/.exec(sidebarSrc))[1],
   );
-  const interval = Number(/const INVENTORY_POLL_MS = (\d+);/.exec(sidebarSrc)![1]);
+  const interval = Number(must(/const INVENTORY_POLL_MS = (\d+);/.exec(sidebarSrc))[1]);
   assert.ok(
     followUp > 0 && followUp < interval,
     `the follow-up (${followUp}ms) has to land inside the interval (${interval}ms)`,
@@ -444,3 +444,8 @@ test("a settled inventory poll collects the refresh it triggered", () => {
     /window\.clearInterval\(id\);\s*\n\s*if \(followUp\) window\.clearTimeout\(followUp\);/,
   );
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

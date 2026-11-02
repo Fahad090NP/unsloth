@@ -314,9 +314,9 @@ test("a new download clears historical observation and records completion time",
     useInventoryHintStore.getState().pending.gguf.has("org/redownload"),
     true,
   );
-  assert.ok(hint?.createdAt && hint.createdAt >= beforeCompletion);
-  assert.ok(hint?.createdAt && hint.createdAt <= afterCompletion);
-  assert.equal(hint?.startedAt, 1_900_000_000_000);
+  assert.ok(hint.createdAt && hint.createdAt >= beforeCompletion);
+  assert.ok(hint.createdAt && hint.createdAt <= afterCompletion);
+  assert.equal(hint.startedAt, 1_900_000_000_000);
 
   removeJob(key);
   assert.equal(

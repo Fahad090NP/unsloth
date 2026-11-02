@@ -64,7 +64,7 @@ const composer = readSrc("features/chat/shared-composer.tsx");
 const paneStart = composer.indexOf("const engineOffer =");
 const paneEnd = composer.indexOf("// Upgrade dialog first", paneStart);
 assert.ok(paneStart >= 0 && paneEnd > paneStart);
-const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+const AsyncFunction = Object.getPrototypeOf(() => Promise.resolve()).constructor;
 const paneDecisionBody = new AsyncFunction(
   "paneEngine",
   "validation",
@@ -90,16 +90,16 @@ async function paneDecision(
   const fields = await paneDecisionBody(paneEngine, validation, {
     sel,
     compareModelDisplayName: (id: string) => id.split("/").pop() ?? id,
-    confirmManagedEngineIfNeeded: async (model: string, offer: unknown) => {
+    confirmManagedEngineIfNeeded: (model: string, offer: unknown) => {
       asked.push([model, offer]);
-      return choice;
+      return Promise.resolve(choice);
     },
     panePayload: () => ({}),
-    validateModel: async () => {
+    validateModel: () => {
       revalidated += 1;
-      return { managed_engine_offer: null, revalidated: true };
+      return Promise.resolve({ managed_engine_offer: null, revalidated: true });
     },
-    throwIfCompareCancelled: () => {},
+    throwIfCompareCancelled: () => { return undefined; },
     compareSignal: undefined,
     ownConfig,
     reconcilePersistedGpuIds: (ids: number[] | null) => ids,

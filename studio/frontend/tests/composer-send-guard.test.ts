@@ -71,7 +71,7 @@ test("a stale write is refused however late it arrives", () => {
   for (let i = 0; i < 100; i += 1) {
     const result = applySentTextGuard(guard, typed(PROMPT));
     assert.equal(result.accept, false);
-    guard = result.guard!;
+    guard = (result.guard ?? assert.fail("expected a non-null value"));
   }
 });
 

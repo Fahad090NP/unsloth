@@ -25,17 +25,17 @@ const images = await import("../src/features/images/api.ts");
 const video = await import("../src/features/video/api.ts");
 
 // Settles the load notice's background load-progress poll once a test's own stub is gone.
-const settledFetch = (async () =>
-  new Response(JSON.stringify({ phase: "ready" }), {
+const settledFetch = ( () =>
+  Promise.resolve(new Response(JSON.stringify({ phase: "ready" }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
-  })) as typeof fetch;
+  }))) as typeof fetch;
 const store = new Map<string, string>();
 Object.defineProperty(globalThis, "localStorage", {
   configurable: true,
   value: {
     getItem: (k: string) => store.get(k) ?? null,
-    setItem: (k: string, v: string) => void store.set(k, String(v)),
+    setItem: (k: string, v: string) => void store.set(k, v),
     removeItem: (k: string) => void store.delete(k),
   },
 });
@@ -46,13 +46,13 @@ afterEach(() => {
 
 function captureFetch(reply: object): Record<string, unknown>[] {
   const sent: Record<string, unknown>[] = [];
-  globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
+  globalThis.fetch = ( (_url: unknown, init?: RequestInit) => {
     // Only the POST bodies: the load notice also polls load-progress, which sends none.
-    if (init?.body) sent.push(JSON.parse(String(init.body)));
-    return new Response(JSON.stringify(reply), {
+    if (init?.body) sent.push(JSON.parse((init.body as unknown as string)));
+    return Promise.resolve(new Response(JSON.stringify(reply), {
       status: 200,
       headers: { "Content-Type": "application/json" },
-    });
+    }));
   });
   return sent;
 }

@@ -107,7 +107,7 @@ test("the aggregate survives the reclassification in every shape", () => {
   for (const devices of inventories) {
     const totals = gpuMemoryTotalsGb(devices);
     const asDedicatedSum = devices.reduce(
-      (sum, device) => sum + (device.memory_total_gb ?? 0),
+      (sum, device) => sum + (device.memory_total_gb),
       0,
     );
     assert.equal(totals.total, asDedicatedSum, JSON.stringify(devices));

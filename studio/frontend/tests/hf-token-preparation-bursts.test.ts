@@ -28,7 +28,7 @@ function tokenStoreStub(initial: string | null = null) {
   let current = initial;
   return {
     store: {
-      getState: () => ({ token: current, clearToken: () => {} }),
+      getState: () => ({ token: current, clearToken: () => { return undefined; } }),
       subscribe: (fn: (state: { token: string }) => void) => {
         listener = fn;
         return () => {
@@ -46,7 +46,7 @@ function tokenStoreStub(initial: string | null = null) {
 interface Gate { promise: Promise<void>; open: () => void }
 
 function makeGate(): Gate {
-  let open: () => void = () => {};
+  let open: () => void = () => { return undefined; };
   const promise = new Promise<void>((resolve) => {
     open = () => { resolve(); };
   });
@@ -63,9 +63,9 @@ function load(
   const noopStore = {
     getState: () => ({
       token: null,
-      clearToken: () => {},
-      openDialog: () => {},
-      requestDecision: async () => "cancel",
+      clearToken: () => { return undefined; },
+      openDialog: () => { return undefined; },
+      requestDecision: () => Promise.resolve("cancel"),
     }),
   };
   return loadWithStubs<ConfirmToken>(
@@ -82,7 +82,7 @@ function load(
       },
       "./api": {
         validateHfToken: async () => {
-          calls.n += 1;
+          Reflect.set(calls, "n", calls.n + 1);
           const own = gates ? gates[calls.n - 1] : gate;
           if (own) {
             await own.promise;

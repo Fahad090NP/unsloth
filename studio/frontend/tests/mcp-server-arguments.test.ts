@@ -478,38 +478,38 @@ test("full unmount invalidates cancellable stdio encode continuations", async ()
 });
 
 test("open-time reconciliation waits for every mutation across component lifetimes", async () => {
-  const first = deferred<void>();
-  const second = deferred<void>();
-  const batchNotified = deferred<void>();
+  const first = deferred<undefined>();
+  const second = deferred<undefined>();
+  const batchNotified = deferred<undefined>();
   let notificationCount = 0;
   const unsubscribe = subscribeToMcpServerMutationSettlements(() => {
     notificationCount += 1;
-    batchNotified.resolve();
+    batchNotified.resolve(undefined);
   });
-  trackMcpServerMutation(first.promise);
+  trackMcpServerMutation(first.promise).catch(() => undefined);
 
   let reconciled = false;
   const reconciliation = waitForPendingMcpServerMutations().then(() => {
     reconciled = true;
   });
-  await Promise.resolve();
+  await Promise.resolve(undefined);
   assert.equal(
     reconciled,
     false,
     "the first pending mutation must hold refresh",
   );
 
-  trackMcpServerMutation(second.promise);
-  first.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
+  trackMcpServerMutation(second.promise).catch(() => undefined);
+  first.resolve(undefined);
+  await Promise.resolve(undefined);
+  await Promise.resolve(undefined);
   assert.equal(
     reconciled,
     false,
     "a mutation added during settlement must also hold refresh",
   );
 
-  second.resolve();
+  second.resolve(undefined);
   await reconciliation;
   await batchNotified.promise;
   unsubscribe();
@@ -522,32 +522,32 @@ test("open-time reconciliation waits for every mutation across component lifetim
 });
 
 test("a settled successor can reconcile while an older mutation remains pending", async () => {
-  const first = deferred<void>();
-  const second = deferred<void>();
+  const first = deferred<undefined>();
+  const second = deferred<undefined>();
   let authoritativeRows = ["old"];
   const snapshots: string[][] = [];
-  const successorVisible = deferred<void>();
-  const predecessorVisible = deferred<void>();
+  const successorVisible = deferred<undefined>();
+  const predecessorVisible = deferred<undefined>();
 
   const unsubscribe = subscribeToMcpServerMutationSettlements(() => {
-    void readMcpServerMutationSnapshot(async () => [...authoritativeRows]).then(
+    readMcpServerMutationSnapshot(() => Promise.resolve([...authoritativeRows])).then(
       (rows) => {
         snapshots.push(rows);
-        if (rows.includes("successor")) successorVisible.resolve();
-        if (rows.includes("predecessor")) predecessorVisible.resolve();
+        if (rows.includes("successor")) successorVisible.resolve(undefined);
+        if (rows.includes("predecessor")) predecessorVisible.resolve(undefined);
       },
-    );
+    ).catch(() => undefined);
   });
 
-  trackMcpServerMutation(first.promise);
-  trackMcpServerMutation(second.promise);
+  trackMcpServerMutation(first.promise).catch(() => undefined);
+  trackMcpServerMutation(second.promise).catch(() => undefined);
   authoritativeRows = ["old", "successor"];
-  second.resolve();
+  second.resolve(undefined);
   await successorVisible.promise;
   assert.deepEqual(snapshots.at(-1), ["old", "successor"]);
 
   authoritativeRows = ["old", "successor", "predecessor"];
-  first.resolve();
+  first.resolve(undefined);
   await predecessorVisible.promise;
   await waitForPendingMcpServerMutations();
   unsubscribe();
@@ -555,7 +555,7 @@ test("a settled successor can reconcile while an older mutation remains pending"
 });
 
 test("failed mutations settle waiters without leaking a tracker rejection", async () => {
-  const mutation = deferred<void>();
+  const mutation = deferred<undefined>();
   const tracked = trackMcpServerMutation(mutation.promise);
   assert.equal(tracked, mutation.promise);
   const expectedFailure = assert.rejects(tracked, /save failed/);
@@ -569,23 +569,23 @@ test("failed mutations settle waiters without leaking a tracker rejection", asyn
 
 test("settlement refreshes a mounted background consumer after another consumer mutates", async () => {
   let authoritativeRows = ["old"];
-  let backgroundRows = await readAfterPendingMcpServerMutations(async () => [
+  let backgroundRows = await readAfterPendingMcpServerMutations(() => Promise.resolve([
     ...authoritativeRows,
-  ]);
+  ]));
   let foregroundRows = [...backgroundRows];
-  const backgroundUpdated = deferred<void>();
+  const backgroundUpdated = deferred<undefined>();
   let notificationCount = 0;
   let notifiedEpoch = 0;
 
   const unsubscribe = subscribeToMcpServerMutationSettlements((epoch) => {
     notificationCount += 1;
     notifiedEpoch = epoch;
-    void readAfterPendingMcpServerMutations(async () => [
+    readAfterPendingMcpServerMutations(() => Promise.resolve([
       ...authoritativeRows,
-    ]).then((rows) => {
+    ])).then((rows) => {
       backgroundRows = rows;
-      backgroundUpdated.resolve();
-    });
+      backgroundUpdated.resolve(undefined);
+    }).catch(() => undefined);
   });
 
   const mutation = deferred<string>();
@@ -595,9 +595,9 @@ test("settlement refreshes a mounted background consumer after another consumer 
   mutation.resolve("saved");
 
   assert.equal(await tracked, "saved");
-  foregroundRows = await readAfterPendingMcpServerMutations(async () => [
+  foregroundRows = await readAfterPendingMcpServerMutations(() => Promise.resolve([
     ...authoritativeRows,
-  ]);
+  ]));
   await backgroundUpdated.promise;
   unsubscribe();
 
@@ -613,24 +613,24 @@ test("settlement refreshes a mounted background consumer after another consumer 
 test("a list read retries when a mutation starts after its pre-read drain", async () => {
   let authoritativeRows = ["old"];
   let readCount = 0;
-  const firstReadStarted = deferred<void>();
+  const firstReadStarted = deferred<undefined>();
   const firstReadResult = deferred<string[]>();
 
   const stableRead = readAfterPendingMcpServerMutations(async () => {
     readCount += 1;
     if (readCount === 1) {
-      firstReadStarted.resolve();
+      firstReadStarted.resolve(undefined);
       return await firstReadResult.promise;
     }
     return [...authoritativeRows];
   });
 
   await firstReadStarted.promise;
-  const mutation = deferred<void>();
+  const mutation = deferred<undefined>();
   const tracked = trackMcpServerMutation(mutation.promise);
   firstReadResult.resolve(["old"]);
   authoritativeRows = ["new"];
-  mutation.resolve();
+  mutation.resolve(undefined);
 
   await tracked;
   assert.deepEqual(await stableRead, ["new"]);
@@ -641,7 +641,7 @@ test("a rejected overlapping list read retries after settlement subscribers join
   let authoritativeRows = ["old"];
   let readCount = 0;
   let listRequest: Promise<string[]> | null = null;
-  const firstReadStarted = deferred<void>();
+  const firstReadStarted = deferred<undefined>();
   const firstReadResult = deferred<string[]>();
 
   function listRows(): Promise<string[]> {
@@ -649,7 +649,7 @@ test("a rejected overlapping list read retries after settlement subscribers join
     const request = readAfterPendingMcpServerMutations(async () => {
       readCount += 1;
       if (readCount === 1) {
-        firstReadStarted.resolve();
+        firstReadStarted.resolve(undefined);
         return await firstReadResult.promise;
       }
       return [...authoritativeRows];
@@ -669,19 +669,19 @@ test("a rejected overlapping list read retries after settlement subscribers join
   const originalRequest = listRows();
   await firstReadStarted.promise;
 
-  const subscriberJoined = deferred<void>();
+  const subscriberJoined = deferred<undefined>();
   let subscriberRequest: Promise<string[]> | null = null;
   let notificationCount = 0;
   const unsubscribe = subscribeToMcpServerMutationSettlements(() => {
     notificationCount += 1;
     subscriberRequest = listRows();
-    subscriberJoined.resolve();
+    subscriberJoined.resolve(undefined);
   });
 
-  const mutation = deferred<void>();
+  const mutation = deferred<undefined>();
   const tracked = trackMcpServerMutation(mutation.promise);
   authoritativeRows = ["new"];
-  mutation.resolve();
+  mutation.resolve(undefined);
   await tracked;
   await subscriberJoined.promise;
 
@@ -693,6 +693,7 @@ test("a rejected overlapping list read retries after settlement subscribers join
   firstReadResult.reject(new Error("transient list failure"));
 
   assert.deepEqual(await originalRequest, ["new"]);
+  assert.ok(subscriberRequest);
   assert.deepEqual(await subscriberRequest, ["new"]);
   unsubscribe();
   assert.equal(notificationCount, 1);
@@ -703,9 +704,9 @@ test("a list rejection without an epoch change preserves the original error", as
   const expected = new Error("unrelated list failure");
   let readCount = 0;
   await assert.rejects(
-    readAfterPendingMcpServerMutations(async () => {
+    readAfterPendingMcpServerMutations(() => {
       readCount += 1;
-      throw expected;
+      return Promise.reject(expected);
     }),
     (error) => error === expected,
   );

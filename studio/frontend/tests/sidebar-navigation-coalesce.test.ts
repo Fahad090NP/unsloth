@@ -29,7 +29,7 @@ function fakeRouter(start = "/chat", { blocked = false } = {}) {
           index += 1;
         }
       }
-      return new Promise(() => {});
+      return new Promise(() => {/* intentionally empty */});
     },
     currentHref: () => stack[index].href,
     hrefOf: (o) => o.to,

@@ -11,6 +11,14 @@ import { applyManualOrder } from "../src/features/chat/stores/sidebar-organizati
 import type { SidebarItem } from "../src/features/chat/hooks/use-chat-sidebar-items.ts";
 import { readSrcAsync } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const APP_SIDEBAR = await readSrcAsync("components/app-sidebar.tsx");
 
 // The open-state gutter rule is more specific than hover, so both must reserve the same.
@@ -184,7 +192,7 @@ test("a pinned folder is a row of Pinned, not of Projects", () => {
 test("a pinned folder keeps the order it was dragged into", () => {
   const projects = [{ id: "a" }, { id: "b" }, { id: "c" }];
   const byId = new Map(projects.map((p) => [p.id, p]));
-  const pinned = ["b", "a"].map((id) => byId.get(id)!);
+  const pinned = ["b", "a"].map((id) => required(byId.get(id)));
   const draggedInProjects = ["c", "a", "b"];
   const order = (pinnedScope: string[] | undefined) =>
     applyManualOrder(

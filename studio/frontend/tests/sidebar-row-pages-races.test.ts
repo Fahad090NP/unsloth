@@ -29,12 +29,12 @@ test("a retry after a failed query change re-reads the new query from the top", 
   };
   let failNext = false;
   const pager = new RowPager<string, Row>(
-    async (query, limit, cursor) => {
+     (query, limit, cursor) => {
       if (failNext) {
         failNext = false;
-        throw new Error("offline");
+        return Promise.reject(new Error("offline"));
       }
-      return offsetPage(lists[query], limit, cursor);
+      return Promise.resolve(offsetPage(lists[query], limit, cursor));
     },
     "a",
     "a",
@@ -67,7 +67,7 @@ test("a read replaced by a refresh stops asking the server", async () => {
   calls.length = 0;
   const selectAll = pager.loadAll();
   await tick();
-  void pager.refresh();
+  pager.refresh().catch((error: unknown) => { throw error; });
   await selectAll;
   assert.ok(calls.length <= 12, `the list was walked twice: ${calls.length} requests`);
 });

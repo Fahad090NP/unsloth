@@ -63,8 +63,8 @@ const { DEFAULT_PROJECT_ATTACHMENT_TARGET, normalizeProjectAttachmentTarget } =
   await import("../src/features/chat/utils/project-attachment-target.ts");
 
 // Driven directly; the store drags in the whole app graph.
-async function targetForStoredValue(value: string | null): Promise<string> {
-  return normalizeProjectAttachmentTarget(value);
+function targetForStoredValue(value: string | null): Promise<string> {
+  return Promise.resolve(normalizeProjectAttachmentTarget(value));
 }
 
 test("an install that has never chosen gets the shipped default", async () => {
@@ -144,7 +144,7 @@ function stubFetch(handler: (url: string) => { status: number; body: unknown }) 
     return {
       ok: status >= 200 && status < 300,
       status,
-      json: async () => body,
+      json: () => Promise.resolve(body),
     } as Response;
   });
   return { urls, restore: () => { setAuthFetchHandler(null); } };
@@ -169,7 +169,7 @@ test("a project can be looked at again for jobs that start later", async () => {
   const fetched = stubFetch(() => ({ status: 200, body: { linkedFolders: [] } }));
   const realNow = Date.now;
   let clock = realNow();
-  Date.now = () => clock;
+  Reflect.set(Date, "now", () => clock);
   try {
     await rag.reconcileProjectFolderJobs("p-folder-again");
     assert.equal(fetched.urls.length, 1);
@@ -179,7 +179,7 @@ test("a project can be looked at again for jobs that start later", async () => {
     await rag.reconcileProjectFolderJobs("p-folder-again");
     assert.equal(fetched.urls.length, 2, "a periodic look has to reach the backend");
   } finally {
-    Date.now = realNow;
+    Reflect.set(Date, "now", realNow);
     fetched.restore();
   }
 });
@@ -206,11 +206,11 @@ test("every look for folder jobs gates the composer while it runs", async () => 
   setAuthFetchHandler(async (input: string) => {
     urls.push(input);
     await answered;
-    return { ok: true, status: 200, json: async () => ({ linkedFolders: [] }) } as Response;
+    return { ok: true, status: 200, json: () => Promise.resolve(({ linkedFolders: [] })) } as Response;
   });
   const realNow = Date.now;
   let clock = realNow();
-  Date.now = () => clock;
+  Reflect.set(Date, "now", () => clock);
   try {
     const looking = rag.reconcileProjectFolderJobs("p-folder-gate");
     assert.equal(rag.projectWorkCount("p-folder-gate"), 1, "a send must wait for the answer");
@@ -222,7 +222,7 @@ test("every look for folder jobs gates the composer while it runs", async () => 
     assert.equal(urls.length, 2);
     assert.equal(rag.projectWorkCount("p-folder-gate"), 0);
   } finally {
-    Date.now = realNow;
+    Reflect.set(Date, "now", realNow);
     setAuthFetchHandler(null);
   }
 });

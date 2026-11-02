@@ -27,10 +27,11 @@ import { openingTag } from "./helpers/tsx-ast.ts";
 // The real tables pull in the app's dialog; these surfaces only need the <table> through.
 const plainTable = ({
   children,
-  node: _node,
   ...props
-}: { children?: React.ReactNode; node?: unknown }) =>
-  React.createElement("table", props, children);
+}: { children?: React.ReactNode; node?: unknown }) => {
+  Reflect.deleteProperty(props, "node");
+  return React.createElement("table", props, children);
+};
 const markdownTable = {
   MARKDOWN_TABLE_ICONS: {},
   MarkdownTable: plainTable,

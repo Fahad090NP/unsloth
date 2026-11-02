@@ -318,7 +318,7 @@ test("each spooky greeting shows its own Halloween sloths, and every picture exi
       sloth,
     );
     const line = key.replace("halloween.greeting.", "");
-    assert.ok(allowed[line]?.includes(sloth), `${line}: ${sloth}`);
+    assert.ok(allowed[line].includes(sloth), `${line}: ${sloth}`);
     seen.set(line, (seen.get(line) ?? new Set()).add(sloth));
   }
   for (const [line, pictures] of Object.entries(allowed)) {

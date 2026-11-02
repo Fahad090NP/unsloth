@@ -17,8 +17,6 @@ import { readSrc } from "./helpers/kit.ts";
 
 const MB = 1e6;
 
-const voiceTabSource = readSrc("features/settings/tabs/voice-tab.tsx");
-
 test("each download's samples belong to its own job, not to the tab", () => {
   const pollLoopSource = readSrc("features/hub/download-manager/poll-loop.ts");
   assert.ok(

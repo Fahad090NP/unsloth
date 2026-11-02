@@ -30,6 +30,14 @@ import {
 } from "../src/features/chat/stores/sidebar-organization-store.ts";
 import { readSrcAsync } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 /** Narrows planSidebarDrop's result to a plan, failing with what came back otherwise. */
 function plannedDrop(
   outcome: SidebarDropOutcome,
@@ -37,7 +45,7 @@ function plannedDrop(
 ): SidebarDropPlan {
   assert.ok(
     outcome !== null && outcome !== STAY,
-    message ?? `expected a drop plan, got ${String(outcome)}`,
+    message ?? `expected a drop plan, got ${(outcome as unknown as string)}`,
   );
   return outcome;
 }
@@ -289,7 +297,7 @@ test("a chat dropped on a folder, its chats or its empty line is filed there", (
               folderId: zone.folderId,
             },
           }
-        : { ring: folderRingKey(zone.folderId!) },
+        : { ring: folderRingKey(required(zone.folderId)) },
     );
     assert.deepEqual(plan.effects.moveChat, {
       chatId: "r1",
@@ -897,9 +905,9 @@ test("rows cover the gap between them, so the section never answers for it", () 
 // A section's collapsible clips overflow, so cues stay inside the row.
 test("every drop cue is drawn inside its row", () => {
   for (const cue of [
-    "${DROP_CUE_BASE} before:top-0",
+    "\${DROP_CUE_BASE} before:top-0",
     // A pixel up: the last row's extra hit pixel is clipped by the list.
-    "${DROP_CUE_BASE} before:bottom-px",
+    "\${DROP_CUE_BASE} before:bottom-px",
     "before:inset-x-1 before:inset-y-0 ",
     // Borders snap to whole device pixels, so every cue keeps one thickness.
     "before:h-0 before:border-t-[1.5px] before:border-foreground",
@@ -1112,7 +1120,7 @@ test("a chat can be dropped after a folder that ends the Pinned list", () => {
   }
   // Printable: a control character makes Git treat the file as binary.
   assert.ok(
-    [...SIDEBAR_TAIL_SCOPE].every((ch) => {
+    Array.from(SIDEBAR_TAIL_SCOPE).every((ch) => {
       const code = ch.codePointAt(0) ?? 0;
       return code > 0x1f && code !== 0x7f;
     }),

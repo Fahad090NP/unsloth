@@ -263,7 +263,7 @@ function setup(
         // caller asking the store to bound it.
         if (localeResult === "stalled") {
           if (typeof options?.timeoutMs !== "number") {
-            return await new Promise<string>(() => {});
+            return await new Promise<string>(() => { return undefined; });
           }
           return "failed";
         }

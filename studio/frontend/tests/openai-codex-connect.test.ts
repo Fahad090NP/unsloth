@@ -65,7 +65,7 @@ function flow(overrides: Partial<CodexOAuthFlow>): CodexOAuthFlow {
 }
 
 test("renders login options before the provider has been saved", () => {
-  const markup = render({ providerId: null, ensureProvider: async () => "provider-1" });
+  const markup = render({ providerId: null, ensureProvider: () => Promise.resolve("provider-1") });
   assert.match(markup, /Connect in browser/);
   assert.match(markup, /Use device code/);
 });

@@ -27,7 +27,7 @@ function findByType(node: unknown, type: string): StubElement | null {
   if (!node || typeof node !== "object") return null;
   const element = node as StubElement;
   if (element.type === type) return element;
-  return findByType((element.props ?? {}).children, type);
+  return findByType(element.props?.children, type);
 }
 
 /** `useState` is cell-backed across renders, so the error path's reset is observable. */
@@ -64,10 +64,10 @@ async function clickStopServer(outcome: Outcome) {
         },
       },
       "@/features/auth": {
-        authFetch: async (path: string) => {
+        authFetch:  (path: string) => {
           fetched.push(path);
-          if ("throws" in outcome) throw new TypeError("Failed to fetch");
-          return { ok: outcome.ok };
+          if ("throws" in outcome) return Promise.reject(new TypeError("Failed to fetch"));
+          return Promise.resolve({ ok: outcome.ok });
         },
       },
       "@/shared/toast": {

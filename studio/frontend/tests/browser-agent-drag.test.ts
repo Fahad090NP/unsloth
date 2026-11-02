@@ -2,10 +2,13 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
-register("./helpers/browser-executor-resolver.mjs", import.meta.url);
+const browserExecutorResolverHooks = (await import(new URL("./helpers/browser-executor-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserExecutorResolverHooks.resolve });
 const { runBrowserAction } = await import("../src/features/browser/agent/executor.ts");
 const { useBrowserStore } = await import("../src/features/browser/store.ts");
 const { stopBrowserAgent } = await import("../src/features/browser/agent/agent-store.ts");
@@ -18,13 +21,13 @@ const info = { role: "button", name: "Move", tag: "div", href: "", formMethod: "
 
 test("a drag whose press navigates the tab is not released on the new page", async () => {
   const posted: { result: { ok: boolean; error?: string } }[] = [];
-  globals.__authFetch = async (_url: string, init: { body: string }) => {
+  globals.__authFetch = (_url: string, init: { body: string }) => {
     posted.push(JSON.parse(init.body));
     return new Response(null, { status: 200 });
   };
   const sent: string[] = [];
   let doc = "r1";
-  globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
+  globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
     sent.push(`${op.op}${op.phase ? `:${op.phase}` : ""}`);
     if (op.op === "status") return { installed: true, result: { ok: true, quietMs: 1000, doc } };
     if (op.op === "describe") return { installed: true, result: { ok: true, info, hit: "r5", sig: "s", doc } };
@@ -36,7 +39,7 @@ test("a drag whose press navigates the tab is not released on the new page", asy
   };
   const run = { runKey: "r", userText: "open https://example.com/board" };
   await runBrowserAction({ id: "d0", sessionId: "s", op: "navigate", url: "https://example.com/board", direction: "down", policy }, run);
-  sent.length = 0;
+  sent.splice(0);
   await runBrowserAction({ id: "d1", sessionId: "s", op: "drag", x: 10, y: 10, toX: 200, toY: 10, direction: "down", policy }, run);
   assert.equal(posted.at(-1)?.result.ok, false);
   assert.match(posted.at(-1)?.result.error ?? "", /page changed during the drag/);
@@ -47,12 +50,12 @@ test("a drag whose press navigates the tab is not released on the new page", asy
 
 test("a drag between fractional points reaches its end and is released", async () => {
   const posted: { result: { ok: boolean; error?: string } }[] = [];
-  globals.__authFetch = async (_url: string, init: { body: string }) => {
+  globals.__authFetch = (_url: string, init: { body: string }) => {
     posted.push(JSON.parse(init.body));
     return new Response(null, { status: 200 });
   };
   const sent: Record<string, unknown>[] = [];
-  globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
+  globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
     sent.push(op);
     if (op.op === "status") return { installed: true, result: { ok: true, quietMs: 1000, doc: "r1" } };
     if (op.op === "describe") return { installed: true, result: { ok: true, info, hit: "r5", sig: "s", doc: "r1" } };
@@ -66,18 +69,18 @@ test("a drag between fractional points reaches its end and is released", async (
   const up = sent.find((op) => op.op === "pointer" && op.phase === "up");
   assert.deepEqual(up && [up.x, up.y], [1.9, 10]);
   // The document check rides on the describes the drag makes anyway: no status round trips before the drop.
-  assert.equal(sent.slice(0, sent.indexOf(up!)).filter((op) => op.op === "status").length, 0);
+  assert.equal(sent.slice(0, sent.indexOf((up ?? assert.fail("expected a non-null value")))).filter((op) => op.op === "status").length, 0);
 });
 
 /** Drags on the tab the first test opened, with `onOp` seeing each page command; returns what was sent and the result. */
 async function drag(id: string, runKey: string, onOp: (op: Record<string, unknown>, sent: string[]) => void) {
   const posted: { result: { ok: boolean; error?: string } }[] = [];
-  globals.__authFetch = async (_url: string, init: { body: string }) => {
+  globals.__authFetch = (_url: string, init: { body: string }) => {
     posted.push(JSON.parse(init.body));
     return new Response(null, { status: 200 });
   };
   const sent: string[] = [];
-  globals.__frameAgent = async (_tabId: string, op: Record<string, unknown>) => {
+  globals.__frameAgent = (_tabId: string, op: Record<string, unknown>) => {
     sent.push(`${op.op}${op.phase ? `:${op.phase}` : ""}`);
     onOp(op, sent);
     if (op.op === "status") return { installed: true, result: { ok: true, quietMs: 1000, doc: "r1" } };

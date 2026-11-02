@@ -2,11 +2,14 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 import type { HighlightOptions, HighlightResult, ThemeInput } from "@streamdown/code";
 
-register("./shiki-tokenization-resolver.mjs", import.meta.url);
+const shikiTokenizationResolverHooks = (await import(new URL("./shiki-tokenization-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: shikiTokenizationResolverHooks.resolve });
 const { createCodePlugin } = await import("../src/components/assistant-ui/code-plugin.ts");
 
 const THEMES: [ThemeInput, ThemeInput] = ["github-light", "github-dark"];
@@ -28,7 +31,7 @@ test("the exact path never answers with the throttled approximation of a fence t
   assert.ok(base.length > 2000);
   const longer = `${base}export function tail() {\n  return value1 + value2;\n}\n`;
   await highlighted(plugin, base);
-  const approximate = plugin.highlight(options(longer), () => {});
+  const approximate = plugin.highlight(options(longer), () => { /* empty */ });
   const exact = plugin.highlightExact(options(longer));
   const expected = await highlighted(reference, longer);
   assert.ok(approximate && exact);
@@ -45,7 +48,7 @@ test("a seeded result is served for its exact source only, never as a prefix for
   const expected = await highlighted(fresh, extended);
   seeded.seed(options(SEEDED), result);
   assert.equal(seeded.cached(options(SEEDED)), result, "an exact hit hands back the seeded object");
-  assert.equal(seeded.highlight(options(SEEDED), () => {}), result, "and the ordinary highlight path too");
+  assert.equal(seeded.highlight(options(SEEDED), () => { /* empty */ }), result, "and the ordinary highlight path too");
   const continued = await highlighted(seeded, extended);
   assert.deepEqual(continued.tokens, expected.tokens, "a longer body is tokenized afresh, not continued from the seeded lines");
   assert.equal(continued.tokens.length, expected.tokens.length);

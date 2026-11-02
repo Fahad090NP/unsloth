@@ -4,7 +4,7 @@
 // Before server-port the base is port 0: the device type read must not fetch it and must land where a refused fetch did.
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 
 import {
@@ -12,7 +12,10 @@ import {
   registerBundlerResolver,
 } from "./helpers/kit.ts";
 
-register("./helpers/vite-env-loader.mjs", import.meta.url);
+const viteEnvLoaderHooks = (await import(new URL("./helpers/vite-env-loader.mjs", import.meta.url).href)) as {
+  load: NonNullable<Parameters<typeof registerHooks>[0]["load"]>;
+};
+registerHooks({ load: viteEnvLoaderHooks.load });
 registerBundlerResolver();
 const { store } = installLocalStorageFake();
 store.set("unsloth_auth_token", "token");
@@ -30,12 +33,12 @@ Object.defineProperty(globalThis, "navigator", {
 
 const requested: string[] = [];
 let reply: Record<string, unknown> | null = null;
-globalThis.fetch = (async (input: string) => {
+globalThis.fetch = ((input: string) => {
   requested.push(String(input));
   const body = reply;
   // What a WebView answers for http://127.0.0.1:0.
   if (body === null) throw new TypeError("Failed to fetch");
-  const res = { ok: true, json: async () => ({ ...body }), clone: () => res };
+  const res = { ok: true, json: () => ({ ...body }), clone: () => res };
   return res;
 }) as unknown as typeof fetch;
 

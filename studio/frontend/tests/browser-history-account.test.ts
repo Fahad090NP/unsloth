@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
 const data = new Map<string, string>([["unsloth.browser-account.v1", "account:b1:bob"]]);
@@ -17,7 +17,10 @@ Object.assign(globalThis, {
   window: { localStorage, location: { protocol: "http:" }, addEventListener: (type: string, flush: () => void) => type === "pagehide" && flushes.push(flush) },
 });
 
-register("./helpers/browser-store-resolver.mjs", import.meta.url);
+const browserStoreResolverHooks = (await import(new URL("./helpers/browser-store-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserStoreResolverHooks.resolve });
 const { useBrowserHistoryStore } = await import("../src/features/browser/history-store.ts");
 
 test("history persists under the account that made it, so a write flushed after a switch stays there", () => {
@@ -33,6 +36,6 @@ test("a download keeps its record but not an address too long to store", () => {
   store.recordDownload({ name: "a.zip", url: `https://example.com/${"q".repeat(5000)}`, size: 1, contentType: "x" });
   store.recordDownload({ name: "b.zip", url: "https://example.com/b.zip", size: 1, contentType: "x" });
   const [b, a] = useBrowserHistoryStore.getState().downloads;
-  assert.equal(a?.url, null);
-  assert.equal(b?.url, "https://example.com/b.zip");
+  assert.equal(a.url, null);
+  assert.equal(b.url, "https://example.com/b.zip");
 });

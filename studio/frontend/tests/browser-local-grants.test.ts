@@ -2,11 +2,14 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 import { readSrc } from "./helpers/kit.ts";
 
-register("./helpers/browser-local-resolver.mjs", import.meta.url);
+const browserLocalResolverHooks = (await import(new URL("./helpers/browser-local-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserLocalResolverHooks.resolve });
 const { grantLocalOrigin, localOriginGranted } = await import("../src/features/browser/native-support.ts");
 const { currentEntry, setNativeWebHistory, useBrowserStore } = await import("../src/features/browser/store.ts");
 const globals = globalThis as Record<string, unknown>;
@@ -17,10 +20,10 @@ async function until(done: () => boolean): Promise<void> {
 
 test("local grants belong to one tab and close even when the native view was pruned", async () => {
   const calls: { command: string; args: Record<string, unknown> }[] = [];
-  globals.__localInvoke = async (command: string, args: Record<string, unknown>) => { calls.push({ command, args }); };
+  globals.__localInvoke = (command: string, args: Record<string, unknown>) => { calls.push({ command, args }); };
   const store = useBrowserStore.getState();
-  const owner = store.openTabIn(store.chat, "http://localhost:7860/")!;
-  const publicTab = store.openTabIn(store.chat, "https://example.com/")!;
+  const owner = (store.openTabIn(store.chat, "http://localhost:7860/") ?? assert.fail("expected a non-null value"));
+  const publicTab = (store.openTabIn(store.chat, "https://example.com/") ?? assert.fail("expected a non-null value"));
   await grantLocalOrigin(owner, "http://localhost:7860/");
   assert.equal(localOriginGranted(owner, "http://localhost:7860/app"), true);
   assert.equal(localOriginGranted(publicTab, "http://localhost:7860/app"), false);
@@ -40,7 +43,7 @@ test("a tab closed while a grant was pending cannot regain local access", async 
     if (command === "browser_view_grant") await new Promise<void>((resolve) => { release = resolve; });
   };
   const store = useBrowserStore.getState();
-  const tab = store.openTabIn(store.chat, "http://localhost:7860/")!;
+  const tab = (store.openTabIn(store.chat, "http://localhost:7860/") ?? assert.fail("expected a non-null value"));
   const granting = grantLocalOrigin(tab, "http://localhost:7860/");
   await until(() => calls.includes("browser_view_grant"));
   store.closeTab(tab);
@@ -52,10 +55,10 @@ test("a tab closed while a grant was pending cannot regain local access", async 
 
 test("leaving a granted origin for a page that isn't web forgets the native grant too", async () => {
   const calls: { command: string; args: Record<string, unknown> }[] = [];
-  globals.__localInvoke = async (command: string, args: Record<string, unknown>) => { calls.push({ command, args }); };
+  globals.__localInvoke = (command: string, args: Record<string, unknown>) => { calls.push({ command, args }); };
   const store = useBrowserStore.getState();
   store.newTab();
-  const tab = useBrowserStore.getState().activeTabId!;
+  const tab = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
   store.navigate(tab, { url: "http://localhost:7860/" });
   await grantLocalOrigin(tab, "http://localhost:7860/");
   store.goBack(tab);
@@ -69,18 +72,18 @@ test("a native tab keeps the page it leaves for a local origin, whose view start
   setNativeWebHistory(true);
   try {
     const store = useBrowserStore.getState();
-    const tab = store.openTabIn(store.chat, "https://example.com/")!;
+    const tab = (store.openTabIn(store.chat, "https://example.com/") ?? assert.fail("expected a non-null value"));
     store.navigate(tab, { url: "https://example.org/" });
     store.updateTab(tab, { displayUrl: "https://example.org/docs/intro" });
     store.navigate(tab, { url: "http://localhost:7860/" });
     store.navigate(tab, { url: "http://localhost:7860/app" });
-    const { history } = useBrowserStore.getState().tabs.find((item) => item.id === tab)!;
+    const { history } = (useBrowserStore.getState().tabs.find((item) => item.id === tab) ?? assert.fail("expected a non-null value"));
     assert.deepEqual(history.map((entry) => (entry.kind === "web" ? entry.url : entry.kind)), [
       "https://example.org/docs/intro",
       "http://localhost:7860/app",
     ]);
     store.goBack(tab);
-    const entry = currentEntry(useBrowserStore.getState().tabs.find((item) => item.id === tab)!);
+    const entry = currentEntry((useBrowserStore.getState().tabs.find((item) => item.id === tab) ?? assert.fail("expected a non-null value")));
     assert.equal(entry.kind === "web" && entry.url, "https://example.org/docs/intro");
     store.closeTab(tab);
   } finally {
@@ -97,10 +100,10 @@ test("a generated page a native tab showed is not kept as its history across a l
   setNativeWebHistory(true);
   try {
     const store = useBrowserStore.getState();
-    const tab = store.openTabIn(store.chat, "https://example.com/")!;
+    const tab = (store.openTabIn(store.chat, "https://example.com/") ?? assert.fail("expected a non-null value"));
     store.updateTab(tab, { displayUrl: "about:blank" });
     store.navigate(tab, { url: "http://localhost:7860/" });
-    const { history } = useBrowserStore.getState().tabs.find((item) => item.id === tab)!;
+    const { history } = (useBrowserStore.getState().tabs.find((item) => item.id === tab) ?? assert.fail("expected a non-null value"));
     assert.deepEqual(history.map((entry) => (entry.kind === "web" ? entry.url : entry.kind)), [
       "https://example.com/",
       "http://localhost:7860/",

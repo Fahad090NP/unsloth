@@ -13,7 +13,7 @@ registerBundlerResolver();
 const { DISPLAY_VISIBILITIES } = await import(
   "../src/features/chat/utils/display-visibility.ts"
 );
-const { reasoningTailCapped, reasoningTailFlexBox, resolveReasoningOpen } = await import(
+const { reasoningTailCapped, reasoningTailFlexBox } = await import(
   "../src/features/chat/utils/reasoning-visibility.ts"
 );
 

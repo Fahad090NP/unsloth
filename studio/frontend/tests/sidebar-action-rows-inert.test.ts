@@ -19,34 +19,34 @@ function navItemFor(source: string, label: string): string {
   return row;
 }
 
-test("New chat never marks itself active", async () => {
+test("New chat never marks itself active",  () => {
   const row = navItemFor(APP_SIDEBAR, "shell.navigation.newChat");
   assert.match(row, /active=\{false\}/);
-});
+return Promise.resolve(); });
 
-test("Search never marks itself active either", async () => {
+test("Search never marks itself active either",  () => {
   const row = navItemFor(APP_SIDEBAR, 'label={t("shell.navigation.search")}');
   assert.match(row, /active=\{false\}/);
-});
+return Promise.resolve(); });
 
-test("a nav row paints the same pill when active and when hovered", async () => {
+test("a nav row paints the same pill when active and when hovered",  () => {
   const rule = /([^}]*)\{\s*background-color: var\(--nav-surface-hover\)/.exec(
     INDEX,
   );
   assert.ok(rule, "no rule paints a nav row with --nav-surface-hover");
   assert.match(rule[1], /\.sidebar-nav-btn:hover/);
   assert.match(rule[1], /\.sidebar-nav-btn\[data-active="true"\]/);
-});
+return Promise.resolve(); });
 
-test("desktop branding clears the titlebar actions", async () => {
+test("desktop branding clears the titlebar actions",  () => {
   const source = APP_SIDEBAR;
   assert.match(
     source,
     /shrink-0 p-0 pt-\[calc\(var\(--studio-desktop-titlebar-height,34px\)\+17px\)\]/,
   );
-});
+return Promise.resolve(); });
 
-test("custom titlebar branding centers on the chat header's model picker", async () => {
+test("custom titlebar branding centers on the chat header's model picker",  () => {
   const header = APP_SIDEBAR.split("<SidebarHeader")[1].split("</SidebarHeader>")[0];
   assert.match(
     header,
@@ -56,22 +56,22 @@ test("custom titlebar branding centers on the chat header's model picker", async
     header,
     /usesCustomTitlebar && "h-\[var\(--studio-chat-control-height,34px\)\]"/,
   );
-});
+return Promise.resolve(); });
 
-test("desktop branding keeps an 11px gap above New chat", async () => {
+test("desktop branding keeps an 11px gap above New chat",  () => {
   const source = APP_SIDEBAR;
   assert.match(source, /usesDesktopTitlebar \? "pt-\[11px\]" : "pt-\[7px\]"/);
-});
+return Promise.resolve(); });
 
-test("footer profile sits 11px above the sidebar edge", async () => {
+test("footer profile sits 11px above the sidebar edge",  () => {
   const source = APP_SIDEBAR;
   assert.match(
     source,
     /relative pb-\[11px\] group-data-\[collapsible=icon\]:px-0/,
   );
-});
+return Promise.resolve(); });
 
-test("navigation rows align while the profile footer ignores the scroll rail", async () => {
+test("navigation rows align while the profile footer ignores the scroll rail",  () => {
   // Rows in the scroller lose the rail width, so New Chat adds it back to align.
   // The footer keeps full width. Logical sides, since the rail moves under rtl.
   const source = APP_SIDEBAR;
@@ -94,9 +94,9 @@ test("navigation rows align while the profile footer ignores the scroll rail", a
   assert.match(footerProps, /unrailedRowPadding/);
   assert.doesNotMatch(footerProps, /var\(--sidebar-rail/);
   assert.equal(source.match(/"pl-2 pr-\[5px\]"/g), null);
-});
+return Promise.resolve(); });
 
-test("the sidebar list measures its scroll rail", async () => {
+test("the sidebar list measures its scroll rail",  () => {
   // 0 for overlay scrollbars, else the thin rail width; written to the DOM to avoid state loops.
   const source = APP_SIDEBAR;
   assert.match(
@@ -158,10 +158,10 @@ test("the sidebar list measures its scroll rail", async () => {
     INDEX,
     /\[dir="rtl"\] \.sidebar-scroll-fade\.is-scrolled \{[\s\S]*linear-gradient\(to right, #000 var\(--sidebar-rail, 0px\), transparent 0\);/,
   );
-});
+return Promise.resolve(); });
 
-test("Tauri chat Recents label takes the shared header inset, not a shift", async () => {
+test("Tauri chat Recents label takes the shared header inset, not a shift",  () => {
   const source = APP_SIDEBAR;
   assert.match(source, /headerInset,\s*scrolled && "is-scrolled",\s*!chatOpen/);
   assert.doesNotMatch(source, /translate-x-\[2px\]/);
-});
+return Promise.resolve(); });

@@ -148,7 +148,7 @@ test("the overlay is presentation only, with no way out of a wedged reap", async
 
 // Since #15723 the quit covers the backend reap by hiding the main window on every platform;
 // Rust no longer emits app-closing, so the overlay above is unreachable until it is removed.
-test("a quit with no window on screen leaves it hidden", async () => {
+test("a quit with no window on screen leaves it hidden", () => {
   const rust = readText("../../src-tauri/src/main.rs");
   const hide = rust.slice(
     rust.indexOf("fn hide_main_window_for_quit("),
@@ -176,7 +176,7 @@ test("the overlay names the wait it is covering", async () => {
   assert.match(body, /<Spinner className="size-6 text-primary" \/>/);
 });
 
-test("the quit hides the window after the confirmations and before the reap", async () => {
+test("the quit hides the window after the confirmations and before the reap", () => {
   const rust = readText("../../src-tauri/src/main.rs");
   const sequence = rust.slice(
     rust.indexOf("fn quit_sequence("),

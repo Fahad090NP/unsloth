@@ -182,14 +182,14 @@ for (const ratio of [3, 1.5]) {
   });
 }
 
-test("the chat drop handler defers to a registered target", async () => {
+test("the chat drop handler defers to a registered target", () => {
   assert.match(
     USE_NATIVE_DROP,
     /if \(nativeDropTargetAt\(event\.payload\.position\)\) \{\s*publish\(\{ status: "idle" \}\);\s*return;/,
   );
 });
 
-test("the shared image picker owns native drops and ignores stale reads", async () => {
+test("the shared image picker owns native drops and ignores stale reads", () => {
   assert.match(IMAGE_DROPZONE, /const nativeDropRef = useNativeDropTarget\(\{/);
   assert.match(IMAGE_DROPZONE, /ref=\{nativeDropRef\}/);
   assert.match(IMAGE_DROPZONE, /registerNativeAttachmentPath\(path\)/);
@@ -202,7 +202,7 @@ test("the shared image picker owns native drops and ignores stale reads", async 
   assert.match(IMAGE_DROPZONE, /if \(seen\.current === value\) return;\s*seen\.current = value;\s*selection\.current \+= 1;/);
 });
 
-test("the picker's droppable formats are ones the native path policy admits", async () => {
+test("the picker's droppable formats are ones the native path policy admits", () => {
   const rust = readText("../../src-tauri/src/native_path_policy.rs");
   const listed = (source: string, pattern: RegExp) =>
     [...(source.match(pattern)?.[1].matchAll(/"([a-z0-9]+)"/g) ?? [])]
@@ -216,7 +216,7 @@ test("the picker's droppable formats are ones the native path policy admits", as
 });
 
 // Tauri repeats "over" per cursor move, so only changed state may setState.
-test("the chat drop overlay only publishes a changed state", async () => {
+test("the chat drop overlay only publishes a changed state", () => {
   assert.match(
     USE_NATIVE_DROP,
     /setDropState\(\(prev\) => \(sameDropState\(prev, next\) \? prev : next\)\)/,

@@ -62,7 +62,7 @@ const { getState, jobKeyOf, putJob } = await import(
 test("a held reading is still held after the reload that carried it", () => {
   const jobs = getState().jobs;
   assert.equal(
-    jobs[jobKeyOf("model", "org/held-model", "Q4_K_M")]?.measuredTransfer,
+    jobs[jobKeyOf("model", "org/held-model", "Q4_K_M")].measuredTransfer,
     false,
   );
 });
@@ -70,7 +70,7 @@ test("a held reading is still held after the reload that carried it", () => {
 test("a measured reading restores as measured", () => {
   const jobs = getState().jobs;
   assert.equal(
-    jobs[jobKeyOf("model", "org/measured-model", "Q4_K_M")]?.measuredTransfer,
+    jobs[jobKeyOf("model", "org/measured-model", "Q4_K_M")].measuredTransfer,
     true,
   );
 });
@@ -78,7 +78,7 @@ test("a measured reading restores as measured", () => {
 test("a current record with no marker still means never polled", () => {
   const jobs = getState().jobs;
   assert.equal(
-    jobs[jobKeyOf("model", "org/unpolled-model", "Q4_K_M")]?.measuredTransfer,
+    jobs[jobKeyOf("model", "org/unpolled-model", "Q4_K_M")].measuredTransfer,
     undefined,
   );
 });

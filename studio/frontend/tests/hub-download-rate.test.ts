@@ -71,7 +71,7 @@ test("bursts far apart still report their rate once the cadence is known", () =>
   assert.ok(rates.length > 0, "a 90s cadence should still publish");
   for (const rate of rates) {
     assert.ok(
-      Math.abs(rate - 100 * MB) < 1 * MB,
+      Math.abs(rate - 100 * MB) < Number(MB),
       `published ${(rate / 1e6).toFixed(1)} MB/s, want 100`,
     );
   }
@@ -172,7 +172,7 @@ test("a resume after a long stall is not priced across the stall", () => {
   assert.ok(published.length > 0, "the resumed transfer should publish again");
   for (const rate of published) {
     assert.ok(
-      Math.abs(rate - 20 * MB) < 1 * MB,
+      Math.abs(rate - 20 * MB) < Number(MB),
       `published ${(rate / MB).toFixed(2)} MB/s after a resume, want 20`,
     );
   }

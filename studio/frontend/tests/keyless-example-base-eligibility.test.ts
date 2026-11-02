@@ -51,7 +51,7 @@ test("the keyless example is offered exactly where admission accepts the authori
     assert.equal(
       keylessBaseEligible(base, "inference", "private_lan"),
       expected,
-      `${base} (${why}): panel said ${!expected}, admission says ${expected}`,
+      `${base} (${why}): panel said ${String(!expected)}, admission says ${String(expected)}`,
     );
   }
 });

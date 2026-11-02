@@ -12,7 +12,7 @@ const windowListeners = new Map<string, ((event: unknown) => void)[]>();
   addEventListener: (type: string, listener: (event: unknown) => void) => {
     windowListeners.set(type, [...(windowListeners.get(type) ?? []), listener]);
   },
-  removeEventListener: () => {},
+  removeEventListener: () => { /* empty */ },
   localStorage: {
     getItem: (key: string) => store.get(key) ?? null,
     setItem: (key: string, value: string) => {
@@ -108,7 +108,9 @@ test("composers hear each other's text, never their own", () => {
 
 // A fresh module stands in for a newly opened tab or a reload.
 const openTab = () =>
-  import(`../src/features/chat/utils/composer-draft.ts?tab=${Math.random()}`);
+  import(
+    `../src/features/chat/utils/composer-draft.ts?tab=${Math.random()}`
+  ) as Promise<typeof import("../src/features/chat/utils/composer-draft.ts")>;
 
 test("a new tab or a reload starts from the saved draft", async () => {
   writeComposerDraft(composerDraftKey(), "saved before the reload");

@@ -23,14 +23,14 @@ function loadApis(): ImagesApi {
       },
       "@/lib/account-transition": { accountTransitionPending: () => false },
       "./session": {
-        clearAuthTokens: () => {},
+        clearAuthTokens: () => { return undefined; },
         getAuthToken: () => "access-token",
         getRefreshToken: () => null,
         mustChangePassword: () => false,
-        setMustChangePassword: () => {},
-        storeAuthTokens: () => {},
+        setMustChangePassword: () => { return undefined; },
+        storeAuthTokens: () => { return undefined; },
       },
-      "@tauri-apps/api/core": { invoke: async () => false },
+      "@tauri-apps/api/core": { invoke: () => Promise.resolve(false) },
     },
   );
   return loadWithStubs<ImagesApi>(
@@ -38,8 +38,8 @@ function loadApis(): ImagesApi {
     {
       "@/lib/model-lifecycle-events": { withBackgroundLoadNotice: (f: unknown) => f },
       "@/features/auth": { authFetch: auth.authFetch },
-      "@/lib/format-fastapi-error": { readFastApiError: async () => "" },
-      "@/lib/multi-model-refusal": { parseLoadJson: async () => ({}) },
+      "@/lib/format-fastapi-error": { readFastApiError: () => Promise.resolve("") },
+      "@/lib/multi-model-refusal": { parseLoadJson: () => Promise.resolve(({})) },
       "@/lib/unified-memory-load-refusal": { withAllowOversizedLoad: (body: unknown) => body },
     },
     { relativePassthrough: true },
@@ -50,9 +50,9 @@ test("a dropped generate reply is surfaced as lost, not re-sent", async () => {
   const api = loadApis();
   const originalFetch = globalThis.fetch;
   let posts = 0;
-  globalThis.fetch = (async () => {
+  globalThis.fetch = (() => {
     posts += 1;
-    throw new TypeError("Load failed");
+    return Promise.reject(new TypeError("Load failed"));
   });
   try {
     await assert.rejects(
@@ -61,6 +61,6 @@ test("a dropped generate reply is surfaced as lost, not re-sent", async () => {
     );
     assert.equal(posts, 1);
   } finally {
-    globalThis.fetch = originalFetch;
+    Reflect.set(globalThis, "fetch", originalFetch);
   }
 });

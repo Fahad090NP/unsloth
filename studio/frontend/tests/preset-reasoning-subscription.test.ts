@@ -41,7 +41,7 @@ for (const [field, effective, inherited] of [
   ["reasoningBudgetMessage", "Conclude now.", ""],
 ] as const) {
   test(`preset subscription sees requested-only changes to ${field}`, () => {
-    const select = selectors.get(field)!;
+    const select = must(selectors.get(field));
     const loaded = `loaded${field[0].toUpperCase()}${field.slice(1)}`;
     const explicit = {
       [field]: effective,
@@ -53,4 +53,9 @@ for (const [field, effective, inherited] of [
     assert.equal(select(changed), inherited);
     assert.notEqual(select(explicit), select(changed));
   });
+}
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
 }

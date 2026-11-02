@@ -51,7 +51,7 @@ test("the catalog states the hosted checkpoint each official row would be fetche
     assert.ok(hit, id);
     assert.equal(hit.artifact.prequantRepo, repo, id);
     assert.equal(hit.artifact.prequantSizeGb?.fp8, fp8, id);
-    assert.equal(hit.artifact.prequantSizeGb?.int8, int8, id);
+    assert.equal(hit.artifact.prequantSizeGb.int8, int8, id);
   }
 });
 
@@ -289,12 +289,12 @@ test("a transcription row judged on RAM names RAM as the budget's device", () =>
   const WHISPER = "unsloth/whisper-large-v3";
   const onRam = curatedArtifactFit(WHISPER, AUDIO_CATALOG, { gpuGb: 1, systemRamGb: 5 });
   assert.equal(onRam?.fits, false);
-  assert.equal(onRam?.device, "RAM");
-  assert.equal(onRam?.deviceGb, 5);
-  assert.equal(onRam?.allowanceGb, 5 * 0.7);
+  assert.equal(onRam.device, "RAM");
+  assert.equal(onRam.deviceGb, 5);
+  assert.equal(onRam.allowanceGb, 5 * 0.7);
   const onGpu = curatedArtifactFit(WHISPER, AUDIO_CATALOG, { gpuGb: 5, systemRamGb: 1 });
   assert.equal(onGpu?.device, "GPU");
-  assert.equal(onGpu?.deviceGb, 5);
+  assert.equal(onGpu.deviceGb, 5);
 });
 
 test("the over-budget text never shows the size below the budget it exceeds", () => {

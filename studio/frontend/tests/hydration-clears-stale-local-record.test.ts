@@ -97,7 +97,7 @@ test("persisting that config removes the stale entry rather than keeping it", ()
     "the cleared flag must not survive for quick select to reload",
   );
   assert.ok(
-    after.config.llamaExtraArgs == null ||
+    after.config.llamaExtraArgs === null || after.config.llamaExtraArgs === undefined ||
       after.config.llamaExtraArgs.length === 0,
   );
 });

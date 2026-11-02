@@ -73,7 +73,7 @@ test("an entry records every param, not only the one that moved", () => {
     params({ temperature: 0.2, systemPrompt: "Be terse." }),
   );
   assert.equal(next?.[QWEN].systemPrompt, "Be terse.");
-  assert.equal(next?.[QWEN].topP, 0.95);
+  assert.equal(next[QWEN].topP, 0.95);
 });
 
 test("editing one model leaves every other model's memory alone", () => {
@@ -85,7 +85,7 @@ test("editing one model leaves every other model's memory alone", () => {
     params({ temperature: 0.2 }),
   );
   assert.deepEqual(after?.[LLAMA], { temperature: 0.9 });
-  assert.equal(after?.[QWEN].temperature, 0.2);
+  assert.equal(after[QWEN].temperature, 0.2);
   // The input map is not mutated: the store compares by identity to decide
   // whether anything has to be persisted.
   assert.deepEqual(before, { [LLAMA]: { temperature: 0.9 } });

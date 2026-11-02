@@ -28,11 +28,11 @@ test("maker names, orgs and common aliases resolve; partial words do not", () =>
 });
 
 test("search terms cover the maker's families without redundant requests", () => {
-  const meta = providerSearchTerms(matchProviderByQuery("meta")!);
+  const meta = providerSearchTerms(must(matchProviderByQuery("meta")));
   assert.ok(meta.includes("muse"));
   assert.ok(meta.includes("llama"));
   assert.ok(!meta.includes("meta-llama"), "contains llama already");
-  assert.deepEqual(providerSearchTerms(matchProviderByQuery("google")!).filter((t) => t.includes("gemma")), ["gemma"]);
+  assert.deepEqual(providerSearchTerms(must(matchProviderByQuery("google"))).filter((t) => t.includes("gemma")), ["gemma"]);
 });
 
 test("both typed-search paths put the maker's Unsloth uploads first, never for owner/repo", () => {
@@ -43,8 +43,8 @@ test("both typed-search paths put the maker's Unsloth uploads first, never for o
 });
 
 test("a maker search also reaches the maker's own Hub orgs, outside Unsloth-only scope", () => {
-  assert.deepEqual(providerHubOrgs(matchProviderByQuery("alibaba")!), ["Qwen"]);
-  assert.deepEqual(providerHubOrgs(matchProviderByQuery("meta")!), ["meta-models", "meta-llama", "facebook"]);
+  assert.deepEqual(providerHubOrgs(must(matchProviderByQuery("alibaba"))), ["Qwen"]);
+  assert.deepEqual(providerHubOrgs(must(matchProviderByQuery("meta"))), ["meta-models", "meta-llama", "facebook"]);
   const hook = readSrc("features/hub/hooks/use-hub-model-search.ts");
   assert.match(hook, /providerUnslothFirstIterator\(queryProvider, orgSearch, \{\n\s*\.\.\.providerOpts,\n\s*includeOrgs: false,/);
   assert.match(hook, /providerUnslothFirstIterator\(queryProvider, merged, \{\n\s*\.\.\.providerOpts,\n\s*includeOrgs: true,/);
@@ -61,3 +61,8 @@ test("the maker groups stream: Unsloth first, listing tails kept, a rejecting fi
   assert.match(fn, /if \(\+\+rejected >= UNSLOTH_FILTER_REJECT_LIMIT\) break;/);
   assert.equal(hook.match(/includeOrgs: (true|false),\n\s*filterPriority,/g)?.length, 2);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

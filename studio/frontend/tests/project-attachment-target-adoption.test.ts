@@ -29,7 +29,7 @@ function adopt(
     return byThread;
   }
   const next = { ...byThread };
-  delete next[PENDING];
+  Reflect.deleteProperty(next, PENDING);
   next[threadId] = pending;
   return next;
 }
@@ -60,7 +60,7 @@ function clearPending(
     return byThread;
   }
   const next = { ...byThread };
-  delete next[PENDING];
+  Reflect.deleteProperty(next, PENDING);
   return next;
 }
 
@@ -136,7 +136,7 @@ test("an abandoned composer cannot consume the next composer's choice", () => {
     if (!(PENDING in byThread)) return;
     claim += 1;
     const next = { ...byThread };
-    delete next[PENDING];
+    Reflect.deleteProperty(next, PENDING);
     byThread = next;
   };
   const adoptWithClaim = (threadId: string, seen: number) => {

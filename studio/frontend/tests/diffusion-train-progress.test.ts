@@ -32,7 +32,7 @@ test("60/60 means data is prepared, not that training is complete", () => {
   });
   assert.equal(progress.title, "Training data prepared");
   assert.equal(progress.percent, 100);
-  assert.match(progress.detail!, /before training starts/);
+  assert.match((progress.detail ?? assert.fail("expected a non-null value")), /before training starts/);
   assert.equal(progress.preparing, true);
 });
 
@@ -44,7 +44,7 @@ test("unknown model-loading and first-step durations remain indeterminate", () =
   });
   assert.equal(firstStep.title, "Starting training");
   assert.equal(firstStep.percent, null);
-  assert.match(firstStep.detail!, /Compilation/);
+  assert.match((firstStep.detail ?? assert.fail("expected a non-null value")), /Compilation/);
 });
 
 test("the first training step switches back to optimization progress", () => {

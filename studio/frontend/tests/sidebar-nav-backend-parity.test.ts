@@ -8,7 +8,7 @@ import { DEFAULT_CUSTOMIZATION } from "../src/features/settings/stores/appearanc
 import { readSrcAsync, readText } from "./helpers/kit.ts";
 
 // Old records get the backend's defaults, so they must match; read the real constant.
-test("the backend sidebar nav defaults match the frontend", async () => {
+test("the backend sidebar nav defaults match the frontend",  () => {
   const source = readText("../../backend/routes/settings.py");
   const block = /SIDEBAR_NAV_ITEM_DEFAULTS = \{([\s\S]*?)^\}/m.exec(source);
   assert.ok(block, "could not find SIDEBAR_NAV_ITEM_DEFAULTS in settings.py");
@@ -18,7 +18,7 @@ test("the backend sidebar nav defaults match the frontend", async () => {
   }));
   // Order matters: the backend appends missing ids in this order.
   assert.deepEqual(backend, DEFAULT_CUSTOMIZATION.sidebarNav);
-});
+return Promise.resolve(); });
 
 // PersonalizationCustomization ignores unknown keys, so undeclared fields are lost on save.
 test("the backend stores every customization field the frontend sends", () => {

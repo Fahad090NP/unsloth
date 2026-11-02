@@ -31,7 +31,7 @@ test("a full offload is the normal case and says nothing", () => {
 test("no layers on the GPU is the worst case, not an excluded one", () => {
   const warning = offloadWarning({ offloaded: 0, total: 60 });
   assert.equal(warning?.titleSuffix, ", on CPU");
-  assert.match(warning?.description ?? "", /^None of the 60 layers fit/);
+  assert.match(warning.description, /^None of the 60 layers fit/);
 });
 
 test("a load that reported no counts says nothing", () => {
@@ -152,15 +152,15 @@ test("a known reason for the CPU wins over the counts", () => {
     cpuFallbackReason: "vulkan_startup_crash",
   });
   assert.equal(warning?.titleSuffix, " on CPU");
-  assert.match(warning?.description ?? "", /Vulkan backend crashed/);
-  assert.doesNotMatch(warning?.description ?? "", /smaller quantization/);
+  assert.match(warning.description, /Vulkan backend crashed/);
+  assert.doesNotMatch(warning.description, /smaller quantization/);
   for (const [reason, text] of [
     ["vulkan_no_device", /No usable Vulkan GPU was found/],
     ["vulkan_startup_stall", /stopped responding during startup/],
   ] as const) {
     const other = offloadWarning({ offloaded: 0, total: 60, cpuFallbackReason: reason });
     assert.equal(other?.titleSuffix, " on CPU");
-    assert.match(other?.description ?? "", text);
+    assert.match(other.description, text);
   }
   assert.equal(
     offloadWarning({ offloaded: 0, total: 60, cpuFallbackReason: "something" }),

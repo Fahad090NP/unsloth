@@ -25,28 +25,28 @@ function harness() {
     },
     useRef: (current: unknown) => ({ current }),
     useCallback: (fn: unknown) => fn,
-    useEffect() {},
+    useEffect() { return undefined; },
   };
   const authFetch = async (url: string) => {
     if (url === "/api/llama/update") {
       return {
         ok: true,
-        json: async () => ({ started: true, job: job("running") }),
+        json: () => Promise.resolve(({ started: true, job: job("running") })),
       };
     }
     const body = await new Promise((resolve) => pending.push({ resolve }));
-    return { ok: true, json: async () => body };
+    return { ok: true, json: () => Promise.resolve(body) };
   };
   const hookModule = loadWithStubs<typeof HookModule>(
     new URL("../src/hooks/use-llama-update-check.ts", import.meta.url),
     {
       react,
       "@/features/auth": { authFetch, getAuthToken: () => "token" },
-      "@/hooks/use-hardware-info": { refreshHardwareInfo: async () => {} },
-      "@/lib/model-lifecycle-events": { notifyModelLifecycle() {} },
+      "@/hooks/use-hardware-info": { refreshHardwareInfo: () => Promise.resolve() },
+      "@/lib/model-lifecycle-events": { notifyModelLifecycle() { return undefined; } },
       "@/lib/llama-job-events": {
-        signalRunningLlamaJob() {},
-        subscribeToLlamaJobStarted: () => () => {},
+        signalRunningLlamaJob() { return undefined; },
+        subscribeToLlamaJobStarted: () => () => { return undefined; },
       },
       "@/lib/llama-job-lifecycle": lifecycle,
     },

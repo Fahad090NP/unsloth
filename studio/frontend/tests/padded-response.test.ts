@@ -26,7 +26,7 @@ test("a body the proxy truncated is rejected, not accepted as success", () => {
     assert.throws(
       () => { assertCompletedPaddedBody(body, "Model load"); },
       /Model load did not report completion/,
-      JSON.stringify(body) ?? "undefined",
+      JSON.stringify(body),
     );
   }
 });

@@ -28,10 +28,10 @@ function loadApi(respond: (call: Call) => Response): { api: Api; calls: Call[] }
     new URL("../src/features/settings/api/tool-result-limit.ts", import.meta.url),
     {
       "@/features/auth": {
-        authFetch: async (url: string, init?: RequestInit) => {
+        authFetch:  (url: string, init?: RequestInit) => {
           const call = { url, init };
           calls.push(call);
-          return respond(call);
+          return Promise.resolve(respond(call));
         },
       },
       "@/lib/format-fastapi-error": {
@@ -79,7 +79,7 @@ test("saves with a PUT of max_chars", async () => {
   const { api, calls } = loadApi(() => json({ ...API_BODY, max_chars: 64000 }));
   const settings = await api.updateToolResultLimit(64000, "fallback");
   assert.equal(calls[0].init?.method, "PUT");
-  assert.deepEqual(JSON.parse(String(calls[0].init?.body)), { max_chars: 64000 });
+  assert.deepEqual(JSON.parse((calls[0].init.body as unknown as string)), { max_chars: 64000 });
   assert.equal(settings.maxChars, 64000);
 });
 

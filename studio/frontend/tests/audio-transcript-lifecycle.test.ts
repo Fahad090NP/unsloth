@@ -86,11 +86,11 @@ test("a run applies a confirmation once and only to the transcript it covered", 
         events.push("confirm");
         return false;
       },
-      prepareTranscriptionModel: async () => {
+      prepareTranscriptionModel: () => {
         events.push("prepare");
         return null;
       },
-      setBusy: () => {},
+      setBusy: () => { /* empty */ },
       AbortController,
     });
     await run(
@@ -162,7 +162,7 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
     if (
       ts.isCallExpression(node) &&
       node.expression.getText(audioTree) === "useEffect" &&
-      node.arguments[0]?.getText(audioTree).includes('"set_renderer_activity"')
+      node.arguments[0].getText(audioTree).includes('"set_renderer_activity"')
     ) {
       protection = node.arguments[0].getText(audioTree);
     }
@@ -234,7 +234,7 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
         AUTH_SESSION_ENDING_EVENT: eventName,
         isTauri: false,
         isOwner: true,
-        logout: async () => {
+        logout: () => {
           events.push("logout");
         },
         clearAuthTokens: () => {
@@ -269,7 +269,7 @@ test("remounting audio restores the unsaved transcript and its origin", () => {
   const declarations: string[] = [];
   function visit(node: ts.Node) {
     if (ts.isVariableDeclaration(node) && ts.isArrayBindingPattern(node.name)) {
-      const name = node.name.elements[0]?.getText(tree);
+      const name = node.name.elements[0].getText(tree);
       if (name && names.has(name)) declarations.push(`const ${node.getText(tree)};`);
     }
     ts.forEachChild(node, visit);
@@ -281,7 +281,7 @@ test("remounting audio restores the unsaved transcript and its origin", () => {
     { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
   );
   const scope = {
-    useState: (initial: unknown) => [typeof initial === "function" ? initial() : initial, () => {}],
+    useState: (initial: unknown) => [typeof initial === "function" ? initial() : initial, () => { /* empty */ }],
     transcriptDraftKey: () => "test-draft",
     readTranscriptDraft: () => draft,
   };

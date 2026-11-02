@@ -13,8 +13,8 @@ import {
 
 interface Effect {
   deps?: unknown[];
-  cleanup?: (() => void) | void;
-  run?: () => (() => void) | void;
+  cleanup?: () => void;
+  run?: () => (() => void);
 }
 
 class Host {
@@ -85,7 +85,7 @@ const react = {
     current.slots[index] = { fn, deps };
     return fn;
   },
-  useEffect(run: () => (() => void) | void, deps?: unknown[]) {
+  useEffect(run: () => (() => void) | undefined, deps?: unknown[]) {
     const index = current.cursor++;
     const prev = current.slots[index] as Effect | undefined;
     if (prev && sameDeps(prev.deps, deps)) return;
@@ -138,8 +138,8 @@ function harness(rows: typeof KB[] = [KB]) {
       },
       "@/lib/utils": { cn: () => "" },
       "../api/rag-api": {
-        listKnowledgeBases: async () => rows,
-        listKnowledgeBaseDocuments: async () => [],
+        listKnowledgeBases: () => Promise.resolve(rows),
+        listKnowledgeBaseDocuments: () => Promise.resolve([]),
       },
       "../api/rag-availability": {
         useRagAvailabilityStore: (
@@ -168,13 +168,13 @@ function harness(rows: typeof KB[] = [KB]) {
             documents: [],
             loading: false,
             uploading: state.uploading,
-            refresh: async () => {},
+            refresh: () => Promise.resolve(),
             upload: async (items: unknown[]) => {
               const started = generation.current;
               await Promise.resolve();
               (started === generation.current ? uploads : abandoned).push(items);
             },
-            remove: async () => {},
+            remove: () => Promise.resolve(),
           };
         },
       },
@@ -182,7 +182,7 @@ function harness(rows: typeof KB[] = [KB]) {
         useSourceDrop: () => ({
           dragging: false,
           dropProps: {},
-          nativeDropTarget: () => {},
+          nativeDropTarget: () => { return undefined; },
         }),
       },
       "./use-upload-queue": {
@@ -260,7 +260,7 @@ function harness(rows: typeof KB[] = [KB]) {
     abandoned,
     errors,
     async open(focus: Record<string, unknown> | null) {
-      props = { open: true, onOpenChange() {}, focus };
+      props = { open: true, onOpenChange() { return undefined; }, focus };
       await settle();
     },
     async close() {
@@ -282,10 +282,10 @@ function harness(rows: typeof KB[] = [KB]) {
     },
     openRow() {
       const row = find(tree, (e) => e.props.title === "Open to add or remove documents");
-      (row!.props.onClick as () => void)();
+      (must(row).props.onClick as () => void)();
     },
     back() {
-      (documentsView()!.props.onBack as () => void)();
+      (must(documentsView()).props.onBack as () => void)();
     },
   };
 }
@@ -385,3 +385,8 @@ test("a handoff into the knowledge base on screen waits for its running upload w
   assert.deepEqual(app.uploads, [[ITEM], [LATER]]);
   assert.deepEqual(app.abandoned, []);
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

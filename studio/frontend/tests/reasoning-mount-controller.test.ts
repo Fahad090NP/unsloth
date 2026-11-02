@@ -42,6 +42,14 @@ import { defineContainmentFlag } from "../src/components/assistant-ui/containmen
 
 import { readSrc } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const geometry = { width: 640, lineHeight: 24, fontPixels: 15, codeLineHeight: 18.9, codeFontPixels: 12.2, codeFooter: 12.25 };
 
 test("a hidden fragment has no height and prose loses its paragraph gap", () => {
@@ -244,7 +252,7 @@ test("a growing last group never moves to another chunk, and appended groups nev
   const a = buildChunkGrid(before, before.map(() => 1)).chunks;
   const b = buildChunkGrid(after, after.map(() => 1)).chunks;
   for (let i = 0; i < a.length - 1; i += 1) assert.deepEqual(b[i], a[i]);
-  assert.equal(b[a.length - 1].key, a.at(-1)!.key, "the open chunk keeps its key while it grows and when it closes");
+  assert.equal(b[a.length - 1].key, required(a.at(-1)).key, "the open chunk keeps its key while it grows and when it closes");
 });
 
 test("a range cuts grid chunks into pieces whose keys stay unique and stable as the range moves", () => {
@@ -338,7 +346,7 @@ test("a streamed fence's rows keep the reader's place when the rewrite parses th
   assert.ok(fence && !fence.code, "PRECONDITION: the full parse holds the fence as prose");
   const codeRows = before.filter((fragment) => fragment.code);
   assert.ok(codeRows.length > 1, "PRECONDITION: the stream held the fence as several code rows");
-  for (const row of codeRows) assert.equal(after[anchorAtSamePlace(before, after, row, "const", 0)!.index], fence);
+  for (const row of codeRows) assert.equal(after[required(anchorAtSamePlace(before, after, row, "const", 0)).index], fence);
   const third = codeRows[2];
   assert.equal(third.code?.lines[0]?.line, 32, "PRECONDITION: code rows hold 16 lines");
   assert.deepEqual(

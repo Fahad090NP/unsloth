@@ -21,7 +21,7 @@ const REGISTRY: Record<string, Capability> = {
 
 before(async () => {
   vite = await createServer({ appType: "custom", server: { middlewareMode: true } });
-  const loaded = await vite.ssrLoadModule("/src/features/chat/sync-external-providers.ts");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/sync-external-providers.ts")) as typeof import("../src/features/chat/sync-external-providers.ts");
   mergeLearnedModelCapabilities = loaded.mergeLearnedModelCapabilities as Merge;
 });
 

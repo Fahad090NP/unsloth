@@ -82,7 +82,7 @@ test("the bound settles the listing even when the request never does", async () 
   let requestSignal: AbortSignal | undefined;
   const pending = runBoundedVariantsRequest(caller.signal, (signal) => {
     requestSignal = signal;
-    return new Promise<never>(() => {});
+    return new Promise<never>(() => { return undefined; });
   });
   caller.abort();
   await assert.rejects(pending);
@@ -100,6 +100,6 @@ test("a request that throws synchronously still rejects and disposes", async () 
 });
 
 test("a successful request passes its value straight through", async () => {
-  const value = await runBoundedVariantsRequest(undefined, async () => "listed");
+  const value = await runBoundedVariantsRequest(undefined, () => Promise.resolve("listed"));
   assert.equal(value, "listed");
 });

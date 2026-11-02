@@ -7,6 +7,14 @@ import {
   type ModelLifecyclePhase,
 } from "../src/features/chat/utils/model-lifecycle-gate.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const source = ts.createSourceFile(
   "chat-adapter.ts",
   readSrc("features/chat/api/chat-adapter.ts"),
@@ -19,11 +27,16 @@ const loader = source.statements.find(
 assert.ok(loader);
 const js = ts.transpileModule(
   `${loader.getText(source)}\nreturn resolveQueuedEmptyLocalModel;`,
-  { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } },
+  {
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.Preserve,
+    },
+  },
 ).outputText;
 
 for (const busy of [false, true]) {
-  test(`chat auto-load admits follow-ups while waiting for the model, busy=${busy}`, async () => {
+  test(`chat auto-load admits follow-ups while waiting for the model, busy=${String(busy)}`, async () => {
     const gate = new ModelLifecycleGate();
     const previous = busy ? gate.tryAcquire("preparing") : null;
     const leases: number[] = [];
@@ -43,10 +56,10 @@ for (const busy of [false, true]) {
           endModelLoading: (lease: number) => gate.release(lease),
         }),
       },
-      waitForModelReady: async () => {
+      waitForModelReady:  () => {
         assert.notEqual(previous, null);
-        gate.release(previous!);
-      },
+        gate.release(required(previous));
+      return Promise.resolve(); },
       isExternalModelId: () => false,
       autoLoadSmallestModel: () => loading,
       queuedResolvedModelFromStore: () => null,
@@ -67,6 +80,6 @@ for (const busy of [false, true]) {
     assert.equal(gate.canQueue(), true);
     const next = gate.tryAcquire("unloading");
     assert.notEqual(next, null, "the load releases its lifecycle");
-    gate.release(next!);
+    gate.release(required(next));
   });
 }

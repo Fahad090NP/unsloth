@@ -92,7 +92,7 @@ function accountBrowser(account: string) {
   } as unknown as Storage;
   const browser = {
     localStorage,
-    sessionStorage: { length: 0, key: () => null, removeItem: () => {} },
+    sessionStorage: { length: 0, key: () => null, removeItem: () => { return undefined; } },
     indexedDB: {
       deleteDatabase: () => {
         const request = {} as IDBOpenDBRequest;
@@ -100,7 +100,7 @@ function accountBrowser(account: string) {
         return request;
       },
     },
-    location: { replace: () => {} },
+    location: { replace: () => { return undefined; } },
   } as unknown as Window;
   return { browser, localStorage };
 }
@@ -111,7 +111,7 @@ test("another account signing in does not see the previous account's prompts", a
     saveLastPrompt("images:create", "alice's prompt");
     dismissExample("images:create");
   });
-  await transitionBrowserAccount("bob", "/images", () => {}, browser);
+  await transitionBrowserAccount("bob", "/images", () => { return undefined; }, browser);
   withStorage(localStorage, () => {
     assert.equal(readLastPrompt("images:create"), "");
     assert.equal(isExampleDismissed("images:create"), false);
@@ -121,7 +121,7 @@ test("another account signing in does not see the previous account's prompts", a
 test("the same account signing in again keeps its prompts", async () => {
   const { browser, localStorage } = accountBrowser("alice");
   withStorage(localStorage, () => { saveLastPrompt("video", "alice's clip"); });
-  await transitionBrowserAccount("alice", "/video", () => {}, browser);
+  await transitionBrowserAccount("alice", "/video", () => { return undefined; }, browser);
   withStorage(localStorage, () => {
     assert.equal(readLastPrompt("video"), "alice's clip");
   });

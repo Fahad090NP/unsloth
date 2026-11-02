@@ -10,7 +10,7 @@ const APP_SIDEBAR = readSrc("components/app-sidebar.tsx");
 
 // The selection list also carries drag-reorder ids, so losing it breaks both.
 
-test("every chat list hands its rows a selection list", async () => {
+test("every chat list hands its rows a selection list",  () => {
   const source = APP_SIDEBAR;
   for (const list of [
     /scope: PINNED_ORDER_SCOPE,\s*ids: pinnedChatRowIds,\s*orderIds: pinnedRowIds,/,
@@ -19,9 +19,9 @@ test("every chat list hands its rows a selection list", async () => {
   ]) {
     assert.match(source, list);
   }
-});
+return Promise.resolve(); });
 
-test("folder rows select too, and open their own bulk menu", async () => {
+test("folder rows select too, and open their own bulk menu",  () => {
   const source = APP_SIDEBAR;
   assert.match(
     source,
@@ -30,7 +30,7 @@ test("folder rows select too, and open their own bulk menu", async () => {
   assert.match(source, /selectProjectForContextMenu\(project\.id\)/);
   assert.match(source, /\{renderProjectContextMenu\(project\)\}/);
   assert.match(source, /selectedProjectIds\.has\(project\.id\)/);
-});
+return Promise.resolve(); });
 
 function bodyOf(source: string, name: string): string {
   const found = new RegExp(`function ${name}\\(([\\s\\S]*?)\\n  \\}`).exec(
@@ -40,7 +40,7 @@ function bodyOf(source: string, name: string): string {
   return found[1];
 }
 
-test("picking one kind of row drops the other", async () => {
+test("picking one kind of row drops the other",  () => {
   // Chats and folders share no bulk action, so all four entry points must drop the mix.
   const source = APP_SIDEBAR;
   for (const [name, drop] of [
@@ -54,9 +54,9 @@ test("picking one kind of row drops the other", async () => {
       `${name} leaves the other kind of row selected`,
     );
   }
-});
+return Promise.resolve(); });
 
-test("a right-click drops the other kind even on an already-selected row", async () => {
+test("a right-click drops the other kind even on an already-selected row",  () => {
   // Drop before the already-selected early return, or a mixed selection survives.
   const source = APP_SIDEBAR;
   for (const [name, drop] of [
@@ -73,9 +73,9 @@ test("a right-click drops the other kind even on an already-selected row", async
       `${name} drops the other kind only after its early return`,
     );
   }
-});
+return Promise.resolve(); });
 
-test("dropping a selection clears its anchor too", async () => {
+test("dropping a selection clears its anchor too",  () => {
   // A kept anchor lets a cleared list regrow on the next shift-click.
   const source = APP_SIDEBAR;
   assert.match(
@@ -86,16 +86,16 @@ test("dropping a selection clears its anchor too", async () => {
     source,
     /const dropProjectSelection = useCallback\(\(\) => \{\s*projectAnchorRef\.current = null;/,
   );
-});
+return Promise.resolve(); });
 
-test("the bulk archive failure reads a translated string", async () => {
+test("the bulk archive failure reads a translated string",  () => {
   const source = APP_SIDEBAR;
   const archive = /async function archiveChatItems\(([\s\S]*?)\n {2}\}/.exec(source);
   assert.ok(archive, "no archiveChatItems");
   assert.match(archive[1], /translate\("settings\.data\.failedToArchiveChats"\)/);
-});
+return Promise.resolve(); });
 
-test("one failed archive does not abandon the rest of the batch", async () => {
+test("one failed archive does not abandon the rest of the batch",  () => {
   // The selection is cleared up front, so the loop must catch per item.
   const source = APP_SIDEBAR;
   assert.match(source, /async function archiveSelected\(\) \{\s*const items = selectedChatItems;\s*clearSelection\(\);\s*await archiveChatItems\(items\);/);
@@ -109,9 +109,9 @@ test("one failed archive does not abandon the rest of the batch", async () => {
   assert.match(body, /archived \+= 1/);
   assert.match(body, /if \(archived > 0\) showArchivedChatsToast\(\)/);
   assert.match(body, /if \(archived < items\.length\)/);
-});
+return Promise.resolve(); });
 
-test("deleting folders in bulk cleans up like deleting one", async () => {
+test("deleting folders in bulk cleans up like deleting one",  () => {
   const source = APP_SIDEBAR;
   const branch = /if \(target\.kind === "projects"\) \{([\s\S]*?)\n {6}return;/.exec(
     source,
@@ -128,9 +128,9 @@ test("deleting folders in bulk cleans up like deleting one", async () => {
     false,
     "deletedIds is built from the requested projects, not the deleted ones",
   );
-});
+return Promise.resolve(); });
 
-test("both sidebar expanders read translated labels", async () => {
+test("both sidebar expanders read translated labels",  () => {
   // Comments name the control too, so match the rendered ternary, not the words.
   const source = APP_SIDEBAR;
   assert.equal(
@@ -140,7 +140,7 @@ test("both sidebar expanders read translated labels", async () => {
   );
   const uses = source.match(/shell\.navigation\.show(More|Less)/g) ?? [];
   assert.equal(uses.length, 4, "both expanders read both keys");
-});
+return Promise.resolve(); });
 
 
 test("a row's right-click menu and its 3-dot menu render the same items", () => {

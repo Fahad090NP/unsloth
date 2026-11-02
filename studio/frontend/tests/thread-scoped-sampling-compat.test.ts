@@ -84,7 +84,9 @@ async function world(rows: Record<string, Record<string, unknown>> = {}) {
   for (const [threadId, row] of Object.entries(rows)) {
     threadRows.rows.set(threadId, row);
   }
-  const mod = await import(`${STORE_URL}?scenario=compat${scenario}`);
+  const mod = (await import(
+    `${STORE_URL}?scenario=compat${scenario}`
+  )) as typeof import("../src/features/chat/stores/chat-runtime-store.ts");
   const store = () => mod.useChatRuntimeStore.getState();
   await store().hydratePersistedSettings();
   return {
@@ -200,7 +202,8 @@ test("C1c: a legacy chat that the user then edits pins the WHOLE set, not just t
   await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   // The write is a full replacement from the store, so all keys get pinned.
-  const row = threadRows.rows.get("L")!;
+  const row = threadRows.rows.get("L");
+  assert.ok(row);
   assert.equal(row.temperature, 1.37);
   for (const key of SAMPLING_KEYS) {
     assert.notEqual(row[key], undefined, `${key} was not pinned`);
@@ -223,7 +226,8 @@ test("C1c: a legacy chat that the user then edits pins the WHOLE set, not just t
 
 test("C2: an empty, null or absent snapshot opens on the installation settings", async (t) => {
   enableCountedTimers(t);
-  for (const snapshot of [null, {}, undefined]) {
+  await [null, {}, undefined].reduce<Promise<void>>(async (previous, snapshot) => {
+    await previous;
     const w = await world();
     await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
     w.open("E", snapshot === undefined ? null : snapshot);
@@ -231,7 +235,8 @@ test("C2: an empty, null or absent snapshot opens on the installation settings",
     const where = `snapshot ${JSON.stringify(snapshot ?? null)}`;
     assertUsable(w.sampling(), where);
     assert.deepEqual(w.sampling(), INSTALLATION, where);
-    const row = threadRows.rows.get("E")!;
+    const row = threadRows.rows.get("E");
+    assert.ok(row);
     for (const key of SAMPLING_KEYS) {
       assert.equal(
         row[key],
@@ -239,7 +244,7 @@ test("C2: an empty, null or absent snapshot opens on the installation settings",
         where,
       );
     }
-  }
+  }, Promise.resolve());
 });
 
 test("C2b: hasThreadScopedSettings tells an empty snapshot from a falsy one", () => {
@@ -376,7 +381,8 @@ test("C3e: an out-of-range recommendation never reaches a chat that pinned that 
   await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
   assert.equal(w.store().params.topP, INSTALLATION.topP);
-  const row = threadRows.rows.get("A")!;
+  const row = threadRows.rows.get("A");
+  assert.ok(row);
   assert.equal(row.topP, INSTALLATION.topP);
   assert.equal(row.temperature, 1.37);
 
@@ -405,7 +411,8 @@ test("C3f: an out-of-range recommendation taken with no chat open cannot be pinn
   // Omit topP rather than send a body the PATCH would refuse whole.
   w.open("A");
   await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
-  const row = threadRows.rows.get("A")!;
+  const row = threadRows.rows.get("A");
+  assert.ok(row);
   assert.equal(row.topP, undefined);
   assert.equal(row.temperature, INSTALLATION.temperature);
   assert.equal(row.systemPrompt, INSTALLATION.systemPrompt);
@@ -440,7 +447,8 @@ test("C4: the sanitizer keeps every falsy and negative value", () => {
 
 test("C4b: a falsy edit round-trips capture -> persist -> restore", async (t) => {
   enableCountedTimers(t);
-  for (const topK of [-1, 0]) {
+  await [-1, 0].reduce<Promise<void>>(async (previous, topK) => {
+    await previous;
     const edge = { ...FALSY_EDGE, topK };
     const w = await world();
     await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
@@ -448,7 +456,8 @@ test("C4b: a falsy edit round-trips capture -> persist -> restore", async (t) =>
     w.store().setParams({ ...w.store().params, ...edge });
     await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
-    const row = threadRows.rows.get("A")!;
+    const row = threadRows.rows.get("A");
+    assert.ok(row);
     for (const [key, value] of Object.entries(edge)) {
       assert.equal(row[key], value, `topK ${topK}: ${key} was not stored`);
     }
@@ -465,7 +474,7 @@ test("C4b: a falsy edit round-trips capture -> persist -> restore", async (t) =>
       edge,
       `topK ${topK}: A lost a value on reopen`,
     );
-  }
+  }, Promise.resolve());
 });
 
 test("C4c: a falsy pinned value survives a model load and a model switch", async (t) => {
@@ -515,10 +524,9 @@ test("C4d: an empty system prompt is a choice, not an absent one", async (t) => 
   w.store().setParams({ ...w.store().params, systemPrompt: "" });
   await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
-  assert.equal(
-    (threadRows.rows.get("B")!).systemPrompt,
-    "",
-  );
+  const rowB = threadRows.rows.get("B");
+  assert.ok(rowB);
+  assert.equal(rowB.systemPrompt, "");
   w.open("A");
   await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
   assert.equal(w.store().params.systemPrompt, "A's prompt");
@@ -547,7 +555,8 @@ test("C5: a one-megabyte system prompt is neither truncated nor fatal", async (t
   w.store().setParams({ ...w.store().params, systemPrompt: huge });
   await settle(w.mod, (ms) => { t.mock.timers.tick(ms); });
 
-  const row = threadRows.rows.get("A")!;
+  const row = threadRows.rows.get("A");
+  assert.ok(row);
   assert.equal((row.systemPrompt as string).length, huge.length);
   assert.equal(row.systemPrompt, huge);
 

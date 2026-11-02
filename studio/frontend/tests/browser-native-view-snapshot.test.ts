@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
 // minimal DOM for native-view.ts with one page placeholder and test-controlled overlays
@@ -78,16 +78,16 @@ Object.assign(globalThis, {
   requestAnimationFrame: (callback: () => void) => frames.push(callback),
   cancelAnimationFrame: noop,
   ResizeObserver: class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
+    observe() { /* empty */ }
+    unobserve() { /* empty */ }
+    disconnect() { /* empty */ }
   },
   MutationObserver: class {
     constructor(callback: () => void) {
       mutations.push(callback);
     }
-    observe() {}
-    disconnect() {}
+    observe() { /* empty */ }
+    disconnect() { /* empty */ }
   },
 });
 
@@ -104,8 +104,14 @@ let captureDone: ((bytes: ArrayBuffer) => void) | null = null;
   return Promise.resolve();
 };
 
-register("./helpers/browser-store-resolver.mjs", import.meta.url);
-register("./helpers/native-view-resolver.mjs", import.meta.url);
+const browserStoreResolverHooks = (await import(new URL("./helpers/browser-store-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserStoreResolverHooks.resolve });
+const nativeViewResolverHooks = (await import(new URL("./helpers/native-view-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: nativeViewResolverHooks.resolve });
 const { currentEntry, useBrowserStore } = await import("../src/features/browser/store.ts");
 const { refreshCoveredPage, startNativeViews } = await import(
   "../src/features/browser/native-view.ts"
@@ -153,11 +159,11 @@ test("a menu that closes and reopens while the page is captured keeps the snapsh
     await frame();
     assert.ok(captureDone, "the covered page is captured before it hides");
     // close and reopen the menu before capture resolves
-    overlays.length = 0;
+    overlays.splice(0);
     await frame();
     overlays.push(menu);
     await frame();
-    captureDone?.(new Uint8Array([137, 80, 78, 71]).buffer);
+    captureDone(new Uint8Array([137, 80, 78, 71]).buffer);
     await settle();
     await frame();
 
@@ -180,7 +186,7 @@ test("a menu that closes and reopens while the page is captured keeps the snapsh
       calls.some(({ command, args }) => command === "browser_view_zoom" && args?.zoom === 1.25),
       "the zoom applies while the menu is open",
     );
-    captureDone?.(new Uint8Array([137, 80, 78, 71]).buffer);
+    captureDone(new Uint8Array([137, 80, 78, 71]).buffer);
     await settle();
     assert.equal(
       calls.filter(({ command }) => command === "browser_capture").length,
@@ -188,7 +194,7 @@ test("a menu that closes and reopens while the page is captured keeps the snapsh
       "the covered page is captured again at its new zoom",
     );
 
-    overlays.length = 0;
+    overlays.splice(0);
     await frame();
     assert.equal(
       placeholder.style.backgroundImage,
@@ -223,11 +229,11 @@ test("tooltips along the toolbar capture the page once, and it returns when the 
     assert.deepEqual([lastShow()?.tabId, lastShow()?.parked], [tabId, true]);
 
     // the next button's tooltip reuses the snapshot
-    overlays.length = 0;
+    overlays.splice(0);
     await frame();
     overlays.push(tooltip(700));
     await frame();
-    overlays.length = 0;
+    overlays.splice(0);
     await frame();
     assert.equal(captures(), before + 1, "no capture per button");
     assert.equal(lastShow()?.parked, true, "still parked just after the tooltip closes");
@@ -239,7 +245,7 @@ test("tooltips along the toolbar capture the page once, and it returns when the 
     assert.deepEqual([lastShow()?.tabId, lastShow()?.parked], [tabId, undefined], "the page is back");
   } finally {
     stop();
-    overlays.length = 0;
+    overlays.splice(0);
   }
 });
 
@@ -263,7 +269,7 @@ test("the dialog the browser opens in over compare, projects and phones leaves i
     assert.equal(calls.filter(({ command }) => command === "browser_capture").length, captures, "nothing is captured");
   } finally {
     stop();
-    overlays.length = 0;
+    overlays.splice(0);
   }
 });
 
@@ -276,7 +282,7 @@ test("a capture that never lands keeps the page on screen instead of parking it 
     const tabId = useBrowserStore.getState().activeTabId;
     const captures = () => calls.filter(({ command }) => command === "browser_capture").length;
     const parked = () =>
-      calls.some(({ command, args }) => command === "browser_view_show" && args?.tabId === tabId && args?.parked);
+      calls.some(({ command, args }) => command === "browser_view_show" && args?.tabId === tabId && args.parked);
     const before = captures();
     overlays.push(menu);
     await frame();
@@ -306,7 +312,7 @@ test("a capture that never lands keeps the page on screen instead of parking it 
     assert.equal(captures(), retried + 1, "and left alone once it lands");
   } finally {
     stop();
-    overlays.length = 0;
+    overlays.splice(0);
   }
 });
 
@@ -326,7 +332,7 @@ test("a tab opened under a lasting cover is shown and captured, not left blank, 
     const next = useBrowserStore.getState().activeTabId;
     await frame();
     const shows = () => calls.filter(({ command, args }) => command === "browser_view_show" && args?.tabId === next);
-    assert.ok(shows().some(({ args }) => args?.url && !args?.parked), "the new tab is shown first");
+    assert.ok(shows().some(({ args }) => args?.url && !args.parked), "the new tab is shown first");
     captureDone?.(new Uint8Array([137, 80, 78, 71]).buffer);
     await settle();
     assert.equal(shows().at(-1)?.args?.parked, true, "then parked under its snapshot");
@@ -344,7 +350,7 @@ test("a tab opened under a lasting cover is shown and captured, not left blank, 
     await settle();
   } finally {
     stop();
-    overlays.length = 0;
+    overlays.splice(0);
   }
 });
 
@@ -370,7 +376,7 @@ test("a resize under a lasting cover parks the page at its new size and captures
     await settle();
   } finally {
     stop();
-    overlays.length = 0;
+    overlays.splice(0);
     pageBox = rect(500, 100, 500, 600);
   }
 });
@@ -411,7 +417,7 @@ test("a finished download is listed and reported after its tab closed, and warns
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId!;
+    const tabId = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
     useBrowserStore.getState().closeTab(tabId);
     await frame();
     const seen: { level: string; message: string }[] = [];
@@ -462,7 +468,7 @@ test("an approved download runs on the Downloads button until it lands or its sa
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId!;
+    const tabId = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
     g.nativeViewSeen = [];
     g.nativeViewActivity = [];
     const prompt = { kind: "downloadPrompt", tabId, site: "https://example.org/", name: "a.zip" };
@@ -500,7 +506,7 @@ test("two downloads of one address run apart: the first to land doesn't end the 
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId!;
+    const tabId = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
     const url = "https://example.org/same.zip";
     g.nativeViewSeen = [];
     g.nativeViewActivity = [];
@@ -534,7 +540,7 @@ test("a download that finished while its prompt was open doesn't keep spinning",
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId!;
+    const tabId = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
     const url = "https://example.org/big.zip";
     g.nativeViewSeen = [];
     g.nativeViewActivity = [];
@@ -574,7 +580,7 @@ test("with a Downloads button on screen, a download shows there, not as a toast"
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId!;
+    const tabId = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
     const seen: { level: string; message: string }[] = [];
     g.nativeViewSeen = seen;
     const event = { kind: "download", tabId, url: "https://example.com/b.zip", name: "b.zip", path: null, size: 3 };
@@ -606,7 +612,7 @@ test("a native page and its downloads begun beside a temporary chat stay tempora
   try {
     useBrowserStore.getState().openUrl("https://example.org/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId!;
+    const tabId = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
     const visits: { url: string; temporary: boolean }[] = [];
     const seen: { level: string; message: string; temporary?: boolean }[] = [];
     g.nativeViewVisits = visits;
@@ -656,7 +662,7 @@ test("a native page begun beside a normal chat is kept in history though its tab
     useBrowserStore.getState().openUrl("https://example.net/", { newTab: true });
     useChatRuntimeStore.getState().setIncognito(false);
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId!;
+    const tabId = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
     const visits: { url: string; temporary: boolean }[] = [];
     g.nativeViewVisits = visits;
     const load = (url: string, loading: boolean) =>
@@ -698,7 +704,7 @@ test("a native page begun beside a temporary chat keeps it through a redirect an
   try {
     useBrowserStore.getState().openUrl("https://example.edu/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId!;
+    const tabId = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
     const visits: { url: string; temporary: boolean }[] = [];
     g.nativeViewVisits = visits;
     const load = (url: string, loading: boolean) =>
@@ -718,7 +724,7 @@ test("a native page begun beside a temporary chat keeps it through a redirect an
     useChatRuntimeStore.getState().setIncognito(false);
     g.nativeViewsClosed?.();
     await frame();
-    const tab = useBrowserStore.getState().tabs.find((item) => item.id === tabId)!;
+    const tab = (useBrowserStore.getState().tabs.find((item) => item.id === tabId) ?? assert.fail("expected a non-null value"));
     const reached = currentEntry(tab);
     assert.ok(reached.kind === "web" && reached.temporary === true);
     load("https://example.edu/private", true);
@@ -739,7 +745,7 @@ test("a temporary chat's hidden page stays temporary when it navigates while ano
   runtime.setIncognito(true);
   store.showChat("single:temporary-hidden");
   store.openUrl("https://private.example/");
-  const tabId = useBrowserStore.getState().activeTabId!;
+  const tabId = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
   const stop = startNativeViews();
   try {
     await frame();
@@ -774,7 +780,7 @@ test("a new address asked for beside a temporary chat stays temporary when its n
   try {
     useBrowserStore.getState().openUrl("https://example.info/", { newTab: true });
     await frame();
-    const tabId = useBrowserStore.getState().activeTabId!;
+    const tabId = (useBrowserStore.getState().activeTabId ?? assert.fail("expected a non-null value"));
     const visits: { url: string; temporary: boolean }[] = [];
     g.nativeViewVisits = visits;
     const load = (url: string, loading: boolean) =>

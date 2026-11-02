@@ -18,14 +18,15 @@ function searchHarness(request: typeof fetch) {
   const cells: { deps: unknown[]; value: unknown }[] = [];
   const memo = (create: () => unknown, deps: unknown[]) => {
     const i = index++;
-    const cell = cells[i];
+    const cell = cells[i] as { deps: unknown[]; value: unknown } | undefined;
     if (
-      deps.length !== cell?.deps.length ||
+      !cell ||
+      deps.length !== cell.deps.length ||
       deps.some((dep, j) => !Object.is(dep, cell.deps[j]))
     ) {
       cells[i] = { deps, value: create() };
     }
-    return cells[i].value;
+    return (cells[i] as { value: unknown }).value;
   };
   let iterator!: AsyncGenerator;
   const rows = [
@@ -41,8 +42,8 @@ function searchHarness(request: typeof fetch) {
       react: {
         useMemo: memo,
         useCallback: (fn: unknown, deps: unknown[]) => memo(() => fn, deps),
-        useState: (value: unknown) => [value, () => {}],
-        useEffect: () => {},
+        useState: (value: unknown) => [value, () => { return undefined; }],
+        useEffect: () => { return undefined; },
       },
       "@/config/env": {
         usePlatformStore: (select: (s: unknown) => unknown) =>
@@ -121,11 +122,11 @@ function searchHarness(request: typeof fetch) {
 
 test("changing context bounds reuses configs instead of exhausting the Hub quota", async () => {
   let requests = 0;
-  const hook = searchHarness(async (url) => {
-    if (++requests > 2) return new Response(null, { status: 429 });
-    return Response.json({
-      max_position_embeddings: String(url).includes("/small/") ? 4096 : 32768,
-    });
+  const hook = searchHarness((url) => {
+    if (++requests > 2) return Promise.resolve(new Response(null, { status: 429 }));
+    return Promise.resolve(Response.json({
+      max_position_embeddings: String(url as string).includes("/small/") ? 4096 : 32768,
+    }));
   });
   assert.deepEqual(await hook.search({ minContext: 2048 }), hook.rows);
   assert.deepEqual(await hook.search({ minContext: 8192 }), [hook.rows[1]]);
@@ -136,13 +137,13 @@ test("changing context bounds reuses configs instead of exhausting the Hub quota
 
 test("a retry reuses successful configs but fetches the failed request again", async () => {
   const requests = new Map<string, number>();
-  const hook = searchHarness(async (url) => {
-    const key = String(url);
+  const hook = searchHarness((url) => {
+    const key = String(url as string);
     const count = (requests.get(key) ?? 0) + 1;
     requests.set(key, count);
     if (key.includes("/large/") && count === 1)
-      return new Response(null, { status: 429 });
-    return Response.json({ max_position_embeddings: 32768 });
+      return Promise.resolve(new Response(null, { status: 429 }));
+    return Promise.resolve(Response.json({ max_position_embeddings: 32768 }));
   });
   await assert.rejects(hook.search({ minContext: 2048 }), /429/);
   assert.deepEqual(await hook.search({ minContext: 2048 }), hook.rows);
@@ -162,9 +163,9 @@ test("a retry reuses successful configs but fetches the failed request again", a
 
 test("a different token or Hub endpoint cannot reuse filter metadata", async () => {
   let requests = 0;
-  const hook = searchHarness(async () => {
+  const hook = searchHarness(() => {
     requests++;
-    return Response.json({ max_position_embeddings: 32768 });
+    return Promise.resolve(Response.json({ max_position_embeddings: 32768 }));
   });
   for (const accessToken of [
     undefined,
@@ -183,9 +184,9 @@ test("expired metadata is refreshed so a changed context limit takes effect", as
   t.mock.timers.enable({ apis: ["Date"], now: 1_000_000 });
   let context = 32768;
   let requests = 0;
-  const hook = searchHarness(async () => {
+  const hook = searchHarness(() => {
     requests++;
-    return Response.json({ max_position_embeddings: context });
+    return Promise.resolve(Response.json({ max_position_embeddings: context }));
   });
   await hook.search({ minContext: 16384 });
   context = 8192;
@@ -200,9 +201,9 @@ test("expired metadata is refreshed so a changed context limit takes effect", as
 test("missing configs are reused but access errors and malformed JSON are retried", async () => {
   for (const status of [404, 401, 403, 200]) {
     let requests = 0;
-    const hook = searchHarness(async () => {
+    const hook = searchHarness(() => {
       requests++;
-      return new Response("not JSON", { status });
+      return Promise.resolve(new Response("not JSON", { status }));
     });
     assert.deepEqual(await hook.search({ minContext: 2048 }), []);
     assert.deepEqual(await hook.search({ minContext: 8192 }), []);
@@ -232,9 +233,9 @@ test("an aborted search cannot cache metadata that arrives after cancellation", 
 
 test("rows the list hides cost no metadata request", async () => {
   const requested: string[] = [];
-  const hook = searchHarness(async (url) => {
-    requested.push(String(url));
-    return Response.json({ max_position_embeddings: 32768 });
+  const hook = searchHarness((url) => {
+    requested.push(String(url as string));
+    return Promise.resolve(Response.json({ max_position_embeddings: 32768 }));
   });
   const keepResult = (result: { id: string }) => result.id !== "unsloth/small";
   assert.deepEqual(await hook.search({ minContext: 2048 }, { keepResult }), [
@@ -252,8 +253,8 @@ test("rows the list hides cost no metadata request", async () => {
 });
 
 test("a row the mapper throws on is skipped, not the whole search", async () => {
-  const hook = searchHarness(async () =>
-    Response.json({ max_position_embeddings: 32768 }),
+  const hook = searchHarness(() =>
+    Promise.resolve(Response.json({ max_position_embeddings: 32768 })),
   );
   const keepResult = (result: { id: string }) => {
     if (result.id === "unsloth/small") throw new RangeError("Invalid time value");

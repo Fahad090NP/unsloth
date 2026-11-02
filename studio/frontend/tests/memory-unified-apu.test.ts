@@ -81,7 +81,7 @@ test("an old backend that never sends unified_memory keeps the old behaviour", (
     assert.equal(
       probed || appleSilicon,
       appleSilicon,
-      `old backend with appleSilicon=${appleSilicon} changed answer`,
+      `old backend with appleSilicon=${String(appleSilicon)} changed answer`,
     );
   }
 });

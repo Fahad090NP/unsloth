@@ -58,7 +58,7 @@ function harness(
     jobId: "job",
     filename: options.filename ?? "report.pdf",
   };
-  const lister = options.list ?? (async () => []);
+  const lister = options.list ?? (() => Promise.resolve([]));
   let scope: RagDocumentScope | null = { type: "thread", threadId: "thread" };
   const react = {
     useRef(value: unknown) {
@@ -72,14 +72,17 @@ function harness(
       return [
         slots[index],
         (next: unknown) => {
-          slots[index] = typeof next === "function" ? next(slots[index]) : next;
+          slots[index] =
+            typeof next === "function"
+              ? (next as (previous: unknown) => unknown)(slots[index])
+              : next;
         },
       ];
     },
     useCallback(fn: unknown) {
       return fn;
     },
-    useEffect(effect: () => void | (() => void), deps: unknown[]) {
+    useEffect(effect: () => (() => void) | undefined, deps: unknown[]) {
       const index = cursor++;
       const previous = slots[index] as
         { deps: unknown[]; cleanup?: () => void } | undefined;
@@ -121,28 +124,32 @@ function harness(
           getState: () => ({ isUnavailable: () => false }),
         },
       },
-      "./vision-overrides": { resolveVisionOverrides: async () => ({}) },
+      "./vision-overrides": { resolveVisionOverrides: () => Promise.resolve({}) },
       "../api/rag-api": {
-        uploadThreadDocument: async (threadId: string) => {
+        uploadThreadDocument: (threadId: string) => {
           if (refusals > 0) {
             refusals -= 1;
-            throw new Error("Server busy");
+            return Promise.reject(new Error("Server busy"));
           }
           uploads.push(threadId);
-          return uploaded;
+          return Promise.resolve(uploaded);
         },
-        deleteDocument: async () => {
-          if (options.failDeletes) throw new Error("Server busy");
+        deleteDocument: () => {
+          if (options.failDeletes) {
+            return Promise.reject(new Error("Server busy"));
+          }
+          return Promise.resolve();
         },
         noteProjectWork: () => undefined,
         streamJobEvents:
           options.events ??
           async function* () {
+            await Promise.resolve();
             yield { type: "complete", num_chunks: 10 };
           },
         getJob:
           options.getJob ??
-          (async () => ({ status: "completed", numChunks: 10 })),
+          (() => Promise.resolve({ status: "completed", numChunks: 10 })),
       },
     },
   );
@@ -160,7 +167,8 @@ function harness(
       return result;
     },
     dispose() {
-      for (const slot of slots) (slot as { cleanup?: () => void })?.cleanup?.();
+      for (const slot of slots)
+        (slot as { cleanup?: () => void }).cleanup?.();
     },
   };
 }
@@ -187,11 +195,11 @@ for (const extension of [
       await hook.upload([report(filename)]);
       await flush();
       hook = app.render();
-      assert.equal(hook.documents[0]?.status, "completed");
+      assert.equal(hook.documents[0].status, "completed");
       let initialized = 0;
-      await hook.upload([report(filename)], async () => {
+      await hook.upload([report(filename)], () => {
         initialized += 1;
-        throw new Error("Thread was not persisted");
+        return Promise.reject(new Error("Thread was not persisted"));
       });
       await flush();
       assert.equal(initialized, 0);
@@ -209,9 +217,9 @@ for (const extension of [
     try {
       const hook = app.render();
       await flush();
-      await hook.upload([report(filename)], async () => {
-        throw new Error("Thread deleted");
-      });
+      await hook.upload([report(filename)], () =>
+        Promise.reject(new Error("Thread deleted")),
+      );
       assert.deepEqual(app.errors, ["Couldn't attach documents"]);
       assert.deepEqual(app.uploads, []);
       assert.deepEqual(app.render().documents, []);
@@ -240,6 +248,7 @@ test("an ended event stream keeps the file indexing until the job completes", as
   let reads = 0;
   const app = harness({
     events: async function* () {
+      await Promise.resolve();
       yield { type: "progress", progress: 0.4, stage: "captioning" };
     },
     getJob: async () => {
@@ -254,7 +263,7 @@ test("an ended event stream keeps the file indexing until the job completes", as
     await flush();
     await hook.upload([report()]);
     await flush();
-    assert.equal(app.render().documents[0]?.status, "running");
+    assert.equal(app.render().documents[0].status, "running");
     assert.equal(app.render().hasIndexing, true);
     assert.equal(reads, 2);
     completion.resolve({
@@ -264,8 +273,8 @@ test("an ended event stream keeps the file indexing until the job completes", as
       numChunks: 12,
     });
     await flush();
-    assert.equal(app.render().documents[0]?.status, "completed");
-    assert.equal(app.render().documents[0]?.numChunks, 12);
+    assert.equal(app.render().documents[0].status, "completed");
+    assert.equal(app.render().documents[0].numChunks, 12);
     assert.equal(app.render().hasIndexing, false);
   } finally {
     app.dispose();
@@ -275,13 +284,16 @@ test("an ended event stream keeps the file indexing until the job completes", as
 test("an original job failure is preserved after its event stream ends", async () => {
   let reads = 0;
   const app = harness({
-    events: async function* () {},
-    getJob: async () => ({
-      id: "job",
-      documentId: "doc",
-      status: ++reads === 1 ? "running" : "failed",
-      error: "Invalid PDF",
-    }),
+    events: async function* () {
+      await Promise.resolve();
+    },
+    getJob: () =>
+      Promise.resolve({
+        id: "job",
+        documentId: "doc",
+        status: ++reads === 1 ? "running" : "failed",
+        error: "Invalid PDF",
+      }),
   });
   try {
     const hook = app.render();
@@ -303,21 +315,32 @@ test("an original job failure is preserved after its event stream ends", async (
 
 test("a refresh that lists the failure first keeps the row retryable", async () => {
   let listed = false;
-  let release = () => {};
+  let release = () => {/* intentionally empty */};
   const polled = new Promise<void>((resolve) => {
     release = resolve;
   });
   const app = harness({
-    events: async function* () {},
+    events: async function* () {
+      await Promise.resolve();
+    },
     // The job poll answers only after the list has already reported the failure.
     getJob: async () => {
       await polled;
       return { id: "job", documentId: "doc", status: "failed", error: "Invalid PDF" };
     },
-    list: async () =>
-      listed
-        ? ([{ id: "doc", filename: "report.pdf", status: "failed", error: "Invalid PDF" }] as unknown as RagDocument[])
-        : [],
+    list: () =>
+      Promise.resolve(
+        listed
+          ? ([
+              {
+                id: "doc",
+                filename: "report.pdf",
+                status: "failed",
+                error: "Invalid PDF",
+              },
+            ] as unknown as RagDocument[])
+          : [],
+      ),
   });
   try {
     let hook = app.render();
@@ -350,8 +373,8 @@ test("a refused upload stays as a failed chip and Retry sends the same file agai
     await flush();
     hook = app.render();
     const failed = hook.documents[0];
-    assert.equal(failed?.status, "failed");
-    assert.equal(failed?.error, "Server busy");
+    assert.equal(failed.status, "failed");
+    assert.equal(failed.error, "Server busy");
     assert.equal(hook.canRetry(failed.id), true);
     assert.deepEqual(app.errors, ["Couldn't upload report.pdf"]);
 
@@ -372,13 +395,16 @@ test("a retry whose delete fails keeps the failed row retryable and uploads noth
   let reads = 0;
   const app = harness({
     failDeletes: true,
-    events: async function* () {},
-    getJob: async () => ({
-      id: "job",
-      documentId: "doc",
-      status: ++reads === 1 ? "running" : "failed",
-      error: "Invalid PDF",
-    }),
+    events: async function* () {
+      await Promise.resolve();
+    },
+    getJob: () =>
+      Promise.resolve({
+        id: "job",
+        documentId: "doc",
+        status: ++reads === 1 ? "running" : "failed",
+        error: "Invalid PDF",
+      }),
   });
   try {
     let hook = app.render();
@@ -390,7 +416,7 @@ test("a retry whose delete fails keeps the failed row retryable and uploads noth
     await flush();
     hook = app.render();
     assert.deepEqual(app.uploads, ["thread"], "no second upload beside the undeleted one");
-    assert.equal(hook.documents[0]?.status, "failed");
+    assert.equal(hook.documents[0].status, "failed");
     assert.equal(hook.canRetry("doc"), true);
   } finally {
     app.dispose();
@@ -420,25 +446,26 @@ test("an upload begun without a scope stops at the chat the user left", async ()
 });
 
 test("a new chat's id committed after its upload finished keeps tracking the job", async () => {
-  const indexed = deferred<void>();
+  const indexed = deferred<undefined>();
   let done = false;
   let signal: AbortSignal | undefined;
   const app = harness({
-    list: async () => [
-      {
-        id: "doc",
-        threadId: "thread",
-        filename: "report.pdf",
-        status: done ? "completed" : "running",
-        managed: false,
-        numChunks: done ? 10 : 0,
-      },
-    ],
+    list: () =>
+      Promise.resolve([
+        {
+          id: "doc",
+          threadId: "thread",
+          filename: "report.pdf",
+          status: done ? "completed" : "running",
+          managed: false,
+          numChunks: done ? 10 : 0,
+        },
+      ]),
     events: async function* (_jobId, streamSignal) {
       signal = streamSignal;
       yield { type: "progress", progress: 0.4, stage: "captioning" };
       await new Promise<void>((resolve, reject) => {
-        indexed.promise.then(resolve);
+        void indexed.promise.then(resolve);
         streamSignal?.addEventListener("abort", () =>
           { reject(new DOMException("Fetch is aborted", "AbortError")); },
         );
@@ -452,10 +479,12 @@ test("a new chat's id committed after its upload finished keeps tracking the job
     let hook = app.render();
     await flush();
     // React commits the id late: the POST has returned before the scope change reaches the hook.
-    await hook.upload([report()], async () => ({
-      type: "thread",
-      threadId: "thread",
-    }));
+    await hook.upload([report()], () =>
+      Promise.resolve({
+        type: "thread",
+        threadId: "thread",
+      }),
+    );
     await flush();
     assert.equal(app.render().uploading, false);
     assert.equal(signal?.aborted, false, "the job was never tracked");
@@ -463,15 +492,15 @@ test("a new chat's id committed after its upload finished keeps tracking the job
     hook = app.render();
     await flush();
     assert.equal(
-      signal?.aborted,
+      signal.aborted,
       false,
       "the scope arriving for the new chat aborted its own upload's job",
     );
-    indexed.resolve();
+    indexed.resolve(undefined);
     await flush();
     await flush();
     hook = app.render();
-    assert.equal(hook.documents[0]?.status, "completed");
+    assert.equal(hook.documents[0].status, "completed");
     assert.equal(hook.hasIndexing, false);
     assert.deepEqual(app.errors, []);
   } finally {
@@ -496,10 +525,12 @@ test("leaving a new chat for another one after its upload finished drops the job
     app.setScope(null);
     let hook = app.render();
     await flush();
-    await hook.upload([report()], async () => ({
-      type: "thread",
-      threadId: "thread",
-    }));
+    await hook.upload([report()], () =>
+      Promise.resolve({
+        type: "thread",
+        threadId: "thread",
+      }),
+    );
     await flush();
     assert.equal(signal?.aborted, false, "the job was never tracked");
     app.setScope({ type: "thread", threadId: "other" });
@@ -508,7 +539,7 @@ test("leaving a new chat for another one after its upload finished drops the job
     await flush();
     hook = app.render();
     assert.equal(
-      signal?.aborted,
+      signal.aborted,
       true,
       "the new chat's job kept streaming into the chat the user opened",
     );
@@ -521,14 +552,14 @@ test("leaving a new chat for another one after its upload finished drops the job
 });
 
 test("a scope passed to an unscoped hook keeps its job when that scope commits late", async () => {
-  const indexed = deferred<void>();
+  const indexed = deferred<undefined>();
   let signal: AbortSignal | undefined;
   const app = harness({
     events: async function* (_jobId, streamSignal) {
       signal = streamSignal;
       yield { type: "progress", progress: 0.4, stage: "captioning" };
       await new Promise<void>((resolve, reject) => {
-        indexed.promise.then(resolve);
+        void indexed.promise.then(resolve);
         streamSignal?.addEventListener("abort", () =>
           { reject(new DOMException("Fetch is aborted", "AbortError")); },
         );
@@ -548,11 +579,11 @@ test("a scope passed to an unscoped hook keeps its job when that scope commits l
     hook = app.render();
     await flush();
     assert.equal(
-      signal?.aborted,
+      signal.aborted,
       false,
       "the passed scope committing late aborted its own upload's job",
     );
-    indexed.resolve();
+    indexed.resolve(undefined);
     await flush();
     await flush();
     assert.deepEqual(app.errors, []);

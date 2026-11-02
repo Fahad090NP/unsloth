@@ -32,6 +32,18 @@ class ChatThreadWriteError extends Error {
   }
 }
 
+function mustFind<T>(items: readonly T[], predicate: (item: T) => boolean): T {
+  const found = items.find(predicate);
+  assert.ok(found);
+  return found;
+}
+
+function mustGet<K, V>(map: ReadonlyMap<K, V>, key: K): V {
+  const value = map.get(key);
+  assert.ok(value !== undefined);
+  return value;
+}
+
 interface Module {
   importConversationsFromSource: (
     source: ImportSource,
@@ -55,22 +67,24 @@ function harness(
       "mdast-util-from-markdown": { fromMarkdown },
       "../api/chat-api": {
         notifyChatHistoryUpdated: () => { events.historyUpdated++; },
-        listChatProjects: async () => projects,
-        saveChatProject: async (project: ProjectRecord) => {
+        listChatProjects: () => Promise.resolve(projects),
+        saveChatProject: (project: ProjectRecord) => {
           projects.push(project);
-          return project;
+          return Promise.resolve(project);
         },
         ChatThreadWriteError,
       },
       "./chat-history-storage": {
-        saveStoredChatThread: async (thread: ThreadRecord) => {
+        saveStoredChatThread: (thread: ThreadRecord) => {
           if (rejectAt === "thread" && thread.title === "Rejected") {
-            throw new ChatThreadWriteError("Request failed (500)", 500);
+            return Promise.reject(
+              new ChatThreadWriteError("Request failed (500)", 500),
+            );
           }
           threads.push(thread);
-          return thread;
+          return Promise.resolve(thread);
         },
-        syncStoredChatMessages: async (
+        syncStoredChatMessages: (
           threadId: string,
           records: MessageRecord[],
         ) => {
@@ -78,19 +92,19 @@ function harness(
             rejectAt === "messages" &&
             threads.find(({ id }) => id === threadId)?.title === "Rejected"
           ) {
-            throw new Error("Message sync failed");
+            return Promise.reject(new Error("Message sync failed"));
           }
           messages.set(threadId, records);
-          return records;
+          return Promise.resolve(records);
         },
-        deleteStoredChatThreads: async (ids: string[]) => {
+        deleteStoredChatThreads: (ids: string[]) => {
           deleted.push(...ids);
           for (const id of ids) {
             const index = threads.findIndex((thread) => thread.id === id);
             if (index !== -1) threads.splice(index, 1);
             messages.delete(id);
           }
-          return ids;
+          return Promise.resolve(ids);
         },
       },
     },
@@ -109,6 +123,7 @@ function sourceText(name: string, text: string): ImportSource {
     name,
     size: text.length,
     async *chunks() {
+      await Promise.resolve();
       yield { text: text.slice(0, half), bytes: half };
       yield { text: text.slice(half), bytes: text.length - half };
     },
@@ -124,7 +139,10 @@ for (const rejectAt of ["thread", "messages"] as const) {
     }));
     const text = await buildNamedConversationsMarkdown(
       conversations,
-      async (id) => buildConversationMarkdown([{ role: "user", content: id }]),
+      (id) =>
+        Promise.resolve(
+          buildConversationMarkdown([{ role: "user", content: id }]),
+        ),
     );
     const saved: string[] = [];
     const progress: { imported: number; failed: number }[] = [];
@@ -236,8 +254,8 @@ test("a Studio backup restores one chat per thread, with titles, branches, archi
   assert.deepEqual(result, { imported: 2, failed: 0 });
   assert.deepEqual(threads.map(({ title }) => title).sort(), ["Old recipe", "Trip plan"]);
 
-  const trip = threads.find(({ title }) => title === "Trip plan")!;
-  const recipe = threads.find(({ title }) => title === "Old recipe")!;
+  const trip = mustFind(threads, ({ title }) => title === "Trip plan");
+  const recipe = mustFind(threads, ({ title }) => title === "Old recipe");
   assert.notEqual(trip.id, "t1");
   assert.equal(trip.archived, false);
   assert.equal(trip.projectId, "p1");
@@ -256,7 +274,7 @@ test("a Studio backup restores one chat per thread, with titles, branches, archi
     ],
   );
 
-  const tripMessages = messages.get(trip.id)!;
+  const tripMessages = mustGet(messages, trip.id);
   assert.deepEqual(
     tripMessages.map(({ content }) => (content[0] as { text: string }).text),
     ["Where to?", "Lisbon", "Porto"],
@@ -266,7 +284,7 @@ test("a Studio backup restores one chat per thread, with titles, branches, archi
   assert.equal(tripMessages[1].parentId, tripMessages[0].id);
   assert.equal(tripMessages[2].parentId, tripMessages[0].id);
 
-  const recipeMessages = messages.get(recipe.id)!;
+  const recipeMessages = mustGet(messages, recipe.id);
   assert.equal(recipeMessages.length, 2);
   assert.equal(recipeMessages[1].parentId, recipeMessages[0].id);
   assert.equal(recipe.forkedFromThreadId, trip.id);
@@ -347,7 +365,8 @@ test("a compare pair stays paired under a new pair id, and legacy rows without p
   assert.deepEqual(threads.map(({ modelType }) => modelType).sort(), ["model1", "model2"]);
   assert.equal(threads[0].pairId, threads[1].pairId);
   assert.notEqual(threads[0].pairId, "pair");
-  const left = messages.get(threads.find(({ title }) => title === "Left")?.id ?? "")!;
+  const leftThread = mustFind(threads, ({ title }) => title === "Left");
+  const left = mustGet(messages, leftThread.id);
   assert.deepEqual(left.map(({ role }) => role), ["user", "assistant"]);
   assert.deepEqual(left.map(({ createdAt }) => createdAt), [5, 6]);
   assert.notEqual(left[0].metadata?.createdAtEstimated, true);
@@ -411,11 +430,12 @@ test("restored messages carry no link to the server run that produced them", asy
   assert.deepEqual(result, { imported: 1, failed: 0 });
   const [records] = [...messages.values()];
   const assistant = records.find((record) => record.role === "assistant");
-  assert.deepEqual(assistant?.metadata, {
+  assert.ok(assistant);
+  assert.deepEqual(assistant.metadata, {
     reasoningDuration: 3,
     custom: { note: "kept" },
   });
-  assert.deepEqual(assistant?.content, [{ type: "text", text: "hello" }]);
+  assert.deepEqual(assistant.content, [{ type: "text", text: "hello" }]);
 });
 
 test("a chat whose last message was deleted comes back, and so does a project with no chats", async () => {
@@ -442,7 +462,7 @@ test("a chat whose last message was deleted comes back, and so does a project wi
   const result = await module.importConversationsFromSource(sourceOf("backup.json", data));
 
   assert.deepEqual(result, { imported: 3, failed: 0 });
-  const emptied = threads.find(({ title }) => title === "Emptied out")!;
+  const emptied = mustFind(threads, ({ title }) => title === "Emptied out");
   assert.notEqual(emptied, undefined);
   assert.equal(emptied.createdAt, 3000);
   assert.equal(emptied.updatedAt, 3100);
@@ -459,8 +479,8 @@ test("a fork keeps its badge when only the branch-point message is gone", async 
 
   await module.importConversationsFromSource(sourceOf("backup.json", data));
 
-  const trip = threads.find(({ title }) => title === "Trip plan")!;
-  const recipe = threads.find(({ title }) => title === "Old recipe")!;
+  const trip = mustFind(threads, ({ title }) => title === "Trip plan");
+  const recipe = mustFind(threads, ({ title }) => title === "Old recipe");
   assert.equal(recipe.forkedFromThreadId, trip.id);
   assert.equal(recipe.forkedFromMessageId, undefined);
 });
@@ -475,27 +495,32 @@ test("a settings snapshot this build rejects costs the settings, not the chat", 
     {
       "mdast-util-from-markdown": { fromMarkdown },
       "../api/chat-api": {
-        notifyChatHistoryUpdated: () => {},
-        listChatProjects: async () => [],
-        saveChatProject: async (project: ProjectRecord) => project,
+        notifyChatHistoryUpdated: () => undefined,
+        listChatProjects: () => Promise.resolve([]),
+        saveChatProject: (project: ProjectRecord) => Promise.resolve(project),
         ChatThreadWriteError,
       },
       "./chat-history-storage": {
-        saveStoredChatThread: async (thread: ThreadRecord) => {
+        saveStoredChatThread: (thread: ThreadRecord) => {
           attempts.push(thread.settings);
           const temperature = (thread.settings as { temperature?: number } | undefined)
             ?.temperature;
           if (temperature !== undefined && temperature > 2) {
-            throw new ChatThreadWriteError("less_than_equal: settings.temperature", 422);
+            return Promise.reject(
+              new ChatThreadWriteError(
+                "less_than_equal: settings.temperature",
+                422,
+              ),
+            );
           }
           saved.push(thread);
-          return thread;
+          return Promise.resolve(thread);
         },
-        syncStoredChatMessages: async (
+        syncStoredChatMessages: (
           _threadId: string,
           records: MessageRecord[],
-        ) => records,
-        deleteStoredChatThreads: async () => [],
+        ) => Promise.resolve(records),
+        deleteStoredChatThreads: () => Promise.resolve([]),
       },
     },
     { relativePassthrough: true },
@@ -541,7 +566,7 @@ test("a backup cannot arm a restored chat with tools, bypassed approval or a sys
   );
 
   assert.deepEqual(result, { imported: 2, failed: 0 });
-  const trip = threads.find(({ title }) => title === "Trip plan")!;
+  const trip = mustFind(threads, ({ title }) => title === "Trip plan");
   assert.deepEqual(trip.settings, { temperature: 0.4, reasoningEffort: "high" });
 });
 
@@ -555,7 +580,7 @@ test("a settings snapshot with nothing restorable in it leaves no settings behin
 
   await module.importConversationsFromSource(sourceOf("backup.json", data));
 
-  const trip = threads.find(({ title }) => title === "Trip plan")!;
+  const trip = mustFind(threads, ({ title }) => title === "Trip plan");
   assert.equal(trip.settings, undefined);
 });
 
@@ -588,24 +613,26 @@ test("a backend that is merely down keeps the settings instead of quietly droppi
     {
       "mdast-util-from-markdown": { fromMarkdown },
       "../api/chat-api": {
-        notifyChatHistoryUpdated: () => {},
-        listChatProjects: async () => [],
-        saveChatProject: async (project: ProjectRecord) => project,
+        notifyChatHistoryUpdated: () => undefined,
+        listChatProjects: () => Promise.resolve([]),
+        saveChatProject: (project: ProjectRecord) => Promise.resolve(project),
         ChatThreadWriteError,
       },
       "./chat-history-storage": {
-        saveStoredChatThread: async (thread: ThreadRecord) => {
+        saveStoredChatThread: (thread: ThreadRecord) => {
           attempts.push(thread.settings);
           if (thread.settings !== undefined && failures-- > 0) {
-            throw new ChatThreadWriteError("Request failed (500)", 500);
+            return Promise.reject(
+              new ChatThreadWriteError("Request failed (500)", 500),
+            );
           }
-          return thread;
+          return Promise.resolve(thread);
         },
-        syncStoredChatMessages: async (
+        syncStoredChatMessages: (
           _threadId: string,
           records: MessageRecord[],
-        ) => records,
-        deleteStoredChatThreads: async () => [],
+        ) => Promise.resolve(records),
+        deleteStoredChatThreads: () => Promise.resolve([]),
       },
     },
     { relativePassthrough: true },
@@ -674,7 +701,7 @@ test("a backup cannot restore a message that speaks with the system role", async
   );
 
   assert.deepEqual(result, { imported: 1, failed: 0 });
-  const records = messages.get(threads[0].id)!;
+  const records = mustGet(messages, threads[0].id);
   assert.deepEqual(records.map(({ role }) => role), ["user", "user"]);
   assert.equal(
     (records[0].content[0] as { text: string }).text,
@@ -705,7 +732,7 @@ test("a message whose content was stored as a plain string keeps its text", asyn
   );
 
   assert.deepEqual(result, { imported: 1, failed: 0 });
-  const records = messages.get(threads[0].id)!;
+  const records = mustGet(messages, threads[0].id);
   assert.deepEqual(records.map(({ content }) => content), [
     [{ type: "text", text: "plain string turn" }],
     [{ type: "text", text: "array turn" }],

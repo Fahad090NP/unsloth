@@ -3,11 +3,14 @@
 
 import assert from "node:assert/strict";
 import test, { after } from "node:test";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 
 import { installLocalStorageFake, readSrc } from "./helpers/kit.ts";
 
-register("./helpers/download-lifecycle-resolver.mjs", import.meta.url);
+const downloadLifecycleResolverHooks = (await import(new URL("./helpers/download-lifecycle-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: downloadLifecycleResolverHooks.resolve });
 
 const { storage } = installLocalStorageFake();
 Object.assign(globalThis.window, {
@@ -19,7 +22,7 @@ storage.setItem("unsloth.studio.transportMode", "xet");
 
 const originalFetch = globalThis.fetch;
 after(() => {
-  globalThis.fetch = originalFetch;
+  Object.assign(globalThis, { fetch: originalFetch });
 });
 
 const { requestStart } =
@@ -134,7 +137,7 @@ test("a requested start is visible while its preflight runs, until the backend a
   backend.release();
   assert.equal(await starting, "started");
   assert.deepEqual(usePendingStarts.getState().starts, {});
-  assert.equal(useDownloadManagerStore.getState().jobs[key]?.state, "running");
+  assert.equal(useDownloadManagerStore.getState().jobs[key].state, "running");
 
   finalize(key, "complete");
   removeJob(key);
@@ -173,8 +176,8 @@ test("a start the backend rejects ends as an error row with no pending entry beh
 
   assert.notEqual(await starting, "started");
   const job = useDownloadManagerStore.getState().jobs[key];
-  assert.equal(job?.state, "error");
-  assert.match(job?.error ?? "", /being removed/);
+  assert.equal(job.state, "error");
+  assert.match(job.error ?? "", /being removed/);
   assert.deepEqual(usePendingStarts.getState().starts, {});
   removeJob(key);
 });
@@ -243,20 +246,20 @@ test("a restart inside a finished row's linger keeps that row and marks it start
   stubBackend().release();
   assert.equal(await requestStart(request), "started");
   finalize(key, "cancelled");
-  assert.equal(useDownloadManagerStore.getState().jobs[key]?.state, "cancelled");
+  assert.equal(useDownloadManagerStore.getState().jobs[key].state, "cancelled");
 
   const backend = stubBackend();
   const restarting = requestStart(request);
   await backend.requested;
   const { jobs } = useDownloadManagerStore.getState();
   const { starts } = usePendingStarts.getState();
-  assert.equal(jobs[key]?.state, "cancelled");
+  assert.equal(jobs[key].state, "cancelled");
   assert.deepEqual(Object.keys(starts), [key]);
   assert.equal(visiblePendingStarts(starts, jobs, []).length, 1);
 
   backend.release();
   assert.equal(await restarting, "started");
-  assert.equal(useDownloadManagerStore.getState().jobs[key]?.state, "running");
+  assert.equal(useDownloadManagerStore.getState().jobs[key].state, "running");
   assert.deepEqual(usePendingStarts.getState().starts, {});
 
   finalize(key, "complete");

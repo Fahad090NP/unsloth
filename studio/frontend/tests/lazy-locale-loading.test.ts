@@ -465,7 +465,7 @@ function items(node: unknown): StubElement[] {
   }
   const element = node as StubElement;
   const own = element.type === "CommandItem" ? [element] : [];
-  return [...own, ...items(element.props?.children)];
+  return [...own, ...items(element.props.children)];
 }
 
 /** The checked entry, or "" when none is checked. */
@@ -489,14 +489,14 @@ function findStub(node: unknown, type: string): StubElement | null {
   if (node === null || typeof node !== "object") return null;
   const element = node as StubElement;
   if (element.type === type) return element;
-  return findStub(element.props?.children, type);
+  return findStub(element.props.children, type);
 }
 
 function shownLabel(): unknown {
   const trigger = findStub(LanguageSelect(), "PopoverTrigger");
   const button = trigger?.props.children as StubElement | undefined;
   const label = (button?.props.children as StubElement[] | undefined)?.find(
-    (child) => child?.props?.["data-language-label"],
+    (child) => child.props["data-language-label"],
   );
   return label?.props.children;
 }
@@ -668,7 +668,7 @@ test("a catalog that never settles does not hold the caller forever", async () =
   // A stalled CDN, proxy or service worker never settles, so the store's own timeout must wake hydration.
   const outcome = await settledWithin(
     localeStore.setLocale("hi", {
-      loadMessages: () => new Promise<void>(() => {}),
+      loadMessages: () => new Promise<void>(() => { return undefined; }),
       adoptOnFailure: true,
       timeoutMs: 5,
     }),
@@ -714,7 +714,7 @@ test("a pick that names no bound of its own is still bounded", async () => {
   mock.timers.enable({ apis: ["setTimeout"] });
   try {
     const selected = localeStore.setLocale("ko", {
-      loadMessages: () => new Promise<void>(() => {}),
+      loadMessages: () => new Promise<void>(() => { return undefined; }),
     });
     assert.equal(localeStore.getPendingLocalePreference(), "ko");
 
@@ -737,7 +737,7 @@ test("a timed out catalog is evicted so the next pick asks for it again", async 
   let requests = 0;
   const stalled = () => {
     requests += 1;
-    return new Promise<unknown>(() => {});
+    return new Promise<unknown>(() => { return undefined; });
   };
   const loadMessages = (
     locale: Parameters<typeof messagesModule.loadLocaleMessages>[0],
@@ -770,7 +770,7 @@ test("a timed out startup catalog is evicted so the first pick asks for it again
   let requests = 0;
   const stalled = () => {
     requests += 1;
-    return new Promise<unknown>(() => {});
+    return new Promise<unknown>(() => { return undefined; });
   };
   const loadMessages = (
     locale: Parameters<typeof messagesModule.loadLocaleMessages>[0],

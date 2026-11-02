@@ -89,7 +89,7 @@ test("an older backend without requested/status keeps today's behaviour", () => 
     reason: "per-kind default",
   });
   assert.equal(auto?.label, "Auto: EAGER");
-  assert.equal(auto?.tone, "auto");
+  assert.equal(auto.tone, "auto");
 });
 
 test("an older backend still flags a mismatch it can see", () => {
@@ -148,7 +148,7 @@ test("every off spelling counts as an honored off request", () => {
     assert.equal(
       isResolvedHonored({ value, requested, source: "explicit", reason: "" }),
       true,
-      `${requested} -> ${value}`,
+      `${String(requested)} -> ${String(value)}`,
     );
   }
 });

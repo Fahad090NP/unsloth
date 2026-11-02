@@ -14,7 +14,7 @@ function mount(options: { passive?: boolean }) {
   const requests: string[] = [];
   const cleanups: (() => void)[] = [];
   const react = {
-    useState: (initial: unknown) => [initial, () => {}],
+    useState: (initial: unknown) => [initial, () => { return undefined; }],
     useRef: (current: unknown) => ({ current }),
     useCallback: (fn: unknown) => fn,
     useEffect(effect: () => (() => void) | undefined) {
@@ -22,23 +22,23 @@ function mount(options: { passive?: boolean }) {
       if (cleanup) cleanups.push(cleanup);
     },
   };
-  const authFetch = async (url: string) => {
+  const authFetch = (url: string) => {
     requests.push(url);
-    return {
+    return Promise.resolve({
       ok: true,
-      json: async () => ({ supported: true, job: { state: "idle" } }),
-    };
+      json: () => Promise.resolve(({ supported: true, job: { state: "idle" } })),
+    });
   };
   const hookModule = loadWithStubs<typeof HookModule>(
     new URL("../src/hooks/use-llama-update-check.ts", import.meta.url),
     {
       react,
       "@/features/auth": { authFetch, getAuthToken: () => "token" },
-      "@/hooks/use-hardware-info": { refreshHardwareInfo: async () => {} },
-      "@/lib/model-lifecycle-events": { notifyModelLifecycle() {} },
+      "@/hooks/use-hardware-info": { refreshHardwareInfo: () => Promise.resolve() },
+      "@/lib/model-lifecycle-events": { notifyModelLifecycle() { return undefined; } },
       "@/lib/llama-job-events": {
-        signalRunningLlamaJob() {},
-        subscribeToLlamaJobStarted: () => () => {},
+        signalRunningLlamaJob() { return undefined; },
+        subscribeToLlamaJobStarted: () => () => { return undefined; },
       },
       "@/lib/llama-job-lifecycle": lifecycle,
     },
@@ -59,9 +59,9 @@ function withWindow(run: () => Promise<void>) {
   return async () => {
     const previous = (globalThis as { window?: unknown }).window;
     (globalThis as { window?: unknown }).window = {
-      addEventListener() {},
-      removeEventListener() {},
-      dispatchEvent() {},
+      addEventListener() { return undefined; },
+      removeEventListener() { return undefined; },
+      dispatchEvent() { return undefined; },
     };
     mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
     try {

@@ -15,12 +15,12 @@ import { openingTag } from "./helpers/tsx-ast.ts";
 const { OWNER_USERNAME } = loadWithStubs<{ OWNER_USERNAME: string }>(
   new URL("../src/features/auth/account-session.ts", import.meta.url),
   {
-    react: { useEffect: () => {}, useSyncExternalStore: () => undefined },
+    react: { useEffect: () => { return undefined; }, useSyncExternalStore: () => undefined },
     "./login-client": {
-      ensureLoginMode: () => {},
+      ensureLoginMode: () => { return undefined; },
       getFullAccessAllowed: () => true,
       getLoginMode: () => "single",
-      subscribeLoginMode: () => () => {},
+      subscribeLoginMode: () => () => { return undefined; },
     },
     "./session": {
       AUTH_SESSION_CLEARED_EVENT: "cleared",

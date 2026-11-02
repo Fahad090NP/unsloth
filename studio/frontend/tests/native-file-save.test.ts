@@ -147,7 +147,7 @@ test("browser download suggests a name but does not report an unknown final file
   assert.equal(clicked, true);
   assert.equal(removed, true);
   assert.equal(downloadedBlob?.type, "text/plain");
-  assert.equal(await downloadedBlob?.text(), "contents");
+  assert.equal(await downloadedBlob.text(), "contents");
   assert.deepEqual(revoke.mock.calls[0]?.arguments, [objectUrl]);
 });
 

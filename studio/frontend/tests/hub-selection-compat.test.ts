@@ -395,7 +395,7 @@ test("the gguf file query survives canonicalization but a stale one is dropped",
     resolvedModelFormat: "gguf",
   });
   assert.equal(gguf?.action, "replace");
-  assert.equal(gguf?.preserveGgufFile, true);
+  assert.equal(gguf.preserveGgufFile, true);
 
   const safetensors = resolveSelectionUrlSync({
     isDiscoverTab: false,
@@ -405,7 +405,7 @@ test("the gguf file query survives canonicalization but a stale one is dropped",
     resolvedModelFormat: "safetensors",
   });
   assert.equal(safetensors?.action, "replace");
-  assert.equal(safetensors?.preserveGgufFile, false);
+  assert.equal(safetensors.preserveGgufFile, false);
 });
 
 test("a null selection never invents a row", () => {
@@ -462,7 +462,7 @@ test("resolution is idempotent across every row shape combination", () => {
               assert.equal(
                 twice,
                 once,
-                `not idempotent for ${id}: ${once} -> ${twice}`,
+                `not idempotent for ${id}: ${String(once)} -> ${String(twice)}`,
               );
               checked += 1;
             }

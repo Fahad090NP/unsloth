@@ -160,8 +160,8 @@ test("Seed-VC clamps out-of-range values and takes defaults from the schema", ()
     ctx({ convertMode: "speech" }),
   );
   assert.equal(patch.options?.length_adjust, 2);
-  assert.equal(patch.options?.num_inference_steps, 1);
-  assert.equal(patch.options?.similarity_guidance_scale, 0);
+  assert.equal(patch.options.num_inference_steps, 1);
+  assert.equal(patch.options.similarity_guidance_scale, 0);
 });
 
 test("RVC and Chatterbox send their settings within range", () => {
@@ -252,7 +252,7 @@ test("the tool context reads the Convert caps from the status", () => {
     },
   );
   assert.deepEqual(context.convert?.modes, ["speech", "singing"]);
-  assert.equal(context.convert?.style, true);
+  assert.equal(context.convert.style, true);
   const none = audioModelContextFor(
     { audio_family: "kokoro", audio_convert: null },
     {

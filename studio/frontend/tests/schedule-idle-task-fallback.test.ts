@@ -17,7 +17,7 @@ function engine(t: TestContext, idle?: (callback: () => void) => number) {
   const listeners = new Map<string, () => void>();
   const scope = globalThis as Record<string, unknown>;
   const saved = { window: scope.window, document: scope.document, performance: scope.performance };
-  scope.window = idle ? { requestIdleCallback: idle, cancelIdleCallback: () => {} } : {};
+  scope.window = idle ? { requestIdleCallback: idle, cancelIdleCallback: () => {/* intentionally empty */} } : {};
   scope.document = {
     addEventListener: (type: string, listener: () => void) => listeners.set(type, listener),
   };

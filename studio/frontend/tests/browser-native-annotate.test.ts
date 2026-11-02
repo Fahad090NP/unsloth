@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
 Object.assign(globalThis, { window: globalThis });
@@ -18,15 +18,21 @@ const calls: Call[] = [];
     calls.push({ command: args.command, answer, fail: () => { reject(new Error("no such tab")); } }),
   );
 
-register("./helpers/browser-store-resolver.mjs", import.meta.url);
-register("./helpers/native-view-resolver.mjs", import.meta.url);
+const browserStoreResolverHooks = (await import(new URL("./helpers/browser-store-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserStoreResolverHooks.resolve });
+const nativeViewResolverHooks = (await import(new URL("./helpers/native-view-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: nativeViewResolverHooks.resolve });
 const { startNativeAnnotate } = await import("../src/features/browser/native-annotate.ts");
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 5));
 const sent = () => calls.map(({ command }) => command.command);
 
 test("commands reach the page one at a time, in order, and only checked reports come back", async () => {
-  calls.length = 0;
+  calls.splice(0);
   const events: unknown[] = [];
   const channel = startNativeAnnotate("t1", (event) => events.push(event));
   try {
@@ -61,7 +67,7 @@ test("commands reach the page one at a time, in order, and only checked reports 
 });
 
 test("a page that loses the code (it navigated) asks for it again, once", async () => {
-  calls.length = 0;
+  calls.splice(0);
   const events: unknown[] = [];
   const channel = startNativeAnnotate("t4", (event) => events.push(event));
   const answerNext = async (installed: boolean) => {
@@ -86,7 +92,7 @@ test("a page that loses the code (it navigated) asks for it again, once", async 
 });
 
 test("a closing channel's stop runs before a new channel's commands for the tab", async () => {
-  calls.length = 0;
+  calls.splice(0);
   const old = startNativeAnnotate("t2", () => undefined);
   await new Promise((resolve) => setTimeout(resolve, 100));
   // A poll hangs (the page is navigating) while the layer remounts.
@@ -108,7 +114,7 @@ test("a closing channel's stop runs before a new channel's commands for the tab"
 });
 
 test("an install or start that failed is sent again after the next answer", async () => {
-  calls.length = 0;
+  calls.splice(0);
   const channel = startNativeAnnotate("t3", () => undefined);
   try {
     channel.send({ command: "annotateInstall", code: "return {}" });
@@ -131,7 +137,7 @@ test("an install or start that failed is sent again after the next answer", asyn
 });
 
 test("a start that reaches the page after its install failed goes again behind the install", async () => {
-  calls.length = 0;
+  calls.splice(0);
   const channel = startNativeAnnotate("t5", () => undefined);
   try {
     channel.send({ command: "annotateInstall", code: "return {}" });
@@ -152,7 +158,7 @@ test("a start that reaches the page after its install failed goes again behind t
 });
 
 test("a start that finds no code is not resent until the code is in", async () => {
-  calls.length = 0;
+  calls.splice(0);
   const channel = startNativeAnnotate("t6", () => undefined);
   try {
     channel.send({ command: "annotate", on: true, color: "#fff" });

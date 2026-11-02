@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import { test } from "node:test";
 
 // macOS: the page sits under the app's webview, so panel UI draws over it without a snapshot.
@@ -80,16 +80,16 @@ Object.assign(globalThis, {
   requestAnimationFrame: (callback: () => void) => frames.push(callback),
   cancelAnimationFrame: noop,
   ResizeObserver: class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
+    observe() { /* empty */ }
+    unobserve() { /* empty */ }
+    disconnect() { /* empty */ }
   },
   MutationObserver: class {
     constructor(callback: () => void) {
       mutations.push(callback);
     }
-    observe() {}
-    disconnect() {}
+    observe() { /* empty */ }
+    disconnect() { /* empty */ }
   },
 });
 
@@ -100,8 +100,14 @@ const calls: Call[] = [];
   return Promise.resolve(command === "browser_view_layered" ? true : undefined);
 };
 
-register("./helpers/browser-store-resolver.mjs", import.meta.url);
-register("./helpers/native-view-resolver.mjs", import.meta.url);
+const browserStoreResolverHooks = (await import(new URL("./helpers/browser-store-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: browserStoreResolverHooks.resolve });
+const nativeViewResolverHooks = (await import(new URL("./helpers/native-view-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: nativeViewResolverHooks.resolve });
 const { currentEntry, useBrowserStore } = await import("../src/features/browser/store.ts");
 const { keepInBackground, releaseBackground, startNativeViews } = await import("../src/features/browser/native-view.ts");
 
@@ -206,11 +212,11 @@ test("a menu over a layered page neither captures nor hides it, and owns its inp
     }
 
     // a menu away from the page owns it too, so a click there closes the menu; a hover card doesn't
-    blocking.length = 0;
+    blocking.splice(0);
     blocking.push(overlay(rect(0, 600, 200, 100)));
     await frame();
     assert.deepEqual(lastInput(), { blocked: true, exclude: [] });
-    blocking.length = 0;
+    blocking.splice(0);
     blocking.push({
       ...overlay(rect(0, 600, 200, 100)),
       querySelector: (selector: string) => (selector.includes("hover-card") ? {} : null),
@@ -219,7 +225,7 @@ test("a menu over a layered page neither captures nor hides it, and owns its inp
     assert.deepEqual(lastInput(), { blocked: false, exclude: [] });
 
     // the dialog the browser opens in (compare, projects, phones) holds the page: it isn't over it
-    blocking.length = 0;
+    blocking.splice(0);
     blocking.push({
       ...overlay(rect(0, 0, 1000, 800)),
       querySelector: (selector: string) => (selector.startsWith("[data-native-page") ? placeholder : null),
@@ -228,7 +234,7 @@ test("a menu over a layered page neither captures nor hides it, and owns its inp
     assert.deepEqual(lastInput(), { blocked: false, exclude: [] });
 
     // a dialog the site raised while its page had the keys takes them, and gives them back on close
-    blocking.length = 0;
+    blocking.splice(0);
     await frame();
     panelFocused = false;
     blocking.push(overlay(rect(600, 200, 300, 200)));
@@ -236,7 +242,7 @@ test("a menu over a layered page neither captures nor hides it, and owns its inp
     const actions = () => calls.filter(({ command }) => command === "browser_view_action").map(({ args }) => args?.action);
     assert.deepEqual(actions().slice(-1), ["blur"]);
     panelFocused = true;
-    blocking.length = 0;
+    blocking.splice(0);
     await frame();
     await frame();
     assert.deepEqual(actions().slice(-1), ["focus"]);
@@ -249,17 +255,17 @@ test("a menu over a layered page neither captures nor hides it, and owns its inp
     await frame();
     await frame();
     panelFocused = true;
-    blocking.length = 0;
+    blocking.splice(0);
     await frame();
     await frame();
     assert.equal(
-      calls.filter(({ command, args }) => command === "browser_view_action" && args?.action === "focus" && args?.tabId === tabId).length,
+      calls.filter(({ command, args }) => command === "browser_view_action" && args?.action === "focus" && args.tabId === tabId).length,
       1,
       "only the earlier hand-back focused the first tab",
     );
 
     // a toast over the page takes input only where it is
-    blocking.length = 0;
+    blocking.splice(0);
     clickable.push(overlay(rect(600, 600, 200.5, 50)));
     await frame();
     assert.deepEqual(lastInput(), {
@@ -273,7 +279,7 @@ test("a menu over a layered page neither captures nor hides it, and owns its inp
     await settle();
     assert.equal((lastInput()?.exclude as { y: number }[])[0].y, 560);
     assert.ok(frames.length > 0, "and again next frame while it moves");
-    clickable.length = 0;
+    clickable.splice(0);
     await frame();
     assert.deepEqual(lastInput(), { blocked: false, exclude: [] });
   } finally {
@@ -288,7 +294,7 @@ test("a page at work in a chat off screen opens hidden, follows its tab, and out
   store.closePanel();
   store.showChat("single:shown");
   const tabId = store.openTabIn("single:away", "https://away.example/") ?? "";
-  calls.length = 0;
+  calls.splice(0);
   keepInBackground(tabId);
   await settle();
   const opened = calls.find(({ command }) => command === "browser_view_open_background");
@@ -324,7 +330,7 @@ test("a kept tab that leaves its local origin is closed through the views, so it
   // Back to a new tab page drops the grant, and the views close the page themselves
   store.goBack(tabId);
   globals.nativeViewGranted = undefined;
-  calls.length = 0;
+  calls.splice(0);
   globals.nativeViewCloseLocal?.(tabId);
   assert.deepEqual(calls.at(-1), { command: "browser_view_close", args: { tabId, forgetLocal: true } });
   keepInBackground(tabId);
@@ -388,10 +394,10 @@ test("a temporary page's popup in a chat off screen stays out of history", () =>
   });
   assert.equal(popup?.chat, "single:temporary");
   const entry = popup && currentEntry(popup);
-  assert.equal(entry?.kind === "web" ? entry.temporary : undefined, true);
+  assert.equal(entry.kind === "web" ? entry.temporary : undefined, true);
 });
 
-test("an address a local page can't go to itself is offered, not opened", async () => {
+test("an address a local page can't go to itself is offered, not opened", () => {
   const store = useBrowserStore.getState();
   store.closePanel();
   store.showChat("single:local");
@@ -425,7 +431,7 @@ test("a page whose protections fail shows an error, and Try again opens a new vi
     const shown = failed && currentEntry(failed);
     assert.equal(shown?.kind === "web" && shown.url, "http://localhost:7860/");
     assert.equal(failed?.nativeError, "the page's protections couldn't be set up, so it wasn't opened");
-    assert.equal(failed?.loading, false);
+    assert.equal(failed.loading, false);
     assert.ok(calls.slice(before).some(({ command, args }) => command === "browser_view_close" && args?.tabId === tabId));
     await frame();
 

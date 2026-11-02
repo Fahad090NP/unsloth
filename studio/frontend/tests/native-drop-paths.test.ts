@@ -455,7 +455,7 @@ test("a remounted composer claims image and OpenDocument batches", () => {
   store.claimImageAttachments("composer-2", "single:other");
   assert.equal(
     useNativeIntentStore.getState().pendingImageAttachments["single:new"]
-      ?.length,
+      .length,
     1,
   );
 
@@ -1005,7 +1005,7 @@ test("every basename the picker claims is one the drop paths accept", () => {
     ".editorconfig",
     ".zshrc",
   ]) {
-    const derived = `.${name.split(".").pop()!.toLowerCase()}`;
+    const derived = `.${must(name.split(".").pop()).toLowerCase()}`;
     assert.ok(accept.includes(derived), `${name} is claimed through ${derived}`);
     assert.equal(isTextAttachmentName(name), true, `${name} is droppable`);
     assert.equal(classifyDropPaths([`/repo/${name}`]).kind, "docs", name);
@@ -2175,7 +2175,7 @@ test("a boundary counts only on the header that owns the parts", async () => {
   }
 });
 
-test("a preview finds a declaration that sits past its own slice", async () => {
+test("a preview finds a declaration that sits past its own slice", () => {
   // Find the declaration in the whole file, not just the bounded preview prefix.
   const enc = new TextEncoder();
   const comment = new Uint8Array([
@@ -2477,3 +2477,8 @@ test("audiobooks, WebM and Matroska audio, 3GPP2 video and map files attach", ()
     assert.equal(classifyDropPaths([`/maps/${name}`]).kind, "docs", name);
   }
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

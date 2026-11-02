@@ -19,7 +19,7 @@ export function authFetch(input: string, init?: RequestInit): Promise<Response> 
   return Promise.resolve(handler(input, init));
 }
 
-export async function prepareHfTokenForUse(): Promise<null> {
+export function prepareHfTokenForUse(): null {
   return null;
 }
 

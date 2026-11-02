@@ -121,7 +121,7 @@ test("every mirrored setting moves the instance key", () => {
     base,
   );
   assert.equal(
-    modelConfigInstanceKey(MODEL, VARIANT, { ...LIVE, selectedGpuIds: [...LIVE.selectedGpuIds!] }),
+    modelConfigInstanceKey(MODEL, VARIANT, { ...LIVE, selectedGpuIds: [...must(LIVE.selectedGpuIds)] }),
     base,
   );
 });
@@ -150,3 +150,8 @@ test("the arguments the model is running with key the editor", () => {
     base,
   );
 });
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
+}

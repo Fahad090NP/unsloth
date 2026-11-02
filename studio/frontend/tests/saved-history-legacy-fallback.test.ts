@@ -15,9 +15,9 @@ interface Storage {
 
 class StubWriteCoordinator {
   closeAdmission(): () => void {
-    return () => {};
+    return () => {/* intentionally empty */};
   }
-  confirmFinalState(): void {}
+  confirmFinalState(): void {/* intentionally empty */}
   idsRequiringFence(): string[] {
     return [];
   }
@@ -46,38 +46,38 @@ function loadStorage(backend: {
         ChatThreadDeletedError: class extends Error {},
         getChatThread: backend.getChatThread,
         listChatMessages: backend.listChatMessages,
-        notifyChatHistoryUpdated: () => {},
+        notifyChatHistoryUpdated: () => {/* intentionally empty */},
       },
       "../db": {
         DEXIE_DB_NAME: "unsloth-chat",
         db: {
           threads: {},
           messages: {
-            where: () => ({ equals: () => ({ toArray: async () => [legacyRow] }) }),
+            where: () => ({ equals: () => ({ toArray:  () => Promise.resolve([legacyRow]) }) }),
           },
-          transaction: async () => undefined,
+          transaction:  () => Promise.resolve(undefined),
         },
       },
       "./chat-thread-tombstones": {
         isChatThreadDeleted: () => false,
-        markChatThreadDeleted: () => {},
-        markChatThreadsDeleted: () => {},
+        markChatThreadDeleted: () => {/* intentionally empty */},
+        markChatThreadsDeleted: () => {/* intentionally empty */},
       },
       "./thread-record-write-coordinator": {
         ThreadRecordWriteCoordinator: StubWriteCoordinator,
       },
-      "../stores/fork-boundary-store": { setForkBoundary: () => {} },
+      "../stores/fork-boundary-store": { setForkBoundary: () => {/* intentionally empty */} },
     },
   );
 }
 
 test("a failed backend read served from the legacy copy is not a backend read", async () => {
   const storage = loadStorage({
-    getChatThread: async () => {
-      throw new Error("offline");
+    getChatThread:  () => {
+      return Promise.reject(new Error("offline"));
     },
-    listChatMessages: async () => {
-      throw new Error("offline");
+    listChatMessages:  () => {
+      return Promise.reject(new Error("offline"));
     },
   });
   const { messages, fromBackend } = await storage.readStoredChatMessages("thread-1");
@@ -87,10 +87,10 @@ test("a failed backend read served from the legacy copy is not a backend read", 
 
 test("a successful backend read is a backend read", async () => {
   const storage = loadStorage({
-    getChatThread: async () => ({ id: "thread-1" }),
-    listChatMessages: async () => [
+    getChatThread:  () => Promise.resolve(({ id: "thread-1" })),
+    listChatMessages:  () => Promise.resolve([
       { ...legacyRow, content: [{ type: "text", text: "Server copy" }] },
-    ],
+    ]),
   });
   const { messages, fromBackend } = await storage.readStoredChatMessages("thread-1");
   assert.equal(fromBackend, true);

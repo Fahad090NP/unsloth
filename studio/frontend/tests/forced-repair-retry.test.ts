@@ -34,7 +34,7 @@ function runRetry(status: string, forced: boolean): Run {
   const forcedRepairRef = { current: forced };
   const allowHeldRuntimeRepairRef = { current: false };
   let preflights = 0;
-  const noop = () => {};
+  const noop = () => { /* empty */ };
   const scope = {
     statusRef: { current: status },
     forcedRepairRef,

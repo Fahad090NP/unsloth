@@ -110,11 +110,16 @@ const SUPPORT_INSTRUCTIONS =
   "<project_instructions>\nCite the refund policy.\n</project_instructions>\n\n" +
   "You answer for the Billing team. End with Ticket closed.";
 
+function parseJson<T>(text: string): T {
+  return JSON.parse(text) as T;
+}
+
 function turns(threadId: string) {
-  return [
+  const rows: [string, string | null, string, string][] = [
     ["u1", null, "user", "Where is my refund?"],
     ["a1", "u1", "assistant", "It went out today. Ticket closed."],
-  ].map(([id, parentId, role, text], index) => ({
+  ];
+  return rows.map(([id, parentId, role, text], index) => ({
     id: `${threadId}-${id}`,
     threadId,
     parentId: parentId ? `${threadId}-${parentId}` : null,
@@ -149,16 +154,16 @@ function loadExporters(
   ).outputText;
   const context = {
     exports: {},
-    toast: { info: () => {}, success: () => {} },
-    listStoredChatThreads: async () => threadIds.map((id) => ({ id })),
-    listStoredChatMessages: async (id: string) => turns(id),
-    getStoredChatThread: async (id: string) =>
+    toast: { info: () => { /* empty */ }, success: () => { /* empty */ } },
+    listStoredChatThreads: () => threadIds.map((id) => ({ id })),
+    listStoredChatMessages: (id: string) => turns(id),
+    getStoredChatThread: (id: string) =>
       THREADS.find((thread) => thread.id === id),
-    getStoredChatProject: async (id: string) => PROJECTS[id] ?? null,
+    getStoredChatProject: (id: string) => PROJECTS[id] ?? null,
     composeChatInstructions,
     useChatRuntimeStore: { getState: () => ({ activeProjectId: "openInComposer" }) },
     isThreadIncognito: () => false,
-    settleThreadScopedSettingsForCopy: async () => {},
+    settleThreadScopedSettingsForCopy: async () => { /* empty */ },
     threadScopedDefault: (key: string) => INSTALLATION_DEFAULTS[key],
     composerProjectByPendingThread: new Map(),
     ...liveThreadHead,
@@ -184,10 +189,10 @@ function loadExporters(
     csvDocument,
     csvEscape,
     CSV_MIME,
-    downloadBlob: async (body: string) => {
+    downloadBlob: (body: string) => {
       downloads.push(body);
     },
-    saveMarkdownAsProjectSource: async (_projectId: string, body: string) => {
+    saveMarkdownAsProjectSource: (_projectId: string, body: string) => {
       sources.push(body);
       return true;
     },
@@ -201,7 +206,7 @@ test("chat training data starts with the system prompt the chat ran with", async
   const exporters = loadExporters(["support", "plain"], []);
 
   const openai = (await exporters.buildFineTuneJsonl("openai")).lines.map(
-    (line) => JSON.parse(line).messages,
+    (line) => parseJson<{ messages: { role: string; content: string }[] }>(line).messages,
   );
   assert.deepEqual(openai[0], [
     { role: "system", content: SUPPORT_INSTRUCTIONS },
@@ -214,13 +219,13 @@ test("chat training data starts with the system prompt the chat ran with", async
   ]);
 
   const sharegpt = (await exporters.buildFineTuneJsonl("sharegpt")).lines.map(
-    (line) => JSON.parse(line).conversations,
+    (line) => parseJson<{ conversations: { from: string; value: string }[] }>(line).conversations,
   );
   assert.deepEqual(sharegpt[0][0], { from: "system", value: SUPPORT_INSTRUCTIONS });
   assert.equal(sharegpt[1][0].from, "human");
 
   const alpaca = (await exporters.buildFineTuneJsonl("alpaca")).lines.map((line) =>
-    JSON.parse(line),
+    parseJson<{ input: string }>(line),
   );
   assert.equal(alpaca[0].input, SUPPORT_INSTRUCTIONS);
   assert.equal(alpaca[1].input, "");
@@ -231,19 +236,19 @@ test("every chat export format starts with the chat's system prompt", async () =
   const exporters = loadExporters(["support"], downloads);
 
   await exporters.exportConversationRawJsonl("support");
-  assert.deepEqual(JSON.parse(downloads[0]).messages[0], {
+  assert.deepEqual(parseJson<{ messages: { role: string; content: string }[] }>(downloads[0]).messages[0], {
     role: "system",
     content: SUPPORT_INSTRUCTIONS,
   });
 
   await exporters.exportConversationMessagesJsonl("support");
-  assert.deepEqual(JSON.parse(downloads[1].split("\n")[0]), {
+  assert.deepEqual(parseJson<{ role: string; content: string }>(downloads[1].split("\n")[0]), {
     role: "system",
     content: SUPPORT_INSTRUCTIONS,
   });
 
   await exporters.exportConversationShareGPT("support");
-  assert.deepEqual(JSON.parse(downloads[2]).conversations[0], {
+  assert.deepEqual(parseJson<{ conversations: { from: string; value: string }[] }>(downloads[2]).conversations[0], {
     from: "system",
     value: SUPPORT_INSTRUCTIONS,
   });
@@ -257,7 +262,7 @@ test("every chat export format starts with the chat's system prompt", async () =
   assert.ok(markdown.indexOf("## System") < markdown.indexOf("## User"));
 
   const bulk = await exporters.buildThreadContent("support", "jsonl-raw");
-  assert.equal(JSON.parse(bulk ?? "").messages[0].role, "system");
+  assert.equal(parseJson<{ messages: { role: string }[] }>(bulk ?? "").messages[0].role, "system");
 });
 
 test("a chat with no system prompt exports only its own turns", async () => {
@@ -269,8 +274,8 @@ test("a chat with no system prompt exports only its own turns", async () => {
   await exporters.exportConversationCsv("plain");
   await exporters.exportConversationMarkdown("plain");
 
-  assert.equal(JSON.parse(downloads[0]).messages[0].role, "user");
-  assert.equal(JSON.parse(downloads[1]).conversations[0].from, "human");
+  assert.equal(parseJson<{ messages: { role: string; content: string }[] }>(downloads[0]).messages[0].role, "user");
+  assert.equal(parseJson<{ conversations: { from: string }[] }>(downloads[1]).conversations[0].from, "human");
   assert.ok(!downloads[2].includes('"system"'));
   assert.ok(!downloads[3].includes("## System"));
   assert.ok(!downloads.join("").includes("French"));
@@ -281,7 +286,7 @@ test("a chat whose snapshot omits the system prompt exports the default it runs 
   const exporters = loadExporters(["inherits"], downloads);
 
   await exporters.exportConversationRawJsonl("inherits");
-  assert.deepEqual(JSON.parse(downloads[0]).messages[0], {
+  assert.deepEqual(parseJson<{ messages: { role: string; content: string }[] }>(downloads[0]).messages[0], {
     role: "system",
     content: "Sign off as Ada.",
   });
@@ -296,14 +301,14 @@ test("an export waits for the chat's settings edit still being saved", async () 
       saved = true;
       return true;
     },
-    getStoredChatThread: async (id: string) => ({
+    getStoredChatThread: (id: string) => ({
       ...THREADS.find((thread) => thread.id === id),
       settings: { systemPrompt: saved ? "Edited prompt." : "" },
     }),
   });
 
   await exporters.exportConversationRawJsonl("plain");
-  assert.deepEqual(JSON.parse(downloads[0]).messages[0], {
+  assert.deepEqual(parseJson<{ messages: { role: string; content: string }[] }>(downloads[0]).messages[0], {
     role: "system",
     content: "Edited prompt.",
   });

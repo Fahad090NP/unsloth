@@ -28,16 +28,16 @@ function loadSystem(body: unknown) {
     new URL("../src/hooks/use-system.ts", import.meta.url),
     {
       react: {
-        useState: (initial: unknown) => [initial, () => {}],
+        useState: (initial: unknown) => [initial, () => {/* intentionally empty */}],
         useMemo: (factory: () => unknown) => factory(),
         useEffect: (effect: () => (() => void) | undefined) => {
           cleanup = effect();
         },
       },
       "@/features/auth": {
-        authFetch: async (url: string, init?: RequestInit) => {
+        authFetch:  (url: string, init?: RequestInit) => {
           requests.push({ url, init });
-          return Response.json(body);
+          return Promise.resolve(Response.json(body));
         },
       },
     },
@@ -95,7 +95,7 @@ test("an unavailable Vulkan inventory is re-probed with backoff, not every 3 s",
     memory: { available_gb: 8 },
     inference_gpu: { backend: "vulkan", available: false, devices: [] },
   });
-  const unsubscribe = system.subscribeSystemInfo(() => {}, {
+  const unsubscribe = system.subscribeSystemInfo(() => {/* intentionally empty */}, {
     retryUnavailableVulkan: true,
   });
   try {

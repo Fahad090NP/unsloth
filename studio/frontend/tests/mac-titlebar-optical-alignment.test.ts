@@ -7,10 +7,10 @@ const PORTALLED_NATIVE_TITLEBAR_PATTERN =
   /"--studio-window-chrome-top",[\s\S]*?NATIVE_MAC_TITLEBAR_HEIGHT_VAR/;
 
 test("mac titlebar navigation shifts buttons with centered glyphs", async () => {
-  const [titlebar, provider] = await Promise.all([
+  const [titlebar, provider] = [
     atDefaultUiScale(readSrc("components/tauri/window-titlebar.tsx")),
     atDefaultUiScale(readSrc("app/provider.tsx")),
-  ]);
+  ];
   const macStyle = (/const MAC_NATIVE_CHROME_STYLE = \{[\s\S]*?\} as CSSProperties;/.exec(provider))?.[0];
   assert.ok(macStyle);
   assert.match(macStyle, /"--studio-titlebar-navigation-margin-top": "4px"/);
@@ -28,12 +28,12 @@ test("mac titlebar navigation shifts buttons with centered glyphs", async () => 
 });
 
 test("mac chat and media headers share the lowered control row", async () => {
-  const [provider, chat, images, video] = await Promise.all([
+  const [provider, chat, images, video] = [
     atDefaultUiScale(readSrc("app/provider.tsx")),
     atDefaultUiScale(readSrc("features/chat/chat-page.tsx")),
     atDefaultUiScale(readSrc("features/images/images-page.tsx")),
     atDefaultUiScale(readSrc("features/video/video-page.tsx")),
-  ]);
+  ];
 
   const macStyle = (/const MAC_NATIVE_CHROME_STYLE = \{[\s\S]*?\} as CSSProperties;/.exec(provider))?.[0];
   assert.ok(macStyle);
@@ -45,10 +45,10 @@ test("mac chat and media headers share the lowered control row", async () => {
 
 // Assert the fallback is built from the same constant; retyped values diverge at other zooms.
 test("mac native chrome clearance stays fixed across interface scales", async () => {
-  const [provider, runtime] = await Promise.all([
+  const [provider, runtime] = [
     atDefaultUiScale(readSrc("app/provider.tsx")),
     atDefaultUiScale(readSrc("features/settings/lib/interface-scale-runtime.ts")),
-  ]);
+  ];
   assert.match(
     runtime,
     /NATIVE_MAC_TITLEBAR_HEIGHT_VAR = `var\(--studio-native-titlebar-height, \$\{NATIVE_MAC_TITLEBAR_HEIGHT_PX\}px\)`/,

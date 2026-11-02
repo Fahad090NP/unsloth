@@ -96,9 +96,9 @@ const isSpoken = (part: Part) =>
 const spokenText = (parts: Part[], type: string) =>
   parts
     .filter((part) => part.type === type)
-    .map((part) => String(part.text ?? ""))
+    .map((part) => String(part.text ?? "" as string))
     .join("");
-const identify = (part: Part) => String(part.toolCallId ?? part.id ?? "?");
+const identify = (part: Part) => String(part.toolCallId ?? part.id ?? "?" as string);
 const carriedIds = (parts: Part[]) =>
   parts.filter((part) => !isSpoken(part)).map(identify);
 
@@ -106,7 +106,7 @@ function prefixLengths(parts: Part[]): [string, number][] {
   const out: [string, number][] = [];
   let seen = 0;
   for (const part of parts) {
-    if (isSpoken(part)) seen += String(part.text ?? "").length;
+    if (isSpoken(part)) seen += String(part.text ?? "" as string).length;
     else out.push([identify(part), seen]);
   }
   return out.sort();

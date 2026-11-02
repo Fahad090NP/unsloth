@@ -21,9 +21,11 @@ function load(responses: Response[]) {
     new URL("../src/features/rag/api/rag-api.ts", import.meta.url),
     {
       "@/features/auth": {
-        authFetch: async (url: string, init?: { method?: string }) => {
+        authFetch: (url: string, init?: { method?: string }) => {
           requests.push(`${init?.method ?? "GET"} ${url}`);
-          return responses.shift()!;
+          const response = responses.shift();
+  assert.ok(response);
+  return Promise.resolve(response);
         },
       },
       "@/lib/api-base": { apiUrl: (path: string) => path },
@@ -31,8 +33,8 @@ function load(responses: Response[]) {
       "@/lib/open-stream-response": {},
       "@/lib/sse-json-events": {},
       "./rag-availability": {
-        noteRagAvailability() {},
-        noteRagResponse() {},
+        noteRagAvailability() { return undefined; },
+        noteRagResponse() { return undefined; },
       },
     },
   );

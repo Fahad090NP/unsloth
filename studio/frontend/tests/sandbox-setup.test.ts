@@ -9,6 +9,8 @@ import type {
   SandboxSetupJob,
 } from "../src/features/chat/api/sandbox-capability.ts";
 import type { SandboxStatus } from "../src/features/settings/api/sandbox-isolation.ts";
+import type * as SandboxPick from "../src/features/chat/sandbox-pick.ts";
+import type * as SandboxSetupState from "../src/features/chat/sandbox-setup-state.ts";
 import {
   setupRowView,
 } from "../src/features/settings/tabs/sandbox-tab-state.ts";
@@ -19,6 +21,14 @@ import {
   stubJsxRuntime,
   type StubElement,
 } from "./helpers/module-stubs.ts";
+
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
 
 interface Call { url: string; init?: RequestInit }
 
@@ -130,7 +140,7 @@ test("a setup the server did not name cannot be run, whatever the flag says", as
   );
   const capability = await api.loadSandboxCapability();
   assert.equal(capability?.setupAction, null);
-  assert.equal(capability?.canRunSetup, false);
+  assert.equal(capability.canRunSetup, false);
 });
 
 test("starting a setup sends only the operation and the consent", async () => {
@@ -149,7 +159,7 @@ test("starting a setup sends only the operation and the consent", async () => {
   );
   assert.equal(calls[0].url, "/api/settings/sandbox/setup");
   assert.equal(calls[0].init?.method, "POST");
-  assert.deepEqual(JSON.parse(String(calls[0].init?.body)), {
+  assert.deepEqual(JSON.parse((calls[0].init.body as unknown as string)), {
     operation: "windows-setup",
     consent_dacl_fallback: true,
   });
@@ -199,7 +209,7 @@ test("the runtime-only operation is sent as is and the job note is kept", async 
     }),
   );
   const job = await api.startSandboxSetup("windows-runtime", {}, "fallback");
-  assert.deepEqual(JSON.parse(String(calls[0].init?.body)), {
+  assert.deepEqual(JSON.parse((calls[0].init?.body as unknown as string)), {
     operation: "windows-runtime",
     consent_dacl_fallback: false,
   });
@@ -233,13 +243,13 @@ test("a settled read waits out a check that has not answered yet, but not a real
   assert.equal(stuck.calls.length, 2);
 });
 
-type PickModule = typeof import("../src/features/chat/sandbox-pick.ts");
+type PickModule = typeof SandboxPick;
 
 const pickModule = loadWithStubs<PickModule>(
   new URL("../src/features/chat/sandbox-pick.ts", import.meta.url),
   {
     "./api/sandbox-capability": {
-      loadSettledSandboxCapability: async () => null,
+      loadSettledSandboxCapability:  () => Promise.resolve(null),
       cachedSandboxCapability: () => null,
       sandboxReady: (c: SandboxCapability) =>
         c.pythonOsIsolated && c.terminalOsIsolated,
@@ -264,7 +274,7 @@ test("switching to Low applies at once and reads nothing", async () => {
     "low",
     (level) => applied.push(level),
     () => assert.fail("no popup for Low"),
-    async () => assert.fail("no read for Low"),
+     () => Promise.resolve(assert.fail("no read for Low")),
   );
   assert.deepEqual(applied, ["low"]);
 });
@@ -276,9 +286,9 @@ test("switching to High with a working OS sandbox applies it; a known one skips 
     "high",
     (level) => applied.push(level),
     () => assert.fail("no popup"),
-    async () => {
+     () => {
       reads++;
-      return null;
+      return Promise.resolve(null);
     },
     () => capability({ pythonOsIsolated: true, terminalOsIsolated: true }),
   );
@@ -286,7 +296,7 @@ test("switching to High with a working OS sandbox applies it; a known one skips 
     "high",
     (level) => applied.push(level),
     () => assert.fail("no popup"),
-    async () => capability({ pythonOsIsolated: true, terminalOsIsolated: true }),
+     () => Promise.resolve(capability({ pythonOsIsolated: true, terminalOsIsolated: true })),
   );
   assert.deepEqual(applied, ["high", "high"]);
   assert.equal(reads, 0);
@@ -299,7 +309,7 @@ test("switching to High without an OS sandbox opens the popup instead of applyin
     "high",
     (level) => applied.push(level),
     () => popups++,
-    async () => capability({ pythonOsIsolated: true }),
+     () => Promise.resolve(capability({ pythonOsIsolated: true })),
   );
   assert.deepEqual(applied, []);
   assert.equal(popups, 1);
@@ -311,13 +321,13 @@ test("an answer still unknown applies High; the backend still checks every call"
     "high",
     (level) => applied.push(level),
     () => assert.fail("no popup while unknown"),
-    async () => capability({ pythonOsIsolated: true, backend: "unknown" }),
+     () => Promise.resolve(capability({ pythonOsIsolated: true, backend: "unknown" })),
   );
   await pickModule.pickSandboxLevel(
     "high",
     (level) => applied.push(level),
     () => assert.fail("no popup for an older server"),
-    async () => null,
+     () => Promise.resolve(null),
   );
   assert.deepEqual(applied, ["high", "high"]);
 });
@@ -339,7 +349,7 @@ test("a switch made while a High check is in flight wins over that check", async
   assert.equal(popups, 0);
 });
 
-type SetupState = typeof import("../src/features/chat/sandbox-setup-state.ts");
+type SetupState = typeof SandboxSetupState;
 
 const setupState = loadWithStubs<SetupState>(
   new URL("../src/features/chat/sandbox-setup-state.ts", import.meta.url),
@@ -606,7 +616,7 @@ test("Linux shows Install sandbox with the command; a remote owner only the comm
   assert.equal(row.showInstall, true);
   assert.equal(row.command, "apt-get install -y bubblewrap");
   const remote = setupRowView(
-    status({ setup: { ...status().setup!, canRun: false } }),
+    status({ setup: { ...required(status().setup), canRun: false } }),
     null,
   );
   assert.equal(remote.showInstall, false);
@@ -659,7 +669,7 @@ test("a failed install shows the job's command; a running one keeps the button",
     "apt-get update && apt-get install -y bubblewrap",
   );
   const running = setupRowView(
-    status({ setup: { ...status().setup!, canRun: false, manualCommand: "" } }),
+    status({ setup: { ...required(status().setup), canRun: false, manualCommand: "" } }),
     setupJob(),
   );
   assert.equal(running.show, true);
@@ -711,15 +721,15 @@ function sandboxPopup(capabilityNow: SandboxCapability | null) {
     "react/jsx-runtime": stubJsxRuntime(),
     react: {
       // The capability read has answered.
-      useState: (initial: unknown) => [initial === null ? capabilityNow : initial, () => {}],
+      useState: (initial: unknown) => [initial === null ? capabilityNow : initial, () => {/* intentionally empty */}],
       useRef: (current: unknown) => ({ current }),
-      useEffect: () => {},
+      useEffect: () => {/* intentionally empty */},
       useCallback: (fn: unknown) => fn,
     },
-    sonner: { toast: { success() {}, error() {} } },
+    sonner: { toast: { success() {/* intentionally empty */}, error() {/* intentionally empty */} } },
     zustand: {
       create: (init: (set: unknown) => unknown) => {
-        const value = init(() => {});
+        const value = init(() => {/* intentionally empty */});
         return Object.assign((selector: (s: unknown) => unknown) => selector(value), {
           getState: () => value,
         });
@@ -745,13 +755,13 @@ function sandboxPopup(capabilityNow: SandboxCapability | null) {
         }),
     },
     "@/i18n": { useT: () => (key: string) => key },
-    "@/lib/copy-to-clipboard": { copyToClipboard: async () => true },
+    "@/lib/copy-to-clipboard": { copyToClipboard:  () => Promise.resolve(true) },
     "./api/sandbox-capability": {
-      forgetSandboxCapability() {},
-      loadSandboxSetup: async () => setupJob({ state: "idle" as never }),
-      loadSettledSandboxCapability: async () => capabilityNow,
+      forgetSandboxCapability() {/* intentionally empty */},
+      loadSandboxSetup:  () => Promise.resolve(setupJob({ state: "idle" as never })),
+      loadSettledSandboxCapability:  () => Promise.resolve(capabilityNow),
       sandboxReady: (c: SandboxCapability) => c.pythonOsIsolated && c.terminalOsIsolated,
-      startSandboxSetup: async () => setupJob(),
+      startSandboxSetup:  () => Promise.resolve(setupJob()),
     },
     "./sandbox-setup-state": setupState,
     "./stores/chat-runtime-store": { useChatRuntimeStore: store },

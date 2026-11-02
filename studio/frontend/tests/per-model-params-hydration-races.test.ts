@@ -218,7 +218,7 @@ test("a model left before hydration on Max inherits Max, not its window", async 
   await hydrating;
 
   assert.equal(
-    useChatRuntimeStore.getState().paramsByModel[A]?.maxTokens,
+    useChatRuntimeStore.getState().paramsByModel[A].maxTokens,
     REMEMBERED_MAX_TOKENS_MAX,
   );
 });

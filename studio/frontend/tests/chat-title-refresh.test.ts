@@ -103,10 +103,10 @@ test("a refresh is as cheap as the automatic title, with its own prompt", async 
   const refresh = await buildTitleRefreshRequest(LOCAL, "User: hi");
   // The automatic prompt is unchanged byte for byte.
   assert.equal(
-    automatic?.messages?.[0]?.content,
+    automatic?.messages[0]?.content,
     "Write 1 concise chat title summarizing the conversation topic, not the user's exact wording. Use the assistant reply as context when provided. Rules: 2-6 words, no quotes, no punctuation, ASCII only, do not echo input. Output title only.",
   );
-  assert.match(String(refresh?.messages?.[0]?.content), /latest messages/);
+  assert.match(String(refresh?.messages[0]?.content), /latest messages/);
   assert.deepEqual(
     { ...refresh, messages: undefined },
     { ...automatic, messages: undefined },

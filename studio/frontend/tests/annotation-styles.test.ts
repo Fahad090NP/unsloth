@@ -18,7 +18,7 @@ test("annotation sheets work without inserting inline styles and preserve existi
   const addStyle = vm.runInNewContext(`${helper}; addStyle`, {
     CSSStyleSheet: Sheet,
     document: { createElement: () => { throw new Error("Inline styles blocked by CSP"); } },
-  });
+  }) as (target: { adoptedStyleSheets: Sheet[] }, css: string) => () => void;
   const existing = new Sheet();
   const target = { adoptedStyleSheets: [existing] };
   const remove = addStyle(target, ".mark { position: fixed; border: 1px dashed blue; }");
@@ -34,7 +34,10 @@ test("older webviews retain their inline-style path", () => {
   const inserted: unknown[] = [];
   let removed = false;
   const style = { textContent: "", remove: () => { removed = true; } };
-  const addStyle = vm.runInNewContext(`${helper}; addStyle`, { document: { createElement: () => style } });
+  const addStyle = vm.runInNewContext(`${helper}; addStyle`, { document: { createElement: () => style } }) as (
+    target: { head: { appendChild: (value: unknown) => void } },
+    css: string,
+  ) => () => void;
   const remove = addStyle({ head: { appendChild: (value: unknown) => inserted.push(value) } }, ".pin { display: flex; }");
   assert.equal(style.textContent, ".pin { display: flex; }");
   assert.deepEqual(inserted, [style]);
@@ -55,8 +58,8 @@ test("annotation controls can be built when Trusted Types rejects HTML sinks", (
   const build = vm.runInNewContext(`${buildSource}; build`, {
     root: null, overlay: null, outline: null, area: null,
     document: { createElement: (tag: string) => tag === "unsloth-annotate" ? overlay : { className: "" } },
-    color: "#123456", PIN: 28, addStyle: () => {},
-  });
+    color: "#123456", PIN: 28, addStyle: () => { /* empty */ },
+  }) as () => void;
   build();
   assert.deepEqual(children.map((element) => element.className), ["hover", "area"]);
 });

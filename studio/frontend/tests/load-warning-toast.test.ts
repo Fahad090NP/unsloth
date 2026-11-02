@@ -36,18 +36,18 @@ function chatApi(body: Record<string, unknown>) {
         {},
       ),
       "@/features/auth": {
-        authFetch: async () => ({
+        authFetch: () => Promise.resolve(({
           status: 200,
           ok: true,
           headers: { get: () => null },
-          json: async () => body,
-        }),
+          json: () => Promise.resolve(body),
+        })),
       },
       "@/lib/format-fastapi-error": { formatApiErrorBody: () => null },
       "../types": {},
       "../types/api": {},
       "../utils/chat-history-revision": {
-        notifyChatHistoryUpdated: () => {},
+        notifyChatHistoryUpdated: () => { return undefined; },
         isCoalescedHistoryEvent: () => false,
       },
       "../utils/openapi-support": { readAdvertisedPatchGuards: () => null },
@@ -60,11 +60,11 @@ function chatApi(body: Record<string, unknown>) {
       ),
       "./generation-length.ts": {},
       "./gguf-variants-request": {},
-      "./padded-response": { assertCompletedPaddedBody: () => {} },
-      "@/features/hf-auth": { prepareHfTokenForUse: async () => ({ proceed: true }) },
+      "./padded-response": { assertCompletedPaddedBody: () => { return undefined; } },
+      "@/features/hf-auth": { prepareHfTokenForUse: () => Promise.resolve(({ proceed: true })) },
       "@/features/igpu-carveout": {
-        dismissCarveoutAdviceForModel: () => {},
-        showCarveoutAdvice: () => {},
+        dismissCarveoutAdviceForModel: () => { return undefined; },
+        showCarveoutAdvice: () => { return undefined; },
       },
       "@/features/hub/lib/abort-signals": {},
       "@/features/hub/lib/hub-token-header": { hubTokenHeader: () => ({}) },
@@ -90,7 +90,7 @@ test("a load warning raises one warning toast carrying the backend's text", () =
   assert.equal(calls.length, 1);
   assert.equal(calls[0].kind, "warning");
   assert.equal(calls[0].options?.id, LOAD_WARNING_TOAST_ID);
-  assert.equal(calls[0].options?.description, NOTICE);
+  assert.equal(calls[0].options.description, NOTICE);
 });
 
 test("a model with no warning takes the previous model's warning down", () => {

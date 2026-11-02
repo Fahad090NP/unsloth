@@ -163,14 +163,14 @@ test("cancelling an unclaimed reservation releases it immediately", () => {
 for (const usesLocalModel of [true, false]) {
   test(`steering cancels only its own ${usesLocalModel ? "local" : "external"} pre-stream reservation`, () => {
     let cancels = 0;
-    const own = reservePreStreamRun(["steer-local", "steer-remote"], {
+    const own = must(reservePreStreamRun(["steer-local", "steer-remote"], {
       usesLocalModel,
       cancel: () => {
         cancels += 1;
       },
-    })!;
-    const sibling = reservePreStreamRun(["steer-sibling"])!;
-    const unresolved = reservePreStreamRun([])!;
+    }));
+    const sibling = must(reservePreStreamRun(["steer-sibling"]));
+    const unresolved = must(reservePreStreamRun([]));
     claimPreStreamRunReservation(own);
     if (!usesLocalModel) assert.equal(cancelPreStreamRunReservations([own]), 0);
     assert.equal(cancelPreStreamRunForThreadIds([]), false);
@@ -180,10 +180,15 @@ for (const usesLocalModel of [true, false]) {
     assert.equal(hasPreStreamRunReservation(["steer-local"]), false);
     assert.equal(hasPreStreamRunReservation(["steer-sibling"]), true);
     assert.equal(hasPreStreamRunReservation([]), true);
-    const replacement = reservePreStreamRun(["steer-local"])!;
+    const replacement = must(reservePreStreamRun(["steer-local"]));
     releasePreStreamRunReservation(own);
     assert.equal(findPreStreamRunReservation(["steer-local"]), replacement);
     for (const token of [sibling, unresolved, replacement])
       releasePreStreamRunReservation(token);
   });
+}
+
+function must<T>(value: T | null | undefined): T {
+  assert.ok(value);
+  return value;
 }

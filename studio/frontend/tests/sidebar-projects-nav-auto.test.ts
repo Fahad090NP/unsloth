@@ -5,6 +5,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { installLocalStorageFake, readSrcAsync } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 installLocalStorageFake();
 
 const {
@@ -77,7 +85,7 @@ test("an install that never chose gets the rule, one that chose keeps its choice
   assert.deepEqual(unpinned.sidebarNavAuto, []);
   assert.equal(
     sidebarNavRowPinned(
-      unpinned.sidebarNav.find((entry) => entry.id === "projects")!,
+      required(unpinned.sidebarNav.find((entry) => entry.id === "projects")),
       unpinned.sidebarNavAuto,
       { projectsSectionShowing: false },
     ),

@@ -145,7 +145,7 @@ function fakeInsetDom(rowWidth: number, panelWidth: number) {
   const row = { clientWidth: rowWidth };
   const panel = { offsetWidth: panelWidth, parentElement: row };
   const observed = new Set<object>();
-  let notify = () => {};
+  let notify = () => {/* intentionally empty */};
   class Observer {
     constructor(callback: () => void) {
       notify = callback;
@@ -227,8 +227,8 @@ function fakeScope() {
 test("corner insets reach every scope, including one that mounts later", (t) => {
   const toaster = fakeScope();
   const rail = fakeScope();
-  t.after(cornerInsetScope(toaster.element) ?? (() => {}));
-  t.after(cornerInsetScope(rail.element) ?? (() => {}));
+  t.after(cornerInsetScope(toaster.element) ?? (() => {/* intentionally empty */}));
+  t.after(cornerInsetScope(rail.element) ?? (() => {/* intentionally empty */}));
   t.after(() => {
     cornerInsets.style.removeProperty(CHAT_SETTINGS_INSET_VAR);
     cornerInsets.style.removeProperty(BROWSER_PAGE_INSET_VAR);
@@ -256,7 +256,7 @@ test("corner insets reach every scope, including one that mounts later", (t) => 
 
 test("the inset follows a drag through the corner scopes", (t) => {
   const scope = fakeScope();
-  t.after(cornerInsetScope(scope.element) ?? (() => {}));
+  t.after(cornerInsetScope(scope.element) ?? (() => {/* intentionally empty */}));
   const dom = fakeInsetDom(1400, 320);
   const stop = watchChatSettingsInset(cornerInsets, dom.panel, 320, 1, dom.Observer);
   t.after(stop);

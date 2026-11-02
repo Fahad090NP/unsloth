@@ -73,7 +73,7 @@ function harness(
   let armedCount = 0;
   const environmentWaitPollsRef = { current: 0 };
   const allowHeldRuntimeRepairRef = { current: false };
-  const noop = () => {};
+  const noop = () => { return undefined; };
 
   const scope: Record<string, unknown> = {
     MANAGED_ENVIRONMENT_BUSY,
@@ -96,7 +96,7 @@ function harness(
           if (command === "desktop_preflight") return Promise.resolve(preflight);
           if (command === "start_managed_repair") {
             repairs += 1;
-            return Promise.reject("An update or repair is already running.");
+            return Promise.reject(new Error("An update or repair is already running."));
           }
           return Promise.resolve(null);
         },
@@ -128,7 +128,7 @@ function harness(
       repairs += 1;
       return Promise.resolve();
     },
-    preflightStaleMessage: (_d: string, reason: string | null) => `stale:${reason}`,
+    preflightStaleMessage: (_d: string, reason: string | null) => `stale:${String(reason)}`,
     allowHeldRuntimeRepairRef,
     wasRuntimeRepairedRecently: () => runtimeRepairedRecently,
     runtimeRepairRecurrenceMessage: () => "runtime damaged again",

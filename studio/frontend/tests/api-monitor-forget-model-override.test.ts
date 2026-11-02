@@ -391,7 +391,7 @@ async function quietly(run: () => Promise<void>): Promise<void> {
   try {
     await run();
   } finally {
-    console.warn = warn;
+    Object.assign(console, { warn: warn });
   }
 }
 

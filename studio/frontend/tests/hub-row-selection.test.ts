@@ -18,13 +18,13 @@ const selectedFill = (row: string) => {
       `html\\.dark \\.hub-page \\.${row}\\[data-selected="true"\\] \\{([^}]*)\\}`,
     ).exec(HUB_CSS);
   assert.ok(rule, `${row} has no dark selected rule`);
-  return rule[1] ?? "";
+  return rule[1];
 };
 
 const hoverFill = (row: string) => {
   const rule = new RegExp(`html\\.dark \\.hub-page \\.${row}:hover \\{([^}]*)\\}`).exec(HUB_CSS);
   assert.ok(rule, `${row} has no dark hover rule`);
-  return rule[1] ?? "";
+  return rule[1];
 };
 
 for (const row of ["catalog-row", "hub-result-row"]) {

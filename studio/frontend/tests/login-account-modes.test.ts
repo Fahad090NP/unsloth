@@ -57,7 +57,7 @@ function translate(key: string, values: Record<string, string> = {}) {
 
 function mountForm(
   client: typeof LoginClient,
-  session: {
+  initialSession: {
     access: string | null;
     change: boolean;
     owner?: boolean;
@@ -69,6 +69,7 @@ function mountForm(
   failTransitionOnce = false,
   desktop: { continued: boolean; calls: string[] } | null = null,
 ) {
+  const session = initialSession;
   const state: unknown[] = [];
   let cursor = 0;
   const effects: (() => void)[] = [];
@@ -82,12 +83,14 @@ function mountForm(
       useState: (initial: unknown) => {
         const index = cursor++;
         if (!(index in state))
-          state[index] = typeof initial === "function" ? initial() : initial;
+          state[index] = typeof initial === "function" ? (initial as () => unknown)() : initial;
         return [
           state[index],
           (value: unknown) => {
             state[index] =
-              typeof value === "function" ? value(state[index]) : value;
+              typeof value === "function"
+                ? (value as (previous: unknown) => unknown)(state[index])
+                : value;
           },
         ];
       },
@@ -100,20 +103,21 @@ function mountForm(
         effects.push(effect);
       },
     },
-    "@/components/app-readiness": { useAppShellReadySignal: () => () => {} },
+    "@/components/app-readiness": { useAppShellReadySignal: () => () => undefined },
     "@/lib/api-base": desktop ? { ...base, isTauri: true } : base,
     "../tauri-auto-auth": {
-      clearDesktopSignedOut: async () => {
+      clearDesktopSignedOut: () => {
         desktop?.calls.push("clear");
+        return Promise.resolve();
       },
-      continueAsDesktopOwner: async () => {
+      continueAsDesktopOwner: () => {
         desktop?.calls.push("continue");
-        return desktop?.continued ?? false;
+        return Promise.resolve(desktop?.continued ?? false);
       },
     },
     "@/lib/account-transition": {
       normalizeAccountUsername: transition.normalizeAccountUsername,
-      transitionBrowserAccount: async (
+      transitionBrowserAccount: (
         account: transition.BrowserAccount | string,
         route: string,
         commit: () => void,
@@ -129,7 +133,7 @@ function mountForm(
         if (failTransitionOnce && transitions.length === 1)
           throw new Error("Close other Unsloth tabs and retry");
         commit();
-        return switched;
+        return Promise.resolve(switched);
       },
     },
     "../account-session": {
@@ -161,8 +165,8 @@ function mountForm(
     "@/lib/folder-icons": { ViewIcon: "ViewIcon", ViewOffSlashIcon: "ViewOffSlashIcon" },
     "@hugeicons/react": { HugeiconsIcon: "HugeiconsIcon" },
     "../api": {
-      refreshSession: async () => true,
-      refreshSessionOutcome: async () => session.outcome ?? "ok",
+      refreshSession: () => Promise.resolve(true),
+      refreshSessionOutcome: () => Promise.resolve(session.outcome ?? "ok"),
     },
     "../bootstrap-deadline": deadline,
     "../session": {
@@ -224,7 +228,7 @@ function environment(t: TestContext) {
     },
   } as unknown as Window & typeof globalThis;
   t.after(() => {
-    globalThis.fetch = previousFetch;
+    Reflect.set(globalThis, "fetch", previousFetch);
     globalThis.window = previousWindow;
   });
 }
@@ -232,12 +236,14 @@ function environment(t: TestContext) {
 for (const mode of ["single", "multi"] as const) {
   test(`${mode} form renders the correct username fields and setup hint`, async (t) => {
     environment(t);
-    globalThis.fetch = async () =>
-      Response.json({
-        initialized: true,
-        requires_password_change: false,
-        login_mode: mode,
-      });
+    globalThis.fetch = () =>
+      Promise.resolve(
+        Response.json({
+          initialized: true,
+          requires_password_change: false,
+          login_mode: mode,
+        }),
+      );
     const form = mountForm(client(), { access: null, change: false });
     const tree = await form.initialize();
     const username = elements(tree).find(
@@ -268,12 +274,14 @@ for (const mode of ["single", "multi"] as const) {
 for (const mode of ["single", "multi"] as const) {
   test(`${mode} change password form names the account for password managers`, async (t) => {
     environment(t);
-    globalThis.fetch = async () =>
-      Response.json({
-        initialized: true,
-        requires_password_change: true,
-        login_mode: mode,
-      });
+    globalThis.fetch = () =>
+      Promise.resolve(
+        Response.json({
+          initialized: true,
+          requires_password_change: true,
+          login_mode: mode,
+        }),
+      );
     const form = mountForm(client(), { access: "access", change: true });
     const tree = await form.initialize("change-password");
     const savedUsernames = elements(tree).filter(
@@ -287,9 +295,9 @@ for (const mode of ["single", "multi"] as const) {
 test("single mode still posts unsloth and does not refetch on success", async (t) => {
   environment(t);
   const requests: unknown[] = [];
-  globalThis.fetch = async (path, init) => {
-    requests.push([path, JSON.parse(String(init?.body))]);
-    return Response.json(token);
+  globalThis.fetch = (path, init) => {
+    requests.push([path, JSON.parse(String(init?.body as string))]);
+    return Promise.resolve(Response.json(token));
   };
   assert.deepEqual(
     await client().loginFromForm("single", "ignored", "owner-password"),
@@ -303,9 +311,9 @@ test("single mode still posts unsloth and does not refetch on success", async (t
 test("multi mode case folds and trims username without changing password", async (t) => {
   environment(t);
   let sent: unknown;
-  globalThis.fetch = async (_path, init) => {
-    sent = JSON.parse(String(init?.body));
-    return Response.json(token);
+  globalThis.fetch = (_path, init) => {
+    sent = JSON.parse(String(init?.body as string));
+    return Promise.resolve(Response.json(token));
   };
   await client().loginFromForm("multi", " ALIce ", "Keep-CaSe ");
   assert.deepEqual(sent, { username: "alice", password: "Keep-CaSe " });
@@ -314,19 +322,21 @@ test("multi mode case folds and trims username without changing password", async
 test("401 after a second account is created rerenders username entry without showing the error", async (t) => {
   environment(t);
   let statusReads = 0;
-  globalThis.fetch = async (path) =>
-    String(path).endsWith("/status")
-      ? Response.json({
-          initialized: true,
-          requires_password_change: false,
-          login_mode: ++statusReads === 1 ? "single" : "multi",
-        })
-      : Response.json({ detail: "bad password" }, { status: 401 });
+  globalThis.fetch = (path) =>
+    Promise.resolve(
+      String(path as string).endsWith("/status")
+        ? Response.json({
+            initialized: true,
+            requires_password_change: false,
+            login_mode: ++statusReads === 1 ? "single" : "multi",
+          })
+        : Response.json({ detail: "bad password" }, { status: 401 }),
+    );
   const form = mountForm(client(), { access: null, change: false });
   let tree = await form.initialize();
   const submit = elements(tree).find((element) => element.type === "form")
     ?.props.onSubmit as (event: unknown) => Promise<void>;
-  await submit({ preventDefault() {} });
+  await submit({ preventDefault: () => undefined });
   tree = form.render();
   assert.ok(elements(tree).find((element) => element.props.id === "username"));
   assert.ok(!textContent(tree).includes("bad password"));
@@ -341,11 +351,13 @@ test("other login failures preserve the server error and only single-mode 401 pr
     ["single", 401, 2],
   ] as const) {
     let count = 0;
-    globalThis.fetch = async (path) => {
+    globalThis.fetch = (path) => {
       count++;
-      return String(path).endsWith("/status")
-        ? Response.json({ login_mode: "single" })
-        : Response.json({ detail: "Server detail" }, { status });
+      return Promise.resolve(
+        String(path as string).endsWith("/status")
+          ? Response.json({ login_mode: "single" })
+          : Response.json({ detail: "Server detail" }, { status }),
+      );
     };
     await assert.rejects(
       client().loginFromForm(mode, "alice", "password"),
@@ -356,14 +368,16 @@ test("other login failures preserve the server error and only single-mode 401 pr
 });
 
 for (const owner of [false, true]) {
-  test(`managed setup follows the token requirement despite public owner status, owner ${owner}`, async (t) => {
+  test(`managed setup follows the token requirement despite public owner status, owner ${String(owner)}`, async (t) => {
     environment(t);
-    globalThis.fetch = async () =>
-      Response.json({
-        initialized: true,
-        requires_password_change: false,
-        login_mode: "multi",
-      });
+    globalThis.fetch = () =>
+      Promise.resolve(
+        Response.json({
+          initialized: true,
+          requires_password_change: false,
+          login_mode: "multi",
+        }),
+      );
     const session = { access: "setup-session", change: true, owner };
     const form = mountForm(client(), session);
     const tree = await form.initialize("change-password");
@@ -383,12 +397,14 @@ for (const owner of [false, true]) {
 
 test("owner bootstrap still redirects single-mode login to password setup", async (t) => {
   environment(t);
-  globalThis.fetch = async () =>
-    Response.json({
-      initialized: true,
-      requires_password_change: true,
-      login_mode: "single",
-    });
+  globalThis.fetch = () =>
+    Promise.resolve(
+      Response.json({
+        initialized: true,
+        requires_password_change: true,
+        login_mode: "single",
+      }),
+    );
   const form = mountForm(client(), { access: null, change: false });
   await form.initialize();
   assert.deepEqual(form.routes, ["/change-password"]);
@@ -396,14 +412,16 @@ test("owner bootstrap still redirects single-mode login to password setup", asyn
 
 test("successful login commits through transition and avoids SPA navigation when replacing", async (t) => {
   environment(t);
-  globalThis.fetch = async (path) =>
-    String(path).endsWith("/status")
-      ? Response.json({
-          initialized: true,
-          requires_password_change: false,
-          login_mode: "multi",
-        })
-      : Response.json({ ...token, must_change_password: true });
+  globalThis.fetch = (path) =>
+    Promise.resolve(
+      String(path as string).endsWith("/status")
+        ? Response.json({
+            initialized: true,
+            requires_password_change: false,
+            login_mode: "multi",
+          })
+        : Response.json({ ...token, must_change_password: true }),
+    );
   const session = { access: null as string | null, change: false };
   const form = mountForm(client(), session, true);
   let tree = await form.initialize();
@@ -414,7 +432,7 @@ test("successful login commits through transition and avoids SPA navigation when
   tree = form.render();
   const submit = elements(tree).find((element) => element.type === "form")
     ?.props.onSubmit as (event: unknown) => Promise<void>;
-  await submit({ preventDefault() {} });
+  await submit({ preventDefault: () => undefined });
   assert.deepEqual(form.transitions, ["alice@a1:/change-password"]);
   assert.equal(session.change, true);
   assert.equal(session.access, "access");
@@ -445,15 +463,15 @@ test("owner visibility uses the authenticated subject or role and fails closed",
 test("cleanup retries reuse an issued setup session without consuming the code again", async (t) => {
   environment(t);
   let logins = 0;
-  globalThis.fetch = async (path) => {
-    if (String(path).endsWith("/status"))
-      return Response.json({
+  globalThis.fetch = (path) => {
+    if (String(path as string).endsWith("/status"))
+      return Promise.resolve(Response.json({
         initialized: true,
         requires_password_change: false,
         login_mode: "multi",
-      });
+      }));
     logins++;
-    return Response.json({ ...token, must_change_password: true });
+    return Promise.resolve(Response.json({ ...token, must_change_password: true }));
   };
   const session = { access: null as string | null, change: false };
   const form = mountForm(client(), session, true, true);
@@ -468,7 +486,7 @@ test("cleanup retries reuse an issued setup session without consuming the code a
     tree = form.render();
     const submit = elements(tree).find((element) => element.type === "form")
       ?.props.onSubmit as (event: unknown) => Promise<void>;
-    await submit({ preventDefault() {} });
+    await submit({ preventDefault: () => undefined });
     if (attempt === 0) {
       assert.equal(session.access, null);
       assert.match(textContent(form.render()), /Close other Unsloth tabs/);
@@ -481,7 +499,7 @@ test("cleanup retries reuse an issued setup session without consuming the code a
 
 test("an owner-only browser never adds a startup status probe or changes stored preferences", async (t) => {
   environment(t);
-  globalThis.fetch = async () => {
+  globalThis.fetch = () => {
     assert.fail("single-user startup must not probe status");
   };
   const api = client();
@@ -498,13 +516,15 @@ test("multi-user policy survives document reloads and revalidates only multi-use
   const reloaded = client();
   assert.equal(reloaded.getLoginMode(), "multi");
   let requests = 0;
-  globalThis.fetch = async () => {
+  globalThis.fetch = () => {
     requests++;
-    return Response.json({
-      initialized: true,
-      requires_password_change: false,
-      login_mode: "multi",
-    });
+    return Promise.resolve(
+      Response.json({
+        initialized: true,
+        requires_password_change: false,
+        login_mode: "multi",
+      }),
+    );
   };
   reloaded.ensureLoginMode();
   await tick();
@@ -513,7 +533,7 @@ test("multi-user policy survives document reloads and revalidates only multi-use
 
 test("creating an account restricts the legacy full-access hint in peer tabs", (t) => {
   environment(t);
-  globalThis.fetch = async () => {
+  globalThis.fetch = () => {
     assert.fail("storage synchronization must not fetch status");
   };
   const handlers = new Set<(event: Partial<StorageEvent>) => void>();
@@ -558,13 +578,15 @@ test("a deactivated account keeps the legacy hint restricted in single mode", as
   window.localStorage.setItem("unsloth_chat_permission_mode", "full");
   const api = client();
   assert.equal(api.getFullAccessAllowed(), true);
-  globalThis.fetch = async () =>
-    Response.json({
-      initialized: true,
-      requires_password_change: false,
-      login_mode: "single",
-      full_access: false,
-    });
+  globalThis.fetch = () =>
+    Promise.resolve(
+      Response.json({
+        initialized: true,
+        requires_password_change: false,
+        login_mode: "single",
+        full_access: false,
+      }),
+    );
   await api.fetchAuthStatus();
   assert.equal(api.getLoginMode(), "single");
   assert.equal(api.getFullAccessAllowed(), false);
@@ -578,13 +600,15 @@ test("a deactivated account keeps the legacy hint restricted in single mode", as
   assert.equal(reloaded.getFullAccessAllowed(), false);
   api.setLoginMode("single");
   assert.equal(api.getFullAccessAllowed(), false);
-  globalThis.fetch = async () =>
-    Response.json({
-      initialized: true,
-      requires_password_change: false,
-      login_mode: "single",
-      full_access: true,
-    });
+  globalThis.fetch = () =>
+    Promise.resolve(
+      Response.json({
+        initialized: true,
+        requires_password_change: false,
+        login_mode: "single",
+        full_access: true,
+      }),
+    );
   reloaded.ensureLoginMode();
   await tick();
   assert.equal(reloaded.getFullAccessAllowed(), true);
@@ -632,15 +656,17 @@ async function submitPasswordChange(
   session: Parameters<typeof mountForm>[1],
   requests: string[],
 ) {
-  globalThis.fetch = async (path) => {
-    requests.push(String(path));
-    return String(path).endsWith("/status")
-      ? Response.json({
-          initialized: true,
-          requires_password_change: true,
-          login_mode: "single",
-        })
-      : Response.json(token);
+  globalThis.fetch = (path) => {
+    requests.push(String(path as string));
+    return Promise.resolve(
+      String(path as string).endsWith("/status")
+        ? Response.json({
+            initialized: true,
+            requires_password_change: true,
+            login_mode: "single",
+          })
+        : Response.json(token),
+    );
   };
   const form = mountForm(client(), session);
   let tree = await form.initialize("change-password");
@@ -656,7 +682,7 @@ async function submitPasswordChange(
   }
   const submit = elements(tree).find((element) => element.type === "form")
     ?.props.onSubmit as (event: unknown) => Promise<void>;
-  await submit({ preventDefault() {} });
+  await submit({ preventDefault: () => undefined });
   return form.render("change-password");
 }
 
@@ -694,8 +720,10 @@ test("a rejected refresh during a password change still drops the stored session
 test("desktop single mode offers Continue as owner instead of the seeded-password setup page", async (t) => {
   environment(t);
   // A desktop owner who never set a password: the server still reports the seeded one.
-  globalThis.fetch = async () =>
-    Response.json({ initialized: true, requires_password_change: true, login_mode: "single" });
+  globalThis.fetch = () =>
+    Promise.resolve(
+      Response.json({ initialized: true, requires_password_change: true, login_mode: "single" }),
+    );
   const desktop = { continued: true, calls: [] as string[] };
   const form = mountForm(client(), { access: null, change: false }, false, false, desktop);
   const tree = await form.initialize();
@@ -713,8 +741,10 @@ test("desktop single mode offers Continue as owner instead of the seeded-passwor
 
 test("desktop Continue as owner that the server refuses keeps the form with a hint", async (t) => {
   environment(t);
-  globalThis.fetch = async () =>
-    Response.json({ initialized: true, requires_password_change: false, login_mode: "single" });
+  globalThis.fetch = () =>
+    Promise.resolve(
+      Response.json({ initialized: true, requires_password_change: false, login_mode: "single" }),
+    );
   const desktop = { continued: false, calls: [] as string[] };
   const form = mountForm(client(), { access: null, change: false }, false, false, desktop);
   const owner = elements(await form.initialize()).find(
@@ -728,8 +758,10 @@ test("desktop Continue as owner that the server refuses keeps the form with a hi
 
 test("multi mode asks for credentials, names the owner's sign-in name and offers no owner shortcut", async (t) => {
   environment(t);
-  globalThis.fetch = async () =>
-    Response.json({ initialized: true, requires_password_change: true, login_mode: "multi" });
+  globalThis.fetch = () =>
+    Promise.resolve(
+      Response.json({ initialized: true, requires_password_change: true, login_mode: "multi" }),
+    );
   for (const desktop of [null, { continued: true, calls: [] as string[] }]) {
     const form = mountForm(client(), { access: null, change: false }, false, false, desktop);
     const tree = await form.initialize();
@@ -741,10 +773,12 @@ test("multi mode asks for credentials, names the owner's sign-in name and offers
 
 test("a desktop password sign-in clears the explicit sign-out", async (t) => {
   environment(t);
-  globalThis.fetch = async (input: RequestInfo | URL) =>
-    String(input).endsWith("/status")
-      ? Response.json({ initialized: true, requires_password_change: false, login_mode: "multi" })
-      : Response.json(token);
+  globalThis.fetch = (input: RequestInfo | URL) =>
+    Promise.resolve(
+      String(input as string).endsWith("/status")
+        ? Response.json({ initialized: true, requires_password_change: false, login_mode: "multi" })
+        : Response.json(token),
+    );
   const desktop = { continued: false, calls: [] as string[] };
   const form = mountForm(client(), { access: null, change: false }, false, false, desktop);
   let tree = await form.initialize();
@@ -757,7 +791,9 @@ test("a desktop password sign-in clears the explicit sign-out", async (t) => {
   set("password", "owner-password");
   tree = form.render();
   const formElement = elements(tree).find((element) => element.type === "form");
-  (formElement?.props.onSubmit as (event: unknown) => void)({ preventDefault() {} });
+  (formElement?.props.onSubmit as (event: unknown) => void)({
+    preventDefault: () => undefined,
+  });
   await tick();
   await tick();
   assert.deepEqual(desktop.calls, ["clear"]);

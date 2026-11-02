@@ -172,10 +172,10 @@ test("several changed middle lines preserve disjoint colored islands and partial
   const progress = { counts: [[1000, 1000, 512, 1000, 0, 1000]], cursor: 2, located: true };
   const retained = retainHighlightProgress(previous, next, progress);
   assert.deepEqual(retained, progress);
-  assert.notEqual(retained?.counts, progress.counts);
+  assert.notEqual(retained.counts, progress.counts);
   assert.equal(highlightLineCount(retained, 2), 512);
   assert.equal(highlightLineCount(retained, 5), 1000);
-  assert.equal(retained?.counts[0], progress.counts[0]);
+  assert.equal(retained.counts[0], progress.counts[0]);
 });
 
 test("null tokens and small coverage upgraded to dense tokens regain bounded progress", () => {
@@ -209,11 +209,11 @@ test("truncation clamps counts and cursor and recognizes entirely complete retai
 
 test("a batch copies only its changed groups and shares untouched empty groups", () => {
   const lines = Array.from({ length: 3200 }, () => ({ length: 12 }));
-  const previous = initialHighlightProgress(lines)!;
+  const previous = (initialHighlightProgress(lines) ?? assert.fail("expected a non-null value"));
   for (const group of previous.counts) Object.freeze(group);
   Object.freeze(previous.counts);
   Object.freeze(previous);
-  const next = advanceHighlightProgress(lines, previous, 1024)!;
+  const next = (advanceHighlightProgress(lines, previous, 1024) ?? assert.fail("expected a non-null value"));
   assert.equal(next.counts.length, 100);
   const changed = next.counts.flatMap((group, index) => group !== previous.counts[index] ? [index] : []);
   assert.deepEqual(changed, [32, 33]);
@@ -234,7 +234,7 @@ test("retaining replacement tokens reuses disjoint unchanged count groups", () =
   const next = previous.slice();
   next[2] = { length: 800 };
   next[34] = { length: 1100 };
-  const retained = retainHighlightProgress(previous, next, progress)!;
+  const retained = (retainHighlightProgress(previous, next, progress) ?? assert.fail("expected a non-null value"));
   assert.notEqual(retained.counts[0], groups[0]);
   assert.equal(retained.counts[1], groups[1]);
   assert.equal(retained.counts[2], groups[2]);
@@ -251,12 +251,12 @@ test("appending and truncating preserve every unaffected count group", () => {
     cursor: 64,
     located: true,
   };
-  const appended = retainHighlightProgress(previous, [...previous, { length: 1 }], progress)!;
+  const appended = (retainHighlightProgress(previous, [...previous, { length: 1 }], progress) ?? assert.fail("expected a non-null value"));
   assert.deepEqual(appended.counts.slice(0, 3), progress.counts);
   for (let index = 0; index < 3; index += 1) assert.equal(appended.counts[index], progress.counts[index]);
   assert.equal(appended.counts[3], EMPTY_HIGHLIGHT_COUNTS);
   assert.equal(highlightLineCount(appended, 96), 0);
-  const truncated = retainHighlightProgress(previous, previous.slice(0, 65), progress)!;
+  const truncated = (retainHighlightProgress(previous, previous.slice(0, 65), progress) ?? assert.fail("expected a non-null value"));
   assert.equal(truncated.counts[0], progress.counts[0]);
   assert.equal(truncated.counts[1], progress.counts[1]);
   assert.deepEqual(truncated.counts[2], [512]);

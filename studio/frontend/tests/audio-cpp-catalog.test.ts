@@ -186,14 +186,14 @@ test("recommended models are plain GGUF Audio rows named as on the Hub", () => {
   for (const model of AUDIO_CPP_MODELS) {
     const group = groupForRepoId(model.id, AUDIO_CATALOG);
     assert.equal(group?.canonicalId, model.id, model.id);
-    assert.equal(group?.displayName, audioCppDisplayName(model.id));
-    assert.equal(group?.task, model.task === "asr" ? "stt" : "tts", model.id);
+    assert.equal(group.displayName, audioCppDisplayName(model.id));
+    assert.equal(group.task, model.task === "asr" ? "stt" : "tts", model.id);
     assert.equal(audioTaskFor(model.id), model.task === "asr" ? "stt" : "tts");
     assert.deepEqual(
-      group?.artifacts.map((artifact) => [artifact.format, artifact.loadKind]),
+      group.artifacts.map((artifact) => [artifact.format, artifact.loadKind]),
       [["gguf", "gguf"]],
     );
-    assert.doesNotMatch(`${group?.displayName} ${group?.description}`, BRAND);
+    assert.doesNotMatch(`${group.displayName} ${group.description}`, BRAND);
   }
   assert.equal(
     groupForRepoId("unslothai/Qwen3-ASR-0.6B-GGUF", AUDIO_CATALOG)?.canonicalId,

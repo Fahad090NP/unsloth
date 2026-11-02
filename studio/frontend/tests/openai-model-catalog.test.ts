@@ -139,7 +139,7 @@ test("the audio catalog is relisted until a model is resident, then more slowly"
       return (
         next === null
           ? Promise.reject(new Error("offline"))
-          : Promise.resolve(next ?? [])
+          : Promise.resolve(next)
       ) as Promise<never>;
     };
     const flush = () => new Promise<void>((r) => setImmediate(r));

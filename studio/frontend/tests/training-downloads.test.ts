@@ -40,7 +40,7 @@ test("discovery uses real registry identity and never adopts another subsystem's
 test("global discovery adopts a live training download after navigating or reloading", async () => {
   const adopted: ActiveModelDownload[] = [];
   const discovery = new TrainingDownloadDiscovery({
-    fetch: async () => [job],
+    fetch:  () => Promise.resolve([job]),
     session: () => "account-a",
     adopt: (row) => adopted.push(row),
   });

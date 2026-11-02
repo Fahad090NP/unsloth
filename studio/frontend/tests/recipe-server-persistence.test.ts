@@ -14,7 +14,7 @@ function fakeServer(respond: (call: Call) => number) {
     const call = {
       url,
       method: init.method ?? "GET",
-      body: init.body ? JSON.parse(String(init.body)) : null,
+      body: init.body ? JSON.parse((init.body as unknown as string)) : null,
     };
     calls.push(call);
     const status = respond(call);
@@ -141,11 +141,11 @@ test("legacy import isolates a rejected record, keeps the rest, and runs once", 
   const rejected = "bad";
   const imported: string[] = [];
   const recipeRequest = (_path: string, init: RequestInit) => {
-    const body = JSON.parse(String(init.body)) as Record<
+    const body = JSON.parse((init.body as unknown as string)) as Record<
       string,
       { id: string }[]
     >;
-    const rows = body.recipes ?? body.executions;
+    const rows = body.recipes;
     if (rows.some((row) => row.id === rejected)) {
       return Promise.reject(new RecipeApiError("too large", 422));
     }
@@ -199,13 +199,13 @@ test("legacy import isolates a rejected record, keeps the rest, and runs once", 
     },
   );
 
-  const warn = console.warn;
-  console.warn = () => undefined;
+  const warn = globalThis.console.warn;
+  globalThis.console.warn = () => undefined;
   try {
     await importLegacyRecipes();
     await importLegacyRecipes();
   } finally {
-    console.warn = warn;
+    Object.assign(globalThis.console, { warn });
   }
   assert.deepEqual(imported, ["a", "e1"]);
   assert.ok(storage.get("unsloth-data-recipes:server-import.v1"));
@@ -258,13 +258,13 @@ test("an auth or throttling failure leaves the legacy import to retry", async ()
       "./recipes-api": { recipeRequest, RecipeApiError },
     },
   );
-  const error = console.error;
-  console.error = () => undefined;
+  const error = globalThis.console.error;
+  globalThis.console.error = () => undefined;
   try {
     await importLegacyRecipes();
     await importLegacyRecipes();
   } finally {
-    console.error = error;
+    Object.assign(globalThis.console, { error });
   }
   assert.equal(calls, 2);
   assert.equal(storage.get("unsloth-data-recipes:server-import.v1"), undefined);

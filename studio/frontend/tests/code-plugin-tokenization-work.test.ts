@@ -7,7 +7,7 @@
  */
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 import type {
   HighlightOptions,
@@ -17,7 +17,10 @@ import type {
 import { createHighlighter } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
-register("./shiki-tokenization-resolver.mjs", import.meta.url);
+const shikiTokenizationResolverHooks = (await import(new URL("./shiki-tokenization-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: shikiTokenizationResolverHooks.resolve });
 const { createCodePlugin, MIN_INCREMENTAL_CHARS, TOKENIZE_LIMITS } =
   await import("../src/components/assistant-ui/code-plugin.ts");
 const { tokenized } = await import("./shiki-tokenization-counter.mts");
@@ -96,7 +99,7 @@ test("a streaming fence is tokenized once, not once per update", async () => {
     engine: createJavaScriptRegexEngine({ forgiving: true }),
   });
   assert.deepEqual(
-    last?.tokens,
+    last.tokens,
     reference.codeToTokens(SOURCE, {
       lang: "typescript",
       themes: { light: "github-light", dark: "github-dark" },

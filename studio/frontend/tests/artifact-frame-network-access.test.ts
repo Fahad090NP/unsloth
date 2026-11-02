@@ -158,7 +158,7 @@ function readSetterCalls(
           break;
         }
       }
-      calls.push({ argument: node.arguments[0]?.getText() ?? "", handler });
+      calls.push({ argument: node.arguments[0].getText() ?? "", handler });
     }
     node.forEachChild(visit);
   };
@@ -190,7 +190,7 @@ test("no effect resets the grant, which would leave a stale render", () => {
     if (
       ts.isCallExpression(node) &&
       node.expression.getText() === "useEffect" &&
-      GRANT_SETTER.test(node.arguments[0]?.getText() ?? "")
+      GRANT_SETTER.test(node.arguments[0].getText() ?? "")
     ) {
       resetInEffect = true;
     }
@@ -360,8 +360,8 @@ test("the banner deep-links to the network access setting", () => {
         }
       }
       deepLinks.push({
-        tab: node.arguments[0]?.getText() ?? "",
-        options: node.arguments[1]?.getText() ?? "",
+        tab: node.arguments[0].getText() ?? "",
+        options: node.arguments[1].getText() ?? "",
         handler,
       });
     }

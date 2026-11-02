@@ -28,7 +28,7 @@ function setup(
     cfg: { url: pageUrl },
     document: { querySelector: () => null },
     MessageChannel,
-    parent: { postMessage() {} },
+    parent: { postMessage() { /* empty */ } },
   });
   return window;
 }

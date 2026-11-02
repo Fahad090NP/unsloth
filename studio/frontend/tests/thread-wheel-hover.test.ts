@@ -35,9 +35,11 @@ const thread = {
   boundary(event: Event, target: Message) {
     let stopped = false;
     Object.defineProperty(event, "target", { value: target });
-    event.stopPropagation = () => {
-      stopped = true;
-    };
+    Object.defineProperty(event, "stopPropagation", {
+      value: () => {
+        stopped = true;
+      },
+    });
     this.listeners.get(`${event.type}:capture`)?.(event);
     if (!stopped) target.got.push(event.type);
   },
@@ -75,16 +77,18 @@ function attach(...ids: string[]) {
 
 // the browser updates `:hover` even when the event does not reach assistant-ui.
 const enter = (m: Message, buttons = 0) => {
-  m.hover = true;
+  const target = m;
+  target.hover = true;
   const event = new MouseEvent("mouseenter");
   Object.defineProperty(event, "buttons", { value: buttons });
-  thread.boundary(event, m);
+  thread.boundary(event, target);
 };
 const leave = (m: Message, buttons = 0) => {
-  m.hover = false;
+  const target = m;
+  target.hover = false;
   const event = new MouseEvent("mouseleave");
   Object.defineProperty(event, "buttons", { value: buttons });
-  thread.boundary(event, m);
+  thread.boundary(event, target);
 };
 
 test("a wheel scroll holds message hover events, then moves hover once it settles", () => {

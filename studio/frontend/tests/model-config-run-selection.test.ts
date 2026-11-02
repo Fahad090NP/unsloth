@@ -170,7 +170,10 @@ const cases = [
 
 for (const entry of cases) {
   test(`configuration Run preserves loading and remembering for ${entry.name}`, () => {
-    const { name: _name, id, ...fields } = entry;
+    const { id } = entry;
+    const fields = { ...entry };
+    Reflect.deleteProperty(fields, "name");
+    Reflect.deleteProperty(fields, "id");
     const meta: ModelSelectorChangeMeta = {
       source: "hub",
       isLora: false,

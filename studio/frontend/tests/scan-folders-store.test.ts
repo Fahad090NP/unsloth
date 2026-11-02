@@ -40,7 +40,7 @@ const store = await import("../src/features/hub/inventory/scan-folders-store.ts"
 
 test("an add during the first load keeps the folders the load was fetching", async () => {
   store.resetScanFoldersStoreForTests();
-  let release: () => void = () => {};
+  let release: () => void = () => {/* intentionally empty */};
   listGate = new Promise((resolve) => {
     release = resolve;
   });

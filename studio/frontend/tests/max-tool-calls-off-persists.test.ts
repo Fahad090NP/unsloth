@@ -40,8 +40,8 @@ test("Off is sent to the server and read back on reload", async () => {
   const bodies: string[] = [];
   setAuthFetchHandler((_input, init) => {
     if (init?.method === "PUT") {
-      bodies.push(String(init.body));
-      Object.assign(server, JSON.parse(String(init.body)));
+      bodies.push(String(init.body as string));
+      Object.assign(server, JSON.parse(String(init.body as string)));
     }
     return Response.json({ settings: server });
   });

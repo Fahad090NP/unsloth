@@ -26,7 +26,7 @@ const { openRagDocumentInBrowser, openRagDocumentExternally } = loadWithStubs<ty
         message: (title: string) => toasts.push(`message:${title}`),
       },
     },
-    "../api/rag-api": { getDocumentFileUrl: async () => "http://studio.test/file" },
+    "../api/rag-api": { getDocumentFileUrl:  () => Promise.resolve("http://studio.test/file") },
   },
 );
 
@@ -34,12 +34,15 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
 
 function serve(size: number, contentLength = String(size)) {
   let cancelled = false;
-  globalThis.fetch = (async () => ({
-    ok: true,
-    headers: new Headers(contentLength ? { "content-length": contentLength } : {}),
-    body: { cancel: async () => void (cancelled = true) },
-    blob: async () => new Blob([new Uint8Array(size)]),
-  })) as unknown as typeof fetch;
+  globalThis.fetch = (() =>
+    Promise.resolve({
+      ok: true,
+      headers: new Headers(
+        contentLength ? { "content-length": contentLength } : {},
+      ),
+      body: { cancel: () => Promise.resolve(void (cancelled = true)) },
+      blob: () => Promise.resolve(new Blob([new Uint8Array(size)])),
+    })) as unknown as typeof fetch;
   return () => cancelled;
 }
 
@@ -68,7 +71,7 @@ test("two quick clicks on one document open the later one, whichever download fi
   const delays = [40, 5];
   globalThis.fetch = (async () => {
     await new Promise((resolve) => setTimeout(resolve, delays.shift()));
-    return { ok: true, headers: new Headers(), blob: async () => new Blob([new Uint8Array(LIMIT)]) };
+    return { ok: true, headers: new Headers(), blob:  () => Promise.resolve(new Blob([new Uint8Array(LIMIT)])) };
   }) as unknown as typeof fetch;
   openRagDocumentInBrowser("doc-1", "handbook.pdf", 3);
   openRagDocumentInBrowser("doc-1", "handbook.pdf", 5);
@@ -84,7 +87,7 @@ test("a superseded click that fails says nothing once a later click opened the f
     const { delay, ok } = outcomes.shift() ?? { delay: 0, ok: false };
     await new Promise((resolve) => setTimeout(resolve, delay));
     if (!ok) throw new Error("network");
-    return { ok: true, headers: new Headers(), blob: async () => new Blob([new Uint8Array(LIMIT)]) };
+    return { ok: true, headers: new Headers(), blob:  () => Promise.resolve(new Blob([new Uint8Array(LIMIT)])) };
   }) as unknown as typeof fetch;
   openRagDocumentInBrowser("doc-1", "handbook.pdf", 3);
   openRagDocumentInBrowser("doc-1", "handbook.pdf", 5);

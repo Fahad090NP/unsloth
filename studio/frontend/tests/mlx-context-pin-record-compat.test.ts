@@ -293,12 +293,12 @@ test("a patched pin round-trips through storage on both backends", () => {
     assert.ok(savePerModelConfig(MODEL, null, patched));
     const { config, remembered } = resolveInitialConfig(MODEL, null);
     assert.ok(remembered);
-    assert.equal(savedContextPin(config), 32768, `isMlx=${isMlx}`);
-    assert.equal(loadRequest(config, isMlx), 32768, `isMlx=${isMlx}`);
+    assert.equal(savedContextPin(config), 32768, `isMlx=${String(isMlx)}`);
+    assert.equal(loadRequest(config, isMlx), 32768, `isMlx=${String(isMlx)}`);
     assert.equal(
       loadRequest(config, !isMlx),
       32768,
-      `cross-read isMlx=${!isMlx}`,
+      `cross-read isMlx=${String(!isMlx)}`,
     );
   }
 });
@@ -468,9 +468,9 @@ test("the gap is the config page's, not resolveLoadMaxSeqLength's", () => {
   );
   const { config } = resolveInitialConfig(MODEL, null);
   const oldResolverAnswer =
-    config.customContextLength != null
-      ? config.customContextLength
-      : (normalizeMaxSeqLength(config.maxSeqLength) ?? DEFAULT_MAX_SEQ_LENGTH);
+    config.customContextLength ??
+    normalizeMaxSeqLength(config.maxSeqLength) ??
+    DEFAULT_MAX_SEQ_LENGTH;
   assert.equal(oldResolverAnswer, 32768);
   const oldComparePaneAnswer =
     config.customContextLength ??

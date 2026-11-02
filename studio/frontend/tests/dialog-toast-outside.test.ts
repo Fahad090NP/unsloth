@@ -96,7 +96,7 @@ test("an interaction on a toast does not dismiss the sheet under it", () => {
     }) => StubElement;
   }>(new URL("../src/components/ui/sheet.tsx", import.meta.url), {
     "react/jsx-runtime": stubJsxRuntime(),
-    react: { useState: () => [null, () => {}] },
+    react: { useState: () => [null, () => { /* empty */ }] },
     "radix-ui": {
       Dialog: new Proxy({}, { get: (_, part) => `Dialog.${String(part)}` }),
     },

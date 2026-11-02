@@ -149,7 +149,7 @@ test("encoded filenames and image formats resolve across Markdown, HTML, and sco
 						assert.deepEqual(
 							render(markup, scope).sources,
 							[expected],
-							`${markup} in ${scope.threadId}/${scope.projectId}`,
+							`${markup} in ${scope.threadId}/${String(scope.projectId)}`,
 						);
 					}
 				}

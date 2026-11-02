@@ -15,6 +15,14 @@ import ts from "@typescript/typescript6";
 import { gateViewportMedia } from "../vite-plugin-viewport-media.ts";
 import { readSrc } from "./helpers/kit.ts";
 
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error("Expected a value");
+  }
+  return value;
+}
+
+
 const parsed = ts.createSourceFile(
   "sidebar.tsx",
   readSrc("components/ui/sidebar.tsx"),
@@ -85,7 +93,7 @@ const activeVariant = postcss
 assert.ok(activeVariant);
 const generated = (async () => {
   const compiler = await compile(
-    `@theme { --spacing: .25rem; --breakpoint-md: 48rem; --radius-xl: .75rem; --shadow-sm: 0 1px 3px #0002; --color-sidebar-accent-foreground: #333; } ${activeVariant} @tailwind utilities;`,
+    `@theme { --spacing: .25rem; --breakpoint-md: 48rem; --radius-xl: .75rem; --shadow-sm: 0 1px 3px #0002; --color-sidebar-accent-foreground: #333; } ${String(activeVariant)} @tailwind utilities;`,
   );
   return optimize(compiler.build(pairs.flat()), { minify: true }).code;
 })();
@@ -108,7 +116,7 @@ function rules(css: string, candidate: string) {
   postcss.parse(css).walkRules((rule) => {
     for (const selector of selectorParser().astSync(rule.selector).nodes) {
       if (!includesClass(selector, candidate)) continue;
-      const declarations = (rule.nodes ?? [])
+      const declarations = (rule.nodes)
         .filter((node) => node.type === "decl")
         .map(
           (node) =>
@@ -144,7 +152,7 @@ function specificity(node: SelectorNode): Specificity {
   if (node.type === "pseudo") {
     if (node.value === ":where") return [0, 0, 0];
     if ([":is", ":not", ":has"].includes(node.value))
-      return (node.nodes ?? [])
+      return (node.nodes)
         .map(specificity)
         .reduce<Specificity>((a, b) => (compare(a, b) >= 0 ? a : b), [
           0, 0, 0,
@@ -160,7 +168,7 @@ function unnamedSiblings(selector: Selector, candidate: string): string[] {
   const found: string[] = [];
   selector.walkCombinators((combinator) => {
     if (combinator.value.trim() !== "~") return;
-    const nodes = combinator.parent!.nodes;
+    const nodes = required(combinator.parent).nodes;
     const next = nodes.slice(nodes.indexOf(combinator) + 1);
     const end = next.findIndex((node) => node.type === "combinator");
     const compound = end === -1 ? next : next.slice(0, end);

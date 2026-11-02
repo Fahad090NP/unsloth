@@ -2,12 +2,15 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { registerHooks } from "node:module";
 import test from "node:test";
 
 import { installLocalStorageFake } from "./helpers/kit.ts";
 
-register("./chat-search-index-resolver.mjs", import.meta.url);
+const chatSearchIndexResolverHooks = (await import(new URL("./chat-search-index-resolver.mjs", import.meta.url).href)) as {
+  resolve: NonNullable<Parameters<typeof registerHooks>[0]["resolve"]>;
+};
+registerHooks({ resolve: chatSearchIndexResolverHooks.resolve });
 const { store } = installLocalStorageFake();
 
 // The shared fake's addEventListener is a no-op, so listeners are swapped in before import.

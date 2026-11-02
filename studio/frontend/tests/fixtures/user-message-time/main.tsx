@@ -141,7 +141,7 @@ function App() {
   const runtime = useExternalStoreRuntime({
     messages,
     isRunning: true,
-    onNew: async () => {},
+    onNew: () => Promise.resolve(),
   });
   window.messageTimeFixture = {
     setLocale,
@@ -195,4 +195,4 @@ if (params.has("scale"))
     "--ui-font-size-scale",
     params.get("scale"),
   );
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root") as HTMLElement).render(<App />);

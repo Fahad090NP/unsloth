@@ -97,7 +97,7 @@ test("reportAudioFailure keeps the failure with the message it explains, never p
   assert.equal(reportAudioFailure(error)?.code, "out_of_memory");
   const stored = useAudioWorkspaceStore.getState().failure;
   assert.equal(stored?.message, "Not enough GPU memory.");
-  assert.equal(stored?.failure.code, "out_of_memory");
+  assert.equal(stored.failure.code, "out_of_memory");
   useAudioWorkspaceStore.getState().rememberModel("speak", "org/model");
   assert.doesNotMatch(
     store.get("unsloth_audio_workspace") ?? "",
