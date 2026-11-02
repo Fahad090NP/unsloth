@@ -183,7 +183,9 @@ const UnmeasuredCollapsibleContent = React.forwardRef<
           cancelAnimationFrame(inner);
         };
       }
-      setExpanded(false);
+      queueMicrotask(() => {
+        setExpanded(false);
+      });
       return undefined;
     }, [open]);
 

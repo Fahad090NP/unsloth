@@ -72,7 +72,12 @@ export function llamaUpdateOffered(status: LlamaUpdateStatus): boolean {
 function parseJob(value: unknown): LlamaUpdateJob {
   const job = (value ?? {}) as Record<string, unknown>;
   return {
-    state: (job.state as LlamaUpdateJob["state"]) ?? "idle",
+    state:
+      job.state === "running" ||
+      job.state === "success" ||
+      job.state === "error"
+        ? job.state
+        : "idle",
     operation:
       job.operation === "update" || job.operation === "switch"
         ? job.operation
@@ -411,9 +416,13 @@ export function useLlamaUpdateCheck({
     if (remaining <= 0) return;
     snoozeTimer.current = setTimeout(() => {
       snoozeTimer.current = null;
-      readStatus(true).then((next) => {
-        if (activeRef.current) surfaceRef.current(next);
-      });
+      readStatus(true)
+        .then((next) => {
+          if (activeRef.current) surfaceRef.current(next);
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to read status after snooze", error);
+        });
     }, remaining);
   }, [passive, readStatus]);
 
@@ -509,32 +518,39 @@ export function useLlamaUpdateCheck({
   const startJobPoll = useCallback(
     (onDone?: (result: LlamaApplyResult) => void) => {
       clearPollTimer();
-      const timer = setInterval(async () => {
-        const s = await readStatus();
-        // Polls overlap: a "running" answer landing after a later poll saw the job
-        // finish would re-set applying with no timer left to clear it.
-        if (!s || pollTimer.current !== timer) return;
-        const presentation = commitStatus(s);
-        if (presentation.running) return;
-        clearPollTimer();
-        notifySettledOnce(s.job);
-        if (s.job.state === "success") {
-          void refreshHardwareInfo();
-          // Fires here, not only in apply's onDone, so cross-tab updates are covered.
-          notifyReloadIfNeeded(s.job);
-          onDone?.({
-            ok: true,
-            tag: s.job.to_tag,
-            reloadRequired: s.job.reload_required,
-            message: s.job.message,
+      const timer = setInterval(() => {
+        readStatus()
+          .then((s) => {
+            // Polls overlap: a "running" answer landing after a later poll saw the job
+            // finish would re-set applying with no timer left to clear it.
+            if (!s || pollTimer.current !== timer) return;
+            const presentation = commitStatus(s);
+            if (presentation.running) return;
+            clearPollTimer();
+            notifySettledOnce(s.job);
+            if (s.job.state === "success") {
+              refreshHardwareInfo().catch((error: unknown) => {
+                console.error("Failed to refresh hardware info", error);
+              });
+              // Fires here, not only in apply's onDone, so cross-tab updates are covered.
+              notifyReloadIfNeeded(s.job);
+              onDone?.({
+                ok: true,
+                tag: s.job.to_tag,
+                reloadRequired: s.job.reload_required,
+                message: s.job.message,
+              });
+            } else if (s.job.state === "error") {
+              // Keep the banner for retry; a partial update may still have unloaded the server.
+              notifyReloadIfNeeded(s.job);
+              onDone?.({ ok: false, error: s.job.error });
+            } else {
+              onDone?.({ ok: false, error: "update did not complete" });
+            }
+          })
+          .catch((error: unknown) => {
+            console.error("Failed to poll llama update job", error);
           });
-        } else if (s.job.state === "error") {
-          // Keep the banner for retry; a partial update may still have unloaded the server.
-          notifyReloadIfNeeded(s.job);
-          onDone?.({ ok: false, error: s.job.error });
-        } else {
-          onDone?.({ ok: false, error: "update did not complete" });
-        }
       }, JOB_POLL_INTERVAL_MS);
       pollTimer.current = timer;
     },
@@ -575,9 +591,13 @@ export function useLlamaUpdateCheck({
     else armSnoozeTimer();
 
     const check = (forceRefresh: boolean) => () => {
-      readStatus(forceRefresh).then((s) => {
-        if (!canceled) surfaceIfAvailable(s);
-      });
+      readStatus(forceRefresh)
+        .then((s) => {
+          if (!canceled) surfaceIfAvailable(s);
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to check llama update status", error);
+        });
     };
     let firstTimer: ReturnType<typeof setTimeout> | undefined;
     let reminder: ReturnType<typeof setInterval> | undefined;
@@ -633,7 +653,11 @@ export function useLlamaUpdateCheck({
         event.newValue &&
         event.newValue !== reloadNotifiedForRef.current
       ) {
-        readStatus(!passive).then(surfaceIfAvailable);
+        readStatus(!passive)
+          .then(surfaceIfAvailable)
+          .catch((error: unknown) => {
+            console.error("Failed to read status on handled reload storage event", error);
+          });
       }
     };
     window.addEventListener(OFFER_SUPPRESSION_EVENT, onSuppression);
@@ -655,7 +679,11 @@ export function useLlamaUpdateCheck({
   useEffect(() => {
     if (!enabled) return;
     return subscribeToLlamaJobStarted(() => {
-      readStatus().then(surfaceIfAvailable);
+      readStatus()
+        .then(surfaceIfAvailable)
+        .catch((error: unknown) => {
+          console.error("Failed to read status on llama job started", error);
+        });
     });
   }, [enabled, readStatus, surfaceIfAvailable]);
 
@@ -704,12 +732,13 @@ export function useLlamaUpdateCheck({
     const suppressionAtRequest = suppressionRef.current;
     setApplying(true);
     setVisible(true);
-    let action: {
+    interface ActionResponse {
       started?: boolean;
       reason?: string | null;
       message?: string | null;
       job?: unknown;
-    } | null = null;
+    }
+    let action: ActionResponse | null = null;
     try {
       const res = await authFetch("/api/llama/update", { method: "POST" });
       if (!res.ok) {
@@ -717,7 +746,11 @@ export function useLlamaUpdateCheck({
         return { ok: false, error: `HTTP ${res.status}` };
       }
       try {
-        action = await res.json();
+        const raw: unknown = await res.json();
+        action =
+          typeof raw === "object" && raw !== null
+            ? (raw as ActionResponse)
+            : null;
       } catch {
         action = null;
       }

@@ -95,7 +95,7 @@ function isImeCompositionKey(
   compositionActive: boolean,
 ): boolean {
   return (
-    compositionActive || event.nativeEvent.isComposing || event.keyCode === 229
+    compositionActive || event.nativeEvent.isComposing || event.key === "Process"
   );
 }
 

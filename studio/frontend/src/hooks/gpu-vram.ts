@@ -62,11 +62,13 @@ export function gpuMemoryTotalsGb(
         const total = size(device);
         const hostBackedReported = device.shared_memory_host_backed_gb;
         const hostBackedKnown =
+          typeof hostBackedReported === "number" &&
           Number.isFinite(hostBackedReported) &&
-          (hostBackedReported!) >= 0;
-        const hostBacked = hostBackedKnown
-          ? Math.min(total, hostBackedReported!)
-          : total;
+          hostBackedReported >= 0;
+        const hostBacked =
+          hostBackedKnown && typeof hostBackedReported === "number"
+            ? Math.min(total, hostBackedReported)
+            : total;
         return {
           // `shared_memory` devices are views of one host pool (take the largest);
           // `unified_memory` alone is a pool per socket (MI300A), which stays additive.
@@ -189,9 +191,10 @@ function budgetedGpuMemoryGb(
     }
     const reportedHostBacked = device.sharedMemoryHostBackedGb;
     const hostBacked =
+      typeof reportedHostBacked === "number" &&
       Number.isFinite(reportedHostBacked) &&
-      (reportedHostBacked!) >= 0
-        ? Math.min(total, reportedHostBacked!)
+      reportedHostBacked >= 0
+        ? Math.min(total, reportedHostBacked)
         : total;
     const deviceReserved = total - hostBacked;
     reserved += Math.min(deviceReserved, deviceCapacity);
@@ -270,9 +273,10 @@ export function resolveMemoryCapacityGb(input: MemoryCapacityInput): {
   // Unpinned falls back to the full aggregate, correct on hosts with no shared device.
   const rawDedicatedCapacityGb = pinGoverns
     ? pinnedTotals.dedicated
-    : Number.isFinite(input.hostDedicatedGpuTotalGb) &&
-        (input.hostDedicatedGpuTotalGb!) >= 0
-      ? (input.hostDedicatedGpuTotalGb!)
+    : typeof input.hostDedicatedGpuTotalGb === "number" &&
+        Number.isFinite(input.hostDedicatedGpuTotalGb) &&
+        input.hostDedicatedGpuTotalGb >= 0
+      ? input.hostDedicatedGpuTotalGb
       : hostGpuTotalGb;
   // Measure against the budgeted capacity the slider draws; a 0 or missing value would zero it.
   const budget =
@@ -348,7 +352,9 @@ export function resolveGpuVramUsedGb(
     return devices.reduce((sum, device) => sum + (device.vram_used_gb ?? 0), 0);
   }
   const aggregate = gpu?.vram_used_gb_aggregate;
-  return Number.isFinite(aggregate) ? (aggregate!) : null;
+  return typeof aggregate === "number" && Number.isFinite(aggregate)
+    ? aggregate
+    : null;
 }
 
 /** The loader's default VRAM fraction (`_CTX_FIT_VRAM_FRACTION`). */
@@ -523,8 +529,10 @@ export function aggregateUsableFreeVramGb(
       continue;
     }
     const total =
-      Number.isFinite(device.memoryTotalGb) && (device.memoryTotalGb!) > 0
-        ? (device.memoryTotalGb!)
+      typeof device.memoryTotalGb === "number" &&
+      Number.isFinite(device.memoryTotalGb) &&
+      device.memoryTotalGb > 0
+        ? device.memoryTotalGb
         : 0;
     if (total === 0) {
       fullySharedDemand = Math.max(fullySharedDemand, deviceUsable);
@@ -533,9 +541,10 @@ export function aggregateUsableFreeVramGb(
     }
     const reportedHostBacked = device.sharedMemoryHostBackedGb;
     const hostBacked =
+      typeof reportedHostBacked === "number" &&
       Number.isFinite(reportedHostBacked) &&
-      (reportedHostBacked!) >= 0
-        ? Math.min(total, reportedHostBacked!)
+      reportedHostBacked >= 0
+        ? Math.min(total, reportedHostBacked)
         : total;
     const deviceReserved = total - hostBacked;
     const deviceCapacity = usableFreeVramGb(total, total, fraction);
@@ -548,8 +557,10 @@ export function aggregateUsableFreeVramGb(
     if (deviceReserved > 0) {
       partialSharedDemand += deviceSharedDemand;
       const free =
-        Number.isFinite(device.memoryFreeGb) && (device.memoryFreeGb!) > 0
-          ? (device.memoryFreeGb!)
+        typeof device.memoryFreeGb === "number" &&
+        Number.isFinite(device.memoryFreeGb) &&
+        device.memoryFreeGb > 0
+          ? device.memoryFreeGb
           : 0;
       const deviceSharedFree = Math.min(hostBacked, free);
       partialSharedFree = Math.max(partialSharedFree, deviceSharedFree);

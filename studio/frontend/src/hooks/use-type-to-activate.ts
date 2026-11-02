@@ -26,7 +26,7 @@ export function useTypeToActivate(): void {
       }
       // IME start and dead keys must reach the target so composition begins there.
       const compositionStart =
-        e.keyCode === 229 || e.isComposing || e.key === "Dead";
+        e.key === "Process" || e.isComposing || e.key === "Dead";
       if (
         !compositionStart &&
         (codePointCount(e.key) !== 1 || e.key === " ")

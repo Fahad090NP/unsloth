@@ -56,6 +56,9 @@ function statusLabel(status: UpdateStatus, t: Translate): string {
       return t("desktopUpdate.installing");
     case "error":
       return t("desktopUpdate.failed");
+    case "available":
+    case "checking":
+    case "idle":
     default:
       return t("desktopUpdate.updating");
   }
@@ -71,6 +74,9 @@ function statusSubtext(status: UpdateStatus, progress: number, t: Translate): st
       return t("desktopUpdate.restartShortly");
     case "error":
       return t("desktopUpdate.failedDetail");
+    case "available":
+    case "checking":
+    case "idle":
     default:
       return "";
   }
@@ -138,7 +144,7 @@ export function UpdateScreen({
               </div>
             )}
 
-            {downloadProgress !== null && (
+            {downloadProgress !== null && downloadProgress !== undefined && (
               <div className="mt-2 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
                 <progress
                   aria-label={

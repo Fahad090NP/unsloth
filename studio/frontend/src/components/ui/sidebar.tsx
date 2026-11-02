@@ -113,7 +113,7 @@ function SidebarProvider({
   const [_open, _setOpen] = React.useState(defaultOpen)
 
   // Pin mode drives open entirely from `pinned`; otherwise controlled/uncontrolled.
-  const open = hasPinMode ? Boolean(pinnedProp) : (openProp ?? _open)
+  const open = hasPinMode ? pinnedProp : (openProp ?? _open)
 
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {

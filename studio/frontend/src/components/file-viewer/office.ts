@@ -1066,14 +1066,15 @@ function findTag(bytes: Uint8Array, from: number, name: string, closing: boolean
 const MAX_SHARED_STRINGS = 2_000_000;
 
 function sharedStrings(part: Growing | undefined): (index: number) => string | undefined {
+  if (!part) return () => "";
   let starts = new Uint32Array(1024);
   let ends = new Uint32Array(1024);
   let count = 0;
   const texts = new Map<number, string>();
   const source = part;
-  let at = source ? 0 : -1;
+  let at = 0;
   return (index) => {
-    while (source && at !== -1 && count <= index && count < MAX_SHARED_STRINGS) {
+    while (at !== -1 && count <= index && count < MAX_SHARED_STRINGS) {
       const open = findTag(source.data, at, "si", false);
       const close = open && !open.empty ? findTag(source.data, open.end, "si", true) : null;
       if (!open || (!open.empty && !close)) {
@@ -1090,8 +1091,8 @@ function sharedStrings(part: Growing | undefined): (index: number) => string | u
       count++;
       at = close ? close.end : open.end;
     }
-    if ((source?.cut || count >= MAX_SHARED_STRINGS) && index >= count) return undefined;
-    if (!source || !Number.isInteger(index) || index < 0 || index >= count) return "";
+    if ((source.cut || count >= MAX_SHARED_STRINGS) && index >= count) return undefined;
+    if (!Number.isInteger(index) || index < 0 || index >= count) return "";
     let text = texts.get(index);
     if (text === undefined) {
       const start = starts[index];
@@ -1424,11 +1425,11 @@ function readChart(doc: Document, budget: number): { caption?: string; table: st
     return out;
   };
   const series = serNodes.slice(0, MAX_CHART_SERIES).map((ser) => {
-    const tx = children(ser, "tx")[0];
+    const tx = children(ser, "tx").at(0);
     return {
       name: clip((tx && (cache(tx).at(0) ?? first(tx, "v")?.textContent)) ?? ""),
-      categories: cache(children(ser, "cat")[0] ?? children(ser, "xVal")[0]),
-      values: cache(children(ser, "val")[0] ?? children(ser, "yVal")[0]),
+      categories: cache(children(ser, "cat").at(0) ?? children(ser, "xVal").at(0)),
+      values: cache(children(ser, "val").at(0) ?? children(ser, "yVal").at(0)),
     };
   });
   if (!series.length) return null;

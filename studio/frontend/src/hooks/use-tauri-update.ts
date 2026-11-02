@@ -302,7 +302,8 @@ export function useTauriUpdate(isExternalServer = false) {
       setCheckError(String(e));
       updateStatus(infoRef.current ? "available" : "idle");
     } finally {
-      checkingRef.current = false;
+      const holder = checkingRef;
+      holder.current = false;
       setHasChecked(true);
     }
   }
@@ -310,7 +311,9 @@ export function useTauriUpdate(isExternalServer = false) {
   function checkForUpdateWhenSafe() {
     // Recovery owns version-specific state until the user settles it.
     if (statusRef.current === "error") return;
-    void checkForUpdate();
+    checkForUpdate().catch((error: unknown) => {
+      console.error("Failed to check for update", error);
+    });
   }
 
   const scheduledCheckRef = useRef(checkForUpdateWhenSafe);
@@ -368,9 +371,7 @@ export function useTauriUpdate(isExternalServer = false) {
         // A reload leaves the native download running with no listener, and a second one is refused.
         if (!bundle.downloading) break;
         if (Date.now() >= waitUntil) break;
-        if (!unlisten) {
-          unlisten = await listenDesktopUpdateDownload(version, setUpdateProgress);
-        }
+        unlisten ??= await listenDesktopUpdateDownload(version, setUpdateProgress);
         await new Promise((resolve) =>
           setTimeout(resolve, BUNDLE_DOWNLOAD_POLL_MS),
         );
@@ -428,16 +429,20 @@ export function useTauriUpdate(isExternalServer = false) {
       );
       cleanups.push(unlistenProgress);
 
-      const backendResult = await new Promise<"complete" | string>(
+      const backendResult = await new Promise<string>(
         (resolve) => {
-          listen<void>("update-complete", () => { resolve("complete"); }).then(
-            (u) => cleanups.push(u),
-          );
-          listen<string>("update-failed", (e) =>
-            { resolve(e.payload); },
-          ).then((u) => cleanups.push(u));
+          listen<undefined>("update-complete", () => { resolve("complete"); })
+            .then((u) => cleanups.push(u))
+            .catch((error: unknown) => {
+              console.error("Failed to listen for update-complete", error);
+            });
+          listen<string>("update-failed", (e) => { resolve(e.payload); })
+            .then((u) => cleanups.push(u))
+            .catch((error: unknown) => {
+              console.error("Failed to listen for update-failed", error);
+            });
 
-          invoke("start_backend_update").catch((e) => { resolve(String(e)); });
+          invoke("start_backend_update").catch((e: unknown) => { resolve(String(e)); });
         },
       );
 
@@ -484,7 +489,7 @@ export function useTauriUpdate(isExternalServer = false) {
       if (phaseRef.current === "shell_download" || phaseRef.current === "shell_install") {
         // Starting a backend with kill-on-close disabled would orphan it.
         if (!(await crashCleanupReady())) {
-          retainFailure(msg, phaseRef.current ?? "shell_install");
+          retainFailure(msg, phaseRef.current);
           return;
         }
         try {
@@ -500,7 +505,7 @@ export function useTauriUpdate(isExternalServer = false) {
           setDismissed(false);
           setUpdatePhase("recovered_after_shell_failure");
         } catch {
-          retainFailure(msg, phaseRef.current ?? "shell_install");
+          retainFailure(msg, phaseRef.current);
           setError(msg);
           updateStatus("error");
         }
@@ -510,7 +515,8 @@ export function useTauriUpdate(isExternalServer = false) {
         updateStatus("error");
       }
     } finally {
-      updatingRef.current = false;
+      const holder = updatingRef;
+      holder.current = false;
       cleanup(cleanups);
     }
   }

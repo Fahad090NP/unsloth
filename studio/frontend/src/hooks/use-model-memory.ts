@@ -140,7 +140,7 @@ function subscribeToConfigChanges(onChange: () => void): () => void {
   const onStorage = (event: Event) => {
     const key = (event as StorageEvent).key;
     // A null key means the whole store was cleared.
-    if (key === null || key === undefined || watchedStorageKeys().includes(key)) onConfigWrite();
+    if (key === null || watchedStorageKeys().includes(key)) onConfigWrite();
   };
   window.addEventListener("storage", onStorage);
   const unsubscribeStore = useChatRuntimeStore.subscribe(onChange);
@@ -214,7 +214,7 @@ function budgetIsMeaningful(config: PerModelConfig | undefined): boolean {
   if (mode === "manual") return false;
   // A session pin lives in the runtime store, not a saved config.
   const sessionPin = useChatRuntimeStore.getState().selectedGpuIds;
-  if (sessionPin !== null && sessionPin !== undefined && sessionPin.length > 0) return false;
+  if (sessionPin !== null && sessionPin.length > 0) return false;
   if (!config) return true;
   // Pass-through args follow Unsloth's flags, so an -ngl or device pin there wins.
   if (extraArgsOwnPlacement(config.llamaExtraArgs)) return false;
@@ -224,8 +224,8 @@ function budgetIsMeaningful(config: PerModelConfig | undefined): boolean {
   if (extraArgsAddResidentFiles(config.llamaExtraArgs)) return false;
   return (
     (config.selectedGpuIds === null || config.selectedGpuIds === undefined) &&
-    ((config.gpuLayers === null || config.gpuLayers === undefined) || config.gpuLayers < 0) &&
-    ((config.nCpuMoe === null || config.nCpuMoe === undefined) || config.nCpuMoe === 0)
+    (config.gpuLayers === undefined || config.gpuLayers < 0) &&
+    (config.nCpuMoe === undefined || config.nCpuMoe === 0)
   );
 }
 
@@ -267,7 +267,7 @@ async function fetchEstimate(
         kvBytes: r.kv_bytes,
         // weights_bytes is the whole file; its lookup tables never reach the GPU.
         weightsBytes:
-          (r.weights_bytes === null || r.weights_bytes === undefined)
+          r.weights_bytes === null
             ? null
             : Math.max(0, r.weights_bytes - (r.lookup_table_bytes ?? 0)),
         specBytes: r.spec_bytes,
@@ -312,7 +312,7 @@ export function useModelMemory(
 
   // Gate before subscribing: the store ticks per streamed token, and an unconditional subscription
   // woke every row. Both branches are module constants.
-  const watching = enabled && source !== null && source !== undefined;
+  const watching = enabled && source !== undefined;
   const epoch = useSyncExternalStore(
     watching ? subscribeToConfigChanges : subscribeNothing,
     watching ? readConfigEpoch : readZeroEpoch,
@@ -447,5 +447,5 @@ export function useModelMemory(
           ? typeof plan.nCtx === "undefined"
           : !estimate.contextIsPinned,
     });
-  }, [plan, entry, source, source?.sizeBytes, source?.lookupTableBytes, budgetGb, budgetFraction]);
+  }, [plan, entry, source, budgetGb, budgetFraction]);
 }

@@ -280,7 +280,7 @@ export function LlamaUpdateBanner({
       migrationPending || bundled || primary?.component === "audio.cpp";
     const offerTag = primary?.latestTag ?? null;
     const result = await apply();
-    if (result?.ok) {
+    if (result.ok) {
       const updatedTag = bundled
         ? null
         : (updateToastTag(

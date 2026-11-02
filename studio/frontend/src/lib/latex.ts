@@ -650,7 +650,12 @@ function shellExpansionEnd(text: string, at: number): number {
 
 function encodeMarkdownLiteral(text: string): string {
   let encoded = "";
-  for (const char of text) encoded += `&#${char.codePointAt(0)};`;
+  for (const char of text) {
+    const code = char.codePointAt(0);
+    if (code !== undefined) {
+      encoded += `&#${code};`;
+    }
+  }
   return encoded;
 }
 // an entity stays literal in Markdown without showing an escape slash in raw HTML.

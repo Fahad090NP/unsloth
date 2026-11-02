@@ -13,27 +13,28 @@ export function useWheelScrollRef<T extends HTMLElement>() {
     if (!node) {
       return;
     }
+    const element = node;
 
     const onWheel = (event: WheelEvent) => {
-      if (event.ctrlKey || node.scrollHeight <= node.clientHeight) {
+      if (event.ctrlKey || element.scrollHeight <= element.clientHeight) {
         return;
       }
       const multiplier =
         event.deltaMode === WheelEvent.DOM_DELTA_LINE
           ? 16
           : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
-            ? node.clientHeight
+            ? element.clientHeight
             : 1;
       const delta = event.deltaY * multiplier;
       if (delta === 0) {
         return;
       }
-      node.scrollTop += delta;
+      element.scrollTop += delta;
       event.preventDefault();
       event.stopPropagation();
     };
 
-    node.addEventListener("wheel", onWheel, { passive: false });
-    detachRef.current = () => { node.removeEventListener("wheel", onWheel); };
+    element.addEventListener("wheel", onWheel, { passive: false });
+    detachRef.current = () => { element.removeEventListener("wheel", onWheel); };
   }, []);
 }

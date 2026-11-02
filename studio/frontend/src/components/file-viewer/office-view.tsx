@@ -231,15 +231,19 @@ function SheetGrid({
   const { visibleColumns, visibleRows, widths, rowCount } = useMemo(() => {
     const columns = Math.max(
       1,
-      sheet.rows.reduce((max, row) => Math.max(max, row?.length ?? 0), sheet.widths.length),
+      sheet.rows.reduce((max, row) => Math.max(max, row.length), sheet.widths.length),
     );
     const rowCount = Math.max(sheet.rows.length, 1);
     const visibleColumns = Array.from({ length: columns }, (_, index) => index).filter(
       (index) => !sheet.hidden?.columns.has(index),
     );
-    const visibleRows = sheet.hidden?.rows.size
-      ? Array.from({ length: rowCount }, (_, index) => index).filter((index) => !sheet.hidden!.rows.has(index))
-      : null;
+    const hiddenRows = sheet.hidden?.rows;
+    const visibleRows =
+      hiddenRows && hiddenRows.size > 0
+        ? Array.from({ length: rowCount }, (_, index) => index).filter(
+            (index) => !hiddenRows.has(index),
+          )
+        : null;
     const widths = visibleColumns.map((index) => (sheet.widths[index] ?? DEFAULT_COLUMN_WIDTH) * uiScale);
     return { visibleColumns, visibleRows, widths, rowCount };
   }, [sheet, uiScale]);
@@ -336,7 +340,7 @@ function SheetView({
   const t = useT();
   const uiScale = useUiSpaceScale();
   const [active, setActive] = useState(0);
-  const sheet = sheets[active] ?? sheets[0];
+  const sheet = sheets.at(active) ?? sheets.at(0);
   if (!sheet) return <p className="m-auto text-sm text-muted-foreground">{t("library.preview.emptyDocument")}</p>;
   return (
     <div className="flex size-full min-h-0 flex-col overflow-hidden border-t border-border">
@@ -433,8 +437,9 @@ function SlideImage({ image, crop }: { image: Blob; crop?: SlideBox["crop"] }) {
   const attach = useCallback(
     (element: HTMLImageElement | null) => {
       if (!element) return;
+      const target = element;
       const url = URL.createObjectURL(image);
-      element.src = url;
+      target.src = url;
       return () => { URL.revokeObjectURL(url); };
     },
     [image],
@@ -571,8 +576,16 @@ export default function OfficeView({
     let cancelled = false;
     const run = () => parse(file, kind, name, contentType, thumbnail);
     (thumbnail ? queueParse(run, () => cancelled) : run()).then(
-      (parsed) => !cancelled && parsed && setState({ file, parsed }),
-      () => !cancelled && setState({ file, error: true }),
+      (parsed) => {
+        if (!cancelled && parsed) {
+          setState({ file, parsed });
+        }
+      },
+      () => {
+        if (!cancelled) {
+          setState({ file, error: true });
+        }
+      },
     );
     return () => {
       cancelled = true;

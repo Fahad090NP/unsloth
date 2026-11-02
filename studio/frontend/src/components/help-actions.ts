@@ -58,16 +58,16 @@ export function runHelpAction(action: HelpAction): void {
   switch (action) {
     case "help-documentation":
       openLink("https://unsloth.ai/docs");
-      return;
+      break;
     case "help-whats-new":
       openLink("https://unsloth.ai/docs/new/changelog");
-      return;
+      break;
     case "help-send-feedback":
       openLink("https://github.com/unslothai/unsloth/issues");
-      return;
+      break;
     case "help-keyboard-shortcuts":
     case "help-troubleshooting":
     case "help-system-status":
-      return;
+      break;
   }
 }

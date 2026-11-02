@@ -206,8 +206,10 @@ export function useHfDatasetSplits(
     }
 
     const controller = new AbortController();
-    setIsLoading(true);
-    setError(null);
+    queueMicrotask(() => {
+      setIsLoading(true);
+      setError(null);
+    });
 
     loadHfDatasetSplits(
       {

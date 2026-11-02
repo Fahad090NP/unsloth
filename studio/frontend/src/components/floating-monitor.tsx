@@ -563,7 +563,9 @@ export function FloatingMonitor() {
     }
     const panel = document.querySelector('[data-slot="chat-settings-panel"]');
     if (!panel) {
-      setPaintedSettingsWidth(0);
+      queueMicrotask(() => {
+        setPaintedSettingsWidth(0);
+      });
       return;
     }
     const measure = () => {

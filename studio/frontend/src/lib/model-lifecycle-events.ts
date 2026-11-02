@@ -49,7 +49,7 @@ export function subscribeModelLifecycle(
   if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
     const detail = (event as CustomEvent<ModelLifecycle>).detail;
-    if (detail.runtime) onChange(detail);
+    onChange(detail);
   };
   window.addEventListener(MODEL_LIFECYCLE_EVENT, handler);
   return () => { window.removeEventListener(MODEL_LIFECYCLE_EVENT, handler); };

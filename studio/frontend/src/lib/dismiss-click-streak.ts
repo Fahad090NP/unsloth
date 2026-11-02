@@ -72,7 +72,7 @@ function selectAt(event: MouseEvent, target: Element | null): Extend | null {
   // Native selection never starts in unselectable text or outside the pressed element.
   if (
     !anchor ||
-    !target?.contains(anchor.startContainer) ||
+    !target.contains(anchor.startContainer) ||
     getComputedStyle(target).userSelect === "none"
   ) {
     return null;
