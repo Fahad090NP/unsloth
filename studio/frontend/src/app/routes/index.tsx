@@ -11,7 +11,7 @@ export const Route = createRoute({
   path: "/",
   beforeLoad: async () => {
     await requireAuth();
-    throw redirect({ to: getPostAuthRoute() });
+    return redirect({ to: getPostAuthRoute() });
   },
   component: () => null,
 });

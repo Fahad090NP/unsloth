@@ -26,6 +26,7 @@ function SkillIcon({
   strokeWidth: _strokeWidth,
   ...props
 }: ComponentProps<"svg">) {
+  void _strokeWidth;
   return <HugeiconsIcon icon={Scroll01Icon} {...props} />;
 }
 

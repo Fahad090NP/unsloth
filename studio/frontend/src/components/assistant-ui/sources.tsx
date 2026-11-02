@@ -97,6 +97,7 @@ function Source({
   onClick,
   ...props
 }: SourceProps) {
+  void _asChild;
   return (
     <Badge
       asChild

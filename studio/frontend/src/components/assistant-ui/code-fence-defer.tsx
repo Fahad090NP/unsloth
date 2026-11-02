@@ -87,7 +87,7 @@ export const fenceMode = (): FenceMode =>
 
 const readBuildFlag = (): string => {
   try {
-    const flag = import.meta.env.VITE_UNSLOTH_DEFER_FENCE_HIGHLIGHT;
+    const flag: unknown = import.meta.env.VITE_UNSLOTH_DEFER_FENCE_HIGHLIGHT;
     return typeof flag === "string" ? flag : "";
   } catch {
     return "";

@@ -82,7 +82,7 @@ export const copyImagePart = async (
   ) {
     throw new Error("Clipboard API is not available in this environment.");
   }
-  const clipboard: Clipboard | undefined = navigator.clipboard;
+  const clipboard = navigator.clipboard as Clipboard | undefined;
   if (!clipboard) {
     throw new Error("Clipboard API is not available in this environment.");
   }

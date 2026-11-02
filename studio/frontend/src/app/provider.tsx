@@ -73,6 +73,7 @@ import {
   watchThreadScrollbarGutter,
 } from "./low-device-scale";
 import { MotionConfig } from "motion/react";
+import type * as TauriWindowApi from "@tauri-apps/api/window";
 import {
   type CSSProperties,
   type ReactNode,
@@ -109,7 +110,7 @@ interface AppProviderProps {
 }
 
 type TauriWindowMode = "setup" | "app";
-type WindowModule = typeof import("@tauri-apps/api/window");
+type WindowModule = typeof TauriWindowApi;
 type TauriWindow = Awaited<ReturnType<WindowModule["getCurrentWindow"]>>;
 type TauriMonitor = NonNullable<
   Awaited<ReturnType<WindowModule["currentMonitor"]>>
@@ -134,6 +135,11 @@ const STACK_SHADOW_GUTTER_BOTTOM_PAST_COMPOSER = `calc(${STACK_SHADOW_GUTTER_BOT
 function BlockingScreenFlag() {
   useDocumentFlag("data-blocking-screen-open", true);
   return null;
+}
+
+// Void-typed UI callbacks wrap async workflows that report failures through their own state.
+function runInBackground(promise: Promise<unknown>): void {
+  promise.catch(() => undefined);
 }
 
 // macos page zoom does not change dpr; windows already includes zoom in its dpr.
@@ -547,8 +553,8 @@ function TauriUpdateLayer({
       logs={update.logs}
       progress={update.progress}
       error={update.error}
-      onRetry={update.retryUpdate}
-      onSkipRestart={update.skipAndRestart}
+      onRetry={() => { runInBackground(update.retryUpdate()); }}
+      onSkipRestart={() => { runInBackground(update.skipAndRestart()); }}
       onCopyDiagnostics={update.copyDiagnostics}
     />
   ) : (
@@ -578,7 +584,7 @@ function TauriUpdateLayer({
         manualReleaseUrl={update.manualReleaseUrl}
         releasePageUrl={update.releasePageUrl}
         positioned={false}
-        onInstall={update.installUpdate}
+        onInstall={() => { runInBackground(update.installUpdate()); }}
         onDismiss={update.dismiss}
         onCopyDiagnostics={update.copyDiagnostics}
       />
@@ -658,10 +664,13 @@ function DesktopChromeVarsEffect({
 }) {
   useEffect(() => {
     const el = document.documentElement;
-    const set = (name: string, value: string | null) =>
-      value === null
-        ? el.style.removeProperty(name)
-        : el.style.setProperty(name, value);
+    const set = (name: string, value: string | null) => {
+      if (value === null) {
+        el.style.removeProperty(name);
+      } else {
+        el.style.setProperty(name, value);
+      }
+    };
     set("--studio-custom-titlebar-height", usesCustomTitlebar ? "34px" : null);
     set(
       "--studio-mac-titlebar-height",
@@ -718,7 +727,9 @@ function TauriWrapper({ children }: { children: ReactNode }) {
 
   // Manual repair reruns the installer so a CPU-only venv is rebuilt; via ref since startRepair churns.
   const startRepairRef = useRef(startRepair);
-  startRepairRef.current = startRepair;
+  useEffect(() => {
+    startRepairRef.current = startRepair;
+  }, [startRepair]);
   const [upgradingToFull, setUpgradingToFull] = useState(false);
   const repairController = useMemo(
     () => ({
@@ -741,6 +752,8 @@ function TauriWrapper({ children }: { children: ReactNode }) {
   const [appShellReady, setAppShellReady] = useState(false);
   const [updateScreenShown, setUpdateScreenShown] = useState(false);
   const canMountApp = status === "running" && desktopAuthReady;
+  // Reset during render (like upgradingToFull above): a backend restart must re-wait for the shell.
+  if (!canMountApp && appShellReady) setAppShellReady(false);
   useEffect(() => {
     if (!isTauri) return;
     setDesktopShellReady(canMountApp && appShellReady);
@@ -751,11 +764,7 @@ function TauriWrapper({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isTauri) return;
-    if (!canMountApp) {
-      setAppShellReady(false);
-      return;
-    }
-    if (appShellReady) return;
+    if (!canMountApp || appShellReady) return;
     // A failed chunk must not strand the user behind the splash; never bypass credential auth.
     const timeout = window.setTimeout(() => { setAppShellReady(true); }, 15_000);
     return () => { window.clearTimeout(timeout); };
@@ -776,28 +785,30 @@ function TauriWrapper({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isTauri) return;
-    let disposed = false;
+    const lifecycle = { disposed: false };
     let stopListening: (() => void) | undefined;
 
-    void wasLaunchedHidden().then(async (hiddenAtLaunch) => {
-      if (!hiddenAtLaunch || disposed) return;
-      const { getCurrentWindow } = await import("@tauri-apps/api/window");
-      const unlisten = await getCurrentWindow().onFocusChanged(
-        ({ payload }) => {
-          if (!payload || disposed) return;
-          stopListening?.();
-          stopListening = undefined;
-          launchedHidden = Promise.resolve(false);
-          appliedWindowModeRef.current = null;
-          setWindowRevealRevision((revision) => revision + 1);
-        },
-      );
-      if (disposed) unlisten();
-      else stopListening = unlisten;
-    });
+    wasLaunchedHidden()
+      .then(async (hiddenAtLaunch) => {
+        if (!hiddenAtLaunch || lifecycle.disposed) return;
+        const { getCurrentWindow } = await import("@tauri-apps/api/window");
+        const unlisten = await getCurrentWindow().onFocusChanged(
+          ({ payload }) => {
+            if (!payload || lifecycle.disposed) return;
+            stopListening?.();
+            stopListening = undefined;
+            launchedHidden = Promise.resolve(false);
+            appliedWindowModeRef.current = null;
+            setWindowRevealRevision((revision) => revision + 1);
+          },
+        );
+        if (lifecycle.disposed) unlisten();
+        else stopListening = unlisten;
+      })
+      .catch(() => undefined);
 
     return () => {
-      disposed = true;
+      lifecycle.disposed = true;
       stopListening?.();
     };
   }, []);
@@ -859,10 +870,7 @@ function TauriWrapper({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!isTauri) {
-      setDesktopAuthReady(true);
-      return;
-    }
+    if (!isTauri) return;
     if (status !== "running") {
       setDesktopAuthReady(false);
       setDesktopAuthRetry(0);
@@ -882,7 +890,7 @@ function TauriWrapper({ children }: { children: ReactNode }) {
           if (!disposed) setDesktopAuthRetry((value) => value + 1);
         }, 500);
       }
-    });
+    }).catch(() => undefined);
 
     return () => {
       disposed = true;
@@ -1015,10 +1023,10 @@ function TauriWrapper({ children }: { children: ReactNode }) {
             startupMessage={startupMessage}
             elevationPackages={elevationPackages}
             upgradingToFull={upgradingToFull}
-            onInstall={startInstall}
+            onInstall={(options) => { runInBackground(startInstall(options)); }}
             onRetry={retry}
-            onRetryInstall={retryInstall}
-            onApproveElevation={approveElevation}
+            onRetryInstall={() => { runInBackground(retryInstall()); }}
+            onApproveElevation={() => { runInBackground(approveElevation()); }}
             onStartServer={retry}
             onCopyDiagnostics={copyDiagnostics}
           />

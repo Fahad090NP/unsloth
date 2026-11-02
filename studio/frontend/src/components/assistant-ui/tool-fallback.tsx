@@ -163,11 +163,6 @@ function ToolFallbackRoot({
 
 type ToolStatus = ToolCallMessagePartStatus["type"];
 
-// Not a tick: "Used tool" already says it finished.
-function completeToolIcon(name: string): ElementType {
-  return name.startsWith("browser_") ? InternetGlyph : WrenchGlyph;
-}
-
 // Stroke 2 like InternetGlyph beside it.
 function WrenchGlyph(props: { className?: string }) {
   return <HugeiconsIcon icon={WrenchIcon} strokeWidth={2} {...props} />;
@@ -180,12 +175,6 @@ function CancelCircleGlyph(props: { className?: string }) {
 function AlertCircleGlyph(props: { className?: string }) {
   return <HugeiconsIcon icon={AlertCircleIcon} {...props} />;
 }
-
-const statusIconMap: Record<Exclude<ToolStatus, "complete">, ElementType> = {
-  running: LoaderIcon,
-  incomplete: CancelCircleGlyph,
-  "requires-action": AlertCircleGlyph,
-};
 
 function renderStatusIcon(statusType: ToolStatus, name: string) {
   const dataSlot = "tool-fallback-trigger-icon";

@@ -386,7 +386,7 @@ export const Route = createRootRoute({
       !isChatOnlyAllowed(location.pathname) &&
       !(unmeasured && waitsOutUnknownVerdict(location.pathname))
     ) {
-      throw redirect({ to: "/chat" });
+      return redirect({ to: "/chat" });
     }
   },
   component: RootLayout,

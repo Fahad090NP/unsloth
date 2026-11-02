@@ -409,17 +409,11 @@ class DocumentIndex {
           });
         }
         for (let n = 0; n < nodes.length - 1; n += 1) {
+          const nodeStart = nodes[n].position?.start.offset ?? 0;
+          const nextStart = nodes[n + 1].position?.start.offset ?? 0;
           const start =
-            n === 0
-              ? 0
-              : Math.max(
-                  0,
-                  nodes[n].position!.start.offset! - this.prefix.length,
-                );
-          const stop = Math.max(
-            0,
-            nodes[n + 1].position!.start.offset! - this.prefix.length,
-          );
+            n === 0 ? 0 : Math.max(0, nodeStart - this.prefix.length);
+          const stop = Math.max(0, nextStart - this.prefix.length);
           this.committed.push({
             start: this.offset + start,
             end: this.offset + stop,
@@ -615,7 +609,8 @@ export function cachedReasoningTranscriptIndex(
   const index = new ReasoningTranscriptIndex();
   indices.set(key, index);
   if (indices.size > INDEX_CACHE_ENTRIES) {
-    indices.delete(indices.keys().next().value!);
+    const oldest = indices.keys().next();
+    if (!oldest.done) indices.delete(oldest.value);
   }
   return index;
 }

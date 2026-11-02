@@ -566,8 +566,6 @@ const ComposerAttachmentCard: FC = () => {
 
 const SentAttachmentLayoutContext = createContext<SentAttachmentLayout>("list");
 
-const NoAttachment: FC = () => null;
-
 const SentImageTile: FC = () => {
   const layout = useContext(SentAttachmentLayoutContext);
   const attachmentId = useAuiState(({ attachment }) => attachment.id);

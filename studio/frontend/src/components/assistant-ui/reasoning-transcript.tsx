@@ -335,9 +335,10 @@ function CodeGroup({
   fragments: readonly ReasoningFragment[];
   streaming: boolean;
 }) {
-  const first = fragments[indices[0]];
+  const first: ReasoningFragment | undefined = fragments[indices[0]];
   const code = first?.code;
-  const last = fragments[indices[indices.length - 1]];
+  const last: ReasoningFragment | undefined =
+    fragments[indices[indices.length - 1]];
   const surface = useRef<HTMLDivElement>(null);
   const colour = useThinkingCodeColour(
     surface,

@@ -77,8 +77,11 @@ async function fetchAuthStatus(): Promise<AuthStatus> {
   return await request;
 }
 
-function authRedirect(to: "/login" | "/change-password"): never {
-  throw redirect({ to });
+function authRedirect(to: string): never {
+  // TanStack Router performs the redirect by throwing this response itself.
+  redirect({ to, throw: true });
+  // Unreachable; keeps the `never` contract for callers.
+  throw new Error("redirect() did not throw");
 }
 
 export async function requireAuth(): Promise<void> {
@@ -108,22 +111,22 @@ export async function requireAuth(): Promise<void> {
 
 export async function requireGuest(): Promise<void> {
   if (isTauri && !isTauriLoginRequired()) {
-    throw redirect({ to: "/chat" });
+    authRedirect("/chat");
   }
   if (!(await hasActiveSession())) return;
   await fetchAuthStatus();
-  throw redirect({ to: getPostAuthRoute() });
+  authRedirect(getPostAuthRoute());
 }
 
 export async function requirePasswordChangeFlow(): Promise<void> {
   if (isTauri && !isTauriLoginRequired()) {
-    throw redirect({ to: "/chat" });
+    authRedirect("/chat");
   }
 
   const status = await fetchAuthStatus();
   if (status.requires_password_change || mustChangePassword()) return;
   if (await hasActiveSession()) {
-    throw redirect({ to: getPostAuthRoute() });
+    authRedirect(getPostAuthRoute());
   }
   authRedirect(status.initialized ? "/login" : "/change-password");
 }

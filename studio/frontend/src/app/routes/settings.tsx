@@ -15,7 +15,7 @@ export const Route = createRoute({
   beforeLoad: async () => {
     await requireAuth();
     useSettingsDialogStore.getState().openDialog();
-    throw redirect({ to: getPostAuthRoute() });
+    return redirect({ to: getPostAuthRoute() });
   },
   component: () => null,
 });

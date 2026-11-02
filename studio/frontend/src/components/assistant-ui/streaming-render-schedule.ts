@@ -372,7 +372,11 @@ const createRepairParity = (
 
 // Keep every link definition in the live tail: marked resolves them document-wide, so a
 // retained one would be lexed apart. Same test as `documentProse`.
-function updateLinkDefinitionParity(parity: RepairParity, text: string): void {
+function updateLinkDefinitionParity(
+  parityInput: RepairParity,
+  text: string,
+): void {
+  const parity = parityInput;
   if (!isCodeBlock(text) && LINK_DEFINITION_LINE_RE.test(text)) {
     parity.linkDefinition = true;
   }
@@ -470,10 +474,11 @@ const isLatexMathState = (state: EmphasisMathState): boolean =>
 // Incremental version of remend's per-marker math scan; runs before fence handling because
 // remend's math pass ignores fences.
 function updateEmphasisMathParity(
-  parity: RepairParity,
+  parityInput: RepairParity,
   text: string,
   index: number,
 ): number {
+  const parity = parityInput;
   if (text[index] === "\\") {
     // The escape wins: `\$` is a literal dollar in any scan state.
     if (text[index + 1] === "$") {
@@ -605,10 +610,11 @@ function isSingleUnderscoreCandidate(
 
 // remend decides closers from document-wide parity, so a retained prefix must end neutral.
 function updateAsteriskParity(
-  parity: RepairParity,
+  parityInput: RepairParity,
   text: string,
   index: number,
 ): number {
+  const parity = parityInput;
   if (isSingleAsteriskCandidate(parity, text, index)) {
     parity.singleAsteriskCandidate = true;
     parity.firstSingleAsteriskCandidate ??= parity.emphasisInlineCode
@@ -632,10 +638,11 @@ function updateAsteriskParity(
 }
 
 function updateUnderscoreParity(
-  parity: RepairParity,
+  parityInput: RepairParity,
   text: string,
   index: number,
 ): number {
+  const parity = parityInput;
   if (isSingleUnderscoreCandidate(parity, text, index)) {
     parity.singleUnderscoreCandidate = true;
     parity.firstSingleUnderscoreCandidate ??= parity.emphasisInlineCode
@@ -656,10 +663,11 @@ function updateUnderscoreParity(
 // remend locates `**` with a raw indexOf but counts pairs outside fences only, so a fenced `**`
 // seeds the bold context without reaching the counter.
 function recordBoldMarker(
-  parity: RepairParity,
+  parityInput: RepairParity,
   text: string,
   index: number,
 ): void {
+  const parity = parityInput;
   if (text[index] === "*" && text[index + 1] === "*") {
     parity.boldCandidate = true;
     parity.firstBoldOrSingleUnderscore ??= "bold";
@@ -667,7 +675,8 @@ function recordBoldMarker(
 }
 
 // remend completes a dangling link at the document end, so an unmatched bracket blocks retention.
-function updateBracketDepth(parity: RepairParity, character: string): void {
+function updateBracketDepth(parityInput: RepairParity, character: string): void {
+  const parity = parityInput;
   if (character === "[") {
     parity.bracketDepth += 1;
   } else if (character === "]" && parity.bracketDepth > 0) {
@@ -677,10 +686,11 @@ function updateBracketDepth(parity: RepairParity, character: string): void {
 
 // remend consumes an escaped backtick before testing for a fence.
 function skipEscapeOrFence(
-  parity: RepairParity,
+  parityInput: RepairParity,
   text: string,
   index: number,
 ): number {
+  const parity = parityInput;
   if (text[index] === "\\" && text[index + 1] === "`") {
     return index + 1;
   }
@@ -693,15 +703,20 @@ function skipEscapeOrFence(
 
 // Mirrors remend: non-asterisk, non-word chars clear the in-word chain, only outside a fence.
 function clearInWordAsteriskChain(
-  parity: RepairParity,
+  parityInput: RepairParity,
   character: string | undefined,
 ): void {
+  const parity = parityInput;
   if (!parity.boldFence && character !== "*" && !isWordCharacter(character)) {
     parity.inWordAsteriskChain = false;
   }
 }
 
-function updateEmphasisParity(parity: RepairParity, text: string): void {
+function updateEmphasisParity(
+  parityInput: RepairParity,
+  text: string,
+): void {
+  const parity = parityInput;
   for (let index = 0; index < text.length; index += 1) {
     // Cleared before the multi-character skips: they all start on non-word characters.
     clearInWordAsteriskChain(parity, text[index]);
@@ -732,7 +747,11 @@ function updateEmphasisParity(parity: RepairParity, text: string): void {
   }
 }
 
-function updateTripleAsteriskParity(parity: RepairParity, text: string): void {
+function updateTripleAsteriskParity(
+  parityInput: RepairParity,
+  text: string,
+): void {
+  const parity = parityInput;
   let inFence = false;
   let runLength = 0;
   const finishRun = () => {
@@ -755,7 +774,11 @@ function updateTripleAsteriskParity(parity: RepairParity, text: string): void {
   finishRun();
 }
 
-function updateInlineCodeParity(parity: RepairParity, text: string): void {
+function updateInlineCodeParity(
+  parityInput: RepairParity,
+  text: string,
+): void {
+  const parity = parityInput;
   for (let index = 0; index < text.length; index += 1) {
     if (text[index] === "\\" && text[index + 1] === "`") {
       index += 1;
@@ -767,7 +790,11 @@ function updateInlineCodeParity(parity: RepairParity, text: string): void {
   }
 }
 
-function updateStrikethroughParity(parity: RepairParity, text: string): void {
+function updateStrikethroughParity(
+  parityInput: RepairParity,
+  text: string,
+): void {
+  const parity = parityInput;
   const strikeMarkers = text.match(/~~/g)?.length ?? 0;
   if (strikeMarkers % 2 === 1) {
     parity.strikethrough = !parity.strikethrough;
@@ -775,7 +802,11 @@ function updateStrikethroughParity(parity: RepairParity, text: string): void {
 }
 
 // Unlike remend, count to text.length: retained block boundaries are interior.
-function updateDisplayMathParity(parity: RepairParity, text: string): void {
+function updateDisplayMathParity(
+  parityInput: RepairParity,
+  text: string,
+): void {
+  const parity = parityInput;
   for (let index = 0; index < text.length; index += 1) {
     if (text[index] === "`" && !isTripleBacktick(text, index)) {
       parity.displayMathInlineCode = !parity.displayMathInlineCode;
@@ -792,7 +823,11 @@ function updateDisplayMathParity(parity: RepairParity, text: string): void {
   }
 }
 
-function updateInlineMathParity(parity: RepairParity, text: string): void {
+function updateInlineMathParity(
+  parityInput: RepairParity,
+  text: string,
+): void {
+  const parity = parityInput;
   for (let index = 0; index < text.length; index += 1) {
     if (text[index] === "\\") {
       index += 1;
