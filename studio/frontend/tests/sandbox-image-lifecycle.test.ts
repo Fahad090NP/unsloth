@@ -56,7 +56,7 @@ function imageHook() {
     useState: (initial: unknown) => {
       const i = cursor++;
       if (!(i in slots))
-        slots[i] = typeof initial === "function" ? initial() : initial;
+        slots[i] = typeof initial === "function" ? (initial as () => unknown)() : initial;
       return [
         slots[i],
         (value: unknown) => {

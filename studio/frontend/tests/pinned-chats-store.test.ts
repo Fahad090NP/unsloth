@@ -28,6 +28,13 @@ test("pins made before the sync runtime binds are replayed into it, and sign-out
   setPinnedChatsActions(null);
 });
 
+type PinnedChatsStoreModule = {
+  usePinnedChatsStore: { getState: () => { togglePin: (id: string) => void } };
+  setPinnedChatsActions: (
+    actions: { setPinned: (ids: string[], pinned: boolean) => void },
+  ) => void;
+};
+
 test("a pin made before the runtime binds survives a reload", async () => {
   const values = new Map<string, string>();
   const storage = {
@@ -38,9 +45,9 @@ test("a pin made before the runtime binds survives a reload", async () => {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
   Object.defineProperty(globalThis, "localStorage", { value: storage, configurable: true });
   try {
-    const before = await import(`${STORE}?page=1`);
+    const before = (await import(`${STORE}?page=1`)) as PinnedChatsStoreModule;
     before.usePinnedChatsStore.getState().togglePin("early");
-    const after = await import(`${STORE}?page=2`);
+    const after = (await import(`${STORE}?page=2`)) as PinnedChatsStoreModule;
     const calls: [string[], boolean][] = [];
     after.setPinnedChatsActions({
       setPinned: (ids: string[], pinned: boolean) => calls.push([ids, pinned]),

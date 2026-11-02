@@ -39,7 +39,7 @@ test("parses real combined bulk exports with titles and separators", async () =>
   ];
   const combined = await buildNamedConversationsMarkdown(
     conversations,
-    async (id) => buildConversationMarkdown(messages[id === "first" ? 0 : 1]),
+    async (id) => { await Promise.resolve(); return buildConversationMarkdown(messages[id === "first" ? 0 : 1]); },
   );
   assert.deepEqual(parseConversationMarkdownDocument(combined, "export"), [
     { title: "First chat", messages: messages[0] },
@@ -76,7 +76,7 @@ for (const content of [
         { id: "first", title: "First" },
         { id: "second", title: "Second" },
       ],
-      async () => exported,
+      async () => { await Promise.resolve(); return exported; },
     );
     assert.deepEqual(parseConversationMarkdownDocument(combined, "chat"), [
       { title: "First", messages },
@@ -115,7 +115,7 @@ for (const content of [
       { role: "assistant", content: content.replace(/\r\n?/g, "\n") },
     ];
     const build = createConversationMarkdownBuilder({
-      loadMessages: async () => messages,
+      loadMessages: async () => { await Promise.resolve(); return messages; },
       renderMessage: (message) => message.content,
     });
     const single = await build("first");
@@ -141,9 +141,9 @@ for (const content of [
 
 test("rejects damaged framed exports rather than importing partial messages", async () => {
   const build = createConversationMarkdownBuilder({
-    loadMessages: async () => [
+    loadMessages: async () => { await Promise.resolve(); return [
       { role: "assistant", content: "A complete answer." },
-    ],
+    ]; },
     renderMessage: (message) => message.content,
   });
   const exported = await build("chat");

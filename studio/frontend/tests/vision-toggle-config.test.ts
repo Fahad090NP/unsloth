@@ -59,7 +59,7 @@ test("vision is on by default", () => {
 test("a blob written before the toggle existed still loads", () => {
   // Genuinely absent, as an older build's JSON has it.
   const { disableVision: _omitted, ...legacy } = DEFAULT_PER_MODEL_CONFIG;
-  void _omitted;
+  _omitted;
   assert.equal(
     normalizePerModelConfig(legacy as Record<string, unknown>).disableVision,
     false,
@@ -114,7 +114,7 @@ test("an older build cannot reach a vision-off record and erase it", () => {
       typeof map[key].version === "number" ? (map[key].version) : 0;
     if (version > PRE_VISION_CEILING) continue;
     const { disableVision: _dropped, ...known } = map[key];
-    void _dropped;
+    _dropped;
     map[key] = known;
     rewrote = true;
   }

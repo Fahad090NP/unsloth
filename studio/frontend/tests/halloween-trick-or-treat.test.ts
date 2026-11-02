@@ -8,7 +8,7 @@ import test from "node:test";
 const store = new Map<string, string>();
 const storage = {
   getItem: (k: string) => store.get(k) ?? null,
-  setItem: (k: string, v: string) => void store.set(k, String(v)),
+  setItem: (k: string, v: string) => void store.set(k, v),
   removeItem: (k: string) => void store.delete(k),
   clear: () => { store.clear(); },
   key: (i: number) => [...store.keys()][i] ?? null,

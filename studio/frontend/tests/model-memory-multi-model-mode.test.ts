@@ -24,7 +24,7 @@ const requests: { method: string; body: unknown }[] = [];
 globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
   requests.push({
     method: init?.method ?? "GET",
-    body: init?.body ? JSON.parse(String(init.body as string)) : undefined,
+    body: init?.body ? JSON.parse(init.body as string) : undefined,
   });
   return Promise.resolve(new Response(JSON.stringify(nextBody), { status: 200 }));
 });

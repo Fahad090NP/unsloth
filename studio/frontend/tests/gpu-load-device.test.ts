@@ -57,5 +57,5 @@ test("an older backend without visible_ordinal still falls back to the lowest in
 });
 
 test("an empty inventory has no load device", () => {
-  assert.equal(pickLoadDevice([]) as unknown, undefined);
+  assert.equal(pickLoadDevice([] as GpuDevice[]) as unknown, undefined);
 });

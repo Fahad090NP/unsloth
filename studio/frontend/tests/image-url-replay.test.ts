@@ -31,11 +31,11 @@ const serializeJs = ts.transpileModule(
   { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
 ).outputText;
 
-const { toOpenAIMessages } = new Function(serializeJs)() as {
+const { toOpenAIMessages } = (new Function(serializeJs) as () => {
   toOpenAIMessages: (
     message: unknown,
   ) => { role: string; content: unknown }[];
-};
+})();
 
 function replayedImageUrl(image: string): string {
   const [serialized] = toOpenAIMessages({

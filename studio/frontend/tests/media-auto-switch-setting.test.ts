@@ -39,7 +39,7 @@ let nextBody: Record<string, unknown> = { ...API };
 const bodies: string[] = [];
 
 globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
-  if (init?.body) bodies.push(String(init.body as string));
+  if (init?.body) bodies.push(init.body as string);
   return Promise.resolve(new Response(JSON.stringify(nextBody), {
     status: 200,
     headers: { "Content-Type": "application/json" },

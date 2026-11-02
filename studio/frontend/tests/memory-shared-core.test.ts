@@ -64,7 +64,9 @@ test("the fit threshold and the pressure ramp stay distinct", () => {
   assert.equal(MEMORY_FIT_TIGHT_RATIO, 0.85);
   assert.equal(PRESSURE_HIGH_PCT, 80);
   assert.equal(PRESSURE_CRITICAL_PCT, 90);
-  assert.ok(PRESSURE_HIGH_PCT < PRESSURE_CRITICAL_PCT);
+  const highPct: number = PRESSURE_HIGH_PCT;
+  const criticalPct: number = PRESSURE_CRITICAL_PCT;
+  assert.ok(highPct < criticalPct);
 });
 
 test("a figure that does not exist is never a confident fit", () => {

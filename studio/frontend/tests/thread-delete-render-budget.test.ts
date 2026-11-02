@@ -11,7 +11,7 @@ import { readSrc } from "./helpers/kit.ts";
 const thread = readSrc("components/assistant-ui/thread.tsx");
 
 function block(start: string): string {
-  const [, rest] = thread.split(start, 2);
+  const rest = thread.split(start, 2).at(1);
   assert.ok(rest !== undefined, `thread.tsx no longer contains ${start}`);
   const [body] = (rest).split("\n};", 1);
   return body;

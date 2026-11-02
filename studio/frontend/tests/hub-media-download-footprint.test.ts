@@ -20,7 +20,7 @@ const requests: { url: string; body: Record<string, unknown> }[] = [];
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
   requests.push({
     url: String(input as string),
-    body: JSON.parse(String(init?.body ?? "{}" as string)),
+    body: JSON.parse((init?.body ?? "{}") as string) as Record<string, unknown>,
   });
   return Promise.resolve(new Response(JSON.stringify(planBody), {
     status: 200,

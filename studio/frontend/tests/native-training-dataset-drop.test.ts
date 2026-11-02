@@ -69,7 +69,7 @@ test("redirects Markdown documents across native path formats", () => {
     const dropped = classifyNativeTrainingDatasetDrop([path]);
     assert.equal(dropped.kind, "document", path);
     assert.equal(
-      dropped.kind === "document" ? dropped.filename.toLowerCase() : null,
+      dropped.filename.toLowerCase(),
       "notes.md",
       path,
     );

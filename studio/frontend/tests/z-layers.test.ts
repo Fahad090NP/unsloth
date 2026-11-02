@@ -36,13 +36,13 @@ test("every layer is listed in the order", () => {
 });
 
 test("floating panels paint over the notification stack", () => {
-  assert.ok(Z_LAYER.FLOATING_PANEL > Z_LAYER.OVERLAY_STACK);
+  assert.ok((Z_LAYER.FLOATING_PANEL as number) > (Z_LAYER.OVERLAY_STACK as number));
 });
 
 // The stack reaches the bottom edge and is pointer-active while scrolling, so grips must outrank it.
 test("the window's bottom resize grips outrank the notification stack", () => {
-  assert.ok(Z_LAYER.WINDOW_RESIZE_EDGE > Z_LAYER.OVERLAY_STACK);
-  assert.ok(Z_LAYER.WINDOW_RESIZE_EDGE < Z_LAYER.FLOATING_PANEL);
+  assert.ok((Z_LAYER.WINDOW_RESIZE_EDGE as number) > (Z_LAYER.OVERLAY_STACK as number));
+  assert.ok((Z_LAYER.WINDOW_RESIZE_EDGE as number) < (Z_LAYER.FLOATING_PANEL as number));
 });
 
 // In-page surfaces use Tailwind's scale up to 120; named layers stay clear of that band.

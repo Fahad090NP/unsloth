@@ -68,7 +68,7 @@ test("the gate never closes on an arrival the strip would cut", () => {
   ]) {
     drive(`two fragments gap=${gap}`, [
       `start ${filler(gap)}\${first}`,
-      "\${second}",
+      "$" + "{second}",
     ]);
   }
 
@@ -95,13 +95,13 @@ test("the gate never closes on an arrival the strip would cut", () => {
     drive(`reseed edge back=${back}`, [
       `\${outer${filler(Math.max(0, back))}`,
       "}",
-      "\${inner}",
+      "$" + "{inner}",
       "  ",
     ]);
   }
 
   for (const gap of [0, W, 2 * W, 3 * W]) {
-    drive("resumed", ["\${b}", "  "], `resumed ${filler(gap)}\${a}`);
+    drive("resumed", ["$" + "{b}", "  "], `resumed ${filler(gap)}\${a}`);
   }
 
   assert.deepEqual(
@@ -130,9 +130,9 @@ test("randomised streams far longer than the reseed window", () => {
     "$",
     "{",
     "}",
-    "\${",
+    "${",
     "}$",
-    "\${}",
+    "${}",
     "x".repeat(50),
     "y".repeat(700),
   ];

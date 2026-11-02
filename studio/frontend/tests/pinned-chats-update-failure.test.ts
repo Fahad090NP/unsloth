@@ -72,9 +72,10 @@ function stalled(init?: RequestInit): Response {
 }
 
 type Handler = (url: string, init?: RequestInit) => Promise<Response>;
+const noneYet = (count: number) => count === 0;
 let handle: Handler = () => Promise.resolve(json({}));
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
-  handle(String(input as string), init));
+  handle(input as string, init));
 
 /** The pins routes over an in-memory list; `down` makes every request fail like authFetch would. */
 function pinsServer() {
@@ -95,7 +96,10 @@ function pinsServer() {
     }
     if (url.endsWith("/api/chat/pins")) return json({ pinnedIds: server.pins });
     if (url.endsWith("/api/chat/settings/compare-and-set")) {
-      const body = JSON.parse(String(init?.body as string));
+      const body = JSON.parse(init?.body as string) as {
+        expected: { pinnedChatIds?: string[] };
+        patch: { pinnedChatIds: string[] };
+      };
       const applied =
         JSON.stringify(body.expected.pinnedChatIds ?? server.pins) ===
         JSON.stringify(server.pins);
@@ -199,7 +203,7 @@ async function timedOutAfterHeaders(
   const leave = followDesktopUpdateScreen(true, false, noResync);
   try {
     const failure = call(api).then(() => assert.fail("expected a timeout"), (e: unknown) => e);
-    while (stalledRequests === 0) await new Promise((r) => setImmediate(r));
+    while (noneYet(stalledRequests)) await new Promise((r) => setImmediate(r));
     t.mock.timers.tick(10_000);
     return await failure;
   } finally {
@@ -305,7 +309,7 @@ test("a queued write that times out after 200 headers stays silent with the edit
       runtime.sync.setPinned(["a"], true),
       runtime.sync.setPinned(["b"], true),
     ]);
-    while (stalledWrites === 0) await new Promise((r) => setImmediate(r));
+    while (noneYet(stalledWrites)) await new Promise((r) => setImmediate(r));
     t.mock.timers.tick(10_000);
     await settled;
   } finally {

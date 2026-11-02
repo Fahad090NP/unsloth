@@ -165,7 +165,11 @@ function harness(name = "ThreadContextUsageRecount") {
     useAuiState: (selector: (snapshot: { thread: typeof world.thread }) => unknown) => selector(world),
     usePromptQueueUI: (selector: (snapshot: { byThreadId: Record<string, never> }) => unknown) =>
       selector({ byThreadId: {} }),
-    useRef: (initial: unknown) => refs[hookIndex++] ??= { current: initial },
+    useRef: (initial: unknown) => {
+      const index = hookIndex++;
+      refs[index] ??= { current: initial };
+      return refs[index];
+    },
     useEffect: (effect: () => unknown, dependencies: readonly unknown[]) => {
       const index = hookIndex++;
       const previous = previousDeps[index];

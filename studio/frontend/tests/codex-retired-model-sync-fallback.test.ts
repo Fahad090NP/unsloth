@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { createServer, type ViteDevServer } from "vite";
+import type * as SyncExternalProviders from "../src/features/chat/sync-external-providers.ts";
 
 type Resolve = (
   providerType: string,
@@ -20,7 +21,7 @@ const SEED = ["gpt-5.4", "gpt-5.5"];
 
 before(async () => {
   vite = await createServer({ appType: "custom", server: { middlewareMode: true } });
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/sync-external-providers.ts")) as typeof import("../src/features/chat/sync-external-providers.ts");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/sync-external-providers.ts")) as typeof SyncExternalProviders;
   resolveSyncedModelIds = loaded.resolveSyncedModelIds as Resolve;
 });
 

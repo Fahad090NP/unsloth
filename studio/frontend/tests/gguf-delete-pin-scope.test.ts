@@ -13,11 +13,15 @@ function readSource(path: string) {
   return ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 }
 
-function compile(expression: string, context: Record<string, unknown>) {
+function compile<T>(expression: string, context: Record<string, unknown>): T {
   const js = ts.transpileModule(`const callback = ${expression};`, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },
   }).outputText;
-  return new Function(...Object.keys(context), js + "; return callback;")(...Object.values(context));
+  const build = new Function(
+    ...Object.keys(context),
+    js + "; return callback;",
+  ) as (...args: unknown[]) => T;
+  return build(...Object.values(context));
 }
 
 const helper = readSource("../src/features/model-picker/components/model-selector/reconcile-gguf-pins.ts");
@@ -28,7 +32,10 @@ function helperFunction(name: string) {
   assert.ok(declaration, name);
   return declaration.getText(helper).replace("export ", "");
 }
-const isChatGgufTask = compile(helperFunction("isChatGgufTask"), {});
+const isChatGgufTask = compile<(task: string | null | undefined) => boolean>(
+  helperFunction("isChatGgufTask"),
+  {},
+);
 const callbacks: { name: string; body: string; wholeRepo: boolean }[] = [];
 for (const path of [
   "../src/features/model-picker/components/model-selector/pickers.tsx",
@@ -66,13 +73,15 @@ for (const task of [null, "text-generation", "image-text-to-text", "text-to-imag
       };
       const unpinRepo = () => { pinned = []; };
       const usePinnedModelsStore = { getState: () => ({ pinned, togglePinned, unpinRepo }) };
-      const reconcile = compile(helperFunction("reconcileGgufPinsAfterDelete"), {
+      const reconcile = compile<
+        (targetRepoId: string, hfToken?: string) => Promise<void>
+      >(helperFunction("reconcileGgufPinsAfterDelete"), {
         fetchCachedGgufInventory: () => Promise.resolve(({ cached: [{ repo_id: repoId }], scan_confirmed: true })),
         listGgufVariants: () => Promise.resolve(({ variants: chat || wholeRepo ? [{ quant: surviving, downloaded: true, partial: false }] : [] })),
         usePinnedModelsStore, pinnedQuantEntries, modelIdsMatchForPicker, ggufVariantsMatchForPicker,
       });
       let reconciliations = 0;
-      const callback = compile(body, {
+      const callback = compile<() => Promise<void>>(body, {
         repoId, hfToken: "hf_fixture_token", pipelineTag: task,
         useHfTokenStore: { getState: () => ({ token: "hf_fixture_token" }) },
         v: { quant: deleted }, entry: { repoId, quant: deleted },
@@ -84,7 +93,11 @@ for (const task of [null, "text-generation", "image-text-to-text", "text-to-imag
         diffusionTaskById: new Map([[repoId.toLowerCase(), task]]),
         mediaPageForTask: (value: string | null) => value && !["text-generation", "image-text-to-text"].includes(value) ? "images" : null,
         isChatGgufTask, usePinnedModelsStore, pinKey, togglePinned, togglePinnedQuant: togglePinned, unpinRepo,
-        reconcileGgufPinsAfterDelete: async (...args: unknown[]) => { reconciliations++; assert.equal(args[1], "hf_fixture_token"); await reconcile(...args); },
+        reconcileGgufPinsAfterDelete: async (targetRepoId: string, hfToken?: string) => {
+          reconciliations++;
+          assert.equal(hfToken, "hf_fixture_token");
+          await reconcile(targetRepoId, hfToken);
+        },
         onDeleteVariant: () => Promise.resolve(), deleteCachedModel: () => Promise.resolve(), deleteCachedDataset: () => Promise.resolve(),
         refreshCachedLists: () => { return undefined; }, prunePinnedQuantValidation: () => { return undefined; }, setRefreshKey: () => { return undefined; },
         // Memoized On Device rows reach the picker's callbacks through its actions holder.

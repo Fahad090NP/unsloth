@@ -40,11 +40,18 @@ const MANIFEST: PreviewRuntimeManifest = {
   tailwind: "tailwind",
 };
 
+function bodyFor(
+  url: string,
+  overrides: Record<string, string>,
+): string | undefined {
+  return overrides[url] ?? BODIES[url];
+}
+
 function fetcher(overrides: Record<string, string> = {}) {
   const calls: string[] = [];
   const fetchBytes =  (url: string) => {
     calls.push(url);
-    const body = overrides[url] ?? BODIES[url];
+    const body = bodyFor(url, overrides);
     if (body === undefined) return Promise.reject(new Error("404"));
     return Promise.resolve(new TextEncoder().encode(body));
   };

@@ -37,6 +37,7 @@ export function resetStub({
 }
 
 export async function getInferenceStatus() {
+  await Promise.resolve();
   return {
     active_model: state.active,
     loaded: [...state.loaded],
@@ -55,6 +56,7 @@ export function isExternalModelId() {
 }
 
 export async function unloadModel(payload: UnloadPayload): Promise<void> {
+    await Promise.resolve();
   state.unloads.push(payload);
   if (state.generating && !payload.force_cancel_active) {
     throw new Error(
@@ -74,6 +76,7 @@ export async function confirmStopRunningChatsIfNeeded(
   effect: string,
   model?: string,
 ) {
+  await Promise.resolve();
   state.confirmCalls.push({ action, effect, model });
   const answer = state.generating
     ? state.confirmAnswer
@@ -91,19 +94,24 @@ export const useChatRuntimeStore = {
 };
 
 export async function getDiffusionStatus() {
+    await Promise.resolve();
   return { loaded: false };
 }
 export async function unloadDiffusionModel() {
+    await Promise.resolve();
   return { loaded: false };
 }
 export async function getVideoStatus() {
+    await Promise.resolve();
   return { loaded: false };
 }
 export async function unloadVideoModel() {
+    await Promise.resolve();
   return { loaded: false };
 }
 
 export async function unloadEmbeddingModel() {
+    await Promise.resolve();
   state.embeddingLoaded = false;
   return { backendLoaded: false };
 }

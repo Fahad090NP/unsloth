@@ -36,7 +36,16 @@ const compile = new Function(
   ts.transpileModule(declaration, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },
   }).outputText + "; return reconcileGgufPinsAfterDelete;",
-);
+) as (
+  listCachedGguf: unknown,
+  fetchCachedGgufInventory: unknown,
+  fetchCachedModelsInventory: unknown,
+  listGgufVariants: unknown,
+  pinnedQuantEntries: unknown,
+  usePinnedModelsStore: unknown,
+  modelIdsMatchForPicker: unknown,
+  ggufVariantsMatchForPicker: unknown,
+) => (repoId: string, hfToken?: string) => Promise<void>;
 
 for (const requested of ["Org/Model", "org/model"]) {
   for (const remaining of [

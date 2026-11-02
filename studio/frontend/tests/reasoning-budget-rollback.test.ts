@@ -2,6 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import test from "node:test";
 import { readSrc } from "./helpers/kit.ts";
 
@@ -15,12 +16,9 @@ interface State {
   loadedReasoningBudgetRequested: number | null;
   loadedReasoningBudgetMessageRequested: string | null;
 }
-const hydrate = new Function(
-  "previous",
-  "status",
-  "seedLoadParams",
-  "reasoningBudgetApplicable",
+const hydrate = vm.compileFunction(
   `return { ...previous, ${applier.slice(start, end)} };`,
+  ["previous", "status", "seedLoadParams", "reasoningBudgetApplicable"],
 ) as (
   previous: State,
   status: Record<string, unknown>,
@@ -34,9 +32,9 @@ const rollbackStart = runtime.indexOf(
 );
 const rollbackEnd = runtime.indexOf("// omit unset fields:", rollbackStart);
 assert.ok(rollbackStart >= 0 && rollbackEnd > rollbackStart);
-const rollback = new Function(
-  "rollbackState",
+const rollback = vm.compileFunction(
   `return { ${runtime.slice(rollbackStart, rollbackEnd)} };`,
+  ["rollbackState"],
 ) as (state: State) => {
   reasoning_budget: number;
   reasoning_budget_message: string;

@@ -18,7 +18,9 @@ const toPermission = (method: string) =>
 
 // A denied call rejects at runtime and sends setup down its resizable fallback.
 test("every window setter the frontend calls is granted", async () => {
-  const granted = JSON.parse(await readFile(CAPABILITIES, "utf8")).permissions;
+  const granted = (
+    JSON.parse(await readFile(CAPABILITIES, "utf8")) as { permissions: string[] }
+  ).permissions;
   const files = await readdir(SRC, { recursive: true });
   const used = new Set<string>();
   for (const file of files.filter((f) => SOURCE_FILE.test(f))) {

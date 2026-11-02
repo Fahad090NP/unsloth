@@ -96,7 +96,9 @@ function accountBrowser(account: string) {
     indexedDB: {
       deleteDatabase: () => {
         const request = {} as IDBOpenDBRequest;
-        queueMicrotask(() => request.onsuccess?.call(request, {} as IDBVersionChangeEvent));
+        queueMicrotask(() => {
+          request.onsuccess?.call(request, {} as IDBVersionChangeEvent);
+        });
         return request;
       },
     },

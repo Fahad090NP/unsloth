@@ -49,6 +49,7 @@ function fakeReact() {
     },
     useSyncExternalStore: (_subscribe: unknown, get: () => unknown) => get(),
   };
+  const isDirty = () => dirty;
   const render = <T>(hook: () => T): T => {
     let result!: T;
     for (let pass = 0; pass < 20; pass++) {
@@ -62,7 +63,7 @@ function fakeReact() {
         slot.cleanup = slot.pending() ?? undefined;
         slot.pending = undefined;
       }
-      if (!dirty) return result;
+      if (!isDirty()) return result;
     }
     throw new Error("render did not settle");
   };

@@ -5,6 +5,7 @@
 // release the guard while its replacement is in flight, or every tick fires a forced read.
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import test from "node:test";
 
 import { readSrcAsync } from "./helpers/kit.ts";
@@ -32,18 +33,20 @@ const STALL_MS = constant("VERDICT_POLL_STALL_MS");
 const POLL_MS = constant("VERDICT_UNKNOWN_POLL_MS");
 const FOLLOW_UP_MS = constant("INVENTORY_FOLLOW_UP_MS");
 
-const startPoll = new Function(
-  "window",
-  "Date",
-  "fetchDeviceType",
-  "capabilitiesUnknown",
-  "VERDICT_POLL_STALL_MS",
-  "VERDICT_UNKNOWN_POLL_MS",
-  "SELF_HEAL_POLL_MS",
-  // Unused in this scenario but needed so the lifted block evaluates.
-  "selfHealSettled",
-  "INVENTORY_FOLLOW_UP_MS",
+const startPoll = vm.compileFunction(
   body,
+  [
+    "window",
+    "Date",
+    "fetchDeviceType",
+    "capabilitiesUnknown",
+    "VERDICT_POLL_STALL_MS",
+    "VERDICT_UNKNOWN_POLL_MS",
+    "SELF_HEAL_POLL_MS",
+    // Unused in this scenario but needed so the lifted block evaluates.
+    "selfHealSettled",
+    "INVENTORY_FOLLOW_UP_MS",
+  ],
 ) as (
   window: {
     setInterval: (fn: () => void, ms: number) => number;

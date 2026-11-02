@@ -18,9 +18,9 @@ let nextStatus = 200;
 let nextBody: unknown = {};
 
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-  const url = String(
-    typeof input === "string" ? input : (input as Request).url,
-  );
+  await Promise.resolve();
+  const url =
+    typeof input === "string" ? input : (input as Request).url;
   calls.push(`${init?.method ?? "GET"} ${url}`);
   return new Response(JSON.stringify(nextBody), {
     status: nextStatus,

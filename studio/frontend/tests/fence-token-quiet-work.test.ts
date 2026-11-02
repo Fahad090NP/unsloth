@@ -17,7 +17,7 @@ const compiled = ts.transpileModule(hookSource, { compilerOptions: { target: ts.
 function harness(initial: Partial<Props> = {}) {
   const slots: unknown[] = [];
   const effects = new Map<number, Effect>();
-  let pending: { index: number; deps: unknown[]; effect: () => (() => void) | void }[] = [];
+  let pending: { index: number; deps: unknown[]; effect: () => (() => void) | undefined }[] = [];
   let cursor = 0;
   let dirty = false;
   let mounted = true;
@@ -57,7 +57,7 @@ function harness(initial: Partial<Props> = {}) {
       if (!previous || !same(previous.deps, deps)) slots[index] = { callback, deps };
       return (slots[index] as { callback: unknown }).callback;
     },
-    useLayoutEffect(effect: () => (() => void) | void, deps: unknown[]) {
+    useLayoutEffect(effect: () => (() => void) | undefined, deps: unknown[]) {
       const index = cursor++;
       const previous = effects.get(index);
       if (!previous || !same(previous.deps, deps)) pending.push({ index, deps, effect });

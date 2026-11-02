@@ -64,7 +64,7 @@ for (const supportsPageSwap of [true, false]) {
       styleSheets: ["/assets/index-abc123.css"],
     });
     let listener: (event: Partial<StorageEvent>) => void;
-    let incoming: ReturnType<typeof createEnvironment> | undefined;
+    let incoming: ReturnType<typeof createEnvironment>;
     const peer = {
       localStorage,
       sessionStorage: storage(outgoing.storage),
@@ -99,7 +99,7 @@ for (const supportsPageSwap of [true, false]) {
           return request;
         },
       },
-      location: { replace() {} },
+      location: { replace() { /* empty */ } },
     } as unknown as Window;
     await transitionBrowserAccount(
       { username: "bob", accountId: "b1" },

@@ -9,6 +9,8 @@ import { enhanceRestoreFor } from "../src/features/images/lib/prompt-enhance.ts"
 import { restoredInpaintMaskOptions } from "../src/features/images/lib/inpaint-options.ts";
 import { detailerNotApplied, restoredDetailer } from "../src/features/images/lib/detailer.ts";
 
+type RestoreSettings = (image: Record<string, unknown>, exact?: boolean) => void;
+
 function restoreSettingsWith(negativeCapable: boolean) {
   const source = readSrc("features/images/images-page.tsx");
   const tree = ts.createSourceFile(
@@ -70,9 +72,10 @@ function restoreSettingsWith(negativeCapable: boolean) {
             state[key as string] = args.length > 1 ? args : args[0];
           },
   });
-  const restore = new Function("scope", `with (scope) { ${outputText} }`)(
-    scope,
-  );
+  const compile = new Function("scope", `with (scope) { ${outputText} }`) as (
+    scope: unknown,
+  ) => RestoreSettings;
+  const restore = compile(scope);
   return { restore, state };
 }
 

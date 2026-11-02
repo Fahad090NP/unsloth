@@ -168,7 +168,8 @@ test("one Ctrl+wheel notch is one step, up zooms in, and a pause starts over", (
   // Deltas come in CSS pixels, which shrink as the zoom grows: at 200% a notch reads 50.
   assert.equal(step(wheel(-50, 5000), 2), 1);
   assert.equal(step(wheel(-25, 6000), 1), null);
-  assert.ok(WHEEL_ZOOM_STEP_PX <= 50);
+  const wheelZoomStepPx: number = WHEEL_ZOOM_STEP_PX;
+  assert.ok(wheelZoomStepPx <= 50);
 });
 
 test("only a vertical Ctrl+wheel without Alt or Meta zooms", () => {

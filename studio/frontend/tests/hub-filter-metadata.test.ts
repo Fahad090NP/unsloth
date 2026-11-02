@@ -20,9 +20,8 @@ function searchHarness(request: typeof fetch) {
     const i = index++;
     const cell = cells[i] as { deps: unknown[]; value: unknown } | undefined;
     if (
-      !cell ||
-      deps.length !== cell.deps.length ||
-      deps.some((dep, j) => !Object.is(dep, cell.deps[j]))
+      cell?.deps.length !== deps.length ||
+      deps.some((dep, j) => !Object.is(dep, cell?.deps[j]))
     ) {
       cells[i] = { deps, value: create() };
     }
@@ -58,6 +57,7 @@ function searchHarness(request: typeof fetch) {
       },
       "@huggingface/hub": {
         listModels: async function* () {
+          await Promise.resolve();
           yield* rows;
         },
       },
@@ -125,7 +125,7 @@ test("changing context bounds reuses configs instead of exhausting the Hub quota
   const hook = searchHarness((url) => {
     if (++requests > 2) return Promise.resolve(new Response(null, { status: 429 }));
     return Promise.resolve(Response.json({
-      max_position_embeddings: String(url as string).includes("/small/") ? 4096 : 32768,
+      max_position_embeddings: (url as string).includes("/small/") ? 4096 : 32768,
     }));
   });
   assert.deepEqual(await hook.search({ minContext: 2048 }), hook.rows);
@@ -138,7 +138,7 @@ test("changing context bounds reuses configs instead of exhausting the Hub quota
 test("a retry reuses successful configs but fetches the failed request again", async () => {
   const requests = new Map<string, number>();
   const hook = searchHarness((url) => {
-    const key = String(url as string);
+    const key = url as string;
     const count = (requests.get(key) ?? 0) + 1;
     requests.set(key, count);
     if (key.includes("/large/") && count === 1)
@@ -234,7 +234,7 @@ test("an aborted search cannot cache metadata that arrives after cancellation", 
 test("rows the list hides cost no metadata request", async () => {
   const requested: string[] = [];
   const hook = searchHarness((url) => {
-    requested.push(String(url as string));
+    requested.push(url as string);
     return Promise.resolve(Response.json({ max_position_embeddings: 32768 }));
   });
   const keepResult = (result: { id: string }) => result.id !== "unsloth/small";

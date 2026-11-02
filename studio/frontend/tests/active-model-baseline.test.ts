@@ -57,7 +57,7 @@ function configsEqual(persistedMode: string) {
     {
       "@/features/chat/stores/chat-runtime-store": {
         normalizeSpeculativeType: (value: string | null | undefined) =>
-          value == null || value === "" ? null : value.toLowerCase(),
+          value === null || value === undefined || value === "" ? null : value.toLowerCase(),
         readPersistedSpeculativeType: () => persistedMode,
       },
       "@/features/chat/presets/preset-policy": {},

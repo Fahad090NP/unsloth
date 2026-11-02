@@ -6,6 +6,14 @@ import test, { after } from "node:test";
 
 import { createServer } from "vite";
 
+import type { TrainingStartRequest } from "../src/features/training/types/api.ts";
+import type { TrainingConfigStore } from "../src/features/training/types/config.ts";
+
+type TrainingConfigStoreApi = {
+  getState: () => TrainingConfigStore;
+  setState: (state: Partial<TrainingConfigStore>) => void;
+};
+
 const values = new Map<string, string>();
 const storage = {
   getItem: (key: string) => values.get(key) ?? null,
@@ -67,12 +75,17 @@ const server = await createServer({
   logLevel: "silent",
   server: { middlewareMode: true },
 });
-const { useTrainingConfigStore } = await server.ssrLoadModule(
+const { useTrainingConfigStore } = (await server.ssrLoadModule(
   "/src/features/training/stores/training-config-store.ts",
-);
-const { buildTrainingStartPayload } = await server.ssrLoadModule(
+)) as { useTrainingConfigStore: TrainingConfigStoreApi };
+const { buildTrainingStartPayload } = (await server.ssrLoadModule(
   "/src/features/training/api/mappers.ts",
-);
+)) as {
+  buildTrainingStartPayload: (
+    state: TrainingConfigStore,
+    hfToken: string | null,
+  ) => TrainingStartRequest;
+};
 const hydratedState = useTrainingConfigStore.getState();
 const hydratedDatasetState = {
   browseDatasetSelection: hydratedState.browseDatasetSelection,
@@ -84,7 +97,7 @@ const hydratedDatasetState = {
 
 after(() => server.close());
 
-function resetState(overrides: Record<string, unknown>): void {
+function resetState(overrides: Partial<TrainingConfigStore>): void {
   useTrainingConfigStore.getState().reset();
   useTrainingConfigStore.setState(overrides);
 }

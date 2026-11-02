@@ -158,7 +158,7 @@ test("documents are an attachment drop, one or many", () => {
     "/docs/c.docx",
   ]);
   assert.equal(dropped.kind, "docs");
-  assert.equal(dropped.kind === "docs" ? dropped.paths.length : 0, 3);
+  assert.equal(dropped.paths.length, 3);
 });
 
 test("OpenDocument picker types are accepted by native drops", () => {
@@ -247,16 +247,14 @@ test("images route to chat vision attachments, one or many", () => {
     "/photos/icon.webp",
   ]);
   assert.equal(dropped.kind, "images");
-  assert.equal(dropped.kind === "images" ? dropped.paths.length : 0, 3);
+  assert.equal(dropped.paths.length, 3);
 });
 
 test("documents and images can be dropped together", () => {
   const dropped = classifyDropPaths(["/docs/a.pdf", "/photos/cat.png"]);
   assert.equal(dropped.kind, "attach");
-  if (dropped.kind === "attach") {
-    assert.deepEqual(dropped.docs, ["/docs/a.pdf"]);
-    assert.deepEqual(dropped.images, ["/photos/cat.png"]);
-  }
+  assert.deepEqual(dropped.docs, ["/docs/a.pdf"]);
+  assert.deepEqual(dropped.images, ["/photos/cat.png"]);
 });
 
 test("a mixed or unsupported drop is rejected", () => {
@@ -534,7 +532,7 @@ test("document, image and audio drop extensions stay disjoint", () => {
 test("a single audio file routes to chat audio attachments", () => {
   const dropped = classifyDropPaths(["/clips/take.WAV"]);
   assert.equal(dropped.kind, "audio");
-  assert.deepEqual(dropped.kind === "audio" ? dropped.paths : [], [
+  assert.deepEqual(dropped.paths, [
     "/clips/take.WAV",
   ]);
 });
@@ -546,7 +544,7 @@ test("multi-audio drops route to chat audio attachments", () => {
     "/clips/voice.flac",
   ]);
   assert.equal(dropped.kind, "audio");
-  assert.deepEqual(dropped.kind === "audio" ? dropped.paths : [], [
+  assert.deepEqual(dropped.paths, [
     "/clips/take.WAV",
     "/clips/note.mp3",
     "/clips/voice.flac",
@@ -560,7 +558,7 @@ test("several clips alongside other attachments route together", () => {
     "/clips/voice.flac",
   ]);
   assert.equal(dropped.kind, "attach");
-  assert.deepEqual(dropped.kind === "attach" ? dropped.audio : [], [
+  assert.deepEqual(dropped.audio, [
     "/clips/note.mp3",
     "/clips/voice.flac",
   ]);
@@ -580,19 +578,15 @@ test("documents, images and audio can be dropped together", () => {
     "/clips/note.mp3",
   ]);
   assert.equal(dropped.kind, "attach");
-  if (dropped.kind === "attach") {
-    assert.deepEqual(dropped.docs, ["/docs/a.pdf"]);
-    assert.deepEqual(dropped.images, ["/photos/cat.png"]);
-    assert.deepEqual(dropped.audio, ["/clips/note.mp3"]);
-  }
+  assert.deepEqual(dropped.docs, ["/docs/a.pdf"]);
+  assert.deepEqual(dropped.images, ["/photos/cat.png"]);
+  assert.deepEqual(dropped.audio, ["/clips/note.mp3"]);
 });
 
 test("a video routes to chat video attachments", () => {
   const dropped = classifyDropPaths(["/clips/demo.mp4"]);
   assert.equal(dropped.kind, "video");
-  if (dropped.kind === "video") {
-    assert.deepEqual(dropped.paths, ["/clips/demo.mp4"]);
-  }
+  assert.deepEqual(dropped.paths, ["/clips/demo.mp4"]);
 });
 
 // llama-server expands a clip into many frames, so several would fill the context.
@@ -610,12 +604,10 @@ test("video rides along in a mixed attachment drop", () => {
     "/clips/demo.webm",
   ]);
   assert.equal(dropped.kind, "attach");
-  if (dropped.kind === "attach") {
-    assert.deepEqual(dropped.docs, ["/docs/a.pdf"]);
-    assert.deepEqual(dropped.images, ["/photos/cat.png"]);
-    assert.deepEqual(dropped.video, ["/clips/demo.webm"]);
-    assert.deepEqual(dropped.audio, []);
-  }
+  assert.deepEqual(dropped.docs, ["/docs/a.pdf"]);
+  assert.deepEqual(dropped.images, ["/photos/cat.png"]);
+  assert.deepEqual(dropped.video, ["/clips/demo.webm"]);
+  assert.deepEqual(dropped.audio, []);
 });
 
 test("frontend and Rust accept the same chat video extensions", () => {

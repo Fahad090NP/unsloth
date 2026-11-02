@@ -53,9 +53,10 @@ function createReact() {
   const effects: (() => void)[] = [];
   let cursor = 0;
   let dirty = false;
+  const isDirty = () => dirty;
 
   const slot = (): Slot => {
-    const existing = slots[cursor];
+    const existing: Slot | undefined = slots[cursor];
     if (existing) {
       cursor += 1;
       return existing;
@@ -117,7 +118,7 @@ function createReact() {
         dirty = false;
         body();
         while (effects.length) effects.shift()?.();
-      } while (dirty);
+      } while (isDirty());
     },
     unmount(): void {
       for (const self of slots) runCleanup(self.cleanup);

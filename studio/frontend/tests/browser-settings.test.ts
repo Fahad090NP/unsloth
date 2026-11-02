@@ -18,7 +18,7 @@ const localStorage = {
 };
 Object.assign(globalThis, {
   localStorage,
-  window: { localStorage, location: { protocol: "http:" }, addEventListener: () => {} },
+  window: { localStorage, location: { protocol: "http:" }, addEventListener: () => { /* empty */ } },
 });
 
 register("./helpers/browser-store-resolver.mjs", import.meta.url);
@@ -30,6 +30,20 @@ const { useChatRuntimeStore } = await import("@/features/chat");
 const { currentEntry, useBrowserStore } = await import("../src/features/browser/store.ts");
 
 const download = { name: "file.pdf", url: "https://example.com/file.pdf", size: 10, contentType: "application/pdf" };
+
+interface ToastLike {
+  message?: string;
+  options?: { id?: string; action?: { onClick: () => void } };
+}
+
+function toastAction(toasts: ToastLike[] | undefined, index: number): () => void {
+  assert.ok(toasts);
+  const toast = toasts.at(index);
+  assert.ok(toast);
+  assert.ok(toast.options);
+  assert.ok(toast.options.action);
+  return toast.options.action.onClick;
+}
 
 test("with history saving off, visits are not recorded; turned back on, they are", () => {
   const history = useBrowserHistoryStore.getState();
@@ -88,18 +102,25 @@ test("with download history off, downloads are not listed", () => {
 test("a navigation asked for as temporary stays temporary in a normal chat", () => {
   const store = useBrowserStore.getState();
   store.openUrl("https://example.com/", { newTab: true });
-  const tabId = useBrowserStore.getState().activeTabId!;
+  const tabId = useBrowserStore.getState().activeTabId;
+  assert.ok(tabId);
   store.navigate(tabId, { url: "https://example.com/reached", temporary: true });
-  const entry = currentEntry(useBrowserStore.getState().tabs.find((item) => item.id === tabId)!);
+  const firstTab = useBrowserStore.getState().tabs.find((item) => item.id === tabId);
+  assert.ok(firstTab);
+  const entry = currentEntry(firstTab);
   assert.equal(entry.kind === "web" && entry.temporary, true);
   store.navigate(tabId, { url: "https://example.com/after" });
-  const after = currentEntry(useBrowserStore.getState().tabs.find((item) => item.id === tabId)!);
+  const afterTab = useBrowserStore.getState().tabs.find((item) => item.id === tabId);
+  assert.ok(afterTab);
+  const after = currentEntry(afterTab);
   assert.equal(after.kind === "web" && after.temporary, undefined);
   // A page noted as normal stays normal when it is kept during a temporary chat.
   useChatRuntimeStore.getState().setIncognito(true);
   store.navigate(tabId, { url: "https://example.com/kept", temporary: false });
   useChatRuntimeStore.getState().setIncognito(false);
-  const kept = currentEntry(useBrowserStore.getState().tabs.find((item) => item.id === tabId)!);
+  const keptTab = useBrowserStore.getState().tabs.find((item) => item.id === tabId);
+  assert.ok(keptTab);
+  const kept = currentEntry(keptTab);
   assert.equal(kept.kind === "web" && kept.temporary, undefined);
   store.closeTab(tabId);
 });
@@ -124,17 +145,28 @@ test("a download begun beside a temporary chat stays unlisted when it is saved a
   prefs.setAskBeforeDownloading(false);
   const g = globalThis as { showSaveFilePicker?: unknown; __toasts?: { options?: { action?: { onClick: () => void } } }[] };
   const written: Blob[] = [];
-  g.showSaveFilePicker = async ({ suggestedName }: { suggestedName: string }) => ({
-    name: suggestedName,
-    createWritable: async () => ({ write: async (data: Blob) => void written.push(data), close: async () => {} }),
-  });
+  g.showSaveFilePicker = async ({ suggestedName }: { suggestedName: string }) => {
+    await Promise.resolve();
+    return {
+      name: suggestedName,
+      createWritable: async () => ({
+        write: async (data: Blob) => {
+          await Promise.resolve();
+          return void written.push(data);
+        },
+        close: async () => {
+          await Promise.resolve();
+        },
+      }),
+    };
+  };
   Object.defineProperty(globalThis, "navigator", { value: { userActivation: { isActive: false } }, configurable: true });
   g.__toasts = [];
   try {
     useChatRuntimeStore.getState().setIncognito(true);
     await saveBrowserDownload({ blob: new Blob(["x"]), name: "late.zip", contentType: "application/zip", url: "https://a.example/late.zip" });
     useChatRuntimeStore.getState().setIncognito(false);
-    g.__toasts.at(-1)!.options!.action!.onClick();
+    toastAction(g.__toasts, -1)();
     await new Promise((resolve) => setTimeout(resolve, 20));
     assert.equal(written.length, 1);
     assert.deepEqual(useBrowserHistoryStore.getState().downloads, []);
@@ -152,7 +184,18 @@ test("a file a temporary chat's page fetched stays unlisted when it is saved aft
   const written: Blob[] = [];
   const target = {
     name: "late.bin",
-    createWritable: async () => ({ write: async (data: Blob) => void written.push(data), close: async () => {} }),
+    createWritable: async () => {
+      await Promise.resolve();
+      return {
+        write: async (data: Blob) => {
+          await Promise.resolve();
+          return void written.push(data);
+        },
+        close: async () => {
+          await Promise.resolve();
+        },
+      };
+    },
   };
   const download = { blob: new Blob(["x"]), name: "late.bin", contentType: "application/octet-stream", url: "https://a.example/late.bin" };
   await saveBrowserDownload({ ...download, temporary: true }, target);
@@ -178,10 +221,21 @@ test("Save link as from a temporary chat stays unlisted when its fetch lands aft
   prefs.setAskBeforeDownloading(false);
   const g = globalThis as { showSaveFilePicker?: unknown; __authFetch?: unknown };
   const written: Blob[] = [];
-  g.showSaveFilePicker = async ({ suggestedName }: { suggestedName: string }) => ({
-    name: suggestedName,
-    createWritable: async () => ({ write: async (data: Blob) => void written.push(data), close: async () => {} }),
-  });
+  g.showSaveFilePicker = async ({ suggestedName }: { suggestedName: string }) => {
+    await Promise.resolve();
+    return {
+      name: suggestedName,
+      createWritable: async () => ({
+        write: async (data: Blob) => {
+          await Promise.resolve();
+          return void written.push(data);
+        },
+        close: async () => {
+          await Promise.resolve();
+        },
+      }),
+    };
+  };
   g.__authFetch = () =>
     new Promise((resolve) =>
       setTimeout(
@@ -619,11 +673,23 @@ test("a download whose click has expired waits for Save rather than skip the sav
   // Chromium's picker refuses to open without a recent click.
   Object.assign(globalThis, {
     showSaveFilePicker: async ({ suggestedName }: { suggestedName: string }) => {
+      await Promise.resolve();
       if (!active) throw new DOMException("Must be handling a user gesture", "SecurityError");
       picked.push(suggestedName);
       return {
         name: suggestedName,
-        createWritable: async () => ({ write: async (data: Blob) => void written.push(data), close: async () => {} }),
+        createWritable: async () => {
+      await Promise.resolve();
+      return {
+        write: async (data: Blob) => {
+          await Promise.resolve();
+          return void written.push(data);
+        },
+        close: async () => {
+          await Promise.resolve();
+        },
+      };
+    },
       };
     },
   });
@@ -636,12 +702,13 @@ test("a download whose click has expired waits for Save rather than skip the sav
   const blob = new Blob(["x"]);
   // Not a file that runs code: those ask first whatever the setting.
   await saveBrowserDownload({ blob, name: "data.zip", contentType: "application/zip", url: "https://a.example/data.zip" });
-  const toasts = (globalThis as { __toasts?: { message: string; options?: { action?: { onClick: () => void } } }[] }).__toasts!;
+  const toasts = (globalThis as { __toasts?: { message: string; options?: { action?: { onClick: () => void } } }[] }).__toasts;
+  assert.ok(toasts);
   assert.equal(toasts.length, 1);
   assert.equal(toasts[0].message, "browser.downloadPrompt.ready");
   assert.deepEqual(picked, []);
   active = true;
-  toasts[0].options!.action!.onClick();
+  toastAction(toasts, 0)();
   await new Promise((resolve) => setTimeout(resolve, 20));
   assert.deepEqual(picked, ["data.zip"]);
   assert.equal(written.length, 1);
@@ -657,14 +724,18 @@ test("a file a page sends the tab to is asked about for that page, not the file'
   const { useDownloadSitesStore } = await import("../src/features/browser/download-sites-store.ts");
   const store = useBrowserStore.getState();
   store.openUrl("https://a.example/page", { newTab: true });
-  const tabId = useBrowserStore.getState().activeTabId!;
+  const tabId = useBrowserStore.getState().activeTabId;
+  assert.ok(tabId);
   store.navigate(tabId, { url: "https://b.example/setup.zip", from: "https://a.example/page" });
-  const tab = useBrowserStore.getState().tabs.find((candidate) => candidate.id === tabId)!;
+  const tab = useBrowserStore.getState().tabs.find((candidate) => candidate.id === tabId);
+  assert.ok(tab);
   const entry = currentEntry(tab);
   assert.ok(entry.kind === "web");
   assert.equal(entry.from, "https://a.example/page");
   store.navigate(tabId, { url: "https://b.example/other.zip" });
-  const typed = currentEntry(useBrowserStore.getState().tabs.find((candidate) => candidate.id === tabId)!);
+  const typedTab = useBrowserStore.getState().tabs.find((candidate) => candidate.id === tabId);
+  assert.ok(typedTab);
+  const typed = currentEntry(typedTab);
   assert.ok(typed.kind === "web" && typed.from === undefined);
 
   // b.example is trusted, but a.example sent the tab there: still asked, for a.example.
@@ -691,22 +762,24 @@ test("a file a page sent without a click waits for Save, then asks for its page 
   saveBrowserDownloadOnClick({ ...download, agentRule: "block" });
   assert.deepEqual(g.__toasts.map((toast) => toast.message), ["browser.downloadPrompt.ready", "browser.downloadPrompt.ready"]);
   assert.equal(useApprovalStore.getState().queue.length, 0);
-  g.__toasts[0].options!.action!.onClick();
+  toastAction(g.__toasts, 0)();
   await new Promise((resolve) => setTimeout(resolve, 0));
   const queue = useApprovalStore.getState().queue;
   assert.equal(queue.length, 1);
   assert.equal(queue[0].origin, "https://a.example");
   answerDownload(queue[0], false, false);
-  g.__toasts[1].options!.action!.onClick();
+  toastAction(g.__toasts, 1)();
   await new Promise((resolve) => setTimeout(resolve, 0));
-  assert.equal(g.__toasts.at(-1)!.message, "browser.downloadPrompt.blocked");
+  const lastToast = g.__toasts?.at(-1);
+  assert.ok(lastToast);
+  assert.equal(lastToast.message, "browser.downloadPrompt.blocked");
   assert.equal(useApprovalStore.getState().queue.length, 0);
   for (let i = 0; i < 4; i++) saveBrowserDownloadOnClick(download);
   const ids = g.__toasts.slice(-4).map((toast) => toast.options?.id);
   assert.equal(new Set(ids).size, 3);
   assert.equal(ids[3], ids[0]);
   saveBrowserDownloadOnClick({ ...download, blob: new Blob(["MZ"]), name: "update", contentType: "application/x-msdownload" });
-  g.__toasts.at(-1)!.options!.action!.onClick();
+  toastAction(g.__toasts, -1)();
   await new Promise((resolve) => setTimeout(resolve, 0));
   const program = useApprovalStore.getState().queue[0];
   assert.deepEqual([program?.name, program?.dangerous], ["update.exe", true]);
@@ -720,6 +793,7 @@ test("a download link's file is fetched through the panel, named by the server, 
   const fetched: string[] = [];
   let served: Record<string, string> = {};
   g.__authFetch = async (_path: string, init: { body: string }) => {
+    await Promise.resolve();
     fetched.push(JSON.parse(init.body).url);
     return new Response("a,b", { headers: { "X-Unsloth-Browser-Kind": "raw", "Content-Type": "text/plain", ...served } });
   };
@@ -745,7 +819,7 @@ test("a download link's file is fetched through the panel, named by the server, 
     await new Promise((resolve) => setTimeout(resolve, 20));
     assert.equal(fetched.length, 3);
     assert.deepEqual(g.__toasts.map((toast) => toast.message), ["browser.downloadPrompt.ready"]);
-    g.__toasts[0].options!.action!.onClick();
+    toastAction(g.__toasts, 0)();
     assert.deepEqual(await asked(), ["report.txt", "https://a.example"]);
     assert.equal(fetched.length, 4);
   } finally {
@@ -759,7 +833,7 @@ test("a file its site sends as an attachment is saved, not shown; inline or unde
   const { savesFile } = await import("../src/features/browser/file-kind.ts");
   const g = globalThis as { __authFetch?: unknown };
   const load = async (headers: Record<string, string>) => {
-    g.__authFetch = async () => new Response("a,b", { headers: { "X-Unsloth-Browser-Kind": "raw", ...headers } });
+    g.__authFetch = async () => { await Promise.resolve(); return new Response("a,b", { headers: { "X-Unsloth-Browser-Kind": "raw", ...headers } }); };
     const page = await fetchBrowserPage({ url: "https://a.example/export" }, new AbortController().signal);
     assert.ok(page.kind === "raw");
     return savesFile(page.fileName ?? "export", page.contentType, page.attachment);
@@ -810,12 +884,13 @@ test("a program sent with no extension asks under the name it saves as, whatever
 
     prefs.setAskWhereToSave(true);
     g.showSaveFilePicker = async () => {
+      await Promise.resolve();
       throw new DOMException("no picker here", "NotAllowedError");
     };
     g.__authFetch = async () =>
-      new Response(new Blob(["MZ"]), {
+      { await Promise.resolve(); return new Response(new Blob(["MZ"]), {
         headers: { "Content-Type": "application/x-msdownload; charset=binary", "X-Unsloth-Browser-Filename": "setup" },
-      });
+      }); };
     const linked = saveLinkAs("https://a.example/download");
     const asked = await nextAsked();
     assert.deepEqual(asked && [asked.name, asked.dangerous], ["setup.exe", true]);
@@ -873,16 +948,16 @@ test("browser saves keep the approved name without MIME inference, including age
   const saved: { name: string; blob: Blob }[] = [];
   Object.assign(globalThis, {
     document: {
-      body: { appendChild() {} },
+      body: { appendChild() { /* empty */ } },
       createElement: () => {
-        const anchor = { href: "", download: "", click: () => saved.push({ name: anchor.download, blob: transport! }), remove() {} };
+        const anchor = { href: "", download: "", click: () => saved.push({ name: anchor.download, blob: transport! }), remove() { /* empty */ } };
         return anchor;
       },
     },
   });
   Object.assign(window, { setTimeout: () => 0 });
   URL.createObjectURL = (blob) => { transport = blob as Blob; return "blob:test"; };
-  URL.revokeObjectURL = () => {};
+  URL.revokeObjectURL = () => { /* empty */ };
   const cases: [string, string, string, boolean][] = [
     ["update", "application/x-msdownload", "update.exe", true],
     ["Installer", "application/x-apple-diskimage", "Installer.dmg", true],
@@ -924,7 +999,9 @@ test("browser saves keep the approved name without MIME inference, including age
         assert.equal(saved.length, count + 1);
         assert.equal(saved.at(-1)?.name, expected);
         assert.equal(saved.at(-1)?.blob.type, "application/octet-stream");
-        assert.equal(await saved.at(-1)!.blob.text(), await blob.text());
+        const lastSaved = saved.at(-1);
+        assert.ok(lastSaved);
+        assert.equal(await lastSaved.blob.text(), await blob.text());
         assert.equal(blob.type, (contentType || "application/x-msdownload").toLowerCase());
         const recorded = useBrowserHistoryStore.getState().downloads[0];
         assert.deepEqual([recorded.name, recorded.contentType], [expected, contentType]);
@@ -953,6 +1030,7 @@ test("Save link as asks again when the file it named by the address turns out to
   const g = globalThis as { showSaveFilePicker?: unknown; __authFetch?: unknown };
   // The picker fails without a cancel, so the save falls back to a plain download by the server's name.
   g.showSaveFilePicker = async () => {
+    await Promise.resolve();
     throw new DOMException("no picker here", "NotAllowedError");
   };
   // Slower than the wait before asking, so the address's name ("download") is the one approved first.
@@ -1037,6 +1115,7 @@ test("a long download name keeps its extension, and a kept copy goes with its hi
   const history = useBrowserHistoryStore.getState();
   history.clearDownloads();
   const id = history.recordDownload({ ...download, name: `${"a".repeat(210)}.exe` });
+  assert.ok(id);
   const row = useBrowserHistoryStore.getState().downloads[0];
   assert.equal(row.name.length, 200);
   assert.ok(row.name.endsWith(".exe"));
@@ -1044,7 +1123,7 @@ test("a long download name keeps its extension, and a kept copy goes with its hi
   const file = { blob: new Blob(["x"]), name: row.name, contentType: "" };
   finishDownload("save:row", { name: row.name, size: 1, contentType: "", url: null, historyId: id, failed: false }, file);
   assert.equal(keptDownloadFile(id), file);
-  useBrowserHistoryStore.getState().removeDownload(id!);
+  useBrowserHistoryStore.getState().removeDownload(id);
   assert.equal(keptDownloadFile(id), null);
 });
 

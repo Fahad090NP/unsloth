@@ -168,16 +168,17 @@ test("the search index keeps a widget's shown text, not its seed", () => {
   const js = ts.transpileModule(`${binaryKey}\n${body}`, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },
   }).outputText;
-  const searchableText = new Function(
+  const build = new Function(
     "splitMcpImages",
     "isMcpUiToolResult",
     "stripBase64Runs",
     `${js}; return searchableText;`,
-  )(splitMcpImages, isMcpUiToolResult, stripBase64Runs) as (
-    value: unknown,
-    depth?: number,
-    toolName?: string,
-  ) => string;
+  ) as (
+    splitMcpImages: unknown,
+    isMcpUiToolResult: unknown,
+    stripBase64Runs: unknown,
+  ) => (value: unknown, depth?: number, toolName?: string) => string;
+  const searchableText = build(splitMcpImages, isMcpUiToolResult, stripBase64Runs);
   const widget = {
     text: "SF: 18C",
     ui: {

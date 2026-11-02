@@ -21,7 +21,7 @@ test("only insufficient combined capacity gets an exceeds verdict", () => {
   const fit = curatedPickerFit(id, IMAGE_CATALOG, { gpuGb: 12, systemRamGb: 8 });
   assert.equal(fit?.fits, false);
   assert.equal(fit.status, "exceeds");
-  const budget = fit && curatedBudget(fit);
+  const budget = curatedBudget(fit);
   assert.ok(budget);
   assert.match(curatedBudgetText(19, 12, budget), /20GB combined GPU and available RAM/);
 });

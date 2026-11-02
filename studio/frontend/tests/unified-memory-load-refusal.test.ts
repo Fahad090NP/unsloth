@@ -48,7 +48,7 @@ function captureFetch(reply: object): Record<string, unknown>[] {
   const sent: Record<string, unknown>[] = [];
   globalThis.fetch = ( (_url: unknown, init?: RequestInit) => {
     // Only the POST bodies: the load notice also polls load-progress, which sends none.
-    if (init?.body) sent.push(JSON.parse((init.body as unknown as string)));
+    if (init?.body) sent.push(JSON.parse((init.body as unknown as string)) as Record<string, unknown>);
     return Promise.resolve(new Response(JSON.stringify(reply), {
       status: 200,
       headers: { "Content-Type": "application/json" },

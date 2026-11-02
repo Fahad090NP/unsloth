@@ -179,7 +179,9 @@ test("a purge posts cache keys and nothing that could be a path", async () => {
   assert.equal(requests.length, 1);
   assert.equal(requests[0].url, "/api/settings/caches/purge");
   assert.equal(requests[0].init?.method, "POST");
-  const body = JSON.parse((requests[0].init.body as unknown as string));
+  const body = JSON.parse((requests[0].init.body as unknown as string)) as {
+    keys: string[];
+  };
   assert.deepEqual(Object.keys(body), ["keys"]);
   assert.deepEqual(body.keys, ["uv", "triton"]);
 });

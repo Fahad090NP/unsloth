@@ -108,6 +108,7 @@ test("a 401 answer does not back the Hub off or record an outage", async () => {
 });
 
 test("the discovery feed names a refused token instead of an unreachable Hub", async () => {
+    await Promise.resolve();
   const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   assert.match(
     search,

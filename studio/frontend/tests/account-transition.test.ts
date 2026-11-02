@@ -183,6 +183,7 @@ test("switch removes every content prefix and preserves only listed chrome and u
 test("only a switch clears the desktop browser's site data, before the new session", async () => {
   const events: string[] = [];
   const clear = async () => {
+    await Promise.resolve();
     events.push("clear");
   };
   const b = browserWith({ [BROWSER_ACCOUNT_KEY]: "alice" });
@@ -201,7 +202,7 @@ test("only a switch clears the desktop browser's site data, before the new sessi
 
 test("a switch keeps the machine's llama.cpp runtime repair record", async () => {
   const b = browserWith({ [RUNTIME_REPAIR_KEY]: "repaired", unsloth_auth_token: "owner" });
-  assert.equal(await transitionBrowserAccount("alice", "/chat", () => {}, b.browser), true);
+  assert.equal(await transitionBrowserAccount("alice", "/chat", () => { /* empty */ }, b.browser), true);
   assert.equal(b.data.get(RUNTIME_REPAIR_KEY), "repaired");
   assert.equal(b.data.has("unsloth_auth_token"), false);
 });
@@ -209,7 +210,7 @@ test("a switch keeps the machine's llama.cpp runtime repair record", async () =>
 test("a first managed login clears legacy owner data even without a marker", async () => {
   const b = browserWith({ "unsloth-old-content": "owner" });
   assert.equal(
-    await transitionBrowserAccount("alice", "/chat", () => {}, b.browser),
+    await transitionBrowserAccount("alice", "/chat", () => { /* empty */ }, b.browser),
     true,
   );
   assert.deepEqual(b.removed, ["unsloth-old-content", BROWSER_ACCOUNT_FENCE_KEY]);
@@ -220,7 +221,7 @@ test("same managed account keeps content and avoids IndexedDB work", async () =>
     [BROWSER_ACCOUNT_KEY]: "alice",
     "chat-draft:1": "alice",
   });
-  await transitionBrowserAccount("ALICE", "/chat", () => {}, b.browser);
+  await transitionBrowserAccount("ALICE", "/chat", () => { /* empty */ }, b.browser);
   assert.deepEqual(b.removed, []);
   assert.deepEqual(b.deleted, []);
   assert.deepEqual(b.replaced, []);
@@ -231,7 +232,7 @@ test("a username created again as a different account inherits nothing", async (
   await transitionBrowserAccount(
     { username: "alice", accountId: "a1" },
     "/chat",
-    () => {},
+    () => { /* empty */ },
     b.browser,
   );
   b.data.set("chat-draft:1", "first alice");
@@ -240,7 +241,7 @@ test("a username created again as a different account inherits nothing", async (
   const changed = await transitionBrowserAccount(
     { username: "alice", accountId: "a2" },
     "/chat",
-    () => {},
+    () => { /* empty */ },
     b.browser,
   );
   assert.equal(changed, true);
@@ -264,7 +265,7 @@ test("one account keeps its data across a rename", async () => {
     await transitionBrowserAccount(
       { username: "Alice2", accountId: "a1" },
       "/chat",
-      () => {},
+      () => { /* empty */ },
       b.browser,
     ),
     false,
@@ -283,7 +284,7 @@ test("a marker written before account ids upgrades in place", async () => {
     await transitionBrowserAccount(
       { username: "alice", accountId: "a1" },
       "/chat",
-      () => {},
+      () => { /* empty */ },
       b.browser,
     ),
     false,
@@ -302,7 +303,7 @@ test("a server that sends no account id keeps the session on the username", asyn
       "chat-draft:1": "alice",
     });
     assert.equal(
-      await transitionBrowserAccount(account, "/chat", () => {}, b.browser),
+      await transitionBrowserAccount(account, "/chat", () => { /* empty */ }, b.browser),
       false,
     );
     assert.deepEqual(b.removed, []);
@@ -320,7 +321,7 @@ for (const marker of [undefined, "unsloth"]) {
       await transitionBrowserAccount(
         { username: "unsloth", accountId: "owner" },
         "/chat",
-        () => {},
+        () => { /* empty */ },
         b.browser,
       ),
       false,
@@ -341,7 +342,7 @@ test("a marker no build wrote can only compare as a different account", async ()
     await transitionBrowserAccount(
       { username: "alice", accountId: "a1" },
       "/chat",
-      () => {},
+      () => { /* empty */ },
       b.browser,
     ),
     true,
@@ -355,7 +356,7 @@ test("returning to the owner clears the previous managed account", async () => {
     "unsloth-private": "alice",
   });
   assert.equal(
-    await transitionBrowserAccount("unsloth", "/chat", () => {}, b.browser),
+    await transitionBrowserAccount("unsloth", "/chat", () => { /* empty */ }, b.browser),
     true,
   );
   assert.equal(b.data.has("unsloth-private"), false);
@@ -500,7 +501,7 @@ test("a legacy marker still compares on the name when neither side has an id", a
     "unsloth-private": "alice",
   });
   assert.equal(
-    await transitionBrowserAccount(" ALICE ", "/chat", () => {}, same.browser),
+    await transitionBrowserAccount(" ALICE ", "/chat", () => { /* empty */ }, same.browser),
     false,
   );
   assert.equal(same.data.get("unsloth-private"), "alice");
@@ -509,7 +510,7 @@ test("a legacy marker still compares on the name when neither side has an id", a
     "unsloth-private": "alice",
   });
   assert.equal(
-    await transitionBrowserAccount("bob", "/chat", () => {}, other.browser),
+    await transitionBrowserAccount("bob", "/chat", () => { /* empty */ }, other.browser),
     true,
   );
   assert.equal(other.data.has("unsloth-private"), false);
@@ -517,13 +518,13 @@ test("a legacy marker still compares on the name when neither side has an id", a
 
 test("switching accounts clears the legacy browser-only chat store", async () => {
   const b = browserWith({ [BROWSER_ACCOUNT_KEY]: "unsloth" });
-  await transitionBrowserAccount("alice", "/chat", () => {}, b.browser);
+  await transitionBrowserAccount("alice", "/chat", () => { /* empty */ }, b.browser);
   assert.ok(b.deleted.includes("unsloth-chat"));
 });
 
 test("the owner's own first login keeps the legacy chat store to import", async () => {
   const b = browserWith({});
-  await transitionBrowserAccount("unsloth", "/chat", () => {}, b.browser);
+  await transitionBrowserAccount("unsloth", "/chat", () => { /* empty */ }, b.browser);
   assert.deepEqual(b.deleted, []);
 });
 
@@ -540,7 +541,7 @@ test("switching accounts clears session content and keeps neutral session flags"
     unsloth_server_user_stopped: "1",
   });
   assert.equal(
-    await transitionBrowserAccount("bob", "/chat", () => {}, b.browser),
+    await transitionBrowserAccount("bob", "/chat", () => { /* empty */ }, b.browser),
     true,
   );
   assert.equal(b.sessionData.has("chat:training-compare-handoff:v1"), false);
@@ -554,7 +555,7 @@ test("the same account keeps a pending compare handoff", async () => {
     "chat:training-compare-handoff:v1": "pending",
   });
   assert.equal(
-    await transitionBrowserAccount("ALICE", "/chat", () => {}, b.browser),
+    await transitionBrowserAccount("ALICE", "/chat", () => { /* empty */ }, b.browser),
     false,
   );
   assert.equal(
@@ -571,7 +572,7 @@ test("unreadable session storage never fails a sign-in", async () => {
     },
   });
   assert.equal(
-    await transitionBrowserAccount("bob", "/chat", () => {}, b.browser),
+    await transitionBrowserAccount("bob", "/chat", () => { /* empty */ }, b.browser),
     true,
   );
 });
@@ -634,11 +635,11 @@ test("transcript recovery survives reauthentication but is cleared on account ch
     assert.equal(writeTranscriptDraft(key, draft), true);
     b.data.delete("unsloth_auth_token");
     await transitionBrowserAccount(
-      { username: "alice", accountId: "alice-id" }, "/chat", () => {}, b.browser,
+      { username: "alice", accountId: "alice-id" }, "/chat", () => { /* empty */ }, b.browser,
     );
     assert.deepEqual(readTranscriptDraft(transcriptDraftKey()), draft);
     await transitionBrowserAccount(
-      { username: "bob", accountId: "bob-id" }, "/chat", () => {}, b.browser,
+      { username: "bob", accountId: "bob-id" }, "/chat", () => { /* empty */ }, b.browser,
     );
     assert.notEqual(transcriptDraftKey(), key);
     assert.equal(readTranscriptDraft(key), null);
@@ -673,18 +674,18 @@ test("chat preferences survive account switches without being shared", async () 
     a.getState().setAutoScrollWhileGenerating(false);
     a.getState().setThinkingVisibility("collapsed");
     assert.deepEqual(choices(await load("alice-reload")), ["mod-enter", false, "collapsed"]);
-    await transitionBrowserAccount(bob, "/chat", () => {}, b.browser);
+    await transitionBrowserAccount(bob, "/chat", () => { /* empty */ }, b.browser);
     const other = await load("bob");
     assert.deepEqual(choices(other), ["enter", true, "auto"]);
     other.getState().setThinkingVisibility("expanded");
-    await transitionBrowserAccount(alice, "/chat", () => {}, b.browser);
+    await transitionBrowserAccount(alice, "/chat", () => { /* empty */ }, b.browser);
     assert.deepEqual(choices(await load("alice-return")), ["mod-enter", false, "collapsed"]);
-    await transitionBrowserAccount(bob, "/chat", () => {}, b.browser);
+    await transitionBrowserAccount(bob, "/chat", () => { /* empty */ }, b.browser);
     assert.deepEqual(choices(await load("bob-return")), ["enter", true, "expanded"]);
     // Reset preferences removes the active entry; the old snapshot must not resurrect it.
     b.data.delete("unsloth_chat_preferences");
-    await transitionBrowserAccount(alice, "/chat", () => {}, b.browser);
-    await transitionBrowserAccount(bob, "/chat", () => {}, b.browser);
+    await transitionBrowserAccount(alice, "/chat", () => { /* empty */ }, b.browser);
+    await transitionBrowserAccount(bob, "/chat", () => { /* empty */ }, b.browser);
     assert.deepEqual(choices(await load("bob-reset")), ["enter", true, "auto"]);
   } finally {
     if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
@@ -700,19 +701,19 @@ test("chat preference snapshots follow account IDs, including rename and recreat
     [BROWSER_ACCOUNT_KEY]: browserAccountMarker(alice),
     unsloth_chat_preferences: saved,
   });
-  await transitionBrowserAccount(bob, "/chat", () => {}, b.browser);
-  await transitionBrowserAccount({ username: "renamed", accountId: "alice-id" }, "/chat", () => {}, b.browser);
+  await transitionBrowserAccount(bob, "/chat", () => { /* empty */ }, b.browser);
+  await transitionBrowserAccount({ username: "renamed", accountId: "alice-id" }, "/chat", () => { /* empty */ }, b.browser);
   assert.equal(b.data.get("unsloth_chat_preferences"), saved);
-  await transitionBrowserAccount(bob, "/chat", () => {}, b.browser);
-  await transitionBrowserAccount({ username: "alice", accountId: "new-alice-id" }, "/chat", () => {}, b.browser);
+  await transitionBrowserAccount(bob, "/chat", () => { /* empty */ }, b.browser);
+  await transitionBrowserAccount({ username: "alice", accountId: "new-alice-id" }, "/chat", () => { /* empty */ }, b.browser);
   assert.equal(b.data.has("unsloth_chat_preferences"), false);
 });
 
 test("owner preferences survive the legacy marker upgrade", async () => {
   const saved = JSON.stringify({ state: { thinkingVisibility: "collapsed" }, version: 1 });
   const b = browserWith({ unsloth_chat_preferences: saved });
-  await transitionBrowserAccount("alice", "/chat", () => {}, b.browser);
-  await transitionBrowserAccount({ username: "unsloth", accountId: "owner" }, "/chat", () => {}, b.browser);
+  await transitionBrowserAccount("alice", "/chat", () => { /* empty */ }, b.browser);
+  await transitionBrowserAccount({ username: "unsloth", accountId: "owner" }, "/chat", () => { /* empty */ }, b.browser);
   assert.equal(b.data.get("unsloth_chat_preferences"), saved);
 });
 
@@ -723,7 +724,7 @@ test("failed account cleanup leaves chat preferences available for a retry", asy
     unsloth_chat_preferences: saved,
   }, "blocked");
   await assert.rejects(transitionBrowserAccount(
-    { username: "bob", accountId: "bob-id" }, "/chat", () => {}, b.browser,
+    { username: "bob", accountId: "bob-id" }, "/chat", () => { /* empty */ }, b.browser,
   ));
   assert.equal(b.data.get("unsloth_chat_preferences"), saved);
 });
@@ -734,17 +735,17 @@ test("a failed session publication keeps each account's chat preferences its own
   const alice = { username: "alice", accountId: "alice-id" };
   const bob = { username: "bob", accountId: "bob-id" };
   const b = browserWith({ [BROWSER_ACCOUNT_KEY]: browserAccountMarker(alice) });
-  await transitionBrowserAccount(bob, "/chat", () => {}, b.browser);
+  await transitionBrowserAccount(bob, "/chat", () => { /* empty */ }, b.browser);
   b.data.set("unsloth_chat_preferences", bobPrefs);
-  await transitionBrowserAccount(alice, "/chat", () => {}, b.browser);
+  await transitionBrowserAccount(alice, "/chat", () => { /* empty */ }, b.browser);
   b.data.set("unsloth_chat_preferences", alicePrefs);
   await assert.rejects(transitionBrowserAccount(bob, "/chat", () => {
     throw new Error("token storage failed");
   }, b.browser));
   assert.equal(b.data.get("unsloth_chat_preferences"), alicePrefs);
-  await transitionBrowserAccount(bob, "/chat", () => {}, b.browser);
+  await transitionBrowserAccount(bob, "/chat", () => { /* empty */ }, b.browser);
   assert.equal(b.data.get("unsloth_chat_preferences"), bobPrefs);
-  await transitionBrowserAccount(alice, "/chat", () => {}, b.browser);
+  await transitionBrowserAccount(alice, "/chat", () => { /* empty */ }, b.browser);
   assert.equal(b.data.get("unsloth_chat_preferences"), alicePrefs);
 });
 
@@ -761,7 +762,7 @@ test("a full storage never blocks an account switch or leaks preferences", async
     setItem(key, value);
   };
   assert.equal(
-    await transitionBrowserAccount({ username: "bob", accountId: "bob-id" }, "/chat", () => {}, b.browser),
+    await transitionBrowserAccount({ username: "bob", accountId: "bob-id" }, "/chat", () => { /* empty */ }, b.browser),
     true,
   );
   assert.equal(b.data.get(BROWSER_ACCOUNT_KEY), "account:bob-id:bob");

@@ -80,14 +80,19 @@ test("recalling a quantized model carries the selected adapters into its load", 
         throw new Error("generation must wait for the load");
       },
       handleLoad: async (...args: unknown[]) => {
+        await Promise.resolve();
         loads.push(args);
         return true;
       },
       ...overrides,
     };
-    const callbacks = new Function(...Object.keys(scope), outputText)(
-      ...Object.values(scope),
-    );
+    const compile = new Function(...Object.keys(scope), outputText) as (
+      ...args: unknown[]
+    ) => {
+      handleGenerateWithRecall: () => Promise<unknown>;
+      currentLoadAdvanced: (repoId: string) => { loras?: unknown };
+    };
+    const callbacks = compile(...Object.values(scope));
     return { scope, loads, callbacks };
   };
   for (const quant of ["int8", "fp8"]) {
@@ -116,18 +121,16 @@ test("recalling a quantized model carries the selected adapters into its load", 
       kind: model.kind,
       filename: model.filename,
     });
-    const advanced = loads[0][2] as
-      | {
-          loras?: unknown;
-          transformer_quant?: string;
-          text_encoder_quant?: string;
-          family_override?: string;
-        }
-      | undefined;
-    assert.deepEqual(advanced?.loras, [{ id: "org/style", weight: 0.7 }]);
-    assert.equal(advanced?.transformer_quant, quant);
-    assert.equal(advanced?.text_encoder_quant, "int8");
-    assert.equal(advanced?.family_override, undefined);
+    const advanced = loads[0][2] as {
+      loras?: unknown;
+      transformer_quant?: string;
+      text_encoder_quant?: string;
+      family_override?: string;
+    };
+    assert.deepEqual(advanced.loras, [{ id: "org/style", weight: 0.7 }]);
+    assert.equal(advanced.transformer_quant, quant);
+    assert.equal(advanced.text_encoder_quant, "int8");
+    assert.equal(advanced.family_override, undefined);
     assert.equal(
       callbacks.currentLoadAdvanced("org/different-model").loras,
       undefined,
@@ -167,8 +170,10 @@ test("recalling a quantized model carries the selected adapters into its load", 
     componentFilesMatch,
     withEngagedFamily: (m: Record<string, unknown>) => m,
     rememberImageModel: (m: unknown) => { storage.setItem("unsloth:images:last-model", JSON.stringify(m)); },
-    setRememberedModel: () => {},
-    handleGenerate: async () => {},
+    setRememberedModel: () => { /* noop */ },
+    handleGenerate: async () => {
+      await Promise.resolve();
+    },
   });
   await resident.callbacks.handleGenerateWithRecall();
   assert.deepEqual(readImageModel()?.textEncoderFiles, supplied.textEncoderFiles);
@@ -181,8 +186,10 @@ test("recalling a quantized model carries the selected adapters into its load", 
     componentFilesMatch,
     withEngagedFamily: (m: Record<string, unknown>) => m,
     rememberImageModel: (m: unknown) => { storage.setItem("unsloth:images:last-model", JSON.stringify(m)); },
-    setRememberedModel: () => {},
-    handleGenerate: async () => {},
+    setRememberedModel: () => { /* noop */ },
+    handleGenerate: async () => {
+      await Promise.resolve();
+    },
   });
   await reloaded.callbacks.handleGenerateWithRecall();
   assert.equal(readImageModel()?.textEncoderFiles, undefined);
@@ -196,8 +203,10 @@ test("recalling a quantized model carries the selected adapters into its load", 
     componentFilesMatch,
     withEngagedFamily: (m: Record<string, unknown>) => m,
     rememberImageModel: (m: unknown) => { storage.setItem("unsloth:images:last-model", JSON.stringify(m)); },
-    setRememberedModel: () => {},
-    handleGenerate: async () => {},
+    setRememberedModel: () => { /* noop */ },
+    handleGenerate: async () => {
+      await Promise.resolve();
+    },
   });
   await ownStale.callbacks.handleGenerateWithRecall();
   assert.equal(readImageModel()?.textEncoderFiles, undefined);
@@ -314,7 +323,8 @@ test("a new model pick cancels recalled generation and retires the staged load",
       scope.loadAnyway.dismissed += 1;
     },
   };
-  new Function(...Object.keys(scope), outputText)(...Object.values(scope));
+  const run = new Function(...Object.keys(scope), outputText) as (...args: unknown[]) => unknown;
+  run(...Object.values(scope));
   assert.equal(scope.pickToast.dismissed, 1);
   assert.equal(scope.loadAnyway.dismissed, 1);
   assert.equal(scope.pendingRecalledGeneration.current, null);

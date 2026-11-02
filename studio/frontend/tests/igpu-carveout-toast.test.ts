@@ -105,7 +105,7 @@ test("the action posts the allocation it was dismissed at", async () => {
     seen.push({
       url,
       method: init?.method,
-      body: init?.body ? JSON.parse(String(init.body as string)) : null,
+      body: init?.body ? JSON.parse(init.body as string) : null,
     });
     return new Response(JSON.stringify({ dismissed_at_gb: 32 }), { status: 200 });
   });

@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { createServer, type ViteDevServer } from "vite";
+import type * as ProvidersDialog from "../src/features/chat/chat-providers-dialog.tsx";
 
 interface SubscriptionModels {
   models: { id: string; vision?: boolean | null }[];
@@ -89,7 +90,7 @@ const ENTRY: RegistryEntry = {
 };
 
 test("a plan-listed slug carries its own vision flag into the capability map", async () => {
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof ProvidersDialog;
   const codexCapabilitiesWithPlanModels = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const capabilities = codexCapabilitiesWithPlanModels(
     ENTRY,
@@ -105,7 +106,7 @@ test("a plan-listed slug carries its own vision flag into the capability map", a
 });
 
 test("a curated fallback never rewrites the capability map", async () => {
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof ProvidersDialog;
   const codexCapabilitiesWithPlanModels = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   assert.equal(
     codexCapabilitiesWithPlanModels(
@@ -119,7 +120,7 @@ test("a curated fallback never rewrites the capability map", async () => {
 });
 
 test("a plan that describes nothing new never overrides the registry", async () => {
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof ProvidersDialog;
   const codexCapabilitiesWithPlanModels = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const capabilities = codexCapabilitiesWithPlanModels(
     ENTRY,
@@ -132,7 +133,7 @@ test("a plan that describes nothing new never overrides the registry", async () 
 
 
 test("another connection's learned slug survives this one's catalog", async () => {
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof ProvidersDialog;
   const codexCapabilitiesWithPlanModels = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const capabilities = codexCapabilitiesWithPlanModels(
     ENTRY,
@@ -145,7 +146,7 @@ test("another connection's learned slug survives this one's catalog", async () =
 
 
 test("a saved slug the plan still returns survives losing its picker slot", async () => {
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof ProvidersDialog;
   const resolve = loaded.resolveCodexPickerModels as Resolve;
   const { catalog, selected } = resolve(
     CURATED,
@@ -161,7 +162,7 @@ test("a saved slug the plan still returns survives losing its picker slot", asyn
 });
 
 test("a slug the plan no longer returns at all is retired", async () => {
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof ProvidersDialog;
   const resolve = loaded.resolveCodexPickerModels as Resolve;
   const { selected } = resolve(
     CURATED,
@@ -173,7 +174,7 @@ test("a slug the plan no longer returns at all is retired", async () => {
 
 
 test("a hidden saved slug still contributes its capability", async () => {
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof ProvidersDialog;
   const capabilities = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const resolved = capabilities(
     ENTRY,
@@ -189,7 +190,7 @@ test("a hidden saved slug still contributes its capability", async () => {
 
 
 test("a reauthorization answer retires nothing and describes nothing", async () => {
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof ProvidersDialog;
   const resolve = loaded.resolveCodexPickerModels as Resolve;
   const capabilities = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const { selected } = resolve(
@@ -209,7 +210,7 @@ test("a reauthorization answer retires nothing and describes nothing", async () 
 
 test("a catalog that arrives before the registry does not rewrite what is learned", async () => {
   // Writing before the registry loads would drop the studio_tools wildcard and persisted flags.
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof import("../src/features/chat/chat-providers-dialog.tsx");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/chat-providers-dialog.tsx")) as typeof ProvidersDialog;
   const codexCapabilitiesWithPlanModels = loaded.codexCapabilitiesWithPlanModels as Capabilities;
   const stored = {
     "gpt-5.4": { vision: true, studio_tools: true },

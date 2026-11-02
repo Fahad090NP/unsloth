@@ -53,8 +53,7 @@ interface Node {
 const render = async (markdown: string) => {
   const baseMath = createMathPlugin({ singleDollarTextMath: true });
   const [remarkMath, remarkMathOptions] = baseMath.remarkPlugin as [
-    // biome-ignore lint/suspicious/noExplicitAny: a unified attacher, typed loosely on purpose
-    any,
+    (options?: unknown) => (tree: unknown) => void,
     unknown,
   ];
   const processor = unified()

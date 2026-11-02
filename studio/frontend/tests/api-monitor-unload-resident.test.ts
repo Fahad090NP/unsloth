@@ -33,10 +33,12 @@ function backend(timeline: (ResidentModel | null)[]): UnloadResidentDeps & {
   const at = (i: number) => timeline[Math.min(i, timeline.length - 1)] ?? null;
   return {
     readResident: async () => {
+      await Promise.resolve();
       reads += 1;
       return at(index++);
     },
     unload: async (checkpoint: string) => {
+      await Promise.resolve();
       sent.push(checkpoint);
       const landsOn = at(index);
       if (landsOn?.checkpoint === checkpoint) {

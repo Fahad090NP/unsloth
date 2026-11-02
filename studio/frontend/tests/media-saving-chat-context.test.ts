@@ -14,6 +14,8 @@ const tick = () => new Promise((resolve) => setTimeout(resolve, 5));
 const FAST = { intervalMs: 1, firstDelayMs: 0 };
 const SAVE = save.SAVING_CHAT_CONTEXT;
 
+const noneYet = (count: number) => count === 0;
+
 test("only the saving phase reaches the toast, and a failed read keeps watching", async () => {
   const phases = ["ready", null, "boom", SAVE, "downloading", "error", SAVE];
   let saving = 0;
@@ -47,7 +49,7 @@ test("a read still in flight at stop() is dropped, and stop() is idempotent", as
     });
   };
   const watch = save.watchSavingPhase(read, () => saving++, FAST);
-  while (reads === 0) await tick();
+  while (noneYet(reads)) await tick();
   watch.stop();
   watch.stop();
   release({ phase: SAVE });

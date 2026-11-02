@@ -1238,7 +1238,10 @@ test("registered ranges are cleared and repainted before deletion or replacement
   const events: string[] = [];
   class FakeHighlight {
     priority = 0;
-    constructor(..._ranges: Range[]) { /* empty */ }
+    readonly ranges: Range[];
+    constructor(...ranges: Range[]) {
+      this.ranges = ranges;
+    }
     clear(): void {
       events.push("clear");
     }
@@ -1343,7 +1346,7 @@ test("registered ranges are cleared and repainted before deletion or replacement
       ["HTMLElement", saved.htmlElement, saved.hadHtmlElement],
     ] as const) {
       if (had) Object.assign(scope, { [key]: value });
-      else delete scope[key];
+      else Reflect.deleteProperty(scope, key);
     }
   }
 });

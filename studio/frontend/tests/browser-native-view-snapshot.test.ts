@@ -40,9 +40,10 @@ const rootStyle = {
   removeProperty: (name: string) => rootVars.delete(name),
 };
 placeholder.style.removeProperty = (name) => {
-  delete placeholder.style[
-    name.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase())
-  ];
+  Reflect.deleteProperty(
+    placeholder.style,
+    name.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase()),
+  );
 };
 const noop = () => undefined;
 Object.assign(globalThis, {
@@ -64,6 +65,7 @@ Object.assign(globalThis, {
   },
   CSS: { escape: (value: string) => value },
   DOMRect: class {
+    static readonly stub = true;
     constructor(x: number, y: number, width: number, height: number) {
       // biome-ignore lint/correctness/noConstructorReturn: a plain rect stands in for DOMRect
       return rect(x, y, width, height);

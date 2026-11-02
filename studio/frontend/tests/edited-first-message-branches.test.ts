@@ -195,7 +195,7 @@ function orderByPreviousRule(rows: Row[]): string[] {
   const chain: string[] = [];
   const seen = new Set<string>();
   let cur: string | null = sorted.at(-1)?.id ?? null;
-  while (cur != null && !seen.has(cur)) {
+  while (cur !== null && !seen.has(cur)) {
     seen.add(cur);
     if (!sorted.some((x) => x.id === cur)) {
       break;

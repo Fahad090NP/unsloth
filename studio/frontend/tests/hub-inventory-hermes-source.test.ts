@@ -39,7 +39,9 @@ test("a Hermes download is labelled by the app that fetched it", () => {
 
 test("a Hermes GGUF becomes a loadable local row", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rows = buildLocalInventoryRows([hermesModel() as any]);
+  const rows = buildLocalInventoryRows([
+    hermesModel() as unknown as Parameters<typeof buildLocalInventoryRows>[0][number],
+  ]);
   assert.equal(rows.length, 1);
   assert.equal(rows[0].source, "hermes");
   assert.equal(rows[0].sourceLabel, "Hermes");

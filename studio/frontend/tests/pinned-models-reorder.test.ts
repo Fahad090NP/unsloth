@@ -31,7 +31,7 @@ function setPinned(pinned: string[]) {
 
 function storedPinned(): string[] | null {
   const raw = storageStore.get(STORAGE_KEY);
-  return raw ? JSON.parse(raw) : null;
+  return raw ? (JSON.parse(raw) as string[]) : null;
 }
 
 function externalWrite(pinned: string[], key: string | null = STORAGE_KEY) {

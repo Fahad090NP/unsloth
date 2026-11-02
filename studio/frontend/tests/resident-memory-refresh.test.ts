@@ -28,7 +28,7 @@ test("resident estimates wait for fresh probes and discard obsolete refreshes", 
           return [
             state,
             (next: unknown) => {
-              state = typeof next === "function" ? next(state) : next;
+              state = typeof next === "function" ? (next as (previous: unknown) => unknown)(state) : next;
             },
           ];
         },

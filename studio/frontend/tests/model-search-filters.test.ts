@@ -22,9 +22,11 @@ async function collect<T>(iterator: AsyncIterable<T>): Promise<T[]> {
 }
 
 async function* listing(models: unknown[]) {
+  await Promise.resolve();
   yield* models;
 }
 const noFetch = async () => {
+  await Promise.resolve();
   throw new Error("unexpected metadata request");
 };
 
@@ -99,6 +101,7 @@ test("combined filters use actual parameters, GGUF context, and organization own
         uploaders: ["unsloth", "organization"],
       },
       async (path) => {
+        await Promise.resolve();
         requests.push(path);
         // Personal accounts 404 on the organization overview (fetchJson maps that to null).
         if (path.includes("/organizations/")) {
@@ -140,13 +143,17 @@ test("missing or inaccessible config is excluded while service errors propagate"
   const rows = [{ name: "user/gated", safetensors: { total: 2e9 } }];
   assert.deepEqual(
     await collect(
-      filterModelListing(listing(rows), { minContext: 1 }, async () => null),
+      filterModelListing(listing(rows), { minContext: 1 }, async () => {
+        await Promise.resolve();
+        return null;
+      }),
     ),
     [null],
   );
   await assert.rejects(
     collect(
       filterModelListing(listing(rows), { minContext: 1 }, async () => {
+        await Promise.resolve();
         throw new Error("HTTP 429");
       }),
     ),
@@ -164,7 +171,7 @@ test("a sparse result remains reachable beyond the pagination scan budget", asyn
     assert.equal((await iter.next()).value, null);
   }
   const rest = await collect(iter);
-  assert.equal((rest.filter(Boolean)[0] as { name: string }).name, "user/199");
+  assert.equal((rest.find(Boolean) as { name: string }).name, "user/199");
 });
 
 test("metadata work is bounded and cancellation closes the source iterator", async () => {
@@ -172,6 +179,7 @@ test("metadata work is bounded and cancellation closes the source iterator", asy
   let peak = 0;
   let closed = false;
   async function* source() {
+    await Promise.resolve();
     try {
       for (let i = 0; i < 20; i++) {
         yield { name: `user/${i}` };
@@ -285,7 +293,10 @@ test("context filters accept established config key aliases", async () => {
       filterModelListing(
         listing([model]),
         { minContext: 2048, maxContext: 2048 },
-        async () => ({ [field]: 2048 }),
+        async () => {
+          await Promise.resolve();
+          return { [field]: 2048 };
+        },
       ),
     );
     assert.deepEqual(rows, [model], field);
@@ -311,7 +322,7 @@ function channelIterator(listings: Record<string, unknown[]>) {
   assert.ok(limit > 0);
   const listModels = ({ search }: { search: { owner?: string } }) =>
     listing(listings[search.owner ?? "all"] ?? []);
-  const fn = new Function(
+  const compile = new Function(
     "listModels",
     "getHfEndpoint",
     "ALL_FIELDS",
@@ -324,7 +335,16 @@ function channelIterator(listings: Record<string, unknown[]>) {
         compilerOptions: { target: ts.ScriptTarget.ES2022 },
       }).outputText
     }; return channelUnslothFirstIterator;`,
-  )(
+  ) as (
+    listModels: (input: { search: { owner?: string } }) => AsyncGenerator<unknown>,
+    getHfEndpoint: () => string,
+    allFields: unknown[],
+    makeSortFetch: () => undefined,
+    prefetch: number,
+    rejectLimit: number,
+    hubListingSort: (sortBy: string) => string,
+  ) => (search: unknown, options: unknown) => AsyncGenerator<unknown>;
+  const fn = compile(
     listModels,
     () => "",
     [],
@@ -374,6 +394,7 @@ test("uploaders split Unsloth, other organizations and personal accounts", async
   ];
   const requests: string[] = [];
   const fetchJson = async (path: string) => {
+    await Promise.resolve();
     requests.push(path);
     return path.includes("/organizations/Qwen/") ? {} : null;
   };

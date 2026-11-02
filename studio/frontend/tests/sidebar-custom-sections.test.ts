@@ -813,13 +813,18 @@ test("a row id named like an object built-in is unfiled until it is filed", () =
   );
   assert.equal(merged.sectionByChatId.__proto__, "s");
   assert.equal(
-    (merged.sectionByChatId as unknown as Record<string, unknown>).toString,
+    Object.getOwnPropertyDescriptor(
+      merged.sectionByChatId as unknown as Record<string, unknown>,
+      "toString",
+    )?.value,
     "s",
   );
   assert.equal(merged.sectionByChatId.constructor, undefined);
   assert.equal(
-    (merged.sectionByProjectId as unknown as Record<string, unknown>)
-      .hasOwnProperty,
+    Object.getOwnPropertyDescriptor(
+      merged.sectionByProjectId as unknown as Record<string, unknown>,
+      "hasOwnProperty",
+    )?.value,
     undefined,
   );
   store.deleteCustomSection(a);

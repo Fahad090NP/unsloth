@@ -27,7 +27,7 @@ interface DialogState {
 const IDLE_DIALOG_STATE: DialogState = {
   logFamilyRequested: null,
   logSourcePathRequested: null,
-  consumeLogFamilyRequest: () => {},
+  consumeLogFamilyRequest: () => { /* empty */ },
 };
 
 const API_URL = new URL(
@@ -97,11 +97,13 @@ function makeWorld(options: {
   const apiStubs: Record<string, unknown> = {
     "@/features/auth": {
       authFetch: async (input: string) => {
+        await Promise.resolve();
         requests.push(input);
         return options.respond?.() ?? new Response(new Blob(["PK"]));
       },
       getAuthToken: () => storedToken,
       refreshSession: async () => {
+        await Promise.resolve();
         refreshes.push(true);
         if (options.refreshFails) {
           // The real refresh clears stored tokens on any non-2xx, so nothing refreshes speculatively.
@@ -119,6 +121,7 @@ function makeWorld(options: {
     "@/lib/format-fastapi-error": formatFastApiError,
     "@/lib/native-files": {
       browserDownload: async (blob: Blob, filename: string) => {
+        await Promise.resolve();
         downloads.push({ filename, bytes: blob.size });
       },
     },
@@ -185,7 +188,7 @@ function makeWorld(options: {
       TooltipTrigger: passthrough,
     },
     "@/features/hub/hooks/use-copy-feedback": {
-      useCopyFeedback: () => ({ copied: false, copy: async () => {} }),
+      useCopyFeedback: () => ({ copied: false, copy: async () => { /* empty */ } }),
     },
     "@/features/hub": { formatBytes: (bytes: number) => `${bytes} B` },
     "@/i18n": { useT: () => t },
@@ -258,7 +261,7 @@ function jsonResponse(status: number, detail: string): Response {
 test("the desktop export streams through the Tauri command", async () => {
   const world = makeWorld({
     isTauri: true,
-    invoke: async () => SAVED_PATH,
+    invoke: async () => { await Promise.resolve(); return SAVED_PATH; },
   });
 
   assert.equal(await world.api.exportAllLogs(), SAVED_PATH);
@@ -316,7 +319,7 @@ test("an export that works does not touch the session", async () => {
   // Download all logs.
   const world = makeWorld({
     isTauri: true,
-    invoke: async () => SAVED_PATH,
+    invoke: async () => { await Promise.resolve(); return SAVED_PATH; },
   });
 
   await world.api.exportAllLogs();
@@ -329,6 +332,7 @@ test("a rejected token is refreshed once and the export retried", async () => {
   const world = makeWorld({
     isTauri: true,
     invoke: async () => {
+      await Promise.resolve();
       attempts += 1;
       if (attempts === 1) throw "Download failed with status 401.";
       return SAVED_PATH;
@@ -347,6 +351,7 @@ test("a 401 that cannot be refreshed is reported, not retried", async () => {
   const world = makeWorld({
     isTauri: true,
     invoke: async () => {
+      await Promise.resolve();
       attempts += 1;
       throw "Download failed with status 401.";
     },
@@ -364,6 +369,7 @@ test("a failure that is not a 401 never reaches for the refresh token", async ()
   const world = makeWorld({
     isTauri: true,
     invoke: async () => {
+      await Promise.resolve();
       throw "Download failed with status 500.";
     },
   });
@@ -437,6 +443,7 @@ test("the desktop stream failure carries the HTTP status back out of Rust", asyn
   const world = makeWorld({
     isTauri: true,
     invoke: async () => {
+      await Promise.resolve();
       throw "Download failed with status 404.";
     },
   });
@@ -489,7 +496,7 @@ test("a desktop export toasts the saved path and reveals that folder", async () 
   const world = makeWorld({
     isTauri: true,
     invoke: async (command) =>
-      command === "download_logs_to_downloads" ? SAVED_PATH : undefined,
+      { await Promise.resolve(); return command === "download_logs_to_downloads" ? SAVED_PATH : undefined; },
   });
   world.render();
 
@@ -523,7 +530,7 @@ test("a desktop export toasts the saved path and reveals that folder", async () 
 });
 
 test("the open-logs-folder button still reaches the command", async () => {
-  const world = makeWorld({ isTauri: true, invoke: async () => undefined });
+  const world = makeWorld({ isTauri: true, invoke: async () => { await Promise.resolve(); return undefined; }});
   world.render();
 
   (world.button("debug-log-open-folder").onClick as () => void)();

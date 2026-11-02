@@ -303,8 +303,8 @@ function harness(
       threadId: options.propId === undefined ? ID : options.propId,
     });
     effects.splice(0).forEach((effect) => {
-      const cleanup = (effect)();
-      if (typeof cleanup === "function") cleanups.push(cleanup);
+      const cleanup = (effect as () => unknown)();
+      if (typeof cleanup === "function") cleanups.push(cleanup as () => void);
     });
   }
   function pick() {

@@ -36,7 +36,10 @@ function harness() {
         id,
         follow,
         onProgress,
-        finish: (error) => { error ? reject(error) : resolve(); },
+        finish: (error) => {
+          if (error) reject(error);
+          else resolve();
+        },
       });
     });
   const store = loadWithStubs<typeof NpuCatalogStore>(

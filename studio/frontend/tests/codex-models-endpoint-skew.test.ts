@@ -44,7 +44,7 @@ after(async () => {
 
 function stubFetch(response: Response): () => void {
   const original = globalThis.fetch;
-  globalThis.fetch = (async () => response.clone());
+  globalThis.fetch = (async () => { await Promise.resolve(); return response.clone(); });
   return () => {
     globalThis.fetch = original;
   };
@@ -119,7 +119,7 @@ test("a gateway 401 on the unknown path still keeps the selection", async () => 
   const store = new Map<string, string>();
   globals.localStorage = {
     getItem: (key: string) => store.get(key) ?? null,
-    setItem: (key: string, value: string) => void store.set(key, String(value)),
+    setItem: (key: string, value: string) => void store.set(key, value),
     removeItem: (key: string) => void store.delete(key),
     clear: () => { store.clear(); },
     key: () => null,

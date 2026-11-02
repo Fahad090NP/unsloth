@@ -42,9 +42,9 @@ const liftedJs = ts.transpileModule(liftedTs, {
 }).outputText;
 
 // eslint-disable-next-line @typescript-eslint/no-implied-eval
-const findLatestUserVideoBase64 = new Function(liftedJs)() as (
+const findLatestUserVideoBase64 = (new Function(liftedJs) as () => (
   messages: unknown,
-) => string | undefined;
+) => string | undefined)();
 
 const f = (name: string, type: string) => ({ name, type }) as unknown as File;
 

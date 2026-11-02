@@ -79,7 +79,7 @@ test("an old backend that never sends unified_memory keeps the old behaviour", (
   assert.equal(probed, false, "a missing key must not read as unified");
   for (const appleSilicon of [false, true]) {
     assert.equal(
-      probed || appleSilicon,
+      appleSilicon,
       appleSilicon,
       `old backend with appleSilicon=${String(appleSilicon)} changed answer`,
     );
@@ -386,7 +386,8 @@ test("a non-Apple unified pool is measured against the host, not the window", ()
       "carved window cannot answer a whole-load question",
   );
   assert.equal(pooled.known, true);
-  assert.ok(pooled.gb > 60, `the pool must hold the load; got ${pooled.gb}`);
+  const pooledGb: number = pooled.gb;
+  assert.ok(pooledGb > 60, `the pool must hold the load; got ${pooled.gb}`);
 });
 
 test("an unread host RAM figure is reported unread, not replaced by the window", () => {

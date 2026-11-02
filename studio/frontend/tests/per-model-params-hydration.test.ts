@@ -973,12 +973,14 @@ test("a remembered Max is the window after a restart", async () => {
     paramsByModel: {},
     params: { ...useChatRuntimeStore.getState().params, checkpoint: LLAMA },
   });
-  settingsHttp.settings = {
-    inferenceParams: { maxTokens: 30000 },
-    inferenceParamsByModel: {
-      [LLAMA]: { maxTokens: REMEMBERED_MAX_TOKENS_MAX },
+  Object.assign(settingsHttp, {
+    settings: {
+      inferenceParams: { maxTokens: 30000 },
+      inferenceParamsByModel: {
+        [LLAMA]: { maxTokens: REMEMBERED_MAX_TOKENS_MAX },
+      },
     },
-  };
+  });
   await useChatRuntimeStore.getState().hydratePersistedSettings();
   assert.equal(useChatRuntimeStore.getState().params.maxTokens, 30000);
 });

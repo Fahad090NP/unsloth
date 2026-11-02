@@ -470,7 +470,7 @@ test("a picture the live turn accepted at the limit still fits its own replay", 
 
 test("the byte filter scans past candidates that do not fit", () => {
   const big = (tag: string, n: number, size: number) =>
-    Array.from({ length: n }, (_, i) => ({ data: tag.repeat(size / tag.length) + i, mimeType: "image/png" }));
+    Array.from({ length: n }, (_, i) => ({ data: `${tag.repeat(size / tag.length)}${i}`, mimeType: "image/png" }));
   const messages = [
     {
       role: "tool",

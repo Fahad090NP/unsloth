@@ -2,6 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import { readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -34,7 +35,7 @@ test("toolArgText renders whatever the model sent as text", () => {
 
 // `{"toString":null}` shadows Object.prototype's toString, so coercing it throws.
 test("toolArgText survives an object that cannot be coerced", () => {
-  const hostile = JSON.parse('{"code":{"toString":null}}').code;
+  const hostile = (JSON.parse('{"code":{"toString":null}}') as { code: unknown }).code;
   assert.equal(toolArgText(hostile), '{"toString":null}');
   assert.equal(
     toolArgText(JSON.parse('[{"toString":null}]')),
@@ -52,7 +53,7 @@ test("toolArgText caps a serialised object but never a string", () => {
   assert.equal(toolArgText(long), long);
 
   // Wide rather than deep: engine recursion limits differ.
-  const wide = JSON.parse(`[${new Array(200_000).fill(0).join(",")}]`);
+  const wide = JSON.parse(`[${new Array(200_000).fill(0).join(",")}]`) as number[];
   const out = toolArgText(wide);
   assert.ok(out.length <= 100_001, `serialised object was ${out.length} chars`);
   assert.ok(out.endsWith("…"), "a truncated value says so");
@@ -228,12 +229,11 @@ test("the image card survives a result whose fields are not strings", () => {
     one("imageMetadata"),
     "return { imageDimensions, imageSrc, imageMetadata };",
   ].join("\n");
-  const render = new Function(
-    "__result",
-    "toolArgText",
+  const render = vm.compileFunction(
     ts.transpileModule(body, {
       compilerOptions: { target: ts.ScriptTarget.ES2022 },
     }).outputText,
+    ["__result", "toolArgText"],
   ) as (
     result: Record<string, unknown>,
     coerce: typeof toolArgText,
@@ -246,7 +246,7 @@ test("the image card survives a result whose fields are not strings", () => {
     imageSrc: "data:image/png;base64,AAA",
     imageMetadata: "1024 · hd · image/png",
   });
-  const hostile = JSON.parse('{"toString":null}');
+  const hostile = JSON.parse('{"toString":null}') as { toString: null };
   assert.doesNotThrow(() => run({ size: hostile }));
   assert.doesNotThrow(() => run({ quality: hostile }));
   assert.doesNotThrow(() => run({ image_mime: hostile }));

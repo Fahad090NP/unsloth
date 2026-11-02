@@ -70,7 +70,7 @@ function run(
     },
   });
   vm.runInContext(liveHandler(), context);
-  context.receive(events);
+  (context as { receive: (events: unknown[]) => void }).receive(events);
   return cleared;
 }
 

@@ -52,7 +52,7 @@ function load(
             if (models instanceof Error) return Promise.reject(models);
             return Promise.resolve({ ok: true, status: 200, json:  () => Promise.resolve(models) });
           }
-          posted.push(JSON.parse(init?.body ?? "{}"));
+          posted.push(JSON.parse(init?.body ?? "{}") as Record<string, unknown>);
           return Promise.resolve({
             ok: reply.status < 400,
             status: reply.status,

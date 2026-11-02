@@ -114,7 +114,11 @@ test("each visibility round-trips through storage", async () => {
   for (const visibility of ["auto", "expanded", "collapsed"] as const) {
     useChatPreferencesStore.getState().setToolVisibility(visibility);
     useChatPreferencesStore.getState().setThinkingVisibility(visibility);
-    const saved = JSON.parse(store.get(PREFERENCES_KEY) ?? "{}").state;
+    const saved = (
+      JSON.parse(store.get(PREFERENCES_KEY) ?? "{}") as {
+        state: { toolVisibility: string; thinkingVisibility: string };
+      }
+    ).state;
     assert.equal(
       saved.toolVisibility,
       visibility,

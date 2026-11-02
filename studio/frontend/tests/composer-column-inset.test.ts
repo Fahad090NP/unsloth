@@ -14,7 +14,6 @@ import { readSrc } from "./helpers/kit.ts";
 const DOCK_INNER_RULE =
   /\.unsloth-composer-dock-inner \{\s*padding-left: var\(--composer-dock-inset-left/;
 const FOOTER_COLUMN_CALL = /left: footerRect\.left \+ viewport\.scrollLeft/;
-const NARROW_DOCK_RULE = /data-thread-narrow\]\) \.unsloth-composer-dock-inner/;
 
 const base = {
   left: 0,

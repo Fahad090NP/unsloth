@@ -96,7 +96,11 @@ const isScope = (n: ts.Node): boolean =>
   ts.isFunctionLike(n);
 
 function enclosingScope(node: ts.Node): ts.Node | null {
-  for (let n = node.parent; n; n = n.parent) {
+  for (
+    let n = node.parent as ts.Node | undefined;
+    n;
+    n = n.parent as ts.Node | undefined
+  ) {
     if (isScope(n)) return n;
   }
   return null;
@@ -148,7 +152,11 @@ function resolve(
 }
 
 function importModuleOf(declaration: ts.Node): string | null {
-  for (let n: ts.Node | undefined = declaration; n; n = n.parent) {
+  for (
+    let n = declaration as ts.Node | undefined;
+    n;
+    n = n.parent as ts.Node | undefined
+  ) {
     if (ts.isImportDeclaration(n)) {
       return ts.isStringLiteralLike(n.moduleSpecifier)
         ? n.moduleSpecifier.text
@@ -204,7 +212,6 @@ const isPathnameBinding = (n: ts.Node): boolean => {
 const isPathnameRead = (n: ts.Node): boolean =>
   (ts.isPropertyAccessExpression(n) && n.name.text === "pathname") ||
   (ts.isElementAccessExpression(n) &&
-    n.argumentExpression !== undefined &&
     ts.isStringLiteralLike(n.argumentExpression) &&
     n.argumentExpression.text === "pathname") ||
   isPathnameBinding(n);
@@ -343,7 +350,7 @@ function taintedBindings(
   const destructured = (n: ts.Node): ts.Node[] => {
     if (!ts.isBindingElement(n)) return [];
     if (seed(n)) return [n];
-    const declaration = n.parent.parent;
+    const declaration = n.parent.parent as ts.Node | undefined;
     return declaration &&
       ts.isVariableDeclaration(declaration) &&
       declaration.initializer &&
@@ -386,7 +393,7 @@ function taintedBindings(
     if (!parameters) return [];
     const out: ts.Node[] = [];
     n.arguments.forEach((argument, index) => {
-      const parameter = parameters[index];
+      const parameter = parameters.at(index);
       if (parameter && isTainted(argument)) out.push(parameter);
     });
     return out;
@@ -478,7 +485,7 @@ function scanSource(source: ts.SourceFile, label: string): Scan {
   walk(source, (n) => {
     if (isDynamicImport(n)) {
       result.dynamicImports += 1;
-      const specifier = n.arguments[0];
+      const specifier = n.arguments.at(0);
       if (
         specifier &&
         reaches(

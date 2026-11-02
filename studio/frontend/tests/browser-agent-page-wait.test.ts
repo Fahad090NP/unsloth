@@ -15,9 +15,11 @@ function page(requests: { start: number; end: number }[], mutations: number[] = 
     maxMs, changingMaxMs, quietMs: QUIET,
     now: () => now,
     sleep: async (ms) => {
+      await Promise.resolve();
       now += ms;
     },
     status: async () => {
+      await Promise.resolve();
       // The command takes a moment to reach the page.
       now += 5;
       const pending = requests.filter((r) => r.start >= since && r.start <= now && now < r.end).length;

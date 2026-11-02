@@ -144,7 +144,7 @@ test("a panel opened again reads what another tab saved while none was open", ()
   // Another tab's write, with nothing here listening.
   const map = JSON.parse(
     store.get(saved.SAVED_RUN_SETTINGS_STORAGE_KEY) ?? "{}",
-  );
+  ) as Record<string, unknown[]>;
   const [key] = Object.keys(map);
   map[key] = [];
   store.set(saved.SAVED_RUN_SETTINGS_STORAGE_KEY, JSON.stringify(map));

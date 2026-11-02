@@ -35,7 +35,7 @@ function json(body: unknown): Response {
 }
 
 setAuthFetchHandler((input, init) => {
-  const url = String(input);
+  const url = input;
   if (url.startsWith(CAPS_URL)) {
     capsCalls += 1;
     const xet = source === "huggingface";

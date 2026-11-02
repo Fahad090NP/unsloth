@@ -2,6 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import test from "node:test";
 
 import ts from "@typescript/typescript6";
@@ -66,9 +67,9 @@ const privateContentPredicateJs = ts.transpileModule(
   { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
 ).outputText;
 
-const messagesUsePrivateContent = new Function(privateContentPredicateJs)() as (
+const messagesUsePrivateContent = (vm.compileFunction(privateContentPredicateJs) as () => (
   messages: unknown[],
-) => boolean;
+) => boolean)();
 
 test("private message history blocks automatic image lookup", () => {
   assert.equal(
@@ -736,10 +737,11 @@ const sanitizeAssistantReplayJs = ts.transpileModule(
   { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
 ).outputText;
 
-const sanitizeAssistantReplayText = new Function(
-  "stripSearchImageTokens",
-  sanitizeAssistantReplayJs,
-)(stripSearchImageTokens) as (text: string) => string;
+const sanitizeAssistantReplayText = (
+  vm.compileFunction(sanitizeAssistantReplayJs, ["stripSearchImageTokens"]) as (
+    strip: (text: string) => string,
+  ) => (text: string) => string
+)(stripSearchImageTokens);
 
 test("a token from an earlier turn is unresolvable in the message that repeats it", () => {
   const earlier = [
@@ -893,12 +895,11 @@ test("the web search card survives a query that is not a string", () => {
     cardSource.indexOf("const isUrlFetch ="),
   );
   assert.ok(args.length > 0, "the args derivation moved");
-  const derived = new Function(
-    "args",
-    "toolArgText",
+  const derived = vm.compileFunction(
     ts.transpileModule(`${args}\nreturn [query.trim(), url];`, {
       compilerOptions: { target: ts.ScriptTarget.ES2022 },
     }).outputText,
+    ["args", "toolArgText"],
   ) as (args: unknown, coerce: typeof toolArgText) => [string, string];
   const derive = (args: unknown): [string, string] => derived(args, toolArgText);
   assert.deepEqual(derive({ query: 42 }), ["42", ""]);

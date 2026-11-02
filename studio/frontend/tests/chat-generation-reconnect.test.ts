@@ -107,6 +107,7 @@ test("reconnect resumes from the applied cursor without duplicate chunks", async
   const eventUrls: string[] = [];
   let follows = 0;
   globalThis.fetch = (async (input: RequestInfo | URL) => {
+    await Promise.resolve();
     const url = String(input);
     if (url.includes("/events")) {
       eventUrls.push(url);
@@ -158,6 +159,7 @@ test("reconnect resumes from the applied cursor without duplicate chunks", async
 
 test("durable replay normalizes reasoning summary control frames", async () => {
   globalThis.fetch = (async (input: RequestInfo | URL) => {
+    await Promise.resolve();
     if (String(input).includes("/events")) {
       return sse([
         frame(1, "chunk", { type: "reasoning_summary", duration_ms: 3200 }),
@@ -182,6 +184,7 @@ test("durable replay normalizes reasoning summary control frames", async () => {
 test("durable replay re-tags persisted tool control frames for the shared consumer", async () => {
   const toolStart = { type: "tool_start", name: "web_search", input: { q: "x" } };
   globalThis.fetch = (async (input: RequestInfo | URL) => {
+    await Promise.resolve();
     if (String(input).includes("/events")) {
       return sse([
         frame(1, "chunk", { type: "tool_status", content: "Searching…" }),
@@ -215,16 +218,16 @@ test("durable replay re-tags persisted tool control frames for the shared consum
 
 test("a backend without chat runs selects the legacy path", async () => {
   globalThis.fetch = (async () =>
-    new Response(null, { status: 404 }));
+    { await Promise.resolve(); return new Response(null, { status: 404 }); });
   assert.equal(await supportsChatGenerationRuns("thread-1"), false);
 });
 
 test("tool-enabled durable admission errors select the legacy stream", async () => {
   globalThis.fetch = (async () =>
-    new Response(
+    { await Promise.resolve(); return new Response(
       JSON.stringify({ detail: "Tool-enabled chat runs use the legacy streaming path" }),
       { status: 400, headers: { "content-type": "application/json" } },
-    ));
+    ); });
   await assert.rejects(
     createChatGenerationRun(createInput()),
     (error: unknown) => {
@@ -236,10 +239,10 @@ test("tool-enabled durable admission errors select the legacy stream", async () 
 
 test("credential-safe durable admission errors select the legacy stream", async () => {
   globalThis.fetch = (async () =>
-    new Response(JSON.stringify({ detail: "Credentials cannot be persisted" }), {
+    { await Promise.resolve(); return new Response(JSON.stringify({ detail: "Credentials cannot be persisted" }), {
       status: 400,
       headers: { "content-type": "application/json" },
-    }));
+    }); });
   await assert.rejects(
     createChatGenerationRun(createInput()),
     (error: unknown) => {
@@ -251,12 +254,12 @@ test("credential-safe durable admission errors select the legacy stream", async 
 
 test("an older backend's unknown-field refusal selects the legacy stream", async () => {
   globalThis.fetch = (async () =>
-    new Response(
+    { await Promise.resolve(); return new Response(
       JSON.stringify({
         detail: "Unsupported durable request fields: sandbox_level",
       }),
       { status: 400, headers: { "content-type": "application/json" } },
-    ));
+    ); });
   await assert.rejects(
     createChatGenerationRun(createInput()),
     (error: unknown) => isLegacyFallbackChatGenerationAdmissionError(error),
@@ -269,10 +272,10 @@ test("missing history rows select the legacy stream", async () => {
     [400, "userMessageId must identify a user message in the thread"],
   ] as const) {
     globalThis.fetch = (async () =>
-      new Response(JSON.stringify({ detail }), {
+      { await Promise.resolve(); return new Response(JSON.stringify({ detail }), {
         status,
         headers: { "content-type": "application/json" },
-      }));
+      }); });
     await assert.rejects(
       createChatGenerationRun(createInput()),
       (error: unknown) => isLegacyFallbackChatGenerationAdmissionError(error),
@@ -283,6 +286,7 @@ test("missing history rows select the legacy stream", async () => {
 test("an ambiguous create retries the same run instead of starting generation twice", async () => {
   const bodies: string[] = [];
   globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    await Promise.resolve();
     bodies.push(String(init?.body));
     if (bodies.length === 1) throw new TypeError("network reset");
     return new Response(JSON.stringify(run("queued", 1)), {
@@ -301,6 +305,7 @@ test("Stop cancels the server run while an event reconnect is delayed", async ()
   let eventCalls = 0;
   let cancelCalls = 0;
   globalThis.fetch = (async (input: RequestInfo | URL) => {
+    await Promise.resolve();
     const url = String(input);
     if (url.endsWith("/cancel")) {
       cancelCalls += 1;
@@ -334,11 +339,11 @@ test("completed, cancelled, and backend-restarted snapshots are terminal", async
   for (const status of ["completed", "cancelled", "failed"] as const) {
     const terminal = run(status, 0);
     globalThis.fetch = (async (input: RequestInfo | URL) =>
-      String(input).includes("/events")
+      { await Promise.resolve(); return String(input).includes("/events")
         ? sse([])
         : new Response(JSON.stringify(terminal), {
             status: 200,
-          }));
+          }); });
     const seen: string[] = [];
     for await (const update of followChatGenerationRun("run-1", {
       initialRun: terminal,
@@ -379,7 +384,7 @@ test("Stop during create cancels the run after its delayed reply", async () => {
 
 test("a null admission does not mean the run was stopped", async () => {
   globalThis.fetch = (async () =>
-    new Response("", { status: 200 }));
+    { await Promise.resolve(); return new Response("", { status: 200 }); });
   const controller = new AbortController();
   const created = await createChatGenerationRunUntilAbort(
     createInput(),

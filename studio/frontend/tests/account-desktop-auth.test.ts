@@ -69,6 +69,7 @@ function fixture(
     clearAuthTokens: () => { access = null; refresh = null; passwordChange = false; },
     getPostAuthRoute: () => tauri ? "/chat" : passwordChange ? "/change-password" : "/chat",
     refreshSession: async () => {
+      await Promise.resolve();
       refreshCalls++;
       if (!refreshSucceeds) return false;
       access = "refreshed-access";
@@ -102,6 +103,7 @@ function fixture(
         route: string,
         commitSession: () => void,
       ) => {
+        await Promise.resolve();
         transitions.push({ account, route });
         commitSession();
         return false;
@@ -109,6 +111,7 @@ function fixture(
     },
     "@tauri-apps/api/core": {
       invoke: async (command: string, args?: unknown) => {
+        await Promise.resolve();
         invokes.push([command, args]);
         if (command === "desktop_mark_signed_out") return void (shell.signedOut = true);
         if (command === "desktop_clear_signed_out") return void (shell.signedOut = false);
@@ -119,7 +122,7 @@ function fixture(
         return response;
       },
     },
-    "@/app/router": { router: { navigate: async (options: unknown) => { navigations.push(options); } } },
+    "@/app/router": { router: { navigate: async (options: unknown) => { await Promise.resolve();  navigations.push(options); } } },
   });
   const guards = loadWithStubs<Guards>(new URL("../src/app/auth-guards.ts", import.meta.url), {
     "@tanstack/react-router": { redirect: (options: unknown) => options },
@@ -133,6 +136,7 @@ function fixture(
     },
   });
   globalThis.fetch = async () => {
+    await Promise.resolve();
     statusCalls++;
     return new Response(JSON.stringify(status), { status: 200 });
   };
@@ -443,6 +447,7 @@ async function runSignOut({ tauri, owner, status, offline, markerFails }: SignOu
     Event,
     AUTH_SESSION_ENDING_EVENT: "ending",
     fetchAuthStatus: async () => {
+      await Promise.resolve();
       events.push("status");
       if (status === undefined) throw new Error("offline");
       return status;
@@ -451,10 +456,12 @@ async function runSignOut({ tauri, owner, status, offline, markerFails }: SignOu
     t: (key: string) => key,
     useSettingsDialogStore: { getState: () => ({ openDialog: (tab: string) => events.push(`open:${tab}`) }) },
     markDesktopSignedOut: async () => {
+      await Promise.resolve();
       if (markerFails) throw new Error("permission denied");
       events.push("signed-out");
     },
     logout: async () => {
+      await Promise.resolve();
       events.push("logout");
       if (offline) throw new TypeError("Failed to fetch");
     },

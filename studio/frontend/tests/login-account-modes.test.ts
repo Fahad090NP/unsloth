@@ -296,7 +296,7 @@ test("single mode still posts unsloth and does not refetch on success", async (t
   environment(t);
   const requests: unknown[] = [];
   globalThis.fetch = (path, init) => {
-    requests.push([path, JSON.parse(String(init?.body as string))]);
+    requests.push([path, JSON.parse(init?.body as string)]);
     return Promise.resolve(Response.json(token));
   };
   assert.deepEqual(
@@ -312,7 +312,7 @@ test("multi mode case folds and trims username without changing password", async
   environment(t);
   let sent: unknown;
   globalThis.fetch = (_path, init) => {
-    sent = JSON.parse(String(init?.body as string));
+    sent = JSON.parse(init?.body as string);
     return Promise.resolve(Response.json(token));
   };
   await client().loginFromForm("multi", " ALIce ", "Keep-CaSe ");
@@ -324,7 +324,7 @@ test("401 after a second account is created rerenders username entry without sho
   let statusReads = 0;
   globalThis.fetch = (path) =>
     Promise.resolve(
-      String(path as string).endsWith("/status")
+      (path as string).endsWith("/status")
         ? Response.json({
             initialized: true,
             requires_password_change: false,
@@ -354,7 +354,7 @@ test("other login failures preserve the server error and only single-mode 401 pr
     globalThis.fetch = (path) => {
       count++;
       return Promise.resolve(
-        String(path as string).endsWith("/status")
+        (path as string).endsWith("/status")
           ? Response.json({ login_mode: "single" })
           : Response.json({ detail: "Server detail" }, { status }),
       );
@@ -414,7 +414,7 @@ test("successful login commits through transition and avoids SPA navigation when
   environment(t);
   globalThis.fetch = (path) =>
     Promise.resolve(
-      String(path as string).endsWith("/status")
+      (path as string).endsWith("/status")
         ? Response.json({
             initialized: true,
             requires_password_change: false,
@@ -464,7 +464,7 @@ test("cleanup retries reuse an issued setup session without consuming the code a
   environment(t);
   let logins = 0;
   globalThis.fetch = (path) => {
-    if (String(path as string).endsWith("/status"))
+    if ((path as string).endsWith("/status"))
       return Promise.resolve(Response.json({
         initialized: true,
         requires_password_change: false,
@@ -657,9 +657,9 @@ async function submitPasswordChange(
   requests: string[],
 ) {
   globalThis.fetch = (path) => {
-    requests.push(String(path as string));
+    requests.push(path as string);
     return Promise.resolve(
-      String(path as string).endsWith("/status")
+      (path as string).endsWith("/status")
         ? Response.json({
             initialized: true,
             requires_password_change: true,
@@ -775,7 +775,7 @@ test("a desktop password sign-in clears the explicit sign-out", async (t) => {
   environment(t);
   globalThis.fetch = (input: RequestInfo | URL) =>
     Promise.resolve(
-      String(input as string).endsWith("/status")
+      (input as string).endsWith("/status")
         ? Response.json({ initialized: true, requires_password_change: false, login_mode: "multi" })
         : Response.json(token),
     );

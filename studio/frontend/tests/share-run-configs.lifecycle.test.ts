@@ -126,8 +126,10 @@ function harness(loadParser?: () => typeof links | Promise<typeof links>) {
       "@/lib/toast": {
         toast: {
           error: (message: string) => errors.push(message),
-          loading: (message: string) =>
-            loading.set(++toastId, message) && toastId,
+          loading: (message: string) => {
+            loading.set(++toastId, message);
+            return toastId;
+          },
           dismiss: (id: number) => loading.delete(id),
         },
       },

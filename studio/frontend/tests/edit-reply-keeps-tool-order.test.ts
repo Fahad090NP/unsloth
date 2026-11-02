@@ -53,7 +53,7 @@ function harness() {
         },
         listChatMessages: () => [],
       },
-      "@assistant-ui/core/internal": { MessageRepository: class {} },
+      "@assistant-ui/core/internal": { MessageRepository: class { static readonly stub = true; } },
       // Cut here so the passthrough never loads db.ts and its IndexedDB driver.
       "./chat-history-storage": {
         ensureStoredChatThread: () => undefined,

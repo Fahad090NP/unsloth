@@ -256,7 +256,7 @@ function makeStream(mintPartIds = false): {
   const js = ts.transpileModule(`const mintPartIds = ${String(mintPartIds)};` + body, {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   }).outputText;
-  return new Function(
+  const build = new Function(
     "splitTopLevelJsonObjects",
     "createBoundaryScan",
     "streamedToolCallArguments",
@@ -265,7 +265,13 @@ function makeStream(mintPartIds = false): {
     "bindStreamedToolCallCard",
     "resolveToolCallPartId",
     js,
-  )(
+  ) as (...args: unknown[]) => {
+    feed: (batch: DeltaCall[], finished?: boolean) => boolean;
+    parts: LoopPart[];
+    resolveToolPartId: (backendId: string) => string;
+    endRound: () => void;
+  };
+  return build(
     splitTopLevelJsonObjects,
     createBoundaryScan,
     streamedToolCallArguments,
@@ -273,12 +279,7 @@ function makeStream(mintPartIds = false): {
     mintStreamedToolCallId,
     bindStreamedToolCallCard,
     resolveToolCallPartId,
-  ) as {
-    feed: (batch: DeltaCall[], finished?: boolean) => boolean;
-    parts: LoopPart[];
-    resolveToolPartId: (backendId: string) => string;
-    endRound: () => void;
-  };
+  );
 }
 
 function run(batches: DeltaCall[][]): LoopPart[] {
@@ -1275,7 +1276,10 @@ test("a provider-hosted tool event does not end the provider turn", () => {
   const js = ts.transpileModule(`${guarded}\n}`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   }).outputText;
-  const applyGuard = new Function("chunk", "endProviderTurn", js);
+  const applyGuard = new Function("chunk", "endProviderTurn", js) as (
+    chunk: unknown,
+    endProviderTurn: () => void,
+  ) => void;
   for (const [chunk, expectedEnds] of [
     [{ _toolEvent: { tool_name: "web_search" } }, 1],
     [{ choices: [{}], _toolEvent: { tool_name: "web_search" } }, 0],

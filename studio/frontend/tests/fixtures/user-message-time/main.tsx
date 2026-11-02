@@ -10,7 +10,7 @@ import {
   useExternalStoreRuntime,
   type ThreadMessage,
 } from "@assistant-ui/react";
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import {
   UserMessageActionBar,
@@ -143,20 +143,23 @@ function App() {
     isRunning: true,
     onNew: () => Promise.resolve(),
   });
-  window.messageTimeFixture = {
-    setLocale,
-    updateReply: () =>
-      { setMessages((previous) =>
-        previous.map((message) =>
-          message.role === "assistant"
-            ? {
-                ...message,
-                content: [{ type: "text", text: `Streaming ${Math.random()}` }],
-              }
-            : message,
-        ),
-      ); },
-  };
+  useEffect(() => {
+    window.messageTimeFixture = {
+      setLocale,
+      updateReply: () => {
+        setMessages((previous) =>
+          previous.map((message) =>
+            message.role === "assistant"
+              ? {
+                  ...message,
+                  content: [{ type: "text", text: `Streaming ${Math.random()}` }],
+                }
+              : message,
+          ),
+        );
+      },
+    };
+  }, []);
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <TooltipProvider>
@@ -195,4 +198,4 @@ if (params.has("scale"))
     "--ui-font-size-scale",
     params.get("scale"),
   );
-createRoot(document.getElementById("root") as HTMLElement).render(<App />);
+createRoot(document.getElementById("root")!).render(<App />);

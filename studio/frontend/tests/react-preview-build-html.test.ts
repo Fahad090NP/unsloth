@@ -47,8 +47,9 @@ function frame(registry: Record<string, unknown> = {}) {
     },
     document: { getElementById: (id: string) => ({ id }) },
   });
-  context.window = context;
-  context.window.dispatchEvent = (event: { init: { message: string } }) => errors.push(event.init.message);
+  const windowContext = context as { window: Record<string, unknown> };
+  windowContext.window = context as unknown as Record<string, unknown>;
+  windowContext.window.dispatchEvent = (event: { init: { message: string } }) => errors.push(event.init.message);
   vm.runInContext(previewBootstrap(AVAILABLE), context);
   const run = async (code: string) => {
     const promise = vm.runInContext(componentScript(code, "App.tsx"), context) as Promise<void>;

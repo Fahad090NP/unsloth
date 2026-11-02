@@ -18,6 +18,7 @@ function body(source: string, start: string, end: string): string {
 }
 
 test("clients with their own request keep their own reachability", async () => {
+  await Promise.resolve();
   const page = readText("../src/features/hub/hub-page.tsx");
   assert.match(page, /const online = useOnlineStatus\(\);/);
   assert.ok(
@@ -27,6 +28,7 @@ test("clients with their own request keep their own reachability", async () => {
 });
 
 test("the panel still reads the classified cause, not that boolean", async () => {
+  await Promise.resolve();
   const page = readText("../src/features/hub/hub-page.tsx");
   assert.match(page, /searchFailure,/);
   const search = readText("../src/features/hub/hooks/use-discover-search.ts");
@@ -35,6 +37,7 @@ test("the panel still reads the classified cause, not that boolean", async () =>
 });
 
 test("a dead feed is restarted by Load more, not left inert", async () => {
+  await Promise.resolve();
   const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   const fn = body(search, "const fetchMore = useCallback", "\n  }, [");
   assert.ok(fn.includes("needsRestart()"), "it has to notice the dead iterator");
@@ -45,6 +48,7 @@ test("a dead feed is restarted by Load more, not left inert", async () => {
 });
 
 test("the restart is not allowed to defeat the backoff", async () => {
+  await Promise.resolve();
   const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   const fn = body(search, "const fetchMore = useCallback", "\n  }, [");
   // Only the explicit Retry clears the window; the scroll path would re-probe a dead origin.
@@ -54,6 +58,7 @@ test("the restart is not allowed to defeat the backoff", async () => {
 });
 
 test("rows on screen do not hide that the feed failed", async () => {
+  await Promise.resolve();
   const lists = readText("../src/features/hub/catalog/models-catalog-lists.tsx");
   assert.match(lists, /\{\(hasMore \|\| searchError \|\| searchFailure\) && \(/);
   const footer = body(lists, "<DiscoverFetchMoreFooter", "/>");
@@ -72,6 +77,7 @@ test("rows on screen do not hide that the feed failed", async () => {
 });
 
 test("a live backoff is not bypassed by typing", async () => {
+  await Promise.resolve();
   const search = readText("../src/features/hub/hooks/use-discover-search.ts");
   // Each ungated attempt failed and re-armed the 30s window, so it never elapsed.
   for (const m of search.matchAll(/enabled: ([^,\n]+),/g)) {
@@ -82,6 +88,7 @@ test("a live backoff is not bypassed by typing", async () => {
 });
 
 test("gating the search again does not re-hide the error", async () => {
+  await Promise.resolve();
   const paginated = readText(
     "../src/features/hub/hooks/use-hub-paginated-search.ts",
   );
@@ -92,6 +99,7 @@ test("gating the search again does not re-hide the error", async () => {
 });
 
 test("a footer retained over an outage can still act", async () => {
+  await Promise.resolve();
   const lists = readText("../src/features/hub/catalog/models-catalog-lists.tsx");
   const footer = body(lists, "<DiscoverFetchMoreFooter", "/>");
   assert.ok(
@@ -105,6 +113,7 @@ test("a footer retained over an outage can still act", async () => {
 });
 
 test("the retained footer names the cause, not just the staleness", async () => {
+  await Promise.resolve();
   const lists = readText("../src/features/hub/catalog/models-catalog-lists.tsx");
   const footer = body(lists, "<DiscoverFetchMoreFooter", "/>");
   assert.ok(
@@ -124,6 +133,7 @@ test("the retained footer names the cause, not just the staleness", async () => 
 });
 
 test("the notice outlives the backoff window, not the other way round", async () => {
+  await Promise.resolve();
   const lists = readText("../src/features/hub/catalog/models-catalog-lists.tsx");
   // `online` is a 30s TTL that flips back on a timer; the notice keys on the cause instead.
   const footer = body(lists, "<DiscoverFetchMoreFooter", "/>");
@@ -140,6 +150,7 @@ test("the notice outlives the backoff window, not the other way round", async ()
 });
 
 test("a row the mapper rejects is not treated as an outage", async () => {
+  await Promise.resolve();
   const paginated = readText(
     "../src/features/hub/hooks/use-hub-paginated-search.ts",
   );
@@ -155,6 +166,7 @@ test("a row the mapper rejects is not treated as an outage", async () => {
 });
 
 test("pausing dataset fetches leaves the rendered rows alone", async () => {
+  await Promise.resolve();
   const datasets = readText(
     "../src/features/hub/hooks/use-hub-dataset-search.ts",
   );

@@ -31,7 +31,7 @@ const DAY = 86_400_000;
 const now = new Date(2026, 8, 27, 12).getTime();
 
 const chats: ChatEntry[] = [
-  { id: "a", type: "single", title: "Café planning", createdAt: now - 40 * DAY, updatedAt: now - Number(DAY), projectId: "p1" },
+  { id: "a", type: "single", title: "Café planning", createdAt: now - 40 * DAY, updatedAt: now - DAY, projectId: "p1" },
   { id: "b", type: "single", title: "bug triage", createdAt: now - 3 * DAY, updatedAt: now, isFork: true },
   { id: "c", type: "compare", title: "Model shootout", createdAt: now - 2 * DAY, updatedAt: now - 2 * DAY, projectId: "p2" },
   { id: "d", type: "single", title: "Archive me", createdAt: now - 90 * DAY, updatedAt: now - 60 * DAY },

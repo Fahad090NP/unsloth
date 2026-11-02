@@ -52,9 +52,10 @@ test("reloadLastModel rejects missing history without loading", async () => {
   const loaded: ReloadTarget[] = [];
   await assert.rejects(
     reloadLastModel({
-      readLastLoad: async () => null,
+      readLastLoad: async () => { await Promise.resolve(); return null; },
       resolveConfig: () => null,
       loadTarget: async (next) => {
+        await Promise.resolve();
         loaded.push(next);
       },
     }),
@@ -66,13 +67,14 @@ test("reloadLastModel rejects missing history without loading", async () => {
 test("reloadLastModel awaits durable history before loading", async () => {
   const loaded: ReloadTarget[] = [];
   const target = await reloadLastModel({
-    readLastLoad: async () => ({
+    readLastLoad: async () => { await Promise.resolve(); return ({
       id: "unsloth/llama",
       kind: "model",
       ggufVariant: null,
-    }),
+    }); },
     resolveConfig: () => null,
     loadTarget: async (next) => {
+      await Promise.resolve();
       loaded.push(next);
     },
   });

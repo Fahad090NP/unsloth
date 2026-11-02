@@ -158,7 +158,10 @@ function run(names: string[]): Record<string, Record<string, unknown>> {
   for (const name of names) {
     vm.runInContext(code(name), context, { filename: `${name}.js` });
   }
-  return vm.runInContext("globalThis.__unslothModules", context);
+  return vm.runInContext("globalThis.__unslothModules", context) as Record<
+    string,
+    Record<string, unknown>
+  >;
 }
 
 test("the files register module namespaces, React first and shared", () => {
@@ -198,10 +201,11 @@ test("a library loaded before React says so", () => {
 test("the plugin serves the manifest module and the files, and 404s anything else", async () => {
   const plugin = previewRuntime();
   type Hook = (...args: unknown[]) => unknown;
-  const call = (hook: unknown, ...args: unknown[]) =>
-    (typeof hook === "function" ? hook : (hook as { handler: Hook }).handler)(
-      ...args,
-    );
+  const call = (hook: unknown, ...args: unknown[]) => {
+    const handler: Hook =
+      typeof hook === "function" ? (hook as Hook) : (hook as { handler: Hook }).handler;
+    return handler(...args);
+  };
   call(plugin.configResolved, {
     root: ROOT,
     base: "/",

@@ -24,7 +24,9 @@ function nativeFn(name: string) {
 function loadDocument(label: string, { guarded }: { guarded: boolean }) {
   const target = new EventTarget();
   const invoked: string[] = [];
-  class Node {}
+  class Node {
+    static readonly stub = true;
+  }
   const window: Record<string, unknown> = {
     URL,
     Node,

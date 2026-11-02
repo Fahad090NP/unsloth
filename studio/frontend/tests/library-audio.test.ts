@@ -232,7 +232,7 @@ test("the card player stops a clip whose card is gone and reports a failed strea
   assert.equal(players[0].paused, true);
 
   await playback.toggleLibraryAudio({ id: "audio:b", name: "b.wav" });
-  players[0].error = { message: "network" };
+  Object.assign(players[0], { error: { message: "network" } });
   players[0].onerror?.();
   players[0].rejectPlay?.(new Error("aborted"));
   await new Promise((resolve) => setTimeout(resolve, 0));

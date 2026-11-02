@@ -9,6 +9,8 @@ import { register } from "node:module";
 import test from "node:test";
 
 import { installLocalStorageFake } from "./helpers/kit.ts";
+
+import type * as ChatRuntimeStoreModule from "../src/features/chat/stores/chat-runtime-store.ts";
 import {
   drainMockedTimers,
   enableCountedTimers,
@@ -314,7 +316,7 @@ async function raceWorld() {
   threadRows.reset();
   const mod = (await import(
     `${STORE_URL}?scenario=race${raceScenario}`
-  )) as typeof import("../src/features/chat/stores/chat-runtime-store.ts");
+  )) as typeof ChatRuntimeStoreModule;
   const { sanitizeThreadScopedSettings } = await import(
     "../src/features/chat/utils/thread-scoped-settings.ts"
   );

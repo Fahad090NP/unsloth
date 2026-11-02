@@ -2,10 +2,9 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import test from "node:test";
 
-import { markdownBlockFallback } from "../src/components/assistant-ui/markdown-block-fallback.ts";
 import { readSrc } from "./helpers/kit.ts";
 
 /** Pins that the reach latch never reverts; a two-way viewport gate measured slower. */

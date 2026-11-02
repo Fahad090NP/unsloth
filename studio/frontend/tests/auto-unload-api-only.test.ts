@@ -33,6 +33,7 @@ let nextBody: Record<string, unknown> = { ...API };
 const bodies: string[] = [];
 
 globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+  await Promise.resolve();
   if (init?.body) bodies.push(String(init.body));
   return new Response(JSON.stringify(nextBody), {
     status: 200,
@@ -48,7 +49,8 @@ const {
 
 test("a backend without the field reads as off", async () => {
   invalidateOpenAIAutoSwitchSettings();
-  const { auto_unload_api_only: _omitted, ...older } = API;
+  const older: Record<string, unknown> = { ...API };
+  delete older.auto_unload_api_only;
   nextBody = older;
   const settings = await loadOpenAIAutoSwitchSettings();
   assert.equal(settings.autoUnloadApiOnly, false);

@@ -41,11 +41,13 @@ function takes({
     signal: controller.signal,
     groupId: GROUP,
     run: async (take) => {
+      await Promise.resolve();
       sent.push(take);
       if (sent.length === failOn) throw new Error("take failed");
       return { clips: [{ seed: 1000 + sent.length }] };
     },
     onTake: async (response) => {
+      await Promise.resolve();
       shown.push(response.clips[0].seed);
       if (shown.length === stopAfter) controller.abort();
     },
@@ -86,11 +88,12 @@ test("an inline take 1 (history could not keep it) still hands its seed on", asy
     count: 2,
     how: "sequential",
     run: async (take) => {
+      await Promise.resolve();
       sent.push(take);
       return { clips: [], audio: { seed: 1001 } };
     },
-    onTake: async () => {},
-    onStatus: () => {},
+    onTake: async () => { /* empty */ },
+    onStatus: () => { /* empty */ },
   });
   assert.deepEqual(sent.map((t) => t.seed), [undefined, 1001]);
 });

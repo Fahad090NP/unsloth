@@ -16,6 +16,7 @@ test("Responses survives provider requests and cache while legacy cache defaults
   const bodies: Record<string, unknown>[] = [];
   const previous = globalThis.fetch;
   globalThis.fetch = (async (_url, init) => {
+    await Promise.resolve();
     bodies.push(JSON.parse(String(init?.body))); return Response.json({});
   });
   try {

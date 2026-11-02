@@ -228,7 +228,7 @@ function ggufState(
 ) {
   const external = checkpoint.startsWith("external::");
   if (!checkpoint || external) return null;
-  return fields.variant != null || fields.ctx != null;
+  return fields.variant !== undefined || fields.ctx !== undefined;
 }
 
 test("an external selection makes GGUF-ness unknown, not stale-true", () => {

@@ -36,6 +36,7 @@ test("On Device answers from disk alone once the Hub is known unreachable", asyn
   const shown: (typeof local)[] = [];
   const result = await loadPickerGgufVariants(
     async (localOnly) => {
+      await Promise.resolve();
       calls.push(localOnly);
       return local;
     },
@@ -56,6 +57,7 @@ test("On Device publishes cached quants before a stalled remote request finishes
   });
   const pending = loadPickerGgufVariants(
     async (localOnly) => {
+      await Promise.resolve();
       calls.push(localOnly);
       return localOnly ? local : await remote;
     },
@@ -97,16 +99,16 @@ test("online discovery adds published quants without changing a cached quant's l
     ],
   };
   const result = await loadPickerGgufVariants(
-    async (localOnly) => (localOnly ? local : remote),
+    async (localOnly) => await Promise.resolve(localOnly ? local : remote),
     options,
-    () => {},
+    () => { /* noop */ },
   );
   assert.equal(result.variants.length, 2);
   const cached = result.variants.find((v) => v.quant === "Q4_K_M");
   assert.equal(cached?.filename, "old-Q4_K_M.gguf");
-  assert.equal(cached?.cache_path, "/cache/old");
-  assert.equal(cached?.downloaded, true);
-  assert.equal(cached?.update_available, true);
+  assert.equal(cached.cache_path, "/cache/old");
+  assert.equal(cached.downloaded, true);
+  assert.equal(cached.update_available, true);
   assert.equal(result.context_length, 4096);
   assert.equal(
     result.variants.find((v) => v.quant === "Q8_0")?.downloaded,
@@ -121,9 +123,9 @@ test("a remote answer cannot promote a locally incomplete quant", async () => {
     dependencies_resolved: false,
   };
   const result = await loadPickerGgufVariants(
-    async (localOnly) => (localOnly ? incomplete : local),
+    async (localOnly) => await Promise.resolve(localOnly ? incomplete : local),
     options,
-    () => {},
+    () => { /* noop */ },
   );
   assert.equal(result.variants[0].downloaded, false);
   assert.equal(result.variants[0].partial, true);
@@ -134,11 +136,12 @@ test("known Hub backoff keeps On Device local", async () => {
   const calls: boolean[] = [];
   await loadPickerGgufVariants(
     async (localOnly) => {
+      await Promise.resolve();
       calls.push(localOnly);
       return local;
     },
     { ...options, canDiscoverRemote: () => false },
-    () => {},
+    () => { /* noop */ },
   );
   assert.deepEqual(calls, [true]);
 });
@@ -148,6 +151,7 @@ test("collapsing the row after its cached answer prevents remote work", async ()
   const calls: boolean[] = [];
   await loadPickerGgufVariants(
     async (localOnly) => {
+      await Promise.resolve();
       calls.push(localOnly);
       return local;
     },
@@ -161,6 +165,7 @@ test("catalog rows retain remote discovery", async () => {
   const calls: boolean[] = [];
   await loadPickerGgufVariants(
     async (localOnly) => {
+      await Promise.resolve();
       calls.push(localOnly);
       return local;
     },
@@ -183,9 +188,9 @@ test("a Hub update or missing drafter reaches a cached quant's row", async () =>
     ],
   };
   const result = await loadPickerGgufVariants(
-    async (localOnly) => (localOnly ? local : remote),
+    async (localOnly) => await Promise.resolve(localOnly ? local : remote),
     options,
-    () => {},
+    () => { /* noop */ },
   );
   assert.equal(result.variants[0].update_available, true);
   assert.equal(result.variants[0].pending_drafter_filename, "mtp-drafter.gguf");
@@ -208,26 +213,30 @@ test("an update downloads the published revision's size and the Hub default wins
     ],
   };
   const result = await loadPickerGgufVariants(
-    async (localOnly) =>
-      localOnly
+    async (localOnly) => {
+      await Promise.resolve();
+      return localOnly
         ? {
             ...local,
             variants: [{ ...local.variants[0], download_size_bytes: 0 }],
           }
-        : remote,
+        : remote;
+    },
     options,
-    () => {},
+    () => { /* noop */ },
   );
   const cached = result.variants.find((v) => v.quant === "Q4_K_M");
   assert.equal(cached?.download_size_bytes, 300);
-  assert.equal(cached?.size_bytes, 300);
-  assert.equal(cached?.cache_path, "/cache/old");
+  assert.equal(cached.size_bytes, 300);
+  assert.equal(cached.cache_path, "/cache/old");
   assert.equal(result.default_variant, "Q8_0");
   const current = await loadPickerGgufVariants(
-    async (localOnly) =>
-      localOnly ? local : { ...remote, variants: [local.variants[0]] },
+    async (localOnly) => {
+      await Promise.resolve();
+      return localOnly ? local : { ...remote, variants: [local.variants[0]] };
+    },
     options,
-    () => {},
+    () => { /* noop */ },
   );
   assert.equal(current.variants[0].size_bytes, 256);
 });
@@ -239,13 +248,14 @@ test("a Hub update or missing drafter withdraws a collapsed sole quant", async (
   ]) {
     const remote = { ...local, variants: [{ ...local.variants[0], ...extra }] };
     assert.equal(
-      await hubWithdrawsSoleQuant(async () => remote, "q4_k_m"),
+      await hubWithdrawsSoleQuant(async () => await Promise.resolve(remote), "q4_k_m"),
       true,
     );
   }
-  assert.equal(await hubWithdrawsSoleQuant(async () => local, "Q4_K_M"), false);
+  assert.equal(await hubWithdrawsSoleQuant(async () => await Promise.resolve(local), "Q4_K_M"), false);
   assert.equal(
     await hubWithdrawsSoleQuant(async () => {
+      await Promise.resolve();
       throw new Error("Hugging Face unreachable");
     }, "Q4_K_M"),
     false,
@@ -275,6 +285,7 @@ test("follow-up Hub probes never exceed the limiter's concurrency", async () => 
 test("a failed disk phase falls back to the Hub only when it is reachable", async () => {
   const calls: boolean[] = [];
   const list = async (localOnly: boolean) => {
+    await Promise.resolve();
     calls.push(localOnly);
     if (localOnly) throw new Error("Model not found");
     return local;
@@ -289,7 +300,7 @@ test("a failed disk phase falls back to the Hub only when it is reachable", asyn
     loadPickerGgufVariants(
       list,
       { ...options, canDiscoverRemote: () => false },
-      () => {},
+      () => { /* noop */ },
     ),
     /Model not found/,
   );
@@ -298,8 +309,9 @@ test("a failed disk phase falls back to the Hub only when it is reachable", asyn
 
 test("an up-to-date cached quant keeps the Hub's companion-inclusive size", async () => {
   const result = await loadPickerGgufVariants(
-    async (localOnly) =>
-      localOnly
+    async (localOnly) => {
+      await Promise.resolve();
+      return localOnly
         ? {
             ...local,
             variants: [{ ...local.variants[0], download_size_bytes: 256 }],
@@ -307,9 +319,10 @@ test("an up-to-date cached quant keeps the Hub's companion-inclusive size", asyn
         : {
             ...local,
             variants: [{ ...local.variants[0], download_size_bytes: 900 }],
-          },
+          };
+    },
     options,
-    () => {},
+    () => { /* noop */ },
   );
   assert.equal(result.variants[0].download_size_bytes, 900);
   assert.equal(result.variants[0].cache_path, "/cache/old");
@@ -320,12 +333,15 @@ type Variant = GgufVariantsResponse["variants"][number];
 
 async function mergedRow(cached: Partial<Variant>, hub: Partial<Variant>) {
   const merged = await loadPickerGgufVariants(
-    async (localOnly) => ({
-      ...local,
-      variants: [{ ...local.variants[0], ...(localOnly ? cached : hub) }],
-    }),
+    async (localOnly) => {
+      await Promise.resolve();
+      return {
+        ...local,
+        variants: [{ ...local.variants[0], ...(localOnly ? cached : hub) }],
+      };
+    },
     options,
-    () => {},
+    () => { /* noop */ },
   );
   return merged.variants[0];
 }

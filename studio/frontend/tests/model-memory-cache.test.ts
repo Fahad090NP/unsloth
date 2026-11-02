@@ -44,9 +44,8 @@ let nextBody: Record<string, unknown> = { ...API };
 let release: (() => void) | null = null;
 
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-  const url = String(
-    typeof input === "string" ? input : (input as Request).url,
-  );
+  const url =
+    typeof input === "string" ? input : (input as Request).url;
   calls.push(`${init?.method ?? "GET"} ${url}`);
   const body = { ...nextBody };
   if (release) {
@@ -216,7 +215,7 @@ test("only the fields actually set are sent, so the switches save independently"
   const bodies: string[] = [];
   const original = globalThis.fetch;
   globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
-    bodies.push(String(init?.body ?? "" as string));
+    bodies.push((init?.body ?? "") as string);
     return Promise.resolve(new Response(JSON.stringify(API), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -251,7 +250,7 @@ test("saving model memory drops the auto-switch cache", async () => {
   assert.equal(calls.length, 0, "auto-switch does cache");
 
   await updateModelMemorySettings({ keepResident: true });
-  calls = [];
+  calls.length = 0;
   await autoSwitch.loadOpenAIAutoSwitchSettings();
   assert.equal(calls.length, 1, "the write must have invalidated it");
 });

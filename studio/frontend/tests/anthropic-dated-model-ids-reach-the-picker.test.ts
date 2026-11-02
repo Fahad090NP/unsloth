@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { createServer, type ViteDevServer } from "vite";
+import type * as SyncExternalProviders from "../src/features/chat/sync-external-providers.ts";
 
 type Prune = (providerType: string, modelIds: string[]) => string[];
 
@@ -23,7 +24,7 @@ const UNDATED = ["claude-opus-5", "claude-opus-4-8", "claude-sonnet-4-6"];
 
 before(async () => {
   vite = await createServer({ appType: "custom", server: { middlewareMode: true } });
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/sync-external-providers.ts")) as typeof import("../src/features/chat/sync-external-providers.ts");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/sync-external-providers.ts")) as typeof SyncExternalProviders;
   pruneProviderModelIds = loaded.pruneProviderModelIds as Prune;
 });
 

@@ -62,7 +62,7 @@ test("a null window admits every index", () => {
 test("widening only ever moves start down", () => {
   let current = initialWindow(220, false);
   let previous = Number.POSITIVE_INFINITY;
-  while (current !== null && current !== undefined) {
+  while (current !== null) {
     assert.ok(
       current.start < previous,
       `start went ${previous} -> ${current.start}`,
@@ -121,12 +121,14 @@ test("isCovered is true exactly when nothing is being withheld", () => {
 
 test("the constants stay inside the range they were measured over", () => {
   // Bounds, not equalities, so the first commit cannot quietly become one row or everything.
+  const initialMessages: number = INITIAL_MESSAGES;
   assert.ok(
-    INITIAL_MESSAGES >= 8 && INITIAL_MESSAGES <= 64,
+    initialMessages >= 8 && initialMessages <= 64,
     `INITIAL_MESSAGES ${INITIAL_MESSAGES} is outside the measured range`,
   );
+  const chunkMessages: number = CHUNK_MESSAGES;
   assert.ok(
-    CHUNK_MESSAGES >= 8 && CHUNK_MESSAGES <= 128,
+    chunkMessages >= 8 && chunkMessages <= 128,
     `CHUNK_MESSAGES ${CHUNK_MESSAGES} is outside the measured range`,
   );
   assert.ok(
@@ -177,7 +179,7 @@ test("widening is monotone in start for every reachable window and count", () =>
   for (let count = 0; count <= 300; count += 7) {
     for (let start = 0; start <= 300; start += 5) {
       const next = widen({ start }, count);
-      if (next === null || next === undefined) continue;
+      if (next === null) continue;
       assert.ok(
         next.start < start,
         `widen({start:${start}}, ${count}) returned {start:${next.start}}, which withholds more`,
@@ -211,7 +213,7 @@ function visibleRows(
 ): number {
   let visible = 0;
   for (
-    let index = window === null || window === undefined ? 0 : window.start;
+    let index = window === null ? 0 : window.start;
     index < count;
     index += 1
   ) {
@@ -225,21 +227,21 @@ test("the initial tail is sized on rows that render, not on message count", () =
   const renders = tailIsUnrenderable(count, INITIAL_MESSAGES);
   const w = initialWindow(count, false, renders);
   assert.equal(visibleRows(w, count, renders), INITIAL_MESSAGES);
-  assert.ok(w !== null && w !== undefined && w.start < count - INITIAL_MESSAGES);
+  assert.ok(w !== null && w.start < count - INITIAL_MESSAGES);
 });
 
 test("a tail of unrenderable rows still only ever widens", () => {
   const count = 220;
   const renders = tailIsUnrenderable(count, 40);
   const w = initialWindow(count, false, renders);
-  assert.ok(w !== null && w !== undefined && w.start >= 0 && w.start < count);
+  assert.ok(w !== null && w.start >= 0 && w.start < count);
   assert.equal(visibleRows(w, count, renders), INITIAL_MESSAGES);
   let current: MountWindow = w;
   let steps = 0;
-  while (current !== null && current !== undefined) {
+  while (current !== null) {
     const next = widen(current, count);
     assert.ok(
-      next === null || next === undefined || next.start < current.start,
+      next === null || next.start < current.start,
       "start must only fall",
     );
     current = next;
@@ -295,7 +297,7 @@ test("the first commit's raw span is bounded even when the tail does not render"
   const count = 220;
   const renders = (index: number) => index < INITIAL_MESSAGES;
   const w = initialWindow(count, false, renders);
-  const first = w === null || w === undefined ? 0 : w.start;
+  const first = w === null ? 0 : w.start;
   assert.ok(
     count - first <= MAX_INITIAL_SPAN,
     `first commit mounted ${count - first} providers, over the ${MAX_INITIAL_SPAN} cap`,
@@ -307,7 +309,7 @@ test("the cap does not cost visible rows when they are reachable inside it", () 
   const renders = (index: number) => index % 3 !== 0;
   const w = initialWindow(count, false, renders);
   assert.notEqual(w, null);
-  const first = w === null || w === undefined ? 0 : w.start;
+  const first = w === null ? 0 : w.start;
   assert.ok(count - first <= MAX_INITIAL_SPAN);
   assert.equal(visibleRows(w, count, renders), INITIAL_MESSAGES);
 });
@@ -322,11 +324,11 @@ test("a capped window still only widens, and still converges", () => {
   const count = 220;
   const renders = (index: number) => index < INITIAL_MESSAGES;
   let current = initialWindow(count, false, renders);
-  assert.ok(current !== null && current !== undefined && current.start >= 0 && current.start < count);
+  assert.ok(current !== null && current.start >= 0 && current.start < count);
   let steps = 0;
-  while (current !== null && current !== undefined) {
+  while (current !== null) {
     const next = widen(current, count);
-    assert.ok(next === null || next === undefined || next.start < current.start, "start must only fall");
+    assert.ok(next === null || next.start < current.start, "start must only fall");
     current = next;
     steps += 1;
     assert.ok(steps <= count + 2, "widen made no progress");

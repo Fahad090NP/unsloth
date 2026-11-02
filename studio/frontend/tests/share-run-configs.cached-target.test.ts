@@ -132,7 +132,7 @@ function harness(options: Partial<typeof defaults> = {}) {
           await delay(o.delayMs);
           const query = new URL(url, "http://localhost").searchParams;
           const [repo, ...rest] = ["repo_id", "local_path", "offline"].map(
-            (key) => `${query.get(key) ?? ""}`,
+            (key) => query.get(key) ?? "",
           );
           requests.push([repo, ...rest]);
           if (o.listingErrors.includes(repo)) throw new Error("unavailable");

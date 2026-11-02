@@ -36,8 +36,15 @@ function renderer() {
   ).outputText;
   const slots: unknown[] = [];
   let cursor = 0;
+  type ImageProps = {
+    src?: string;
+    className: string;
+    onError: (event: unknown) => void;
+    onLoad: (event: unknown) => void;
+  };
+  type RenderedNode = { props: ImageProps; children: RenderedNode[] };
   const context = {
-    exports: {} as { render: (props: Record<string, unknown>) => any },
+    exports: {} as { render: (props: Record<string, unknown>) => RenderedNode },
     memo: (fn: unknown) => fn,
     React: {
       createElement: (

@@ -7,6 +7,12 @@ import { createPinnedChatsSync, type PinOperation } from "../src/features/chat/u
 import { createPinnedChatsTransport, type PinnedChatsFallbackState } from "../src/features/chat/utils/pinned-chats-transport.ts";
 import { ChatSettingsRequestError } from "../src/features/chat/utils/settings-retry.ts";
 
+function failureMessage(value: unknown): string {
+  if (value instanceof Error) return value.message;
+  if (typeof value === "string") return value;
+  return JSON.stringify(value) ?? "unknown failure";
+}
+
 function unsupported(status = 400, loc = ["patch", "pinnedChatIds"]) {
   return new ChatSettingsRequestError("unsupported", status, [
     { type: "extra_forbidden", loc },
@@ -33,7 +39,7 @@ function fixture(error: unknown = unsupported()) {
       loads += 1;
       if (loadFailure)
         return Promise.reject(
-          loadFailure instanceof Error ? loadFailure : new Error(String(loadFailure)),
+          loadFailure instanceof Error ? loadFailure : new Error(failureMessage(loadFailure)),
         );
       return Promise.resolve(remote?.slice());
     },
@@ -41,7 +47,7 @@ function fixture(error: unknown = unsupported()) {
       remoteCalls += 1;
       if (failure)
         return Promise.reject(
-          failure instanceof Error ? failure : new Error(String(failure)),
+          failure instanceof Error ? failure : new Error(failureMessage(failure)),
         );
       if (operation && acknowledged.has(operation.operationId))
         return Promise.resolve({ pinnedIds: remote?.slice(), applied: true });
@@ -55,7 +61,7 @@ function fixture(error: unknown = unsupported()) {
     migrateLegacy: (ids: string[]) => {
       if (failure)
         return Promise.reject(
-          failure instanceof Error ? failure : new Error(String(failure)),
+          failure instanceof Error ? failure : new Error(failureMessage(failure)),
         );
       remote = [...new Set([...(remote ?? []), ...ids.filter((id) => !tombstones.has(id))])];
       return Promise.resolve(remote.slice());

@@ -20,7 +20,9 @@ interface FakeEvent {
   preventDefault?: () => void;
 }
 
-class FakeNode {}
+class FakeNode {
+  readonly kind = "node";
+}
 
 class FakeElement extends FakeNode {
   inMenu: boolean;

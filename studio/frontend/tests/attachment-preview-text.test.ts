@@ -506,16 +506,23 @@ test("extractPdfAttachmentText destroys the PDF proxy after success and failure"
     {
       _pdfInfo: {},
       numPages: 1,
-      getPage: async () => ({
-        getTextContent: async () => ({
-          items: [
-            { str: "page one", hasEOL: true },
-            { str: "page two", hasEOL: false },
-          ],
-        }),
-      }),
-      getFieldObjects: async () => null,
+      getPage: async () => {
+        await Promise.resolve();
+        return {
+          getTextContent: async () => {
+            await Promise.resolve();
+            return {
+              items: [
+                { str: "page one", hasEOL: true },
+                { str: "page two", hasEOL: false },
+              ],
+            };
+          },
+        };
+      },
+      getFieldObjects: async () => { await Promise.resolve(); return null; },
       destroy: async () => {
+        await Promise.resolve();
         destroyed.push("success");
       },
     },
@@ -523,17 +530,19 @@ test("extractPdfAttachmentText destroys the PDF proxy after success and failure"
       _pdfInfo: {},
       numPages: 1,
       getPage: async () => {
+        await Promise.resolve();
         throw new Error("page extraction failed");
       },
       destroy: async () => {
+        await Promise.resolve();
         destroyed.push("failure");
       },
     },
   ];
 
-  await definePDFJSModule(async () => ({
+  await definePDFJSModule(async () => { await Promise.resolve(); return ({
     getDocument: () => ({ promise: Promise.resolve(proxies.shift()) }),
-  }));
+  }); });
   try {
     const file = new File(["%PDF"], "small.pdf", {
       type: "application/pdf",

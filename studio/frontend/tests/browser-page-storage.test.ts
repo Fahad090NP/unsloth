@@ -25,6 +25,7 @@ const source = readFileSync(new URL("../../backend/routes/browser.py", import.me
 const clock = { now: Date.UTC(2026, 9, 15) };
 const pageDate = { now: () => clock.now, parse: Date.parse };
 class StorageEvent {
+  static readonly stub = true;
   constructor(type: string, init: Record<string, unknown>) {
     Object.assign(this, init, { type });
   }

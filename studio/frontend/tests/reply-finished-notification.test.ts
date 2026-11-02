@@ -11,6 +11,9 @@ import test, { mock } from "node:test";
 
 import { readSrc } from "./helpers/kit.ts";
 
+import type * as ChatPreferencesStoreModule from "../src/features/chat/stores/chat-preferences-store.ts";
+import type * as SettingsSearchModule from "../src/features/settings/settings-search.ts";
+
 // Same "?bust=N" resolver as model-load-native-notifications.test.ts: api-base reads `isTauri`
 // at evaluation, so each case re-evaluates the module graph under its own globals.
 register("./helpers/notification-resolver.mjs", import.meta.url);
@@ -24,8 +27,7 @@ const STORE = new URL(
   import.meta.url,
 ).href;
 
-type ChatPreferencesModule =
-  typeof import("../src/features/chat/stores/chat-preferences-store.ts");
+type ChatPreferencesModule = typeof ChatPreferencesStoreModule;
 
 interface Env {
   tauri: boolean;
@@ -376,7 +378,7 @@ test("the setting is a searchable switch in Chat settings that reverts when refu
   assert.match(row, /setNotifyWhenReplyFinishes\(false\)/);
   const { SETTINGS_SEARCH_INDEX } = (await import(
     new URL("../src/features/settings/settings-search.ts", import.meta.url).href
-  )) as typeof import("../src/features/settings/settings-search.ts");
+  )) as typeof SettingsSearchModule;
   assert.ok(
     SETTINGS_SEARCH_INDEX.chat.includes("settings.chat.replyNotification"),
   );

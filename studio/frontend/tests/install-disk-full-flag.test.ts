@@ -87,14 +87,13 @@ ${installBody
     return { startInstall, onInstallFailed: (e) => {${listenerBody}} };
   `;
   const keys = Object.keys(scope);
-  const hook = new Function(...keys, source)(
-    ...keys.map((key) => scope[key]),
-  ) as {
+  const build = new Function(...keys, source) as (...args: unknown[]) => {
     startInstall: () => Promise<void>;
     onInstallFailed: (e: {
       payload: { message: string; diskFull: boolean };
     }) => void;
   };
+  const hook = build(...keys.map((key) => scope[key]));
 
   const install = hook.startInstall();
   await new Promise((resolve) => setImmediate(resolve));
@@ -144,9 +143,10 @@ ${installBody
     return startInstall;
   `;
   const keys = Object.keys(scope);
-  const startInstall = new Function(...keys, source)(
-    ...keys.map((key) => scope[key]),
-  ) as (options: unknown) => Promise<void>;
+  const buildStartInstall = new Function(...keys, source) as (
+    ...args: unknown[]
+  ) => (options: unknown) => Promise<void>;
+  const startInstall = buildStartInstall(...keys.map((key) => scope[key]));
   await startInstall(options);
   return args;
 }

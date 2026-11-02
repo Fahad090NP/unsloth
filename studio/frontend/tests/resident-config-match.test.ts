@@ -4,6 +4,7 @@
 /** Remembered configs pass without forceReload, so adopting on identity alone drops settings. */
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import test from "node:test";
 
 import { readSrc, registerBundlerResolver } from "./helpers/kit.ts";
@@ -63,7 +64,7 @@ const STANDING = {
   splitRatio: null,
   // The comparator must normalize the speculative mode on both sides.
   normalizeSpeculative: (v: string | null | undefined) =>
-    v === null || v === undefined || !v.trim()
+    !v?.trim()
       ? null
       : v.trim().toLowerCase() === "default"
         ? "auto"
@@ -1590,9 +1591,11 @@ test("the speculative normalizer reads llama.cpp's disable spellings as off", ()
     .slice(start, store.indexOf("\n}\n", start) + 2)
     .replace("export function", "function")
     .replace("  v: string | null | undefined,\n): string | null {", "v) {");
-  const normalize = new Function(
-    `${source}; return normalizeSpeculativeType;`,
-  )() as (v: string | null | undefined) => string | null;
+  const normalize = (
+    vm.compileFunction(`${source}; return normalizeSpeculativeType;`) as () => (
+      v: string | null | undefined,
+    ) => string | null
+  )();
 
   for (const spelling of [
     "off",

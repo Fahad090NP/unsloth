@@ -144,6 +144,7 @@ test("an actively detecting reply is not deferred", () => {
 
 // The bounded hardware re-read runs at most once per page load, or each navigation repeats it.
 test("the bounded hardware wait is spent at most once per page load", async () => {
+  await Promise.resolve();
   assert.match(
     ENV,
     /let hardwareWaitSpent = false/,
@@ -158,6 +159,7 @@ test("the bounded hardware wait is spent at most once per page load", async () =
 
 // /api/health reports device_type to authed callers only, so an unauthed poll never settles.
 test("an unauthenticated read never spends the detection window", async () => {
+  await Promise.resolve();
   assert.match(
     ENV,
     /const spendWait = Boolean\(token\) && !hardwareWaitSpent/,
@@ -167,6 +169,7 @@ test("an unauthenticated read never spends the detection window", async () => {
 
 // main.tsx fires an unawaited fetchDeviceType while __root.tsx awaits its own.
 test("the latch is claimed after the wait, not during it", async () => {
+  await Promise.resolve();
   const loopStart = ENV.indexOf("while (res.ok && Date.now() < deadline)");
   // Anchor on the loop's closing brace, not the latch, or the slice moves with the regression.
   const loopEnd = ENV.indexOf("\n    }\n", loopStart);
@@ -184,6 +187,7 @@ test("the latch is claimed after the wait, not during it", async () => {
 
 // Falling back to the browser platform mislabels WSL/SSH remote hosts as local.
 test("a provisional forced refresh keeps the server-reported platform", async () => {
+  await Promise.resolve();
   assert.match(
     ENV,
     /const keepPlatform =\s*\n?\s*data\.device_type === undefined && previous\.fetched/,
@@ -203,6 +207,7 @@ test("a provisional forced refresh keeps the server-reported platform", async ()
 
 // Under the kill switch only a first-use operation detects, so the sidebar must poll.
 test("a deferred verdict is recorded so the sidebar can poll out of it", async () => {
+  await Promise.resolve();
   assert.match(
     ENV,
     /detectionDeferred: isDetectionDeferred\(data\)/,
@@ -217,6 +222,7 @@ test("a deferred verdict is recorded so the sidebar can poll out of it", async (
 
 // /api/health answers a rejected token with the unauthed body, so a stale token holds /login.
 test("a rejected token stops the wait instead of polling it out", async () => {
+  await Promise.resolve();
   const loopStart = ENV.indexOf("while (res.ok && Date.now() < deadline)");
   const loopEnd = ENV.indexOf("\n    }\n", loopStart);
   assert.ok(loopStart > 0 && loopEnd > loopStart, "the wait loop moved");
@@ -235,6 +241,7 @@ test("a rejected token stops the wait instead of polling it out", async () => {
 
 // Spending the latch on a refused token leaves the route guard on defaults until refresh.
 test("a rejected token does not consume the once-per-load window", async () => {
+  await Promise.resolve();
   assert.match(
     ENV,
     /if \(spendWait && !tokenRejected\) hardwareWaitSpent = true;/,
@@ -250,6 +257,7 @@ test("a rejected token does not consume the once-per-load window", async () => {
 
 // chatOnly is seeded from the user agent, so Macs read true before /api/health answers.
 test("the store exposes an unknown state, not just chat-only", async () => {
+  await Promise.resolve();
   assert.match(
     ENV,
     /capabilitiesUnknown: \(\) => boolean;/,
@@ -266,6 +274,7 @@ test("the store exposes an unknown state, not just chat-only", async () => {
 
 // Under the torch-warm kill switch `fetched` never flips, so unknown would spin forever.
 test("a deferred verdict counts as settled, not as still checking", async () => {
+  await Promise.resolve();
   const selector = /capabilitiesUnknown: \(\) => \{([\s\S]*?)\n {2}\},/.exec(ENV);
   assert.ok(selector, "capabilitiesUnknown is no longer a block the deferred case can live in");
   assert.match(
@@ -276,6 +285,7 @@ test("a deferred verdict counts as settled, not as still checking", async () => 
 });
 
 test("the sidebar gates Train and Video on a measured verdict", async () => {
+  await Promise.resolve();
   assert.match(
     APP_SIDEBAR,
     /const chatOnlyMeasured = chatOnly && !capabilitiesUnknown;/,
@@ -375,6 +385,7 @@ test("a chat-only Apple Silicon host keeps Video navigable", () => {
 });
 
 test("the Video row is disabled exactly when the hint has something to say", async () => {
+  await Promise.resolve();
   assert.match(
     APP_SIDEBAR,
     /const videoDisabledHint = videoNavHint\(chatOnlyMeasured, chatOnlyReason, videoCpuOptIn\)/,
@@ -403,6 +414,7 @@ test("the Video row is disabled exactly when the hint has something to say", asy
 
 // A failed probe used to stay unloaded forever, spinning the Video gate.
 test("a failed hardware probe is retried, not left unloaded", async () => {
+  await Promise.resolve();
   assert.match(
     USE_HARDWARE_INFO,
     /if \(!cancelled && !hw\.loaded\) retry = setTimeout\(load, RETRY_MS\);/,
@@ -417,6 +429,7 @@ test("a failed hardware probe is retried, not left unloaded", async () => {
 
 // A probe resolving between render and subscribe would otherwise never call setInfo.
 test("a cache filled between render and subscribe still reaches the component", async () => {
+  await Promise.resolve();
   assert.match(
     USE_HARDWARE_INFO,
     /if \(cached\) listener\(cached\);\s*\n\s*else load\(\);/,

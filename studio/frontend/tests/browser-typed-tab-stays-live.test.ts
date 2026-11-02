@@ -181,7 +181,7 @@ test("discarding a frame clears only its own draft mark", () => {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
   }).outputText;
   for (const id of [ids[1], ids[0]]) {
-    const noop = () => {};
+    const noop = () => { /* empty */ };
     const globals = {
       pageRequests: () => ({ stop: noop }), requestForPage: noop, userActionGate, urlRef: { current: null }, frameRef: { current: null },
       window: { addEventListener: noop, removeEventListener: noop }, onPageStorageClear: () => noop,
@@ -209,13 +209,13 @@ test("only the first private input channel from this page can report edits", () 
   let now = 0;
   let violation: (event: { effectiveDirective: string; blockedURI: string }) => void;
   const document = {
-    createElement: () => ({ contentWindow: child, setAttribute() {} }),
-    body: { appendChild() {} }, head: { appendChild() {} },
+    createElement: () => ({ contentWindow: child, setAttribute() { /* empty */ } }),
+    body: { appendChild() { /* empty */ } }, head: { appendChild() { /* empty */ } },
     addEventListener: (_: string, callback: typeof violation) => { violation = callback; },
   };
   new Function("window", "document", "parent", "performance", "boot", "escapeAttr", "inject", relay)(
     { addEventListener: (_: string, callback: typeof listener) => { listener = callback; } },
-    document, parent, { now: () => now }, () => {}, (text: string) => text, () => "",
+    document, parent, { now: () => now }, () => { /* empty */ }, (text: string) => text, () => "",
   );
   const send = (source: unknown, data: unknown, ports: Port[] = []) => { listener({ source, data, ports }); };
   send(parent, { type: "unsloth:browser-html", html: "" });

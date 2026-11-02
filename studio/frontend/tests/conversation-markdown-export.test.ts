@@ -26,14 +26,16 @@ function exporterFor(
 ) {
   return createConversationMarkdownExporter<TestMessage>({
     loadMessages: async (threadId) => {
+      await Promise.resolve();
       assert.equal(threadId, "thread-1");
       return messages;
     },
     renderMessage: (message) => message.text,
     download: async (content, filename, mimeType) => {
+      await Promise.resolve();
       downloads.push({ content, filename, mimeType });
     },
-    exportBasename: async (threadId) => `named-${threadId}`,
+    exportBasename: async (threadId) => { await Promise.resolve(); return `named-${threadId}`; },
     notifyNoContent: () => notifications.push("empty"),
   });
 }
@@ -90,7 +92,7 @@ test("notifies when every message is empty", async () => {
 });
 
 test("a compare pair copies with each half under its model", async () => {
-  const build = async (id: string) => `## User\n\nhi\n\n## Assistant\n\nfrom ${id}`;
+  const build = async (id: string) => { await Promise.resolve(); return `## User\n\nhi\n\n## Assistant\n\nfrom ${id}`; };
   const markdown = await buildNamedConversationsMarkdown(
     [
       { id: "thread-1", title: "Chat - Qwen3-8B" },
@@ -106,7 +108,7 @@ test("a single chat copies exactly as the download writes it", async () => {
   const body = "## User\n\nhi";
   const markdown = await buildNamedConversationsMarkdown(
     [{ id: "thread-1", title: "Chat" }],
-    async () => body,
+    async () => { await Promise.resolve(); return body; },
   );
   assert.equal(markdown, body);
 });
@@ -117,7 +119,7 @@ test("a half that loads nothing is dropped, not left as a bare heading", async (
       { id: "thread-1", title: "Chat - base" },
       { id: "thread-2", title: "Chat - fine-tuned" },
     ],
-    async (id) => (id === "thread-1" ? "## User\n\nhi" : ""),
+    async (id) => { await Promise.resolve(); return (id === "thread-1" ? "## User\n\nhi" : ""); },
   );
   assert.equal(markdown, "# Chat - base\n\n## User\n\nhi");
 });
@@ -128,7 +130,7 @@ test("a title carrying a line break stays on its heading", async () => {
       { id: "thread-1", title: "Two\nlines - base" },
       { id: "thread-2", title: "Two lines - lora" },
     ],
-    async () => "## User\n\nhi",
+    async () => { await Promise.resolve(); return "## User\n\nhi"; },
   );
   assert.match(markdown, /^# Two lines - base\n\n## User/);
 });
@@ -149,7 +151,7 @@ test("renderer tokens never leave a thread, downloaded or copied", async () => {
   assert.ok(downloads[0].content.includes(stripped));
 
   const build = createConversationMarkdownBuilder<TestMessage>({
-    loadMessages: async () => messages,
+    loadMessages: async () => { await Promise.resolve(); return messages; },
     renderMessage: (message) => message.text,
   });
   const copied = await buildNamedConversationsMarkdown(

@@ -23,7 +23,9 @@ function constant(name: string): number {
   const match = new RegExp(`const ${name} = ([^;]+);`).exec(source);
   assert.ok(match, `model-catalog.check.ts no longer defines ${name}`);
   // The literals are written for readers (7 * 60 * 1000, 20_000), so evaluate rather than parse.
-  return Number(new Function(`return (${match[1].replaceAll("_", "")})`)());
+  return (new Function(
+    `return (${match[1].replaceAll("_", "")})`,
+  ) as () => number)();
 }
 
 test("the whole network pass is bounded, not just each request", () => {

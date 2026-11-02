@@ -19,7 +19,7 @@ function serve(verdicts: string[]): { probes: string[]; polls: string[] } {
   const probes: string[] = [];
   const polls: string[] = [];
   setAuthFetchHandler((input) => {
-    const url = String(input);
+    const url = input;
     assert.ok(url.startsWith(CAPS_URL), `unexpected request: ${url}`);
     const probed = url.includes("probe=1");
     (probed ? probes : polls).push(url);

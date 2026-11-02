@@ -180,7 +180,7 @@ function queueHarness() {
   return {
     ran,
     toasts,
-    render(busy: boolean, key: string | null) {
+    Render(busy: boolean, key: string | null) {
       cursor = 0;
       const result = useUploadQueue((items) => ran.push(items), busy, key);
       for (const effect of effects.splice(0)) effect();
@@ -191,41 +191,41 @@ function queueHarness() {
 
 test("files added during an upload wait for it, then go in one batch", () => {
   const app = queueHarness();
-  app.render(false, "p1").enqueue(["a"]);
+  app.Render(false, "p1").enqueue(["a"]);
   assert.deepEqual(app.ran, [["a"]]);
 
-  let hook = app.render(true, "p1");
+  let hook = app.Render(true, "p1");
   hook.enqueue(["b"]);
-  hook = app.render(true, "p1");
+  hook = app.Render(true, "p1");
   hook.enqueue(["c"]);
   assert.deepEqual(
     app.ran,
     [["a"]],
     "nothing starts while the first upload runs",
   );
-  assert.equal(app.render(true, "p1").queued, 2);
+  assert.equal(app.Render(true, "p1").queued, 2);
 
-  app.render(false, "p1");
+  app.Render(false, "p1");
   assert.deepEqual(app.ran, [["a"], ["b", "c"]]);
-  assert.equal(app.render(false, "p1").queued, 0);
+  assert.equal(app.Render(false, "p1").queued, 0);
 });
 
 test("a drop that resolves after a switch is not added to the new destination", () => {
   const app = queueHarness();
-  const stale = app.render(false, "p1").enqueue;
-  app.render(false, "p2");
+  const stale = app.Render(false, "p1").enqueue;
+  app.Render(false, "p2");
   stale(["a"]);
   assert.deepEqual(app.ran, []);
   assert.ok(app.toasts.some((message) => message.includes("not added")));
-  app.render(false, "p2").enqueue(["b"]);
+  app.Render(false, "p2").enqueue(["b"]);
   assert.deepEqual(app.ran, [["b"]]);
 });
 
 test("files queued for one project are not added to the next", () => {
   const app = queueHarness();
-  app.render(true, "p1").enqueue(["b"]);
-  app.render(true, "p2");
-  app.render(false, "p2");
+  app.Render(true, "p1").enqueue(["b"]);
+  app.Render(true, "p2");
+  app.Render(false, "p2");
   assert.deepEqual(app.ran, []);
   assert.ok(app.toasts.some((message) => message.includes("not added")));
 });

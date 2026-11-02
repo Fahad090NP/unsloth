@@ -34,7 +34,7 @@ globalThis.fetch = ((_input: string, init?: RequestInit) => {
     return Promise.resolve({ ok: false, status, json: () => Promise.resolve(({})) } as Response);
   }
   if (init?.method === "PUT") {
-    const body = JSON.parse(String(init.body as string)) as Record<string, unknown>;
+    const body = JSON.parse(init.body as string) as Record<string, unknown>;
     puts.push(body);
     const shifted =
       typeof body.loaded_at === "number" && typeof body.client_now === "number"

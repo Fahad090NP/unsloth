@@ -178,6 +178,7 @@ test("a marker naming a call the reply no longer shows falls back to the prompt"
 });
 
 test("the composer reads /compact before any send path, and only for GGUF or MLX", async () => {
+  await Promise.resolve();
   const thread = readSrc("components/assistant-ui/thread.tsx");
   const submit = thread.slice(thread.indexOf("const handleSubmit = useCallback("));
   const command = submit.indexOf("isCompactCommand(composerText)");
@@ -290,7 +291,10 @@ function menuCallback(name: string, deps: Record<string, unknown>, argument: num
   const code = ts.transpileModule(`return (${expression.getText(source)});`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
   }).outputText;
-  return new Function(...Object.keys(deps), code)(...Object.values(deps));
+  const build = new Function(...Object.keys(deps), code) as (
+    ...args: unknown[]
+  ) => unknown;
+  return build(...Object.values(deps));
 }
 
 function compactMenu(threadId: string) {
@@ -479,7 +483,7 @@ test("the compact button waits for a directly issued assistant run", async () =>
         }, null);
       };
       assert.equal(isBusy(), true);
-      const beforeFinish = notifications;
+      const beforeFinish: number = notifications;
       finish();
       await started;
       assert.ok(notifications > beforeFinish);
@@ -491,7 +495,7 @@ test("the compact button waits for a directly issued assistant run", async () =>
       const otherStarted = core.startRun({ parentId: null, sourceId: null, runConfig: {} });
       assert.equal(liveThreadRunning(id), false);
       assert.equal(liveThreadRunning(siblingId), true);
-      const beforeUnmount = notifications;
+      const beforeUnmount: number = notifications;
       unregister();
       assert.ok(notifications > beforeUnmount);
       assert.equal(liveThreadRunning(siblingId), false);
@@ -534,7 +538,10 @@ test("the compact menu item binds its action, icon and busy state", () => {
     return attribute.initializer.expression.getText(source);
   }
   assert.equal(expression(item.openingElement, "onSelect"), "compact");
-  const disabled = new Function("menu", "busy", `return (${expression(item.openingElement, "disabled")});`);
+  const disabled = new Function("menu", "busy", `return (${expression(item.openingElement, "disabled")});`) as (
+    menu: unknown,
+    busy: boolean,
+  ) => unknown;
   assert.equal(disabled({ item: { type: "single" } }, false), false);
   assert.equal(disabled({ item: { type: "single" } }, true), true);
   assert.equal(disabled({ item: { type: "compare" } }, false), true);

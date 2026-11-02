@@ -26,7 +26,7 @@ assert.ok(effectSource, "the rail cap must update from actual layout measurement
 const runEffect = new Function(
   "anchorRef", "placement", "rail", "kind", "getComputedStyle", "document", "ResizeObserver", "setCap",
   `return (${effectSource})();`,
-);
+) as (...args: unknown[]) => () => void;
 
 function measure({
   kind = "images", scale = 1, inset = "", fallbackInset = "", placement = "page",
@@ -40,7 +40,7 @@ function measure({
   const block = { clientWidth: 1000 };
   const root = {};
   let cap = NaN;
-  let update = () => {};
+  let update = () => { /* noop */ };
   let disconnected = false;
   const cleanup = runEffect(
     { current: { parentElement: placement === "page" ? block : { parentElement: block } } },

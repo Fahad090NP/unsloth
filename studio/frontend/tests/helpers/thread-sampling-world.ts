@@ -74,6 +74,10 @@ const EDITS: Record<string, { temperature: number; systemPrompt: string }> = {
   "": { temperature: 0.83, systemPrompt: "NO CHAT OPEN 7e44" },
 };
 
+function checkpointText(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
 function qwenTable(thinkingOn: boolean, checkpoint: string) {
   const base = thinkingOn
     ? { temperature: 0.6, topP: 0.95, topK: 20, minP: 0 }
@@ -147,17 +151,17 @@ export async function runScenario(
   settingsHttp.release = null;
   threadRows.reset();
 
-  const mod: StoreModule = await import(
+  const mod = (await import(
     `${STORE_URL}?scenario=${scenarioCounter}`
-  );
-  const qwen: { applyQwenThinkingParams: (on: boolean) => void } = await import(
+  )) as StoreModule;
+  const qwen = (await import(
     `${QWEN_URL}?scenario=${scenarioCounter}`
-  );
+  )) as { applyQwenThinkingParams: (on: boolean) => void };
   const {
     sanitizeThreadScopedSettings,
-  }: {
+  } = (await import(SETTINGS_URL)) as {
     sanitizeThreadScopedSettings: (value: unknown) => Record<string, unknown>;
-  } = await import(SETTINGS_URL);
+  };
 
   const violations: Violation[] = [];
   const owed = new Map<string, Record<string, unknown>>();
@@ -273,7 +277,7 @@ export async function runScenario(
     }
 
     if (strict && applied !== "" && owed.has(applied)) {
-      const want = owed.get(applied)!;
+      const want = owed.get(applied) ?? {};
       for (const [key, value] of Object.entries(want)) {
         if (!Object.is(params[key], value)) {
           record(
@@ -343,7 +347,7 @@ export async function runScenario(
         live.setParams(
           {
             ...live.params,
-            ...qwenTable(true, String(live.params.checkpoint ?? "")),
+            ...qwenTable(true, checkpointText(live.params.checkpoint)),
           } as never,
           { fromModelDefaults: true } as never,
         );
@@ -351,7 +355,7 @@ export async function runScenario(
       case "qwenToggleOn":
       case "qwenToggleOff": {
         const on = op === "qwenToggleOn";
-        const checkpoint = String(live.params.checkpoint ?? "");
+        const checkpoint = checkpointText(live.params.checkpoint);
         qwen.applyQwenThinkingParams(on);
         if (
           checkpoint.toLowerCase().includes("qwen3") &&

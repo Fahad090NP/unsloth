@@ -65,7 +65,7 @@ test("bad values name the item", () => {
   const bad = (text: string, type: "int" | "float") => {
     const r = parseAxisValues(text, type);
     assert.equal(r.ok, false, text);
-    return r.ok ? "" : r.error;
+    return r.error;
   };
   assert.match(bad("abc", "int"), /"abc" is not a number/);
   assert.match(bad("2.5", "int"), /not a whole number/);
@@ -144,7 +144,7 @@ test("SD controls axes appear only when status reports them (#14562), CFG rescal
 test("an axis the model lacks is refused by id, out-of-range values are refused", () => {
   const r = planCompare([{ axisId: "sampler", text: "euler" }], zimage());
   assert.equal(r.ok, false);
-  assert.match(r.ok ? "" : r.error, /no sampler axis/);
+  assert.match(r.error, /no sampler axis/);
   assert.equal(planCompare([{ axisId: "steps", text: "0, 5" }], sdxl()).ok, false);
   assert.equal(planCompare([{ axisId: "steps", text: "101" }], sdxl()).ok, false);
   assert.equal(planCompare([{ axisId: "guidance", text: "21" }], sdxl()).ok, false);
@@ -171,8 +171,8 @@ test("cell cap: over the limit is refused with the count, at the limit is fine",
     sdxl(),
   );
   assert.equal(over.ok, false);
-  assert.equal(over.ok ? 0 : over.cellCount, 80);
-  assert.match(over.ok ? "" : over.error, /80 cells is over the limit of 64/);
+  assert.equal(over.cellCount, 80);
+  assert.match(over.error, /80 cells is over the limit of 64/);
   const at = planCompare(
     [
       { axisId: "steps", text: "1-4" },
@@ -318,7 +318,7 @@ test("run order: A1111's z, y, x nesting; costly axes outermost, grouped by shap
     [7, 8],
   ]);
   let switches = 0;
-  for (let k = 1; k < ran.length; k++) if ((Number(ran[k][0]) > 1) !== (Number(ran[k - 1][0]) > 1)) switches++;
+  for (let k = 1; k < ran.length; k++) if ((ran[k][0] > 1) !== (ran[k - 1][0] > 1)) switches++;
   assert.equal(switches, 1);
   // Prompt S/R outranks guidance: each prompt is entered once.
   const sr = plan(
@@ -447,7 +447,7 @@ test("a Schedule type the cell's sampler does not take is refused, not silently 
     sdxl(),
   );
   assert.equal(bad.ok, false);
-  assert.match(bad.ok ? "" : bad.error, /Karras is not available with Euler a/);
+  assert.match(bad.error, /Karras is not available with Euler a/);
   // The form's Model default takes no schedule either.
   const onDefault = planCompare([{ axisId: "schedule", text: "automatic, karras" }], sdxl());
   assert.match(onDefault.ok ? "" : onDefault.error, /Karras is not available with Model default/);
@@ -473,14 +473,14 @@ test("Prompt S/R counts a negative-prompt match only where some cell's CFG engag
   const ctx = sdxl({ prompt: "a fox", negativePrompt: "red eyes", guidance: 1 });
   const off = planCompare([{ axisId: "prompt_sr", text: "red, blue" }], ctx);
   assert.equal(off.ok, false);
-  assert.match(off.ok ? "" : off.error, /did not find "red" in cell "red"/);
+  assert.match(off.error, /did not find "red" in cell "red"/);
   // A CFG axis that raises guidance over the threshold engages it for those cells.
   // Per cell: a CFG 1 cell would not use the negative prompt, so its substitution would do nothing.
   const mixed = planCompare([{ axisId: "prompt_sr", text: "red, blue" }, { axisId: "guidance", text: "1, 7" }], ctx);
   assert.match(mixed.ok ? "" : mixed.error, /did not find "red" in cell "red, CFG: 1"/);
   const withCfg = planCompare([{ axisId: "prompt_sr", text: "red, blue" }, { axisId: "guidance", text: "3, 7" }], ctx);
   assert.ok(withCfg.ok);
-  const req = buildCellRequest(withCfg.ok ? withCfg.plan : (null as never), 3, base({ prompt: "a fox", negative_prompt: undefined, guidance: 1 }), ctx, {
+  const req = buildCellRequest(withCfg.plan, 3, base({ prompt: "a fox", negative_prompt: undefined, guidance: 1 }), ctx, {
     base: 1,
     keepRandom: false,
     seedFieldEmpty: false,

@@ -27,6 +27,7 @@ test("files the composer refuses wait for a model instead of being lost", async 
   const added: string[] = [];
   let modelLoaded = false;
   const add = async (f: File) => {
+    await Promise.resolve();
     if (f.name.endsWith(".png") && !modelLoaded) throw new Error("Load a model first");
     added.push(f.name);
   };
@@ -43,6 +44,7 @@ test("files the composer refuses wait for a model instead of being lost", async 
 });
 
 test("a sign-out drops files handed to a chat that has not taken them", async () => {
+  await Promise.resolve();
   const handoff = useLibraryChatHandoffStore.getState();
   handoff.offer("single:3", { files: [file("a.png")] });
   useLibraryChatHandoffStore.setState({ held: { targetKey: "single:3", files: [file("b.png")] } });
@@ -57,6 +59,7 @@ test("a sign-out mid-handoff stops it, and keeps nothing for the next account", 
     .offer("single:4", { files: [file("a.png"), file("b.png"), file("c.png")] });
   const added: string[] = [];
   const add = async (f: File) => {
+    await Promise.resolve();
     added.push(f.name);
     if (f.name === "a.png") fireWindowEvent(SIGNED_OUT, {});
     throw new Error("Load a model first");
@@ -89,9 +92,10 @@ function loadApi(session: { epoch: number }, authFetch: (url: string, init?: Req
 
 test("two quick changes to one folder reach the server in the order they were made", async () => {
   const sent: string[] = [];
-  let answerFirst = () => {};
+  let answerFirst = () => { /* noop */ };
   const { updateLibraryFolder } = loadApi({ epoch: 1 }, (_url, init) => {
-    const { name } = JSON.parse(String(init?.body)) as { name: string };
+    const body = init?.body;
+    const { name } = JSON.parse(typeof body === "string" ? body : "{}") as { name: string };
     sent.push(name);
     if (name !== "first") return Promise.resolve(new Response("{}"));
     return new Promise((resolve) => (answerFirst = () => { resolve(new Response("{}")); }));
@@ -114,7 +118,10 @@ test("a preview stops reading at its cap, whatever size the listing said", async
       },
     });
   const answer = { body: (): BodyInit => bytes(1), headers: {} as Record<string, string> };
-  const api = loadApi({ epoch: 1 }, async () => new Response(answer.body(), { headers: answer.headers }));
+  const api = loadApi({ epoch: 1 }, async () => {
+    await Promise.resolve();
+    return new Response(answer.body(), { headers: answer.headers });
+  });
   const item = { name: "grew.png", fileUrl: "/f", sizeBytes: 4 };
   assert.equal((await api.fetchLibraryBlob(item, "image/png", 10)).size, 4);
   answer.body = () => bytes(4);
@@ -128,6 +135,7 @@ test("an upload's grants from before a sign-in are not sent under it", async () 
   const session = { epoch: 1 };
   let requests = 0;
   const { uploadLibraryFiles } = loadApi(session, async () => {
+    await Promise.resolve();
     requests += 1;
     return new Response(JSON.stringify({ ids: ["upload:x"] }));
   });
@@ -142,6 +150,7 @@ test("an upload's grants from before a sign-in are not sent under it", async () 
 test("a batch of more than 1000 files goes as several requests", async () => {
   const perRequest: number[] = [];
   const { uploadLibraryFiles } = loadApi({ epoch: 1 }, async (_url, init) => {
+    await Promise.resolve();
     const files = (init?.body as FormData).getAll("files");
     perRequest.push(files.length);
     return new Response(JSON.stringify({ ids: files.map((_, i) => `upload:${i}`) }));
@@ -154,6 +163,7 @@ test("a batch of more than 1000 files goes as several requests", async () => {
 test("a desktop drop of more than 999 files keeps each request under the field limit", async () => {
   const fields: number[] = [];
   const { uploadLibraryFiles } = loadApi({ epoch: 1 }, async (_url, init) => {
+    await Promise.resolve();
     const form = init?.body as FormData;
     fields.push(form.getAll("nativePathLeases").length + form.getAll("folderId").length);
     return new Response(JSON.stringify({ ids: ["upload:x"] }));
@@ -167,11 +177,12 @@ test("the next account's edit does not wait behind one the account that left nev
   const session = { epoch: 1 };
   const sent: string[] = [];
   const { updateLibraryItem } = loadApi(session, (_url, init) => {
-    const { name } = JSON.parse(String(init?.body)) as { name: string };
+    const body = init?.body;
+    const { name } = JSON.parse(typeof body === "string" ? body : "{}") as { name: string };
     sent.push(name);
-    return name === "A's" ? new Promise(() => {}) : Promise.resolve(new Response("{}"));
+    return name === "A's" ? new Promise(() => { /* noop */ }) : Promise.resolve(new Response("{}"));
   });
-  void updateLibraryItem("attachment:m:a", { name: "A's" });
+  void updateLibraryItem("attachment:m:a", { name: "A's" }).catch(() => undefined);
   await new Promise((resolve) => setTimeout(resolve, 0));
   session.epoch += 1;
   await updateLibraryItem("attachment:m:a", { name: "B's" });
@@ -187,7 +198,9 @@ function loadStore(
   emitted: unknown[] = [],
   session: { epoch: number } = { epoch: 0 },
   starsUndone: string[] = [],
-  prepareChatAttachmentDeletion: (attachmentId: string) => Promise<void> = async () => {},
+  prepareChatAttachmentDeletion: (attachmentId: string) => Promise<void> = async () => {
+    await Promise.resolve();
+  },
 ) {
   return loadWithStubs<{
     useLibraryStore: zustand.UseBoundStore<
@@ -206,7 +219,9 @@ function loadStore(
       getAuthSessionEpoch: () => session.epoch,
     },
     "@/features/chat": {
-      deleteFineTunedModel: async () => {},
+      deleteFineTunedModel: async () => {
+        await Promise.resolve();
+      },
       emitChatAttachmentDeleted: (event: unknown) => emitted.push(event),
       prepareChatAttachmentDeletion,
     },
@@ -216,18 +231,18 @@ function loadStore(
       },
     },
     "@/i18n": { translate: (key: string) => key },
-    "@/lib/gallery-flags": { notifyGalleryChanged: () => {} },
+    "@/lib/gallery-flags": { notifyGalleryChanged: () => { /* noop */ } },
     "./api": { errorMessage: String, ...api },
     "./favorites-store": {
       useLibraryFavoritesStore: {
         getState: () => ({
           begin: () => ({}),
           adopt: (_: unknown, ids: unknown) => ids,
-          mark: (id: string) => ({ settle: () => {}, undo: () => starsUndone.push(id) }),
+          mark: (id: string) => ({ settle: () => { /* noop */ }, undo: () => starsUndone.push(id) }),
         }),
       },
     },
-    "./object-url-cache": { clearCachedObjectUrls: () => {} },
+    "./object-url-cache": { clearCachedObjectUrls: () => { /* noop */ } },
   }).useLibraryStore;
 }
 
@@ -237,13 +252,16 @@ test("a failed edit is undone locally when the refresh meant to undo it fails to
   let online = true;
   const store = loadStore({
     getLibrary: async () => {
+      await Promise.resolve();
       if (!online) throw new Error("offline");
       return { items: [item("upload:a"), item("upload:b")], folders: [] };
     },
     deleteLibraryItem: async () => {
+      await Promise.resolve();
       throw new Error("offline");
     },
     updateLibraryItem: async () => {
+      await Promise.resolve();
       throw new Error("offline");
     },
   });
@@ -261,10 +279,12 @@ test("undoing a failed edit keeps what a later edit to the same item saved", asy
   let online = true;
   const store = loadStore({
     getLibrary: async () => {
+      await Promise.resolve();
       if (!online) throw new Error("offline");
       return { items: [item("upload:a")], folders: [] };
     },
     updateLibraryItem: async (_id: string, patch: Partial<Item>) => {
+      await Promise.resolve();
       if (patch.name) throw new Error("offline");
     },
   });
@@ -278,11 +298,12 @@ test("undoing a failed edit keeps what a later edit to the same item saved", asy
 });
 
 test("an edit still pending at sign-out does not hold back the next account's Library", async () => {
+  await Promise.resolve();
   const store = loadStore({
     getLibrary: async () => ({ items: [item("upload:b")], folders: [] }),
-    updateLibraryItem: () => new Promise(() => {}),
+    updateLibraryItem: () => new Promise(() => { /* noop */ }),
   });
-  void store.getState().patchItem("upload:a", { name: "never answered" });
+  void store.getState().patchItem("upload:a", { name: "never answered" }).catch(() => undefined);
   fireWindowEvent(SIGNED_OUT, {});
   await store.getState().refresh();
   assert.deepEqual(store.getState().items, [item("upload:b")]);
@@ -294,10 +315,12 @@ test("a star that fails offline is undone where Images and Video read it too", a
   const store = loadStore(
     {
       getLibrary: async () => {
+        await Promise.resolve();
         if (!online) throw new Error("offline");
         return { items: [item("image:a")], folders: [] };
       },
       updateLibraryItem: async () => {
+        await Promise.resolve();
         throw new Error("offline");
       },
     },
@@ -319,7 +342,7 @@ test("undoing a mirrored star leaves a newer toggle of it alone", () => {
       mark: (id: string, favorite: boolean) => { settle: () => void; undo: () => void };
     }>;
   }>(new URL("../src/features/library/favorites-store.ts", import.meta.url), {
-    react: { useEffect: () => {} },
+    react: { useEffect: () => { /* noop */ } },
     zustand,
     "@/features/auth": { AUTH_SESSION_CLEARED_EVENT: SIGNED_OUT },
     "@/i18n": { translate: (key: string) => key },
@@ -372,6 +395,7 @@ test("deleting a fine-tune also drops its model picker pin", async () => {
 });
 
 test("deleting a chat attachment tells an open chat to drop it", async () => {
+  await Promise.resolve();
   const emitted: unknown[] = [];
   const store = loadStore(
     {
@@ -398,6 +422,7 @@ test("a chat attachment is not deleted when an open chat could not drop it after
         folders: [],
       }),
       deleteLibraryItem: async (id: string) => {
+        await Promise.resolve();
         deleted.push(id);
       },
     },
@@ -405,6 +430,7 @@ test("a chat attachment is not deleted when an open chat could not drop it after
     { epoch: 0 },
     [],
     async (attachmentId) => {
+      await Promise.resolve();
       prepared.push(attachmentId);
       if (!chunkLoads) throw new Error("Failed to fetch dynamically imported module");
     },
@@ -427,9 +453,9 @@ function loadDownloads(
   saved: (File | Blob)[],
   fileNames: object,
   session: { epoch: number } = { epoch: 0 },
-  fetched: (name: string) => void = () => {},
+  fetched: (name: string) => void = () => { /* noop */ },
 ) {
-  const toast = Object.assign(() => {}, { loading: () => 0, dismiss: () => {}, error: () => {} });
+  const toast = Object.assign(() => { /* noop */ }, { loading: () => 0, dismiss: () => { /* noop */ }, error: () => { /* noop */ } });
   return loadWithStubs<{
     downloadLibraryItems: (items: { name: string; sizeBytes: number | null }[]) => Promise<void>;
   }>(new URL("../src/features/library/actions.ts", import.meta.url), {
@@ -454,6 +480,7 @@ function loadDownloads(
     "./api": {
       errorMessage: String,
       libraryItemFile: async (i: { name: string }) => {
+        await Promise.resolve();
         fetched(i.name);
         return file(i.name);
       },
@@ -472,6 +499,7 @@ test("an attachment deleted as another account signs in is not dropped from its 
     {
       getLibrary: async () => ({ items: [item("attachment:m:a")], folders: [] }),
       deleteLibraryItem: async () => {
+        await Promise.resolve();
         session.epoch += 1;
       },
     },
@@ -519,7 +547,7 @@ test("a zip whose last file is read as another account signs in is not saved", a
   const saved: Blob[] = [];
   const session = { epoch: 1 };
   const download = loadDownloads(fflate, saved, { uniqueFileNames }, session);
-  const read = File.prototype.arrayBuffer;
+  const read = Reflect.get(File.prototype, "arrayBuffer") as (this: File) => Promise<ArrayBuffer>;
   File.prototype.arrayBuffer = function (this: File) {
     session.epoch += 1;
     return read.call(this);
@@ -530,7 +558,7 @@ test("a zip whose last file is read as another account signs in is not saved", a
       { name: "b.txt", sizeBytes: 1 },
     ]);
   } finally {
-    File.prototype.arrayBuffer = read;
+    Reflect.set(File.prototype, "arrayBuffer", read);
   }
   assert.deepEqual(saved, []);
 });

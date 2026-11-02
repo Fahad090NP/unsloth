@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import test from "node:test";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
@@ -64,9 +65,11 @@ for (const busy of [false, true]) {
       autoLoadSmallestModel: () => loading,
       queuedResolvedModelFromStore: () => null,
     };
-    const load = new Function(...Object.keys(deps), js)(...Object.values(deps)) as (
-      signal: AbortSignal,
-    ) => Promise<{ loaded: boolean }>;
+    const load = (
+      vm.compileFunction(js, Object.keys(deps)) as (
+        ...args: unknown[]
+      ) => (signal: AbortSignal) => Promise<{ loaded: boolean }>
+    )(...Object.values(deps));
     const result = load(new AbortController().signal);
     await Promise.resolve();
     try {

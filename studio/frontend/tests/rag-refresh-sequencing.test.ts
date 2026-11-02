@@ -461,7 +461,8 @@ test("work is counted per reporting tab, not per project", () => {
     Map<string, { count: number; until: number }>
   >();
   const set = (from: string, count: number) => {
-    const bySender = byProject.get("proj-1") ?? new Map();
+    const bySender =
+      byProject.get("proj-1") ?? new Map<string, { count: number; until: number }>();
     if (count <= 0) bySender.delete(from);
     else bySender.set(from, { count, until: now + TTL });
     byProject.set("proj-1", bySender);

@@ -9,16 +9,42 @@ import React from "react";
 import ts from "@typescript/typescript6";
 
 const read = (path: string) => readFileSync(new URL(`../src/${path}`, import.meta.url), "utf8");
-function component(source: string, context: Record<string, unknown>) {
+
+interface PreviewElement {
+  type: unknown;
+  props: { onFrameReady: (frame: unknown) => unknown };
+}
+interface RenderedTree {
+  props: { children: Array<{ props: { children: PreviewElement } }> };
+}
+type TextFileComponent = (props: {
+  blob: Record<string, unknown>;
+  name: string;
+  tabId: string;
+  scale: number;
+  reloadNonce: number;
+}) => RenderedTree;
+type ReactPreviewComponent = (props: {
+  source: string;
+  lang: string;
+  title: string;
+  onFrameReady: () => () => void;
+}) => { type: unknown; props: { onFrameReady: () => () => void } };
+interface FrameRegistry {
+  registerArtifactFrame: (tabId: string, frame: unknown) => () => void;
+  useFrameAvailable: (tabId: string) => boolean;
+}
+
+function component(source: string, context: Record<string, unknown>): unknown {
   const js = ts.transpileModule(`(${source})`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React },
   }).outputText;
-  return vm.runInNewContext(js, { React, useEffect: () => {}, ...context });
+  return vm.runInNewContext(js, { React, useEffect: () => { /* no-op */ }, ...context }) as unknown;
 }
 
 test("a rendered React file registers its artifact iframe and returns the cleanup", () => {
   const source = read("features/browser/file-view.tsx");
-  const cleanup = () => {};
+  const cleanup = () => { /* no-op */ };
   const frame = {} as HTMLIFrameElement;
   const registered: unknown[][] = [];
   const ReactPreview = () => null;
@@ -32,10 +58,10 @@ test("a rendered React file registers its artifact iframe and returns the cleanu
     truncateAttachmentPreviewText: (text: string) => ({ text }),
     attachmentTextLanguage: () => null,
     cn: () => "",
-    stageEditsPrompt: () => {},
+    stageEditsPrompt: () => { /* no-op */ },
     ReactPreview,
     registerArtifactFrame: (...args: unknown[]) => { registered.push(args); return cleanup; },
-  });
+  }) as TextFileComponent;
   const tree = TextFile({ blob: {}, name: "Demo.tsx", tabId: "tab1", scale: 1, reloadNonce: 0 });
   const preview = tree.props.children[0].props.children;
   assert.equal(preview.type, ReactPreview);
@@ -46,12 +72,12 @@ test("a rendered React file registers its artifact iframe and returns the cleanu
 test("ReactPreview passes frame registration through to ArtifactHtmlFrame", () => {
   const source = read("features/chat/artifacts/react-preview/react-preview.tsx");
   const ArtifactHtmlFrame = () => null;
-  const onFrameReady = () => () => {};
+  const onFrameReady = () => () => { /* no-op */ };
   const ReactPreview = component(source.slice(source.indexOf("export function ReactPreview")).replace("export function", "function"), {
     useT: () => () => "",
     useState: () => [{ key: "tsx\u0000demo", prepared: { status: "ready", html: "<h1>Demo</h1>" } }],
     ArtifactHtmlFrame,
-  });
+  }) as ReactPreviewComponent;
   const frame = ReactPreview({ source: "demo", lang: "tsx", title: "Demo", onFrameReady });
   assert.equal(frame.type, ArtifactHtmlFrame);
   assert.equal(frame.props.onFrameReady, onFrameReady);
@@ -61,14 +87,17 @@ test("artifact frame availability follows registration and cleanup", () => {
   const source = read("features/browser/page-frame.tsx");
   const fragment = source.slice(source.indexOf("const frames ="), source.indexOf("const snapshotRequests =")).replace(/^export /gm, "");
   const observed: boolean[] = [];
-  const registry = component(`function () { ${fragment} return { registerArtifactFrame, useFrameAvailable }; }`, {
-    window: { addEventListener: () => {}, removeEventListener: () => {} },
+  const registry = (component(`function () { ${fragment} return { registerArtifactFrame, useFrameAvailable }; }`, {
+    window: {
+      addEventListener: () => { /* no-op */ },
+      removeEventListener: () => { /* no-op */ },
+    },
     useSyncExternalStore: (subscribe: (notify: () => void) => void, snapshot: () => boolean) => {
       subscribe(() => observed.push(snapshot()));
       observed.push(snapshot());
       return snapshot();
     },
-  })();
+  }) as () => FrameRegistry)();
   assert.equal(registry.useFrameAvailable("tab1"), false);
   const cleanup = registry.registerArtifactFrame("tab1", {});
   cleanup();
@@ -85,7 +114,7 @@ test("an unavailable React preview uses DOM annotation instead of an absent fram
       activeEntry: { kind: "file", name: "Demo.tsx", contentType: "application/x-unsloth-react-preview" },
       fileBarKind: () => "html",
       fileMode: "preview",
-    });
+    }) as boolean;
     assert.equal(htmlAnnotating, available);
   }
 });

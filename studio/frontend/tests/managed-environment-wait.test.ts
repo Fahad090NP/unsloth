@@ -146,9 +146,10 @@ ${checkBody
     return checkInstallAndStart;
   `;
   const keys = Object.keys(scope);
-  const check = new Function(...keys, source)(
-    ...keys.map((key) => scope[key]),
-  ) as () => Promise<void>;
+  const build = new Function(...keys, source) as (
+    ...args: unknown[]
+  ) => () => Promise<void>;
+  const check = build(...keys.map((key) => scope[key]));
 
   return {
     check,

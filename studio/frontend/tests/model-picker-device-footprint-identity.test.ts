@@ -54,7 +54,7 @@ test("the On Device expander props memo re-keys on the resolver", () => {
     ) {
       found = true;
       const deps = node.initializer.arguments[1];
-      assert.ok(deps && ts.isArrayLiteralExpression(deps));
+      assert.ok(ts.isArrayLiteralExpression(deps));
       assert.ok(
         deps.elements.some((e) => e.getText(source) === "resolveDownloadFootprint"),
         deps.getText(source),

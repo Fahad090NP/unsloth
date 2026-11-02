@@ -694,7 +694,7 @@ test("a rejected overlapping list read retries after settlement subscribers join
 
   assert.deepEqual(await originalRequest, ["new"]);
   assert.ok(subscriberRequest);
-  assert.deepEqual(await subscriberRequest, ["new"]);
+  assert.deepEqual(subscriberRequest, ["new"]);
   unsubscribe();
   assert.equal(notificationCount, 1);
   assert.equal(readCount, 2, "the failed overlapping GET gets one fresh retry");

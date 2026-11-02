@@ -24,7 +24,7 @@ const {
   titleRefreshExcerpt,
 } = await import("../src/features/chat/utils/chat-title.ts");
 const { buildExternalModelId, parseExternalModelId } = await import("../src/features/chat/external-providers.ts");
-type MessageRecord = import("../src/features/chat/types.ts").MessageRecord;
+import type { MessageRecord } from "../src/features/chat/types.ts";
 
 const LOCAL = "unsloth/gemma-4-E2B-it-GGUF";
 

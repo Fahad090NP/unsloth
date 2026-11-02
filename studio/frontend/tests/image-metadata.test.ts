@@ -11,6 +11,7 @@ import {
   importNotApplied,
   parseA1111Parameters,
   parseComfyPrompt,
+  type ImportedRecipe,
   pngTextChunks,
   APPLIED_RECIPE_KEYS,
   INFO_RECIPE_KEYS,
@@ -23,6 +24,9 @@ import {
   withWebpExif,
 } from "../src/features/images/lib/image-metadata.ts";
 import { readSrc } from "./helpers/kit.ts";
+
+type ComfyNode = { class_type?: string; inputs: Record<string, unknown> };
+type ComfyGraph = Record<string, ComfyNode>;
 
 // 8x8 files written by Pillow: a JFIF JPEG, a simple lossy WebP and a lossless WebP.
 const JPEG_B64 =
@@ -270,7 +274,7 @@ test("restorable settings are type-checked and fall back to the form's values", 
   assert.equal(hostile.seed, null);
   assert.deepEqual(hostile.loras, ["a:1"]);
   assert.equal(hostile.batch_size, 1);
-  const full = recipeSettings(JSON.parse(RECIPE), defaults);
+  const full = recipeSettings(JSON.parse(RECIPE) as ImportedRecipe, defaults);
   assert.equal(full.seed, 6630007);
   assert.equal(full.height, 768);
   assert.deepEqual(full.loras, ["sloth-style:0.8"]);
@@ -469,7 +473,7 @@ test("a ComfyUI Flux graph imports through SamplerCustomAdvanced and FluxGuidanc
     model: "flux1-dev.safetensors",
   });
   // Flux checkpoint example: KSampler at cfg 1, the real guidance on FluxGuidance.
-  const ksampler = JSON.parse(COMFY_PROMPT);
+  const ksampler = JSON.parse(COMFY_PROMPT) as ComfyGraph;
   ksampler["3"].inputs.positive = ["26", 0];
   ksampler["3"].inputs.cfg = 1;
   ksampler["26"] = {
@@ -555,9 +559,9 @@ test("an imported reference count is capped at the request limit", () => {
 });
 
 test("the ComfyUI model is the loader feeding the sampler, through a LoRA loader", () => {
-  const graph = JSON.parse(COMFY_PROMPT);
+  const graph = JSON.parse(COMFY_PROMPT) as ComfyGraph;
   // An unused checkpoint listed first, and the sampler fed by a LoRA on another UNet.
-  const reordered = {
+  const reordered: ComfyGraph = {
     "1": {
       class_type: "CheckpointLoaderSimple",
       inputs: { ckpt_name: "unused.safetensors" },
@@ -656,7 +660,7 @@ test("an older recipe without the newer fields still loads with the form's value
 test("a newer recipe loads what this build knows and names what it does not", () => {
   const defaults = { width: 1024, height: 1024, steps: 8, guidance: 3.5 };
   const future = {
-    ...JSON.parse(RECIPE),
+    ...(JSON.parse(RECIPE) as Record<string, unknown>),
     schema_version: 2,
     cfg_rescale: 0.7,
     freeu_b1: 1.1,
@@ -678,7 +682,7 @@ test("a newer recipe loads what this build knows and names what it does not", ()
   );
   assert.equal(newerRecipeSchema(recipe), true);
   // Every key today's recipe writes is known, so a current image reports nothing.
-  assert.deepEqual(unknownRecipeKeys(JSON.parse(RECIPE)), []);
+  assert.deepEqual(unknownRecipeKeys(JSON.parse(RECIPE) as ImportedRecipe), []);
   assert.equal(
     new Set([...APPLIED_RECIPE_KEYS, ...INFO_RECIPE_KEYS, ...PENDING_RECIPE_KEYS]).size,
     APPLIED_RECIPE_KEYS.length + INFO_RECIPE_KEYS.length + PENDING_RECIPE_KEYS.length,

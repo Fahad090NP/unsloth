@@ -48,7 +48,7 @@ test("the cached single-quant client sends local-only discovery while navigator 
   });
   const calls: URL[] = [];
   setAuthFetchHandler((url) => {
-    calls.push(new URL(String(url), "http://localhost"));
+    calls.push(new URL(url as string, "http://localhost"));
     return Promise.resolve(new Response(JSON.stringify(cached)));
   });
   try {
@@ -68,7 +68,7 @@ test("the cached single-quant client sends local-only discovery while navigator 
 test("a cache-preferred answer cannot replace a dependency-proven local-only answer", async () => {
   const calls: URL[] = [];
   setAuthFetchHandler((url) => {
-    const request = new URL(String(url), "http://localhost");
+    const request = new URL(url as string, "http://localhost");
     calls.push(request);
     return Promise.resolve(new Response(
       JSON.stringify({

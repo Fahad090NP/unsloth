@@ -10,9 +10,16 @@ installLocalStorageFake();
 Object.assign(window.location, { href: "http://localhost/" });
 const vite = await createServer({ server: { middlewareMode: true } });
 after(() => vite.close());
-const overrides = await vite.ssrLoadModule(
+const overrides = (await vite.ssrLoadModule(
   "/src/features/model-picker/api/model-overrides.ts",
-);
+)) as {
+  putModelOverride: (
+    repoId: string,
+    quant: string,
+    config: unknown,
+    options?: Record<string, unknown>,
+  ) => Promise<unknown>;
+};
 
 async function bodyOf(
   config: unknown,
@@ -21,7 +28,7 @@ async function bodyOf(
   const bodies: Record<string, unknown>[] = [];
   const original = globalThis.fetch;
   globalThis.fetch = ((_url, init) => {
-    bodies.push(JSON.parse(String(init?.body as string)));
+    bodies.push(JSON.parse(init?.body as string) as Record<string, unknown>);
     return Promise.resolve(Response.json({ overrides: {}, removed_keys: [] }));
   });
   try {

@@ -45,7 +45,7 @@ test("a proxy's HTML 502 is still a lost response", async () => {
 test("Stop on a connection run targets the connection, a local Stop does not", async () => {
   const urls: string[] = [];
   globalThis.fetch = ((input: RequestInfo | URL) => {
-    urls.push(String(input as string));
+    urls.push(input as string);
     return Promise.resolve(new Response(JSON.stringify({ cancelled: true }), {
       status: 200,
       headers: { "content-type": "application/json" },

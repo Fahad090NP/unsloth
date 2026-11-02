@@ -85,7 +85,7 @@ function fakeDocument({
       },
     },
     elementFromPoint: (x: number) => {
-      const probe = bodyChildren[0];
+      const probe: Node | undefined = bodyChildren[0];
       if (!probe) {
         return null;
       }

@@ -83,7 +83,7 @@ function renderHook(slots: Record<string, unknown>) {
   };
   const react = {
     useRef: (value: unknown) => cell(() => ({ current: value })).v,
-    useReducer: () => [0, () => {}],
+    useReducer: () => [0, () => { /* no-op */ }],
     useMemo: (fn: () => unknown) => fn(),
     useEffect: (fn: () => unknown, deps?: unknown[]) => {
       const c = cell<{ deps?: unknown[] } | null>(() => null);
@@ -111,6 +111,7 @@ function renderHook(slots: Record<string, unknown>) {
       "../api/chat-api": {
         CHAT_HISTORY_UPDATED_EVENT: "history",
         fetchSidebarRows: async (request: { includeIds: string[] | null; limit: number }) => {
+          await Promise.resolve();
           const list = request.includeIds
             ? rows("old", 1).map((row) => ({ ...row, id: request.includeIds?.[0] ?? row.id }))
             : rows("r", request.limit);
@@ -118,10 +119,21 @@ function renderHook(slots: Record<string, unknown>) {
         },
       },
       "../utils/chat-history-storage": {
-        listStoredChatThreads: async () => [],
-        settleLegacyChatImport: async () => true,
+        listStoredChatThreads: async () => {
+          await Promise.resolve();
+          return [];
+        },
+        settleLegacyChatImport: async () => {
+          await Promise.resolve();
+          return true;
+        },
       },
-      "../utils/repair-legacy-chat-titles": { repairLegacyChatTitles: async () => 0 },
+      "../utils/repair-legacy-chat-titles": {
+        repairLegacyChatTitles: async () => {
+          await Promise.resolve();
+          return 0;
+        },
+      },
       "../utils/chat-thread-tombstones": { isChatThreadDeleted: () => false },
       "../utils/sidebar-row-pager": { RowPager },
       "../utils/sidebar-row-query": rowQuery,

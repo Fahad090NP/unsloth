@@ -14,7 +14,9 @@ function fakeServer(respond: (call: Call) => number) {
     const call = {
       url,
       method: init.method ?? "GET",
-      body: init.body ? JSON.parse((init.body as unknown as string)) : null,
+      body: init.body
+        ? (JSON.parse((init.body as unknown as string)) as Record<string, unknown>)
+        : null,
     };
     calls.push(call);
     const status = respond(call);

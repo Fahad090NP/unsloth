@@ -1753,7 +1753,7 @@ test("keeps the shell when materialized media alone passes the cap", () => {
     rect: [10 + index, 400, 200 + index, 200] as [number, number, number, number],
     naturalWidth: 1400,
     naturalHeight: 1000,
-    attributes: { src: "blob:https://studio/tile-" + index },
+    attributes: { src: `blob:https://studio/tile-${index}` },
   }));
   const environment = createEnvironment({
     navigationType: "navigate",

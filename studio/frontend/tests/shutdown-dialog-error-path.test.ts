@@ -27,7 +27,7 @@ function findByType(node: unknown, type: string): StubElement | null {
   if (!node || typeof node !== "object") return null;
   const element = node as StubElement;
   if (element.type === type) return element;
-  return findByType(element.props?.children, type);
+  return findByType(element.props.children, type);
 }
 
 /** `useState` is cell-backed across renders, so the error path's reset is observable. */
@@ -110,7 +110,7 @@ async function clickStopServer(outcome: Outcome) {
     onClick(event);
 
     // Radix's close, applied before the request settles.
-    if (!defaultPrevented) open = false;
+    open = false;
 
     await new Promise((resolve) => setImmediate(resolve));
 

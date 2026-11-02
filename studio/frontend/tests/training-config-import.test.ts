@@ -25,7 +25,7 @@ test("browser training config imports enforce the native size limit", async () =
     readBrowserTrainingConfig(oversized),
     (error: unknown) =>
       error instanceof TrainingConfigFileError &&
-      error.translationKey === TRAINING_CONFIG_TOO_LARGE_ERROR_KEY,
+      (error.translationKey as string) === TRAINING_CONFIG_TOO_LARGE_ERROR_KEY,
   );
   assert.equal(read, false);
 

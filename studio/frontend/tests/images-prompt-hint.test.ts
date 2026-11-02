@@ -51,7 +51,10 @@ function evaluate(expression: string, scope: Record<string, unknown>): unknown {
   const { outputText } = ts.transpileModule(`return (${expression});`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   });
-  return new Function(...Object.keys(scope), outputText)(...Object.values(scope));
+  const evaluate = new Function(...Object.keys(scope), outputText) as (
+    ...args: unknown[]
+  ) => unknown;
+  return evaluate(...Object.values(scope));
 }
 
 const TIP = "Write the change you want as an instruction.";

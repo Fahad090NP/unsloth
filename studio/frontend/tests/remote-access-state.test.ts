@@ -241,7 +241,7 @@ test("every block reason the backend can emit has a message", () => {
       const msg = remoteAccessBlockMessage(reason, isDesktop);
       assert.ok(
         msg && msg.length > 0,
-        `no message for ${String(reason)} (desktop=${String(isDesktop)})`,
+        `no message for ${reason} (desktop=${String(isDesktop)})`,
       );
     }
   }

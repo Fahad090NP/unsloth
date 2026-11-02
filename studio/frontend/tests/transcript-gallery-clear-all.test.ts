@@ -2,6 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import test from "node:test";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
@@ -54,9 +55,11 @@ function galleryRenderer(scope: Record<string, unknown>) {
       return stubs.get(key);
     },
   });
-  const gallery = new Function(
-    "scope",
-    `with (scope) return ${outputText.replace('"use strict";', "").trim().replace(/;$/, "")};`,
+  const gallery = (
+    vm.compileFunction(
+      `with (scope) return ${outputText.replace('"use strict";', "").trim().replace(/;$/, "")};`,
+      ["scope"],
+    ) as (scope: unknown) => (props: unknown) => unknown
   )(proxy);
   return () => gallery(scope.props) as Element;
 }

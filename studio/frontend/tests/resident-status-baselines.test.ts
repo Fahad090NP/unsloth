@@ -2,6 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { selectResidentEstimateSettings } from "../src/features/model-picker/model-config/resident-memory-request.ts";
@@ -19,13 +20,9 @@ const end = source.indexOf(
   start,
 );
 assert.ok(start >= 0 && end > start);
-const apply = new Function(
-  "prevState",
-  "status",
-  "seedLoadParams",
-  "hydratingExistingModel",
-  "currentSpecType",
+const apply = vm.compileFunction(
   `return { ...prevState, ${source.slice(start, end)} };`,
+  ["prevState", "status", "seedLoadParams", "hydratingExistingModel", "currentSpecType"],
 ) as (
   previous: typeof loaded,
   status: Record<string, unknown>,
@@ -166,12 +163,9 @@ const slotEnd = source.indexOf(
   slotStart,
 );
 assert.ok(slotStart >= 0 && slotEnd > slotStart);
-const applySlots = new Function(
-  "prevState",
-  "status",
-  "seedLoadParams",
-  "hydratingExistingModel",
+const applySlots = vm.compileFunction(
   `return { ...prevState, ${source.slice(slotStart, slotEnd)} };`,
+  ["prevState", "status", "seedLoadParams", "hydratingExistingModel"],
 ) as (
   previous: typeof loaded & { nParallel: number | null },
   status: Record<string, unknown>,

@@ -134,9 +134,9 @@ test("only verified model-copy rows expose Clear and retain individual locations
 test("HF folders are requested only on expansion and stale walks cannot replace a refreshed result", async () => {
   const state: unknown[] = [];
   let cursor = 0;
-  let effect: (() => (() => void) | void) | undefined;
+  let effect: (() => (() => void) | undefined) | undefined;
   let previousDeps: unknown[] = [];
-  let cleanup: (() => void) | void;
+  let cleanup: (() => void) | undefined;
   const requests: ((rows: unknown[]) => void)[] = [];
   const rows = loadWithStubs<{
     HuggingFaceCacheFolders: (props: unknown) => unknown;

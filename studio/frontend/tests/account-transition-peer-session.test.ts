@@ -72,7 +72,7 @@ test("peer-tab account switch clears Alice's training handoff before Bob reloads
           return request;
         },
       },
-      location: { replace() {} },
+      location: { replace() { /* empty */ } },
     } as unknown as Window;
     await transitionBrowserAccount(
       { username: "bob", accountId: "b1" },

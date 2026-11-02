@@ -72,6 +72,7 @@ Object.assign(globalThis, {
   getComputedStyle: (element: FakeNode) => ({ backgroundColor: element.background, backgroundImage: "none" }),
   CSS: { escape: (value: string) => value },
   DOMRect: class {
+    static readonly stub = true;
     constructor(x: number, y: number, width: number, height: number) {
       // biome-ignore lint/correctness/noConstructorReturn: a plain rect stands in for DOMRect
       return rect(x, y, width, height);

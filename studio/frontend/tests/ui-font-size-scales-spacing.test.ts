@@ -442,12 +442,12 @@ test("resizable panels render their layout width at the browser scale", () => {
   assert.equal(sidebar.match(/"--sidebar-width": `\$\{width \* widthScale\}px`/g)?.length, 2);
   assert.ok(
     readSrc("features/chat/chat-settings-sheet.tsx").includes(
-      '"--chat-settings-width": `\${settingsWidth * settingsScale}px`',
+      '"--chat-settings-width": `$' + '{settingsWidth * settingsScale}px`',
     ),
   );
   const handle = readSrc("components/ui/panel-resize-handle.tsx");
-  assert.ok(handle.includes("paint(`\${pendingRef.current * scaleRef.current}px`)"));
-  assert.ok(handle.includes("paint(`\${committedRef.current * scaleRef.current}px`)"));
+  assert.ok(handle.includes("paint(`$" + "{pendingRef.current * scaleRef.current}px`)"));
+  assert.ok(handle.includes("paint(`$" + "{committedRef.current * scaleRef.current}px`)"));
   assert.ok(handle.includes("const next = drag.startWidth + delta / scaleRef.current"));
   // Only the browser scale: desktop zoom already scales every px.
   assert.ok(

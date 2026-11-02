@@ -10,8 +10,9 @@ import * as researchSync from "../src/features/chat/utils/research-message-sync.
 import * as savedUsage from "../src/features/chat/utils/saved-context-usage.ts";
 import { orderBySelectedBranch } from "../src/features/chat/utils/message-order.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
+import type * as DeleteThreadMessage from "../src/features/chat/utils/delete-thread-message.ts";
 
-type DeleteModule = typeof import("../src/features/chat/utils/delete-thread-message.ts");
+type DeleteModule = typeof DeleteThreadMessage;
 
 const legacyUsage = {
   modelId: "local-model", promptTokens: 28_902, completionTokens: 0,

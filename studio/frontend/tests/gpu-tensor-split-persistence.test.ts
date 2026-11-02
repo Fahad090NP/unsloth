@@ -47,13 +47,19 @@ test("a stored split is protected from clients that do not understand it", () =>
   store.clear();
   savePerModelConfig(MODEL, VARIANT, configured());
   const [entry] = Object.values(
-    JSON.parse(must(store.get("unsloth_model_configs"))),
+    JSON.parse(must(store.get("unsloth_model_configs"))) as Record<
+      string,
+      { version: number }
+    >,
   ) as { version: number }[];
   assert.ok(entry.version > 9);
   store.clear();
   savePerModelConfig(MODEL, VARIANT, { ...configured(), tensorSplit: null });
   const [withoutSplit] = Object.values(
-    JSON.parse(must(store.get("unsloth_model_configs"))),
+    JSON.parse(must(store.get("unsloth_model_configs"))) as Record<
+      string,
+      { version: number }
+    >,
   ) as { version: number }[];
   assert.equal(withoutSplit.version, 1);
 });

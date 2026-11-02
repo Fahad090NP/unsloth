@@ -12,7 +12,7 @@ import { isOllamaModelId } from "../src/features/hub/lib/model-identity.ts";
 
 function mayReachHub(modelId: string, nativePathToken: string | null): boolean {
   const servedFromDisk = isLocalModelPath(modelId) || isOllamaModelId(modelId);
-  return !servedFromDisk && nativePathToken == null;
+  return !servedFromDisk && nativePathToken === null;
 }
 
 test("an opaque Ollama manifest reference prepares no Hub token", () => {

@@ -61,7 +61,7 @@ export function deepMerge(
   if (forget && typeof forget === "object") {
     const byModel = { ...(current.inferenceParamsByModel as Record<string, Record<string, unknown>>) };
     for (const [id, keys] of Object.entries(forget as Record<string, string[]>)) {
-      const entry: Record<string, unknown> | undefined = byModel[id];
+      const entry = (byModel as Record<string, Record<string, unknown> | undefined>)[id];
       if (!entry) continue;
       const kept = Object.fromEntries(
         Object.entries(entry).filter(([key]) => !keys.includes(key)),
@@ -143,7 +143,7 @@ export async function authFetch(
       responseSettings = settingsHttp.settings;
     }
   } else if (init?.method === "PUT") {
-    settingsHttp.puts.push(JSON.parse(init.body ?? "{}"));
+    settingsHttp.puts.push(JSON.parse(init.body ?? "{}") as Record<string, unknown>);
     if (settingsHttp.putGate) await settingsHttp.putGate;
     const failureResponse = nextPutFailureResponse();
     if (failureResponse) return failureResponse;

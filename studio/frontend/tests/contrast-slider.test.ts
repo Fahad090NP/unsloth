@@ -376,9 +376,9 @@ test("a light wash follows the slider as its dark twin does", () => {
   // Sweeps every fixed-alpha wash spelling: /alpha, Tailwind shorthand, @apply black/white,
   // and arbitrary values with the colour and alpha inside the brackets.
   const FIXED_WASH =
-    /(bg-foreground\/(\[[\d.]+\]|\d+)|bg-(white|black)\/(\[0?\.\d+\]|\d+)|bg-\[rgba?\([^\]]*[\s,\/]0?\.\d+\s*\)\])/;
+    /(bg-foreground\/(\[[\d.]+\]|\d+)|bg-(white|black)\/(\[0?\.\d+\]|\d+)|bg-\[rgba?\([^\]]*[\s,/]0?\.\d+\s*\)\])/;
   const RAW_WASH =
-    /background(-color)?:\s*rgba?\([\d\s,]+[\s,\/]+0?\.\d+\s*\)/;
+    /background(-color)?:\s*rgba?\([\d\s,]+[\s,/]+0?\.\d+\s*\)/;
   const NOT_CHROME = new Set([
     "components/ui/button.tsx",
     "features/security/components/remote-code-consent-dialog.tsx",

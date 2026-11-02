@@ -915,7 +915,9 @@ test("an image dataset picked inside CPT restores assistant-only training for a 
   useTrainingConfigStore.getState().reset();
   setAuthFetchHandler((input, init) => {
     if (input === "/api/hub/datasets/check-format") {
-      const { dataset_name } = JSON.parse((init?.body as unknown as string));
+      const { dataset_name } = JSON.parse((init?.body as unknown as string)) as {
+        dataset_name: string;
+      };
       return Response.json({
         columns: ["messages"],
         detected_format: "chatml",
@@ -1209,7 +1211,7 @@ test("an image split picked inside CPT preserves the assistant-only choice after
   useTrainingConfigStore.getState().reset();
   setAuthFetchHandler((input, init) =>
     input === "/api/hub/datasets/check-format"
-      ? datasetCheck(JSON.parse((init?.body as unknown as string)).train_split === "images")
+      ? datasetCheck((JSON.parse((init?.body as unknown as string)) as { train_split?: string }).train_split === "images")
       : completionModel("org/vision", true),
   );
   useTrainingConfigStore.getState().selectTrainingModel("org/vision", "vision");

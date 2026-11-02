@@ -6,6 +6,7 @@ import test from "node:test";
 
 import { readSrc } from "./helpers/kit.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
+import type * as AudioApi from "../src/features/audio/api.ts";
 
 const DETAIL = {
   code: "out_of_memory",
@@ -14,7 +15,7 @@ const DETAIL = {
 };
 
 let reply: Response = new Response("{}");
-const api = loadWithStubs<typeof import("../src/features/audio/api.ts")>(
+const api = loadWithStubs<typeof AudioApi>(
   new URL("../src/features/audio/api.ts", import.meta.url),
   {
     "@/features/auth": {

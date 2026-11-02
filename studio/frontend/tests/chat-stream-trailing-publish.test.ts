@@ -101,6 +101,7 @@ function channel<T>() {
             flush();
           }),
         return: async () => {
+          await Promise.resolve();
           returned += 1;
           return { value: undefined, done: true };
         },
@@ -255,6 +256,7 @@ test("nothing held means no trailing publish and no extra render", async () => {
 
 test("a publish the gate did not pace clears the held text", async () => {
   await withFakeClock(async () => {
+    await Promise.resolve();
     assert.ok(withTrailingPublish);
     const gate = createStreamPublishGate();
     assert.equal(gate(1), true);
@@ -271,6 +273,7 @@ test("a publish the gate did not pace clears the held text", async () => {
 
 test("the cap still publishes mid-frame and leaves nothing held", async () => {
   await withFakeClock(async () => {
+    await Promise.resolve();
     const gate = createStreamPublishGate();
     gate(0);
     assert.equal(gate(1), false);

@@ -34,9 +34,8 @@ const {
 const { useExternalProvidersStore } = await import(
   "../src/features/chat/stores/external-providers-store.ts"
 );
-type MessageRecord = import("../src/features/chat/types.ts").MessageRecord;
-type ThreadRecord = import("../src/features/chat/types.ts").ThreadRecord;
-type Chunk = import("../src/features/chat/types/api.ts").OpenAIChatChunk;
+import type { MessageRecord, ThreadRecord } from "../src/features/chat/types.ts";
+import type { OpenAIChatChunk as Chunk } from "../src/features/chat/types/api.ts";
 
 const LONG =
   "Can you plot a Mandelbrot set and explain how the escape time algorithm works";
@@ -312,13 +311,14 @@ function stageConnection(overrides: Record<string, unknown> = {}): void {
 }
 
 function deltas(text: string, finishReason: string | null = "stop"): Chunk[] {
-  const parts = [...text].map((ch) => ({
+  const parts = Array.from(text).map((ch) => ({
     choices: [{ delta: { content: ch } }],
   }));
   return [...parts, { choices: [{ delta: {}, finish_reason: finishReason }] }];
 }
 
 async function* iterate(chunks: Chunk[]): AsyncGenerator<Chunk> {
+  await Promise.resolve();
   for (const chunk of chunks) {
     yield chunk;
   }
@@ -378,10 +378,16 @@ test("a title on a saved connection is routed to it, and streamed", async () => 
     [saved?.provider_base_url, saved && "encrypted_api_key" in saved],
     [null, false],
   );
-  globalThis.fetch = (async () => ({
-    ok: true,
-    json: async () => ({ public_key: PUBLIC_KEY_PEM }),
-  })) as unknown as typeof fetch;
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return {
+      ok: true,
+      json: async () => {
+        await Promise.resolve();
+        return { public_key: PUBLIC_KEY_PEM };
+      },
+    };
+  }) as unknown as typeof fetch;
   stageConnection({ providerType: "openai", hasApiKey: false });
   store.set(
     "unsloth_chat_external_provider_keys",
@@ -517,7 +523,7 @@ test("what answered is read from the reply, whichever kind of turn it was", () =
     "externalModel",
   ] as const) {
     const partial: Record<string, unknown> = { model: "m", ...external };
-    delete partial[missing];
+    Reflect.deleteProperty(partial, missing);
     assert.equal(research(partial), "m", `missing ${missing}`);
     assert.equal(
       research({ ...partial, model: "external::conn-a::m" }),
@@ -648,8 +654,9 @@ test("the answer is reduced to a short, plain, ASCII line", () => {
 test("a forced refresh re-fetches the public key instead of reusing the cached one", async () => {
   let fetched = 0;
   globalThis.fetch = (async () => {
+    await Promise.resolve();
     fetched += 1;
-    return { ok: true, json: async () => ({ public_key: PUBLIC_KEY_PEM }) };
+    return { ok: true, json: async () => { await Promise.resolve(); return ({ public_key: PUBLIC_KEY_PEM }); }};
   }) as unknown as typeof fetch;
   stageConnection({ providerType: "openai", hasApiKey: false });
   store.set(

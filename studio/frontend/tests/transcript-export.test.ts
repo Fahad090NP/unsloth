@@ -84,7 +84,9 @@ test("TXT is the plain text or paragraphs led by the current names; JSON keeps k
     toTxt(timed),
     "Speaker 1: Hello there.\n\nBea: Hi! <b>Tom & Jerry</b>\n",
   );
-  const json = JSON.parse(toJson(timed));
+  const json = JSON.parse(toJson(timed)) as {
+    speakers: unknown[];
+  } & Record<string, unknown>;
   assert.deepEqual(
     Object.keys(json).join(),
     "title,model,language,duration,text,segments,words,speakers",

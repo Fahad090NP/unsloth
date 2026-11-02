@@ -5,8 +5,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  APP_CLOSING_CANCELLED_EVENT,
-  APP_CLOSING_EVENT,
   clearAppClosing,
   isAppClosing,
   markAppClosing,

@@ -185,6 +185,7 @@ test("zipStems stores every file under its name", async () => {
 test("zipStems loads each stem only when the archive reaches it", async () => {
   const order: string[] = [];
   const lazy = (name: string, body: string) => async () => {
+    await Promise.resolve();
     order.push(name);
     return new Blob([body]);
   };

@@ -7,6 +7,7 @@ import test from "node:test";
 import { readSrc } from "./helpers/kit.ts";
 
 test("gallery overlay actions follow interaction state instead of stale mouse focus", async () => {
+    await Promise.resolve();
   const [menu, imagesPage, videoPage] = [
     readSrc("components/gallery-item-menu.tsx"),
     readSrc("features/images/images-page.tsx"),

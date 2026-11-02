@@ -141,7 +141,7 @@ async function shareGptConversations(
   const { downloads, bulk } = await shareGptExport(stored, liveBranch);
   assert.ok(bulk);
   assert.deepEqual(downloads, [`${bulk}\n`]);
-  return JSON.parse(bulk).conversations;
+  return (JSON.parse(bulk) as { conversations: unknown[] }).conversations;
 }
 
 const regenerated = storedMessages([
@@ -226,7 +226,7 @@ test("ShareGPT keeps the picked branch when the chat is switched during the expo
   } finally {
     unregister();
   }
-  assert.deepEqual(JSON.parse(downloads[0]).conversations, [
+  assert.deepEqual((JSON.parse(downloads[0]) as { conversations: unknown[] }).conversations, [
     { from: "human", value: "Name one fruit." },
     { from: "gpt", value: "Apples." },
   ]);

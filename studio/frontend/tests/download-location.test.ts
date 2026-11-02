@@ -18,6 +18,7 @@ after(() => {
 
 const bodies: Record<string, unknown>[] = [];
 globalThis.fetch = (async (_input: string, init?: RequestInit) => {
+  await Promise.resolve();
   bodies.push(JSON.parse(String(init?.body)));
   return new Response(JSON.stringify({ job_key: "k", state: "running" }), {
     status: 202,

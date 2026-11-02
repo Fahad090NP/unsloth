@@ -46,7 +46,7 @@ interface Case {
   lostBefore: boolean;
 }
 
-const FULL = "return `Hi, \${name}!`";
+const FULL = "return `Hi, $" + "{name}!`";
 
 const CASES: Case[] = [
   {
@@ -58,51 +58,51 @@ const CASES: Case[] = [
   {
     // Mistral magistral leaks a fragment onto a finished answer; this is why the strip exists.
     name: "a fragment genuinely at the end of a finished reply is still removed",
-    chunks: ["The answer ", "is 42.", " \${answer}"],
+    chunks: ["The answer ", "is 42.", " $" + "{answer}"],
     expect: "The answer is 42.",
     lostBefore: false,
   },
   {
     name: "nested placeholders",
-    chunks: Array.from("`\${a\${b}}`"),
-    expect: "`\${a\${b}}`",
+    chunks: Array.from("`$" + "{a$" + "{b}}`"),
+    expect: "`$" + "{a$" + "{b}}`",
     lostBefore: true,
   },
   {
     name: "several placeholders in one reply",
-    chunks: Array.from("const s = `\${x} and \${y}`;"),
-    expect: "const s = `\${x} and \${y}`;",
+    chunks: Array.from("const s = `$" + "{x} and $" + "{y}`;"),
+    expect: "const s = `$" + "{x} and $" + "{y}`;",
     lostBefore: true,
   },
   {
     name: "a placeholder split across two arrivals",
-    chunks: ["greet(`Hi, \${na", "me}", "!`)"],
-    expect: "greet(`Hi, \${name}!`)",
+    chunks: ["greet(`Hi, ${na", "me}", "!`)"],
+    expect: "greet(`Hi, $" + "{name}!`)",
     lostBefore: true,
   },
   {
-    name: "an unterminated \${ is never touched",
-    chunks: Array.from("the shell wants \${HOME"),
-    expect: "the shell wants \${HOME",
+    name: "an unterminated ${ is never touched",
+    chunks: Array.from("the shell wants ${HOME"),
+    expect: "the shell wants ${HOME",
     lostBefore: false,
   },
   {
     name: "a placeholder inside a fenced code block",
-    chunks: ["```js\n", "const s = ", "`v=\${v}", "`;\n", "```"],
-    expect: "```js\nconst s = `v=\${v}`;\n```",
+    chunks: ["```js\n", "const s = ", "`v=$" + "{v}", "`;\n", "```"],
+    expect: "```js\nconst s = `v=$" + "{v}`;\n```",
     lostBefore: true,
   },
   {
     // `\r` is whitespace to the pattern, so CRLF gives the strip more places to fire.
     name: "CRLF line endings",
-    chunks: ["line one\r\n", "const t = `\${q}", "`;\r\n", "line three"],
-    expect: "line one\r\nconst t = `\${q}`;\r\nline three",
+    chunks: ["line one\r\n", "const t = `$" + "{q}", "`;\r\n", "line three"],
+    expect: "line one\r\nconst t = `$" + "{q}`;\r\nline three",
     lostBefore: true,
   },
   {
     name: "a template literal in the body and a leaked fragment on the end",
-    chunks: chunked("use `\${name}` here. \${answer}", 2),
-    expect: "use `\${name}` here.",
+    chunks: chunked("use `$" + "{name}` here. $" + "{answer}", 2),
+    expect: "use `$" + "{name}` here.",
     lostBefore: true,
   },
 ];
@@ -204,7 +204,7 @@ test("randomised replies keep the two placements apart", () => {
     seed = (seed * 1_103_515_245 + 12_345) & 0x7fffffff;
     return seed / 0x7fffffff;
   };
-  const alphabet = ["a", " ", "`", "$", "{", "}", "\n", "\r", "!", "\${"];
+  const alphabet = ["a", " ", "`", "$", "{", "}", "\n", "\r", "!", "${"];
 
   let lost = 0;
   let spliced = 0;
@@ -308,7 +308,7 @@ function replayRun(seed: string, chunks: readonly string[]): string {
   return produced ? stripTrailingTemplatePlaceholder(buffer) : buffer;
 }
 
-const SEEDED_PARTIAL = "greet(`Hi, \${name}";
+const SEEDED_PARTIAL = "greet(`Hi, $" + "{name}";
 
 test("a continuation that adds nothing leaves the seeded partial alone", () => {
   // A Continue run that emits only a tool call holds just the seeded partial, the middle of a
@@ -318,9 +318,9 @@ test("a continuation that adds nothing leaves the seeded partial alone", () => {
 });
 
 test("a continuation that does add text is finished normally", () => {
-  assert.equal(replayRun(SEEDED_PARTIAL, ["!", "`)"]), "greet(`Hi, \${name}!`)");
+  assert.equal(replayRun(SEEDED_PARTIAL, ["!", "`)"]), "greet(`Hi, $" + "{name}!`)");
   assert.equal(
-    replayRun("The answer is 42.", [" \${", "answer}"]),
+    replayRun("The answer is 42.", [" ${", "answer}"]),
     "The answer is 42.",
   );
 });

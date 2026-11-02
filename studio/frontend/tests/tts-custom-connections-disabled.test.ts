@@ -176,7 +176,7 @@ test("custom TTS still reaches the saved connection while connections are on", a
 test("custom TTS defaults a blank voice for strict OpenAI-compatible endpoints", async () => {
   const { adapter, posted } = load(true, { voice: "  " });
   await adapter.generateCustomTtsAudio("hello");
-  assert.equal(JSON.parse(posted[0]).voice, "alloy");
+  assert.equal((JSON.parse(posted[0]) as { voice: unknown }).voice, "alloy");
 });
 
 test("read-aloud sends the speech text, not the markdown source (#12547)", async () => {
@@ -188,7 +188,11 @@ test("read-aloud sends the speech text, not the markdown source (#12547)", async
   for (let i = 0; i < 20 && posted.length === 0; i++) {
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
-  assert.equal(JSON.parse(posted[0]).messages[0].content, "spoken(**Done.**)");
+  assert.equal(
+    (JSON.parse(posted[0]) as { messages: Array<{ content: unknown }> }).messages[0]
+      .content,
+    "spoken(**Done.**)",
+  );
 });
 
 test("custom TTS rejects a deleted provider even when Voice settings is unmounted", async () => {

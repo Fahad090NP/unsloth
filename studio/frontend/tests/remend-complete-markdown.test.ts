@@ -2,6 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import { type Dirent, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -121,10 +122,11 @@ function settledParseIncompleteMarkdown(cut: boolean): boolean {
     "markdown-text.tsx no longer passes parseIncompleteMarkdown to Streamdown; the repair these " +
       "documents depend on is no longer requested where they claim it is",
   );
-  const value: unknown = new Function(
-    "incrementalRender",
-    "cut",
-    `return (${expression});`,
+  const value: unknown = (
+    vm.compileFunction(`return (${expression});`, ["incrementalRender", "cut"]) as (
+      incrementalRender: unknown,
+      cut: unknown,
+    ) => unknown
   )(null, cut);
   assert.equal(
     typeof value,

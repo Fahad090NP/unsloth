@@ -74,6 +74,7 @@ test("provider migration is server-first and removes only confirmed keys", async
     {
       getLegacyKey: (id) => (id === "legacy" ? " old-key " : "stale-key"),
       saveLegacyKey: async (id, key) => {
+        await Promise.resolve();
         saved.push(`${id}:${key}`);
         return provider(id, true);
       },
@@ -95,6 +96,7 @@ test("provider migration retains failed and orphaned legacy input", async () => 
       return "retry-me";
     },
     saveLegacyKey: async () => {
+      await Promise.resolve();
       throw new Error("offline");
     },
     removeLegacyKey: (id) => removed.push(id),
@@ -111,7 +113,7 @@ test("provider migration retains plaintext when a successful response has no sav
   const removed: string[] = [];
   const result = await reconcileLegacyProviderKeys([provider("legacy", false)], {
     getLegacyKey: () => "retry-me",
-    saveLegacyKey: async () => provider("legacy", false),
+    saveLegacyKey: async () => { await Promise.resolve(); return provider("legacy", false); },
     removeLegacyKey: (id) => removed.push(id),
   });
 
@@ -125,6 +127,7 @@ test("provider migration is retry-safe after partial success", async () => {
   const dependencies = {
     getLegacyKey: (id: string) => (removed.has(id) ? "" : `key-${id}`),
     saveLegacyKey: async (id: string) => {
+      await Promise.resolve();
       attempts += 1;
       if (id === "second" && attempts === 2) throw new Error("offline");
       return provider(id, true);
@@ -145,12 +148,12 @@ test("provider migration is retry-safe after partial success", async () => {
 test("superseded provider backfills are not launched", async () => {
   let launched = 0;
   await settleTasksIfCurrent(
-    [async () => { launched += 1; }],
+    [async () => { await Promise.resolve();  launched += 1; }],
     () => false,
   );
   assert.equal(launched, 0);
 
-  await settleTasksIfCurrent([async () => { launched += 1; }], () => true);
+  await settleTasksIfCurrent([async () => { await Promise.resolve();  launched += 1; }], () => true);
   assert.equal(launched, 1);
 });
 
@@ -209,9 +212,10 @@ test("HF migration is server-first, retry-safe, and idempotent", async () => {
   const removed: string[] = [];
   let saves = 0;
   const server = await reconcileLegacyHfToken({
-    loadSavedToken: async () => ({ has_token: true, token: "hf_server" }),
+    loadSavedToken: async () => { await Promise.resolve(); return ({ has_token: true, token: "hf_server" }); },
     getLegacyToken: () => "hf_legacy",
     saveLegacyToken: async () => {
+      await Promise.resolve();
       saves += 1;
       return { has_token: true, token: "hf_legacy" };
     },
@@ -229,10 +233,12 @@ test("HF migration is server-first, retry-safe, and idempotent", async () => {
   await assert.rejects(
     reconcileLegacyHfToken({
       loadSavedToken: async () => {
+        await Promise.resolve();
         throw new Error("backend unavailable");
       },
       getLegacyToken: () => "hf_read_retry",
       saveLegacyToken: async () => {
+        await Promise.resolve();
         throw new Error("must not upload without server status");
       },
       removeLegacyToken: (token) => {
@@ -245,9 +251,10 @@ test("HF migration is server-first, retry-safe, and idempotent", async () => {
 
   await assert.rejects(
     reconcileLegacyHfToken({
-      loadSavedToken: async () => ({ has_token: false, token: null }),
+      loadSavedToken: async () => { await Promise.resolve(); return ({ has_token: false, token: null }); },
       getLegacyToken: () => "hf_retry",
       saveLegacyToken: async () => {
+        await Promise.resolve();
         throw new Error("offline");
       },
       removeLegacyToken: (token) => {
@@ -267,11 +274,13 @@ test("HF cleanup removes only the value observed before the request", async () =
   const removed: string[] = [];
   await reconcileLegacyHfToken({
     loadSavedToken: async () => {
+      await Promise.resolve();
       legacyToken = "hf_new";
       return { has_token: true, token: "hf_server" };
     },
     getLegacyToken: () => legacyToken,
     saveLegacyToken: async () => {
+      await Promise.resolve();
       throw new Error("server token must win");
     },
     removeLegacyToken: (expectedToken) => {
@@ -319,7 +328,7 @@ test("provider bootstrap cannot publish a previous authentication session", asyn
   });
   const applied: UiProviderConfig[][] = [];
   const boot = runCredentialBootstrap({
-    hydrateHfToken: async () => undefined,
+    hydrateHfToken: async () => { await Promise.resolve(); return undefined; },
     getProviders: () => [uiProvider("first-session", false)],
     syncProviders: () => providers,
     setProviders: (rows) => applied.push(rows),
@@ -340,6 +349,7 @@ test("provider migration does not consume local input after a session change", a
     {
       getLegacyKey: () => "legacy-key",
       saveLegacyKey: async () => {
+        await Promise.resolve();
         current = false;
         return provider("provider-1", true);
       },
@@ -363,10 +373,10 @@ test("HF credential API rejects a successful non-JSON response", async () => {
   store.set("unsloth_auth_token", "session-token");
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () =>
-    new Response("not json", {
+    { await Promise.resolve(); return new Response("not json", {
       status: 200,
       headers: { "Content-Type": "text/plain" },
-    }));
+    }); });
 
   try {
     const { loadSavedHfToken } = await import(
@@ -403,6 +413,7 @@ test("HF store hydrates from the API without recreating plaintext storage", asyn
   const originalFetch = globalThis.fetch;
   const requests: string[] = [];
   globalThis.fetch = (async (input: RequestInfo | URL) => {
+    await Promise.resolve();
     requests.push(String(input));
     return new Response(
       JSON.stringify({ token: "hf_server", has_token: true }),
@@ -741,8 +752,9 @@ function encryptionHarness() {
       "node-forge": { default: forge },
       "@/features/auth/api": {
         authFetch: async () => {
+          await Promise.resolve();
           fetches += 1;
-          return { ok: true, status: 200, json: async () => ({ public_key: publicKeyPem }) };
+          return { ok: true, status: 200, json: async () => { await Promise.resolve(); return ({ public_key: publicKeyPem }); }};
         },
       },
       "@/lib/format-fastapi-error": { formatFastApiDetail: () => null },

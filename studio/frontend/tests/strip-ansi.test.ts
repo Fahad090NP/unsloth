@@ -142,7 +142,10 @@ test("stringifyToolResult cleans nested tool object fields before JSON display",
     stdout: `${ESC}[32mfile.txt${ESC}[0m`,
     nested: [{ line: `${ESC}[31merror${ESC}[0m` }],
   });
-  const parsed = JSON.parse(rendered);
+  const parsed = JSON.parse(rendered) as {
+    stdout: string;
+    nested: Array<{ line?: string }>;
+  };
   assert.equal(parsed.stdout, "file.txt");
   assert.equal(parsed.nested[0]?.line, "error");
 });
@@ -160,7 +163,7 @@ test("stringifyToolResult preserves fields whose cleaned keys collide", () => {
     key: "plain",
     [`${ESC}[32mkey`]: "second ansi",
   });
-  const parsed = JSON.parse(rendered);
+  const parsed = JSON.parse(rendered) as Record<string, string>;
   assert.deepEqual(parsed, {
     "key [ansi]": "ansi",
     key: "plain",

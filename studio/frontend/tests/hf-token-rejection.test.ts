@@ -10,6 +10,8 @@ import test from "node:test";
 
 register("./bundler-resolver.mjs", import.meta.url);
 
+const noneYet = (count: number) => count < 1;
+
 const { resetHfEndpoints, setHfEndpoints, setHubSessionRefresh } = await import(
   "../src/lib/hf-endpoint.ts"
 );
@@ -43,7 +45,7 @@ function stubHub(opts: {
     // As fetch does: init.headers, when given, replace a Request's own.
     const isRequest = input instanceof Request;
     const headers = new Headers(init?.headers ?? (isRequest ? input.headers : undefined));
-    const url = isRequest ? input.url : String(input);
+    const url = isRequest ? input.url : input;
     const authorization = headers.get("authorization");
     const hfAuthorization = headers.get("x-hf-authorization");
     sent.push({ url, authorization, hfAuthorization });
@@ -545,7 +547,7 @@ test("a slow anonymous probe does not reinstate a refusal a newer tokened succes
   }) as typeof fetch;
   try {
     const slow = fetchHub(API, withToken(OAUTH));
-    while (tokenReads < 1) await new Promise((resolve) => setTimeout(resolve, 0));
+    while (noneYet(tokenReads)) await new Promise((resolve) => setTimeout(resolve, 0));
     const fresh = await fetchHub(API, withToken(OAUTH));
     assert.equal(fresh.status, 200);
     releaseProbe();

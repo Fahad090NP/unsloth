@@ -90,7 +90,7 @@ test("the monitor reloads on first contact and each reconnect only", async () =>
   });
   globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
     calls++;
-    const url = String(input as string);
+    const url = input as string;
     if (url.includes("/api/providers/models")) {
       return Promise.resolve(
         served === null
@@ -164,7 +164,7 @@ test("the monitor reloads on first contact and each reconnect only", async () =>
     await idle();
     assert.equal(puts.length, 1, "no rewrite while the server stays up");
     store.setState({ providers: [{ ...row(), models: ["manual", "alpha"], availableModels: ["alpha"] }] });
-    await settle(() => row().availableModels?.join() === "alpha,beta");
+    await settle(() => row().availableModels.join() === "alpha,beta");
     assert.equal(puts.length, 1);
 
     saved.models = ["manual", "alpha"];

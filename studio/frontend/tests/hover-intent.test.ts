@@ -36,8 +36,10 @@ test("a flyout flipped to the other side is aimed at from that side", () => {
 });
 
 test("nav labels wait for intent, then chain without delay or hover grace", () => {
-  assert.ok(NAV_TOOLTIP_INTENT.delayDuration > 0);
-  assert.ok(NAV_TOOLTIP_INTENT.skipDelayDuration > 0);
+  const delayDuration: number = NAV_TOOLTIP_INTENT.delayDuration;
+  const skipDelayDuration: number = NAV_TOOLTIP_INTENT.skipDelayDuration;
+  assert.ok(delayDuration > 0);
+  assert.ok(skipDelayDuration > 0);
   assert.equal(NAV_TOOLTIP_INTENT.disableHoverableContent, true);
 });
 

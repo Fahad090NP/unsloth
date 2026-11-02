@@ -135,9 +135,9 @@ test("a panel that fails to load cannot take the app down with it", async () => 
     if (tagName(node) === "Suspense") {
       total += 1;
       for (
-        let parent: ts.Node | undefined = node.parent;
+        let parent = node.parent as ts.Node | undefined;
         parent;
-        parent = parent.parent
+        parent = parent.parent as ts.Node | undefined
       ) {
         const name = tagName(parent);
         if (name && boundaries.has(name)) {

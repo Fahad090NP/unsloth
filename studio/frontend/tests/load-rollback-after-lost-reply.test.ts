@@ -184,7 +184,7 @@ test("a completed load is not an error at all", async () => {
 
 test("non-errors and untagged errors keep the rollback", () => {
   for (const value of [null, undefined, "boom", 0, {}, new Error("x"), new TypeError("x")]) {
-    assert.equal(shouldRestorePreviousModel(value), true, String(value as string));
+    assert.equal(shouldRestorePreviousModel(value), true, value as string);
   }
   assert.equal(
     shouldRestorePreviousModel(Object.assign(new Error("x"), { unslothTransportFailure: "yes" })),

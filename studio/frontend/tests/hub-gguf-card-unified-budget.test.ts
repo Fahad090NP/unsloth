@@ -52,7 +52,7 @@ function loadCard(
         useState:
           useState ??
           ((initial: unknown) => [
-            typeof initial === "function" ? initial() : initial,
+            typeof initial === "function" ? (initial as () => unknown)() : initial,
             noop,
           ]),
       },
@@ -224,7 +224,7 @@ test("an over-budget quant on a Mac points at the Metal budget, not the VRAM Bud
 test("starting a download pins the recommended quant so a moving Metal budget keeps the transfer on the card", () => {
   const writes: unknown[] = [];
   const tree = loadCard((initial) => [
-    typeof initial === "function" ? initial() : initial,
+    typeof initial === "function" ? (initial as () => unknown)() : initial,
     (next) => writes.push(next),
   ]).GgufDownloadCard({
     repoId: "unsloth/Qwen3-8B-GGUF",

@@ -75,6 +75,7 @@ function recordingScheduler(
   const saved: string[] = [];
   const scheduler = createRunCheckpointScheduler(
     async (threadId) => {
+      await Promise.resolve();
       saved.push(threadId);
     },
     { intervalMs: INTERVAL, timers: clock.timers, ...options },
@@ -172,6 +173,7 @@ test("a thread restarted after the bound gets a fresh window", async () => {
   let saves = 0;
   const scheduler = createRunCheckpointScheduler(
     async () => {
+      await Promise.resolve();
       saves += 1;
     },
     { intervalMs: INTERVAL, timers: clock.timers, maxDurationMs: 3 * INTERVAL },
@@ -195,6 +197,7 @@ test("an empty options object still uses the production interval", async () => {
   let saves = 0;
   const scheduler = createRunCheckpointScheduler(
     async () => {
+      await Promise.resolve();
       saves += 1;
     },
     { timers: clock.timers },
@@ -223,7 +226,7 @@ test("the original no-options call shape arms a window timer at the production i
     },
   };
   try {
-    const scheduler = createRunCheckpointScheduler(async () => {});
+    const scheduler = createRunCheckpointScheduler(async () => { /* empty */ });
     scheduler.start("thread-a");
     assert.equal(
       armed.length,
@@ -243,6 +246,7 @@ test("a thread that is already inactive at the first tick takes exactly one fina
   const saved: string[] = [];
   const scheduler = createRunCheckpointScheduler(
     async (threadId) => {
+      await Promise.resolve();
       saved.push(threadId);
     },
     { intervalMs: INTERVAL, timers: clock.timers, isActive: () => false },
@@ -267,6 +271,7 @@ test("checkpoints continue while active and end with one final save when the run
   let active = true;
   const scheduler = createRunCheckpointScheduler(
     async () => {
+      await Promise.resolve();
       saves += 1;
     },
     { intervalMs: INTERVAL, timers: clock.timers, isActive: () => active },
@@ -312,6 +317,7 @@ test("a thread can be started again after it self-terminated", async () => {
   let active = false;
   const scheduler = createRunCheckpointScheduler(
     async () => {
+      await Promise.resolve();
       saves += 1;
     },
     { intervalMs: INTERVAL, timers: clock.timers, isActive: () => active },
@@ -340,6 +346,7 @@ test("isActive is not consulted before the first interval elapses", async () => 
   let saves = 0;
   const scheduler = createRunCheckpointScheduler(
     async () => {
+      await Promise.resolve();
       saves += 1;
     },
     {
@@ -367,7 +374,7 @@ test("isActive is not consulted before the first interval elapses", async () => 
 test("liveness is probed once per tick", async () => {
   const clock = createFakeTimers();
   let probes = 0;
-  const scheduler = createRunCheckpointScheduler(async () => {}, {
+  const scheduler = createRunCheckpointScheduler(async () => { /* empty */ }, {
     intervalMs: INTERVAL,
     timers: clock.timers,
     isActive: () => {
@@ -389,6 +396,7 @@ test("the final save is still attempted when the save itself rejects", async () 
   let attempts = 0;
   const scheduler = createRunCheckpointScheduler(
     async () => {
+      await Promise.resolve();
       attempts += 1;
       throw new Error("write failed");
     },
@@ -462,7 +470,7 @@ test("one thread going inactive does not stop its sibling", async () => {
 test("the liveness probe receives the thread id under checkpoint", async () => {
   const clock = createFakeTimers();
   const probed: string[] = [];
-  const scheduler = createRunCheckpointScheduler(async () => {}, {
+  const scheduler = createRunCheckpointScheduler(async () => { /* empty */ }, {
     intervalMs: INTERVAL,
     timers: clock.timers,
     isActive: (threadId) => {
@@ -648,7 +656,7 @@ test("a throwing probe and a throwing save still terminate cleanly", async () =>
 });
 
 test("flushAll checkpoints every started thread", async () => {
-  const { clock, saved, scheduler } = recordingScheduler();
+  const { saved, scheduler } = recordingScheduler();
 
   scheduler.start("thread-a");
   scheduler.start("thread-b");
@@ -659,7 +667,7 @@ test("flushAll checkpoints every started thread", async () => {
 });
 
 test("flushAll does not checkpoint a stopped thread", async () => {
-  const { clock, saved, scheduler } = recordingScheduler();
+  const { saved, scheduler } = recordingScheduler();
 
   scheduler.start("thread-a");
   scheduler.start("thread-b");
@@ -739,7 +747,7 @@ test("flushAll during an in-flight checkpoint still issues the extra save", asyn
 });
 
 test("flushAll after stopAll saves nothing", async () => {
-  const { clock, saved, scheduler } = recordingScheduler();
+  const { saved, scheduler } = recordingScheduler();
 
   scheduler.start("thread-a");
   scheduler.start("thread-b");
@@ -791,6 +799,7 @@ test("flushAll does not consult isActive", async () => {
   let probes = 0;
   const scheduler = createRunCheckpointScheduler(
     async () => {
+      await Promise.resolve();
       saves += 1;
     },
     {
@@ -838,6 +847,7 @@ test("flushAll ignores a thread that already self-terminated", async () => {
   let saves = 0;
   const scheduler = createRunCheckpointScheduler(
     async () => {
+      await Promise.resolve();
       saves += 1;
     },
     { intervalMs: INTERVAL, timers: clock.timers, isActive: () => false },
@@ -853,7 +863,7 @@ test("flushAll ignores a thread that already self-terminated", async () => {
 });
 
 test("flushAll writes a thread that was restarted after stopAll", async () => {
-  const { clock, saved, scheduler } = recordingScheduler();
+  const { saved, scheduler } = recordingScheduler();
 
   scheduler.start("thread-a");
   scheduler.stopAll();
@@ -1035,6 +1045,7 @@ test("a custom interval is honoured for every thread", async () => {
   let saves = 0;
   const scheduler = createRunCheckpointScheduler(
     async () => {
+      await Promise.resolve();
       saves += 1;
     },
     { intervalMs: 250, timers: clock.timers },

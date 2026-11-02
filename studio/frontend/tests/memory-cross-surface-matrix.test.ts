@@ -109,7 +109,7 @@ const HOSTS: Host[] = [
 
 // 22/24 lands in the 0.90-0.97 band the budget change moves.
 const FOOTPRINTS = [
-  { label: "tiny", weightsBytes: 2 * GB, kvBytes: Number(GB) },
+  { label: "tiny", weightsBytes: 2 * GB, kvBytes: GB },
   { label: "half", weightsBytes: 8 * GB, kvBytes: 4 * GB },
   { label: "at the 0.90/0.97 seam", weightsBytes: 20 * GB, kvBytes: 2 * GB },
   { label: "hopeless", weightsBytes: 180 * GB, kvBytes: 40 * GB },
@@ -228,7 +228,7 @@ test("P5: a CPU-only host draws nothing rather than a zero-width bar", () => {
     const cap = capacityFor(host);
     const bar = computeModelMemory({
       weightsBytes: 4 * GB,
-      kvBytes: Number(GB),
+      kvBytes: GB,
       gpuGb: cap.gpuCapacityGb,
     });
     assert.equal(bar.status, "unknown", `${platform}: CPU-only host drew a VRAM bar`);

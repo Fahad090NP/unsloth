@@ -13,7 +13,12 @@ function record(kind: RecordedToast["kind"]) {
   return (message?: unknown, options?: { description?: unknown }) => {
     recordedToasts.push({
       kind,
-      message: String(message ?? ""),
+      message:
+        typeof message === "string"
+          ? message
+          : message === null || message === undefined
+            ? ""
+            : (JSON.stringify(message) ?? ""),
       description:
         typeof options?.description === "string"
           ? options.description

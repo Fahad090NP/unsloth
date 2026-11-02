@@ -200,11 +200,6 @@ test("no effect resets the grant, which would leave a stale render", () => {
   assert.ok(!resetInEffect, "the grant must not be reset from an effect");
 });
 
-const DIRECTIVE_FILTER =
-  /GRANT_CANNOT_FIX\.has\(event\.data\.effectiveDirective\)/;
-const SCHEME_FILTER =
-  /GRANT_CANNOT_FIX_SCHEME\[event\.data\.effectiveDirective\] === uri/;
-const URI_LENGTH_GUARD = /uri\.length > BLOCKED_URI_MAX_CHARS/;
 const URI_CAP = /\buris\.length >= BLOCKED_URIS_TRACKED/;
 const URI_DUPLICATE = /\buris\.includes\(uri\)/;
 const BAILS_OUT = /\bcurrent\b/;

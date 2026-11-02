@@ -166,7 +166,7 @@ function branchConditions(literal: ts.Node): string[] {
   const conditions: string[] = [];
   let node: ts.Node = literal;
   let parent = node.parent;
-  while (parent && !ts.isJsxAttribute(parent)) {
+  while (!ts.isJsxAttribute(parent)) {
     if (ts.isConditionalExpression(parent) && parent.whenTrue === node) {
       conditions.push(parent.condition.getText());
     }
@@ -179,9 +179,9 @@ function branchConditions(literal: ts.Node): string[] {
 /** The className painted inside this floor's own slot: its element's first child. */
 function paintedSurface(literal: ts.Node): string | null {
   let node: ts.Node | undefined = literal;
-  while (node && !ts.isJsxAttribute(node)) node = node.parent;
+  while (!ts.isJsxAttribute(node)) node = node.parent;
   const opening = node.parent.parent;
-  if (!opening || !ts.isJsxOpeningElement(opening)) return null;
+  if (!ts.isJsxOpeningElement(opening)) return null;
   const owner = opening.parent;
   if (!ts.isJsxElement(owner)) return null;
   for (const child of owner.children) {

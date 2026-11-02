@@ -32,7 +32,7 @@ const {
 
 test("the web keeps room for the collapse button beside search; desktop does not need it", async () => {
   assert.equal(SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MIN_WEB);
-  assert.ok(SIDEBAR_WIDTH_MIN_DESKTOP < SIDEBAR_WIDTH_MIN_WEB);
+  assert.ok((SIDEBAR_WIDTH_MIN_DESKTOP as number) < (SIDEBAR_WIDTH_MIN_WEB as number));
   const source = await readSrcAsync("hooks/use-sidebar-width.ts");
   assert.match(
     source,

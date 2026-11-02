@@ -25,7 +25,7 @@ test("a document seed's total chunk count survives save and reload", () => {
       ),
       "utf8",
     ),
-  );
+  ) as { ui: Record<string, unknown> };
   template.ui.seed_total_rows = 42;
   const imported = importRecipePayload(JSON.stringify(template));
   assert.ok(imported.snapshot);

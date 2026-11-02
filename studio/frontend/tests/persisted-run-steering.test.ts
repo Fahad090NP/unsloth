@@ -65,10 +65,19 @@ function pendingRun(hasReservation = true) {
       cancels += 1;
     },
   };
-  const factory = new Function(
+  const compile = new Function(
     ...Object.keys(deps),
     `${js}; return createPersistedRunAdapter;`,
-  )(...Object.values(deps));
+  ) as (...args: unknown[]) => (
+    runner: unknown,
+  ) => {
+    run: (options: {
+      messages: unknown[];
+      unstable_threadId: string;
+      abortSignal: AbortSignal;
+    }) => AsyncGenerator<{ content: string }>;
+  };
+  const factory = compile(...Object.values(deps));
   const adapter = factory({
     *run() {
       calls += 1;

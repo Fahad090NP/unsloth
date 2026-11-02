@@ -498,8 +498,8 @@ const onPage =
   (page: "s" | "m") =>
   (i: { page: string }) =>
     i.page === page;
-const placed = <T extends FlaggableItem & { page: string }>(
-  shelf: T[],
+const placed = (
+  shelf: (FlaggableItem & { page: string })[],
   page: "s" | "m",
   id: string,
   viewAfterId: string | null,

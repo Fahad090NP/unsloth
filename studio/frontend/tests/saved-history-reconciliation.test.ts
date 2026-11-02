@@ -179,7 +179,11 @@ test("recoverCurrentThread reconciles ordinary saved messages", () => {
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
       calls.add(node.expression.text);
       if (node.expression.text === "reconcileOrdinarySavedMessagesInView") {
-        for (let p = node.parent; p; p = p.parent) {
+        for (
+          let p = node.parent as ts.Node | undefined;
+          p;
+          p = p.parent as ts.Node | undefined
+        ) {
           if (ts.isIfStatement(p) && p.expression.getText() === "fromBackend") {
             reconcileGuarded = true;
           }

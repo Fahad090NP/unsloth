@@ -129,16 +129,19 @@ test("dataset cache reconciliation reruns for usability inputs but not cache sta
 
   const datasetEffect = findCall(
     reconciliationSource,
-    (call) =>
-      call.expression.getText(reconciliationSource) === "useEffect" &&
-      call.arguments[0] !== null &&
-      call.arguments[0] !== undefined &&
-      datasetFetch.pos >= call.arguments[0].pos &&
-      datasetFetch.end <= call.arguments[0].end,
+    (call) => {
+      const firstArgument = call.arguments.at(0);
+      return (
+        call.expression.getText(reconciliationSource) === "useEffect" &&
+        firstArgument !== undefined &&
+        datasetFetch.pos >= firstArgument.pos &&
+        datasetFetch.end <= firstArgument.end
+      );
+    },
   );
   assert.ok(datasetEffect, "cached dataset reconciliation effect not found");
 
-  const dependencies = datasetEffect.arguments[1];
+  const dependencies = datasetEffect.arguments.at(1);
   assert.ok(
     dependencies && ts.isArrayLiteralExpression(dependencies),
     "dataset reconciliation dependencies not found",
@@ -158,7 +161,7 @@ test("dataset cache reconciliation reruns for usability inputs but not cache sta
     ],
   );
 
-  const options = datasetFetch.arguments[1];
+  const options = datasetFetch.arguments.at(1);
   assert.ok(
     options && ts.isObjectLiteralExpression(options),
     "cached dataset inventory options not found",
@@ -362,7 +365,7 @@ test("dataset checks pass cancellation through to the request", () => {
     (call) => call.expression.getText(storeSource) === "checkDatasetFormat",
   );
   assert.ok(datasetCheck, "dataset format check not found");
-  const checkOptions = datasetCheck.arguments[0];
+  const checkOptions = datasetCheck.arguments.at(0);
   assert.ok(
     checkOptions && ts.isObjectLiteralExpression(checkOptions),
     "dataset format check options not found",
@@ -384,7 +387,7 @@ test("dataset checks pass cancellation through to the request", () => {
       call.arguments[0].text === "/api/hub/datasets/check-format",
   );
   assert.ok(request, "dataset format request not found");
-  const requestOptions = request.arguments[1];
+  const requestOptions = request.arguments.at(1);
   assert.ok(
     requestOptions && ts.isObjectLiteralExpression(requestOptions),
     "dataset format request options not found",
@@ -415,7 +418,7 @@ test("deleted local dataset handling covers background, preview, and start check
     (call) => call.expression.getText(previewSource) === "checkDatasetFormat",
   );
   assert.ok(previewCheck, "preview dataset format check not found");
-  const previewOptions = previewCheck.arguments[0];
+  const previewOptions = previewCheck.arguments.at(0);
   assert.ok(
     previewOptions && ts.isObjectLiteralExpression(previewOptions),
     "preview dataset format options not found",

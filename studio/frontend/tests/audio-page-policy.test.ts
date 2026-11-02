@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { InferenceStatusResponse } from "../src/features/chat/types/api.ts";
 
 import {
   MINIMAX_MUSIC_DEFAULT_SECONDS,
@@ -689,6 +690,7 @@ function windowShelf(size: number) {
   const shelf = Array.from({ length: size }, (_, n) => ({ id: `c${n}` }));
   const calls: { limit: number; cursor: number | null }[] = [];
   const fetchPage = async (limit: number, cursor: number | null): Promise<WindowPage> => {
+    await Promise.resolve();
     calls.push({ limit, cursor });
     const from = cursor ?? 0;
     const audio = shelf.slice(from, from + limit);
@@ -938,7 +940,7 @@ function deleteForgetReplay(remembered: Record<string, string>, available: Set<s
       if (!rememberedModelIsGone(id, inventory)) continue;
       forgotten.push(id);
       for (const [workflow, value] of Object.entries(remembered)) {
-        if (value === id) delete remembered[workflow];
+        if (value === id) Reflect.deleteProperty(remembered, workflow);
       }
     }
     for (const repoId of settledDeleteMarkers(markers, inventory)) markers.delete(repoId);
@@ -1194,7 +1196,7 @@ const chatPrimary = {
   loaded: ["unsloth/Qwen3-1.7B-GGUF"],
   serving: ["unsloth/Qwen3-1.7B-GGUF", "audio-cpp/audio.cpp-gguf/Kokoro-82M-GGUF"],
   serving_checkpoints: ["unsloth/Qwen3-1.7B-GGUF", ""],
-} as unknown as import("../src/features/chat/types/api.ts").InferenceStatusResponse;
+} as unknown as InferenceStatusResponse;
 const kokoroSlot = {
   ...chatPrimary,
   active_model: "audio-cpp/audio.cpp-gguf/Kokoro-82M-GGUF",
@@ -1206,6 +1208,7 @@ const kokoroSlot = {
 test("the Audio page finds its speech model beside the chat model", async () => {
   const probed: string[] = [];
   const view = await describeAudioSlot(chatPrimary, async (id) => {
+    await Promise.resolve();
     probed.push(id);
     return kokoroSlot;
   });
@@ -1216,6 +1219,7 @@ test("the Audio page finds its speech model beside the chat model", async () => 
 
 test("a primary speech model is used as is, without probing", async () => {
   const view = await describeAudioSlot(kokoroSlot, async () => {
+    await Promise.resolve();
     throw new Error("must not probe");
   });
   assert.equal(view.status, kokoroSlot);
@@ -1224,7 +1228,7 @@ test("a primary speech model is used as is, without probing", async () => {
 
 test("with only the chat model loaded, the Audio page shows no model to eject", async () => {
   // An id not in a slot answers with the primary; a failed probe counts as nothing.
-  for (const probe of [async () => chatPrimary, async () => await Promise.reject(new Error("x"))]) {
+  for (const probe of [async () => { await Promise.resolve(); return chatPrimary; }, async () => await Promise.reject(new Error("x"))]) {
     const view = await describeAudioSlot(chatPrimary, probe);
     assert.equal(view.status.active_model, null);
     assert.equal(view.status.is_audio, false);
@@ -1255,6 +1259,7 @@ test("a speech model kept after the chat model was ejected is still found", asyn
   };
   const probed: string[] = [];
   const view = await describeAudioSlot(emptyPrimary, async (id) => {
+    await Promise.resolve();
     probed.push(id);
     return kokoroSlot;
   });
@@ -1270,10 +1275,10 @@ test("a kept local speech model is routed by its path, not its short name", asyn
     serving: ["unsloth/Qwen3-1.7B-GGUF", "MyVoice"],
     serving_checkpoints: ["unsloth/Qwen3-1.7B-GGUF", "/models/custom/MyVoice.gguf"],
   };
-  const view = await describeAudioSlot(primary, async () => ({
+  const view = await describeAudioSlot(primary, async () => { await Promise.resolve(); return ({
     ...kokoroSlot,
     active_model: "MyVoice",
-  }));
+  }); });
   assert.equal(view.slotModel, "/models/custom/MyVoice.gguf");
   assert.equal(view.slotLabel, "MyVoice");
   assert.equal(view.status.active_model, "MyVoice");
@@ -1303,6 +1308,7 @@ test("a kept speech model sharing the chat model's short name is still found", a
   };
   const probed: string[] = [];
   const view = await describeAudioSlot(primary, async (id) => {
+    await Promise.resolve();
     probed.push(id);
     return { ...kokoroSlot, active_model: "Voice", model_identifier: id };
   });

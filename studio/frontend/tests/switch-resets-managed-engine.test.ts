@@ -2,6 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved.
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import test from "node:test";
 import { readSrc } from "./helpers/kit.ts";
 
@@ -9,13 +10,15 @@ const runtime = readSrc("features/chat/hooks/use-chat-model-runtime.ts");
 const start = runtime.indexOf("let mlxLoadProgress = false;");
 const end = runtime.indexOf("const managedLoad =", start);
 assert.ok(start >= 0 && end > start);
-const requested = new Function(
-  "useChatRuntimeStore",
-  "selection",
-  "keepSpeculative",
-  "modelId",
-  "ggufVariant",
+const requested = vm.compileFunction(
   `${runtime.slice(start, end)}\nreturn requestedEngine;`,
+  [
+    "useChatRuntimeStore",
+    "selection",
+    "keepSpeculative",
+    "modelId",
+    "ggufVariant",
+  ],
 ) as (...args: unknown[]) => string;
 
 interface Params {

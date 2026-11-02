@@ -232,7 +232,7 @@ test("successful model Clear uses the Hub API's normal inventory refresh and lif
   assert.equal(requests.length, 1);
   assert.equal(requests[0].url, "/api/hub/delete-cached");
   assert.equal(requests[0].init?.method, "DELETE");
-  assert.deepEqual(JSON.parse(String(requests[0].init.body as string)), {
+  assert.deepEqual(JSON.parse(requests[0].init.body as string), {
     repo_id: "Org/Model",
     cache_path: "/cache/hub/models--Org--Model",
   });

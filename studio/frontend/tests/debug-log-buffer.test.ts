@@ -154,7 +154,7 @@ test("a caller abort stays silent even when the backstop races it", async () => 
 });
 
 test("a request that answers in time is untouched by the backstop", async () => {
-  assert.equal(await withRequestTimeout(async () => "done", 1000), "done");
+  assert.equal(await withRequestTimeout(async () => { await Promise.resolve(); return "done"; }, 1000), "done");
 });
 
 test("the source rescan cannot freeze the poll loop behind it", async () => {
@@ -168,6 +168,7 @@ test("the source rescan cannot freeze the poll loop behind it", async () => {
     }
   };
   const poll = async () => {
+    await Promise.resolve();
     polls += 1;
   };
   await new Promise<void>((resolve) => {
@@ -201,6 +202,7 @@ test("the caller's signal still cancels, and the timer does not outlive a win", 
 
   let seen: AbortSignal | null = null;
   const value = await withRequestTimeout(async (signal) => {
+    await Promise.resolve();
     seen = signal;
     return "ok";
   }, 20);
@@ -276,7 +278,7 @@ test("the skipped-lines warning outlives the poll that raised it", () => {
 
 test("the deadline fires even when the work ignores the abort", async () => {
   // authFetch awaits refreshSession() without a signal, so only racing the deadline unblocks it.
-  const deaf = () => new Promise<never>(() => {});
+  const deaf = () => new Promise<never>(() => { /* empty */ });
   const started = Date.now();
   await assert.rejects(
     () => withRequestTimeout(deaf, 20),
@@ -286,7 +288,7 @@ test("the deadline fires even when the work ignores the abort", async () => {
 });
 
 test("a caller abort still reads as one when the work ignores it too", async () => {
-  const deaf = () => new Promise<never>(() => {});
+  const deaf = () => new Promise<never>(() => { /* empty */ });
   const controller = new AbortController();
   controller.abort();
   await assert.rejects(

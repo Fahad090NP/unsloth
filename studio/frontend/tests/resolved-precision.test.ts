@@ -148,7 +148,7 @@ test("every off spelling counts as an honored off request", () => {
     assert.equal(
       isResolvedHonored({ value, requested, source: "explicit", reason: "" }),
       true,
-      `${String(requested)} -> ${String(value)}`,
+      `${requested} -> ${String(value)}`,
     );
   }
 });

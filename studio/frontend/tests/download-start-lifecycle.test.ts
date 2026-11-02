@@ -214,6 +214,7 @@ test("a later entry of a staged plan starts without reserving another Xet notice
   let reservations = 0;
 
   globalThis.fetch = (async (input: RequestInfo | URL) => {
+    await Promise.resolve();
     const url = String(input);
     if (url.startsWith("/api/hub/active-downloads")) {
       return json({ downloads: [] });

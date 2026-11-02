@@ -291,7 +291,7 @@ test("a new download clears historical observation and records completion time",
   const completedState = useInventoryHintStore.getState();
   const completedPending = pendingWithInventoryHints(
     completedState.pending,
-    hint ? [hint] : [],
+    [hint],
   );
   const missingRowReconciliation = reconcileInventoryHints({
     pending: completedPending,

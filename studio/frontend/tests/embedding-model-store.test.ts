@@ -46,7 +46,7 @@ function respondWith(model: string, release?: Promise<void>): void {
     return {
       ok: true,
       status: 200,
-      json: async () => ({
+      json: async () => { await Promise.resolve(); return ({
         // biome-ignore lint/style/useNamingConvention: API schema
         embedding_model: model,
         // biome-ignore lint/style/useNamingConvention: API schema
@@ -58,7 +58,7 @@ function respondWith(model: string, release?: Promise<void>): void {
         // biome-ignore lint/style/useNamingConvention: API schema
         is_custom: model !== "unsloth/bge-small-en-v1.5",
         loaded: false,
-      }),
+      }); },
     } as unknown as Response;
   });
 }
@@ -142,12 +142,17 @@ test("a slow read cannot report over the one that overtook it", async () => {
 
 test("a failed read reports the backend's reason", async () => {
   reset();
-  globalThis.fetch = (async () =>
-    ({
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return ({
       ok: false,
       status: 500,
-      json: async () => ({ detail: "storage is offline" }),
-    }) as unknown as Response);
+      json: async () => {
+        await Promise.resolve();
+        return { detail: "storage is offline" };
+      },
+    }) as unknown as Response;
+  });
   await useEmbeddingModelStore.getState().load();
   assert.equal(
     useEmbeddingModelStore.getState().loadError,
@@ -166,7 +171,7 @@ test("an older save cannot land on top of a newer one", async () => {
     await firstGate;
     return settings("unsloth/bge-small-en-v1.5");
   });
-  const second = await store.save(async () => settings("unsloth/bge-m3"));
+  const second = await store.save(async () => { await Promise.resolve(); return settings("unsloth/bge-m3"); });
   respondWith("unsloth/bge-m3");
   releaseFirst();
 
@@ -191,6 +196,7 @@ test("selection order is reserved before an older preflight finishes", async () 
 
   assert.equal(
     await store.save(async () => {
+      await Promise.resolve();
       olderWriteRan = true;
       return settings("org/older");
     }, olderSelection),
@@ -198,7 +204,7 @@ test("selection order is reserved before an older preflight finishes", async () 
   );
   assert.equal(olderWriteRan, false, "the superseded preflight cannot write");
   assert.ok(
-    await store.save(async () => settings("org/newer"), newerSelection),
+    await store.save(async () => { await Promise.resolve(); return settings("org/newer"); }, newerSelection),
   );
   assert.equal(
     useEmbeddingModelStore.getState().settings?.embeddingModel,
@@ -220,6 +226,7 @@ test("a superseded save is reconciled against the backend", async () => {
   });
   const second = store
     .save(async () => {
+      await Promise.resolve();
       throw new Error("could not verify that model");
     })
     .catch(() => false);
@@ -240,11 +247,13 @@ test("a lone save that fails does not trigger a re-read", async () => {
   const store = useEmbeddingModelStore.getState();
   let reads = 0;
   globalThis.fetch = (async () => {
+    await Promise.resolve();
     reads += 1;
     throw new Error("should not be read");
   });
   await store
     .save(async () => {
+      await Promise.resolve();
       throw new Error("could not verify that model");
     })
     .catch(() => undefined);
@@ -253,6 +262,7 @@ test("a lone save that fails does not trigger a re-read", async () => {
 });
 
 test("a save still bumps the revision the reads check", async () => {
+  await Promise.resolve();
   reset();
   const store = useEmbeddingModelStore.getState();
   store.applySettings(settings("unsloth/bge-m3"));
@@ -264,10 +274,11 @@ test("a save with nothing overlapping it commits without a re-read", async () =>
   const store = useEmbeddingModelStore.getState();
   let reads = 0;
   globalThis.fetch = (async () => {
+    await Promise.resolve();
     reads += 1;
     throw new Error("should not be read");
   });
-  assert.ok(await store.save(async () => settings("unsloth/bge-m3")));
+  assert.ok(await store.save(async () => { await Promise.resolve(); return settings("unsloth/bge-m3"); }));
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(reads, 0);
   assert.equal(
@@ -288,17 +299,18 @@ test("the settle flag does not carry into the next save", async () => {
     await gate;
     return settings("unsloth/bge-m3");
   });
-  await store.save(async () => settings("unsloth/bge-m3"));
+  await store.save(async () => { await Promise.resolve(); return settings("unsloth/bge-m3"); });
   release();
   await first;
   await new Promise((resolve) => setTimeout(resolve, 0));
 
   let reads = 0;
   globalThis.fetch = (async () => {
+    await Promise.resolve();
     reads += 1;
     throw new Error("should not be read");
   });
-  await store.save(async () => settings("unsloth/bge-small-en-v1.5"));
+  await store.save(async () => { await Promise.resolve(); return settings("unsloth/bge-small-en-v1.5"); });
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(reads, 0, "the earlier overlap was already settled");
 });
@@ -307,14 +319,14 @@ test("unloading does not retire an in-flight selection's reservation", async () 
   reset();
   const store = useEmbeddingModelStore.getState();
   const selection = store.beginSave();
-  await store.applyResidency(async () => settings("org/selected"));
+  await store.applyResidency(async () => { await Promise.resolve(); return settings("org/selected"); });
 
   assert.ok(
     useEmbeddingModelStore.getState().isSaveCurrent(selection),
     "the unload took the selection's place in save order",
   );
   assert.ok(
-    await store.save(async () => settings("org/selected"), selection),
+    await store.save(async () => { await Promise.resolve(); return settings("org/selected"); }, selection),
     "the selection was dropped without ever persisting",
   );
   assert.equal(

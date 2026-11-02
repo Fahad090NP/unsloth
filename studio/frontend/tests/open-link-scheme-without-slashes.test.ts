@@ -20,7 +20,9 @@ const opened: string[] = [];
   open: (url: string) => opened.push(url),
   location: { hash: "" },
 };
-const { openLink } = await import(`data:text/javascript,${encodeURIComponent(js)}`);
+const { openLink } = (await import(`data:text/javascript,${encodeURIComponent(js)}`)) as {
+  openLink: (href: string) => boolean;
+};
 
 test("https: without slashes opens as a web link instead of navigating Studio's page", () => {
   for (const [href, expected] of [

@@ -76,12 +76,14 @@ function compositionHandlers(file: string, deps: Record<string, unknown>) {
       module: ts.ModuleKind.None,
     },
   }).outputText;
-  return new Function(...Object.keys(deps), code)(...Object.values(deps)) as {
+  return (new Function(...Object.keys(deps), code) as (
+    ...args: unknown[]
+  ) => {
     onFocus: () => void;
     onBlur: () => void;
     onCompositionStart: () => void;
     onCompositionEnd: (event: { timeStamp: number }) => void;
-  };
+  })(...Object.values(deps));
 }
 
 function keyHandler(
@@ -128,9 +130,9 @@ function keyHandler(
       module: ts.ModuleKind.None,
     },
   }).outputText;
-  return new Function(...Object.keys(deps), code)(...Object.values(deps)) as (
-    event: object,
-  ) => void;
+  return (new Function(...Object.keys(deps), code) as (
+    ...args: unknown[]
+  ) => (event: object) => void)(...Object.values(deps));
 }
 
 function fixture(

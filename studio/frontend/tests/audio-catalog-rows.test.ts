@@ -143,6 +143,7 @@ test("an unclassified umbrella folder warns; a stale UNOFFERED entry fails", () 
 test("a failed catalog fetch leaves the static seed, with no rows", async () => {
   let calls = 0;
   const store = createAudioCatalogStore(async () => {
+    await Promise.resolve();
     calls += 1;
     throw new Error("offline");
   });
@@ -159,6 +160,7 @@ test("a fetched catalog notifies and is cached for the TTL", async () => {
   let calls = 0;
   const store = createAudioCatalogStore(
     async () => {
+      await Promise.resolve();
       calls += 1;
       return {
         source: "hub",
@@ -272,6 +274,7 @@ test("a saved or cached catalog is re-asked after the retry interval, not the TT
   let calls = 0;
   const store = createAudioCatalogStore(
     async () => {
+      await Promise.resolve();
       calls += 1;
       return { source: "saved", fetched_at: 1, runtime_specs: false, models: [row({})] };
     },

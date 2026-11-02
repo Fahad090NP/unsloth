@@ -222,7 +222,7 @@ test("the third toast branch names the levers that can actually work", () => {
   );
   assert.match(
     CHAT_ADAPTER,
-    /the system prompt and any \" \+\n\s*\"tools that are enabled\./,
+    /the system prompt and any " \+\n\s*"tools that are enabled\./,
   );
 });
 

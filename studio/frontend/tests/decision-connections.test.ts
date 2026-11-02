@@ -17,6 +17,7 @@ test("System One connections stay decision-only after a reload", async () => {
   const bodies: Record<string, unknown>[] = [];
   const previous = globalThis.fetch;
   globalThis.fetch = (async (_url, init) => {
+    await Promise.resolve();
     bodies.push(JSON.parse(String(init?.body))); return Response.json({});
   });
   try {

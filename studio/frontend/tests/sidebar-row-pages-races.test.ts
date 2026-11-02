@@ -84,7 +84,7 @@ function hookHarness(fetchSidebarRows: (request: { limit: number; cursor: string
   };
   const react = {
     useRef: (value: unknown) => cell(() => ({ current: value })).v,
-    useReducer: () => [0, () => {}],
+    useReducer: () => [0, () => { /* no-op */ }],
     useMemo: (fn: () => unknown) => fn(),
     useEffect: (fn: () => unknown, deps?: unknown[]) => {
       const c = cell<{ deps?: unknown[] } | null>(() => null);
@@ -103,10 +103,21 @@ function hookHarness(fetchSidebarRows: (request: { limit: number; cursor: string
       "@/features/auth": { getAuthSessionEpoch: () => 0 },
       "../api/chat-api": { CHAT_HISTORY_UPDATED_EVENT: "history", fetchSidebarRows },
       "../utils/chat-history-storage": {
-        listStoredChatThreads: async () => [],
-        settleLegacyChatImport: async () => true,
+        listStoredChatThreads: async () => {
+          await Promise.resolve();
+          return [];
+        },
+        settleLegacyChatImport: async () => {
+          await Promise.resolve();
+          return true;
+        },
       },
-      "../utils/repair-legacy-chat-titles": { repairLegacyChatTitles: async () => 0 },
+      "../utils/repair-legacy-chat-titles": {
+        repairLegacyChatTitles: async () => {
+          await Promise.resolve();
+          return 0;
+        },
+      },
       "../utils/chat-thread-tombstones": { isChatThreadDeleted: () => false },
       "../utils/sidebar-row-pager": { RowPager },
       "../utils/sidebar-row-query": rowQuery,
@@ -134,7 +145,7 @@ function sidebarRows(ids: string[]) {
 
 test("a history change during a list's first load is not lost", async () => {
   let server = ["old"];
-  let release = () => {};
+  let release = () => { /* no-op */ };
   let gate: Promise<void> | null = new Promise((resolve) => {
     release = resolve;
   });
@@ -160,6 +171,7 @@ test("a history change during a list's first load is not lost", async () => {
 test("a scroll after one failed page asks for that page again", async () => {
   let failNext = false;
   const { render } = hookHarness(async ({ limit, cursor }) => {
+    await Promise.resolve();
     if (failNext) {
       failNext = false;
       throw new Error("offline");
@@ -184,6 +196,7 @@ test("a scroll after one failed page asks for that page again", async () => {
 test("Select All's full read rejects when a page fails, so no partial list is taken for all", async () => {
   let calls = 0;
   const { render } = hookHarness(async ({ limit, cursor }) => {
+    await Promise.resolve();
     calls += 1;
     if (calls === 2) throw new Error("offline");
     const offset = cursor ? Number(cursor) : 0;

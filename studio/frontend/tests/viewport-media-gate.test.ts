@@ -171,7 +171,9 @@ test("with build sourcemaps on, the rewrite returns its own map", () => {
     handler: (this: unknown, code: string, id: string) => { code: string; map: string };
   };
   const result = hook.handler.call({}, "@media (min-width:40rem){.a{order:1}}", "/app/src/index.css");
-  const map: { sources: string[]; mappings: string } = JSON.parse(result.map);
+  const map: { sources: string[]; mappings: string } = JSON.parse(
+    result.map as string,
+  );
   assert.ok(result.code.startsWith("@media screen{"));
   assert.ok(map.sources.includes("index.css"));
   assert.notEqual(map.mappings, "");
@@ -223,7 +225,7 @@ test("boot script data cannot close an inline script and retains its exact runti
     '<!--<script>',
     '"];globalThis.injected=true;//',
     '\\";globalThis.injected=true;//',
-    '` \${globalThis.injected=true}',
+    "`$" + "{globalThis.injected=true}`",
     "quotes: \" ' \\; literal escapes: \\u003c \\u2028",
     String.fromCharCode(...Array.from({ length: 32 }, (_, i) => i)),
     "line\u2028paragraph\u2029end",

@@ -13,6 +13,7 @@ import {
 } from "../src/features/chat/utils/json-record-stream.ts";
 
 async function* asChunks(text: string, size: number): AsyncGenerator<TextChunk> {
+  await Promise.resolve();
   for (let index = 0; index < text.length; index += size) {
     const slice = text.slice(index, index + size);
     yield { text: slice, bytes: Buffer.byteLength(slice) };
@@ -20,7 +21,7 @@ async function* asChunks(text: string, size: number): AsyncGenerator<TextChunk> 
 }
 
 async function drain(chunks: AsyncIterable<unknown>): Promise<void> {
-  for await (const chunk of chunks) void chunk;
+  for await (const chunk of chunks) assert.ok(chunk !== null);
 }
 
 async function collect(text: string, size: number): Promise<unknown[]> {
@@ -240,7 +241,9 @@ test("an array that ends between records fails instead of reporting a complete i
 });
 
 test("invalid UTF-8 is rejected on the desktop path and tolerated on the browser path", async () => {
+  await Promise.resolve();
   async function* bytes(): AsyncGenerator<Uint8Array> {
+    await Promise.resolve();
     yield new Uint8Array([0x7b, 0x22, 0x61, 0x22, 0x3a, 0x22]); // {"a":"
     yield new Uint8Array([0xff]); // not a UTF-8 sequence
     yield new Uint8Array([0x22, 0x7d]); // "}
@@ -253,6 +256,7 @@ test("invalid UTF-8 is rejected on the desktop path and tolerated on the browser
   await assert.rejects(drain(decodeTextChunks(bytes(), true)), TypeError);
 
   const cutShort = (async function* () {
+    await Promise.resolve();
     yield new Uint8Array([0xe6, 0x97]); // first two bytes of a 3-byte character
   })();
   await assert.rejects(drain(decodeTextChunks(cutShort, true)), TypeError);
@@ -264,6 +268,7 @@ test("the whole-file read is bounded by bytes, not by decoded string length", as
   const source = {
     name: "chats.csv",
     async *chunks() {
+      await Promise.resolve();
       for (const chunk of [text, text]) {
         yield { text: chunk, bytes: Buffer.byteLength(chunk) };
       }
@@ -291,10 +296,12 @@ test("a pretty-printed record following a single-line one survives every chunk b
 });
 
 test("a broken first row is recovered while the file streams, not held until the end", async () => {
+  await Promise.resolve();
   // With nothing emitted yet there is no proven framing; waiting for EOF would buffer the export.
   const rows = `{"id":1\n${Array.from({ length: 60 }, (_, i) => `{"id":${i + 2}}`).join("\n")}\n`;
   let pulled = 0;
   async function* counted(): AsyncGenerator<TextChunk> {
+    await Promise.resolve();
     for (let at = 0; at < rows.length; at += 16) {
       pulled++;
       const slice = rows.slice(at, at + 16);

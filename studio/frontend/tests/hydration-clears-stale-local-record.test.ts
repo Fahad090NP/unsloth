@@ -7,6 +7,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import type { PerModelConfig } from "../src/features/model-picker/model-config/per-model-config.ts";
 
 import {
   installLocalStorageFake,
@@ -170,18 +171,18 @@ test("hydration propagates what its own write evicted", () => {
 test("hydration keeps a moved context pin in one field", () => {
   // The picker reads customContextLength first and auto-switch reads max_seq_length first.
   const legacy = { maxSeqLength: 8192, customContextLength: null };
-  const moved = fromApiOverride({ custom_context_length: 32768 }, legacy as any);
+  const moved = fromApiOverride({ custom_context_length: 32768 }, legacy as unknown as PerModelConfig);
   assert.equal(moved.customContextLength, 32768);
   assert.equal(moved.maxSeqLength, null, "the stale legacy field must not survive");
 
   const back = fromApiOverride(
     { max_seq_length: 8192 },
-    { customContextLength: 32768, maxSeqLength: null } as any,
+    { customContextLength: 32768, maxSeqLength: null } as unknown as PerModelConfig,
   );
   assert.equal(back.customContextLength, null);
   assert.equal(back.maxSeqLength, 8192);
 
   // A row stating no pin falls back to this browser's, or opening the panel deletes it.
-  const kept = fromApiOverride({}, legacy as any);
+  const kept = fromApiOverride({}, legacy as unknown as PerModelConfig);
   assert.equal(kept.maxSeqLength, 8192);
 });

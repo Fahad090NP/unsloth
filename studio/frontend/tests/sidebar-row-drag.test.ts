@@ -905,9 +905,9 @@ test("rows cover the gap between them, so the section never answers for it", () 
 // A section's collapsible clips overflow, so cues stay inside the row.
 test("every drop cue is drawn inside its row", () => {
   for (const cue of [
-    "\${DROP_CUE_BASE} before:top-0",
+    "$" + "{DROP_CUE_BASE} before:top-0",
     // A pixel up: the last row's extra hit pixel is clipped by the list.
-    "\${DROP_CUE_BASE} before:bottom-px",
+    "$" + "{DROP_CUE_BASE} before:bottom-px",
     "before:inset-x-1 before:inset-y-0 ",
     // Borders snap to whole device pixels, so every cue keeps one thickness.
     "before:h-0 before:border-t-[1.5px] before:border-foreground",

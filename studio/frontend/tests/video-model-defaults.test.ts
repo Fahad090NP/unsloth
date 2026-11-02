@@ -7,6 +7,7 @@
 // matcher already folds together.
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import test from "node:test";
 
 import { readText } from "./helpers/kit.ts";
@@ -31,10 +32,12 @@ const defaultsFor = (() => {
     .replace(/: Array<\{[^}]*\}>/, "")
     .replace(/\(repoId: string, family\?: string\): \{[^}]*\}/, "(repoId, family)")
     .replace(/\((\w+): string\)/g, "($1)");
-  const pick = new Function(`${source}\nreturn defaultsFor;`)() as (
-    repoId: string,
-    family?: string,
-  ) => { steps: number; guidance: number };
+  const pick = (
+    vm.compileFunction(`${source}\nreturn defaultsFor;`) as () => (
+      repoId: string,
+      family?: string,
+    ) => { steps: number; guidance: number }
+  )();
   return (repoId: string, family?: string) => {
     const { steps, guidance } = pick(repoId, family);
     return { steps, guidance };

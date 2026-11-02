@@ -202,8 +202,9 @@ test("a maths root buried deeper than the hop bound marks nothing", () => {
   const paragraph = el("p", [node]);
   const tree = root([paragraph]);
 
+  const depthValue: number = depth;
   assert.ok(
-    depth > 12,
+    depthValue > 12,
     "PRECONDITION: the fixture is past the twelve-hop bound",
   );
   assert.equal(markMathBlocks(tree), 0);

@@ -11,6 +11,7 @@ import { readText } from "./helpers/kit.ts";
 const NOT_RENDERED = new Set(["aborted"]);
 
 test("every renderable Hub failure kind has a branch in the panel", async () => {
+    await Promise.resolve();
   const network = readText("../src/features/hub/lib/network.ts");
   const decl = /export type HubFailureKind =([\s\S]*?);/.exec(network);
   assert.ok(decl, "could not find HubFailureKind in network.ts");

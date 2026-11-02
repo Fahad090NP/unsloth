@@ -434,7 +434,7 @@ test("the live adapter saves identities for ordinary, approval and provider card
           ? { awaiting_confirmation: true, approval_id: "approval-1" }
           : {}),
       };
-      context.receive(event);
+      (context as { receive: (event: unknown) => void }).receive(event);
       assert.equal(parts.length, 1);
       const saved = parts[0];
       assert.equal(saved.backendToolCallId, "call_0");
@@ -509,7 +509,7 @@ async function recoverRun(
     content: Record<string, unknown>[];
     metadata: Record<string, unknown>;
   }[] = [];
-  const generationRecoveries = new Map();
+  const generationRecoveries = new Map<string, { promise: Promise<void> }>();
   const runtime = {
     models: [],
     registerThreadServerCancel() { return undefined; },
@@ -559,6 +559,7 @@ async function recoverRun(
       _id: string,
       followOptions: { replayFrom: number },
     ) {
+      await Promise.resolve();
       replayFrom = followOptions.replayFrom;
       for (let i = followOptions.replayFrom; i < payloads.length; i++) {
         const update = {
@@ -594,7 +595,14 @@ async function recoverRun(
       ...options.metadata,
     },
   };
-  context.scheduleGenerationRecovery(
+  (context as {
+    scheduleGenerationRecovery: (
+      threadId: string,
+      stored: unknown,
+      messages: unknown[],
+      deps: unknown,
+    ) => void;
+  }).scheduleGenerationRecovery(
     "thread",
     stored,
     [stored],
@@ -609,7 +617,7 @@ async function recoverRun(
       }),
     },
   );
-  await generationRecoveries.get("run").promise;
+  await generationRecoveries.get("run")?.promise;
   const final = snapshots.at(-1);
   assert.ok(final);
   if (!options.stallBefore) {
@@ -966,7 +974,11 @@ test("Gemini native results and later images survive reloads", async () => {
   const merged = resumed.content[0].args as typeof event.arguments;
   assert.deepEqual(merged.google.native_part.parts, [code, output, image]);
   assert.deepEqual(
-    JSON.parse(String(resumed.content[0].argsText)).google.native_part.parts,
+    (
+      JSON.parse(String(resumed.content[0].argsText)) as {
+        google: { native_part: { parts: unknown[] } };
+      }
+    ).google.native_part.parts,
     [code, output, image],
   );
   assert.deepEqual(saved.args.google.native_part.parts, [code]);
@@ -989,7 +1001,7 @@ test("legacy Gemini signatures and image calls retain exact arguments", () => {
       {
         ...start(),
         tool_name: toolName,
-        arguments: JSON.parse(argsText),
+        arguments: JSON.parse(argsText) as Record<string, unknown>,
         arguments_text: argsText,
       },
       0,
@@ -1019,7 +1031,11 @@ test("legacy Gemini signatures and image calls retain exact arguments", () => {
           ]
         : [image];
     assert.deepEqual(
-      JSON.parse(String(part.argsText)).google.native_part.parts,
+      (
+        JSON.parse(String(part.argsText)) as {
+          google: { native_part: { parts: unknown[] } };
+        }
+      ).google.native_part.parts,
       expected,
     );
     assert.match(String(part.argsText), /9007199254740993/);

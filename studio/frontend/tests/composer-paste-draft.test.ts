@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import type * as ComposerDraft from "../src/features/chat/utils/composer-draft.ts";
 
 const store = new Map<string, string>();
 let failWrites = false;
@@ -110,7 +111,7 @@ test("composers hear each other's text, never their own", () => {
 const openTab = () =>
   import(
     `../src/features/chat/utils/composer-draft.ts?tab=${Math.random()}`
-  ) as Promise<typeof import("../src/features/chat/utils/composer-draft.ts")>;
+  ) as Promise<typeof ComposerDraft>;
 
 test("a new tab or a reload starts from the saved draft", async () => {
   writeComposerDraft(composerDraftKey(), "saved before the reload");

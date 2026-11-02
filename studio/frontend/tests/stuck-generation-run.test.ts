@@ -24,6 +24,10 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
+function restoreFetch(fetchImpl: typeof fetch): void {
+  globalThis.fetch = fetchImpl;
+}
+
 const {
   generationIsCorroboratedLive,
   isServerActiveGenerationRun,
@@ -237,7 +241,7 @@ test("the follower throws on its own deadline instead of returning silently", as
         stallTimeoutMs: 40,
       })) {
         // drain
-        void _update;
+        _update;
       }
     },
     (error: unknown) =>
@@ -258,7 +262,7 @@ test("a caller Stop still ends the follow cleanly", async () => {
     stallTimeoutMs: 60_000,
   })) {
     // drain
-    void _update;
+    _update;
   }
 });
 
@@ -644,7 +648,7 @@ test("advancing keep-alive stamps hold the follower open through a long preparat
     await follow;
     assert.ok(seen.length > 0, "the follower must have survived to see the event");
   } finally {
-    globalThis.fetch = original;
+    restoreFetch(original);
   }
 });
 
@@ -713,7 +717,7 @@ test("a repeated keep-alive stamp does NOT hold the follower open", async () => 
           stallTimeoutMs: 200,
         })) {
           // The run never progresses; only the deadline can end this.
-          void _u;
+          _u;
         }
       } catch (error) {
         stalled = error instanceof api.ChatGenerationStalledError;
@@ -740,7 +744,7 @@ test("a repeated keep-alive stamp does NOT hold the follower open", async () => 
     );
     assert.equal(stalled, true, "a frozen stamp must not keep the follower alive");
   } finally {
-    globalThis.fetch = original;
+    restoreFetch(original);
   }
 });
 
@@ -780,7 +784,7 @@ test("a frozen stamp does not rearm across SSE reconnects", async () => {
           stallTimeoutMs: 2_500,
         })) {
           // Never terminal; only the deadline can end this.
-          void _u;
+          _u;
         }
       } catch (error) {
         stalled = error instanceof api.ChatGenerationStalledError;
@@ -795,7 +799,7 @@ test("a frozen stamp does not rearm across SSE reconnects", async () => {
     assert.equal(stalled, true, "a frozen stamp must not rearm on reconnect");
     assert.ok(connections > 1, `expected several reconnects, saw ${connections}`);
   } finally {
-    globalThis.fetch = original;
+    restoreFetch(original);
   }
 });
 

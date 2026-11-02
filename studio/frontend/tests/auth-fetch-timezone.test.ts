@@ -14,6 +14,7 @@ test("authFetch sends the browser timezone", async () => {
   const originalFetch = globalThis.fetch;
   let receivedHeaders = new Headers();
   globalThis.fetch = async (_input, init) => {
+    await Promise.resolve();
     receivedHeaders = new Headers(init?.headers);
     return new Response(null, { status: 200 });
   };
@@ -25,12 +26,12 @@ test("authFetch sends the browser timezone", async () => {
         "@/lib/api-base": { apiUrl: (path: string) => path, isTauri: false },
         "@/lib/account-transition": { accountTransitionPending: () => false },
         "./session": {
-          clearAuthTokens: () => {},
+          clearAuthTokens: () => { /* empty */ },
           getAuthToken: () => "access-token",
           getRefreshToken: () => null,
           mustChangePassword: () => false,
-          setMustChangePassword: () => {},
-          storeAuthTokens: () => {},
+          setMustChangePassword: () => { /* empty */ },
+          storeAuthTokens: () => { /* empty */ },
         },
       },
     );

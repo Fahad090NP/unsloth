@@ -457,7 +457,7 @@ test("the KV caption survives a field that is not a number", () => {
 test("the draft cache note reads its OWN placement, not the target cache's", () => {
   // --spec-draft-ngl 0 moves the drafter; --no-kv-offload moves the target.
   assert.equal(resolveDraftCacheNote(0, 4 * GB), "host RAM");
-  assert.equal(resolveDraftCacheNote(Number(GB), 4 * GB), "1.00 GiB on GPU");
+  assert.equal(resolveDraftCacheNote(GB, 4 * GB), "1.00 GiB on GPU");
   assert.equal(resolveDraftCacheNote(4 * GB, 4 * GB), undefined);
   assert.equal(resolveDraftCacheNote(Number.NaN, 4 * GB), "host RAM");
 });
@@ -726,7 +726,7 @@ const SMALL_HOST = { systemRamCapacityGb: 16, totalCapacityGb: 23.2, usableSyste
 
 test("a context whose GPU share fits is opened native, so its host share is too", () => {
   const result = fit(
-    { gpuBytes: 2 * GB, totalBytes: 30 * GB, nCtx: 262144, ...floorAt(Number(GB)) },
+    { gpuBytes: 2 * GB, totalBytes: 30 * GB, nCtx: 262144, ...floorAt(GB) },
     { ...EIGHT_GB_CARD, ...SMALL_HOST },
   );
   assert.equal(result.hostShareBytes, 28 * GB);

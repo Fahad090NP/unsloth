@@ -76,7 +76,7 @@ test("audio transcript appends once without replacing a draft typed meanwhile", 
 });
 
 test("an ignored abort cannot commit a late transcript", async () => {
-  let resolveTranscript: (value: string) => void = () => {};
+  let resolveTranscript: (value: string) => void = () => { /* empty */ };
   const transcript = new Promise<string>((resolve) => {
     resolveTranscript = resolve;
   });
@@ -100,7 +100,7 @@ test("an ignored abort cannot commit a late transcript", async () => {
 });
 
 test("an owner change before transcription resolves cannot commit", async () => {
-  let resolveTranscript: (value: string) => void = () => {};
+  let resolveTranscript: (value: string) => void = () => { /* empty */ };
   const transcript = new Promise<string>((resolve) => {
     resolveTranscript = resolve;
   });
@@ -133,6 +133,7 @@ test("an A to B to A generation change still rejects the first result", async ()
     signal: new AbortController().signal,
     blocked: () => false,
     transcribe: async () => {
+      await Promise.resolve();
       current = { ...started, generation: 3 };
       return "late words";
     },
@@ -153,7 +154,7 @@ test("a current result commits exactly once and empty audio commits nothing", as
       current: () => fence,
       signal: new AbortController().signal,
       blocked: () => false,
-      transcribe: async () => value,
+      transcribe: async () => { await Promise.resolve(); return value; },
       commit: (result) => committed.push(result),
     });
   assert.equal(await run(" hello "), "committed");
@@ -223,8 +224,8 @@ test("an open dialog observes a missing model becoming ready", () => {
 
 test("readiness refreshes stay serialized across invalidation and reopen", async () => {
   const queue = new ChatAudioReadinessRefreshQueue();
-  let resolveFirst = () => {};
-  let resolveSecond = () => {};
+  let resolveFirst = () => { /* empty */ };
+  let resolveSecond = () => { /* empty */ };
   const firstGate = new Promise<void>((resolve) => {
     resolveFirst = resolve;
   });
@@ -242,7 +243,7 @@ test("readiness refreshes stay serialized across invalidation and reopen", async
     if (queue.isCurrent(generation)) committed.push("first");
   });
   assert.equal(calls, 1);
-  assert.equal(await queue.run(true, async () => {}), "skipped");
+  assert.equal(await queue.run(true, async () => { /* empty */ }), "skipped");
 
   queue.invalidate();
   const reopened = queue.run(false, async (generation) => {
@@ -252,14 +253,14 @@ test("readiness refreshes stay serialized across invalidation and reopen", async
   });
   assert.equal(calls, 1);
   assert.equal(queue.isCurrent(firstGeneration), false);
-  assert.equal(await queue.run(true, async () => {}), "skipped");
+  assert.equal(await queue.run(true, async () => { /* empty */ }), "skipped");
 
   resolveFirst();
   assert.equal(await first, "ran");
   assert.deepEqual(committed, []);
   await Promise.resolve();
   assert.equal(calls, 2);
-  assert.equal(await queue.run(true, async () => {}), "skipped");
+  assert.equal(await queue.run(true, async () => { /* empty */ }), "skipped");
 
   resolveSecond();
   assert.equal(await reopened, "ran");
@@ -269,7 +270,7 @@ test("readiness refreshes stay serialized across invalidation and reopen", async
 
 test("a newer explicit readiness refresh supersedes one still in flight", async () => {
   const queue = new ChatAudioReadinessRefreshQueue();
-  let release = () => {};
+  let release = () => { /* empty */ };
   const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
@@ -282,6 +283,7 @@ test("a newer explicit readiness refresh supersedes one still in flight", async 
     if (queue.isCurrent(generation)) committed.push("old-model");
   });
   const replacement = queue.run(false, async (generation) => {
+    await Promise.resolve();
     if (queue.isCurrent(generation)) committed.push("new-model");
   });
 
@@ -312,6 +314,7 @@ test("invalidation aborts a hung refresh before a reopened one starts", async ()
   });
   queue.invalidate();
   const reopened = queue.run(false, async () => {
+    await Promise.resolve();
     calls += 1;
   });
 
@@ -367,7 +370,7 @@ test("a hung readiness refresh times out and releases the queue", async () => {
     if (guard !== undefined) clearTimeout(guard);
   }
   assert.equal(timedOut, true);
-  assert.equal(await queue.run(false, async () => {}), "ran");
+  assert.equal(await queue.run(false, async () => { /* empty */ }), "ran");
 });
 
 test("Main cancels an upload only after a queue or normal send is accepted", () => {

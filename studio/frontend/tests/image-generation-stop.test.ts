@@ -72,7 +72,7 @@ test("a Stop the backend did not act on does not explain away a real failure", (
     assert.equal(
       shouldReportGenerateError({
         message: "Failed to save the generated image",
-        stopRequested: stopRequested && cancelAcked,
+        stopRequested: cancelAcked,
       }),
       true,
     );
@@ -81,7 +81,7 @@ test("a Stop the backend did not act on does not explain away a real failure", (
 
 test("a Stop the backend confirmed still silences the run it stopped", () => {
   assert.equal(
-    shouldReportGenerateError({ message: "Bad Gateway", stopRequested: true && true }),
+    shouldReportGenerateError({ message: "Bad Gateway", stopRequested: true }),
     false,
   );
 });

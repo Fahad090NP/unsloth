@@ -125,7 +125,9 @@ test("Codex names the variable and offers a longer tool timeout", () => {
 });
 
 test("OpenCode gets valid JSON with OAuth off and an env reference", () => {
-  const parsed = JSON.parse(snippet("opencode").text);
+  const parsed = JSON.parse(snippet("opencode").text) as {
+    mcp: Record<string, { headers: { Authorization: string } }>;
+  };
   assert.deepEqual(parsed, {
     mcp: {
       "unsloth-studio": {
@@ -136,7 +138,9 @@ test("OpenCode gets valid JSON with OAuth off and an env reference", () => {
       },
     },
   });
-  const withKey = JSON.parse(snippet("opencode", "unix", 'a"b').text);
+  const withKey = JSON.parse(snippet("opencode", "unix", 'a"b').text) as {
+    mcp: Record<string, { headers: { Authorization: string } }>;
+  };
   assert.equal(
     withKey.mcp["unsloth-studio"].headers.Authorization,
     'Bearer a"b',
@@ -144,7 +148,7 @@ test("OpenCode gets valid JSON with OAuth off and an env reference", () => {
 });
 
 test("OpenClaw gets valid JSON with the transport set explicitly", () => {
-  const parsed = JSON.parse(snippet("openclaw").text);
+  const parsed = JSON.parse(snippet("openclaw").text) as Record<string, unknown>;
   assert.deepEqual(parsed, {
     mcp: {
       servers: {
@@ -157,7 +161,11 @@ test("OpenClaw gets valid JSON with the transport set explicitly", () => {
     },
   });
   assert.equal(
-    JSON.parse(snippet("openclaw", "unix", KEY).text).mcp.servers[
+    (
+      JSON.parse(snippet("openclaw", "unix", KEY).text) as {
+        mcp: { servers: Record<string, { headers: { Authorization: string } }> };
+      }
+    ).mcp.servers[
       "unsloth-studio"
     ].headers.Authorization,
     `Bearer ${KEY}`,

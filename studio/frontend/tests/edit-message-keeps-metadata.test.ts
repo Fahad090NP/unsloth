@@ -48,13 +48,13 @@ const RECORD_MODULE = loadWithStubs<{
   ),
   {
     "@assistant-ui/core/internal": { MessageRepository },
-    "../api/chat-api": { listChatMessages: async () => [] },
+    "../api/chat-api": { listChatMessages: async () => { await Promise.resolve(); return []; }},
     "./chat-history-storage": {
-      ensureStoredChatThread: async () => {},
+      ensureStoredChatThread: async () => { /* empty */ },
       syncStoredChatMessages: async (
         _threadId: string,
         records: Record<string, unknown>[],
-      ) => records,
+      ) => { await Promise.resolve(); return records; },
     },
     "./research-message-sync": researchSync,
     "./saved-context-usage": savedUsage,
@@ -154,7 +154,7 @@ async function save(
   const h = harness();
   const exported = thread(content);
   await h.module.updateThreadMessage({
-    thread: { export: () => exported, import: () => {} },
+    thread: { export: () => exported, import: () => { /* empty */ } },
     messageId: "a0",
     remoteId: "remote-1",
     newText,
@@ -186,7 +186,7 @@ test("saving a reply unchanged does not mark it revised, however the parts were 
     const h = harness();
     const exported = thread(content);
     await h.module.updateThreadMessage({
-      thread: { export: () => exported, import: () => {} },
+      thread: { export: () => exported, import: () => { /* empty */ } },
       messageId: "a0",
       remoteId: "remote-1",
       newText: h.module.extractTaggedText(content),
@@ -260,7 +260,7 @@ test("reloading and saving a user unchanged preserves its revision and timestamp
   const exported = thread([]);
   exported.messages[0].message = hydrateUser(user);
   await h.module.updateThreadMessage({
-    thread: { export: () => exported, import: () => {} },
+    thread: { export: () => exported, import: () => { /* empty */ } },
     messageId: "u0",
     remoteId: "remote-1",
     newText: h.module.extractTaggedText(user.content),
@@ -304,7 +304,7 @@ test("a reply with no metadata of its own writes only its revision", async () =>
   target.metadata = { custom: {} };
 
   await h.module.updateThreadMessage({
-    thread: { export: () => exported, import: () => {} },
+    thread: { export: () => exported, import: () => { /* empty */ } },
     messageId: "a0",
     remoteId: "remote-1",
     newText: "edited",
@@ -319,7 +319,7 @@ test("an incognito edit is never written at all", async () => {
   const exported = thread([{ type: "text", text: "hi" }]);
 
   await h.module.updateThreadMessage({
-    thread: { export: () => exported, import: () => {} },
+    thread: { export: () => exported, import: () => { /* empty */ } },
     messageId: "a0",
     remoteId: "remote-1",
     newText: "edited",
@@ -478,7 +478,7 @@ test("the turn keeps its timestamp when the export carries epoch millis", async 
   (exported.messages[1].message).createdAt = 2000;
 
   await h.module.updateThreadMessage({
-    thread: { export: () => exported, import: () => {} },
+    thread: { export: () => exported, import: () => { /* empty */ } },
     messageId: "a0",
     remoteId: "remote-1",
     newText: "edited",
@@ -502,7 +502,7 @@ async function saveOwnedReply(custom: Record<string, unknown>) {
   exported.messages[1].message.metadata = { custom };
 
   await h.module.updateThreadMessage({
-    thread: { export: () => exported, import: () => {} },
+    thread: { export: () => exported, import: () => { /* empty */ } },
     messageId: "a0",
     remoteId: "remote-1",
     newText: "an edited reply",
@@ -577,7 +577,7 @@ function attachmentDeletionHarness(exported: Exported, hash: () => Promise<strin
       export: () => exported,
       import: (next: Exported) => { Object.assign(exported, next); imports += 1; },
     }) },
-    (callback: typeof listener) => { listener = callback; return () => {}; },
+    (callback: typeof listener) => { listener = callback; return () => { /* empty */ }; },
     (part: { type: string }) => part.type === "image" ? "image-signature" : null,
     hash,
     ...Object.values(savedUsage),
@@ -609,7 +609,7 @@ for (const kind of ["attachment", "content-hash", "legacy-content"] as const) {
     };
     exported.messages[1].message.metadata = { custom: { contextUsage: usage } };
     assert.equal(branchContextUsage(records(), "model", 8192, 8192), usage);
-    const h = attachmentDeletionHarness(exported, async () => attachmentId);
+    const h = attachmentDeletionHarness(exported, async () => { await Promise.resolve(); return attachmentId; });
     await h.remove(attachmentId);
     assert.equal(h.imports(), 1);
     const saved = records();
@@ -632,6 +632,7 @@ test("an attachment removed during hashing does not revise the message again", a
   user.content = [{ type: "image", image: "data:image/png;base64,AA==" }];
   user.metadata = { custom: { revision: 3 } };
   const h = attachmentDeletionHarness(exported, async () => {
+    await Promise.resolve();
     exported.messages[0].message = {
       ...user, attachments: [], metadata: { custom: { revision: 4, keep: "new metadata" } },
     };

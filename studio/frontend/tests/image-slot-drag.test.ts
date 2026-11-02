@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import type * as ImageSlotDrag from "../src/components/image-slot-drag.ts";
 
 import {
   classifyNativeImageDrop,
@@ -88,7 +89,7 @@ test("any other drag drops the slot image", async () => {
   Object.assign(globalThis, { document: doc });
   const slot = (await import(
     `${SLOT_DRAG}?other-drag`
-  )) as typeof import("../src/components/image-slot-drag.ts");
+  )) as typeof ImageSlotDrag;
   slot.startImageSlotDrag("data:image/png;base64,AAAA");
   slot.endImageSlotDrag(1_000);
   doc.dispatchEvent(new Event("dragstart"));

@@ -5,6 +5,7 @@
 // evaluate them. DEFAULT_SYSTEM looks CPU-only, so rendering it misreports GPU hosts.
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import test from "node:test";
 
 import { readSrcAsync } from "./helpers/kit.ts";
@@ -47,12 +48,7 @@ interface Snapshot {
 }
 
 function verdictFor(systemInfo: Snapshot) {
-  const run = new Function(
-    "systemInfo",
-    "displayedGpu",
-    "metrics",
-    "t",
-    "unknownLabel",
+  const run = vm.compileFunction(
     `${verdict}
      return {
        gpuUnknown,
@@ -63,7 +59,8 @@ function verdictFor(systemInfo: Snapshot) {
          systemInfo.ml_packages?.torch ?? "settings.resources.environment.notInstalled",
        ),
      };`,
-  );
+    ["systemInfo", "displayedGpu", "metrics", "t", "unknownLabel"],
+  ) as (...args: unknown[]) => unknown;
   return run(
     systemInfo,
     systemInfo.gpu,
@@ -147,7 +144,12 @@ test("no tile fabricates a usage percentage for a host it has not read", () => {
 test("the two non-answers are worded for the whole host, not just its GPUs", () => {
   const detail = lift(tabSrc, /const hostUnreadDetail =\n?[\s\S]*?;/, "hostUnreadDetail", "resources-tab.tsx");
   const forStatus = (status: string) =>
-    new Function("systemInfo", "t", `${detail}\nreturn hostUnreadDetail;`)({ status }, t);
+    (
+      vm.compileFunction(`${detail}\nreturn hostUnreadDetail;`, ["systemInfo", "t"]) as (
+        systemInfo: { status: string },
+        t: (key: string) => string,
+      ) => string
+    )({ status }, t);
   assert.equal(forStatus("unavailable"), UNREADABLE);
   assert.equal(forStatus("pending"), "common.loading");
   assert.notEqual(forStatus("pending"), DETECTING, "which is about GPUs specifically");
@@ -190,11 +192,12 @@ test("a failed poll preserves the whole reading on screen, not just its status",
   const DEFAULT_SYSTEM = { status: "pending", device_backend: "cpu" };
   const settledFailureStatus = (previous: string) =>
     previous === "ready" ? "ready" : "unavailable";
-  const onFailure = new Function(
-    "DEFAULT_SYSTEM",
-    "settledFailureStatus",
-    `return ${branch};`,
-  )(DEFAULT_SYSTEM, settledFailureStatus) as (previous: unknown) => { status: string };
+  const onFailure = (
+    vm.compileFunction(`return ${branch};`, ["DEFAULT_SYSTEM", "settledFailureStatus"]) as (
+      system: typeof DEFAULT_SYSTEM,
+      settled: typeof settledFailureStatus,
+    ) => (previous: unknown) => { status: string }
+  )(DEFAULT_SYSTEM, settledFailureStatus);
 
   const reading = { status: "ready", device_backend: "rocm" };
   assert.equal(onFailure(reading), reading, "the same object, so React does not re-render");
@@ -213,9 +216,11 @@ test("a success published by another consumer clears a placeholder but not a rea
     "use-system.ts",
   );
   const info = { status: "ready", device_backend: "rocm" };
-  const onPublish = new Function("info", `return ${rule};`)(info) as (
-    previous: unknown,
-  ) => unknown;
+  const onPublish = (
+    vm.compileFunction(`return ${rule};`, ["info"]) as (
+      info: { status: string; device_backend: string },
+    ) => (previous: unknown) => unknown
+  )(info);
 
   for (const status of ["pending", "unavailable"]) {
     assert.equal(onPublish({ status }), info, `a ${status} placeholder takes the snapshot`);

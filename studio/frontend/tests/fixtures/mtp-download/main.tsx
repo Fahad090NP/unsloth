@@ -64,9 +64,6 @@ window.__mtpDownloadSmoke = {
     }
     const payload = (await response.json()) as { variants: Variant[] };
     const variant = payload.variants[0];
-    if (!variant) {
-      throw new Error("The deterministic backend returned no variant");
-    }
 
     const staged = wantsDownloadManagerStaging({
       id: REPO_ID,

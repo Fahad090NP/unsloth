@@ -666,7 +666,7 @@ test("a hidden or hand-ordered section still loads its newest chat, which orders
   const src = readSrc("components/app-sidebar.tsx");
   assert.match(src, /\(hiddenSectionSet\.has\(section\.id\) \|\|\n\s*section\.sort === "manual" \|\|\n\s*ids\.length < members\.length\)/);
   assert.match(src, /slots\[`latest:\$\{section\.id\}`\] = \{\n\s*initialLimit: 1,\n\s*query: sidebarRowQuery\(\{ includeIds: members \}\),\n\s*lookupOnly: true,/);
-  const latest = src.indexOf("slots[`latest:\${section.id}`]");
+  const latest = src.indexOf("slots[`latest:$" + "{section.id}`]");
   assert.ok(latest > 0 && latest < src.indexOf("if (ids.length === 0 || hiddenSectionSet.has(section.id)) continue;"));
   // it is never paged past that row
   assert.match(src, /name === "recents" \|\| name\.startsWith\("latest:"\) \|\| !list\.hasMore/);

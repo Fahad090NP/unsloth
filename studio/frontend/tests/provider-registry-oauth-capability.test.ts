@@ -9,7 +9,7 @@ register("./helpers/settings-api-resolver.mjs", import.meta.url);
 
 const requests: string[] = [];
 globalThis.fetch = ((input: RequestInfo | URL) => {
-  requests.push(String(input as string));
+  requests.push(input as string);
   return Promise.resolve(new Response("[]", {
     status: 200,
     headers: { "Content-Type": "application/json" },

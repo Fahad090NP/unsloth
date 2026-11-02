@@ -44,14 +44,14 @@ function loadLifecycle(
       },
       "@/features/auth": { hasAuthToken: () => true },
       "../api/export-api": {
-        fetchExportLogs: async () => ({ entries: [] }),
+        fetchExportLogs: async () => { await Promise.resolve(); return ({ entries: [] }); },
         getExportStatus,
-        streamExportLogs: async () => {},
+        streamExportLogs: async () => { /* empty */ },
       },
       "../stores/export-runtime-store": {
         useExportRuntimeStore: {
           getState: () => state,
-          subscribe: () => () => {},
+          subscribe: () => () => { /* empty */ },
         },
       },
     },
@@ -73,10 +73,10 @@ test("status polling does not stack while the previous request is stalled", asyn
     isExporting: false,
     backendActive: true,
     lastSeq: 0,
-    applyBackendStatus: () => {},
-    setConnected: () => {},
-    appendLogs: () => {},
-    appendLog: () => {},
+    applyBackendStatus: () => { /* empty */ },
+    setConnected: () => { /* empty */ },
+    appendLogs: () => { /* empty */ },
+    appendLog: () => { /* empty */ },
   };
   const lifecycle = loadLifecycle(state, async () => {
     statusRequests += 1;
@@ -118,12 +118,13 @@ test("an idle app polls export status slowly and not at all while hidden", async
     isExporting: false,
     backendActive: false,
     lastSeq: 0,
-    applyBackendStatus: () => {},
-    setConnected: () => {},
-    appendLogs: () => {},
-    appendLog: () => {},
+    applyBackendStatus: () => { /* empty */ },
+    setConnected: () => { /* empty */ },
+    appendLogs: () => { /* empty */ },
+    appendLog: () => { /* empty */ },
   };
   const lifecycle = loadLifecycle(state, async () => {
+    await Promise.resolve();
     statusRequests += 1;
     return {};
   });

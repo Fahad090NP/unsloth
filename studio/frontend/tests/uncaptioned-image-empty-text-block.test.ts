@@ -2,6 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import test from "node:test";
 
 import ts from "@typescript/typescript6";
@@ -32,14 +33,14 @@ const serializeJs = ts.transpileModule(
   { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
 ).outputText;
 
-const { toOpenAIMessages, buildReplayContent } = new Function(
-  serializeJs,
-)() as {
-  toOpenAIMessages: (
-    message: unknown,
-  ) => { role: string; content: unknown }[];
-  buildReplayContent: (text: string, images: unknown[]) => unknown;
-};
+const { toOpenAIMessages, buildReplayContent } = (
+  vm.compileFunction(serializeJs) as () => {
+    toOpenAIMessages: (
+      message: unknown,
+    ) => { role: string; content: unknown }[];
+    buildReplayContent: (text: string, images: unknown[]) => unknown;
+  }
+)();
 
 const IMAGE_DATA_URL = "data:image/png;base64,aGVsbG8=";
 

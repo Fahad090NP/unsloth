@@ -14,7 +14,8 @@ const threadSamplingResolverHooks = (await import(new URL("./thread-sampling-res
 registerHooks({ resolve: threadSamplingResolverHooks.resolve });
 const STORE = new URL("../src/features/chat/stores/chat-runtime-store.ts", import.meta.url).href;
 const { settingsHttp } = await import("./helpers/store-stubs/settings-http.ts");
-type Runtime = typeof import("../src/features/chat/stores/chat-runtime-store.ts");
+import type * as ChatRuntimeStore from "../src/features/chat/stores/chat-runtime-store.ts";
+type Runtime = typeof ChatRuntimeStore;
 
 async function boot(name: string) {
   settingsHttp.settings = {};

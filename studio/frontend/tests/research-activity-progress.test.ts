@@ -387,7 +387,7 @@ test("a stalled watcher does not stop events reaching the store", async () => {
     draft: plan,
   });
   const next = await iterator.next();
-  assert.equal(next.value.status, "awaiting_approval");
+  assert.equal((next.value as { status: string }).status, "awaiting_approval");
   await iterator.return(undefined);
 });
 

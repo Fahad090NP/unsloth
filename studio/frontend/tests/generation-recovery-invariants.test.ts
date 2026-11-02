@@ -93,12 +93,13 @@ function randomContent(next: () => number, seed: number): Part[] {
 
 const isSpoken = (part: Part) =>
   part.type === "text" || part.type === "reasoning";
+const asText = (value: unknown): string => (typeof value === "string" ? value : "");
 const spokenText = (parts: Part[], type: string) =>
   parts
     .filter((part) => part.type === type)
-    .map((part) => String(part.text ?? "" as string))
+    .map((part) => asText(part.text))
     .join("");
-const identify = (part: Part) => String(part.toolCallId ?? part.id ?? "?" as string);
+const identify = (part: Part) => asText(part.toolCallId ?? part.id ?? "?");
 const carriedIds = (parts: Part[]) =>
   parts.filter((part) => !isSpoken(part)).map(identify);
 
@@ -106,7 +107,7 @@ function prefixLengths(parts: Part[]): [string, number][] {
   const out: [string, number][] = [];
   let seen = 0;
   for (const part of parts) {
-    if (isSpoken(part)) seen += String(part.text ?? "" as string).length;
+    if (isSpoken(part)) seen += asText(part.text).length;
     else out.push([identify(part), seen]);
   }
   return out.sort();

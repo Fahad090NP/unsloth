@@ -32,7 +32,7 @@ test("message JSONL writes one message per record", () => {
     '{"role":"user","content":"Hello"}\n{"role":"assistant","content":"Hi"}',
   );
   assert.deepEqual(
-    body.split("\n").map((line) => JSON.parse(line)),
+    body.split("\n").map((line) => JSON.parse(line) as unknown),
     messages,
   );
 });

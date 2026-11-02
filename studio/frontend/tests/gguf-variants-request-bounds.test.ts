@@ -24,7 +24,8 @@ test("every listing carries a signal, so an unanswered one can still be given up
   } finally {
     abort.dispose();
   }
-  assert.ok(GGUF_VARIANTS_TIMEOUT_MS > 0 && Number.isFinite(GGUF_VARIANTS_TIMEOUT_MS));
+  const timeoutMs: number = GGUF_VARIANTS_TIMEOUT_MS;
+  assert.ok(timeoutMs > 0 && Number.isFinite(timeoutMs));
 });
 
 test("collapsing the row aborts the listing it started", () => {

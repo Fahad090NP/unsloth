@@ -6,6 +6,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type * as SidebarPinModule from "../src/hooks/use-sidebar-pin.ts";
+
 const storage = {
   getItem: () => null,
   setItem: () => undefined,
@@ -25,7 +27,7 @@ function stubWindow(matchMedia?: (query: string) => unknown) {
 }
 
 let loads = 0;
-type SidebarPin = typeof import("../src/hooks/use-sidebar-pin.ts");
+type SidebarPin = typeof SidebarPinModule;
 async function load(): Promise<SidebarPin> {
   loads += 1;
   return (await import(

@@ -136,5 +136,5 @@ test("chat auto-load copy folds into the restart notice", () => {
 });
 
 test("it stays up longer than the Toaster default", () => {
-  assert.ok(XET_NOTICE_DURATION_MS > 5000);
+  assert.ok((XET_NOTICE_DURATION_MS as number) > 5000);
 });

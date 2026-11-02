@@ -115,7 +115,7 @@ function world() {
   let serial = 0;
   let modelLoading = false;
   let dispatchRetries = 0;
-  let indexing: () => Promise<boolean> = async () => false;
+  let indexing: () => Promise<boolean> = async () => { await Promise.resolve(); return false; };
   const noop = () => undefined;
   const deps = {
     normalizeQueuedPrompt,
@@ -269,7 +269,7 @@ test("an in-flight indexing probe cannot dispatch the old item after a steer", a
     run.items.map((i) => i.prompt),
     ["urgent", "old first", "old second"],
   );
-  w.setIndexing(async () => false);
+  w.setIndexing(async () => { await Promise.resolve(); return false; });
   await w.dispatchQueuedPrompt(run, run.items[0]);
   assert.deepEqual(w.appended, ["urgent"]);
 });
@@ -394,7 +394,7 @@ test("row steer invalidates an in-flight document probe and waits for model load
   resolve(false);
   await staleDispatch;
   assert.deepEqual(w.appended, []);
-  w.setIndexing(async () => false);
+  w.setIndexing(async () => { await Promise.resolve(); return false; });
   await w.dispatchQueuedPrompt(run, selected);
   assert.deepEqual(w.appended, []);
   assert.equal(selected.dispatched, false);
@@ -472,7 +472,7 @@ async function targetForSelection(
     toolsEnabled: true,
     ragEnabled: false,
     incognito: false,
-    hydratePersistedSettings: async () => undefined,
+    hydratePersistedSettings: async () => { await Promise.resolve(); return undefined; },
   };
   const deps = {
     aui: {
@@ -491,9 +491,9 @@ async function targetForSelection(
     },
     parseExternalModelId,
     pythonToolRunsInStudio: () => false,
-    prepareQueuedPromptFiles: async (prompt: unknown) => prompt,
+    prepareQueuedPromptFiles: async (prompt: unknown) => { await Promise.resolve(); return prompt; },
     resolveDeferredQueuedModelSettings,
-    withAttachmentOriginal: async (_pending: unknown, complete: unknown) => complete,
+    withAttachmentOriginal: async (_pending: unknown, complete: unknown) => { await Promise.resolve(); return complete; },
     getAuthSessionEpoch: () => 0,
     hasPreStreamRunReservation: () => false,
   };
@@ -861,7 +861,7 @@ test("resuming a blocked local follow-up preserves the pending external document
   w.handlePromptQueueRunState(run, {});
   external.running = false;
   w.handlePromptQueueRunState(run, {});
-  w.setIndexing(async () => false);
+  w.setIndexing(async () => { await Promise.resolve(); return false; });
   await w.dispatchQueuedPrompt(run, run.items[1]);
   assert.deepEqual(w.appended, ["external response", "local follow-up"]);
 });
@@ -881,7 +881,7 @@ test("load failure invalidates a local document probe without duplicate dispatch
   const pending = w.dispatchQueuedPrompt(run, run.items[0]);
   w.handlePromptQueueRunFailed(undefined, true);
   w.resumePromptQueueRun(["chat"]);
-  w.setIndexing(async () => false);
+  w.setIndexing(async () => { await Promise.resolve(); return false; });
   await w.dispatchQueuedPrompt(run, run.items[0]);
   resolve(false);
   await pending;

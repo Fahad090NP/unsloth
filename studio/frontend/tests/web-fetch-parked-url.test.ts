@@ -82,7 +82,11 @@ function classNameOf(opening: ts.JsxOpeningLikeElement): string {
 }
 
 function guardCondition(node: ts.Node): ts.Expression | undefined {
-  for (let parent = node.parent; parent; parent = parent.parent) {
+  for (
+    let parent = node.parent as ts.Node | undefined;
+    parent;
+    parent = parent.parent as ts.Node | undefined
+  ) {
     if (ts.isConditionalExpression(parent)) {
       return parent.condition;
     }
@@ -107,7 +111,7 @@ function requireRow(): ts.JsxElement {
   return row;
 }
 
-const [contentTag] = tagsNamed("ToolFallbackContent");
+const contentTag = tagsNamed("ToolFallbackContent").at(0);
 
 test("the parked web-fetch card shows the complete raw url", () => {
   const row = requireRow();

@@ -62,6 +62,7 @@ test("keeps checkpointing a running thread until it is stopped", async () => {
   const saved: string[] = [];
   const scheduler = createRunCheckpointScheduler(
     async (threadId) => {
+      await Promise.resolve();
       saved.push(threadId);
     },
     { intervalMs: INTERVAL, timers: clock.timers },
@@ -89,7 +90,7 @@ test("keeps checkpointing a running thread until it is stopped", async () => {
 
 test("waits for a slow checkpoint instead of stacking the next one behind it", async () => {
   const clock = createFakeTimers();
-  let releaseSave = (): void => {};
+  let releaseSave = (): void => { /* empty */ };
   let saves = 0;
   const scheduler = createRunCheckpointScheduler(
     () => {
@@ -126,6 +127,7 @@ test("keeps checkpointing after a checkpoint fails to write", async () => {
   let attempts = 0;
   const scheduler = createRunCheckpointScheduler(
     async () => {
+      await Promise.resolve();
       attempts += 1;
       throw new Error("write failed");
     },
@@ -144,7 +146,7 @@ test("keeps checkpointing after a checkpoint fails to write", async () => {
 
 test("a stop during an in-flight checkpoint ends the schedule", async () => {
   const clock = createFakeTimers();
-  let releaseSave = (): void => {};
+  let releaseSave = (): void => { /* empty */ };
   let saves = 0;
   const scheduler = createRunCheckpointScheduler(
     () => {
@@ -178,6 +180,7 @@ test("starting a thread twice keeps one schedule, and stopAll ends every thread"
   const saved: string[] = [];
   const scheduler = createRunCheckpointScheduler(
     async (threadId) => {
+      await Promise.resolve();
       saved.push(threadId);
     },
     { intervalMs: INTERVAL, timers: clock.timers },

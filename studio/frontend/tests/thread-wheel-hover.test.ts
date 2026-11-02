@@ -7,8 +7,9 @@ import { mock, test } from "node:test";
 import { attachWheelHoverSuppression } from "../src/components/assistant-ui/thread-wheel-hover.ts";
 import { readSrc } from "./helpers/kit.ts";
 
-globalThis.MouseEvent ??=
-  class extends Event {} as unknown as typeof MouseEvent;
+globalThis.MouseEvent =
+  (globalThis.MouseEvent as typeof MouseEvent | undefined) ??
+  (class extends Event {} as unknown as typeof MouseEvent);
 
 function message(id: string) {
   const got: string[] = [];
@@ -41,7 +42,7 @@ const thread = {
       },
     });
     this.listeners.get(`${event.type}:capture`)?.(event);
-    if (!stopped) target.got.push(event.type);
+    if (!(stopped as boolean)) target.got.push(event.type);
   },
   fire(type: string, extra: Record<string, unknown> = {}) {
     this.listeners.get(type)?.({

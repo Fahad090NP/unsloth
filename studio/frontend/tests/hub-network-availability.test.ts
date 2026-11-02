@@ -12,9 +12,7 @@ const {
   clearRemoteBackoff,
   fetchWithTimeout,
   getHubPhase,
-  getBrowserOfflineRetryDelayMs,
   getLastHubFailure,
-  isHuggingFaceOffline,
   isHubFetchError,
   isRemoteNetworkOffline,
   markRemoteNetworkOffline,
@@ -26,6 +24,10 @@ const { updateHubSource } = await import("../src/features/settings/api/hub-setti
 const { setAuthFetchHandler } = await import("./helpers/store-stubs/auth.ts");
 
 import { readSrcAsync } from "./helpers/kit.ts";
+
+function restoreFetch(implementation: typeof fetch) {
+  globalThis.fetch = implementation;
+}
 
 const HF = "https://huggingface.co";
 
@@ -155,6 +157,7 @@ test("the failure never leaks the request URL or its query", async () => {
   reset();
   const original = globalThis.fetch;
   globalThis.fetch = (async () => {
+    await Promise.resolve();
     throw new TypeError("Failed to fetch");
   });
   try {
@@ -177,7 +180,7 @@ test("the failure never leaks the request URL or its query", async () => {
       },
     );
   } finally {
-    globalThis.fetch = original;
+    restoreFetch(original);
   }
 });
 
@@ -186,6 +189,7 @@ test("a caller-driven abort does not blacklist the origin", async () => {
   const original = globalThis.fetch;
   const controller = new AbortController();
   globalThis.fetch = async () => {
+    await Promise.resolve();
     controller.abort();
     throw new DOMException("aborted", "AbortError");
   };
@@ -200,7 +204,7 @@ test("a caller-driven abort does not blacklist the origin", async () => {
     );
     assert.equal(getLastHubFailure(HF), null);
   } finally {
-    globalThis.fetch = original;
+    restoreFetch(original);
   }
 });
 
@@ -210,7 +214,7 @@ test("a slow optional asset does not take the whole origin down", async () => {
   // Never resolves: fetchWithTimeout's own AbortController fires the timeout.
   globalThis.fetch = ((_input: unknown, init: { signal?: AbortSignal }) =>
     new Promise((_resolve, reject) => {
-      init?.signal?.addEventListener("abort", () =>
+      init.signal?.addEventListener("abort", () =>
         { reject(new DOMException("aborted", "AbortError")); },
       );
     })) as unknown as typeof fetch;
@@ -231,7 +235,7 @@ test("a slow optional asset does not take the whole origin down", async () => {
     );
     assert.equal(getLastHubFailure(HF), null, "and records no origin-wide cause");
   } finally {
-    globalThis.fetch = original;
+    restoreFetch(original);
   }
 });
 
@@ -239,6 +243,7 @@ test("a connectivity failure still does", async () => {
   reset();
   const original = globalThis.fetch;
   globalThis.fetch = (async () => {
+    await Promise.resolve();
     throw new TypeError("Failed to fetch");
   });
   try {
@@ -246,7 +251,7 @@ test("a connectivity failure still does", async () => {
     assert.equal(getHubPhase(HF), "unavailable", "this is the case worth backing off");
     assert.equal(getLastHubFailure(HF)?.kind, "network-opaque");
   } finally {
-    globalThis.fetch = original;
+    restoreFetch(original);
   }
 });
 
@@ -256,8 +261,10 @@ test("a relay that cannot reach its endpoint counts as the endpoint unreachable"
   setHfEndpoints(relay, null, "huggingface", { endpoint: true });
   const original = globalThis.fetch;
   let upstream = false;
-  globalThis.fetch = (async () =>
-    new Response("{}", { status: 502, headers: upstream ? { "X-Hub-Upstream": "1" } : {} }));
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return new Response("{}", { status: 502, headers: upstream ? { "X-Hub-Upstream": "1" } : {} });
+  });
   try {
     await assert.rejects(fetchWithTimeout(`${relay}/api/models`, {}, 1_000));
     assert.equal(getLastHubFailure("http://127.0.0.1:8888")?.kind, "network-opaque");
@@ -274,7 +281,7 @@ test("a relay that cannot reach its endpoint counts as the endpoint unreachable"
     upstream = true;
     assert.equal((await fetchWithTimeout(`${relay}/api/models`, {}, 1_000)).status, 502);
   } finally {
-    globalThis.fetch = original;
+    restoreFetch(original);
     setAuthFetchHandler(null);
     resetHfEndpoints();
   }
@@ -289,13 +296,16 @@ test("a successful response clears a prior failure", async () => {
     retryable: true,
   });
   const original = globalThis.fetch;
-  globalThis.fetch = (async () => new Response("{}", { status: 200 }));
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return new Response("{}", { status: 200 });
+  });
   try {
     await fetchWithTimeout(`${HF}/api/models`, {}, 1_000);
     assert.equal(getHubPhase(HF), "available");
     assert.equal(getLastHubFailure(HF), null);
   } finally {
-    globalThis.fetch = original;
+    restoreFetch(original);
   }
 });
 
@@ -333,6 +343,7 @@ test("sanitizing leaves a message with no trailer alone", () => {
 });
 
 test("the cause on screen describes the window that is in force", async () => {
+  await Promise.resolve();
   markRemoteNetworkOnline();
   const live = {
     kind: "network-opaque" as const,
@@ -361,6 +372,7 @@ test("a generator that threw is not pulled again", async () => {
   // @huggingface/hub awaits fetch inside the generator, so a failed page finishes it for good.
   let requests = 0;
   async function* listing() {
+    await Promise.resolve();
     for (const page of [1, 2]) {
       requests += 1;
       if (page === 2) throw new Error("Failed to fetch");

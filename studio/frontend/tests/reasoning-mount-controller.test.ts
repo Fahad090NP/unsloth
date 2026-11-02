@@ -136,7 +136,7 @@ test("widening stays light while the collapse animation and its scroll lock run"
   assert.ok(settling.characters < steady.characters && settling.fragments < steady.fragments);
   assert.equal(steady.characters, WIDEN_CHARACTERS_PER_FRAME);
   assert.equal(steady.fragments, WIDEN_FRAGMENTS_PER_FRAME);
-  assert.ok(SETTLE_MS >= 200, "at least the collapsible's animation");
+  assert.ok((SETTLE_MS as number) >= 200, "at least the collapsible's animation");
 });
 
 test("a frame's widening is budgeted by characters, never by fragment count", () => {
@@ -145,7 +145,7 @@ test("a frame's widening is budgeted by characters, never by fragment count", ()
   assert.deepEqual(widenBudget(sizes, 2, 1000), { rows: 3, spent: 8000 }, "an oversized fragment still mounts, alone");
   assert.deepEqual(widenBudget(sizes, 3, 24_000), { rows: 6, spent: 8400 }, "the rest fits in one frame");
   assert.deepEqual(widenBudget(sizes, 6, 24_000), { rows: 6, spent: 0 }, "nothing left");
-  assert.ok(WIDEN_CHARACTERS_PER_FRAME >= 8_192, "at least one full fragment per frame");
+  assert.ok((WIDEN_CHARACTERS_PER_FRAME as number) >= 8_192, "at least one full fragment per frame");
   const tiny = Array(500).fill(10);
   assert.deepEqual(widenBudget(tiny, 0, 24_000), { rows: 64, spent: 640 }, "many tiny fragments are capped per frame too");
   assert.deepEqual(widenBudget(tiny, 0, 24_000, 8), { rows: 8, spent: 80 });
@@ -208,7 +208,7 @@ const code = (fence: number, line: number, chars: number): GridInput => ({
 
 test("the grid groups a fence's fragments, closes chunks by characters or count, and keys each by its first group", () => {
   assert.equal(CHUNK_ESTIMATE_PROPERTY, "--unsloth-chunk-estimate");
-  assert.ok(CHUNK_CHARACTERS >= 4_096 && CHUNK_MAX_GROUPS >= 8);
+  assert.ok((CHUNK_CHARACTERS as number) >= 4_096 && (CHUNK_MAX_GROUPS as number) >= 8);
   const fragments = [prose("a", 3000), prose("b", 3000), prose("c", 3000), code(9000, 0, 2000), code(9000, 1, 2000), prose("e", 10)];
   const grid = buildChunkGrid(fragments, fragments.map(() => 10), 8_192, 12);
   assert.deepEqual(grid.groups.map((g) => [g.key, g.first, g.end, g.code]), [

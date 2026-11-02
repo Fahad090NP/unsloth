@@ -50,13 +50,13 @@ function render(
       logs,
       progress: 37,
       error: null,
-      onRetry() {},
-      onSkipRestart() {},
-      onCopyDiagnostics: async () => ({
+      onRetry() { /* empty */ },
+      onSkipRestart() { /* empty */ },
+      onCopyDiagnostics: async () => { await Promise.resolve(); return ({
         ok: true,
         report: "",
         source: "tauri" as const,
-      }),
+      }); },
     }),
   );
 }

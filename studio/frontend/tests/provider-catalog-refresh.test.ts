@@ -7,6 +7,19 @@ import { createServer, type ViteDevServer } from "vite";
 
 import { readSrc } from "./helpers/kit.ts";
 
+type ProviderConfig = { id: string; providerType: string; baseUrl?: string };
+type SyncModule = {
+  refreshProviderModelCatalogs: (providers: ProviderConfig[]) => Promise<void>;
+};
+type CatalogModule = {
+  setModelsDevCatalog: (catalog: { fetched_at: number; providers: Record<string, unknown> }) => void;
+  resolveModelCatalogEntry: (
+    provider: string,
+    modelId: string,
+  ) => { efforts?: string[] } | null;
+  clearProviderModelCatalog: (provider: string) => void;
+};
+
 let vite: ViteDevServer;
 
 before(async () => {
@@ -18,15 +31,15 @@ after(async () => {
 });
 
 test("a failing OpenRouter connection leaves the catalog for the next connection to refresh", async () => {
-  const { refreshProviderModelCatalogs } = await vite.ssrLoadModule(
+  const { refreshProviderModelCatalogs } = (await vite.ssrLoadModule(
     "/src/features/chat/sync-external-providers.ts",
-  );
-  const catalog = await vite.ssrLoadModule("/src/features/chat/model-catalog.ts");
+  )) as SyncModule;
+  const catalog = (await vite.ssrLoadModule("/src/features/chat/model-catalog.ts")) as CatalogModule;
   catalog.setModelsDevCatalog({ fetched_at: Date.now() / 1000, providers: {} });
   const asked: string[] = [];
   const realFetch = globalThis.fetch;
   globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
-    const { provider_id: providerId } = JSON.parse(String(init?.body as string));
+    const { provider_id: providerId } = JSON.parse(init?.body as string) as { provider_id: string };
     asked.push(providerId);
     return Promise.resolve(providerId === "expired-key"
       ? Response.json({ detail: "Invalid API key" }, { status: 502 })
@@ -47,15 +60,15 @@ test("a failing OpenRouter connection leaves the catalog for the next connection
 });
 
 test("an OpenRouter connection on a gateway base URL never writes the shared catalog", async () => {
-  const { refreshProviderModelCatalogs } = await vite.ssrLoadModule(
+  const { refreshProviderModelCatalogs } = (await vite.ssrLoadModule(
     "/src/features/chat/sync-external-providers.ts",
-  );
-  const catalog = await vite.ssrLoadModule("/src/features/chat/model-catalog.ts");
+  )) as SyncModule;
+  const catalog = (await vite.ssrLoadModule("/src/features/chat/model-catalog.ts")) as CatalogModule;
   catalog.setModelsDevCatalog({ fetched_at: Date.now() / 1000, providers: {} });
   const asked: string[] = [];
   const realFetch = globalThis.fetch;
   globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
-    const { provider_id: providerId } = JSON.parse(String(init?.body as string));
+    const { provider_id: providerId } = JSON.parse(init?.body as string) as { provider_id: string };
     asked.push(providerId);
     return Promise.resolve(providerId === "gateway"
       ? Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["max"] } }])
@@ -87,14 +100,14 @@ test("editing a connection refreshes the catalog with the saved base URL, not th
   assert.ok(literalAt > 0, `${refreshed} is not the edited connection`);
   assert.match(save.slice(literalAt, save.indexOf("\n      };", literalAt)), /baseUrl: updated\.base_url/);
 
-  const { refreshProviderModelCatalogs } = await vite.ssrLoadModule(
+  const { refreshProviderModelCatalogs } = (await vite.ssrLoadModule(
     "/src/features/chat/sync-external-providers.ts",
-  );
-  const catalog = await vite.ssrLoadModule("/src/features/chat/model-catalog.ts");
+  )) as SyncModule;
+  const catalog = (await vite.ssrLoadModule("/src/features/chat/model-catalog.ts")) as CatalogModule;
   const asked: string[] = [];
   const realFetch = globalThis.fetch;
   globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
-    asked.push(JSON.parse(String(init?.body as string)).provider_id);
+    asked.push((JSON.parse(init?.body as string) as { provider_id: string }).provider_id);
     return Promise.resolve(Response.json([{ id: "acme/fresh", reasoning: { supported_efforts: ["low", "high"] } }]));
   });
   try {

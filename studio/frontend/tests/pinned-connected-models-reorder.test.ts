@@ -32,7 +32,7 @@ function externalWrite(order: string[], notify = true) {
 }
 
 function storedOrder(): string[] {
-  return JSON.parse(must(storage.get(KEY)));
+  return JSON.parse(must(storage.get(KEY))) as string[];
 }
 
 function drag() {

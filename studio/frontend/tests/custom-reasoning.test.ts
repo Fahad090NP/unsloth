@@ -89,6 +89,7 @@ for (const style of styles) {
     const bodies: Record<string, unknown>[] = [];
     const original = globalThis.fetch;
     globalThis.fetch = (async (_url, init) => {
+      await Promise.resolve();
       bodies.push(JSON.parse(String(init?.body)));
       return Response.json({ reasoning_config: config });
     });
@@ -218,6 +219,7 @@ test("switching same-model connections never leaks the contract and server sync 
   assert.equal(sync.mergeLocalProviderOptions(a, b).reasoningConfig, undefined);
   const original = globalThis.fetch;
   globalThis.fetch = (async (url) => {
+    await Promise.resolve();
     const path = String(url);
     if (path.includes("/registry")) return Response.json([]);
     if (path.endsWith("/api/providers/"))

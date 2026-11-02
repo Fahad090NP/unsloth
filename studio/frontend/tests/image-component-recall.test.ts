@@ -31,10 +31,10 @@ const zImage = { repoId: "/comfy/models/diffusion_models", kind: "gguf", filenam
 const flux = { repoId: "/comfy/models/diffusion_models", kind: "single_file", filename: "flux.safetensors" } as const;
 const zFiles = { textEncoderFiles: ["../text_encoders/qwen_3_4b.safetensors"], vaeFile: "../vae/ae.safetensors" };
 
-function compile<T>(scope: Record<string, unknown>, body: string): T {
+function compile(scope: Record<string, unknown>, body: string): unknown {
   const factory = compileFunction(body, Object.keys(scope)) as (
     ...args: unknown[]
-  ) => T;
+  ) => unknown;
   return factory(...Object.values(scope));
 }
 
@@ -115,7 +115,7 @@ test("a model pick fills the Advanced fields from that model, clears another mod
       setTextEncoderFiles: (v: string) => (state.te = v),
       setVaeFile: (v: string) => (state.vae = v),
     };
-    const pick = compile<(model: unknown) => Record<string, string>>(scope, outputText);
+    const pick = compile(scope, outputText) as (model: unknown) => Record<string, string>;
     return { state, scope, pick };
   };
 
@@ -195,7 +195,7 @@ test("Reapply of a resident model sends that model's files, never the fields ano
         return Promise.resolve(true);
       },
     };
-    compile<() => void>(scope, outputText)();
+    (compile(scope, outputText) as () => void)();
     return { loads, state };
   };
 
@@ -255,9 +255,10 @@ test("a Load-mode footprint plans the shown model with its own files, a Download
       pickGuard: null,
       stage: null,
     };
-    const resolve = compile<
-      (repoId: string, opts: { ggufFilename: string }) => Promise<void>
-    >(scope, outputText);
+    const resolve = compile(scope, outputText) as (
+      repoId: string,
+      opts: { ggufFilename: string },
+    ) => Promise<void>;
     await resolve("org/other-GGUF", { ggufFilename: "o.gguf" });
     return planned[0];
   };
@@ -463,7 +464,7 @@ test("the first loaded status forgets the remembered model's stale files and cle
       setTextEncoderFiles: (v: string) => (state.te = v),
       setVaeFile: (v: string) => (state.vae = v),
     };
-    const reconcile = compile<(status: object) => void>(scope, outputText);
+    const reconcile = compile(scope, outputText) as (status: object) => void;
     reconcile(status);
     reconcile(status);
     return { state, scope };
@@ -570,7 +571,7 @@ test("every settled loaded status forgets the resident model's stale files, not 
       forgetStaleResidentComponents,
       setRememberedModel,
     };
-    compile<(resident: object) => void>(scope, outputText)(fluxResident);
+    (compile(scope, outputText) as (resident: object) => void)(fluxResident);
     return readImageComponents(flux);
   };
   rememberImageModel({ ...flux, vaeFile: "../vae/flux_ae.safetensors" });
@@ -654,7 +655,7 @@ test("a field edit reruns no resident cleanup against a cached status, so anothe
   };
   const render = () => {
     hook = 0;
-    compile<void>(scope, outputText);
+    compile(scope, outputText);
   };
   render();
   assert.deepEqual(readImageComponents(zImage), old);
@@ -733,9 +734,11 @@ test("a recovered pending load refills the Advanced fields the user has not touc
       setTextEncoderFiles: (v: string) => (state.te = v),
       setVaeFile: (v: string) => (state.vae = v),
     };
-    const remember = compile<
-      (model: object, loadedModel: object, wasRecovered: boolean) => void
-    >(scope, outputText);
+    const remember = compile(scope, outputText) as (
+      model: object,
+      loadedModel: object,
+      wasRecovered: boolean,
+    ) => void;
     remember({ ...zImage, ...zFiles, fieldFiles: zFiles }, loaded, recovered);
     return { state, scope };
   };

@@ -63,7 +63,7 @@ test("dropping the wizard step preserves every user-authored value", () => {
 
 test("the version was bumped, so the migration actually runs for old installs", () => {
   assert.ok(
-    TRAINING_CONFIG_PERSISTENCE_VERSION >= 21,
+    (TRAINING_CONFIG_PERSISTENCE_VERSION as number) >= 21,
     "zustand skips migrate() when the stored version matches, so retiring a persisted key requires a bump",
   );
 });

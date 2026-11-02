@@ -14,12 +14,12 @@ for (const mode of ["single", "multi"]) {
     const location = { pathname: "/chat", href: "" };
     globalThis.window = { location } as unknown as Window & typeof globalThis;
     globalThis.fetch = async (path) =>
-      String(path).endsWith("/status")
+      { await Promise.resolve(); return String(path).endsWith("/status")
         ? Response.json({ login_mode: mode, requires_password_change: false })
         : Response.json(
             { detail: "Password change required" },
             { status: 403 },
-          );
+          ); };
     t.after(() => {
       globalThis.window = previousWindow;
       globalThis.fetch = previousFetch;

@@ -39,9 +39,10 @@ test("a task cancelled while waiting never runs and frees no slot it never took"
   let ran = false;
   let cancelled = false;
   const skipped = queueParse(async () => {
+    await Promise.resolve();
     ran = true;
   }, () => cancelled);
-  const after = queueParse(async () => "after", () => false);
+  const after = queueParse(async () => { await Promise.resolve(); return "after"; }, () => false);
   cancelled = true;
   for (const gate of gates) gate.resolve();
   await Promise.all(busy);

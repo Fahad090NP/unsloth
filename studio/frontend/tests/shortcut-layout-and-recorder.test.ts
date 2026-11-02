@@ -128,7 +128,7 @@ test("stopGeneration ships on Mod+. and clashes with nothing", () => {
         assert.notEqual(
           defaultBindingFor(other, slot, mac),
           value,
-          `${other.id}.${slot} also ships on ${String(value)} (mac=${String(mac)})`,
+          `${other.id}.${slot} also ships on ${value} (mac=${String(mac)})`,
         );
       }
     }

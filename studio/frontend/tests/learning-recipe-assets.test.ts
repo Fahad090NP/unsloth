@@ -39,7 +39,11 @@ test("production learning recipes emit JSON assets fetchable under the same-orig
     typeof books.source === "string"
       ? books.source
       : new TextDecoder().decode(books.source);
-  assert(Array.isArray(JSON.parse(source).recipe.columns));
+  assert(
+    Array.isArray(
+      (JSON.parse(source) as { recipe: { columns: unknown } }).recipe.columns,
+    ),
+  );
   for (const file of result.output) {
     if (file.type === "chunk") {
       assert.doesNotMatch(

@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { createServer, type ViteDevServer } from "vite";
+import type * as SyncExternalProviders from "../src/features/chat/sync-external-providers.ts";
 
 interface Capability { vision?: boolean; studio_tools?: boolean }
 type Merge = (
@@ -21,7 +22,7 @@ const REGISTRY: Record<string, Capability> = {
 
 before(async () => {
   vite = await createServer({ appType: "custom", server: { middlewareMode: true } });
-  const loaded = (await vite.ssrLoadModule("/src/features/chat/sync-external-providers.ts")) as typeof import("../src/features/chat/sync-external-providers.ts");
+  const loaded = (await vite.ssrLoadModule("/src/features/chat/sync-external-providers.ts")) as typeof SyncExternalProviders;
   mergeLearnedModelCapabilities = loaded.mergeLearnedModelCapabilities as Merge;
 });
 

@@ -26,7 +26,7 @@ function findByType(node: unknown, type: string): StubElement | null {
   if (!node || typeof node !== "object") return null;
   const element = node as StubElement;
   if (element.type === type) return element;
-  return findByType((element.props ?? {}).children, type);
+  return findByType(element.props.children, type);
 }
 
 function outsideEvent(insideToaster: boolean): OutsideEvent {

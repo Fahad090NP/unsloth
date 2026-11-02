@@ -42,10 +42,14 @@ const KLEIN_PARAMS = 9_078_581_248;
 const OTHER = "unsloth/Wan2.2-T2V-A14B-GGUF";
 
 const VIDEO_TASKS = ["text-to-video", "image-to-video"];
-const keepVideo = (r: Row) =>
-  r.pipelineTag !== null &&
-  r.pipelineTag !== undefined &&
-  VIDEO_TASKS.includes(r.pipelineTag);
+function videoTagOf(row: Row): string | null | undefined {
+  return row.pipelineTag;
+}
+
+const keepVideo = (r: Row) => {
+  const tag = videoTagOf(r);
+  return tag !== null && tag !== undefined && VIDEO_TASKS.includes(tag);
+};
 
 const ids = (rows: Row[]) => rows.map((r) => r.id);
 

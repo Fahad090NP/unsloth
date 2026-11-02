@@ -76,8 +76,15 @@ const toggle = (element: StubElement | undefined, checked: boolean) =>
   call(element, "onCheckedChange", checked);
 const tags = new Proxy({}, { get: (_target, name) => name });
 
+interface LoadedModule<T> {
+  module: T;
+  states: unknown[];
+  effects: (() => (() => void) | undefined)[];
+  render: <R>(draw: () => R) => R;
+}
+
 // State by call order, effects recorded (never run); unlisted imports render as their names.
-function load<T>(file: string, stubs: Record<string, unknown> = {}) {
+function load(file: string, stubs: Record<string, unknown> = {}): LoadedModule<unknown> {
   const states: unknown[] = [];
   const effects: (() => (() => void) | undefined)[] = [];
   const effect = (run: (typeof effects)[number]) => effects.push(run);
@@ -95,11 +102,11 @@ function load<T>(file: string, stubs: Record<string, unknown> = {}) {
       useState: (initial: unknown) => {
         const index = cursor++;
         if (index >= states.length) {
-          states.push(typeof initial === "function" ? initial() : initial);
+          states.push(typeof initial === "function" ? (initial as () => unknown)() : initial);
         }
         const set = (next: unknown) => {
           states[index] =
-            typeof next === "function" ? next(states[index]) : next;
+            typeof next === "function" ? (next as (previous: unknown) => unknown)(states[index]) : next;
         };
         return [states[index], set];
       },
@@ -115,7 +122,7 @@ function load<T>(file: string, stubs: Record<string, unknown> = {}) {
     "./links": links,
     ...stubs,
   };
-  const module = loadWithStubs<T>(
+  const module = loadWithStubs<unknown>(
     new URL(`../src/features/model-picker/sharing/${file}`, import.meta.url),
     new Proxy(known, {
       has: () => true,
@@ -130,10 +137,10 @@ function load<T>(file: string, stubs: Record<string, unknown> = {}) {
 }
 
 const loadConfigUi = (inbox = createRunConfigInbox()) =>
-  load<typeof ConfigUi>("config-ui.tsx", {
+  load("config-ui.tsx", {
     "./inbox": { runConfigInbox: inbox },
     "./import-config": { scheduleRunConfigImport: () => undefined },
-  });
+  }) as LoadedModule<typeof ConfigUi>;
 const { SharedRunConfigReview } = loadConfigUi().module;
 const review = (
   config: Partial<PerModelConfig> | null,
@@ -150,13 +157,13 @@ const review = (
 };
 
 function shareDialog(config: PerModelConfig, target = hubTarget, tauri = true) {
-  const { module, render } = load<typeof ShareDialog>("share-dialog.tsx", {
+  const { module, render } = load("share-dialog.tsx", {
     "@/lib/api-base": { isTauri: tauri },
-  });
+  }) as LoadedModule<typeof ShareDialog>;
   return () => {
     const tree = elements(
       render(() =>
-        module.ShareRunConfigDialog({ target, config, onClose: () => {} }),
+        module.ShareRunConfigDialog({ target, config, onClose: () => { /* no-op */ } }),
       ),
     );
     const link = find(tree, "Textarea")?.props.value as string;
@@ -430,7 +437,7 @@ test("extra arguments are always selectable; custom text, templates and native s
     });
     const args = choice("llamaExtraArgs");
     assert.equal(args?.props.disabled, false);
-    assert.equal(args?.props.checked, Boolean(llamaExtraArgs?.length));
+    assert.equal(args.props.checked, Boolean(llamaExtraArgs?.length));
     if (!llamaExtraArgs?.length) {
       toggle(args, true);
       const selected = render();
@@ -457,7 +464,10 @@ test("automatic GPU settings preserve recipient overrides until explicitly selec
   assert.deepEqual(render().config, {});
   for (const key of Object.keys(automatic)) {
     const choice = render().choice(key);
-    assert.equal(choice?.props.checked || choice?.props.disabled, false);
+    assert.equal(
+      [choice?.props.checked, choice?.props.disabled].some((value) => value === true),
+      false,
+    );
     toggle(choice, true);
   }
   assert.deepEqual(render().config, automatic);
@@ -507,13 +517,13 @@ test("Share opens and closes its dialog without touching the pending import", ()
 test("closing an editor before its sharing UI loads cancels the import, while effect replay retains it", async () => {
   const inbox = pendingImport();
   const notices: { id: string; description: string }[] = [];
-  const { module, effects } = load<typeof Controls>("config-controls.tsx", {
+  const { module, effects } = load("config-controls.tsx", {
     "@/lib/toast": {
       toast: { info: (_: string, notice: never) => notices.push(notice) },
     },
     "./inbox": { runConfigInbox: inbox },
     "./target": { isRunConfigVariantUnresolved: () => false },
-  });
+  }) as LoadedModule<typeof Controls>;
   const props = { ...controlProps, isDiffusion: false };
   module.SharedRunConfigControls({ ...props, canImport: false });
   assert.equal(effects[0](), undefined);
@@ -550,7 +560,7 @@ test("edit cancellation includes contained controls and excludes portaled dialog
   const editor = new NodeFake();
   editor.child = new NodeFake();
   const currentTarget = editor as unknown as Node;
-  const events = load<typeof Controls>("config-controls.tsx").module;
+  const events = (load("config-controls.tsx") as LoadedModule<typeof Controls>).module;
   for (const [target, expected] of [
     [editor.child, true],
     [new NodeFake(), false],
@@ -650,8 +660,7 @@ const useRouterState = () => ({ pathname: "/chat" });
 function linkEditor(runtime: object, inbox: Inbox) {
   const useChatRuntimeStore = (select: (state: object) => unknown) =>
     select(runtime);
-  const { module, render, states } = load<typeof LinkEditor>(
-    "link-editor.tsx",
+  const { module, render, states } = load("link-editor.tsx",
     {
       "@/features/auth": { hasAuthToken: yes, mustChangePassword: no },
       "@/features/chat": { isExternalModelId: no, useChatRuntimeStore },
@@ -660,7 +669,7 @@ function linkEditor(runtime: object, inbox: Inbox) {
       "./inbox": { runConfigInbox: inbox },
       "./target": targets,
     },
-  );
+  ) as LoadedModule<typeof LinkEditor>;
   const draw = () => {
     const pending = inbox.getSnapshot();
     assert.ok(pending);
@@ -688,7 +697,7 @@ test("settings-only chooser accepts recipient-local models and skips known GGUF 
     assert.equal(find(draw(), "Button")?.props.disabled, true);
     call(find(draw(), "Input"), "onChange", { target: { value: model } });
     assert.equal(find(draw(), "Button")?.props.disabled, false, model);
-    call(find(draw(), "form"), "onSubmit", { preventDefault: () => {} });
+    call(find(draw(), "form"), "onSubmit", { preventDefault: () => { /* no-op */ } });
     assert.equal(inbox.getSnapshot()?.selectedModel, model);
     assert.equal(inbox.getSnapshot()?.value, value);
     assert.equal(find(draw(), "Dialog")?.props.open, false);
@@ -718,9 +727,9 @@ test("settings-only chooser accepts recipient-local models and skips known GGUF 
 test("startup intake waits for mount effects and survives strict effect replay", async () => {
   const inbox = createRunConfigInbox();
   let received = 0;
-  let authChanged = () => {};
+  let authChanged = () => { /* no-op */ };
   let disposed = false;
-  const handler = load<typeof LinkHandler>("link-handler.tsx", {
+  const handler = load("link-handler.tsx", {
     "./inbox": { runConfigInbox: inbox },
     "./receive-link": {
       receiveStartupRunConfigUrl: () => received++,
@@ -731,7 +740,7 @@ test("startup intake waits for mount effects and survives strict effect replay",
         };
       },
     },
-  });
+  }) as LoadedModule<typeof LinkHandler>;
   const { module, effects, states, render } = handler;
   const chatSearch = { new: "retained-draft" };
   const draw = () =>
@@ -748,7 +757,7 @@ test("startup intake waits for mount effects and survives strict effect replay",
   inbox.submit({ id: "link", value: { config: { nParallel: 3 } } });
   const shown = find(elements(draw()), "lazy");
   assert.equal(shown?.props.pending, inbox.getSnapshot());
-  assert.equal(shown?.props.chatSearch, chatSearch);
+  assert.equal(shown.props.chatSearch, chatSearch);
   authChanged();
   assert.equal(states[0], 1);
   const failure = (draw() as StubElement).props.fallback as StubElement;

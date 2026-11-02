@@ -433,7 +433,6 @@ test("oversized quoted items keep their enclosing blockquote", () => {
   for (const row of rows) {
     const node = fromMarkdown(row.renderText ?? row.text).children[0];
     assert.equal(node.type, "blockquote");
-    assert.ok(node.type === "blockquote");
     assert.equal(node.children[0].type, "list");
   }
 });
@@ -465,7 +464,6 @@ test("a list split between items does not invent a nested continuation", () => {
   for (const row of rows) {
     const list = fromMarkdown(row.renderText ?? row.text).children[0];
     assert.equal(list.type, "list");
-    assert.ok(list.type === "list");
     assert.equal(list.start, Number.parseInt(row.text));
     assert.equal(row.listContinuationDepth ?? 0, 0);
     assert.ok(

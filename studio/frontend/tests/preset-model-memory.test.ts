@@ -334,7 +334,7 @@ test("a preset pick writes the whole preset to the installation defaults", async
   const written = Object.assign(
     {},
     ...settingsHttp.puts.map((put) => (put.inferenceParams ?? {}) as Record<string, unknown>),
-  );
+  ) as Record<string, unknown>;
   assert.equal(written.temperature, 0.3);
   assert.equal(written.topK, 10);
   assert.equal(written.systemPrompt, "Talk like a pirate.");

@@ -60,21 +60,21 @@ function withScanAccounting<T>(body: () => T): { result: T; chars: number } {
     search: string,
     position?: number,
   ): boolean {
-    counted.chars += String(search).length;
+    counted.chars += search.length;
     return realStartsWith.call(this, search, position);
   };
   RegExp.prototype.exec = function countingExec(
     this: RegExp,
     subject: string,
   ): RegExpExecArray | null {
-    counted.chars += String(subject).length;
+    counted.chars += subject.length;
     return realExec.call(this, subject);
   };
   RegExp.prototype.test = function countingTest(
     this: RegExp,
     subject: string,
   ): boolean {
-    counted.chars += String(subject).length;
+    counted.chars += subject.length;
     return realTest.call(this, subject);
   };
 

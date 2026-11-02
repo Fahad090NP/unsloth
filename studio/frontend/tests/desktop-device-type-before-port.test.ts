@@ -34,7 +34,7 @@ Object.defineProperty(globalThis, "navigator", {
 const requested: string[] = [];
 let reply: Record<string, unknown> | null = null;
 globalThis.fetch = ((input: string) => {
-  requested.push(String(input));
+  requested.push(input);
   const body = reply;
   // What a WebView answers for http://127.0.0.1:0.
   if (body === null) throw new TypeError("Failed to fetch");

@@ -48,24 +48,31 @@ function respond(status: number, body: string, ok = false): Response {
   return {
     ok,
     status,
-    json: async () => JSON.parse(body) as unknown,
+    json: async () => {
+      await Promise.resolve();
+      return JSON.parse(body) as unknown;
+    },
   } as unknown as Response;
 }
 
 test("the backend's reason is what the user is shown", async () => {
-  globalThis.fetch = (async () =>
-    respond(
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return respond(
       404,
       JSON.stringify({ detail: "This chat has no folder yet" }),
-    ));
+    );
+  });
   await assert.rejects(revealSandbox("thread-1"), {
     message: "This chat has no folder yet",
   });
 });
 
 test("a body that is not JSON leaves the status as the only thing to report", async () => {
-  globalThis.fetch = (async () =>
-    respond(500, "<html>502</html>"));
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return respond(500, "<html>502</html>");
+  });
   await assert.rejects(revealSandbox("thread-1"), {
     message: "Request failed (500)",
   });
@@ -73,11 +80,13 @@ test("a body that is not JSON leaves the status as the only thing to report", as
 
 test("an old backend with no reveal route rejects rather than resolving silently", async () => {
   // An updated desktop bundle can meet an older backend, which answers 405 here.
-  globalThis.fetch = (async () =>
-    respond(
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return respond(
       405,
       JSON.stringify({ detail: "Method Not Allowed" }),
-    ));
+    );
+  });
   await assert.rejects(revealSandbox("thread-1"), {
     message: "Method Not Allowed",
   });
@@ -87,12 +96,14 @@ test("a successful reveal resolves without reading the body", async () => {
   function refuse(): Promise<unknown> {
     return Promise.reject(new Error("the body must not be read on success"));
   }
-  globalThis.fetch = (async () =>
-    ({
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return {
       ok: true,
       status: 200,
       json: refuse,
-    }) as unknown as Response);
+    } as unknown as Response;
+  });
   await revealSandbox("thread-1");
 });
 
@@ -149,31 +160,46 @@ test("one thread that outlived a move counts as two folders, not one", () => {
 
 test("a sandbox holding files is told apart from one that was never written", async () => {
   // A missing sandbox lists as 200 with an empty array, not an error.
-  globalThis.fetch = (async () =>
-    ({
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return {
       ok: true,
       status: 200,
-      json: async () => ({ path: "/s/thread-1", files: [{ name: "a.csv" }] }),
-    }) as unknown as Response);
+      json: async () => {
+        await Promise.resolve();
+        return { path: "/s/thread-1", files: [{ name: "a.csv" }] };
+      },
+    } as unknown as Response;
+  });
   assert.equal(await sandboxHasFiles("thread-1"), true);
 
-  globalThis.fetch = (async () =>
-    ({
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return {
       ok: true,
       status: 200,
-      json: async () => ({ path: "/s/thread-1", files: [] }),
-    }) as unknown as Response);
+      json: async () => {
+        await Promise.resolve();
+        return { path: "/s/thread-1", files: [] };
+      },
+    } as unknown as Response;
+  });
   assert.equal(await sandboxHasFiles("thread-1"), false);
 });
 
 test("a probe that could not be answered is reported, not read as an empty folder", async () => {
   // A non-OK is a storage failure; treating it as "no files" would open another workspace.
-  globalThis.fetch = (async () =>
-    ({
+  globalThis.fetch = (async () => {
+    await Promise.resolve();
+    return {
       ok: false,
       status: 500,
-      json: async () => ({}),
-    }) as unknown as Response);
+      json: async () => {
+        await Promise.resolve();
+        return {};
+      },
+    } as unknown as Response;
+  });
   await assert.rejects(sandboxHasFiles("thread-1"), {
     message: "Could not read the chat's folder (500)",
   });

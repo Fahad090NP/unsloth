@@ -41,12 +41,12 @@ const seededApprovalCalls = (): ts.CallExpression[] => {
 
 const enclosingConditions = (node: ts.Node): string[] => {
   const conditions: string[] = [];
-  let current: ts.Node | undefined = node.parent;
+  let current = node.parent as ts.Node | undefined;
   while (current) {
     if (ts.isIfStatement(current)) {
       conditions.push(current.expression.getText(parsed));
     }
-    current = current.parent;
+    current = current.parent as ts.Node | undefined;
   }
   return conditions;
 };
@@ -90,7 +90,7 @@ test("the terminal check is imported, not invented locally", () => {
 // Awaiting the check here delays attendance so an approval can expire near the ceiling.
 
 const isDirectlyAwaited = (node: ts.Node): boolean => {
-  let current: ts.Node | undefined = node.parent;
+  let current = node.parent as ts.Node | undefined;
   while (current) {
     if (ts.isAwaitExpression(current)) return true;
     // Stop at the first non-transparent wrapper: anything higher awaits a different expression.

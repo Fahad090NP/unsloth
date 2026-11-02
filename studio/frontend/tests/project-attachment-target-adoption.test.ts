@@ -25,7 +25,7 @@ function adopt(
   threadId: string,
 ): Record<string, Target> {
   const pending = byThread[PENDING];
-  if (pending === undefined || threadId in byThread) {
+  if (threadId in byThread) {
     return byThread;
   }
   const next = { ...byThread };

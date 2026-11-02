@@ -286,6 +286,7 @@ test("an original job failure is preserved after its event stream ends", async (
   const app = harness({
     events: async function* () {
       await Promise.resolve();
+      yield* [];
     },
     getJob: () =>
       Promise.resolve({
@@ -322,6 +323,7 @@ test("a refresh that lists the failure first keeps the row retryable", async () 
   const app = harness({
     events: async function* () {
       await Promise.resolve();
+      yield* [];
     },
     // The job poll answers only after the list has already reported the failure.
     getJob: async () => {
@@ -397,6 +399,7 @@ test("a retry whose delete fails keeps the failed row retryable and uploads noth
     failDeletes: true,
     events: async function* () {
       await Promise.resolve();
+      yield* [];
     },
     getJob: () =>
       Promise.resolve({
@@ -465,7 +468,7 @@ test("a new chat's id committed after its upload finished keeps tracking the job
       signal = streamSignal;
       yield { type: "progress", progress: 0.4, stage: "captioning" };
       await new Promise<void>((resolve, reject) => {
-        void indexed.promise.then(resolve);
+        indexed.promise.then(resolve, () => undefined);
         streamSignal?.addEventListener("abort", () =>
           { reject(new DOMException("Fetch is aborted", "AbortError")); },
         );
@@ -559,7 +562,7 @@ test("a scope passed to an unscoped hook keeps its job when that scope commits l
       signal = streamSignal;
       yield { type: "progress", progress: 0.4, stage: "captioning" };
       await new Promise<void>((resolve, reject) => {
-        void indexed.promise.then(resolve);
+        indexed.promise.then(resolve, () => undefined);
         streamSignal?.addEventListener("abort", () =>
           { reject(new DOMException("Fetch is aborted", "AbortError")); },
         );

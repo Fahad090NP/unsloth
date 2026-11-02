@@ -23,7 +23,7 @@ test("every locale names the image training link", async () => {
   const files = readdirSync(dir).filter((f) => f.endsWith(".ts"));
   assert.ok(files.length >= 14);
   for (const file of files) {
-    const mod = await import(new URL(file, dir).href);
+    const mod = (await import(new URL(file, dir).href)) as Record<string, unknown>;
     const studio = (Object.values(mod)[0] as { studio: Record<string, unknown> }).studio;
     for (const key of ["imageTraining", "goToImageTraining"]) {
       assert.equal(typeof studio[key], "string", `${file} studio.${key}`);

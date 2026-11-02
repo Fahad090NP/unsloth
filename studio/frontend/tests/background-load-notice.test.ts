@@ -18,7 +18,7 @@ interface Seen { runtime: string; loading: boolean; model: string | null }
 
 function record(): { seen: Seen[]; settled: Promise<void>; stop: () => void } {
   const seen: Seen[] = [];
-  let onSettled: () => void = () => {};
+  let onSettled: () => void = () => { /* empty */ };
   const settled = new Promise<void>((resolve) => {
     onSettled = resolve;
   });
@@ -49,8 +49,9 @@ test("the notice outlives the POST and settles when the load reports ready", asy
   const result = await withBackgroundLoadNotice(
     "image",
     "unsloth/flux",
-    async () => "started",
+    async () => { await Promise.resolve(); return "started"; },
     async () => {
+      await Promise.resolve();
       const phase = phases[Math.min(read++, phases.length - 1)];
       if (phase !== "ready") assert.equal(seen.length, 2);
       return phase;
@@ -79,8 +80,8 @@ test("an errored load settles the notice too", async () => {
   await withBackgroundLoadNotice(
     "video",
     "unsloth/wan",
-    async () => null,
-    async () => "error",
+    async () => { await Promise.resolve(); return null; },
+    async () => { await Promise.resolve(); return "error"; },
     TIMING,
   );
   await settled;
@@ -101,9 +102,11 @@ test("a load that never started settles at once, not from the poll", async () =>
       "image",
       "unsloth/flux",
       async () => {
+        await Promise.resolve();
         throw new Error("422 unsupported model kind");
       },
       async () => {
+        await Promise.resolve();
         polled = true;
         return "ready";
       },
@@ -134,8 +137,9 @@ test("an unreadable progress read does not end a live load", async () => {
   await withBackgroundLoadNotice(
     "image",
     "unsloth/flux",
-    async () => null,
+    async () => { await Promise.resolve(); return null; },
     async () => {
+      await Promise.resolve();
       const answer = answers[Math.min(read++, answers.length - 1)];
       assert.equal(seen.length, 2);
       if (answer instanceof Error) throw answer;
@@ -161,8 +165,9 @@ test("a null phase is terminal, since it means the load left nothing behind", as
   await withBackgroundLoadNotice(
     "video",
     "unsloth/wan",
-    async () => null,
+    async () => { await Promise.resolve(); return null; },
     async () => {
+      await Promise.resolve();
       read += 1;
       return null;
     },
@@ -192,8 +197,9 @@ test("only downloading and finalizing keep the row up", async () => {
   await withBackgroundLoadNotice(
     "image",
     "unsloth/flux",
-    async () => null,
+    async () => { await Promise.resolve(); return null; },
     async () => {
+      await Promise.resolve();
       const phase = phases[Math.min(read++, phases.length - 1)];
       if (phase !== "ready") assert.equal(seen.length, 2);
       return phase;
@@ -216,7 +222,7 @@ test("a hung read is abandoned, so the deadline still bounds the loop", async ()
   await withBackgroundLoadNotice(
     "image",
     "unsloth/flux",
-    async () => null,
+    async () => { await Promise.resolve(); return null; },
     (signal) =>
       new Promise<never>((_resolve, reject) => {
         read += 1;
@@ -246,8 +252,9 @@ test("the read signal is not aborted when the read answers in time", async () =>
   await withBackgroundLoadNotice(
     "video",
     "unsloth/wan",
-    async () => null,
+    async () => { await Promise.resolve(); return null; },
     async (signal) => {
+      await Promise.resolve();
       signal.addEventListener("abort", () => {
         aborted = true;
       });
@@ -269,8 +276,9 @@ test("a long but healthy download is never abandoned", async () => {
   await withBackgroundLoadNotice(
     "video",
     "unsloth/wan",
-    async () => null,
+    async () => { await Promise.resolve(); return null; },
     async () => {
+      await Promise.resolve();
       read += 1;
       return read < 12 ? "downloading" : "ready";
     },
@@ -304,8 +312,9 @@ async function settlingRun(healthyAfterMs: number): Promise<{
   await withBackgroundLoadNotice(
     "image",
     "unsloth/flux",
-    async () => null,
+    async () => { await Promise.resolve(); return null; },
     async () => {
+      await Promise.resolve();
       const now = Date.now();
       maxGapMs = Math.max(maxGapMs, now - lastRead);
       lastRead = now;
@@ -356,10 +365,11 @@ test("the load is announced again once the POST has committed", async () => {
     "image",
     "unsloth/flux",
     async () => {
+      await Promise.resolve();
       announcedBeforeStart = seen.length;
       return null;
     },
-    async () => "ready",
+    async () => { await Promise.resolve(); return "ready"; },
     TIMING,
   );
 

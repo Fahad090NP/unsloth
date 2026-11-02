@@ -60,7 +60,10 @@ function config(maxSeqLength: number, kvCacheDtype: string | null = null) {
 
 function storedKeys(): string[] {
   return Object.keys(
-    JSON.parse(storage.getItem("unsloth_model_configs") ?? "{}"),
+    JSON.parse(storage.getItem("unsloth_model_configs") ?? "{}") as Record<
+      string,
+      unknown
+    >,
   );
 }
 

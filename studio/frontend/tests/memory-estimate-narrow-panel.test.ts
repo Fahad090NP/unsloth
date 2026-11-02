@@ -219,7 +219,7 @@ test("the notes the row actually builds are left breakable", () => {
   const hostNote = resolveDraftCacheNote(0, 1e9);
   assert.equal(hostNote, "host RAM");
   for (const note of ["256 of 257 layers on GPU", hostNote]) {
-    const spaces = (glueNoteItems(note).match(/ /g) || []).length;
+    const spaces = (glueNoteItems(note).match(/ /g) ?? []).length;
     assert.ok(spaces > 0, `${note} has no break opportunity left`);
   }
 });
