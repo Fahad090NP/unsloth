@@ -33,12 +33,9 @@ test("the panel in front outranks the other one", () => {
 });
 
 test("the front panel stays under the layer above the floating panels", () => {
-  assert.ok(
-    [Z_LAYER.FLOATING_PANEL_TOP].every((value) => value < Z_LAYER.STARTUP_SCREEN),
-  );
-  assert.ok(
-    [Z_LAYER.FLOATING_PANEL_TOP].every((value) => value < Z_LAYER.TOOLTIP),
-  );
+  const top = Z_LAYER.FLOATING_PANEL_TOP as number;
+  assert.ok(top < (Z_LAYER.STARTUP_SCREEN as number));
+  assert.ok(top < (Z_LAYER.TOOLTIP as number));
 });
 
 test("raising swaps which panel is in front", () => {

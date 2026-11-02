@@ -73,6 +73,7 @@ Object.assign(globalThis, {
   CSS: { escape: (value: string) => value },
   DOMRect: class {
     static readonly stub = true;
+    toJSON() { return {}; }
     constructor(x: number, y: number, width: number, height: number) {
       // biome-ignore lint/correctness/noConstructorReturn: a plain rect stands in for DOMRect
       return rect(x, y, width, height);
@@ -274,7 +275,7 @@ test("a menu over a layered page neither captures nor hides it, and owns its inp
       exclude: [{ x: 600, y: 600, width: 202, height: 51, viewportWidth: 1000 }],
     });
     // a toast sliding in is measured as it moves, not on the next recheck
-    clickable[0] = overlay(rect(600, 560, 200, 50));
+    clickable.splice(0, 1, overlay(rect(600, 560, 200, 50)));
     listeners.get("transitionrun")?.({ target: { closest: () => ({}) } });
     for (const callback of frames.splice(0)) callback();
     await settle();
@@ -394,7 +395,7 @@ test("a temporary page's popup in a chat off screen stays out of history", () =>
     return entry.kind === "web" && entry.url === "https://popup-temp.example/";
   });
   assert.equal(popup?.chat, "single:temporary");
-  const entry = popup && currentEntry(popup);
+  const entry = currentEntry(popup);
   assert.equal(entry.kind === "web" ? entry.temporary : undefined, true);
 });
 

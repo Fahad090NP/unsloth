@@ -10,7 +10,7 @@ export interface RecordedToast {
 export const recordedToasts: RecordedToast[] = [];
 
 function stringifyOrEmpty(value: unknown): string {
-  const serialized: string | undefined = JSON.stringify(value);
+  const serialized = JSON.stringify(value) as string | undefined;
   return serialized ?? "";
 }
 

@@ -230,7 +230,7 @@ test("a logout during the retry wait ends the refresh", async (t) => {
   };
   assert.equal(await f.api.refreshSessionOutcome(), "rejected");
   assert.ok(loggedOut);
-  await loggedOut;
+  await (loggedOut as Promise<void>);
   assert.equal(f.refreshBodies.length, 1, "the refresh outlived the logout");
   assert.deepEqual(f.tokens, { access: null, refresh: null });
 });

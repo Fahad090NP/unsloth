@@ -195,8 +195,8 @@ test("effect textures retain their established appearance", () => {
 			}
 			assert.equal(
 				digest.digest("hex"),
-				appearanceDigests[`${String(effect)}:${String(light)}`],
-				`${String(effect)}, light=${String(light)}`,
+				appearanceDigests[`${effect}:${String(light)}`],
+				`${effect}, light=${String(light)}`,
 			);
 		}
 	}

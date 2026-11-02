@@ -20,8 +20,7 @@ const reset = () =>
   ); };
 
 const ids = (threadId: string) => [
-  ...(useForkBoundaryStore.getState().boundaryByThreadId[threadId].messageIds ??
-    []),
+  ...useForkBoundaryStore.getState().boundaryByThreadId[threadId].messageIds,
 ];
 
 test("a thread with no boundary published has none", () => {

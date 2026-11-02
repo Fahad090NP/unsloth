@@ -112,7 +112,7 @@ test("an empty change prompt starts from the clip's own description", () => {
   assert.equal(useAudioMusicStore.getState().edit.prompt, "brighter");
   useAudioMusicStore.getState().setLoadedEditActions(["inpaint"]);
   const saved = JSON.parse(store.get("unsloth_audio_music_v1") ?? "{}") as {
-    state: { [key: string]: unknown };
+    state: Record<string, unknown>;
   };
   assert.equal("loadedEditActions" in saved.state, false);
 });

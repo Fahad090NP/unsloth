@@ -265,13 +265,14 @@ test("a downloaded replacement pick falls through to selectModel", () => {
 test("declining B before A unloads X lets C inherit X's newly edited settings", () => {
   const decline = section(runtime, "if (!stopDecision.proceed) {", "// Re-check the tracked picker for a load");
   const chooseC = section(runtime, "if (pendingReplacementRollback?.config) {", "// The cancelled run's own rollback target");
-  const declineB = (state: { pending: { checkpoint: string; config: string; residentUnloaded: boolean } | null; epoch: number; released?: boolean; restored?: boolean }) =>
+  const declineB = (state: { pending: { checkpoint: string; config: string; residentUnloaded: boolean } | null; epoch: number; released?: boolean; restored?: boolean }): void => {
     runInNewContext(`let pendingReplacementRollback = state.pending;
     let modelLoadCancelEpoch = 0;
     const modelSelectionIntentEpoch = state.epoch, loadIntentId = 2, stopDecision = { proceed: false };
     const releasePreflightLifecycleLease = () => { state.released = true; };
     const restorePreviousConfig = () => { state.restored = true; };
     try { ${decline} } finally { state.pending = pendingReplacementRollback; }`, { state });
+  };
   const selectC = (state: { pending: { config: string } | null; fresh: string }) =>
     runInNewContext(`let pendingReplacementRollback = state.pending;
     let previousConfigForReplacement = state.fresh; ${chooseC} return previousConfigForReplacement;`, { state }) as string;

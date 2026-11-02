@@ -27,7 +27,7 @@ function resolveSibling(fromPath: string, specifier: string): URL {
 export function loadWithStubs<T>(
   moduleUrl: URL,
   stubs: Record<string, unknown>,
-  options: { relativePassthrough?: boolean } = {},
+  options: { relativePassthrough?: boolean; _type?: T } = {},
 ): T {
   const path = fileURLToPath(moduleUrl);
   const source = readFileSync(path, "utf8").replaceAll(

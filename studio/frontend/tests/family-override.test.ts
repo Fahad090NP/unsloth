@@ -40,7 +40,7 @@ test("a family admits only a task-less row of a matching (or dual) manifest", ()
     ["text-to-image", "diffusers_pipeline", "diffusers_pipeline", false],
     ["text-to-video", "diffusers_dual_pipeline", "diffusers_modular_pipeline", false],
   ] as const) {
-    assert.equal(taskOpaqueArtifactSupportsFamilyOverride(task, artifact, required), want, `${task ?? "none"} ${artifact ?? "none"} ${required}`);
+    assert.equal(taskOpaqueArtifactSupportsFamilyOverride(task, artifact, required), want, `${task ?? "none"} ${artifact} ${required ?? "none"}`);
   }
 });
 
@@ -68,7 +68,7 @@ test("family options follow the backend registry, deduplicated, and every backen
     return [
       ...source.matchAll(/^\s+name = (?:"([^"]+)"|([A-Z][A-Z0-9_]*),$)/gm),
     ].map(([, literal, key]) => {
-      const label: string | undefined = literal;
+      const label = literal as string | undefined;
       return label ?? constant(key);
     });
   });

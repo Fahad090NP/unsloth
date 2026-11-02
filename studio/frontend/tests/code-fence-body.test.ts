@@ -213,7 +213,7 @@ test("the scrolling ancestor is resolved from outside the code block", () => {
 test("the body reproduces streamdown's language class and incomplete flag", () => {
   const body = DEFER.slice(DEFER.indexOf("export const FenceBody = memo("));
   assert.ok(
-    DEFER.includes('const languageClass = language === null ? null : `language-\${language}`;'),
+    DEFER.includes('const languageClass = language === null ? null : `language-$' + '{language}`;'),
     "the first word of the info string, which is what remark-rehype emits",
   );
   assert.ok(

@@ -40,7 +40,7 @@ const reasoningLength = (content: unknown): number => {
       | { type?: unknown; text?: unknown }
       | null
       | undefined;
-    if (candidate && candidate.type === "reasoning") {
+    if (candidate?.type === "reasoning") {
       total += typeof candidate.text === "string" ? candidate.text.length : 0;
     }
   }

@@ -65,7 +65,9 @@ const paneStart = composer.indexOf("const engineOffer =");
 const paneEnd = composer.indexOf("// Upgrade dialog first", paneStart);
 assert.ok(paneStart >= 0 && paneEnd > paneStart);
 type PaneFields = { engine?: string; gpu_ids?: number[] } & Record<string, unknown>;
-const AsyncFunction = Object.getPrototypeOf(() => Promise.resolve()).constructor as new (
+const AsyncFunction = (
+  Object.getPrototypeOf(() => Promise.resolve()) as { constructor: unknown }
+).constructor as new (
   ...args: string[]
 ) => (...args: unknown[]) => Promise<PaneFields>;
 const paneDecisionBody = new AsyncFunction(

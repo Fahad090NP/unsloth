@@ -90,7 +90,7 @@ test("the music audio types match the backend's list", () => {
   const names = new Set(
     [...block[1].matchAll(/"([^"]+)"|([A-Z_]+_AUDIO_TYPE)/g)].map(
       (m) => {
-        const quotedName: string | undefined = m[1];
+        const quotedName = m[1] as string | undefined;
         return quotedName ?? (m[2] === "AUDIO_CPP_MUSIC_AUDIO_TYPE" ? "audiocpp_music" : m[2]);
       },
     ),

@@ -9,7 +9,8 @@ import { runInNewContext } from "node:vm";
 const shell = readFileSync(new URL("../../backend/routes/browser.py", import.meta.url), "utf8");
 const source = shell.slice(shell.indexOf("const linkFrom = "), shell.indexOf("const submitForm = "));
 
-const nativeDispatch = EventTarget.prototype.dispatchEvent;
+const nativeDispatch = (target: EventTarget, event: Event): boolean =>
+  target.dispatchEvent(event);
 
 function setup() {
   class PageEventTarget extends EventTarget {}
@@ -39,9 +40,9 @@ function setup() {
     }
   }
   const fire = (target: Element, event: Event) => {
-    if (!target.isConnected) return nativeDispatch.call(target, event);
+    if (!target.isConnected) return nativeDispatch(target, event);
     Object.defineProperty(event, "composedPath", { value: () => [target, document] });
-    for (const node of [capturing, target, bubbling]) nativeDispatch.call(node, event);
+    for (const node of [capturing, target, bubbling]) nativeDispatch(node, event);
     return !event.defaultPrevented;
   };
   class HTMLAnchorElement extends Element {

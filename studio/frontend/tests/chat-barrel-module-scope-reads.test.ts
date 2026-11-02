@@ -867,7 +867,7 @@ function isErasedEdge(statement: ts.ImportDeclaration | ts.ExportDeclaration): b
 const parseCache = new Map<string, ts.SourceFile>();
 
 function parse(fileName: string, text: string): ts.SourceFile {
-  const key = `${fileName} ${text}`;
+  const key = `${fileName}\0${text}`;
   const cached = parseCache.get(key);
   if (cached) return cached;
   const source = ts.createSourceFile(fileName, text, ts.ScriptTarget.ESNext, true);

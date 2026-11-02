@@ -338,9 +338,9 @@ test("racing writes from two open pages settle on the store's value", () => {
 test("a write on its way during Clear browsing data doesn't come back", () => {
   reset();
   const page = openPage("https://example.com/");
-  const stop = onPageStorageClear(() =>
-    deliver(() => { page.message({ type: "unsloth:browser-command", command: "clearStorage" }); }),
-  );
+  const stop = onPageStorageClear(() => {
+    deliver(() => { page.message({ type: "unsloth:browser-command", command: "clearStorage" }); });
+  });
   deferred = [];
   page.window.localStorage.setItem("banner", "closed");
   clearPageStorage();

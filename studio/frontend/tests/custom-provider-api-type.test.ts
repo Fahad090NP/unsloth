@@ -5,14 +5,16 @@ import assert from "node:assert/strict";
 import test, { after } from "node:test";
 import { createServer } from "vite";
 import { installLocalStorageFake } from "./helpers/kit.ts";
+import type * as ProvidersApi from "../src/features/chat/api/providers-api.ts";
+import type * as ExternalProviders from "../src/features/chat/external-providers.ts";
 
 installLocalStorageFake();
 Object.assign(window.location, { href: "http://localhost/" });
 const vite = await createServer({ server: { middlewareMode: true } });
 after(() => vite.close());
 test("Responses survives provider requests and cache while legacy cache defaults", async () => {
-  const api = await vite.ssrLoadModule("/src/features/chat/api/providers-api.ts") as typeof import("../src/features/chat/api/providers-api.ts");
-  const providers = await vite.ssrLoadModule("/src/features/chat/external-providers.ts") as typeof import("../src/features/chat/external-providers.ts");
+  const api = (await vite.ssrLoadModule("/src/features/chat/api/providers-api.ts")) as typeof ProvidersApi;
+  const providers = (await vite.ssrLoadModule("/src/features/chat/external-providers.ts")) as typeof ExternalProviders;
   const bodies: Record<string, unknown>[] = [];
   const previous = globalThis.fetch;
   globalThis.fetch = (async (_url, init) => {

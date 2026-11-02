@@ -1414,8 +1414,8 @@ test("linearizeDocxMath writes equations as the backend does and leaves other pa
       const filled = omml.replace(/\{([^{}]*)\}/g, (_, text: string) => `<m:r><m:t>${text}</m:t></m:r>`);
       const xml = strFromU8(unzipSync(linearizeDocxMath(archive(`<w:p><m:oMath>${filled}</m:oMath></w:p>`)))["word/document.xml"]);
       const doc = new XmlDomParser().parseFromString(xml, "application/xml");
-      const node: Element | undefined = doc.getElementsByTagNameNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "t")[0];
-      assert.equal(node?.textContent, expected);
+      const node = doc.getElementsByTagNameNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "t")[0];
+      assert.equal(node.textContent, expected);
     }
   } finally {
     Object.assign(globals, original);

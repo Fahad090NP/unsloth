@@ -22,13 +22,13 @@ interface Counted { chars: number }
 
 function withScanAccounting<T>(body: () => T): { result: T; chars: number } {
   const counted: Counted = { chars: 0 };
-  const realReplace = String.prototype.replace;
-  const realLastIndexOf = String.prototype.lastIndexOf;
-  const realIndexOf = String.prototype.indexOf;
-  const realSlice = String.prototype.slice;
-  const realStartsWith = String.prototype.startsWith;
-  const realExec = RegExp.prototype.exec;
-  const realTest = RegExp.prototype.test;
+  const realReplace = Reflect.get(String.prototype, "replace") as typeof String.prototype.replace;
+  const realLastIndexOf = Reflect.get(String.prototype, "lastIndexOf") as typeof String.prototype.lastIndexOf;
+  const realIndexOf = Reflect.get(String.prototype, "indexOf") as typeof String.prototype.indexOf;
+  const realSlice = Reflect.get(String.prototype, "slice") as typeof String.prototype.slice;
+  const realStartsWith = Reflect.get(String.prototype, "startsWith") as typeof String.prototype.startsWith;
+  const realExec = Reflect.get(RegExp.prototype, "exec") as typeof RegExp.prototype.exec;
+  const realTest = Reflect.get(RegExp.prototype, "test") as typeof RegExp.prototype.test;
 
   type Unknown = (...args: unknown[]) => unknown;
   const countReceiver = (real: Unknown): Unknown =>

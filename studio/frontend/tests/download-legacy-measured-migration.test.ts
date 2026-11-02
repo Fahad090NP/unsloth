@@ -13,13 +13,12 @@ registerBundlerResolver();
 const { store } = installLocalStorageFake();
 
 const PERSIST_KEY = "unsloth.studio.downloads";
-let flushPersistedState: (() => void) | undefined;
+let _flushPersistedState: (() => void) | undefined;
 Object.assign(globalThis.window, {
   addEventListener: (type: string, listener: () => void) => {
-    if (type === "pagehide") flushPersistedState = listener;
+    if (type === "pagehide") _flushPersistedState = listener;
   },
 });
-void flushPersistedState;
 
 function legacyJob(repoId: string, downloadedBytes: number) {
   return {

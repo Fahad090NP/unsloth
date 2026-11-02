@@ -37,13 +37,13 @@ test("peer-tab account switch clears Alice's training handoff before Bob reloads
   localStorage.setItem("unsloth_auth_token", "alice-token");
   const peerSession = storage();
   peerSession.setItem("unsloth_server_user_stopped", "1");
-  let listener: (event: Partial<StorageEvent>) => void;
+  let listener: ((event: Partial<StorageEvent>) => void) | undefined;
   let handoffAtReload: unknown;
   let reloads = 0;
   const peer = {
     localStorage,
     sessionStorage: peerSession,
-    addEventListener: (_type: string, fn: typeof listener) => {
+    addEventListener: (_type: string, fn: (event: Partial<StorageEvent>) => void) => {
       listener = fn;
     },
     location: {
@@ -68,7 +68,7 @@ test("peer-tab account switch clears Alice's training handoff before Bob reloads
       indexedDB: {
         deleteDatabase() {
           const request = {} as IDBOpenDBRequest;
-          queueMicrotask(() => request.onsuccess?.call(request, {} as Event));
+          queueMicrotask(() => { request.onsuccess?.call(request, {} as Event); });
           return request;
         },
       },
@@ -80,7 +80,8 @@ test("peer-tab account switch clears Alice's training handoff before Bob reloads
       () => { localStorage.setItem("unsloth_auth_token", "bob-token"); },
       loginTab,
     );
-    listener!({
+    assert.ok(listener);
+    listener({
       key: BROWSER_ACCOUNT_KEY,
       oldValue: "account:a1:alice",
       newValue: localStorage.getItem(BROWSER_ACCOUNT_KEY),

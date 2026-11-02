@@ -66,6 +66,7 @@ Object.assign(globalThis, {
   CSS: { escape: (value: string) => value },
   DOMRect: class {
     static readonly stub = true;
+    toJSON() { return {}; }
     constructor(x: number, y: number, width: number, height: number) {
       // biome-ignore lint/correctness/noConstructorReturn: a plain rect stands in for DOMRect
       return rect(x, y, width, height);
@@ -169,7 +170,7 @@ test("a menu that closes and reopens while the page is captured keeps the snapsh
     await settle();
     await frame();
 
-    assert.match(placeholder.style.backgroundImage ?? "", /^url\(blob:/);
+    assert.match(placeholder.style.backgroundImage, /^url\(blob:/);
     const shows = calls.filter(
       ({ command }) => command === "browser_view_show",
     );

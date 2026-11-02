@@ -10,7 +10,9 @@ import { strToU8, zipSync } from "fflate";
 import { formatNumber, readDelimited, readPptx, readXlsx } from "../src/components/file-viewer/office.ts";
 
 {
-  const proto: object = Object.getPrototypeOf(new DOMParser().parseFromString("<a/>", "application/xml").documentElement);
+  const proto: object = Object.getPrototypeOf(
+    new DOMParser().parseFromString("<a/>", "application/xml").documentElement,
+  ) as object;
   const element = (node: Node | null): Element | null => {
     let current = node;
     while (current && current.nodeType !== 1) current = current.nextSibling;

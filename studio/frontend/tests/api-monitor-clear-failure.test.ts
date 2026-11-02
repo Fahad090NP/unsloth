@@ -52,7 +52,7 @@ test("a refused clear reports through the monitor's error state", async () => {
 });
 
 test("a rejection that is not an Error still reports", async () => {
-  const reason: unknown = "offline";
+  const reason = "offline" as unknown as Error;
   const state = trace(() => Promise.reject(reason));
 
   await assert.doesNotReject(() => clearMonitor(state.deps));

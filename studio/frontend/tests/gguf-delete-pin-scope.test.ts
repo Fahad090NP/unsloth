@@ -14,7 +14,7 @@ function readSource(path: string) {
   return ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 }
 
-function compile<T>(expression: string, context: Record<string, unknown>): T {
+function compile<T>(expression: string, context: Record<string, unknown>, _type?: T): T {
   const js = ts.transpileModule(`const callback = ${expression};`, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },
   }).outputText;

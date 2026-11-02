@@ -125,7 +125,7 @@ for (const [name, file, inline] of [
       if (isComposing) f.compose(false);
       f.key("Enter");
       assert.equal(f.effects.filter((effect) => effect === "save").length, 1);
-      const inlineEnabled: boolean = inline;
+      const inlineEnabled = inline as boolean;
       if (inlineEnabled) assert.equal(f.skipRenameBlurRef.current, true);
     });
   }

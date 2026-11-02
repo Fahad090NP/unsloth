@@ -6,6 +6,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compileFunction } from "node:vm";
 
 import { readSrcAsync } from "./helpers/kit.ts";
 
@@ -65,10 +66,11 @@ function runRetry(status: string, forced: boolean): Run {
     stopManagedEnvironmentWait: noop,
   };
   const keys = Object.keys(scope);
-  new Function(
-    ...keys,
+  const fn = compileFunction(
     body.replace(/^const retry = /, "return ").replace(/;\s*$/, ";"),
-  )(...keys.map((key) => (scope as Record<string, unknown>)[key]))();
+    keys,
+  ) as (...args: unknown[]) => () => void;
+  fn(...keys.map((key) => (scope as Record<string, unknown>)[key]))();
   return {
     repairs,
     preflights,

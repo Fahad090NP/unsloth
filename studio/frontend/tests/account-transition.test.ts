@@ -20,6 +20,7 @@ import {
 } from "../src/lib/account-transition.ts";
 import { RUNTIME_REPAIR_KEY } from "../src/hooks/runtime-repair-history.ts";
 import { SEEN_KEY_PREFIX, UNSEEN_KEY_PREFIX } from "../src/features/scheduled-tasks/results.ts";
+import type * as ChatPreferencesStore from "../src/features/chat/stores/chat-preferences-store.ts";
 
 function browserWith(
   values: Record<string, string> = {},
@@ -659,9 +660,9 @@ test("chat preferences survive account switches without being shared", async () 
   const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   Object.defineProperty(globalThis, "window", { configurable: true, value: b.browser });
   const load = async (name: string) => {
-    const mod = await import(
+    const mod = (await import(
       `../src/features/chat/stores/chat-preferences-store.ts?account-test=${name}`
-    ) as typeof import("../src/features/chat/stores/chat-preferences-store.ts");
+    )) as typeof ChatPreferencesStore;
     return mod.useChatPreferencesStore;
   };
   const choices = (store: Awaited<ReturnType<typeof load>>) => {

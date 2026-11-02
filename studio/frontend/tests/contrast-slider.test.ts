@@ -464,7 +464,7 @@ test("every near-opaque card spelling takes the panel muted text", () => {
     for (const [spelling, isDark, alpha] of readSrc(file).matchAll(
       /(?<![\w:-])(dark:)?bg-card(?:\/(\d+))?(?![\w/-])/g,
     )) {
-      const alphaValue: string | undefined = alpha;
+      const alphaValue = alpha as string | undefined;
       if (alphaValue === undefined ? !isDark : Number(alphaValue) < 50) continue;
       assert.ok(
         (isDark ? dark : light).includes(`.${spelling}`),

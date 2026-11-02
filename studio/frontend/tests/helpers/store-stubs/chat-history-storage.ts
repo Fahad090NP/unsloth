@@ -33,7 +33,6 @@ export function updateStoredChatThread(
   },
   _options?: { signal?: AbortSignal },
 ): void {
-  void _options;
   if (threadRows.failNext) {
     threadRows.failNext = false;
     throw new Error("stubbed thread write failure");

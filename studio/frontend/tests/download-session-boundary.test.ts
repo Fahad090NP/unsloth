@@ -54,6 +54,7 @@ const boundaries: [
 
 for (const [name, eventType, event] of boundaries) {
   test(`${name} clears download state and pending persistence`, async () => {
+    await Promise.resolve();
     const key = jobKeyOf("model", "private-org/private-model", "Q4_K_M");
     putJob({
       key,

@@ -64,7 +64,7 @@ const SHELL_VARIABLE_REPLIES: [string, string[]][] = [
   ["Check $HOME, $PATH, and $USER first.", ["$HOME, $PATH, and $USER"]],
   ['Quote them: "$HOME" and "$PATH".', ["$HOME", "$PATH"]],
   ["Files live under $HOME/$USER/data.", ["$HOME/$USER/data"]],
-  [`Use \${HOME} and \${PATH} in scripts.`, ["${HOME} and ${PATH}"]],
+  [`Use \${HOME} and \${PATH} in scripts.`, ["$" + "{HOME} and $" + "{PATH}"]],
   ["Set it to $PATH:$HOME/bin now.", ["$PATH:$HOME/bin"]],
   ["#define HOME $HOME\nthen $PATH", ["$HOME", "$PATH"]],
   ["Use $PATH\n***\nthen $HOME and $USER", ["$PATH", "$HOME and $USER"]],

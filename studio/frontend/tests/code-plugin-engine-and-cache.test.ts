@@ -126,7 +126,7 @@ test("a fence evicted mid-stream still tokenizes correctly when it resumes", asy
     "      /* a block comment",
     "         that stays open across lines */",
     "      const total = items.reduce((sum, item) => sum + item.n, 0);",
-    "      console.log(`total \${total}`);",
+    "      console.log(`total $" + "{total}`);",
     "    </script>",
     "    <style>",
     "      .card { color: #333; /* comment",

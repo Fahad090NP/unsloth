@@ -10,10 +10,11 @@ const thread = readSrc("components/assistant-ui/thread.tsx");
 const attachment = readSrc("components/assistant-ui/attachment.tsx");
 
 function block(source: string, start: string): string {
-  const [, rest] = source.split(start, 2);
+  const parts = source.split(start, 2);
+  const rest = parts.at(1);
   assert.ok(rest !== undefined, `source no longer contains ${start}`);
-  const [body] = (rest ?? "").split("\n};", 1);
-  return body ?? "";
+  const [body] = rest.split("\n};", 1);
+  return body;
 }
 
 const editComposer = block(thread, "const EditComposer: FC = () => {");

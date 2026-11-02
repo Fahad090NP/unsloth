@@ -171,7 +171,7 @@ test("a refused remove leaves this browser's copy and the list alone", async () 
 });
 
 test("a rejection that is not an Error still reports", async () => {
-  const reason: unknown = "offline";
+  const reason = "offline" as unknown as Error;
   const state = trace(() => Promise.reject(reason));
 
   await forgetModelOverride(PATH_KEY, state.deps);

@@ -119,7 +119,7 @@ function harness(name = "ThreadContextUsageRecount") {
   };
   const writes: (savedUsage.BranchContextUsage | null)[] = [];
   const refs: { current: unknown }[] = [];
-  const previousDeps: (readonly unknown[])[] = [];
+  const previousDeps: (readonly unknown[] | undefined)[] = [];
   let pendingEffects: (() => unknown)[] = [];
   let hookIndex = 0;
   let branchReader: (() => readonly ThreadMessage[] | null) | null = null;

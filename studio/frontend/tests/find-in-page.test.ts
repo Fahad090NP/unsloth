@@ -2532,7 +2532,7 @@ test("closing the bar hands focus back to where it came from", () => {
   // First answer only: StrictMode replays the effect, and by the second run the field has focus.
   assert.match(FIND_BAR, /originRef\.current === null &&/);
   assert.match(FIND_BAR, /barRef\.current\?\.contains\(active\) !== true/);
-  assert.equal(FIND_BAR.includes("closest(`[\${FIND_SKIP_ATTRIBUTE}]`)"), false);
+  assert.equal(FIND_BAR.includes("closest(`[$" + "{FIND_SKIP_ATTRIBUTE}]`)"), false);
   assert.match(
     FIND_BAR,
     /if \(focused !== null && focused !== document\.body\) return;/,
