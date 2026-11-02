@@ -17,6 +17,8 @@ export function watchSavingPhase(
 ): { stop(): void } {
   const intervalMs = opts.intervalMs ?? 1000;
   const state = { stopped: false };
+  // stop() flips this from another call, so read it through a call rather than a narrowed property.
+  const isStopped = (): boolean => state.stopped;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let inFlight: AbortController | null = null;
 
@@ -34,12 +36,12 @@ export function watchSavingPhase(
     inFlight = controller;
     try {
       const progress = await read(controller.signal);
-      if (!state.stopped && progress.phase === SAVING_CHAT_CONTEXT) onSaving();
+      if (!isStopped() && progress.phase === SAVING_CHAT_CONTEXT) onSaving();
     } catch {
       // A failed read says nothing about the save; try again next tick.
     }
     if (inFlight === controller) inFlight = null;
-    if (!state.stopped) schedule(intervalMs);
+    if (!isStopped()) schedule(intervalMs);
   };
 
   schedule(opts.firstDelayMs ?? intervalMs);

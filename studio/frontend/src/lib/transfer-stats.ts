@@ -30,25 +30,28 @@ export function appendSample(
   b: number,
   maxWindowSeconds: number = MAX_RETAIN_SECONDS,
 ): TransferSample[] {
-  if (samples.length > 0 && b < samples[samples.length - 1].b) {
-    samples.length = 0;
+  // Work on a copy, then hand the result back to the caller's buffer so its identity survives.
+  const buffer = [...samples];
+  if (buffer.length > 0 && b < buffer[buffer.length - 1].b) {
+    buffer.length = 0;
   }
-  const n = samples.length;
+  const n = buffer.length;
   // Collapse plateaus to first and latest reading, or a stopped transfer grows the buffer unbounded.
-  if (n >= 2 && !(b > samples[n - 1].b) && !(samples[n - 1].b > samples[n - 2].b)) {
-    samples[n - 1] = { t, b };
+  if (n >= 2 && !(b > buffer[n - 1].b) && !(buffer[n - 1].b > buffer[n - 2].b)) {
+    buffer[n - 1] = { t, b };
   } else {
-    samples.push({ t, b });
+    buffer.push({ t, b });
   }
   const cutoff = t - maxWindowSeconds;
   // Not by age alone: on slow links one blob takes minutes, and measurableSpan needs the older increase.
   while (
-    samples.length > 2 &&
-    samples[0].t < cutoff &&
-    countIncreases(samples, 1) >= MIN_RETAINED_INCREASES
+    buffer.length > 2 &&
+    buffer[0].t < cutoff &&
+    countIncreases(buffer, 1) >= MIN_RETAINED_INCREASES
   ) {
-    samples.shift();
+    buffer.shift();
   }
+  samples.splice(0, samples.length, ...buffer);
   return samples;
 }
 

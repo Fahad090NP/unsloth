@@ -339,39 +339,44 @@ function visibleText(
   state: ScanState,
   closesBelow: boolean,
 ): ScannedLine {
+  const next = { ...state };
   // Raw HTML first: its contents are literal, so a fence inside it is not one.
-  if (state.inRawHtml !== null) {
-    const [after, stillInRaw] = stripRawHtml(line, state.inRawHtml);
-    state.inRawHtml = stillInRaw;
+  if (next.inRawHtml !== null) {
+    const [after, stillInRaw] = stripRawHtml(line, next.inRawHtml);
+    Object.assign(state, next, { inRawHtml: stillInRaw });
     return { text: after, structural: "" };
   }
-  if (state.inHtmlBlock) {
-    state.inHtmlBlock = line.trim() !== "";
+  if (next.inHtmlBlock) {
+    Object.assign(state, next, { inHtmlBlock: line.trim() !== "" });
     return { text: "", structural: "" };
   }
-  const commented = state.inComment || state.runOn;
+  const commented = next.inComment || next.runOn;
   const fence = commented
     ? null
     : FENCE.exec(
-        state.openFence === null
-          ? itemContent(line, state.afterParagraph)
+        next.openFence === null
+          ? itemContent(line, next.afterParagraph)
           : line,
       );
   if (
     fence &&
-    (state.openFence !== null || opensFence(fence.at(1) ?? "", fence.at(2) ?? ""))
+    (next.openFence !== null || opensFence(fence.at(1) ?? "", fence.at(2) ?? ""))
   ) {
-    state.openFence = nextFence(
-      state.openFence,
-      fence.at(1) ?? "",
-      fence.at(2) ?? "",
-    );
+    Object.assign(state, next, {
+      openFence: nextFence(
+        next.openFence,
+        fence.at(1) ?? "",
+        fence.at(2) ?? "",
+      ),
+    });
     return { text: "", structural: line };
   }
-  if (state.openFence !== null) {
+  if (next.openFence !== null) {
     return { text: null, structural: "" };
   }
-  return visibleContent(line, state, closesBelow);
+  const scanned = visibleContent(line, next, closesBelow);
+  Object.assign(state, next);
+  return scanned;
 }
 
 function visibleContent(
@@ -379,22 +384,23 @@ function visibleContent(
   state: ScanState,
   closesBelow: boolean,
 ): ScannedLine {
-  const hidden = state.inComment || state.inRawHtml !== null;
-  const carried = state.runOn;
-  const content = itemContent(line, state.afterParagraph);
+  const next = { ...state };
+  const hidden = next.inComment || next.inRawHtml !== null;
+  const carried = next.runOn;
+  const content = itemContent(line, next.afterParagraph);
   const opensComment =
-    !(state.inComment || carried) && COMMENT_BLOCK_OPEN.test(content);
+    !(next.inComment || carried) && COMMENT_BLOCK_OPEN.test(content);
   const [uncommented, stillInComment, stillRunOn] = stripCommentSpans(
     line,
-    state.inComment,
-    state.runOn,
+    next.inComment,
+    next.runOn,
     closesBelow,
     opensComment,
   );
-  state.inComment = stillInComment;
-  state.runOn = stillRunOn;
-  const [visible, stillInRaw] = stripRawHtml(uncommented, state.inRawHtml);
-  state.inRawHtml = stillInRaw;
+  next.inComment = stillInComment;
+  next.runOn = stillRunOn;
+  const [visible, stillInRaw] = stripRawHtml(uncommented, next.inRawHtml);
+  next.inRawHtml = stillInRaw;
   // Taken before the opener is hidden: its indent still closes a list item, and its marker opens one.
   const marker = opensComment
     ? line.slice(0, line.length - content.length)
@@ -406,11 +412,13 @@ function visibleContent(
     !carried &&
     stillInRaw === null &&
     visible.trim() &&
-    opensHtmlBlock(visible, state.afterParagraph)
+    opensHtmlBlock(visible, next.afterParagraph)
   ) {
-    state.inHtmlBlock = true;
+    next.inHtmlBlock = true;
+    Object.assign(state, next);
     return { text: "", structural };
   }
+  Object.assign(state, next);
   return { text: visible, structural };
 }
 
@@ -573,11 +581,13 @@ function closeDedentedBlock(line: string, state: ScanState): void {
     return;
   }
   if (line.trim() && indentWidth(line) < state.blockColumn) {
-    state.openFence = null;
-    state.inRawHtml = null;
-    state.inHtmlBlock = false;
-    state.inComment = false;
-    state.blockColumn = 0;
+    Object.assign(state, {
+      openFence: null,
+      inRawHtml: null,
+      inHtmlBlock: false,
+      inComment: false,
+      blockColumn: 0,
+    });
   }
 }
 
@@ -587,11 +597,11 @@ function scopeBlock(
   lists: ListState,
 ): void {
   if (!inBlock(state)) {
-    state.blockColumn = 0;
+    Object.assign(state, { blockColumn: 0 });
     return;
   }
   if (!wasInBlock) {
-    state.blockColumn = lists.columns.at(-1) ?? 0;
+    Object.assign(state, { blockColumn: lists.columns.at(-1) ?? 0 });
   }
 }
 
@@ -678,18 +688,24 @@ interface Collector {
 }
 
 function flush(collector: Collector): void {
-  if (collector.current?.text) {
-    collector.bullets.push({
-      text: truncate(collector.current.text),
-      indent: collector.current.indent,
+  const next = {
+    ...collector,
+    bullets: [...collector.bullets],
+    prose: [...collector.prose],
+  };
+  if (next.current?.text) {
+    next.bullets.push({
+      text: truncate(next.current.text),
+      indent: next.current.indent,
     });
   }
-  collector.current = null;
-  if (collector.paragraph) {
-    collector.prose.push(truncate(collector.paragraph));
-    collector.paragraph = "";
+  next.current = null;
+  if (next.paragraph) {
+    next.prose.push(truncate(next.paragraph));
+    next.paragraph = "";
   }
-  collector.quotedParagraph = false;
+  next.quotedParagraph = false;
+  Object.assign(collector, next);
 }
 
 function takeBullet(
@@ -702,7 +718,9 @@ function takeBullet(
   const item = toPlainText(text, labels);
   // A quoted list is example output, never a headline bullet.
   if (!line.quoted) {
-    collector.current = { text: item, indent: line.indent };
+    Object.assign(collector, {
+      current: { text: item, indent: line.indent },
+    });
   } else if (item) {
     collector.prose.push(truncate(item));
   }
@@ -719,16 +737,20 @@ function takeText(
     return;
   }
   if (collector.current === null) {
-    collector.paragraph = collector.paragraph
-      ? `${collector.paragraph} ${plain}`
-      : plain;
-    collector.quotedParagraph = quoted;
+    Object.assign(collector, {
+      paragraph: collector.paragraph
+        ? `${collector.paragraph} ${plain}`
+        : plain,
+      quotedParagraph: quoted,
+    });
     return;
   }
-  collector.current = {
-    text: `${collector.current.text} ${plain}`,
-    indent: collector.current.indent,
-  };
+  Object.assign(collector, {
+    current: {
+      text: `${collector.current.text} ${plain}`,
+      indent: collector.current.indent,
+    },
+  });
 }
 
 function collectBullets(markdown: string): {

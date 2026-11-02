@@ -24,7 +24,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Dialog as DialogPrimitive } from "radix-ui";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 
 export interface ViewerImage {
@@ -50,13 +50,14 @@ export const useImageViewerStore = create<ImageViewerState>((set, get) => ({
   images: [],
   index: 0,
   open: false,
-  show: (images, index = 0) =>
-    images.length > 0 &&
+  show: (images, index = 0) => {
+    if (images.length === 0) return;
     set({
       images,
       index: Math.min(Math.max(index, 0), images.length - 1),
       open: true,
-    }),
+    });
+  },
   // The body unmounts on close, so the images (and the blobs their loaders hold) can go too.
   close: () => { set({ images: [], index: 0, open: false }); },
   step: (delta) => {
@@ -126,34 +127,40 @@ function useImageBlob(image: ViewerImage | undefined): Loaded | null {
   useEffect(() => {
     if (!image) return;
     let live = true;
+    // The cleanup closure flips `live`; reading it through a call keeps that visible to the type checker.
+    const stillLive = (): boolean => live;
     let url: string | null = null;
     image
       .load()
       .then(async (blob) => {
-        if (!live) return;
+        if (!stillLive()) return;
         // A data: URL, so an opened SVG can't run as a page on Studio's origin.
         if (/^image\/svg\+xml\b/i.test(blob.type)) {
           const dataUrl = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = () => { resolve(String(reader.result)); };
-            reader.onerror = () => { reject(reader.error); };
+            reader.onload = () => {
+              const result = reader.result;
+              resolve(typeof result === "string" ? result : "");
+            };
+            reader.onerror = () => {
+              reject(reader.error ?? new Error("Failed to read the image"));
+            };
             reader.readAsDataURL(blob);
           });
-          if (live) setLoaded({ key: image.key, url: dataUrl, blob });
+          if (stillLive()) setLoaded({ key: image.key, url: dataUrl, blob });
           return;
         }
         url = URL.createObjectURL(blob);
         setLoaded({ key: image.key, url, blob });
       })
-      .catch(
-        () =>
-          live &&
-          setLoaded(
-            image.fallbackUrl
-              ? { key: image.key, url: image.fallbackUrl, blob: null }
-              : { key: image.key, failed: true },
-          ),
-      );
+      .catch(() => {
+        if (!stillLive()) return;
+        setLoaded(
+          image.fallbackUrl
+            ? { key: image.key, url: image.fallbackUrl, blob: null }
+            : { key: image.key, failed: true },
+        );
+      });
     return () => {
       live = false;
       if (url) URL.revokeObjectURL(url);
@@ -162,13 +169,23 @@ function useImageBlob(image: ViewerImage | undefined): Loaded | null {
   return loaded && loaded.key === image?.key ? loaded : null;
 }
 
+/** The scale at which an image of this size fits the stage, never enlarging past 1:1. */
+function fitValue(stage: HTMLElement | null, width: number, height: number): number {
+  if (!stage || width <= 0 || height <= 0) return 1;
+  return Math.min(
+    1,
+    stage.clientWidth / width,
+    stage.clientHeight / height,
+  );
+}
+
 function ViewerBody() {
   const t = useT();
   const locale = useLocale();
   const images = useImageViewerStore((state) => state.images);
   const index = useImageViewerStore((state) => state.index);
   const { close, step } = useImageViewerStore.getState();
-  const image = images[index];
+  const image: ViewerImage | undefined = images[index];
   const loaded = useImageBlob(image);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [natural, setNatural] = useState<{
@@ -179,19 +196,10 @@ function ViewerBody() {
   const [zoom, setZoom] = useState<{ key: string; value: number; fit: boolean } | null>(null);
   const size = natural?.key === image?.key ? natural : null;
 
-  const fitZoom = () => {
-    const stage = stageRef.current;
-    if (!stage || !size) return 1;
-    return Math.min(
-      1,
-      stage.clientWidth / size.width,
-      stage.clientHeight / size.height,
-    );
-  };
-  useLayoutEffect(() => {
-    if (size && image && zoom?.key !== image.key)
-      setZoom({ key: image.key, value: fitZoom(), fit: true });
-  });
+  const fitZoom = useCallback(
+    () => (size ? fitValue(stageRef.current, size.width, size.height) : 1),
+    [size],
+  );
   const fitted = Boolean(zoom?.fit && zoom.key === image?.key);
   // biome-ignore lint/correctness/useExhaustiveDependencies: refit only when fit mode or the image's size changes
   useEffect(() => {
@@ -205,10 +213,11 @@ function ViewerBody() {
     );
     observer.observe(stage);
     return () => { observer.disconnect(); };
-  }, [fitted, size]);
+  }, [fitted, fitZoom]);
   const scale = zoom?.key === image?.key ? zoom.value : null;
-  const setScale = (value: number, fit = false) =>
-    { image && setZoom({ key: image.key, value, fit }); };
+  const setScale = (value: number, fit = false) => {
+    if (image) setZoom({ key: image.key, value, fit });
+  };
   const zoomBy = (direction: 1 | -1) => {
     if (scale === null) return;
     const next =
@@ -237,7 +246,7 @@ function ViewerBody() {
     const { blob } = loaded;
     const name = typeof image.fileName === "string" ? image.fileName : image.fileName(blob.type);
     void downloadFile(blob, name, blob.type).catch(
-      (error) => {
+      (error: unknown) => {
         if (!isDownloadCancelled(error))
           toast.error(t("imageViewer.downloadFailed"));
       },
@@ -259,7 +268,9 @@ function ViewerBody() {
       <div
         ref={stageRef}
         className="absolute inset-x-[calc(6rem*var(--ui-space-scale,1))] top-[calc(5.5rem*var(--ui-space-scale,1))] bottom-[calc(6rem*var(--ui-space-scale,1))] flex overflow-auto"
-        onClick={(event) => event.target === event.currentTarget && close()}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) close();
+        }}
       >
         {loaded && "failed" in loaded ? (
           <p className="m-auto text-sm text-white/80">
@@ -270,14 +281,18 @@ function ViewerBody() {
             key={loaded.key}
             src={loaded.url}
             alt={image?.title ?? ""}
-            onLoad={(event) =>
-              { image &&
-              setNatural({
+            onLoad={(event) => {
+              if (!image) return;
+              const width = event.currentTarget.naturalWidth || 1;
+              const height = event.currentTarget.naturalHeight || 1;
+              setNatural({ key: image.key, width, height });
+              // Fit as soon as the size is known, instead of in a layout effect that set state.
+              setZoom({
                 key: image.key,
-                width: event.currentTarget.naturalWidth || 1,
-                height: event.currentTarget.naturalHeight || 1,
-              }); }
-            }
+                value: fitValue(stageRef.current, width, height),
+                fit: true,
+              });
+            }}
             className={cn(
               "m-auto max-w-none rounded-lg shadow-2xl",
               scale === null && "invisible",
@@ -372,7 +387,9 @@ export function ImageViewer() {
   return (
     <DialogPrimitive.Root
       open={open}
-      onOpenChange={(next) => !next && useImageViewerStore.getState().close()}
+      onOpenChange={(next) => {
+        if (!next) useImageViewerStore.getState().close();
+      }}
     >
       <DialogPrimitive.Portal>
         {/* No backdrop blur: it would redraw with the streaming chat. */}

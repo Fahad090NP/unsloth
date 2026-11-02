@@ -59,7 +59,6 @@ function statusLabel(status: UpdateStatus, t: Translate): string {
     case "available":
     case "checking":
     case "idle":
-    default:
       return t("desktopUpdate.updating");
   }
 }
@@ -77,7 +76,6 @@ function statusSubtext(status: UpdateStatus, progress: number, t: Translate): st
     case "available":
     case "checking":
     case "idle":
-    default:
       return "";
   }
 }

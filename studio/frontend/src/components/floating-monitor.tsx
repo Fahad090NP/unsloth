@@ -6,7 +6,7 @@ import { useFloatingPanelLayout } from "@/hooks/use-floating-panel-layout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useChatRuntimeStore } from "@/features/chat";
-import { FIND_PORTAL_ATTRIBUTE } from "@/features/find-in-page/lib/find-attributes";
+import { FIND_PORTAL_ATTRIBUTE } from "@/features/find-in-page";
 
 import { useMonitorOverlayStore } from "@/features/settings";
 import { useCornerCardFrameStore } from "@/features/settings/stores/monitor-frame-store";

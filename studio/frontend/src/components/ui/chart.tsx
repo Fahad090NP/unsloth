@@ -189,7 +189,12 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-}: Partial<RechartsPrimitive.TooltipContentProps<any, any>> &
+}: Partial<
+  RechartsPrimitive.TooltipContentProps<
+    number | string | readonly (number | string)[],
+    string
+  >
+> &
   React.ComponentProps<"div"> & {
     hideLabel?: boolean;
     hideIndicator?: boolean;
@@ -205,11 +210,14 @@ function ChartTooltipContent({
     }
 
     const [item] = payload;
-    const key = `${labelKey ?? item?.dataKey ?? item?.name ?? "value"}`;
+    const key = String(labelKey ?? item.dataKey ?? item.name ?? "value");
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
+    // The config is sparse at runtime, so index it as possibly missing.
+    const labelConfig: ChartConfig[string] | undefined =
+      typeof label === "string" ? config[label] : undefined;
     const value =
       !labelKey && typeof label === "string"
-        ? config[label]?.label ?? label
+        ? labelConfig?.label ?? label
         : itemConfig?.label;
 
     if (labelFormatter) {
@@ -254,28 +262,32 @@ function ChartTooltipContent({
         {payload
           .filter((item) => item.type !== "none")
           .map((item, index) => {
-            const key = `${nameKey ?? item.name ?? item.dataKey ?? "value"}`;
+            const key = String(nameKey ?? item.name ?? item.dataKey ?? "value");
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
-            const indicatorColor = color ?? item.payload.fill ?? item.color;
+            const itemPayload = item.payload as
+              | { fill?: string }
+              | undefined;
+            const indicatorColor = color ?? itemPayload?.fill ?? item.color;
             let customContent: React.ReactNode = null;
             let formattedValue: React.ReactNode =
-              item.value !== null && typeof item.value !== "object"
-                ? String(item.value)
-                : item.value;
+              item.value === undefined || typeof item.value === "object"
+                ? item.value
+                : String(item.value);
             let formattedLabel: React.ReactNode = itemConfig?.label ?? item.name;
 
-            if (formatter && item?.value !== undefined && item.name) {
+            if (formatter && item.value !== undefined && item.name) {
               const result = formatter(
                 item.value,
                 item.name,
                 item,
                 index,
-                item.payload,
+                payload,
               );
 
               if (Array.isArray(result)) {
-                formattedValue = result[0];
-                formattedLabel = result[1];
+                const tuple = result as [React.ReactNode, React.ReactNode];
+                formattedValue = tuple[0];
+                formattedLabel = tuple[1];
               } else {
                 customContent = result;
               }
@@ -283,7 +295,7 @@ function ChartTooltipContent({
 
             return (
               <div
-                key={item.dataKey}
+                key={String(item.dataKey ?? index)}
                 className={cn(
                   "[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:size-2.5",
                   indicator === "dot" && "items-center",
@@ -371,7 +383,7 @@ function ChartLegendContent({
       {payload
         .filter((item) => item.type !== "none")
         .map((item) => {
-          const key = `${nameKey ?? item.dataKey ?? "value"}`;
+          const key = String(nameKey ?? item.dataKey ?? "value");
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
           return (

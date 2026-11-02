@@ -91,10 +91,11 @@ function matchLocale(tag: string): Locale | null {
 }
 
 function detectLocale(): Locale {
+  if (typeof globalThis.navigator === "undefined") return DEFAULT_LOCALE;
   const navigatorRef = globalThis.navigator;
-  const tags = navigatorRef?.languages?.length
+  const tags = navigatorRef.languages.length
     ? navigatorRef.languages
-    : navigatorRef?.language
+    : navigatorRef.language
       ? [navigatorRef.language]
       : [];
   for (const tag of tags) {
@@ -119,7 +120,7 @@ function resolvePreference(preference: LocalePreference): Locale {
 
 function readStoredPreference(): LocalePreference {
   try {
-    const stored = globalThis.localStorage?.getItem(LOCALE_STORAGE_KEY) ?? null;
+    const stored = globalThis.localStorage.getItem(LOCALE_STORAGE_KEY) ?? null;
     return normalizePreference(stored);
   } catch {
     return DEFAULT_LOCALE_PREFERENCE;
@@ -128,7 +129,7 @@ function readStoredPreference(): LocalePreference {
 
 function writeStoredPreference(preference: LocalePreference): void {
   try {
-    globalThis.localStorage?.setItem(LOCALE_STORAGE_KEY, preference);
+    globalThis.localStorage.setItem(LOCALE_STORAGE_KEY, preference);
   } catch {
     // A storage failure only costs persistence.
   }
@@ -285,10 +286,16 @@ function applyPreference(
       },
       Math.max(0, timeoutMs),
     );
-    void settled.then((outcome) => {
-      globalThis.clearTimeout(timeout);
-      resolve(outcome);
-    });
+    settled
+      .then((outcome) => {
+        globalThis.clearTimeout(timeout);
+        resolve(outcome);
+      })
+      .catch((error: unknown) => {
+        globalThis.clearTimeout(timeout);
+        console.error("Failed to settle the locale preference", error);
+        resolve("failed");
+      });
   });
   return bounded.finally(() => signal?.removeEventListener("abort", cancel));
 }
@@ -311,20 +318,22 @@ function handleStorageEvent(event: StorageEvent): void {
       ? DEFAULT_LOCALE_PREFERENCE
       : normalizePreference(event.newValue);
   // Adopted on failure, like hydration: storage already holds this choice. Nothing is written back.
-  void applyPreference(
-    nextPreference,
-    false,
-    loadLocaleMessages,
-    undefined,
-    true,
-  );
+  Promise.resolve(
+    applyPreference(nextPreference, false, loadLocaleMessages, undefined, true),
+  ).catch((error: unknown) => {
+    console.error("Failed to apply the stored locale preference", error);
+  });
 }
 
 function handleLanguageChange(): void {
   // Browser changes may refresh a pending auto request but not supersede an explicit choice.
   const effectivePreference = pendingPreference ?? currentPreference;
   if (effectivePreference !== AUTO_LOCALE) return;
-  void applyPreference(effectivePreference, pendingPreferenceShouldPersist);
+  Promise.resolve(
+    applyPreference(effectivePreference, pendingPreferenceShouldPersist),
+  ).catch((error: unknown) => {
+    console.error("Failed to apply the locale preference after a language change", error);
+  });
 }
 
 function startListeners(): void {

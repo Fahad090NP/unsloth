@@ -94,8 +94,7 @@ const appendDollarPairs = (state: DollarPairs, str: string): void => {
       run = 0;
     }
   }
-  state.closed = closed;
-  state.run = run;
+  Object.assign(state, { closed, run });
 };
 
 const hasOddDollarPairs = (state: DollarPairs): boolean =>

@@ -131,6 +131,27 @@ export function notificationDue(
   );
 }
 
+// The showing a gate recorded, kept next to the store it comes from rather than mirrored in state.
+const heldShownAt = new Map<NotificationChannel, number>();
+
+function subscribeHeld(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function holdChannel(channel: NotificationChannel, at: number): void {
+  heldShownAt.set(channel, at);
+  for (const listener of listeners) listener();
+}
+
+function releaseChannel(channel: NotificationChannel): void {
+  if (heldShownAt.delete(channel)) {
+    for (const listener of listeners) listener();
+  }
+}
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   // Sync changes made in another tab.
@@ -158,19 +179,20 @@ export function useNotificationDue(channel: NotificationChannel): boolean {
   const lastShown = useSyncExternalStore(subscribe, () =>
     getLastShown(channel),
   );
-  const [tick, setTick] = useState(0);
-  const due = notificationDue(frequency, lastShown, Date.now());
-  // `tick` re-arms the timer after a capped wake-up, which a monthly wait needs.
+  // The clock is sampled in a lazy initializer or timer callback, never during render.
+  const [now, setNow] = useState(() => Date.now());
+  const due = notificationDue(frequency, lastShown, now);
+  // A new sample re-arms the timer after a capped wake-up, which a monthly wait needs.
   useEffect(() => {
     const period = PERIOD_MS[frequency];
-    if (tick < 0 || due || period == null || lastShown == null) return;
+    if (due || period == null || lastShown == null) return;
     const wait = Math.min(
       Math.max(lastShown + period - Date.now(), 0) + 1000,
       MAX_TIMEOUT_MS,
     );
-    const timer = setTimeout(() => { setTick((tick) => tick + 1); }, wait);
+    const timer = setTimeout(() => { setNow(Date.now()); }, wait);
     return () => { clearTimeout(timer); };
-  }, [due, frequency, lastShown, tick]);
+  }, [due, frequency, lastShown]);
   return due;
 }
 
@@ -200,17 +222,24 @@ export function useNotificationGate(
   const due = useNotificationDue(channel);
   const frequency = useNotificationFrequency(channel);
   const visible = useDocumentVisible();
-  const [heldFor, setHeldFor] = useState<NotificationChannel | null>(null);
-  const held = heldFor === channel;
+  const lastShown = useSyncExternalStore(subscribe, () =>
+    getLastShown(channel),
+  );
+  // The hold is the showing this gate recorded, so it derives from the store instead of mirroring it.
+  const recordedAt = useSyncExternalStore(subscribeHeld, () =>
+    heldShownAt.get(channel),
+  );
+  const held = lastShown !== null && recordedAt === lastShown;
   const open = wanted && frequency !== "off" && (held || due);
   useEffect(() => {
     if (open && !held && visible) {
-      markNotificationShown(channel);
-      setHeldFor(channel);
-    } else if ((!wanted || frequency === "off") && heldFor !== null) {
+      const at = Date.now();
+      markNotificationShown(channel, at);
+      holdChannel(channel, at);
+    } else if ((!wanted || frequency === "off") && held) {
       // Off releases the hold, so a later quiet period applies from the last showing.
-      setHeldFor(null);
+      releaseChannel(channel);
     }
-  }, [open, held, visible, wanted, heldFor, channel, frequency]);
+  }, [open, held, visible, wanted, channel, frequency]);
   return open;
 }

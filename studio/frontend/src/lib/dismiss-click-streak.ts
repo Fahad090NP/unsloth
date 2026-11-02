@@ -36,9 +36,7 @@ type CaretDoc = Document & {
 
 function caretRangeAt(x: number, y: number): Range | null {
   const doc = document as CaretDoc;
-  if (typeof doc.caretRangeFromPoint === "function") {
-    return doc.caretRangeFromPoint(x, y);
-  }
+  if (typeof doc.caretPositionFromPoint !== "function") return null;
   const position = doc.caretPositionFromPoint(x, y);
   if (!position) return null;
   const range = doc.createRange();
