@@ -397,7 +397,7 @@ export function createCodePlugin(
         fence.lastTokenizedAt = monotonicNow();
         const tail = code.slice(fence.committedLength).split("\n");
         return {
-          ...(fence.meta as ResultMeta),
+          ...(fence.meta!),
           tokens: [...fence.lines, ...tail.map(plainLine)],
         };
       }
@@ -433,7 +433,7 @@ export function createCodePlugin(
   };
 
   const approximateResult = (fence: Fence, code: string): HighlightResult => {
-    const exact = fence.result as HighlightResult;
+    const exact = fence.result!;
     // A live line may have grown mid-token, so render the whole tail plain.
     const keptLines = exact.tokens.slice(0, fence.lines.length);
     const tail = code.slice(fence.committedLength).split("\n");

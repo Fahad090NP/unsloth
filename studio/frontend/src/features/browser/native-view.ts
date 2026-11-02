@@ -146,7 +146,7 @@ function listenOnce(): void {
   if (listening) return;
   listening = true;
   void import("@tauri-apps/api/event").then(({ listen }) =>
-    listen<NativeEvent>(EVENT, (event) => onNativeEvent(event.payload)),
+    listen<NativeEvent>(EVENT, (event) => { onNativeEvent(event.payload); }),
   );
 }
 
@@ -301,7 +301,7 @@ function onNativeEvent(event: NativeEvent): void {
     case "external":
       prompt(t("browser.native.externalPrompt", { host: hostOf(shownUrl(tab)), url: event.url }), {
         label: t("browser.native.open"),
-        onClick: () => openExternalLink(event.url),
+        onClick: () => { openExternalLink(event.url); },
       });
       break;
   }
@@ -320,7 +320,7 @@ function openPopup(tab: BrowserTab, url: string): void {
 function promptPopup(tab: BrowserTab, url: string): void {
   prompt(t("browser.native.externalPrompt", { host: hostOf(shownUrl(tab)), url }), {
     label: t("browser.native.open"),
-    onClick: () => openPopup(tab, url),
+    onClick: () => { openPopup(tab, url); },
   });
 }
 
@@ -416,7 +416,7 @@ export function nativeViewBounds(tabId: string): Bounds | null {
 
 export async function nativeFind(tabId: string, query: string, backwards: boolean): Promise<boolean> {
   if (!views.has(tabId)) return false;
-  return call<boolean>("browser_view_find", { tabId, query, backwards }).catch(() => false);
+  return await call<boolean>("browser_view_find", { tabId, query, backwards }).catch(() => false);
 }
 
 // Snapshot mode: any of these over the page covers it.
@@ -439,7 +439,7 @@ let layeredAsked: Promise<boolean> | null = null;
 function askLayered(): Promise<boolean> {
   layeredAsked ??= call<boolean>("browser_view_layered")
     .catch(() => false)
-    .then((answer) => (layered = answer === true));
+    .then((answer) => (layered = answer));
   return layeredAsked;
 }
 
@@ -586,7 +586,7 @@ function placeHole(): void {
   const left = holeClip ? Math.max(holeBounds.x, holeClip.left) : holeBounds.x;
   const right = holeClip ? Math.min(holeBounds.x + holeBounds.width, holeClip.right) : holeBounds.x + holeBounds.width;
   const values = [left, holeBounds.y, Math.max(0, right - left), holeBounds.height].map((value) => value / zoom);
-  for (const node of holed) HOLE_VARS.forEach((name, index) => node.style.setProperty(name, `${values[index]}px`));
+  for (const node of holed) HOLE_VARS.forEach((name, index) => { node.style.setProperty(name, `${values[index]}px`); });
 }
 
 /** Re-reads background colors when the chain, its classes or the theme change; true if it did. */
@@ -767,7 +767,7 @@ export function whenNativeViewShown(tabId: string, timeoutMs = 1500): Promise<bo
       resolve(shown);
     };
     const wake = () => shownView === tabId && finish(true);
-    const timer = setTimeout(() => finish(false), timeoutMs);
+    const timer = setTimeout(() => { finish(false); }, timeoutMs);
     shownWaiters.add(wake);
   });
 }
@@ -889,7 +889,7 @@ async function paintSnapshot(tabId: string, fresh = false): Promise<boolean> {
   const current = () => element.isConnected && started === generation && token === paintToken;
   const png = await Promise.race([
     call<ArrayBuffer>("browser_capture", { tabId }).catch(() => null),
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), SNAPSHOT_WAIT_MS)),
+    new Promise<null>((resolve) => setTimeout(() => { resolve(null); }, SNAPSHOT_WAIT_MS)),
   ]);
   if (!png?.byteLength || !current()) return shows();
   const url = URL.createObjectURL(new Blob([png], { type: "image/png" }));
@@ -1096,8 +1096,8 @@ export function startNativeViews(): () => void {
   let resized: HTMLElement | null = null;
   let resizedArea: HTMLElement | null = null;
   // The panel resizing (a split drag) only re-cuts the hole: no full sync, no call to the view.
-  const areaObserver = new ResizeObserver(() => clipHole(resized));
-  const resizeObserver = new ResizeObserver(() => schedule());
+  const areaObserver = new ResizeObserver(() => { clipHole(resized); });
+  const resizeObserver = new ResizeObserver(() => { schedule(); });
 
   const sync = () => {
     frame = 0;

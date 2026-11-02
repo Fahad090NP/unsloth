@@ -656,9 +656,9 @@ function flushSettingsOnPageHidden(terminal: boolean): void {
 }
 
 if (typeof window !== "undefined") {
-  window.addEventListener("beforeunload", () => flushSettingsOnPageHidden(true));
+  window.addEventListener("beforeunload", () => { flushSettingsOnPageHidden(true); });
   // beforeunload never fires on discarded mobile tabs, so also use pagehide/visibilitychange.
-  window.addEventListener("pagehide", () => flushSettingsOnPageHidden(true));
+  window.addEventListener("pagehide", () => { flushSettingsOnPageHidden(true); });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") flushSettingsOnPageHidden(false);
   });
@@ -1352,7 +1352,7 @@ export function replayUnconfirmedThreadSettings(): void {
   for (const [threadId, body] of Object.entries(pending)) {
     // Bounded: every settings write waits on these.
     const timeout = new AbortController();
-    const timer = setTimeout(() => timeout.abort(), THREAD_SETTINGS_REPLAY_TIMEOUT_MS);
+    const timer = setTimeout(() => { timeout.abort(); }, THREAD_SETTINGS_REPLAY_TIMEOUT_MS);
     const request = authFetch(`/api/chat/threads/${encodeURIComponent(threadId)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -1432,7 +1432,7 @@ function sendThreadScopedSettingsBeacon(
     body: JSON.stringify(body),
     keepalive: true,
   })
-    .finally(() => forgetThreadReads([threadId]))
+    .finally(() => { forgetThreadReads([threadId]); })
     .catch(() => undefined);
 }
 
@@ -1681,7 +1681,7 @@ export function awaitThreadScopedPairing(
   return Promise.race([
     gate.promise.then(() => true),
     new Promise<boolean>((resolve) =>
-      setTimeout(() => resolve(false), THREAD_PAIRING_WAIT_MS),
+      setTimeout(() => { resolve(false); }, THREAD_PAIRING_WAIT_MS),
     ),
   ]);
 }
@@ -1821,7 +1821,7 @@ async function mergeThreadScopedSettingsIntoRow(
       }
     });
   threadSettingsWriteChains.set(threadId, next);
-  return next;
+  await next;
 }
 
 const hydratedDefaultsByHeldField = new Map<string, unknown>();
@@ -3769,7 +3769,7 @@ const QWEN_MIGRATION_DECISION_FIELDS = [
   "reasoningEnabled",
   "rememberParamsPerModel",
   "inferenceParamsByModel",
-] as const satisfies ReadonlyArray<keyof PersistedChatSettings>;
+] as const satisfies readonly (keyof PersistedChatSettings)[];
 
 // Raw, not sanitized: the server tests `key in current` against what is stored.
 /** A stored field that sanitizes away cannot be fenced by CAS, so decline to migrate. */
@@ -3788,7 +3788,7 @@ function qwenMigrationHasUnfenceableField(
 
 function qwenMigrationExpectedAbsent(
   rawSettings: unknown,
-): Array<keyof PersistedChatSettings> {
+): (keyof PersistedChatSettings)[] {
   const raw =
     typeof rawSettings === "object" && rawSettings !== null
       ? (rawSettings as Record<string, unknown>)
@@ -3801,14 +3801,14 @@ function qwenMigrationExpectedAbsent(
 function qwenMigrationExpectedAbsentPaths(
   rawSettings: unknown,
   patch: PersistedChatSettings,
-): Array<[keyof PersistedChatSettings, string]> {
+): [keyof PersistedChatSettings, string][] {
   const nested = (field: keyof PersistedChatSettings): Record<string, unknown> =>
     typeof rawSettings === "object" && rawSettings !== null
       ? ((rawSettings as Record<string, unknown>)[field] as
           | Record<string, unknown>
           | undefined) ?? {}
       : {};
-  const paths: Array<[keyof PersistedChatSettings, string]> = [];
+  const paths: [keyof PersistedChatSettings, string][] = [];
   if (patch.inferenceParams !== undefined) {
     const global = nested("inferenceParams");
     for (const field of ["topK", "repetitionPenalty"] as const) {
@@ -4366,7 +4366,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       return;
     }
     if (settingsHydrationPromise) {
-      return settingsHydrationPromise;
+      await settingsHydrationPromise; return;
     }
     settingsHydrationPromise = (async () => {
       const hydrationVersions = getSettingsHydrationVersions();
@@ -4520,7 +4520,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         settingsHydrationPromise = null;
       }
     })();
-    return settingsHydrationPromise;
+    await settingsHydrationPromise;
   },
   beginModelLoading: (phase) => {
     const lease = chatModelLifecycleGate.tryAcquire(phase);
@@ -4534,14 +4534,12 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       set({ modelLoading: false });
     }
   },
-  setLoadingModelPick: (pick) =>
-    set({
+  setLoadingModelPick: (pick) => { set({
       loadingModelPick: pick
         ? { ...pick, selectionSuperseded: false }
         : null,
-    }),
-  clearLoadingModelPick: (expected) =>
-    set((state) => {
+    }); },
+  clearLoadingModelPick: (expected) => { set((state) => {
       const current = state.loadingModelPick;
       if (
         !current ||
@@ -4552,9 +4550,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         return state;
       }
       return { loadingModelPick: null };
-    }),
-  setModelRequiresTrustRemoteCode: (modelRequiresTrustRemoteCode) =>
-    set({ modelRequiresTrustRemoteCode }),
+    }); },
+  setModelRequiresTrustRemoteCode: (modelRequiresTrustRemoteCode) => { set({ modelRequiresTrustRemoteCode }); },
   setParams: (params, options) => {
     set((state) => {
       // The local load path can move params.checkpoint via setParams() before setCheckpoint.
@@ -4655,18 +4652,16 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       );
     }
   },
-  setCustomPresets: (customPresets) =>
-    set(() => {
+  setCustomPresets: (customPresets) => { set(() => {
       customPresetsMutationVersion += 1;
       saveSettingsPatch({ customPresets });
       return { customPresets };
-    }),
-  setActivePreset: (activePreset) =>
-    set(() => {
+    }); },
+  setActivePreset: (activePreset) => { set(() => {
       activePresetMutationVersion += 1;
       saveSettingsPatch({ activePreset });
       return { activePreset };
-    }),
+    }); },
   setActivePresetSource: (activePresetSource) => {
     let returnedToBuiltInDefault = false;
     set((state) => {
@@ -4684,10 +4679,9 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       );
     }
   },
-  setModels: (models) => set({ models }),
-  setLoras: (loras) => set({ loras, loraInventorySettled: true }),
-  setThreadRunning: (threadId, running, options) =>
-    set((state) => {
+  setModels: (models) => { set({ models }); },
+  setLoras: (loras) => { set({ loras, loraInventorySettled: true }); },
+  setThreadRunning: (threadId, running, options) => { set((state) => {
       const next = { ...state.runningByThreadId };
       const nextLocal = { ...state.localRunByThreadId };
       const nextOwner = { ...state.runOwnerByThreadId };
@@ -4729,9 +4723,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         localRunByThreadId: nextLocal,
         runOwnerByThreadId: nextOwner,
       };
-    }),
-  adoptDefaultThreadRun: (threadId) =>
-    set((state) => {
+    }); },
+  adoptDefaultThreadRun: (threadId) => { set((state) => {
       const key = "__default";
       if (!threadId || threadId === key) return state;
       // Two first turns can share "__default"; moving wholesale could hand over a sibling's handle.
@@ -4768,36 +4761,32 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         if (confirmations) moved.toolConfirmations = confirmations;
       }
       return Object.keys(moved).length > 0 ? moved : state;
-    }),
+    }); },
   runKeyForOwner: (fallbackKey, owner) => {
     for (const [key, entries] of Object.entries(get().runOwnerByThreadId)) {
       if (entries.some((e) => e.owner === owner)) return key;
     }
     return fallbackKey;
   },
-  registerThreadCancel: (threadId, cancel) =>
-    set((state) => {
+  registerThreadCancel: (threadId, cancel) => { set((state) => {
       const next = { ...state.cancelByThreadId };
       next[threadId] = cancel;
       return { cancelByThreadId: next };
-    }),
-  clearThreadCancel: (threadId, cancel) =>
-    set((state) => {
+    }); },
+  clearThreadCancel: (threadId, cancel) => { set((state) => {
       if (!(threadId in state.cancelByThreadId)) return state;
       if (cancel && state.cancelByThreadId[threadId] !== cancel) return state;
       const next = { ...state.cancelByThreadId };
       delete next[threadId];
       return { cancelByThreadId: next };
-    }),
-  registerThreadServerCancel: (threadId, cancel) =>
-    set((state) => {
+    }); },
+  registerThreadServerCancel: (threadId, cancel) => { set((state) => {
       const next = { ...state.serverCancelByThreadId };
       next[threadId] = [...(state.serverCancelByThreadId[threadId] ?? []), cancel];
       return { serverCancelByThreadId: next };
-    }),
+    }); },
   // Unresolved ids share "__default", so remove only this run's cancel.
-  clearThreadServerCancel: (threadId, cancel) =>
-    set((state) => {
+  clearThreadServerCancel: (threadId, cancel) => { set((state) => {
       const current = state.serverCancelByThreadId[threadId];
       if (current === undefined) return state;
       const remaining =
@@ -4810,15 +4799,14 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         delete next[threadId];
       }
       return { serverCancelByThreadId: next };
-    }),
-  setAutoTitle: (autoTitle) =>
-    set((state) => {
+    }); },
+  setAutoTitle: (autoTitle) => { set((state) => {
       setScalarSettingVersion("autoTitle", autoTitle, state.autoTitle);
       return { autoTitle };
-    }),
-  setHfToken: (hfToken) => useHfTokenStore.getState().setToken(hfToken),
-  setModelsError: (modelsError) => set({ modelsError }),
-  setLastModelLoadError: (lastModelLoadError) => set({ lastModelLoadError }),
+    }); },
+  setHfToken: (hfToken) => { useHfTokenStore.getState().setToken(hfToken); },
+  setModelsError: (modelsError) => { set({ modelsError }); },
+  setLastModelLoadError: (lastModelLoadError) => { set({ lastModelLoadError }); },
   setCheckpoint: (modelId, ggufVariant, options) => {
     let scheduleQwenMigration = false;
     set((state) => {
@@ -4946,8 +4934,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     }
   },
   // Re-apply the incoming thread's usage: background runs never wrote the visible value.
-  setActiveThreadId: (activeThreadId) =>
-    set((state) => {
+  setActiveThreadId: (activeThreadId) => { set((state) => {
       const own = activeThreadId
         ? (state.contextUsageByThreadId[activeThreadId] ?? null)
         : null;
@@ -4957,11 +4944,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         chatFullAccessPendingRunId: null,
         activeThreadEpoch: state.activeThreadEpoch + 1,
         contextUsage:
-          own && own.modelId && own.modelId !== state.params.checkpoint ? null : own,
+          own?.modelId && own.modelId !== state.params.checkpoint ? null : own,
       };
-    }),
-  applyThreadScopedSettings: (threadId, settings) =>
-    set((state) => {
+    }); },
+  applyThreadScopedSettings: (threadId, settings) => { set((state) => {
       settings = normalizeSavedThreadScopedSettings(settings);
       flushThreadScopedSettingsWrite();
       // Edits made while this chat's snapshot was in flight are kept and stored on the chat.
@@ -5114,7 +5100,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         (applied.reasoningEnabled ?? state.reasoningEnabled) === true
       ) {
         applied.reasoningEnabled = false;
-        if (state.reasoningEnabled !== false) target.reasoningEnabled = false;
+        if (state.reasoningEnabled) target.reasoningEnabled = false;
       }
       if (threadId !== null && (stored === null || heldFields.size > 0)) {
         scheduleThreadScopedSettingsWrite(
@@ -5137,8 +5123,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         threadScopedSettingsPending: pending,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setActiveProjectId: (activeProjectId) => set({ activeProjectId }),
+    }); },
+  setActiveProjectId: (activeProjectId) => { set({ activeProjectId }); },
   setIncognito: (incognito) => {
     if (incognito) saveBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false);
     set(
@@ -5147,14 +5133,14 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         : { incognito },
     );
   },
-  setSettingsPanelOpen: (settingsPanelOpen) => set({ settingsPanelOpen }),
-  setEditingMessageId: (id) => set({ editingMessageId: id }),
+  setSettingsPanelOpen: (settingsPanelOpen) => { set({ settingsPanelOpen }); },
+  setEditingMessageId: (id) => { set({ editingMessageId: id }); },
   clearCheckpoint: () => {
     saveLastExternalCheckpoint(null);
     const restoredEffort = pinHoldsLiveEffort()
       ? takeEffortDisplacedByPin()
       : null;
-    return set((state) => ({
+    set((state) => ({
       queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       ...(() => {
         const outgoing = rememberOutgoingModel(state, state.params);
@@ -5280,8 +5266,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       pendingImageEditReference: null,
     }));
   },
-  setReasoningEnabled: (reasoningEnabled, options) =>
-    set((state) => {
+  setReasoningEnabled: (reasoningEnabled, options) => { set((state) => {
       if (options?.persist !== false) {
         saveBool(CHAT_REASONING_ENABLED_KEY, reasoningEnabled);
       } else {
@@ -5291,16 +5276,13 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         reasoningEnabled,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setLastOpenRouterChosenModel: (lastOpenRouterChosenModel) =>
-    set({ lastOpenRouterChosenModel }),
-  setReasoningStyle: (reasoningStyle) =>
-    set((state) => ({
+    }); },
+  setLastOpenRouterChosenModel: (lastOpenRouterChosenModel) => { set({ lastOpenRouterChosenModel }); },
+  setReasoningStyle: (reasoningStyle) => { set((state) => ({
       reasoningStyle,
       queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
-    })),
-  setRememberedParamsForModel: (modelId, patch) =>
-    set((state) => {
+    })); },
+  setRememberedParamsForModel: (modelId, patch) => { set((state) => {
       if (!modelId || !hasKeys(patch)) return state;
       const merged = { ...state.paramsByModel[modelId], ...patch };
       const next = { ...state.paramsByModel, [modelId]: merged };
@@ -5335,7 +5317,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
             }
           : {}),
       };
-    }),
+    }); },
   setReasoningEffort: (reasoningEffort) => {
     const checkpoint = useChatRuntimeStore.getState().params.checkpoint;
     const { effortByModel, setModelReasoningEffort } =
@@ -5357,8 +5339,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       };
     });
   },
-  setPreserveThinking: (preserveThinking) =>
-    set((state) => {
+  setPreserveThinking: (preserveThinking) => { set((state) => {
       setScalarSettingVersion(
         "preserveThinking",
         preserveThinking,
@@ -5369,9 +5350,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         preserveThinking,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setToolsEnabled: (toolsEnabled, options) =>
-    set((state) => {
+    }); },
+  setToolsEnabled: (toolsEnabled, options) => { set((state) => {
       if (options?.persist !== false) {
         saveBool(CHAT_TOOLS_ENABLED_KEY, toolsEnabled);
       } else {
@@ -5384,16 +5364,14 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           : { toolsEnabled }),
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setKeepModelsLoaded: (keepModelsLoaded) => set({ keepModelsLoaded }),
-  setLocalMediaModelsReady: ({ image, video }) =>
-    set((state) =>
+    }); },
+  setKeepModelsLoaded: (keepModelsLoaded) => { set({ keepModelsLoaded }); },
+  setLocalMediaModelsReady: ({ image, video }) => { set((state) =>
       state.localImageModelReady === image && state.localVideoModelReady === video
         ? state
         : { localImageModelReady: image, localVideoModelReady: video },
-    ),
-  setCodeToolsEnabled: (codeToolsEnabled) =>
-    set((state) => {
+    ); },
+  setCodeToolsEnabled: (codeToolsEnabled) => { set((state) => {
       saveBool(CHAT_CODE_TOOLS_ENABLED_KEY, codeToolsEnabled);
       if (codeToolsEnabled) saveBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false);
       return {
@@ -5404,9 +5382,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           !codeToolsEnabled && state.permissionMode === "full",
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setImageToolsEnabled: (imageToolsEnabled) =>
-    set((state) => {
+    }); },
+  setImageToolsEnabled: (imageToolsEnabled) => { set((state) => {
       saveBool(CHAT_IMAGE_TOOLS_ENABLED_KEY, imageToolsEnabled);
       if (imageToolsEnabled) saveBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false);
       return {
@@ -5415,9 +5392,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           : { imageToolsEnabled }),
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setDeepResearchEnabled: (deepResearchEnabled) =>
-    set((state) => {
+    }); },
+  setDeepResearchEnabled: (deepResearchEnabled) => { set((state) => {
       if (
         deepResearchEnabled &&
         isPillClampedOff(state, "deepResearchEnabled")
@@ -5457,17 +5433,15 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
             deepResearchEnabled,
             queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
           };
-    }),
-  setResearchWebsitePolicy: (researchWebsitePolicy) =>
-    set((state) => {
+    }); },
+  setResearchWebsitePolicy: (researchWebsitePolicy) => { set((state) => {
       saveResearchWebsitePolicy(researchWebsitePolicy);
       return {
         researchWebsitePolicy,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setResearchModelTimeoutSeconds: (researchModelTimeoutSeconds) =>
-    set((state) => {
+    }); },
+  setResearchModelTimeoutSeconds: (researchModelTimeoutSeconds) => { set((state) => {
       const seconds = isSupportedResearchModelTimeout(
         researchModelTimeoutSeconds,
       )
@@ -5478,9 +5452,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         researchModelTimeoutSeconds: seconds,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setResearchMcpSources: (researchMcpSources) =>
-    set((state) => {
+    }); },
+  setResearchMcpSources: (researchMcpSources) => { set((state) => {
       const sources = normalizeResearchMcpSources(researchMcpSources);
       persistSetting(
         CHAT_DEEP_RESEARCH_MCP_SOURCES_KEY,
@@ -5490,27 +5463,23 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         researchMcpSources: sources,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setCollapseHtmlArtifacts: (collapseHtmlArtifacts) =>
-    set(() => {
+    }); },
+  setCollapseHtmlArtifacts: (collapseHtmlArtifacts) => { set(() => {
       saveBool(CHAT_COLLAPSE_HTML_ARTIFACTS_KEY, collapseHtmlArtifacts);
       return { collapseHtmlArtifacts };
-    }),
-  setAllowArtifactNetworkAccess: (allowArtifactNetworkAccess) =>
-    set(() => {
+    }); },
+  setAllowArtifactNetworkAccess: (allowArtifactNetworkAccess) => { set(() => {
       saveBool(
         CHAT_ALLOW_ARTIFACT_NETWORK_ACCESS_KEY,
         allowArtifactNetworkAccess,
       );
       return { allowArtifactNetworkAccess };
-    }),
-  setSearchImages: (searchImages) =>
-    set(() => {
+    }); },
+  setSearchImages: (searchImages) => { set(() => {
       saveBool(CHAT_SEARCH_IMAGES_KEY, searchImages);
       return { searchImages };
-    }),
-  setMcpEnabledForChat: (mcpEnabledForChat) =>
-    set((state) => {
+    }); },
+  setMcpEnabledForChat: (mcpEnabledForChat) => { set((state) => {
       saveBool(CHAT_MCP_ENABLED_KEY, mcpEnabledForChat);
       if (mcpEnabledForChat) saveBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false);
       return {
@@ -5519,9 +5488,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           : { mcpEnabledForChat }),
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setConfirmToolCalls: (confirmToolCalls) =>
-    set((state) => {
+    }); },
+  setConfirmToolCalls: (confirmToolCalls) => { set((state) => {
       saveBool(CHAT_CONFIRM_TOOL_CALLS_KEY, confirmToolCalls);
       if (state.permissionMode === "full") {
         return {
@@ -5538,14 +5506,12 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         chatPermissionChoiceVersion: state.chatPermissionChoiceVersion + 1,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setSandboxLevel: (sandboxLevel) =>
-    set((state) => {
+    }); },
+  setSandboxLevel: (sandboxLevel) => { set((state) => {
       saveString(CHAT_SANDBOX_LEVEL_KEY, sandboxLevel);
       return { sandboxLevel, queuedSettingsEpoch: state.queuedSettingsEpoch + 1 };
-    }),
-  setPermissionMode: (permissionMode) =>
-    set((state) => {
+    }); },
+  setPermissionMode: (permissionMode) => { set((state) => {
       savePermissionMode(permissionMode);
       if (permissionMode === "full") {
         // Full access sends confirm_tool_calls=false; keep the store flag in sync.
@@ -5575,10 +5541,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         chatPermissionChoiceVersion: state.chatPermissionChoiceVersion + 1,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setBypassPermissions: (bypassPermissions) =>
-    // Not persisted: a reload must not keep the bypass unaccepted.
-    set((state) => {
+    }); },
+  setBypassPermissions: (bypassPermissions) => { set((state) => {
       if (bypassPermissions) {
         saveBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false);
         return {
@@ -5605,9 +5569,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         chatPermissionChoiceVersion: state.chatPermissionChoiceVersion + 1,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  grantChatFullAccess: (grant) =>
-    set((state) => {
+    }); },
+  grantChatFullAccess: (grant) => { set((state) => {
       if (!grant.runId || !grant.sessionId) return state;
       grant = {
         ...grant,
@@ -5622,9 +5585,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         ...chatFullAccessPermissionPatch(state, grants, state.activeThreadId),
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  adoptChatFullAccessRun: (runId, threadId) =>
-    set((state) => {
+    }); },
+  adoptChatFullAccessRun: (runId, threadId) => { set((state) => {
       if (!runId || !threadId || threadId === "__default") return state;
       const grant = state.chatFullAccessGrants[runId];
       const recorded = state.chatFullAccessThreadByRunId[runId];
@@ -5643,9 +5605,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         ...chatFullAccessPermissionPatch(state, grants, state.activeThreadId),
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  clearUnadoptedChatFullAccessRun: (runId) =>
-    set((state) => {
+    }); },
+  clearUnadoptedChatFullAccessRun: (runId) => { set((state) => {
       // The run's thread mapping stays: a first-turn upgrade acknowledged after the run ended binds through it.
       const grant = state.chatFullAccessGrants[runId];
       if (!grant || grant.threadId) return state;
@@ -5656,9 +5617,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         chatFullAccessPendingRunId: state.chatFullAccessPendingRunId === runId
           ? null : state.chatFullAccessPendingRunId,
       };
-    }),
-  clearChatFullAccessGrants: () =>
-    set((state) => {
+    }); },
+  clearChatFullAccessGrants: () => { set((state) => {
       const permissions = withChatFullAccess(state, {}, state.activeThreadId);
       return {
         chatFullAccessGrants: {},
@@ -5670,17 +5630,15 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         chatFullAccessPreviousMode: null,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setBypassConfirmOpen: (bypassConfirmOpen) =>
-    set(() => ({ bypassConfirmOpen })),
-  allowToolAlways: (sessionId, toolName) =>
-    set((state) => {
+    }); },
+  setBypassConfirmOpen: (bypassConfirmOpen) => { set(() => ({ bypassConfirmOpen })); },
+  allowToolAlways: (sessionId, toolName) => { set((state) => {
       const current = state.alwaysAllowToolsBySession.get(sessionId);
       if (current?.has(toolName)) return state;
       const next = new Map(state.alwaysAllowToolsBySession);
       next.set(sessionId, new Set(current ?? []).add(toolName));
       return { alwaysAllowToolsBySession: next };
-    }),
+    }); },
   setToolConfirmation: (
     toolCallId,
     approvalId,
@@ -5689,8 +5647,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     threadId,
     imageDisclosure,
     runId,
-  ) =>
-    set((state) => ({
+  ) => { set((state) => ({
       toolConfirmations: {
         ...state.toolConfirmations,
         [toolCallId]: {
@@ -5702,9 +5659,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           runId,
         },
       },
-    })),
-  clearToolConfirmation: (toolCallId) =>
-    set((state) => {
+    })); },
+  clearToolConfirmation: (toolCallId) => { set((state) => {
       if (
         !Object.prototype.hasOwnProperty.call(
           state.toolConfirmations,
@@ -5716,17 +5672,15 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const next = { ...state.toolConfirmations };
       delete next[toolCallId];
       return { toolConfirmations: next };
-    }),
-  setWebFetchToolsEnabled: (webFetchToolsEnabled) =>
-    set((state) => {
+    }); },
+  setWebFetchToolsEnabled: (webFetchToolsEnabled) => { set((state) => {
       saveBool(CHAT_WEB_FETCH_TOOLS_ENABLED_KEY, webFetchToolsEnabled);
       return {
         webFetchToolsEnabled,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setRagEnabled: (ragEnabled) =>
-    set((state) => {
+    }); },
+  setRagEnabled: (ragEnabled) => { set((state) => {
       // The only thread-scoped setting with no global slot, so no persist helper reaches it.
       if (ragEnabled !== state.ragEnabled) captureThreadScopedEdit("ragEnabled");
       return {
@@ -5734,16 +5688,14 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         ragPanelHidden: false,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setRagPanelHidden: (ragPanelHidden) => set({ ragPanelHidden }),
-  setRagPanelFileCount: (ragPanelFileCount) => set({ ragPanelFileCount }),
-  setProjectAttachmentTarget: (projectAttachmentTarget) =>
-    set(() => {
+    }); },
+  setRagPanelHidden: (ragPanelHidden) => { set({ ragPanelHidden }); },
+  setRagPanelFileCount: (ragPanelFileCount) => { set({ ragPanelFileCount }); },
+  setProjectAttachmentTarget: (projectAttachmentTarget) => { set(() => {
       saveString(CHAT_PROJECT_ATTACHMENT_TARGET_KEY, projectAttachmentTarget);
       return { projectAttachmentTarget };
-    }),
-  setThreadProjectAttachmentTarget: (threadId, target) =>
-    set((state) => {
+    }); },
+  setThreadProjectAttachmentTarget: (threadId, target) => { set((state) => {
       if (threadId === null) {
         pendingAttachmentTargetClaim += 1;
       }
@@ -5753,9 +5705,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           [threadId ?? PENDING_CHAT_ATTACHMENT_KEY]: target,
         },
       };
-    }),
-  adoptPendingProjectAttachmentTarget: (threadId, claim) =>
-    set((state) => {
+    }); },
+  adoptPendingProjectAttachmentTarget: (threadId, claim) => { set((state) => {
       if (claim !== undefined && claim !== pendingAttachmentTargetClaim) {
         return state;
       }
@@ -5771,9 +5722,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       delete next[PENDING_CHAT_ATTACHMENT_KEY];
       next[threadId] = pending;
       return { projectAttachmentTargetByThread: next };
-    }),
-  clearPendingProjectAttachmentTarget: () =>
-    set((state) => {
+    }); },
+  clearPendingProjectAttachmentTarget: () => { set((state) => {
       const byThread = state.projectAttachmentTargetByThread;
       if (!(PENDING_CHAT_ATTACHMENT_KEY in byThread)) {
         return state;
@@ -5782,9 +5732,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const next = { ...byThread };
       delete next[PENDING_CHAT_ATTACHMENT_KEY];
       return { projectAttachmentTargetByThread: next };
-    }),
-  setRememberParamsPerModel: (rememberParamsPerModel) =>
-    set((state) => {
+    }); },
+  setRememberParamsPerModel: (rememberParamsPerModel) => { set((state) => {
       setScalarSettingVersion(
         "rememberParamsPerModel",
         rememberParamsPerModel,
@@ -5826,42 +5775,37 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         rememberParamsPerModel,
         ...(paramsByModel ? { paramsByModel } : {}),
       };
-    }),
-  setRagSource: (ragSource) =>
-    set((state) => {
+    }); },
+  setRagSource: (ragSource) => { set((state) => {
       saveRagSource(ragSource);
       return {
         ragSource,
         ragPanelHidden: false,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setRagMode: (ragMode) =>
-    set((state) => {
+    }); },
+  setRagMode: (ragMode) => { set((state) => {
       saveString(CHAT_RAG_MODE_KEY, ragMode);
       return {
         ragMode,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setRagTopK: (ragTopK) =>
-    set((state) => {
+    }); },
+  setRagTopK: (ragTopK) => { set((state) => {
       saveString(CHAT_RAG_TOP_K_KEY, String(ragTopK));
       return {
         ragTopK,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setRagAutoInject: (ragAutoInject) =>
-    set((state) => {
+    }); },
+  setRagAutoInject: (ragAutoInject) => { set((state) => {
       saveString(CHAT_RAG_AUTOINJECT_KEY, ragAutoInject);
       return {
         ragAutoInject,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setRagAutoInjectMinScore: (ragAutoInjectMinScore) =>
-    set((state) => {
+    }); },
+  setRagAutoInjectMinScore: (ragAutoInjectMinScore) => { set((state) => {
       saveString(
         CHAT_RAG_AUTOINJECT_MIN_SCORE_KEY,
         String(ragAutoInjectMinScore),
@@ -5870,19 +5814,16 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         ragAutoInjectMinScore,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setRagOcrScanned: (ragOcrScanned) =>
-    set(() => {
+    }); },
+  setRagOcrScanned: (ragOcrScanned) => { set(() => {
       saveBool(CHAT_RAG_OCR_KEY, ragOcrScanned);
       return { ragOcrScanned };
-    }),
-  setRagCaptionFigures: (ragCaptionFigures) =>
-    set(() => {
+    }); },
+  setRagCaptionFigures: (ragCaptionFigures) => { set(() => {
       saveBool(CHAT_RAG_CAPTION_KEY, ragCaptionFigures);
       return { ragCaptionFigures };
-    }),
-  setToolStatus: (threadId, status, owner) =>
-    set((state) => {
+    }); },
+  setToolStatus: (threadId, status, owner) => { set((state) => {
       const next = { ...state.toolStatusByThreadId };
       const entries = state.toolStatusByThreadId[threadId] ?? [];
       const mine = entries.find((e) => e.owner === owner);
@@ -5903,32 +5844,28 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           : [...entries, entry];
       }
       return { toolStatusByThreadId: next };
-    }),
-  appendToolLiveOutput: (toolCallId, text) =>
-    set((state) => ({
+    }); },
+  appendToolLiveOutput: (toolCallId, text) => { set((state) => ({
       toolLiveOutput: {
         ...state.toolLiveOutput,
         [toolCallId]: (state.toolLiveOutput[toolCallId] ?? "") + text,
       },
-    })),
-  setToolFullOutput: (toolCallId, text) =>
-    set((state) => ({
+    })); },
+  setToolFullOutput: (toolCallId, text) => { set((state) => ({
       toolFullOutput: {
         ...state.toolFullOutput,
         [toolCallId]: text,
       },
-    })),
-  clearToolFullOutput: (toolCallId) =>
-    set((state) => {
+    })); },
+  clearToolFullOutput: (toolCallId) => { set((state) => {
       if (!(toolCallId in state.toolFullOutput)) {
         return {};
       }
       const next = { ...state.toolFullOutput };
       delete next[toolCallId];
       return { toolFullOutput: next };
-    }),
-  clearToolLiveOutput: (toolCallId) =>
-    set((state) => {
+    }); },
+  clearToolLiveOutput: (toolCallId) => { set((state) => {
       if (toolCallId === undefined) {
         return Object.keys(state.toolLiveOutput).length
           ? { toolLiveOutput: {} }
@@ -5940,24 +5877,21 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const next = { ...state.toolLiveOutput };
       delete next[toolCallId];
       return { toolLiveOutput: next };
-    }),
-  setActiveDiffusionCanvas: (threadId, canvas) =>
-    set((state) => ({
+    }); },
+  setActiveDiffusionCanvas: (threadId, canvas) => { set((state) => ({
       activeDiffusionCanvasByThreadId: {
         ...state.activeDiffusionCanvasByThreadId,
         [threadId || "__default"]: canvas,
       },
-    })),
-  clearActiveDiffusionCanvasForThread: (threadId) =>
-    set((state) => {
+    })); },
+  clearActiveDiffusionCanvasForThread: (threadId) => { set((state) => {
       const key = threadId || "__default";
       if (state.activeDiffusionCanvasByThreadId[key] === undefined) return state;
       const next = { ...state.activeDiffusionCanvasByThreadId };
       delete next[key];
       return { activeDiffusionCanvasByThreadId: next };
-    }),
-  setLivePrefill: (threadId, prefill) =>
-    set((state) => {
+    }); },
+  setLivePrefill: (threadId, prefill) => { set((state) => {
       const key = threadId || "__default";
       const prefillShown = prefillLabelShown(state.liveGenerationByThreadId[key], prefill);
       // A new prompt pass (the next round of a tool loop) starts over, so its decode figures go too.
@@ -5967,9 +5901,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           [key]: { prefill, prefillShown, decode: null },
         },
       };
-    }),
-  setLiveDecode: (threadId, decode) =>
-    set((state) => {
+    }); },
+  setLiveDecode: (threadId, decode) => { set((state) => {
       const key = threadId || "__default";
       const current = state.liveGenerationByThreadId[key];
       return {
@@ -5982,18 +5915,16 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           },
         },
       };
-    }),
-  clearLiveGenerationForThread: (threadId) =>
-    set((state) => {
+    }); },
+  clearLiveGenerationForThread: (threadId) => { set((state) => {
       const key = threadId || "__default";
       if (state.liveGenerationByThreadId[key] === undefined) return state;
       const next = { ...state.liveGenerationByThreadId };
       delete next[key];
       return { liveGenerationByThreadId: next };
-    }),
-  setGeneratingStatus: (generatingStatus) => set({ generatingStatus }),
-  setAutoHealToolCalls: (autoHealToolCalls) =>
-    set((state) => {
+    }); },
+  setGeneratingStatus: (generatingStatus) => { set({ generatingStatus }); },
+  setAutoHealToolCalls: (autoHealToolCalls) => { set((state) => {
       setScalarSettingVersion(
         "autoHealToolCalls",
         autoHealToolCalls,
@@ -6003,9 +5934,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         autoHealToolCalls,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setNudgeToolCalls: (nudgeToolCalls) =>
-    set((state) => {
+    }); },
+  setNudgeToolCalls: (nudgeToolCalls) => { set((state) => {
       setScalarSettingVersion(
         "nudgeToolCalls",
         nudgeToolCalls,
@@ -6015,9 +5945,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         nudgeToolCalls,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setDeduplicateToolCalls: (deduplicateToolCalls) =>
-    set((state) => {
+    }); },
+  setDeduplicateToolCalls: (deduplicateToolCalls) => { set((state) => {
       setScalarSettingVersion(
         "deduplicateToolCalls",
         deduplicateToolCalls,
@@ -6027,9 +5956,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         deduplicateToolCalls,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setAutoCompactEnabled: (autoCompactEnabled) =>
-    set((state) => {
+    }); },
+  setAutoCompactEnabled: (autoCompactEnabled) => { set((state) => {
       setScalarSettingVersion(
         "autoCompactEnabled",
         autoCompactEnabled,
@@ -6039,9 +5967,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         autoCompactEnabled,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setKeepRunningWhenTabClosed: (keepRunningWhenTabClosed) =>
-    set((state) => {
+    }); },
+  setKeepRunningWhenTabClosed: (keepRunningWhenTabClosed) => { set((state) => {
       setScalarSettingVersion(
         "keepRunningWhenTabClosed",
         keepRunningWhenTabClosed,
@@ -6051,9 +5978,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         keepRunningWhenTabClosed,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setMaxToolCallsPerMessage: (maxToolCallsPerMessage) =>
-    set((state) => {
+    }); },
+  setMaxToolCallsPerMessage: (maxToolCallsPerMessage) => { set((state) => {
       setScalarSettingVersion(
         "maxToolCallsPerMessage",
         maxToolCallsPerMessage,
@@ -6063,9 +5989,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         maxToolCallsPerMessage,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
-  setToolCallTimeout: (toolCallTimeout) =>
-    set((state) => {
+    }); },
+  setToolCallTimeout: (toolCallTimeout) => { set((state) => {
       setScalarSettingVersion(
         "toolCallTimeout",
         toolCallTimeout,
@@ -6075,18 +6000,17 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         toolCallTimeout,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }),
+    }); },
   // Persisted only on a successful load, so an unapplied pick does not stick.
-  setGpuMemoryMode: (gpuMemoryMode) => set({ gpuMemoryMode }),
-  setGpuLayers: (gpuLayers) => set({ gpuLayers }),
-  setNCpuMoe: (nCpuMoe) => set({ nCpuMoe }),
-  setSplitRatio: (splitRatio) => set({ splitRatio }),
-  setSelectedGpuIds: (selectedGpuIds, selectedGpuIndexKind = null) =>
-    set({
+  setGpuMemoryMode: (gpuMemoryMode) => { set({ gpuMemoryMode }); },
+  setGpuLayers: (gpuLayers) => { set({ gpuLayers }); },
+  setNCpuMoe: (nCpuMoe) => { set({ nCpuMoe }); },
+  setSplitRatio: (splitRatio) => { set({ splitRatio }); },
+  setSelectedGpuIds: (selectedGpuIds, selectedGpuIndexKind = null) => { set({
       selectedGpuIds,
       selectedGpuIndexKind:
         selectedGpuIds == null ? null : selectedGpuIndexKind,
-    }),
+    }); },
   setExpandQuantizations: (expandQuantizations) => {
     saveBool(CHAT_EXPAND_QUANTIZATIONS_KEY, expandQuantizations);
     set({ expandQuantizations });
@@ -6103,17 +6027,12 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     saveBool(MODELS_FIT_ON_DEVICE_ONLY_KEY, fitOnDeviceOnly);
     set({ fitOnDeviceOnly });
   },
-  setPendingAudio: (base64, name) =>
-    set({ pendingAudioBase64: base64, pendingAudioName: name }),
-  clearPendingAudio: () =>
-    set({ pendingAudioBase64: null, pendingAudioName: null }),
-  setPendingImageEditReference: (pendingImageEditReference) =>
-    set({ pendingImageEditReference }),
-  clearPendingImageEditReference: () =>
-    set({ pendingImageEditReference: null }),
+  setPendingAudio: (base64, name) => { set({ pendingAudioBase64: base64, pendingAudioName: name }); },
+  clearPendingAudio: () => { set({ pendingAudioBase64: null, pendingAudioName: null }); },
+  setPendingImageEditReference: (pendingImageEditReference) => { set({ pendingImageEditReference }); },
+  clearPendingImageEditReference: () => { set({ pendingImageEditReference: null }); },
   // Write through to the thread's entry: the history loader runs once per mount.
-  setContextUsage: (contextUsage) =>
-    set((state) => {
+  setContextUsage: (contextUsage) => { set((state) => {
       const stamped =
         contextUsage && !contextUsage.modelId && state.params.checkpoint
           ? { ...contextUsage, modelId: state.params.checkpoint }
@@ -6126,9 +6045,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         delete next[state.activeThreadId];
       }
       return { contextUsage: stamped, contextUsageByThreadId: next };
-    }),
-  setThreadContextUsage: (threadId, usage) =>
-    set((state) => {
+    }); },
+  setThreadContextUsage: (threadId, usage) => { set((state) => {
       if (!usage) {
         if (!Object.hasOwn(state.contextUsageByThreadId, threadId)) return state;
         const next = { ...state.contextUsageByThreadId };
@@ -6144,10 +6062,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
               : { ...usage, modelId: state.params.checkpoint },
         },
       };
-    }),
+    }); },
 }));
 
-const clearChatFullAccessOnAuthChange = () => useChatRuntimeStore.getState().clearChatFullAccessGrants();
+const clearChatFullAccessOnAuthChange = () => { useChatRuntimeStore.getState().clearChatFullAccessGrants(); };
 if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
   window.addEventListener(AUTH_SESSION_CLEARED_EVENT, clearChatFullAccessOnAuthChange);
   window.addEventListener(AUTH_SESSION_STORED_EVENT, clearChatFullAccessOnAuthChange);
