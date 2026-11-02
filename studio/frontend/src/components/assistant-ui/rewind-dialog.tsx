@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { useAui, useAuiState } from "@assistant-ui/react";
-import { type FC, useEffect, useMemo, useRef, useState } from "react";
+import { type FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -267,7 +267,7 @@ const RewindChoices: FC<{
   // Rows can exist with nothing left to put back (right after a rewind): that is no change.
   const hasChanges = result !== null && rewindChangedCount(result) > 0;
 
-  const rewind = async (chosen: RewindMode) => {
+  const rewind = useCallback(async (chosen: RewindMode) => {
     if (aui.thread().getState().isRunning) {
       toast.error(t("rewind.waitForResponse"));
       onClose();
@@ -300,7 +300,7 @@ const RewindChoices: FC<{
       }
     }
     onClose();
-  };
+  }, [aui, messageId, onClose, remoteId, t, turnIds]);
 
   // Only the conversation can go back: no choice to make, so no dialog.
   const conversationOnly = dryRun.state !== "loading" && !hasChanges;

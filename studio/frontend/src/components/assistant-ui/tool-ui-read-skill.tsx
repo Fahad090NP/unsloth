@@ -22,11 +22,15 @@ import { useToolActivityOpen } from "./use-tool-activity-open";
 import { ScrollPane } from "./scroll-pane";
 
 // `strokeWidth` is dropped: SVG types it `string | number`, HugeiconsIcon wants a number.
-function SkillIcon({
-  strokeWidth: _strokeWidth,
-  ...props
-}: ComponentProps<"svg">) {
-  return <HugeiconsIcon icon={Scroll01Icon} {...props} />;
+function SkillIcon(props: ComponentProps<"svg">) {
+  const iconProps: ComponentProps<"svg"> = { ...props };
+  delete iconProps.strokeWidth;
+  return (
+    <HugeiconsIcon
+      {...(iconProps as ComponentProps<typeof HugeiconsIcon>)}
+      icon={Scroll01Icon}
+    />
+  );
 }
 
 const ReadSkillToolUIImpl: ToolCallMessagePartComponent = ({

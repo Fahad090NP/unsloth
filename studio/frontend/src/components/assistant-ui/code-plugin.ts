@@ -567,7 +567,7 @@ export function createCodePlugin(
         match = fence;
         matchLength = reach;
       }
-      if (match === null || match.result === null) {
+      if (match?.result == null) {
         return { uncovered: opts.code.length, result: null };
       }
       return {

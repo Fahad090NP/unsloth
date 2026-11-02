@@ -6,7 +6,7 @@
 import { Button } from "@/components/ui/button";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { getAuthSessionEpoch } from "@/features/auth";
-import { useFullAccessAllowed } from "@/features/auth/account-session";
+import { useFullAccessAllowed } from "@/features/auth";
 import { FullAccessConfirmContent } from "@/features/chat";
 import { hasChatFullAccess, withChatFullAccess } from "@/features/chat";
 import {

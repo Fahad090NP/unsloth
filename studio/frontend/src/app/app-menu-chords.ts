@@ -6,11 +6,11 @@ import {
   parseBinding,
   SHORTCUT_SLOTS,
   type ShortcutId,
-} from "@/features/settings/lib/keyboard-shortcuts";
+} from "@/features/settings";
 import {
   resolveBinding,
   shortcutOwningBinding,
-} from "@/features/settings/stores/keyboard-shortcuts-store";
+} from "@/features/settings";
 import type { HelpAction } from "@/components/help-actions";
 import type { SettingsTab } from "@/features/settings";
 

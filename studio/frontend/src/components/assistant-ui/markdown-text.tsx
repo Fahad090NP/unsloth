@@ -219,9 +219,9 @@ const MarkdownImage = memo(function MarkdownImage(props: ComponentProps<"img">) 
     className,
     onLoad,
     onError,
-    node: _node,
     ...dom
   } = props as ComponentProps<"img"> & { node?: unknown };
+  delete dom.node;
   // Fallback scope for a src that records no session; one that does keeps it.
   const remoteId = useAuiState(({ threadListItem }) => threadListItem.remoteId);
   const activeThreadId = useChatRuntimeStore((state) => state.activeThreadId);
@@ -348,7 +348,8 @@ const LINK_CLASS =
   "text-foreground underline underline-offset-2 decoration-foreground/40 hover:decoration-foreground transition-colors cursor-pointer";
 
 function MarkdownLink({ href, children, ...props }: ComponentProps<"a">) {
-  const { node: _node, ...dom } = props as ComponentProps<"a"> & { node?: unknown };
+  const dom = { ...props } as ComponentProps<"a"> & { node?: unknown };
+  delete dom.node;
   const file = href ? sandboxFileForHref(href) : null;
   // Only file links subscribe to the chat's scope; links re-render per streamed token.
   if (href && file !== null) {

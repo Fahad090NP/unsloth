@@ -7,7 +7,7 @@ import { useAppShellReadySignal } from "@/components/app-readiness";
 import { LazyImportFailure } from "@/components/lazy-import-boundary";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandPalette } from "@/components/command-palette";
-import { SpookyDecorations } from "@/features/halloween/spooky-decorations";
+import { SpookyDecorations } from "@/features/halloween";
 import { Navbar } from "@/components/navbar";
 import { SidebarEdgeTrigger } from "@/components/sidebar-edge-trigger";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -37,12 +37,12 @@ import { useExportRuntimeLifecycle } from "@/features/export";
 import { FIND_SCOPE_ATTRIBUTE, FindInPage } from "@/features/find-in-page";
 import { HfTokenWarningDialog } from "@/features/hf-auth";
 import { InterfaceZoom, zoomInterfaceFromMenu } from "@/features/interface-zoom";
-import { bootstrapPersistedCredentials } from "@/features/credentials/bootstrap";
+import { bootstrapPersistedCredentials } from "@/features/credentials";
 import {
   ManagedEngineOfferDialog,
   SharedRunConfigLinkHandler,
 } from "@/features/model-picker";
-import { backfillModelOverrides } from "@/features/model-picker/api/migrate-model-overrides";
+import { backfillModelOverrides } from "@/features/model-picker";
 import { hydratePins } from "@/lib/pins-mirror";
 import { usePersonalizationSync } from "@/features/profile";
 import { ScheduledTaskRunNotifier } from "@/features/scheduled-tasks";
@@ -57,10 +57,10 @@ import {
   useShortcut,
   useShortcutAvailable,
 } from "@/features/settings";
-import { useLowDiskNotice } from "@/features/settings/hooks/use-low-disk-notice";
+import { useLowDiskNotice } from "@/features/settings";
 import { useTrainingUnloadGuard } from "@/features/training";
 import { TransformersUpgradeDialog } from "@/features/transformers-upgrade";
-import { LlmCompressorConsentDialog } from "@/features/export/components/llm-compressor-consent-dialog";
+import { LlmCompressorConsentDialog } from "@/features/export";
 import { useNativePathLeasesSupported } from "@/features/native-intents";
 import { useRagAvailabilityStore } from "@/features/rag";
 import { useIsMobileShell } from "@/hooks/use-mobile";

@@ -209,7 +209,7 @@ import { nativeAttachmentIntentToFile } from "@/features/native-intents";
 import {
   attachLibraryChatFiles,
   useLibraryChatHandoffStore,
-} from "@/features/library/chat-handoff-store";
+} from "@/features/library";
 import { resumesThought } from "@/features/model-picker";
 import { cancelResearchRun } from "@/features/chat";
 import {
@@ -382,14 +382,14 @@ import {
   listProjectDocuments,
   listThreadDocuments,
   projectWorkCount,
-} from "@/features/rag/api/rag-api";
+} from "@/features/rag";
 import { useRagAvailabilityStore } from "@/features/rag";
 import { ThreadDocumentsBar } from "@/features/rag";
 import { KnowledgeBaseComposerButton } from "@/features/rag";
 import { useUserProfileStore } from "@/features/profile";
-import { useSpookyGreetings } from "@/features/halloween/halloween-store";
-import { buildSpookyWelcome } from "@/features/halloween/spooky-greetings";
-import { usePublishedFrame } from "@/features/settings/hooks/use-published-frame";
+import { useSpookyGreetings } from "@/features/halloween";
+import { buildSpookyWelcome } from "@/features/halloween";
+import { usePublishedFrame } from "@/features/settings";
 import { useVoiceSettingsStore } from "@/features/settings";
 import { applyQwenThinkingParams } from "@/features/chat";
 import { isTauri } from "@/lib/api-base";
@@ -403,7 +403,7 @@ import { MicIcon } from "@/lib/mic-icon";
 import { downloadFile, isDownloadCancelled } from "@/lib/native-files";
 import { toast } from "@/lib/toast";
 import { Tick02Icon } from "@/lib/tick-icon";
-import { BrowserAgentMenuItem, BrowserAgentPill } from "@/features/browser/agent/lazy-composer-toggle";
+import { BrowserAgentMenuItem, BrowserAgentPill } from "@/features/browser";
 import {
   BranchNextIcon,
   BranchPrevIcon,
@@ -496,6 +496,53 @@ import { useExpandedComposerFill } from "./use-expanded-composer-fill";
 import { watchComposerClearance } from "@/lib/toast-offset";
 
 const PageDragContext = createContext(false);
+
+/** Lifecycle flags read through calls so TypeScript cannot narrow them across awaits. */
+function createAsyncLifecycle() {
+  let disposed = false;
+  let draining = false;
+  return {
+    dispose: () => {
+      disposed = true;
+    },
+    isDisposed: () => disposed,
+    isDraining: () => draining,
+    beginDrain: () => {
+      draining = true;
+    },
+    endDrain: () => {
+      draining = false;
+    },
+  };
+}
+
+/** Reentrancy gate for a retry loop that can be re-entered while awaiting. */
+function createRetryGate() {
+  let retrying = false;
+  let repeat = false;
+  return {
+    isRetrying: () => retrying,
+    requestRepeat: () => {
+      repeat = true;
+    },
+    begin: () => {
+      retrying = true;
+      repeat = false;
+    },
+    beginAttempt: () => {
+      repeat = false;
+    },
+    shouldRepeat: () => repeat,
+    end: () => {
+      retrying = false;
+    },
+  };
+}
+
+/** The store's record index is typed as present; a frame may still be missing at runtime. */
+function isPresent<T>(value: T | undefined): value is T {
+  return value !== undefined;
+}
 
 const FOLLOW_UP_SHORTCUTS = {
   queueMessage: "queue",
@@ -811,8 +858,8 @@ function scheduleQueuedPromptDispatch(
 function isPromptQueueRunReadyToDispatch(run: PromptQueueRun) {
   const item = getActivePromptQueueItem(run);
   return (
-    item &&
-      run.index >= 0 &&
+    run.index >= 0 &&
+      run.index < run.items.length &&
       !item.dispatched &&
       !item.blockedByModelFailure &&
       !run.waitingForTargetIdle &&
@@ -854,13 +901,13 @@ function requestPromptQueuePump(delay = 0) {
 function pumpPromptQueues() {
   ensurePromptQueueSubscription();
   // Sequential within a thread; independent threads may dispatch together (backend caps concurrency).
-  while (true) {
+  for (;;) {
     const run = getNextReadyPromptQueueRun();
     if (!run) {
       return;
     }
     const item = getActivePromptQueueItem(run);
-    if (!item) {
+    if (run.index >= run.items.length) {
       deletePromptQueueRun(run);
       continue;
     }
@@ -1017,9 +1064,8 @@ function findPromptQueueEntry(
   threadIds: string[],
 ) {
   for (const threadId of threadIds) {
-    const entry = state.byThreadId[threadId];
-    if (entry) {
-      return entry;
+    if (Object.hasOwn(state.byThreadId, threadId)) {
+      return state.byThreadId[threadId];
     }
   }
   return null;
@@ -1177,7 +1223,7 @@ function removePromptQueueItem(itemId: string) {
     }
     run.prevStoreRunning = false;
     const next = run.items[run.index];
-    if (next) {
+    if (run.index < run.items.length) {
       scheduleQueuedPromptDispatch(run, next, 50);
     }
   }
@@ -1218,7 +1264,7 @@ function movePromptQueueItem(itemId: string, targetItemId: string) {
 
   // A move across the active slot changes what dispatches next, so retarget like a removal.
   const nowActive = run.items[run.index];
-  if (run.index >= 0 && !run.waitingForTargetIdle && nowActive && activeChanged) {
+  if (run.index >= 0 && run.index < run.items.length && !run.waitingForTargetIdle && activeChanged) {
     clearPromptQueueRetryTimer(run);
     run.prevStoreRunning = false;
     scheduleQueuedPromptDispatch(run, nowActive, 50);
@@ -1257,10 +1303,10 @@ function isPromptQueueRunTargetRunning(
   run: PromptQueueRun,
   runningByThreadId: Record<string, boolean>,
 ) {
-  const activeItem = getActivePromptQueueItem(run);
-  if (!activeItem) {
+  if (run.items.length === 0) {
     return false;
   }
+  const activeItem = getActivePromptQueueItem(run);
   return isPromptQueueTargetRunning(activeItem.target, runningByThreadId);
 }
 
@@ -1350,8 +1396,7 @@ function handlePromptQueueRunState(
   ) {
     clearPromptQueueRetryTimer(run);
     run.waitingForTargetIdle = false;
-    const activeItem = run.items[run.index];
-    if (activeItem) {
+    if (run.index >= 0 && run.index < run.items.length) {
       requestPromptQueuePump(50);
     }
     return;
@@ -1641,7 +1686,7 @@ function stopLocalPromptQueueRun(run: PromptQueueRun) {
     item.blockedByModelFailure = true;
     item.target.releaseModel();
   }
-  if (!getActivePromptQueueItem(run)) {
+  if (run.items.length === 0 || run.index >= run.items.length) {
     deletePromptQueueRun(run);
     try {
       activeItem.target.cancel();
@@ -1701,7 +1746,7 @@ function retainPendingPromptQueueItemsAfterFailure(run: PromptQueueRun) {
 
   activeItem.target.complete();
   run.items.splice(activeIndex, 1);
-  if (!getActivePromptQueueItem(run)) {
+  if (run.items.length === 0 || run.index >= run.items.length) {
     deletePromptQueueRun(run);
     return true;
   }
@@ -1852,7 +1897,7 @@ const ThreadMessage: FC = () => {
     case "assistant":
       body = <AssistantMessage />;
       break;
-    default:
+    case "none":
       return null;
   }
   return (
@@ -1948,6 +1993,22 @@ const ForkContinuationRule: FC = () => {
   const navigate = useNavigate();
   const isAnchor = anchor !== undefined && anchor === messageId;
   const [source, setSource] = useState<{ id: string; title: string | null } | null>(null);
+  const openSourceThread = async (threadIdToOpen: string) => {
+    // Checked on click (tombstones are per tab); only a definite "no" stops it.
+    const sourceThread = await readBackendChatThread(threadIdToOpen);
+    if (sourceThread === null) {
+      toast.info("That chat has been deleted.");
+      return;
+    }
+    await navigate({
+      to: "/chat",
+      // A paired source opens as its comparison, matching the sidebar.
+      search: sourceThread?.pairId
+        ? { compare: sourceThread.pairId }
+        : { thread: threadIdToOpen },
+      replace: false,
+    });
+  };
   useEffect(() => {
     if (!isAnchor || !sourceThreadId) return;
     let live = true;
@@ -1985,20 +2046,9 @@ const ForkContinuationRule: FC = () => {
           type="button"
           data-slot="fork-continuation-link"
           title="Open the chat this was forked from"
-          // Checked on click (tombstones are per tab); only a definite "no" stops it.
-          onClick={async () => {
-            const source = await readBackendChatThread(sourceThreadId);
-            if (source === null) {
-              toast.info("That chat has been deleted.");
-              return;
-            }
-            navigate({
-              to: "/chat",
-              // A paired source opens as its comparison, matching the sidebar.
-              search: source?.pairId
-                ? { compare: source.pairId }
-                : { thread: sourceThreadId },
-              replace: false,
+          onClick={() => {
+            openSourceThread(sourceThreadId).catch((error: unknown) => {
+              console.error("Failed to open forked chat", error);
             });
           }}
           className={cn(
@@ -2768,11 +2818,12 @@ const ThreadWelcome: FC<{
   useEffect(() => {
     const raw = nickname.trim() || (displayName.trim().split(/\s+/)[0] ?? "");
     const name = raw.length > 20 ? `${raw.slice(0, 20)}…` : raw;
-    setWelcome(
-      spooky
-        ? buildSpookyWelcome(name)
-        : buildWelcome(new Date().getHours(), name),
-    );
+    const next = spooky
+      ? buildSpookyWelcome(name)
+      : buildWelcome(new Date().getHours(), name);
+    queueMicrotask(() => {
+      setWelcome(next);
+    });
   }, [displayName, nickname, spooky]);
 
   const currentEmojiSrc = `Sloth emojis/${welcome.sloth}`;
@@ -3122,7 +3173,6 @@ const Composer: FC<{
       // A paste retires the sent-text guard, but only when the browser will really insert the text.
       if (
         pastedText.length > 0 &&
-        !event.defaultPrevented &&
         justSentRef.current?.draftKey === draftKeyRef.current
       ) {
         justSentRef.current = null;
@@ -3172,10 +3222,13 @@ const Composer: FC<{
   const lineMetricsRef = useRef<{ lineHeight: number; padding: number } | null>(
     null,
   );
-  const [isMultiline, setIsMultiline] = useState(false);
+  // Latch the composer expansion at the draft length that first wrapped, so a shorter
+  // draft is single-line again without a state reset.
+  const [multilineAtLength, setMultilineAtLength] = useState<number | null>(null);
+  const isMultiline =
+    multilineAtLength !== null && composerText.length >= multilineAtLength;
   useEffect(() => {
     if (composerText.length === 0) {
-      setIsMultiline(false);
       lineMetricsRef.current = null;
       return;
     }
@@ -3193,7 +3246,7 @@ const Composer: FC<{
     }
     const { lineHeight, padding } = lineMetricsRef.current;
     const contentHeight = el.scrollHeight - padding;
-    if (contentHeight > lineHeight * 1.5) setIsMultiline(true);
+    if (contentHeight > lineHeight * 1.5) setMultilineAtLength(composerText.length);
   }, [composerText, isMultiline]);
   // Autosize measures a detached clone, so the expanded editor's min/max-height cannot inflate it.
   const [editorRows, setEditorRows] = useState(1);
@@ -3240,7 +3293,9 @@ const Composer: FC<{
   );
   const nativeAttachmentTargetKey = useNativeAttachmentTargetKey();
   const nativeAttachmentTargetKeyRef = useRef(nativeAttachmentTargetKey);
-  nativeAttachmentTargetKeyRef.current = nativeAttachmentTargetKey;
+  useEffect(() => {
+    nativeAttachmentTargetKeyRef.current = nativeAttachmentTargetKey;
+  }, [nativeAttachmentTargetKey]);
 
   useEffect(() => {
     if (!nativeAttachmentTargetKey) return;
@@ -3265,19 +3320,18 @@ const Composer: FC<{
   console.error("Failed to drain chat handoff", error);
 });
     });
-    let retrying = false;
-    let again = false;
+    const retryGate = createRetryGate();
     const retry = async () => {
-      if (retrying) {
-        again = true;
+      if (retryGate.isRetrying()) {
+        retryGate.requestRepeat();
         return;
       }
-      retrying = true;
+      retryGate.begin();
       do {
-        again = false;
+        retryGate.beginAttempt();
         await attachLibraryChatFiles(targetKey, add, true);
-      } while (again);
-      retrying = false;
+      } while (retryGate.shouldRepeat());
+      retryGate.end();
     };
     const loads = useChatRuntimeStore.subscribe((state, prev) => {
       if (state.modelLoading) return;
@@ -3309,8 +3363,7 @@ const Composer: FC<{
   const hasPendingOpenDocumentAttachments = useNativeIntentStore((s) =>
     Boolean(
       nativeAttachmentTargetKey &&
-        (s.pendingOpenDocumentAttachments[nativeAttachmentTargetKey].length ??
-          0) > 0,
+        (s.pendingOpenDocumentAttachments[nativeAttachmentTargetKey].length) > 0,
     ),
   );
   const registeringImageDrops = useNativeIntentStore(
@@ -3347,8 +3400,16 @@ const Composer: FC<{
   // A parked send must not fire on a failed drop. Assigned below once the callback exists.
   const cancelQueuedSendRef = useRef<(() => void) | null>(null);
   const composerIdentityRef = useRef("");
+  const threadListItemId = useAuiState(
+    ({ threadListItem }) => threadListItem.id,
+  );
+  // Not referenceThreadId: it moves null -> remote id on first persist of the same composer.
+  const composerIdentity = threadListItemId;
+  useEffect(() => {
+    composerIdentityRef.current = composerIdentity;
+  }, [composerIdentity]);
   const imageDropFailures = useNativeIntentStore(
-    (s) => (nativeAttachmentTargetKey ? s.imageDropFailures[nativeAttachmentTargetKey] : 0) ?? 0,
+    (s) => (nativeAttachmentTargetKey ? s.imageDropFailures[nativeAttachmentTargetKey] : 0),
   );
   const seenImageDropFailuresRef = useRef(imageDropFailures);
   // Registration fails before an intent exists, so cancel the parked send here.
@@ -3358,7 +3419,7 @@ const Composer: FC<{
     cancelQueuedSendRef.current?.();
   }, [imageDropFailures]);
   const audioDropFailures = useNativeIntentStore(
-    (s) => (nativeAttachmentTargetKey ? s.audioDropFailures[nativeAttachmentTargetKey] : 0) ?? 0,
+    (s) => (nativeAttachmentTargetKey ? s.audioDropFailures[nativeAttachmentTargetKey] : 0),
   );
   const seenAudioDropFailuresRef = useRef(audioDropFailures);
   // Cancel the parked send before `endAudioDropRegistration` reopens the gate.
@@ -3368,7 +3429,7 @@ const Composer: FC<{
     cancelQueuedSendRef.current?.();
   }, [audioDropFailures]);
   const videoDropFailures = useNativeIntentStore(
-    (s) => (nativeAttachmentTargetKey ? s.videoDropFailures[nativeAttachmentTargetKey] : 0) ?? 0,
+    (s) => (nativeAttachmentTargetKey ? s.videoDropFailures[nativeAttachmentTargetKey] : 0),
   );
   const seenVideoDropFailuresRef = useRef(videoDropFailures);
   // Cancel the parked send before `endVideoDropRegistration` reopens the gate.
@@ -3387,8 +3448,7 @@ const Composer: FC<{
     useNativeIntentStore
       .getState()
       .claimAudioAttachments(identityAtSetup, targetKey);
-    let disposed = false;
-    let draining = false;
+    const audioDrain = createAsyncLifecycle();
 
     // A re-key follows the same composer; a thread switch parks the clip back.
     const stillThisComposer = () =>
@@ -3404,17 +3464,17 @@ const Composer: FC<{
     };
 
     const drainPendingAudio = async () => {
-      if (disposed || draining) return;
-      draining = true;
+      if (audioDrain.isDisposed() || audioDrain.isDraining()) return;
+      audioDrain.beginDrain();
       setMaterializingDroppedAudio(true);
       try {
-        while (!disposed) {
+        while (!audioDrain.isDisposed()) {
           const intents = useNativeIntentStore
             .getState()
             .takeAudioAttachments(targetKey);
           if (intents.length === 0) break;
           for (const [index, intent] of intents.entries()) {
-            if (disposed) {
+            if (audioDrain.isDisposed()) {
               requeue(intents.slice(index));
               return;
             }
@@ -3431,7 +3491,7 @@ const Composer: FC<{
             }
             // The read is async; a chat switch in that window must not steal the clip.
             if (
-              disposed ||
+              audioDrain.isDisposed() ||
               nativeAttachmentTargetKeyRef.current !== targetKey
             ) {
               requeue(intents.slice(index));
@@ -3447,9 +3507,9 @@ const Composer: FC<{
           }
         }
       } finally {
-        draining = false;
+        audioDrain.endDrain();
         // A drain for an abandoned target must not touch the flag; the live target may own it.
-        if (!disposed) {
+        if (!audioDrain.isDisposed()) {
           // Early returns requeue mid-batch, and drops can land while `draining` gated the subscription.
           const pending =
             useNativeIntentStore.getState().pendingAudioAttachments[targetKey]
@@ -3488,7 +3548,7 @@ const Composer: FC<{
 });
 
     return () => {
-      disposed = true;
+      audioDrain.dispose();
       setMaterializingDroppedAudio(false);
       unsubscribe();
     };
@@ -3504,8 +3564,7 @@ const Composer: FC<{
     useNativeIntentStore
       .getState()
       .claimVideoAttachments(identityAtSetup, targetKey);
-    let disposed = false;
-    let draining = false;
+    const videoDrain = createAsyncLifecycle();
 
     const stillThisComposer = () =>
       composerIdentityRef.current === identityAtSetup;
@@ -3519,17 +3578,17 @@ const Composer: FC<{
     };
 
     const drainPendingVideo = async () => {
-      if (disposed || draining) return;
-      draining = true;
+      if (videoDrain.isDisposed() || videoDrain.isDraining()) return;
+      videoDrain.beginDrain();
       setMaterializingDroppedVideo(true);
       try {
-        while (!disposed) {
+        while (!videoDrain.isDisposed()) {
           const intents = useNativeIntentStore
             .getState()
             .takeVideoAttachments(targetKey);
           if (intents.length === 0) break;
           for (const [index, intent] of intents.entries()) {
-            if (disposed) {
+            if (videoDrain.isDisposed()) {
               requeue(intents.slice(index));
               return;
             }
@@ -3545,7 +3604,7 @@ const Composer: FC<{
               continue;
             }
             if (
-              disposed ||
+              videoDrain.isDisposed() ||
               nativeAttachmentTargetKeyRef.current !== targetKey
             ) {
               requeue(intents.slice(index));
@@ -3561,8 +3620,8 @@ const Composer: FC<{
           }
         }
       } finally {
-        draining = false;
-        if (!disposed) {
+        videoDrain.endDrain();
+        if (!videoDrain.isDisposed()) {
           const pending =
             useNativeIntentStore.getState().pendingVideoAttachments[targetKey]
               .length;
@@ -3598,7 +3657,7 @@ const Composer: FC<{
 });
 
     return () => {
-      disposed = true;
+      videoDrain.dispose();
       setMaterializingDroppedVideo(false);
       unsubscribe();
     };
@@ -3613,8 +3672,7 @@ const Composer: FC<{
     useNativeIntentStore
       .getState()
       .claimImageAttachments(identityAtSetup, targetKey);
-    let disposed = false;
-    let draining = false;
+    const imageDrain = createAsyncLifecycle();
 
     // A fresh chat re-keys from "single:new" to its thread id under the same composer, so follow it.
     const stillThisComposer = () =>
@@ -3632,15 +3690,15 @@ const Composer: FC<{
     };
 
     const drainPendingImages = async () => {
-      if (disposed || draining) {
+      if (imageDrain.isDisposed() || imageDrain.isDraining()) {
         return;
       }
-      draining = true;
+      imageDrain.beginDrain();
       setMaterializingDroppedImages(true);
       let readFailures = 0;
       let lastReadError: unknown;
       try {
-        while (!disposed) {
+        while (!imageDrain.isDisposed()) {
           const intents = useNativeIntentStore
             .getState()
             .takeImageAttachments(targetKey);
@@ -3648,7 +3706,7 @@ const Composer: FC<{
             break;
           }
           for (let index = 0; index < intents.length; index += 1) {
-            if (disposed) {
+            if (imageDrain.isDisposed()) {
               requeue(intents.slice(index));
               return;
             }
@@ -3666,7 +3724,7 @@ const Composer: FC<{
               continue;
             }
             if (
-              disposed ||
+              imageDrain.isDisposed() ||
               nativeAttachmentTargetKeyRef.current !== targetKey
             ) {
               requeue(intents.slice(index));
@@ -3682,7 +3740,7 @@ const Composer: FC<{
           }
         }
       } finally {
-        draining = false;
+        imageDrain.endDrain();
         if (readFailures > 0) {
           toast.error("Could not attach dropped images", {
             description:
@@ -3692,18 +3750,17 @@ const Composer: FC<{
           });
           if (stillThisComposer()) cancelQueuedSendRef.current?.();
         }
-        if (disposed) {
-          return;
-        }
-        const pending =
-          useNativeIntentStore.getState().pendingImageAttachments[targetKey]
-            .length;
-        if (pending > 0) {
-          drainPendingImages().catch((error: unknown) => {
+        if (!imageDrain.isDisposed()) {
+          const pending =
+            useNativeIntentStore.getState().pendingImageAttachments[targetKey]
+              .length;
+          if (pending > 0) {
+            drainPendingImages().catch((error: unknown) => {
   console.error("Failed to drain pending images", error);
 });
-        } else {
-          setMaterializingDroppedImages(false);
+          } else {
+            setMaterializingDroppedImages(false);
+          }
         }
       }
     };
@@ -3733,7 +3790,7 @@ const Composer: FC<{
 });
 
     return () => {
-      disposed = true;
+      imageDrain.dispose();
       setMaterializingDroppedImages(false);
       unsubscribe();
     };
@@ -3747,8 +3804,7 @@ const Composer: FC<{
     useNativeIntentStore
       .getState()
       .claimImageAttachments(identityAtSetup, targetKey);
-    let disposed = false;
-    let draining = false;
+    const documentDrain = createAsyncLifecycle();
 
     const stillThisComposer = () =>
       composerIdentityRef.current === identityAtSetup;
@@ -3762,17 +3818,17 @@ const Composer: FC<{
     };
 
     const drainPendingOpenDocuments = async () => {
-      if (disposed || draining) return;
-      draining = true;
+      if (documentDrain.isDisposed() || documentDrain.isDraining()) return;
+      documentDrain.beginDrain();
       setMaterializingDroppedOpenDocuments(true);
       try {
-        while (!disposed) {
+        while (!documentDrain.isDisposed()) {
           const intents = useNativeIntentStore
             .getState()
             .takeOpenDocumentAttachments(targetKey);
           if (intents.length === 0) break;
           for (const [index, intent] of intents.entries()) {
-            if (disposed) {
+            if (documentDrain.isDisposed()) {
               requeue(intents.slice(index));
               return;
             }
@@ -3788,7 +3844,7 @@ const Composer: FC<{
               continue;
             }
             if (
-              disposed ||
+              documentDrain.isDisposed() ||
               nativeAttachmentTargetKeyRef.current !== targetKey
             ) {
               requeue(intents.slice(index));
@@ -3802,8 +3858,8 @@ const Composer: FC<{
           }
         }
       } finally {
-        draining = false;
-        if (!disposed) {
+        documentDrain.endDrain();
+        if (!documentDrain.isDisposed()) {
           const pending =
             useNativeIntentStore.getState().pendingOpenDocumentAttachments[
               targetKey
@@ -3842,7 +3898,7 @@ const Composer: FC<{
 });
 
     return () => {
-      disposed = true;
+      documentDrain.dispose();
       setMaterializingDroppedOpenDocuments(false);
       unsubscribe();
     };
@@ -3862,16 +3918,10 @@ const Composer: FC<{
     hasPendingVideoAttachments ||
     materializingDroppedVideo;
   const threadIsRunning = useAuiState(({ thread }) => thread.isRunning);
-  const threadListItemId = useAuiState(
-    ({ threadListItem }) => threadListItem.id,
-  );
   const threadListItemRemoteId = useAuiState(
     ({ threadListItem }) => threadListItem.remoteId,
   );
   const referenceThreadId = threadId ?? activeThreadId ?? null;
-  // Not referenceThreadId: it moves null -> remote id on first persist of the same composer.
-  const composerIdentity = threadListItemId;
-  composerIdentityRef.current = composerIdentity;
   const chatActive = useChatActive();
   // assistant-ui's Escape cancels the run and prevents the key, which would block declining a tool request.
   // Only when decline would take that Escape: its card is keyboard-ready on this screen (not parked in a
@@ -3976,6 +4026,11 @@ const Composer: FC<{
   // unsent pasted File objects need a separate slot because they exist only in memory
   const pasteDraftKey = composerPasteDraftKey();
   const lastDraftScopeRef = useRef(draftScope);
+  // Mirrors the scope for async callbacks; set in a layout effect so every later effect sees it.
+  const draftScopeRef = useRef(draftScope);
+  useLayoutEffect(() => {
+    draftScopeRef.current = draftScope;
+  }, [draftScope]);
   // save only after this chat's paste restore finishes to avoid premature clearing
   const restoredPasteScopeRef = useRef<string | null | undefined>(undefined);
   const restoringPasteScopeRef = useRef<string | null | undefined>(undefined);
@@ -4127,11 +4182,9 @@ const Composer: FC<{
     draftSaveTimerRef.current = t;
     return () => { clearTimeout(t); };
   }, [composerText, draftScope, draftKey, draftSource]);
-  const draftScopeRef = useRef(draftScope);
   useEffect(() => {
     draftKeyRef.current = draftKey;
-    draftScopeRef.current = draftScope;
-  }, [draftKey, draftScope]);
+  }, [draftKey]);
   // Call wherever the composer is emptied because its text left as a message.
   const armJustSent = useCallback((...texts: string[]) => {
     justSentRef.current = armSentTextGuard(
@@ -4370,6 +4423,7 @@ const Composer: FC<{
     };
     const pendingSettingsIds = new Set<number>();
     let cancelled = false;
+    const isCancelled = () => cancelled;
     let appendEpoch = 0;
     let shouldCorrectPersistedModel: boolean | null = null;
     let initializedFreshThreadId: string | null = null;
@@ -4391,9 +4445,11 @@ const Composer: FC<{
         () => undefined,
       );
       if (!historyWasCleared && isTargetCurrentThread()) {
-        void Promise.resolve(aui.threads().switchToNewThread()).catch(
-          () => undefined,
-        );
+        void Promise.resolve()
+          .then(() => {
+            aui.threads().switchToNewThread();
+          })
+          .catch(() => undefined);
       }
       return true;
     };
@@ -4446,6 +4502,9 @@ const Composer: FC<{
             return;
           }
           shouldCorrectPersistedModel ??= !state.remoteId;
+          const correctingPersistedModel = shouldCorrectPersistedModel;
+          // Clear before awaiting so a re-entrant append cannot correct twice.
+          shouldCorrectPersistedModel = false;
           const initializingFreshThread = !state.remoteId;
           // Stamp with the project the queue was started under; the adapter may show another by now.
           if (initializingFreshThread) {
@@ -4466,7 +4525,7 @@ const Composer: FC<{
           }
           if (
             removeFreshThreadPersistedAfterAbort() ||
-            cancelled ||
+            isCancelled() ||
             epoch !== appendEpoch ||
             !pendingSettingsIds.has(settingsId)
           ) {
@@ -4476,16 +4535,15 @@ const Composer: FC<{
             ...getQueueThreadIds(),
             remoteId,
           ]);
-          if (shouldCorrectPersistedModel) {
+          if (correctingPersistedModel) {
             // initialize() persisted the live global model; correct it to this run's captured model.
             await updateStoredChatThread(remoteId, {
               modelId: runSettingsAtQueueStart.params.checkpoint,
               modelGgufVariant: runSettingsAtQueueStart.activeGgufVariant,
             });
-            shouldCorrectPersistedModel = false;
             if (
               removeFreshThreadPersistedAfterAbort() ||
-              cancelled ||
+              isCancelled() ||
               epoch !== appendEpoch ||
               !pendingSettingsIds.has(settingsId)
             ) {
@@ -4515,19 +4573,24 @@ const Composer: FC<{
                 keepQueuedFilesForPython,
               ),
           );
-          prompt.attachments = readyPrompt.attachments;
-          prompt.attachmentFiles = readyPrompt.attachmentFiles;
+          const promptWithFiles: QueuedPrompt = { ...prompt, ...readyPrompt };
           if (
             removeFreshThreadPersistedAfterAbort() ||
-            cancelled ||
+            isCancelled() ||
             epoch !== appendEpoch ||
             !pendingSettingsIds.has(settingsId)
           ) {
             return;
           }
-          const appendResult = thread.append(
-            queuedPromptMessage(readyPrompt),
-          ) as unknown;
+          // The runtime's append is typed void but may return a promise; keep the rejection handled.
+          if (!thread) return;
+          const activeThread = thread;
+          const appendToThread = activeThread.append.bind(activeThread) as (
+            ...args: Parameters<typeof activeThread.append>
+          ) => unknown;
+          const appendResult = appendToThread(
+            queuedPromptMessage(promptWithFiles),
+          );
           freshThreadAppendAccepted = true;
           // thread.append accepts synchronously; later provider failures must not dispatch a duplicate
           if (
@@ -6041,6 +6104,7 @@ function useImeComposerInputHandlers({
         draftKeyRef === undefined ||
         justSentRef.current.draftKey === draftKeyRef.current;
       if (justSentRef && guardOwnsThread) {
+        const sentGuardRef = justSentRef;
         const result = applySentTextGuard(justSentRef.current, {
           value,
           replacesText: isTextReplacement(nativeEvent),
@@ -6048,7 +6112,7 @@ function useImeComposerInputHandlers({
           isComposition: isCompositionWrite(nativeEvent),
           composerIsEmpty: composer.getState().text.length === 0,
         });
-        justSentRef.current = result.guard;
+        sentGuardRef.current = result.guard;
         if (!result.accept) {
           return false;
         }
@@ -6064,7 +6128,8 @@ function useImeComposerInputHandlers({
   const onCompositionStart = useCallback(() => {
     // Dictation and handwriting insert without keydown; a post-send composition is not queued.
     if (justSentRef) {
-      justSentRef.current = markSentTextGuardUserInput(justSentRef.current);
+      const sentGuardRef = justSentRef;
+      sentGuardRef.current = markSentTextGuardUserInput(justSentRef.current);
     }
     imeSessionOpenRef.current = true;
     setCompositionState(true);
@@ -6119,7 +6184,8 @@ function useImeComposerInputHandlers({
         setCompositionState(false);
       }
       if (justSentRef && isGuardRetiringKey(e)) {
-        justSentRef.current = markSentTextGuardUserInput(justSentRef.current);
+        const sentGuardRef = justSentRef;
+        sentGuardRef.current = markSentTextGuardUserInput(justSentRef.current);
       }
       if (composingRef.current) {
         // Candidate-confirming Enter can arrive as non-composing; keep it gated.
@@ -6645,7 +6711,9 @@ const ToolStatusDisplay: FC = () => {
   const toolStatus = entry.status;
   const startedAt = entry.startedAt;
   const [now, setNow] = useState(() => Date.now());
-  const [visible, setVisible] = useState(false);
+  // Latch the start time the badge was revealed for, so a new or cleared run hides it again.
+  const [visibleSince, setVisibleSince] = useState<number | null>(null);
+  const visible = visibleSince !== null && visibleSince === startedAt;
   const visibleRef = useRef(false);
 
   useEffect(() => {
@@ -6654,9 +6722,6 @@ const ToolStatusDisplay: FC = () => {
 
   useEffect(() => {
     if (!startedAt) {
-      if (!isThreadRunning) {
-        setVisible(false);
-      }
       return;
     }
 
@@ -6665,7 +6730,7 @@ const ToolStatusDisplay: FC = () => {
     // 300ms debounce unless already visible, so short tool calls never flash the badge.
     let showTimer: ReturnType<typeof setTimeout> | undefined;
     if (!visibleRef.current) {
-      showTimer = setTimeout(() => { setVisible(true); }, 300);
+      showTimer = setTimeout(() => { setVisibleSince(startedAt); }, 300);
     }
 
     const interval = setInterval(() => { setNow(Date.now()); }, 1000);
@@ -6675,7 +6740,7 @@ const ToolStatusDisplay: FC = () => {
         clearTimeout(showTimer);
       }
     };
-  }, [startedAt, isThreadRunning]);
+  }, [startedAt]);
 
   if (!(toolStatus && startedAt && visible)) {
     return null;
@@ -7490,7 +7555,7 @@ const ComposerRightControls: FC<{
       className="aui-composer-action-wrapper flex shrink-0 items-center gap-1.5"
     >
       <ReasoningToggle side={menuSide} />
-      <ComposerPrimitive.If dictation={false}>
+      <AuiIf condition={({ composer }) => composer.dictation == null}>
         {audioUpload.busy ? (
           <Button
             type="button"
@@ -7518,7 +7583,7 @@ const ComposerRightControls: FC<{
             <MicIcon className="unsloth-dictate-icon size-6" />
           </TooltipIconButton>
         )}
-      </ComposerPrimitive.If>
+      </AuiIf>
       <AuiIf
         condition={({ thread }) =>
           !thread.isRunning && !isQueueRunning && !isResearchActive
@@ -7745,7 +7810,9 @@ function readThoughtDuration(metadata: unknown): number | undefined {
   const custom = (metadata as { custom?: Record<string, unknown> } | undefined)
     ?.custom;
   const durations = custom?.reasoningDurations;
-  const value = Array.isArray(durations) ? durations[0] : custom?.reasoningDuration;
+  const value = Array.isArray(durations)
+    ? (durations as unknown[])[0]
+    : custom?.reasoningDuration;
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
@@ -8125,7 +8192,7 @@ const DiffusionCanvas: FC = () => {
   const canvas = useChatRuntimeStore(
     (s) => s.activeDiffusionCanvasByThreadId[threadKey],
   );
-  if (!isRunning || !canvas) {
+  if (!isRunning || !isPresent(canvas)) {
     return null;
   }
   const stepLabel =
@@ -8230,9 +8297,7 @@ const AssistantMessage: FC = () => {
       // The message is the tab stop that lets the action bar reveal fire; a tabIndex adds no DOM node,
       // and :focus-visible keeps mouse clicks unringed.
       tabIndex={0}
-      ref={focusReveal.ref}
-      onFocus={focusReveal.onFocus}
-      onBlur={focusReveal.onBlur}
+      {...focusReveal}
     >
       <div className="aui-assistant-message-content wrap-break-word min-w-0 text-[#0f1114] dark:text-foreground leading-relaxed">
         {isEditing ? (
@@ -8259,7 +8324,17 @@ const AssistantMessage: FC = () => {
             />
             <div className="mx-3 flex items-center gap-2 self-end">
               <Button type="button" size="sm" variant="ghost" onClick={() => { setEditingId(null); }}>Cancel</Button>
-              <Button type="button" size="sm" onClick={handleSave}>Save</Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  handleSave().catch((error: unknown) => {
+                    console.error("Failed to save title", error);
+                  });
+                }}
+              >
+                Save
+              </Button>
             </div>
           </div>
         ) : (
@@ -8295,9 +8370,9 @@ const AssistantMessage: FC = () => {
         <AssistantActionBar />
       </div>
       {/* Renders nothing. `If last` keeps the hook off the other N-1. */}
-      <MessagePrimitive.If last={true}>
+      <AuiIf condition={({ message }) => message.isLast}>
         <ForkChatShortcut />
-      </MessagePrimitive.If>
+      </AuiIf>
 
       {/* Trailing stop so Shift+Tab enters the action bar; the root's onFocus mounts it. */}
       <span
@@ -8384,7 +8459,7 @@ const useForkMessageAction = () => {
         createdAt: Date.now(),
       });
       useChatRuntimeStore.getState().setActiveThreadId(result.thread.id);
-      navigate({
+      await navigate({
         to: "/chat",
         search: { thread: result.thread.id },
         replace: false,
@@ -8431,7 +8506,11 @@ const ForkMessageButton: FC = () => {
     <TooltipIconButton
       tooltip="Fork from here"
       disabled={forkDisabled}
-      onClick={forkMessage}
+      onClick={() => {
+        forkMessage().catch((error: unknown) => {
+          console.error("Failed to fork message", error);
+        });
+      }}
     >
       <HugeiconsIcon icon={ForkIcon} strokeWidth={1.75} className="size-[calc(var(--icon-size)*0.97)]" />
     </TooltipIconButton>
@@ -8576,7 +8655,9 @@ const RewindDialogMount: FC = () => {
   const requested = useRewindDialogStore((s) => s.request !== null);
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
-    if (requested) setLoaded(true);
+    if (!requested) return;
+    const latch = setTimeout(() => { setLoaded(true); }, 0);
+    return () => { clearTimeout(latch); };
   }, [requested]);
   // Stays mounted once loaded so closing keeps its animation.
   return requested || loaded ? (
@@ -8632,7 +8713,14 @@ const CopyButton: FC = () => {
   };
 
   return (
-    <TooltipIconButton tooltip="Copy" onClick={handleCopy}>
+    <TooltipIconButton
+      tooltip="Copy"
+      onClick={() => {
+        handleCopy().catch((error: unknown) => {
+          console.error("Failed to copy message", error);
+        });
+      }}
+    >
       <HugeiconsIcon
         icon={copied ? Tick02Icon : Copy01Icon}
         strokeWidth={1.75}
@@ -8985,9 +9073,9 @@ const UserMessage: FC = () => {
           <BranchPicker className="aui-user-branch-picker ml-[calc(6px*var(--ui-space-scale,1))] shrink-0" />
         </UserMessageFooter>
       </div>
-      <MessagePrimitive.If last={true}>
+      <AuiIf condition={({ message }) => message.isLast}>
         <ForkChatShortcut />
-      </MessagePrimitive.If>
+      </AuiIf>
       {/* Reverse traversal reaches a trailing stop before the root. Focusing it
           mounts the autohidden controls, so the next Shift+Tab enters its controls
           instead of skipping the action bar and leaving the message. */}

@@ -35,10 +35,18 @@ import { ExpandArrowsIcon } from "@/lib/expand-icons";
 function streamdownIcon(icon: typeof Copy01Icon) {
   return function StreamdownIcon({
     size,
-    strokeWidth: _strokeWidth,
     ...props
   }: ComponentProps<"svg"> & { size?: number }) {
-    return <HugeiconsIcon icon={icon} size={size} {...props} />;
+    // Dropped rather than forwarded: SVG types strokeWidth `string | number`,
+    // while HugeiconsIcon expects a number.
+    delete props.strokeWidth;
+    return (
+      <HugeiconsIcon
+        {...(props as ComponentProps<typeof HugeiconsIcon>)}
+        icon={icon}
+        size={size}
+      />
+    );
   };
 }
 export const MARKDOWN_TABLE_ICONS = {
@@ -132,10 +140,11 @@ function paintSurface(wrapper: HTMLElement): void {
 export function MarkdownTable({
   children,
   className,
-  node: _node,
   ...props
 }: ComponentProps<"table"> & ExtraProps) {
   const t = useT();
+  // `node` is react-markdown's AST node, not a DOM prop.
+  delete props.node;
   const { isAnimating } = useContext(StreamdownContext);
   const [expanded, setExpanded] = useState(false);
   const label = defaultTranslations.viewFullscreen;
@@ -215,9 +224,10 @@ export function MarkdownTable({
 export function StaticMarkdownTable({
   children,
   className,
-  node: _node,
   ...props
 }: ComponentProps<"table"> & ExtraProps) {
+  // `node` is react-markdown's AST node, not a DOM prop.
+  delete props.node;
   return (
     <div className="aui-md-table">
       <TableScroll className={className} props={props}>

@@ -92,11 +92,12 @@ function Source({
   className,
   variant,
   size,
-  asChild: _asChild,
   href,
   onClick,
   ...props
 }: SourceProps) {
+  // `asChild` is consumed by this wrapper (the Badge below always uses it).
+  delete props.asChild;
   return (
     <Badge
       asChild

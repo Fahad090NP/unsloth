@@ -1,6 +1,6 @@
 "use client";
 
-import { useMessageTiming, useMessage } from "@assistant-ui/react";
+import { useMessageTiming, useAuiState } from "@assistant-ui/react";
 import {
   Tooltip,
   TooltipContent,
@@ -50,15 +50,15 @@ export const MessageTiming: FC<{
   side?: "top" | "right" | "bottom" | "left";
 }> = ({ className, side = "right" }) => {
   const timing = useMessageTiming();
-  const message = useMessage();
+  const messageMetadata = useAuiState(({ message }) => message.metadata);
 
   if (timing?.totalStreamTime === undefined) return null;
 
   const custom = (
-    message.metadata as Record<string, unknown> | undefined
+    messageMetadata as Record<string, unknown> | undefined
   )?.custom as
     | {
-        serverTimings?: Record<string, number>;
+        serverTimings?: Record<string, number | undefined>;
         contextUsage?: {
           cachedTokens?: number;
           cacheWriteTokens?: number;
@@ -193,7 +193,7 @@ export const MessageTiming: FC<{
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Prompt</span>
                   <span className="font-mono tabular-nums">
-                    {formatNumber(st.diffusion_prompt_n ?? st.prompt_n)} tokens
+                    {formatNumber((st.diffusion_prompt_n ?? st.prompt_n) as number)} tokens
                   </span>
                 </div>
               )}

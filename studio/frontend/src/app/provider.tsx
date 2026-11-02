@@ -30,9 +30,9 @@ import { receiveSharedRunConfigUrls } from "@/features/model-picker";
 import {
   DownloadManagerPanel,
   dismissStartToasts,
-} from "@/features/hub/download-manager";
+} from "@/features/hub";
 import { LoadedModelsIndicator } from "@/features/loaded-models";
-import { NativeIntentDrain } from "@/features/native-intents/native-intent-drain";
+import { NativeIntentDrain } from "@/features/native-intents";
 import {
   NATIVE_MAC_TITLEBAR_HEIGHT_VAR,
   NATIVE_MAC_TRAFFIC_LIGHT_INSET_VAR,
@@ -46,7 +46,7 @@ import {
   usePalette,
   useTheme,
 } from "@/features/settings";
-import { SttDownloadPrompt } from "@/features/settings/components/stt-download-prompt";
+import { SttDownloadPrompt } from "@/features/settings";
 import { TauriRepairContext } from "@/hooks/tauri-repair-context";
 import { TauriUpdateContext } from "@/hooks/tauri-update-context";
 import { type BackendStatus, useTauriBackend } from "@/hooks/use-tauri-backend";

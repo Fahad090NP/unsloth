@@ -3,8 +3,8 @@
 
 import { redirect } from "@tanstack/react-router";
 import { apiUrl, isTauri } from "@/lib/api-base";
-import { isTauriLoginRequired } from "@/features/auth/tauri-auto-auth";
-import { setLoginMode } from "@/features/auth/login-client";
+import { isTauriLoginRequired } from "@/features/auth";
+import { setLoginMode } from "@/features/auth";
 import {
   getPostAuthRoute,
   hasAuthToken,
