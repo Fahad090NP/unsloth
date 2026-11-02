@@ -4,6 +4,8 @@
 import assert from "node:assert/strict";
 import test, { after } from "node:test";
 import { createServer } from "vite";
+import type * as ExternalProviders from "../src/features/chat/external-providers.ts";
+import type * as ProvidersApi from "../src/features/chat/api/providers-api.ts";
 import { installLocalStorageFake } from "./helpers/kit.ts";
 
 installLocalStorageFake();
@@ -23,10 +25,10 @@ function installFetch(fake: typeof fetch): () => void {
 test("System One connections stay decision-only after a reload", async () => {
   const api = (await vite.ssrLoadModule(
     "/src/features/chat/api/providers-api.ts",
-  )) as typeof import("../src/features/chat/api/providers-api.ts");
+  )) as typeof ProvidersApi;
   const providers = (await vite.ssrLoadModule(
     "/src/features/chat/external-providers.ts",
-  )) as typeof import("../src/features/chat/external-providers.ts");
+  )) as typeof ExternalProviders;
   const bodies: Record<string, unknown>[] = [];
   const restoreFetch = installFetch(async (_url, init) => {
     await Promise.resolve();

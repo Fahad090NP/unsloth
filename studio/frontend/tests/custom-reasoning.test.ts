@@ -4,6 +4,12 @@
 import assert from "node:assert/strict";
 import test, { after } from "node:test";
 import { createServer } from "vite";
+import type * as ChatTitle from "../src/features/chat/utils/chat-title.ts";
+import type * as CustomReasoning from "../src/features/chat/custom-reasoning.ts";
+import type * as ExternalProviders from "../src/features/chat/external-providers.ts";
+import type * as ProviderCapabilities from "../src/features/chat/provider-capabilities.ts";
+import type * as ProvidersApi from "../src/features/chat/api/providers-api.ts";
+import type * as SyncExternalProviders from "../src/features/chat/sync-external-providers.ts";
 import type { ExternalProviderConfig } from "../src/features/chat/external-providers.ts";
 import { installLocalStorageFake } from "./helpers/kit.ts";
 
@@ -13,22 +19,22 @@ const vite = await createServer({ server: { middlewareMode: true } });
 after(() => vite.close());
 const caps = (await vite.ssrLoadModule(
   "/src/features/chat/provider-capabilities.ts",
-)) as typeof import("../src/features/chat/provider-capabilities.ts");
+)) as typeof ProviderCapabilities;
 const providers = (await vite.ssrLoadModule(
   "/src/features/chat/external-providers.ts",
-)) as typeof import("../src/features/chat/external-providers.ts");
+)) as typeof ExternalProviders;
 const api = (await vite.ssrLoadModule(
   "/src/features/chat/api/providers-api.ts",
-)) as typeof import("../src/features/chat/api/providers-api.ts");
+)) as typeof ProvidersApi;
 const sync = (await vite.ssrLoadModule(
   "/src/features/chat/sync-external-providers.ts",
-)) as typeof import("../src/features/chat/sync-external-providers.ts");
+)) as typeof SyncExternalProviders;
 const routing = (await vite.ssrLoadModule(
   "/src/features/chat/utils/chat-title.ts",
-)) as typeof import("../src/features/chat/utils/chat-title.ts");
+)) as typeof ChatTitle;
 const reasoning = (await vite.ssrLoadModule(
   "/src/features/chat/custom-reasoning.ts",
-)) as typeof import("../src/features/chat/custom-reasoning.ts");
+)) as typeof CustomReasoning;
 
 /** Swap the global fetch without touching it across an await in the test body. */
 function installFetch(fake: typeof fetch): () => void {

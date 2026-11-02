@@ -14,14 +14,14 @@ function readSource(path: string) {
   return ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 }
 
-function compile<T>(expression: string, context: Record<string, unknown>): T {
+function compile(expression: string, context: Record<string, unknown>): unknown {
   const js = ts.transpileModule(`const callback = ${expression};`, {
     compilerOptions: { target: ts.ScriptTarget.ES2020 },
   }).outputText;
   const build = compileFunction(
     js + "; return callback;",
     Object.keys(context),
-  ) as unknown as (...args: unknown[]) => T;
+  ) as unknown as (...args: unknown[]) => unknown;
   return build(...Object.values(context));
 }
 
@@ -33,10 +33,10 @@ function helperFunction(name: string) {
   assert.ok(declaration, name);
   return declaration.getText(helper).replace("export ", "");
 }
-const isChatGgufTask = compile<(task: string | null | undefined) => boolean>(
+const isChatGgufTask = compile(
   helperFunction("isChatGgufTask"),
   {},
-);
+) as (task: string | null | undefined) => boolean;
 const callbacks: { name: string; body: string; wholeRepo: boolean }[] = [];
 for (const path of [
   "../src/features/model-picker/components/model-selector/pickers.tsx",
@@ -74,15 +74,13 @@ for (const task of [null, "text-generation", "image-text-to-text", "text-to-imag
       };
       const unpinRepo = () => { pinned = []; };
       const usePinnedModelsStore = { getState: () => ({ pinned, togglePinned, unpinRepo }) };
-      const reconcile = compile<
-        (targetRepoId: string, hfToken?: string) => Promise<void>
-      >(helperFunction("reconcileGgufPinsAfterDelete"), {
+      const reconcile = compile(helperFunction("reconcileGgufPinsAfterDelete"), {
         fetchCachedGgufInventory: () => Promise.resolve(({ cached: [{ repo_id: repoId }], scan_confirmed: true })),
         listGgufVariants: () => Promise.resolve(({ variants: chat || wholeRepo ? [{ quant: surviving, downloaded: true, partial: false }] : [] })),
         usePinnedModelsStore, pinnedQuantEntries, modelIdsMatchForPicker, ggufVariantsMatchForPicker,
-      });
+      }) as (targetRepoId: string, hfToken?: string) => Promise<void>;
       let reconciliations = 0;
-      const callback = compile<() => Promise<void>>(body, {
+      const callback = compile(body, {
         repoId, hfToken: "hf_fixture_token", pipelineTag: task,
         useHfTokenStore: { getState: () => ({ token: "hf_fixture_token" }) },
         v: { quant: deleted }, entry: { repoId, quant: deleted },
@@ -108,7 +106,7 @@ for (const task of [null, "text-generation", "image-text-to-text", "text-to-imag
             refreshCachedLists: () => undefined, prunePinnedQuantValidation: () => undefined,
           }),
         },
-      });
+      }) as () => Promise<void>;
       await callback();
       assert.deepEqual(pinned, !chat && wholeRepo ? [] : [repoId, pinKey(repoId, surviving)]);
       assert.equal(reconciliations, chat ? 1 : 0);

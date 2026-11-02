@@ -113,8 +113,8 @@ test("an older build cannot reach a vision-off record and erase it", () => {
     const version =
       typeof map[key].version === "number" ? (map[key].version) : 0;
     if (version > PRE_VISION_CEILING) continue;
-    const { disableVision: _dropped, ...known } = map[key];
-    void _dropped;
+    const known = { ...map[key] };
+    Reflect.deleteProperty(known, "disableVision");
     map[key] = known;
     rewrote = true;
   }
