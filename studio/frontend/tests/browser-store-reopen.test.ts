@@ -18,7 +18,7 @@ test("reopening a rewritten file shows its new bytes; an unchanged one keeps its
   const open = (text: string) => { store.openFile({ blob: new Blob([text]), name: "a.txt", key: "sandbox/a.txt" }); };
   const shown = () => {
     const tab = useBrowserStore.getState().tabs[0];
-    const entry = tab && currentEntry(tab);
+    const entry = currentEntry(tab);
     return entry.kind === "file" ? entry.fileId : null;
   };
   open("version 1");
@@ -159,11 +159,11 @@ test("a dragged tab moves to where it is dropped, keeping which tab is open", ()
     });
   const [first] = useBrowserStore.getState().tabs;
   const active = useBrowserStore.getState().activeTabId;
-  store.moveTab(first.id ?? "", 2);
+  store.moveTab(first.id, 2);
   assert.deepEqual(hosts(), ["b", "c", "a"]);
-  store.moveTab(first.id ?? "", 99);
+  store.moveTab(first.id, 99);
   assert.deepEqual(hosts(), ["b", "c", "a"]);
-  store.moveTab(first.id ?? "", 0);
+  store.moveTab(first.id, 0);
   assert.deepEqual(hosts(), ["a", "b", "c"]);
   assert.equal(useBrowserStore.getState().activeTabId, active);
 });
@@ -173,14 +173,13 @@ test("a duplicated form result asks before posting again; a duplicated page just
   store.openUrl("https://example.com/order", { method: "POST", body: "item=1" });
   store.openUrl("https://example.com/page", { newTab: true });
   const [posted, page] = useBrowserStore.getState().tabs.slice(-2);
-  store.duplicateTab(posted.id ?? "");
-  store.duplicateTab(page.id ?? "");
+  store.duplicateTab(posted.id);
+  store.duplicateTab(page.id);
   const copyOf = (id: string | undefined) => {
     const tabs = useBrowserStore.getState().tabs;
     return tabs[tabs.findIndex((tab) => tab.id === id) + 1];
   };
   const [postTab, pageTab] = [copyOf(posted.id), copyOf(page.id)];
-  assert.ok(postTab && pageTab);
   const postCopy = currentEntry(postTab);
   assert.equal(postCopy.kind === "web" && postCopy.method, "POST");
   assert.equal(sentPosts.has(postCopy), true);
@@ -238,8 +237,8 @@ test("going Back to a keyed file restores its key, so its card finds the tab aga
   store.duplicateTab(tabId);
   const copy = useBrowserStore.getState().tabs.find((candidate) => candidate.id !== tabId && candidate.history.some((entry) => entry.kind === "file" && entry.name === "page.html"));
   assert.equal(copy?.openKey, null);
-  store.navigate(copy.id ?? "", { url: "https://example.com/" });
-  store.goBack(copy.id ?? "");
+  store.navigate(copy.id, { url: "https://example.com/" });
+  store.goBack(copy.id);
   assert.equal(useBrowserStore.getState().tabs.find((candidate) => candidate.id === copy.id)?.openKey, null);
 });
 

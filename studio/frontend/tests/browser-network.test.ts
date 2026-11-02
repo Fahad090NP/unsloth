@@ -188,7 +188,8 @@ test("reopening an XHR in flight ends its count, since that request never fires 
 
 test("a body read that fails leaves no count behind", async () => {
   const t = setup();
-  const text = t.Response.prototype.text;
+  const text = Object.getOwnPropertyDescriptor(t.Response.prototype, "text")
+    ?.value as (this: unknown) => Promise<string>;
   await assert.rejects(text.call({}));
   assert.equal(t.pending(0), 0);
 });
@@ -215,7 +216,7 @@ const ok = (body: string, extra: Record<string, unknown> = {}) => ({
 });
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 // Objects from the page script's realm, for deepEqual.
-const plain = (value: unknown) => JSON.parse(JSON.stringify(value));
+const plain = (value: unknown) => JSON.parse(JSON.stringify(value)) as unknown;
 
 test("a fetch to the page's own site goes through the panel and reads as same-origin", async () => {
   const t = setup(NativeXHR, "https://site.test/models");
@@ -330,7 +331,7 @@ test("a write past the panel's body limit stays the browser's, as before relayin
   assert.equal(form.calls.at(-1)?.[0], "send");
   // Empty values, but each multipart entry carries a boundary and headers.
   const fields = new FormData();
-  for (let i = 0; i < 3000; i++) fields.append("f" + i, "");
+  for (let i = 0; i < 3000; i++) fields.append(`f${i}`, "");
   const multipart = new t.window.XMLHttpRequest() as PageXHR;
   multipart.open("POST", "/upload");
   multipart.send(fields);
@@ -399,7 +400,8 @@ test("requests to other sites, and from a page with no address, stay the browser
 
 test("a fetch body reaches the panel with the headers the browser would send", async () => {
   const t = setup(NativeXHR, "https://site.test/");
-  void t.window.fetch("/api", { method: "POST", headers: { "X-Test": "1" }, body: "hello", integrity: "sha256-abc" });
+  t.window.fetch("/api", { method: "POST", headers: { "X-Test": "1" }, body: "hello", integrity: "sha256-abc" })
+    .catch(() => { /* empty */ });
   await tick();
   await tick();
   const sent = t.posted[0];
@@ -431,7 +433,7 @@ test("a failed relay is fetch's network error; an abort rejects and tells the pa
 test("an answer from anything but the shell is ignored", async () => {
   const t = setup(NativeXHR, "https://site.test/");
   let settled = false;
-  void t.window.fetch("/a").then(() => (settled = true));
+  t.window.fetch("/a").then(() => (settled = true)).catch(() => { /* empty */ });
   await tick();
   t.reply(t.posted[0].id, ok("{}"), {});
   await tick();

@@ -35,7 +35,7 @@ function harness(initial: Skill[]) {
   const respond = (body: unknown) => ({
     ok: true,
     status: 200,
-    json: async () => body,
+    json: () => Promise.resolve(body),
   });
   const api = loadWithStubs<Api>(
     new URL("../src/features/chat/api/skills-api.ts", import.meta.url),
@@ -45,7 +45,10 @@ function harness(initial: Skill[]) {
           url: string,
           init?: { method?: string; body?: string },
         ) => {
-          const body = init?.body ? JSON.parse(init.body) : null;
+          await Promise.resolve();
+          const body: { enabled?: boolean } = init?.body
+            ? (JSON.parse(init.body) as { enabled?: boolean })
+            : {};
           if (init?.method === "PUT" && url === "/api/skills") {
             // null restores defaults: user skills on.
             server = server.map((s) => ({
@@ -57,7 +60,7 @@ function harness(initial: Skill[]) {
           if (init?.method === "PUT") {
             const name = decodeURIComponent(url.split("/")[3]);
             server = server.map((s) =>
-              s.name === name ? { ...s, enabled: body.enabled } : s,
+              s.name === name ? { ...s, enabled: body.enabled as boolean } : s,
             );
             return respond(server.find((s) => s.name === name));
           }
@@ -77,7 +80,7 @@ function harness(initial: Skill[]) {
         },
       },
       "../utils/refresh-context-usage": {
-        refreshContextUsage: async () => undefined,
+        refreshContextUsage: () => Promise.resolve(undefined),
       },
       "./skill-tools": { SKILL_MENTION_PATTERN: /@x/g },
     },

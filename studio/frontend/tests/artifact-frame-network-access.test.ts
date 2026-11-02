@@ -151,7 +151,7 @@ function readSetterCalls(
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node) && node.expression.getText() === setter) {
       let handler: string | null = null;
-      for (let at: ts.Node | undefined = node; at; at = at.parent) {
+      for (let at: ts.Node | undefined = node as ts.Node | undefined; at; at = at.parent) {
         if (ts.isJsxAttribute(at.parent)) {
           handler = at.parent.name.getText();
           break;
@@ -347,7 +347,7 @@ test("the banner deep-links to the network access setting", () => {
       node.expression.getText().endsWith(".openDialog")
     ) {
       let handler: string | null = null;
-      for (let at: ts.Node | undefined = node; at; at = at.parent) {
+      for (let at: ts.Node | undefined = node as ts.Node | undefined; at; at = at.parent) {
         if (ts.isJsxAttribute(at.parent)) {
           handler = at.parent.name.getText();
           break;
@@ -392,7 +392,7 @@ function readHandlerCalling(needle: string): string {
   let text: string | undefined;
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node) && node.expression.getText() === needle) {
-      for (let at: ts.Node | undefined = node; at; at = at.parent) {
+      for (let at: ts.Node | undefined = node as ts.Node | undefined; at; at = at.parent) {
         if (ts.isJsxAttribute(at.parent)) {
           text = at.parent.getText();
           break;

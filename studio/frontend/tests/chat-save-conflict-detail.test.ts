@@ -124,14 +124,14 @@ test("the body is read exactly once", async () => {
 
 test("a 409 with no usable body still produces a sensible message", async () => {
   const { module } = harness(jsonResponse(409, null));
-  const error = await module.saveChatMessage(message).catch((e) => e);
+  const error = await module.saveChatMessage(message).catch((e: unknown) => e);
   assert.ok(error instanceof module.ChatMessageProtectedError);
   assert.match(error.message, /server-managed/);
 });
 
 test("a 409 whose body is not JSON at all does not throw a parse error", async () => {
   const { module } = harness(jsonResponse(409, undefined));
-  const error = await module.saveChatMessage(message).catch((e) => e);
+  const error = await module.saveChatMessage(message).catch((e: unknown) => e);
   assert.ok(
     error instanceof module.ChatMessageProtectedError,
     "the conflict must survive an unparseable body",
@@ -142,7 +142,7 @@ test("a thread-id collision is not treated as protection", async () => {
   const { module } = harness(
     jsonResponse(409, { detail: "Message id already belongs to another thread: m1" }, "thread-collision"),
   );
-  const error = await module.saveChatMessage(message).catch((e) => e);
+  const error = await module.saveChatMessage(message).catch((e: unknown) => e);
 
   assert.ok(error instanceof Error);
   assert.ok(
@@ -153,7 +153,7 @@ test("a thread-id collision is not treated as protection", async () => {
 
 test("a backend too old to send the header falls back to the plain error", async () => {
   const { module } = harness(jsonResponse(409, { detail: "conflict" }, null));
-  const error = await module.saveChatMessage(message).catch((e) => e);
+  const error = await module.saveChatMessage(message).catch((e: unknown) => e);
 
   assert.ok(error instanceof Error);
   assert.ok(!(error instanceof module.ChatMessageProtectedError));
@@ -161,7 +161,7 @@ test("a backend too old to send the header falls back to the plain error", async
 
 test("other failures are untouched", async () => {
   const { module } = harness(jsonResponse(500, { detail: "boom" }));
-  const error = await module.saveChatMessage(message).catch((e) => e);
+  const error = await module.saveChatMessage(message).catch((e: unknown) => e);
   assert.ok(error instanceof Error);
   assert.ok(
     !(error instanceof module.ChatMessageProtectedError),

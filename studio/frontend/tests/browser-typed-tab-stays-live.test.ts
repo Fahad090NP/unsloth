@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { register } from "node:module";
 import { test } from "node:test";
+import vm from "node:vm";
 import ts from "@typescript/typescript6";
 import { userActionGate } from "../src/features/browser/frame-message.ts";
 import { readSrc } from "./helpers/kit.ts";
@@ -28,7 +29,10 @@ function sourceCode(file: string, names: string[], globals: Record<string, unkno
   const code = ts.transpileModule(`${parts.join("\n")}\nreturn { ${names.join(", ")} };`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
   }).outputText;
-  return new Function(...Object.keys(globals), code)(...Object.values(globals));
+  const compiled = vm.compileFunction(code, Object.keys(globals)) as (
+    ...args: unknown[]
+  ) => Record<string, unknown>;
+  return compiled(...Object.values(globals));
 }
 
 const { liveTabIds, mountedTabIds, retainedTabs } = sourceCode(
@@ -116,10 +120,10 @@ test("the active draft is separate from the three hidden draft slots", () => {
 test("re-editing an older draft changes eviction order", () => {
   const ids = openTabs(["https://a.example/", "https://b.example/", "https://c.example/", "https://d.example/", "https://e.example/", "https://f.example/"]);
   let now = 0;
-  const { useFrameMessages } = sourceCode("features/browser/tab-view.tsx", ["useFrameMessages"], {
+  const { useFrameMessages: frameMessages } = sourceCode("features/browser/tab-view.tsx", ["useFrameMessages"], {
     useBrowserStore, useCallback: (fn: unknown) => fn, useT: () => () => "", Date: { now: () => ++now },
   }) as { useFrameMessages: (id: string, origin: string) => (message: { type: "typed" }) => void };
-  const edit = (id: string) => { useFrameMessages(id, "https://a.example")({ type: "typed" }); };
+  const edit = (id: string) => { frameMessages(id, "https://a.example")({ type: "typed" }); };
   for (const id of ids.slice(0, 4)) edit(id);
   const mounted = visit(ids);
   edit(ids[0]);
@@ -167,7 +171,7 @@ test("a typed notice sent after the page left does not mark the next page", () =
 test("discarding a frame clears only its own draft mark", () => {
   const ids = openTabs(["https://a.example/", "https://b.example/", "https://c.example/"]);
   for (const id of ids) type(id);
-  const { useFrameMessages } = sourceCode("features/browser/tab-view.tsx", ["useFrameMessages"], {
+  const { useFrameMessages: frameMessages } = sourceCode("features/browser/tab-view.tsx", ["useFrameMessages"], {
     useBrowserStore, useCallback: (fn: unknown) => fn, useT: () => () => "",
   }) as { useFrameMessages: (id: string, origin: string) => (message: unknown) => void };
   const file = "features/browser/page-frame.tsx";
@@ -186,9 +190,13 @@ test("discarding a frame clears only its own draft mark", () => {
       pageRequests: () => ({ stop: noop }), requestForPage: noop, userActionGate, urlRef: { current: null }, frameRef: { current: null },
       window: { addEventListener: noop, removeEventListener: noop }, onPageStorageClear: () => noop,
       onPageStorageWrite: () => noop, origin: "https://a.example", tabIdRef: { current: id },
-      onMessageRef: { current: useFrameMessages(id, "https://a.example") },
+      onMessageRef: { current: frameMessages(id, "https://a.example") },
     };
-    const mount = new Function(...Object.keys(globals), code)(...Object.values(globals)) as () => () => void;
+    const mountFactory = vm.compileFunction(
+      code,
+      Object.keys(globals),
+    ) as (...args: unknown[]) => () => () => void;
+    const mount = mountFactory(...Object.values(globals));
     const unmount = mount();
     assert.notEqual(tabs().find((tab) => tab.id === id)?.typedAt, undefined);
     unmount();
@@ -207,13 +215,24 @@ test("only the first private input channel from this page can report edits", () 
   const parent = { postMessage: (data: unknown) => forwarded.push(data) };
   let listener: (event: { source: unknown; data: unknown; ports: Port[] }) => void;
   let now = 0;
-  let violation: (event: { effectiveDirective: string; blockedURI: string }) => void;
+  let violation:
+    | ((event: { effectiveDirective: string; blockedURI: string }) => void)
+    | undefined;
   const document = {
     createElement: () => ({ contentWindow: child, setAttribute() { /* empty */ } }),
     body: { appendChild() { /* empty */ } }, head: { appendChild() { /* empty */ } },
     addEventListener: (_: string, callback: typeof violation) => { violation = callback; },
   };
-  new Function("window", "document", "parent", "performance", "boot", "escapeAttr", "inject", relay)(
+  const relayFactory = vm.compileFunction(relay, [
+    "window",
+    "document",
+    "parent",
+    "performance",
+    "boot",
+    "escapeAttr",
+    "inject",
+  ]) as (...args: unknown[]) => void;
+  relayFactory(
     { addEventListener: (_: string, callback: typeof listener) => { listener = callback; } },
     document, parent, { now: () => now }, () => { /* empty */ }, (text: string) => text, () => "",
   );
@@ -248,14 +267,18 @@ test("only the first private input channel from this page can report edits", () 
   forwarded.length = 0;
   send(child, { source: "unsloth-browser", type: "linkClick", url: "https://docs.example/next" });
   assert.deepEqual(forwarded, []);
-  violation!({ effectiveDirective: "frame-src", blockedURI: "https://docs.example/" });
+  assert.ok(violation);
+  violation({ effectiveDirective: "frame-src", blockedURI: "https://docs.example/" });
   assert.deepEqual(forwarded, [{ source: "unsloth-browser", type: "navigate", url: "https://docs.example/next" }]);
 });
 
 test("bootstrap precedes page scripts without moving a leading doctype", () => {
   const backend = readFileSync(new URL("../../backend/routes/browser.py", import.meta.url), "utf8");
   const injection = backend.slice(backend.indexOf("      const inject = "), backend.indexOf("      let page = null;"));
-  const inject = new Function(`${injection}\nreturn inject;`)() as (html: string, tags: string) => string;
+  const injectFactory = vm.compileFunction(
+    `${injection}\nreturn inject;`,
+  ) as () => (html: string, tags: string) => string;
+  const inject = injectFactory();
   for (const prefix of ["<!doctype html>", "<!-- page -->\n<!doctype html>", ""]) {
     const result = inject(`${prefix}<script>hostile()</script><html lang="en"><head></head><body></body>`, "<script>boot()</script>");
     assert.ok(result.startsWith(`${prefix}<html><head><script>boot()</script></head>`));
@@ -276,19 +299,30 @@ test("scripted editing cannot claim typing but keyboard editors and paste can", 
     addEventListener(type: string, listener: (event: unknown) => void) { listeners.set(type, listener); }
   }
   const document = new Document();
-  new Function("Document", "document", "Element", "edited", "setTimeout", code)(
+  const scriptedEditFactory = vm.compileFunction(code, [
+    "Document",
+    "document",
+    "Element",
+    "edited",
+    "setTimeout",
+  ]) as (...args: unknown[]) => void;
+  scriptedEditFactory(
     Document, document, Element, (value: boolean) => notices.push(value), (callback: () => void) => timers.push(callback),
   );
   document.execCommand();
   listeners.get("input")?.({ isTrusted: false });
   assert.deepEqual(notices, []);
-  const apply = Function.prototype.apply;
+  const applyDescriptor = Object.getOwnPropertyDescriptor(
+    Function.prototype,
+    "apply",
+  );
+  assert.ok(applyDescriptor);
   let escaped: ((this: Document) => void) | undefined;
   try {
     Function.prototype.apply = function () { escaped = this as typeof escaped; };
     document.execCommand();
   } finally {
-    Function.prototype.apply = apply;
+    Object.defineProperty(Function.prototype, "apply", applyDescriptor);
   }
   escaped?.call(document);
   assert.deepEqual(notices, []);

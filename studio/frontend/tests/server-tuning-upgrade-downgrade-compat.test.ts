@@ -169,17 +169,11 @@ test("a v5 record is out of a pre-v5 build's reach in the first place", () => {
     if (version > PRE_TUNING_CEILING) {
       continue;
     }
-    const {
-      loadMode: _loadMode,
-      specDraftCacheDtype: _specDraftCacheDtype,
-      ctxCheckpoints: _ctxCheckpoints,
-      cacheRam: _cacheRam,
-      ...known
-    } = map[key];
-    void _loadMode;
-    void _specDraftCacheDtype;
-    void _ctxCheckpoints;
-    void _cacheRam;
+    const known = { ...map[key] };
+    delete known.loadMode;
+    delete known.specDraftCacheDtype;
+    delete known.ctxCheckpoints;
+    delete known.cacheRam;
     map[key] = known;
     rewrote = true;
   }
