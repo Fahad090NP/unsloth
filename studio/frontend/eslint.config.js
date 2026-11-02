@@ -118,6 +118,19 @@ export default defineConfig([
       "@typescript-eslint/no-unnecessary-type-assertion": "off",
       "@typescript-eslint/consistent-type-definitions": "off",
       "@typescript-eslint/no-unsafe-enum-comparison": "error",
+      // `||` is correct when a falsy primitive is a real value; only flag
+      // object/nullish mixes where `??` is unambiguous.
+      "@typescript-eslint/prefer-nullish-coalescing": [
+        "error",
+        {
+          ignorePrimitives: {
+            bigint: true,
+            boolean: true,
+            number: true,
+            string: true,
+          },
+        },
+      ],
       "@typescript-eslint/prefer-readonly": "error",
       "@typescript-eslint/restrict-template-expressions": [
         "error",
@@ -147,7 +160,9 @@ export default defineConfig([
       "@typescript-eslint/no-deprecated": "warn",
       "@typescript-eslint/no-for-in-array": "error",
       "@typescript-eslint/no-implied-eval": "error",
-      "eqeqeq": ["error", "always"],
+      // `== null` is the idiomatic null-or-undefined check; forcing `=== null`
+      // silently changes behaviour for optional values.
+      "eqeqeq": ["error", "smart"],
       "no-constant-binary-expression": "error",
       "no-else-return": "error",
       "no-implicit-coercion": "error",
@@ -167,14 +182,15 @@ export default defineConfig([
       // React hooks are correctness rules in this app.
       "react-hooks/exhaustive-deps": "error",
       "react-hooks/rules-of-hooks": "error",
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
+      // HMR-only hint; component modules legitimately export hooks and types.
+      "react-refresh/only-export-components": "off",
 
       // Diagnostics are intentional, but should not multiply silently.
-      "no-await-in-loop": "warn",
-      "no-console": "warn",
+      // Awaiting inside a loop is often required for ordering and rate limits,
+      // so it is not a correctness gate.
+      "no-await-in-loop": "off",
+      // Diagnostics may use warn/error; console.log-style output stays banned.
+      "no-console": ["warn", { allow: ["warn", "error"] }],
 
       "no-restricted-imports": [
         "error",
@@ -225,6 +241,19 @@ export default defineConfig([
     },
   },
   {
+    // Test harnesses, build tooling and boot scripts report diagnostics to the
+    // terminal by design.
+    files: [
+      "tests/**/*.{ts,tsx}",
+      "scripts/**/*.{ts,tsx,js,mjs,cjs}",
+      "public/**/*.{js,mjs}",
+      "smoke-*.tsx",
+    ],
+    rules: {
+      "no-console": "off",
+    },
+  },
+  {
     files: ["**/*.{js,jsx,mjs,cjs}"],
     extends: [js.configs.recommended],
     languageOptions: {
@@ -236,7 +265,7 @@ export default defineConfig([
       },
     },
     rules: {
-      "eqeqeq": ["error", "always"],
+      "eqeqeq": ["error", "smart"],
       "no-console": "warn",
       "no-implicit-coercion": "error",
       "no-var": "error",
