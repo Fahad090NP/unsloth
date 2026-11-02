@@ -178,7 +178,7 @@ function LoadedModelRow({
           </button>
         </TooltipTrigger>
         <TooltipContent side="left" sideOffset={6}>
-          <span className="block">{entry.label || entry.name}</span>
+          <span className="block">{entry.label ?? entry.name}</span>
           <span className="block text-muted-foreground">
             {t("floatingPanels.loadedModels.openTarget", {
               target: target.label,

@@ -87,7 +87,7 @@ export function createPickToast({ describe, classNames }: PickToastOptions): Pic
       if (!progress || live?.phase !== "downloading" || live.plan !== progress.plan) return;
       if (
         live.progress?.downloadedBytes === progress.downloadedBytes &&
-        live.progress?.totalBytes === progress.totalBytes
+        live.progress.totalBytes === progress.totalBytes
       ) {
         return;
       }

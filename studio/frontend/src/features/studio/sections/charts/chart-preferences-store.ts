@@ -54,7 +54,7 @@ export const useChartPreferencesStore = create<ChartPreferencesState>(
     setAvailableSteps: (value) =>
       { set((state) => {
         const availableSteps = Math.max(0, Math.round(value));
-        if (state.windowSize == null || availableSteps <= 0) {
+        if (state.windowSize === null || availableSteps <= 0) {
           return { availableSteps };
         }
 
@@ -69,7 +69,7 @@ export const useChartPreferencesStore = create<ChartPreferencesState>(
       }); },
     setWindowSize: (value) =>
       { set((state) => {
-        if (value == null || state.availableSteps <= 0) {
+        if (value === null || state.availableSteps <= 0) {
           return { windowSize: null };
         }
 

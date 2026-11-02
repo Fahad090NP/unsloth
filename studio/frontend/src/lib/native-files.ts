@@ -203,7 +203,7 @@ export async function downloadUrl(
   return await downloadFile(
     bytes,
     filename,
-    response.headers.get("content-type") || "application/octet-stream",
+    response.headers.get("content-type") ?? "application/octet-stream",
   );
 }
 

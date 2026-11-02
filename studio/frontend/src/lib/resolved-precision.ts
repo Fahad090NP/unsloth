@@ -42,7 +42,7 @@ export function isPrecisionRefusal(message: string): boolean {
 function isOff(value: string | boolean | null | undefined): boolean {
   if (value === null || value === undefined || value === false) return true;
   if (value === true) return false;
-  const text = String(value).trim().toLowerCase().replace(/-/g, "_");
+  const text = (value).trim().toLowerCase().replace(/-/g, "_");
   return text === "" || text === "none" || text === "off" || text === "0";
 }
 
@@ -114,7 +114,7 @@ export function resolvedSelectValue<T extends string>(
   if (source === undefined) return null;
   if (source === null) return toOption("none");
   if (typeof source === "boolean") return toOption(source ? "on" : "none");
-  return toOption(String(source));
+  return toOption((source));
 }
 
 /**
@@ -145,7 +145,7 @@ export function isNativeEngineStatus(status: {
   engine?: string | null;
   dtype?: string | null;
 }): boolean {
-  const engine = String(status.engine ?? "").trim().toLowerCase();
+  const engine = (status.engine ?? "").trim().toLowerCase();
   if (engine) return engine.includes("sd_cpp") || engine.includes("sd.cpp") || engine === "native";
   return status.dtype === "gguf";
 }
@@ -164,7 +164,7 @@ export function denseTransformerBuildLabel(status: {
 
 /** CPU, older accelerators and fp16-incompatible families load in other dtypes; unknown is BF16. */
 function denseDtypeLabel(dtype: string | null | undefined): string {
-  const text = String(dtype ?? "").trim().toLowerCase();
+  const text = (dtype ?? "").trim().toLowerCase();
   if (text.includes("bfloat16") || text === "bf16") return "BF16";
   if (text.includes("float16") || text === "fp16") return "FP16";
   if (text.includes("float32") || text === "fp32") return "FP32";
@@ -182,7 +182,7 @@ export function memoryRecipeValue(
   memoryMode: string | null | undefined,
   offloadPolicy: string | null | undefined,
 ): string {
-  const offloading = offloadPolicy != null && offloadPolicy !== "" && offloadPolicy !== "none";
+  const offloading = offloadPolicy !== null && offloadPolicy !== "" && offloadPolicy !== "none";
   if (!offloading) return memoryMode ?? "";
   if (!memoryMode) return `${offloadPolicy} offload`;
   return `${memoryMode} (${offloadPolicy} offload)`;

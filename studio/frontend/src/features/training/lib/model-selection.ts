@@ -15,6 +15,6 @@ export function isLocalTrainingModelSelection({
   return Boolean(
     model &&
       (looksLikeLocalPath(model) ||
-        (!knownCached && localPath && localPath.trim())),
+        (!knownCached && localPath?.trim())),
   );
 }

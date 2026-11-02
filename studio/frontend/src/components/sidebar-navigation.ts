@@ -26,7 +26,9 @@ export function createNavigationCoalescer<T>({
     go(options: T) {
       if (hrefOf(options) === currentHref()) return;
       const replace = unshown !== undefined && currentEntry() === unshown;
-      void navigate(replace ? asReplace(options) : options).catch(() => {});
+      void navigate(replace ? asReplace(options) : options).catch(() => {
+        // Navigation failures leave the current route in place.
+      });
       unshown = currentHref() === hrefOf(options) ? currentEntry() : undefined;
     },
     // The router resolves only when nothing is pending: the entry rendered or history left it.

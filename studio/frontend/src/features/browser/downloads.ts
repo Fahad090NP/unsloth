@@ -156,7 +156,7 @@ async function writeDownload(
     if (!isDownloadCancelled(error)) toast.error(error instanceof Error ? error.message : String(error));
     return;
   }
-  const savedName = saved?.name || picked?.name || name;
+  const savedName = saved?.name ?? picked?.name ?? name;
   const item = { name: savedName, url, size: blob.size, contentType, nativeId: saved?.id };
   const historyId = useBrowserHistoryStore.getState().recordDownload(item, temporary);
   // Open uses the saved file when the app kept it; only otherwise does this session hold the bytes.

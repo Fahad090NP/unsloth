@@ -61,7 +61,9 @@ export function useLoadAnywayPrompt(): {
   const dialog = (
     <AlertDialog
       open={pending !== null}
-      onOpenChange={(open) => !open && setPending(null)}
+      onOpenChange={(open) => {
+        if (!open) setPending(null);
+      }}
     >
       <AlertDialogContent onOverlayClick={() => { setPending(null); }}>
         <AlertDialogHeader>

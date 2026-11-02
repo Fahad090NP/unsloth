@@ -637,7 +637,7 @@ function RunDialogBody({
                   checked={settings.disableEarlyShutdown}
                   onCheckedChange={(checked) =>
                     { onSettingsChange({
-                      disableEarlyShutdown: Boolean(checked),
+                      disableEarlyShutdown: (checked),
                     }); }
                   }
                 />

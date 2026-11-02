@@ -131,7 +131,9 @@ export function ProjectFolderPicker({
         <button
           type="button"
           disabled={!supported || picking || disabled}
-          onClick={() => void add()}
+          onClick={() => {
+            add().catch(() => undefined);
+          }}
           aria-label="Add folder"
           title={
             supported

@@ -34,7 +34,10 @@ function startsBlock(line: string): boolean {
 
 /** Per line, whether a `-->` is reachable within its paragraph; read at `index + 1` for `index`. */
 export function commentClosesBelow(lines: string[]): boolean[] {
-  const closes: boolean[] = new Array(lines.length + 1).fill(false);
+  const closes: boolean[] = Array.from(
+    { length: lines.length + 1 },
+    () => false,
+  );
   for (let at = lines.length - 1; at >= 0; at -= 1) {
     const line = lines[at] ?? "";
     closes[at] =

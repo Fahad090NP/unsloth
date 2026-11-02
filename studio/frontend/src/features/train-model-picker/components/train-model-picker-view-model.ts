@@ -42,7 +42,8 @@ function trainModelSourceWeight(source: LocalSource): number {
       return 4;
     case "hermes":
       return 5;
-    default:
+    case "omlx":
+    case "unsloth":
       return 6;
   }
 }

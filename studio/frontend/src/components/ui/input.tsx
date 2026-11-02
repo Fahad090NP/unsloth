@@ -43,11 +43,10 @@ function stepNumberInput(input: HTMLInputElement, direction: 1 | -1): void {
   const decimals = (String(step).split(".")[1] ?? "").length;
   const value = String(Number(next.toFixed(decimals)));
   // Native setter plus an "input" event so controlled callers' onChange fires.
-  const setter = Object.getOwnPropertyDescriptor(
-    HTMLInputElement.prototype,
-    "value",
-  )?.set;
-  setter?.call(input, value);
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(
+    input,
+    value,
+  );
   input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 

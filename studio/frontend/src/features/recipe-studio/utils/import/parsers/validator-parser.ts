@@ -53,7 +53,8 @@ export function parseValidator(
       ? params.validation_function.trim()
       : "";
   const isLocalCallable =
-    String(column.validator_type ?? "").trim() === "local_callable";
+    typeof column.validator_type === "string" &&
+    column.validator_type.trim() === "local_callable";
   const isOxc =
     isLocalCallable && validationFunctionRaw.startsWith(OXC_VALIDATION_FN_MARKER);
   const isJson =

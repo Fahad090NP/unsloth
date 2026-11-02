@@ -40,7 +40,9 @@ export function MethodPicker({
               type="button"
               disabled={isDisabled}
               aria-pressed={selected}
-              onClick={() => !isDisabled && onChange(m.value)}
+              onClick={() => {
+                if (!isDisabled) onChange(m.value);
+              }}
               className={cn(
                 "flex items-start rounded-[18px] p-4 text-left ring-1 transition-colors",
                 isDisabled

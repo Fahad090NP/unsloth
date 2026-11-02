@@ -20,7 +20,7 @@ export function resolveTrainingStartRequestOutcome(
   if (status.state === "rejected") {
     return {
       kind: "rejected",
-      error: status.error || status.message,
+      error: status.error ?? status.message,
       errorCode: status.error_code ?? null,
     };
   }

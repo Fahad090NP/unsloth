@@ -11,7 +11,7 @@ function isMarkdownNoteNode(node: Node): boolean {
   if (node.type !== "builder") {
     return false;
   }
-  if (!node.data || typeof node.data !== "object") {
+  if (typeof node.data !== "object") {
     return false;
   }
   return (node.data as { kind?: string }).kind === "note";

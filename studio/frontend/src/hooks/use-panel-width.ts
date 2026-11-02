@@ -122,7 +122,9 @@ export function createPanelWidthStore({
       storedWidth = stored;
       try {
         window.localStorage.setItem(key, String(stored));
-      } catch {}
+      } catch {
+        // Ignore unavailable storage; the width stays in memory.
+      }
     }
     recompute();
   }

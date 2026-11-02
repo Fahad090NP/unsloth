@@ -390,7 +390,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
                 modelFormat: "adapter",
                 isVisionModel: modelDetails.is_vision,
                 isEmbeddingModel: Boolean(modelDetails.is_embedding),
-                isAudioModel: Boolean(modelDetails.is_audio),
+                isAudioModel: (modelDetails.is_audio),
                 audioCapabilityUnknown: modelDetails.audio_type_known === false,
                 isLoadingModelDefaults: false,
                 isCheckingVision: false,
@@ -424,7 +424,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
                 : LR_DEFAULT_FULL;
             }
 
-            const isAudio = Boolean(modelDetails.is_audio);
+            const isAudio = (modelDetails.is_audio);
             const isEmbedding = Boolean(modelDetails.is_embedding);
             const inferredModelType = resolveTrainingModelType({
               modelType: modelDetails.model_type,
@@ -937,7 +937,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
         if (requiresExplicitCachedDatasetSplit(state)) {
           return;
         }
-        runDatasetCheck(state.dataset, state.datasetSplit || "train", {
+        runDatasetCheck(state.dataset, state.datasetSplit ?? "train", {
           preferLocalCache: !datasetStreaming && state.datasetKnownCached,
         });
       };
@@ -964,7 +964,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
         dataset: string | null,
         options?: DatasetCacheReferenceOptions,
       ) => {
-        const datasetId = dataset?.trim() || null;
+        const datasetId = dataset?.trim() ?? null;
         trainingDatasetCacheRejections.reset();
         _datasetCheckController?.abort();
         _datasetCheckController = null;
@@ -1216,7 +1216,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
             datasetLocalPath: null,
             browseDatasetSelection: createHfBrowseDatasetSelection(dataset),
           });
-          runDatasetCheck(dataset, get().datasetSplit || "train", {
+          runDatasetCheck(dataset, get().datasetSplit ?? "train", {
             preferLocalCache: false,
           });
         },
@@ -1330,7 +1330,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
             };
           }); },
         setDataset: (dataset) => {
-          const datasetId = dataset?.trim() || null;
+          const datasetId = dataset?.trim() ?? null;
           trainingDatasetCacheRejections.reset();
           _datasetCheckController?.abort();
           _datasetCheckController = null;
@@ -1407,7 +1407,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
             return;
           }
 
-          runDatasetCheck(datasetName, datasetSplit || "train");
+          runDatasetCheck(datasetName, datasetSplit ?? "train");
         },
         ensureDatasetChecked: () => {
           const state = get();
@@ -1423,7 +1423,7 @@ export const useTrainingConfigStore = create<TrainingConfigStore>()(
             return;
           }
 
-          const split = state.datasetSplit || "train";
+          const split = state.datasetSplit ?? "train";
           runDatasetCheck(datasetName, split);
         },
         setDatasetEvalSplit: (datasetEvalSplit) => {

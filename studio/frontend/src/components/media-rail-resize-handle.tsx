@@ -77,7 +77,9 @@ export function MediaRailResizeHandle({
       setWidth={(px) => { rail.setWidth(Math.min(px, max)); }}
       resetWidth={rail.resetWidth}
       // The rail does not collapse; click does nothing, drag and arrow keys resize.
-      onToggle={() => {}}
+      onToggle={() => {
+        /* The rail does not collapse on click. */
+      }}
       target={root}
       cssVar="--media-rail-width"
       measure={() => width}

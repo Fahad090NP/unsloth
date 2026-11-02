@@ -203,7 +203,9 @@ export function MediaZoomStage({
         event.preventDefault();
         event.stopPropagation();
       }}
-      onDragStart={(event) => pannable && event.preventDefault()}
+      onDragStart={(event) => {
+        if (pannable) event.preventDefault();
+      }}
       className={cn(
         "relative min-h-0 flex-1 select-none overflow-hidden",
         pannable && "touch-none",

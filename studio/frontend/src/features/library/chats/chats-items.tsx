@@ -344,7 +344,7 @@ function RegenerateTitleItem({ chat }: { chat: SidebarItem }) {
   const t = useT();
   const actions = useChatsActions();
   const generating = useChatRuntimeStore((s) =>
-    (chat.threadIds?.length ? chat.threadIds : [chat.id]).some((id) => Boolean(s.runningByThreadId[id])),
+    (chat.threadIds?.length ? chat.threadIds : [chat.id]).some((id) => (s.runningByThreadId[id])),
   );
   return (
     <MenuItem
@@ -360,7 +360,7 @@ function RegenerateTitleItem({ chat }: { chat: SidebarItem }) {
 function ForkItem({ chat }: { chat: SidebarItem }) {
   const t = useT();
   const actions = useChatsActions();
-  const generating = useChatRuntimeStore((s) => Boolean(s.runningByThreadId[chat.id]));
+  const generating = useChatRuntimeStore((s) => (s.runningByThreadId[chat.id]));
   const forking = useForkInFlight((s) => s.forking);
   return (
     <DropdownMenuItem

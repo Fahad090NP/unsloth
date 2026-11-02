@@ -124,7 +124,9 @@ if (typeof localeInitialization !== "string" || isTauri || chatPageAtStart) {
     localeInitialization,
     interfaceScaleInitialization,
     chatPageAtStart,
-  ]).then(renderApp);
+  ])
+    .then(renderApp)
+    .catch(() => undefined);
 } else {
   renderApp();
 }

@@ -376,7 +376,7 @@ export function useLinkedFolders(
         onSourcesChanged?.();
         setJobs((current) => {
           const next = { ...current };
-          delete next[folderId];
+          Reflect.deleteProperty(next, folderId);
           return next;
         });
       } catch (error) {

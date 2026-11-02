@@ -62,7 +62,7 @@ export function useLibraryPreviewUrl(
     );
     return () => {
       cancelled = true;
-      void next.then(({ url, streamed }) => !streamed && URL.revokeObjectURL(url), () => {});
+      void next.then(({ url, streamed }) => !streamed && URL.revokeObjectURL(url), () => { /* no-op */ });
     };
     // `key` carries the item's identity and version; the object changes on every refresh.
     // eslint-disable-next-line react-hooks/exhaustive-deps

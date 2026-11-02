@@ -139,7 +139,7 @@ export async function checkVisionModel(
 ): Promise<boolean> {
   const encoded = encodeURIComponent(modelName);
   const response = await authFetch(`/api/models/check-vision/${encoded}`, {
-    headers: hubTokenHeader(hfToken?.trim() || null),
+    headers: hubTokenHeader(hfToken?.trim() ?? null),
   });
   if (!response.ok) {
     throw new Error(
@@ -156,7 +156,7 @@ export async function checkEmbeddingModel(
 ): Promise<boolean> {
   const encoded = encodeURIComponent(modelName);
   const response = await authFetch(`/api/models/check-embedding/${encoded}`, {
-    headers: hubTokenHeader(hfToken?.trim() || null),
+    headers: hubTokenHeader(hfToken?.trim() ?? null),
   });
   if (!response.ok) {
     return false;
@@ -186,7 +186,7 @@ export async function getModelConfig(
   const response = await authFetch(
     `/api/models/config/${encoded}${query ? `?${query}` : ""}`,
     {
-      headers: hubTokenHeader(hfToken?.trim() || null),
+      headers: hubTokenHeader(hfToken?.trim() ?? null),
       signal,
     },
   );

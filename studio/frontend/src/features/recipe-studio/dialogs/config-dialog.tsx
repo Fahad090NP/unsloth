@@ -48,7 +48,7 @@ export function ConfigDialog({
     config?.kind === "validator" ||
     config?.kind === "expression" ||
     (config?.kind === "seed" &&
-      (config.seed_source_type ?? "hf") === "unstructured");
+      config.seed_source_type === "unstructured");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

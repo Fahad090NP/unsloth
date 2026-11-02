@@ -87,7 +87,9 @@ export async function confirmRemoteCodeIfNeeded({
         : scan.createdByScan
           ? [scan.modelName]
           : [];
-    for (const repo of toPurge) void discardRemoteCodeDownload(repo);
+    for (const repo of toPurge) {
+      discardRemoteCodeDownload(repo).catch(() => undefined);
+    }
     return false;
   }
   onApprove(scan.fingerprint);

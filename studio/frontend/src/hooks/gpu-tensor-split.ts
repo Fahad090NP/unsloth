@@ -35,7 +35,7 @@ export function reconcileTensorSplit(
   resolvedIds: number[] | null | undefined,
 ): number[] | null {
   // Unpinned on both sides: the ratio spans every visible GPU, as a resident unpinned manual load reports it.
-  if (savedIds == null && resolvedIds == null) {
+  if (savedIds === null && resolvedIds === null) {
     return Array.isArray(value)
       ? normalizeTensorSplit(value, value.map((_, index) => index))
       : null;

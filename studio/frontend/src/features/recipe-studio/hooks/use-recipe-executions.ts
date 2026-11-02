@@ -458,13 +458,13 @@ function isSameLocalModelSelection(
   left: LocalModelSelection | null,
   right: LocalModelSelection,
 ): boolean {
-  return Boolean(
+  return (
     left?.target.toLowerCase() === right.target.toLowerCase() &&
       left.ggufVariant === right.ggufVariant &&
       contextIntent(left.requestedContextLength, left.isMlx) ===
         contextIntent(right.requestedContextLength, right.isMlx) &&
       (left.reasoningBudget ?? -1) === (right.reasoningBudget ?? -1) &&
-      (left.reasoningBudgetMessage ?? "") === (right.reasoningBudgetMessage ?? ""),
+      (left.reasoningBudgetMessage ?? "") === (right.reasoningBudgetMessage ?? "")
   );
 }
 

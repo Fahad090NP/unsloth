@@ -17,7 +17,7 @@ export function isMobileViewport(): boolean {
 }
 
 function subscribe(callback: () => void): () => void {
-  if (typeof window === "undefined") return () => {};
+  if (typeof window === "undefined") return () => { /* no-op */ };
   const mql = window.matchMedia(MEDIA_QUERY);
   mql.addEventListener("change", callback);
   document.addEventListener("fullscreenchange", callback);
@@ -44,7 +44,7 @@ function getCompactSnapshot(): boolean {
 }
 
 function subscribeCompact(callback: () => void): () => void {
-  if (typeof window === "undefined") return () => {};
+  if (typeof window === "undefined") return () => { /* no-op */ };
   const mql = window.matchMedia(COMPACT_QUERY);
   mql.addEventListener("change", callback);
   return () => { mql.removeEventListener("change", callback); };

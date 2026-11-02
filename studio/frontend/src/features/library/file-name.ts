@@ -23,7 +23,7 @@ function splitName(name: string): [stem: string, suffix: string] {
 function clean(name: string): string {
   let out = "";
   for (const char of name) {
-    const code = char.codePointAt(0)!;
+    const code = char.codePointAt(0) ?? 0;
     out += INVALID_CHARS.has(char) || code < 0x20 || code === 0x7f ? "_" : char;
   }
   return out.replace(/[. ]+$/, "").trim();

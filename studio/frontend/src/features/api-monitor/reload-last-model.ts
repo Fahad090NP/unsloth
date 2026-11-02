@@ -33,7 +33,7 @@ export function resolveReloadTarget<C>(
     return null;
   }
   // A GGUF record's null variant is a direct .gguf path; a model record's is an MLX precision folder.
-  const ggufVariant = lastLoad.ggufVariant?.trim() || null;
+  const ggufVariant = lastLoad.ggufVariant?.trim() ?? null;
   return {
     id,
     kind: lastLoad.kind,

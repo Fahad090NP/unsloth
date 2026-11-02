@@ -27,7 +27,7 @@ export function toBackendTrainingType(trainingMethod: TrainingMethod): string {
 }
 
 export function getTrainingMethodLabel(
-  trainingMethod: TrainingMethod | string,
+  trainingMethod: string,
 ): string {
   if (
     Object.prototype.hasOwnProperty.call(TRAINING_METHOD_LABELS, trainingMethod)

@@ -37,7 +37,7 @@ export function matchedCanvas(
   const maxPixels = defaults?.canvas_max_pixels;
   const multiple = defaults?.resolution_multiple;
   if ((!shortEdge || !maxPixels) && defaults?.canvas_from_presets) {
-    return nearestPresetCanvas(aspectWidth, aspectHeight, defaults.resolution_presets ?? []);
+    return nearestPresetCanvas(aspectWidth, aspectHeight, defaults.resolution_presets);
   }
   if (!shortEdge || !maxPixels || !multiple) return null;
   if (aspectWidth <= 0 || aspectHeight <= 0) return null;

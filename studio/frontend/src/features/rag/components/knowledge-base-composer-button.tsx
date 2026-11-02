@@ -18,8 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsAccountOwner } from "@/features/auth";
-import { useRagToolDisabled } from "@/features/chat/hooks/use-rag-tool-disabled";
-import { useChatRuntimeStore } from "@/features/chat/stores/chat-runtime-store";
+import { useRagToolDisabled } from "@/features/chat";
+import { useChatRuntimeStore } from "@/features/chat";
 
 import {
   listKnowledgeBases,

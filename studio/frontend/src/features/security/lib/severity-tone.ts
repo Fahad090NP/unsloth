@@ -3,7 +3,7 @@
 
 import type { RemoteCodeSeverity } from "../types";
 
-export function severityTone(severity: RemoteCodeSeverity | string): string {
+export function severityTone(severity: string): string {
   switch (severity) {
     case "CRITICAL":
     case "HIGH":

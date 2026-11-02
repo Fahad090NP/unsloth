@@ -26,7 +26,9 @@ export function InfoHint({
   const [hovered, setHovered] = useState(false);
   return (
     <Tooltip
-      {...(hoverOnly ? { open: hovered, onOpenChange: () => {} } : {})}
+      {...(hoverOnly ? { open: hovered, onOpenChange: () => {
+            /* Hover state drives the tooltip. */
+          } } : {})}
     >
       <TooltipTrigger asChild>
         <button

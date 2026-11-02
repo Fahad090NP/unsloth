@@ -29,7 +29,7 @@ export function subscribeModelEjected(
   runtime: EjectedModelRuntime,
   onEjected: () => void,
 ): () => void {
-  if (typeof window === "undefined") return () => {};
+  if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
     const detail = (event as CustomEvent<{ runtime?: string }>).detail;
     if (detail?.runtime === runtime) onEjected();
@@ -46,7 +46,7 @@ export function notifyModelLifecycle(detail: ModelLifecycle): void {
 export function subscribeModelLifecycle(
   onChange: (detail: ModelLifecycle) => void,
 ): () => void {
-  if (typeof window === "undefined") return () => {};
+  if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
     const detail = (event as CustomEvent<ModelLifecycle>).detail;
     if (detail?.runtime) onChange(detail);
@@ -69,7 +69,7 @@ export function notifyModelDeleted(repoId: string): void {
 export function subscribeModelDeleted(
   onDeleted: (repoId: string) => void,
 ): () => void {
-  if (typeof window === "undefined") return () => {};
+  if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
     const repoId = (event as CustomEvent<{ repoId?: string }>).detail?.repoId;
     if (repoId) onDeleted(repoId);

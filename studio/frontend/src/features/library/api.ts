@@ -123,7 +123,7 @@ function inOrder(target: string, send: (check: () => void) => Promise<Response>)
   const epoch = getAuthSessionEpoch();
   const key = `${epoch}:${target}`;
   const request = (writeQueues.get(key) ?? Promise.resolve())
-    .catch(() => {})
+    .catch(() => { /* no-op */ })
     .then(async () => {
       const check = sameSession(epoch, "library.toast.signedOutBeforeSave");
       check();

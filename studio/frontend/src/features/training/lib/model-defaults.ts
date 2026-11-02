@@ -175,7 +175,7 @@ export function mapBackendModelConfigToTrainingPatch(
   // Only patch when the config carries the key; model-switch reset lives in setSelectedModel.
   if (Object.hasOwn(training ?? {}, "vision_image_size")) {
     const raw = training?.vision_image_size;
-    if (raw == null) {
+    if (raw === null) {
       patch.visionImageSize = null;
     } else {
       // Mirrors studio/backend/models/training.py:_check_vision_image_size bounds.

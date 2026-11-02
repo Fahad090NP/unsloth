@@ -22,7 +22,7 @@ import {
 } from "@/features/images/api";
 import { getVideoStatus, unloadVideoModel } from "@/features/video/api";
 import { unloadEmbeddingModel } from "@/features/settings/api/embedding-model";
-import { useEmbeddingModelStore } from "@/features/settings/stores/embedding-model-store";
+import { useEmbeddingModelStore } from "@/features/settings";
 import { notifyModelEjected } from "@/lib/model-lifecycle-events";
 import { ejectChatModel } from "./eject-chat-model";
 import {
@@ -174,7 +174,7 @@ async function ejectChatRow(entry: LoadedModelEntry): Promise<EjectOutcome> {
         return {
           checkpoint,
           aliases: [checkpoint, status.active_model].filter(
-            (alias): alias is string => alias != null,
+            (alias): alias is string => alias !== null,
           ),
         };
       },

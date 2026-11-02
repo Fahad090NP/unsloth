@@ -34,7 +34,7 @@ export function pickGgufFilename(
         ]
       : [];
   });
-  const wanted = quant?.trim() || null;
+  const wanted = quant?.trim() ?? null;
 
   // Honour an unlisted filename: a failed listing must not lose the caller's.
   if (wanted && isGgufName(wanted)) {

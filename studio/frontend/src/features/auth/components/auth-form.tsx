@@ -193,7 +193,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
   const switchText = t("auth.alreadySetUp");
   const switchLinkTo = "/login";
   const switchLinkText = t("auth.backToLogin");
-  const currentPassword = password || window.__UNSLOTH_BOOTSTRAP__?.password || "";
+  const currentPassword = password ?? window.__UNSLOTH_BOOTSTRAP__?.password ?? "";
   // First boot reuses the injected bootstrap password; the Current password field is only for the
   // admin-forced change path.
   const hasBootstrapPassword = Boolean(window.__UNSLOTH_BOOTSTRAP__?.password);
@@ -202,7 +202,7 @@ export function AuthForm({ mode }: AuthFormProps): ReactElement | null {
   const passwordManagerUsername =
     isLoginMode && loginMode === "multi"
       ? null
-      : sessionAccount(getAuthToken())?.username || username || null;
+      : sessionAccount(getAuthToken())?.username ?? username ?? null;
   const invalidChangePasswordForm =
     !isLoginMode &&
     (currentPassword.length < 8 ||

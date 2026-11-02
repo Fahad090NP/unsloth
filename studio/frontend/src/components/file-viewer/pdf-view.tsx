@@ -38,7 +38,7 @@ interface PdfDocument {
 }
 
 const overflowed = new WeakMap<object, Set<number>>();
-const PageOverflow = createContext<() => void>(() => {});
+const PageOverflow = createContext<() => void>(() => { /* no-op */ });
 
 function PdfCanvas() {
   const context = usePageContext();
@@ -116,8 +116,8 @@ function PdfPage({ pdf, index, width, aspect }: { pdf: PdfDocument; index: numbe
       }
       if (live) setSelectable(index);
     })()
-      .catch(() => {})
-      .finally(() => void reader?.cancel().catch(() => {}));
+      .catch(() => { /* no-op */ })
+      .finally(() => void reader?.cancel().catch(() => { /* no-op */ }));
     return () => {
       live = false;
     };

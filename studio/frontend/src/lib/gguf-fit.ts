@@ -114,7 +114,7 @@ export function ggufVariantFitSizeBytes(variant: GgufVariantSizes): number {
 }
 
 export function ggufVariantLookupTableBytes(variant: GgufVariantSizes): number {
-  const table = Number(variant.lookup_table_bytes ?? 0);
+  const table = variant.lookup_table_bytes ?? 0;
   if (!Number.isFinite(table) || table <= 0) return 0;
   return Math.min(table, ggufVariantFitSizeBytes(variant));
 }

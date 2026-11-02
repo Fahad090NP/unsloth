@@ -126,7 +126,6 @@ async function collectDiagnosticsReport(
     });
     return { report, source: "tauri" };
   } catch (error) {
-    console.warn("collect_support_diagnostics failed; using frontend-only diagnostics", error);
     return {
       report: buildFrontendFallbackReport(snapshot, error),
       source: "frontend-fallback",

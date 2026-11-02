@@ -84,11 +84,11 @@ export async function checkDatasetFormat({
     },
     body: JSON.stringify({
       dataset_name: datasetName,
-      subset: subset || undefined,
-      train_split: split || "train",
+      subset: subset ?? undefined,
+      train_split: split ?? "train",
       is_vlm: Boolean(isVlm),
       prefer_local_cache: Boolean(preferLocalCache),
-      local_path: localPath || undefined,
+      local_path: localPath ?? undefined,
     }),
   });
 
@@ -172,9 +172,9 @@ export async function aiAssistMapping({
     body: JSON.stringify({
       columns,
       samples: samples.slice(0, 5),
-      dataset_name: datasetName || undefined,
-      model_name: modelName || undefined,
-      model_type: modelType || undefined,
+      dataset_name: datasetName ?? undefined,
+      model_name: modelName ?? undefined,
+      model_type: modelType ?? undefined,
     }),
   });
 

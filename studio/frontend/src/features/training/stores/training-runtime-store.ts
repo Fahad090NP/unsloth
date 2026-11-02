@@ -375,7 +375,7 @@ export const useTrainingRuntimeStore = create<TrainingRuntimeStore>()(
           payload.start_request_id === state.startRequestId;
         const pendingStartRequestId =
           payload.start_request_state === "pending"
-            ? payload.start_request_id?.trim() || null
+            ? payload.start_request_id?.trim() ?? null
             : null;
         const nextStartRequestId = state.isStarting
           ? state.startRequestId

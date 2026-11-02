@@ -13,7 +13,7 @@ import {
 import { AiSpeechIcon, SheetIcon, TestTubeOutlineIcon } from "@/lib/hugeicons-derived";
 import type { IconSvgElement } from "@hugeicons/react";
 import { documentKind } from "@/components/file-viewer/kind";
-import { attachmentFileKind } from "@/features/chat/lib/attachment-file-kind";
+import { attachmentFileKind } from "@/features/chat";
 import type { LibraryItem } from "./api";
 import { fileExtension } from "./file-name";
 
@@ -86,7 +86,7 @@ const EXTENSION_KINDS: Record<string, LibraryFileKind> = {
 };
 
 export function isModelItem(item: LibraryItem): boolean {
-  return item.model != null;
+  return item.model !== null;
 }
 
 export function isFileItem(item: LibraryItem): boolean {

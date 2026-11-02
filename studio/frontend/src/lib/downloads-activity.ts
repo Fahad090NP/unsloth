@@ -26,5 +26,7 @@ export function reportDownloadsActive(
     .then(({ invoke }) =>
       invoke("set_renderer_activity", { kind: "downloads", active: anyActive }),
     )
-    .catch(() => {});
+    .catch(() => {
+      // Activity reporting is best-effort.
+    });
 }

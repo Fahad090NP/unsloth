@@ -88,7 +88,7 @@ export async function hydratePins(): Promise<void> {
         continue;
       }
       restorers[list]?.();
-    } else if (local !== null && remote == null) {
+    } else if (local !== null && remote === null) {
       seed[list] = local;
     }
   }

@@ -155,7 +155,7 @@ export function ProgressSection({
         data.totalSteps,
         elapsed,
       )
-      : elapsed != null && pct > 0
+      : elapsed !== null && pct > 0
         ? Math.round((elapsed * (100 - pct)) / Math.max(pct, 1))
         : null;
   const eta = data.etaSeconds ?? derivedEta;
@@ -174,7 +174,7 @@ export function ProgressSection({
   };
 
   const exportRunName = data.outputDir
-    ? (data.outputDir.replace(/[/\\]+$/, "").split(/[/\\]/).pop() || null)
+    ? (data.outputDir.replace(/[/\\]+$/, "").split(/[/\\]/).pop() ?? null)
     : null;
   const hasFinishedOutput =
     !data.isTrainingRunning &&
@@ -408,9 +408,9 @@ export function ProgressSection({
               label={t("studio.progress.loss")}
               valueClassName="text-2xl font-bold tracking-tight"
             >
-              {stoppedLoss != null ? stoppedLoss.toFixed(4) : "--"}
+              {stoppedLoss !== null ? stoppedLoss.toFixed(4) : "--"}
             </MetricStat>
-            <MetricStat label={t("studio.progress.lr")}>{stoppedLr != null ? stoppedLr.toExponential(2) : "--"}</MetricStat>
+            <MetricStat label={t("studio.progress.lr")}>{stoppedLr !== null ? stoppedLr.toExponential(2) : "--"}</MetricStat>
             <MetricStat label={t("studio.progress.gradNorm")}>
               {formatNumber(stoppedGradNorm, 3)}
             </MetricStat>
@@ -433,13 +433,13 @@ export function ProgressSection({
               <span>{t("studio.progress.eta", { value: formatDuration(eta) })}</span>
             )}
             <span>
-              {stepsPerSecond == null
+              {stepsPerSecond === null
                 ? t("studio.progress.noStepsPerSecond")
                 : t("studio.progress.stepsPerSecond", {
                   value: stepsPerSecond.toFixed(2),
                 })}
             </span>
-            {data.currentNumTokens != null && (
+            {data.currentNumTokens !== null && (
               <span>{t("studio.progress.tokens", { value: data.currentNumTokens })}</span>
             )}
           </div>
@@ -509,7 +509,7 @@ function LiveGpuPanel({
           label={t("studio.progress.utilization")}
           icon={<HugeiconsIcon icon={DashboardSpeed01Icon} className="size-3.5" />}
           value={
-            currentGpu.gpu_utilization_pct != null
+            currentGpu.gpu_utilization_pct !== null
               ? `${currentGpu.gpu_utilization_pct}%`
               : "--"
           }
@@ -519,7 +519,7 @@ function LiveGpuPanel({
           label={t("studio.progress.temperature")}
           icon={<HugeiconsIcon icon={TemperatureIcon} className="size-3.5" />}
           value={
-            currentGpu.temperature_c != null ? `${currentGpu.temperature_c}°C` : "--"
+            currentGpu.temperature_c !== null ? `${currentGpu.temperature_c}°C` : "--"
           }
           pct={currentGpu.temperature_c ?? 0}
           max={100}
@@ -528,7 +528,7 @@ function LiveGpuPanel({
           label={t("studio.progress.vram")}
           icon={<HugeiconsIcon icon={RamMemoryIcon} className="size-3.5" />}
           value={
-            currentGpu.vram_used_gb != null && currentGpu.vram_total_gb != null
+            currentGpu.vram_used_gb !== null && currentGpu.vram_total_gb !== null
               ? `${currentGpu.vram_used_gb} / ${currentGpu.vram_total_gb} GiB`
               : "--"
           }
@@ -538,8 +538,8 @@ function LiveGpuPanel({
           label={t("studio.progress.power")}
           icon={<HugeiconsIcon icon={ZapIcon} className="size-3.5" />}
           value={
-            currentGpu.power_draw_w != null
-              ? currentGpu.power_limit_w != null
+            currentGpu.power_draw_w !== null
+              ? currentGpu.power_limit_w !== null
                 ? `${currentGpu.power_draw_w} / ${currentGpu.power_limit_w} W`
                 : `${currentGpu.power_draw_w} W`
               : "--"
@@ -631,7 +631,7 @@ function ConfigPopoverButton({
                 <div key={label} className="flex justify-between text-xs">
                   <span className="text-muted-foreground">{label}</span>
                   <span className="font-medium tabular-nums">
-                    {value == null || value === "" ? "--" : String(value)}
+                    {value === null || value === "" ? "--" : String(value)}
                   </span>
                 </div>
               ))}
@@ -796,7 +796,7 @@ function MetricStat({
 function lastValue(points: { value: number }[]): number | null {
   if (points.length === 0) return null;
   const v = points[points.length - 1]?.value;
-  return v != null && Number.isFinite(v) ? v : null;
+  return v !== null && Number.isFinite(v) ? v : null;
 }
 
 function getDisplayMetric(
@@ -805,9 +805,9 @@ function getDisplayMetric(
   history: { value: number }[],
 ): number | null {
   if (isTrainingRunning) {
-    return currentValue != null ? currentValue : null;
+    return currentValue !== null ? currentValue : null;
   }
-  return lastValue(history) ?? (currentValue != null ? currentValue : null);
+  return lastValue(history) ?? (currentValue !== null ? currentValue : null);
 }
 
 function GpuStat({

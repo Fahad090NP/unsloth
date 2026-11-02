@@ -65,8 +65,8 @@ export function toApiProvider(
     name: provider.name.trim(),
     endpoint: provider.endpoint?.trim() ?? "",
     // biome-ignore lint/style/useNamingConvention: api schema
-    api_key: provider.api_key?.trim() || undefined,
+    api_key: provider.api_key?.trim() ?? undefined,
     // biome-ignore lint/style/useNamingConvention: api schema
-    api_key_env: provider.api_key_env?.trim() || undefined,
+    api_key_env: provider.api_key_env?.trim() ?? undefined,
   };
 }

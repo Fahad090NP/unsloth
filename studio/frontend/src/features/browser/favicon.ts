@@ -24,7 +24,7 @@ async function load(url: string): Promise<string | null> {
       return null;
     }
     // data:, not blob:, so eviction can't blank a tab and an SVG can't run on Studio's origin.
-    return dataUrl(new Blob([page.blob], { type: page.contentType }));
+    return await dataUrl(new Blob([page.blob], { type: page.contentType }));
   } catch {
     return null;
   }

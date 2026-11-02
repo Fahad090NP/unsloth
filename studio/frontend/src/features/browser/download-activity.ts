@@ -112,7 +112,7 @@ export function abandonDownload(key: string): void {
   useDownloadActivity.setState((state) => {
     if (!(key in state.active)) return state;
     const active = { ...state.active };
-    delete active[key];
+    Reflect.deleteProperty(active, key);
     return { active };
   });
 }
@@ -136,7 +136,7 @@ export function finishDownload(
   // Only a history row or a notice on screen can reach the copy; with neither it would only sit in memory.
   if (file && (result.historyId || buttons > 0)) keepFile(result.historyId ?? key, file, Boolean(result.historyId));
   const active = { ...useDownloadActivity.getState().active };
-  delete active[key];
+  Reflect.deleteProperty(active, key);
   // With no button on screen the caller toasts it, so nothing holds it here.
   useDownloadActivity.setState((state) => ({
     active,

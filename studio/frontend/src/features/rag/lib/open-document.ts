@@ -80,7 +80,7 @@ export function openRagDocumentInBrowser(
         Number(response.headers.get("content-length")) >
         MAX_DOCUMENT_PREVIEW_BYTES
       ) {
-        void response.body?.cancel();
+        response.body?.cancel().catch(() => undefined);
         return null;
       }
       return response.blob();

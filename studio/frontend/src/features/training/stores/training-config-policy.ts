@@ -123,7 +123,7 @@ export function hasSeparateStreamingEvalSplit(
   if (state.evalSteps <= 0) {
     return true;
   }
-  const trainSplit = state.datasetSplit || "train";
+  const trainSplit = state.datasetSplit ?? "train";
   return Boolean(state.datasetEvalSplit) && state.datasetEvalSplit !== trainSplit;
 }
 

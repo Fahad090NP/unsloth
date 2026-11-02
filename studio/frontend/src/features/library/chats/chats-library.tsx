@@ -714,7 +714,7 @@ export function ChatsLibrary({
     setSelection(new Set());
     void eachChat(
       chats,
-      (chat) => archiveChatItems([chat], activeChatId(), () => {}),
+      (chat) => archiveChatItems([chat], activeChatId(), () => { /* no-op */ }),
       (count) =>
         count === 1
           ? t("settings.data.archivedOneChat")
@@ -781,7 +781,7 @@ export function ChatsLibrary({
     if (target.kind === "chats") {
       await run(
         async () => {
-          await deleteChatItems(target.chats, activeChatId(), () => {}, {
+          await deleteChatItems(target.chats, activeChatId(), () => { /* no-op */ }, {
             deleteFiles: target.deleteFiles,
           });
           const ids = target.chats.map((chat) => chat.id);

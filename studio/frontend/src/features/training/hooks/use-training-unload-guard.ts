@@ -17,7 +17,7 @@ function publishTrainingActive(active: boolean): void {
   if (!isTauri) return;
   void import("@tauri-apps/api/core")
     .then(({ invoke }) => invoke("set_training_active", { active }))
-    .catch(() => {});
+    .catch(() => { /* no-op */ });
 }
 
 /** Call once at the app root. */

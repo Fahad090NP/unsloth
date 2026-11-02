@@ -121,7 +121,7 @@ export function unpinPage(pinnedId: string): void {
 export function renameTabTo(tab: BrowserTab | undefined, pinned: PinnedPage | undefined, title: string): void {
   if (tab) useBrowserStore.getState().renameTab(tab.id, title);
   const pinnedId = pinned?.id ?? tab?.pinnedId;
-  if (pinnedId) usePinnedPagesStore.getState().rename(pinnedId, title.trim() || tab?.title || "");
+  if (pinnedId) usePinnedPagesStore.getState().rename(pinnedId, title.trim() ?? tab?.title ?? "");
 }
 
 /** Focus a rename field once a menu has let go of focus. */
@@ -203,7 +203,7 @@ export function TabMenuItems({
           {t("browser.tabMenu.unpin")}
         </Row>
       ) : tab && url ? (
-        <Row key="pin" P={P} icon={PinIcon} onSelect={() => { pinTab(tab, tab.customTitle || tab.title || hostOf(url)); }}>
+        <Row key="pin" P={P} icon={PinIcon} onSelect={() => { pinTab(tab, tab.customTitle ?? tab.title ?? hostOf(url)); }}>
           {t("browser.tabMenu.pin")}
         </Row>
       ) : null,

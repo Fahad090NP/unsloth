@@ -36,8 +36,8 @@ export function buildSeedConfig(
 
   // Only a user-set endpoint: the backend fetches the seed with its own HF_ENDPOINT, and must not
   // receive a remote browser's value.
-  const endpoint = config.hf_endpoint?.trim() || null;
-  const token = config.hf_token?.trim() || null;
+  const endpoint = config.hf_endpoint?.trim() ?? null;
+  const token = config.hf_token?.trim() ?? null;
 
   let selectionStrategy: Record<string, unknown> | null = null;
   if (config.selection_type === "index_range") {

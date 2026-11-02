@@ -93,7 +93,7 @@ export function InlineSeed({
         <InlineField label="Dataset">
           <HfDatasetCombobox
             value={config.hf_repo_id}
-            accessToken={config.hf_token?.trim() || undefined}
+            accessToken={config.hf_token?.trim() ?? undefined}
             onValueChange={(next) =>
               { onUpdate({
                 hf_repo_id: next,
@@ -130,7 +130,7 @@ export function InlineSeed({
       </div>
       <div className="min-w-0">
         <p className="truncate text-xs font-medium">
-          {fileName || "No file selected"}
+          {fileName ?? "No file selected"}
         </p>
         <p className="text-ui-11 text-muted-foreground">
           {isLocal ? "Structured file" : "Unstructured document"} · configure in

@@ -13,7 +13,7 @@ export async function resolveDiffusionGgufFilename(
     hfToken?: string;
   },
 ): Promise<string | null> {
-  const quant = options?.quant?.trim() || null;
+  const quant = options?.quant?.trim() ?? null;
   if (quant && isGgufName(quant)) return quant;
   try {
     const res = await listGgufVariants(repoId, options?.hfToken, {

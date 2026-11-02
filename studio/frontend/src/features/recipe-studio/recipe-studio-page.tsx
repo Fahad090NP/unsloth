@@ -9,7 +9,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Background,
   BackgroundVariant,
-  type Edge,
   type EdgeTypes,
   type Node,
   type NodeTypes,
@@ -351,7 +350,6 @@ export function RecipeStudioPage({
     validateResult,
     cancelExecution,
     loadExecutionDatasetPage,
-    runPreview,
     runFull,
     copyRecipe,
     importRecipe,
@@ -503,7 +501,7 @@ export function RecipeStudioPage({
       const allTargetsMeasured = (targets: Node[]): boolean =>
         targets.length > 0 &&
         targets.every(
-          (n) => n.measured?.width != null && n.measured?.height != null,
+          (n) => n.measured?.width !== null && n.measured?.height !== null,
         );
 
       const doFit = () => {

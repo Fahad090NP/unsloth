@@ -115,7 +115,7 @@ function LocalDatasetMetadata({ dataset }: { dataset: LocalDatasetInfo }) {
           label={t("studio.dataset.batches")}
           value={
             typeof metadata?.num_completed_batches === "number" &&
-            typeof metadata?.total_num_batches === "number"
+            typeof metadata.total_num_batches === "number"
               ? `${metadata.num_completed_batches}/${metadata.total_num_batches}`
               : "--"
           }
@@ -228,7 +228,7 @@ function SelectedDatasetCard({
             {settings.datasetSource === "upload" ? (
               <>
                 {t("studio.dataset.localDataset")}
-                {selectedLocalRows != null
+                {selectedLocalRows !== null
                   ? t("studio.dataset.localDatasetRows", {
                       count: selectedLocalRows.toLocaleString(),
                     })

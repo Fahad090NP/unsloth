@@ -37,7 +37,7 @@ export function WebUpdateBanner({
   positioned = true,
 }: WebUpdateBannerProps): ReactElement | null {
   const { status, dismiss, snooze } = useWebUpdateCheck({ enabled });
-  const open = useNotificationGate("unsloth", status != null && !isTauri);
+  const open = useNotificationGate("unsloth", status !== null && !isTauri);
   const deviceType = usePlatformStore((s) => s.deviceType);
   const installCmd = installCommandForDevice(deviceType);
   const [copiedVersion, setCopiedVersion] = useState<string | null>(null);
@@ -178,7 +178,9 @@ export function WebUpdateBanner({
                   size="sm"
                   variant="primary"
                   className="-mr-1 h-auto whitespace-nowrap rounded-full px-3 py-2 text-ui-13"
-                  onClick={handleCopyCommand}
+                  onClick={() => {
+                    handleCopyCommand().catch(() => undefined);
+                  }}
                   data-testid="web-update-copy-button"
                 >
                   {copied ? "Copied" : "Copy command"}

@@ -179,10 +179,10 @@ export function ChartSettingsSheet(): ReactElement {
 
   const minWindow = Math.min(10, Math.max(1, availableSteps));
   const effectiveWindowSize =
-    windowSize == null ? Math.max(availableSteps, 1) : windowSize;
+    windowSize === null ? Math.max(availableSteps, 1) : windowSize;
   const showingAll =
     availableSteps > 0 &&
-    (windowSize == null || effectiveWindowSize >= availableSteps);
+    (windowSize === null || effectiveWindowSize >= availableSteps);
   const sliderMax = Math.max(minWindow, availableSteps || 1);
 
   return (

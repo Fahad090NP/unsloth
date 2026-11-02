@@ -88,7 +88,7 @@ export function StudioPage(): ReactElement {
   // The guard let this load on a guess; leave once the host is confirmed chat-only.
   useEffect(() => {
     if (capabilitiesUnknown || !chatOnly) return;
-    void navigate({ to: "/chat", replace: true });
+    navigate({ to: "/chat", replace: true }).catch(() => undefined);
   }, [capabilitiesUnknown, chatOnly, navigate]);
   const hfToken = useHfTokenStore((s) => s.token);
   const selectedModel = useTrainingConfigStore((s) => s.selectedModel);

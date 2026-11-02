@@ -15,7 +15,7 @@ const RESIZE_SETTLE_MS = 200;
 interface Measurement { gutter: number; classic: number; reliable: boolean }
 
 function measure(doc: Document): Measurement {
-  const body = doc.body;
+  const body: HTMLElement | null = doc.body;
   if (!body) {
     return { gutter: 0, classic: 0, reliable: false };
   }

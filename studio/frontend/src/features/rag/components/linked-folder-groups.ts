@@ -19,6 +19,7 @@ export function useLinkedFolderNames(
         setNames(new Map(folders.map((f) => [f.id, f.displayName])));
       })
       .catch(() => {
+        // A failed name lookup just keeps the existing labels.
       });
     return () => {
       cancelled = true;

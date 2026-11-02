@@ -65,8 +65,8 @@ export function sanitizeExecutionRows(
 export function normalizeRunSettings(settings: RecipeRunSettings): RecipeRunSettings {
   return {
     batchSize: toPositiveInt(settings.batchSize, 1000, 1, 200_000),
-    batchEnabled: Boolean(settings.batchEnabled),
-    mergeBatches: Boolean(settings.mergeBatches),
+    batchEnabled: (settings.batchEnabled),
+    mergeBatches: (settings.mergeBatches),
     llmParallelRequests:
       typeof settings.llmParallelRequests === "number"
         ? toPositiveInt(settings.llmParallelRequests, 4, 1, 2048)
@@ -87,7 +87,7 @@ export function normalizeRunSettings(settings: RecipeRunSettings): RecipeRunSett
       0,
       100,
     ),
-    disableEarlyShutdown: Boolean(settings.disableEarlyShutdown),
+    disableEarlyShutdown: (settings.disableEarlyShutdown),
     shutdownErrorRate: toRatio(settings.shutdownErrorRate, 0.5),
     shutdownErrorWindow: toPositiveInt(settings.shutdownErrorWindow, 10, 1, 10_000),
   };

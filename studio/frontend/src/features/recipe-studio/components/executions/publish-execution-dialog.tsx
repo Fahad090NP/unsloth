@@ -58,7 +58,7 @@ function buildDefaultDescription(execution: RecipeExecutionRecord | null): strin
   if (!execution) {
     return "";
   }
-  const runName = execution.run_name?.trim() || "This dataset";
+  const runName = execution.run_name?.trim() ?? "This dataset";
   const records = getExecutionRecordCount(execution);
   const recordPart =
     typeof records === "number" && records > 0
@@ -85,7 +85,7 @@ export function PublishExecutionDialog({
     () => buildDefaultDescription(execution),
     [execution],
   );
-  const runLabel = execution?.run_name?.trim() || "Completed run";
+  const runLabel = execution?.run_name?.trim() ?? "Completed run";
   const recordCount = getExecutionRecordCount(execution);
   const recordLabel =
     typeof recordCount === "number" ? recordCount.toLocaleString() : "--";

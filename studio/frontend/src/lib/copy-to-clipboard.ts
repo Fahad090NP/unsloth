@@ -9,15 +9,14 @@ async function copyWithTauriClipboard(text: string): Promise<boolean> {
     const { writeText } = await import("@tauri-apps/plugin-clipboard-manager");
     await writeText(text);
     return true;
-  } catch (error) {
-    console.warn("Tauri clipboard-manager writeText failed", error);
+  } catch {
     return false;
   }
 }
 
 /** Synchronous so it runs inside the click gesture, as Safari requires. */
 function copyWithExecCommand(text: string): boolean {
-  if (typeof document === "undefined" || !document.body) return false;
+  if (typeof document === "undefined") return false;
 
   // A modal focus trap empties the selection; the copy event writes the text anyway.
   let written = false;
@@ -64,12 +63,12 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     return true;
   }
 
-  if (typeof navigator?.clipboard?.writeText === "function") {
+  if (typeof navigator.clipboard.writeText === "function") {
     try {
       await navigator.clipboard.writeText(text);
       return true;
-    } catch (error) {
-      console.warn("Async clipboard API failed, falling back to execCommand", error);
+    } catch {
+      // Fall back to execCommand below.
     }
   }
 
@@ -89,7 +88,7 @@ export async function copyToClipboardFrom(
   if (
     !isTauri &&
     typeof ClipboardItem === "function" &&
-    typeof navigator?.clipboard?.write === "function"
+    typeof navigator.clipboard.write === "function"
   ) {
     try {
       await navigator.clipboard.write([
@@ -101,8 +100,8 @@ export async function copyToClipboardFrom(
         }),
       ]);
       return true;
-    } catch (error) {
-      console.warn("Promised clipboard write failed, falling back", error);
+    } catch {
+      // Fall back to the plain-text path below.
     }
   }
 
@@ -121,7 +120,13 @@ export async function asPng(blob: Blob): Promise<Blob> {
   canvas.height = bitmap.height;
   canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
   bitmap.close();
-  return await new Promise((resolve, reject) =>
-    { canvas.toBlob((png) => { png ? resolve(png) : reject(new Error("PNG encoding failed")); }, "image/png"); },
-  );
+  return await new Promise((resolve, reject) => {
+    canvas.toBlob((png) => {
+      if (png) {
+        resolve(png);
+      } else {
+        reject(new Error("PNG encoding failed"));
+      }
+    }, "image/png");
+  });
 }

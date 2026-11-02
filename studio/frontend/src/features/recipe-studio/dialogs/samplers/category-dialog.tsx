@@ -77,7 +77,7 @@ export function CategoryDialog({
 
   const removeCondition = (condition: string) => {
     const next = { ...conditional };
-    delete next[condition];
+    Reflect.deleteProperty(next, condition);
     onUpdate({
       // biome-ignore lint/style/useNamingConvention: api schema
       conditional_params: Object.keys(next).length > 0 ? next : undefined,

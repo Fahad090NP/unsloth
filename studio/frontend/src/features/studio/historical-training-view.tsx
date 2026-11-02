@@ -12,7 +12,6 @@ import {
   useTrainingActions,
 } from "@/features/training";
 import { translate, useT } from "@/i18n";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { type ReactElement, useEffect, useState } from "react";
 import { ChartsSection } from "./sections/charts-section";
 import { ProgressSection } from "./sections/progress-section";
@@ -40,19 +39,19 @@ function mapToViewData(
 
   const lossHistory = metrics.loss_step_history
     .map((step, i) => ({ step, value: metrics.loss_history[i] }))
-    .filter((p): p is { step: number; value: number } => p.value != null);
+    .filter((p): p is { step: number; value: number } => p.value !== null);
 
   const lrHistory = metrics.lr_step_history
     .map((step, i) => ({ step, value: metrics.lr_history[i] }))
-    .filter((p): p is { step: number; value: number } => p.value != null);
+    .filter((p): p is { step: number; value: number } => p.value !== null);
 
   const gradNormHistory = metrics.grad_norm_step_history
     .map((step, i) => ({ step, value: metrics.grad_norm_history[i] }))
-    .filter((p): p is { step: number; value: number } => p.value != null);
+    .filter((p): p is { step: number; value: number } => p.value !== null);
 
   const evalLossHistory = metrics.eval_step_history
     .map((step, i) => ({ step, value: metrics.eval_loss_history[i] }))
-    .filter((p): p is { step: number; value: number } => p.value != null);
+    .filter((p): p is { step: number; value: number } => p.value !== null);
 
   const phase =
     run.status === "completed"

@@ -55,7 +55,9 @@ export async function toggleLibraryAudio(item: LibraryItem): Promise<void> {
   }
   if (mine !== generation) return;
   player ??= new Audio();
-  player.onended = () => mine === generation && setPlaying(null);
+  player.onended = () => {
+    if (mine === generation) setPlaying(null);
+  };
   // A stream that fails after play() resolved never rejects it.
   player.onerror = () => { failed(item, player?.error?.message ?? "", mine); };
   player.src = url;

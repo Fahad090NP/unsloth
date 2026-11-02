@@ -430,7 +430,7 @@ export function getBlockDefinitionForConfig(
       unstructured: "seed_unstructured",
       github_repo: "seed_github",
     };
-    return getBlockDefinition("seed", seedType[config.seed_source_type ?? "hf"]);
+    return getBlockDefinition("seed", seedType[config.seed_source_type]);
   }
   if (config.kind === "sampler") {
     const samplerType =

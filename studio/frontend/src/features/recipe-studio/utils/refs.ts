@@ -49,7 +49,7 @@ export function findInvalidJinjaReferences(
   const invalid = new Set<string>();
 
   for (const match of template.matchAll(JINJA_EXPR_RE)) {
-    const expr = (match[1] ?? "").trim();
+    const expr = match[1].trim();
     if (!expr) {
       continue;
     }

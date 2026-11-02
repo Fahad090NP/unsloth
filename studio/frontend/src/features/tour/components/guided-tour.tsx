@@ -135,7 +135,7 @@ export function GuidedTour({
     }
 
     function schedule() {
-      if (rafRef.current != null) return;
+      if (rafRef.current !== null) return;
       rafRef.current = window.requestAnimationFrame(() => {
         rafRef.current = null;
         if (el) read(el);
@@ -187,7 +187,7 @@ export function GuidedTour({
       ro?.disconnect();
       window.removeEventListener("scroll", schedule, true);
       window.removeEventListener("resize", schedule);
-      if (rafRef.current != null) {
+      if (rafRef.current !== null) {
         window.cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }

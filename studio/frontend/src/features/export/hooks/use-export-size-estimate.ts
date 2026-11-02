@@ -25,7 +25,7 @@ export function useExportSizeEstimate(
   hfToken?: string | null,
 ): ExportSizeState {
   const modelKey = normalizeModelId(modelId);
-  const token = hfToken?.trim() || "";
+  const token = hfToken?.trim() ?? "";
   // "|" cannot appear in an id or token.
   const key = modelKey ? `${modelKey}|${token}` : "";
   const [state, setState] = useState<{ key: string; value: ExportSizeState }>(

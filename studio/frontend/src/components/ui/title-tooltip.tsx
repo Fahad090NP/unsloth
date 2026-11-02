@@ -111,7 +111,7 @@ export function TitleTooltipLayer() {
       // The title may be the control's only name (an icon button): keep it for assistive tech.
       standIn = titleStandIn({
         labelled: el.hasAttribute("aria-label") || el.hasAttribute("aria-labelledby"),
-        named: Boolean(el.textContent?.trim()) || Boolean(el.getAttribute("alt")?.trim()),
+        named: Boolean(el.textContent.trim()) || Boolean(el.getAttribute("alt")?.trim()),
         described: el.hasAttribute("aria-describedby") || el.hasAttribute("aria-description"),
       });
       if (standIn && el.hasAttribute(standIn)) standIn = null;

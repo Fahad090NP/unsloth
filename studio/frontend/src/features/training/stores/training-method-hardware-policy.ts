@@ -16,7 +16,7 @@ export async function selectTrainingMethodForHardware(
     }
     const hardware = await response.json();
     const freeVramGb: number | null = hardware?.gpu?.vram_free_gb ?? null;
-    if (freeVramGb == null) {
+    if (freeVramGb === null) {
       return null;
     }
 

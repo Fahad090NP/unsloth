@@ -11,7 +11,7 @@ import type { TrainingStartRequest } from "../types/api";
 import type { TrainingConfigState } from "../types/config";
 
 function parseSliceValue(value: string | null): number | null {
-  if (value == null) return null;
+  if (value === null) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
   const num = Number(trimmed);
@@ -253,7 +253,7 @@ export function buildTrainingStartPayload(
     num_epochs: config.epochs,
     learning_rate: String(config.learningRate),
     embedding_learning_rate:
-      isCpt && config.embeddingLearningRate != null
+      isCpt && config.embeddingLearningRate !== null
         ? config.embeddingLearningRate
         : null,
     batch_size: config.batchSize,

@@ -9,7 +9,7 @@ import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 // Deep import: the feature barrel pulls in SettingsDialog and closes an import cycle.
-import { useShortcut } from "@/features/settings/hooks/use-shortcut"
+import { useShortcut } from "@/features/settings"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
@@ -27,7 +27,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { PanelResizeHandle } from "@/components/ui/panel-resize-handle"
-import { PANEL_RESIZE_SCOPED_VARS_ENABLED } from "@/components/ui/panel-resize-recalc-flags"
 import { useT } from "@/i18n"
 import { useIsMobileShell } from "@/hooks/use-mobile"
 import {
@@ -39,7 +38,9 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { LayoutAlignLeftIcon, PanelLeftIcon } from "@hugeicons/core-free-icons"
 
-const noop = () => {}
+const noop = () => {
+  /* no-op */
+}
 
 const SIDEBAR_WIDTH = `${SIDEBAR_WIDTH_DEFAULT}px`
 const SIDEBAR_WIDTH_ICON = "3rem"
@@ -115,14 +116,14 @@ function SidebarProvider({
   const [_open, _setOpen] = React.useState(defaultOpen)
 
   // Pin mode drives open entirely from `pinned`; otherwise controlled/uncontrolled.
-  const open = hasPinMode ? Boolean(pinnedProp) : (openProp ?? _open)
+  const open = hasPinMode ? pinnedProp === true : (openProp ?? _open)
 
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
 
       if (hasPinMode) {
-        setPinnedProp?.(openState)
+        setPinnedProp(openState)
         return
       }
 
@@ -137,7 +138,7 @@ function SidebarProvider({
 
   const toggleSidebar = React.useCallback(() => {
     if (isMobile) { setOpenMobile((open) => !open); return; }
-    if (hasPinMode && togglePinnedProp) { togglePinnedProp(); return; }
+    if (hasPinMode) { togglePinnedProp(); return; }
     setOpen((open) => !open);
   }, [isMobile, setOpen, setOpenMobile, hasPinMode, togglePinnedProp])
 
@@ -163,12 +164,12 @@ function SidebarProvider({
     retractRef.current = window.setTimeout(() => { setPeekingState(false); }, 120)
   }, [])
   React.useEffect(() => () => { window.clearTimeout(retractRef.current); }, [])
-  React.useEffect(() => {
-    if (pinned || isMobile) setPeekingState(false)
-  }, [pinned, isMobile])
+
+  // Peeking only applies while the sidebar can be held out; pinned or mobile sidesteps it.
+  const visiblePeeking = peeking && !pinned && !isMobile
 
   // Held out counts as expanded: the panel is on screen.
-  const state = open || peeking ? "expanded" : "collapsed"
+  const state = open || visiblePeeking ? "expanded" : "collapsed"
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
@@ -183,10 +184,10 @@ function SidebarProvider({
       pinned,
       setPinned,
       togglePinned,
-      peeking,
+      peeking: visiblePeeking,
       setPeeking,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, hasPinMode, pinned, setPinned, togglePinned, peeking, setPeeking]
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, hasPinMode, pinned, setPinned, togglePinned, visiblePeeking, setPeeking]
   )
 
   return (
@@ -197,9 +198,6 @@ function SidebarProvider({
           {
             // Under PANEL_RESIZE_SCOPED_VARS_ENABLED the var moves to [data-slot="sidebar"]: this
             // wrapper is an ancestor of the thread, so declaring it here would restyle the thread.
-            ...(PANEL_RESIZE_SCOPED_VARS_ENABLED
-              ? null
-              : { "--sidebar-width": `${width * widthScale}px` }),
             "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
             ...style,
           } as React.CSSProperties
@@ -242,9 +240,9 @@ function Sidebar({
   const heldOut = holdsOut && peeking
 
   // Scoped home for --sidebar-width: every consumer is inside it and the thread is not.
-  const scopedWidthStyle = (
-    PANEL_RESIZE_SCOPED_VARS_ENABLED ? { "--sidebar-width": `${width * widthScale}px` } : {}
-  ) as React.CSSProperties
+  const scopedWidthStyle = {
+    "--sidebar-width": `${width * widthScale}px`,
+  } as React.CSSProperties
 
   if (collapsible === "none") {
     return (
@@ -722,7 +720,8 @@ function SidebarMenuButton({
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot.Root : "button"
   const { isMobile, state } = useSidebar()
-  const isDisabled = Boolean(props.disabled || props["aria-disabled"])
+  const isDisabled =
+    Boolean(props.disabled) || Boolean(props["aria-disabled"])
 
   const button = (
     <Comp
@@ -739,12 +738,10 @@ function SidebarMenuButton({
     return button
   }
 
-  if (typeof tooltip === "string") {
-    tooltip = {
-      children: tooltip,
-      className: "tooltip-compact",
-    }
-  }
+  const tooltipContent =
+    typeof tooltip === "string"
+      ? { children: tooltip, className: "tooltip-compact" }
+      : tooltip
 
   // A disabled <button> fires no pointer events; wrap it so the tooltip explaining why is reachable.
   const trigger = isDisabled ? (
@@ -763,7 +760,7 @@ function SidebarMenuButton({
         align="center"
         // Enabled items show the tooltip only when collapsed; disabled and alwaysTooltip rows always.
         hidden={isMobile || (!isDisabled && !alwaysTooltip && state !== "collapsed")}
-        {...tooltip}
+        {...tooltipContent}
       />
     </Tooltip>
   )

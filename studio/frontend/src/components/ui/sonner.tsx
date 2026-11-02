@@ -8,7 +8,7 @@ import {
   CancelCircleIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useTheme } from "@/features/settings/stores/theme-store";
+import { useTheme } from "@/features/settings";
 import { createLoadingToastIcon } from "@/lib/toast";
 import { cornerInsetScope } from "@/lib/toast-offset";
 import { Toaster as Sonner, type ToasterProps } from "sonner";

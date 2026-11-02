@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AUTH_SESSION_CLEARED_EVENT } from "@/features/auth/session-events";
+import { AUTH_SESSION_CLEARED_EVENT } from "@/features/auth";
 import { useLocale, useT } from "@/i18n";
 import { downloadFile, isDownloadCancelled } from "@/lib/native-files";
 import { openLink } from "@/lib/open-link";

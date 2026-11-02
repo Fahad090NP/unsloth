@@ -38,7 +38,7 @@ export function writePickerTabPreference(
   try {
     window.localStorage.setItem(storageKey, tab);
   } catch {
-    
+    // Storage may be unavailable; the tab state simply stays in memory.
   }
 }
 

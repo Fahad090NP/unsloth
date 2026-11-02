@@ -18,9 +18,11 @@ export function followDesktopUpdateScreen(
   backendDownForUpdate = isUpdating || leaving;
   let active = true;
   if (leaving) {
-    void resync().finally(() => {
-      if (active) backendDownForUpdate = false;
-    });
+    resync()
+      .finally(() => {
+        if (active) backendDownForUpdate = false;
+      })
+      .catch(() => undefined);
   }
   return () => {
     active = false;

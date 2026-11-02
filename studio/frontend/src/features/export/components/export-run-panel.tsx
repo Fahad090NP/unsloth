@@ -45,11 +45,11 @@ function useElapsedSeconds(startedAt: number | null, running: boolean): number {
   // `now` only advances in the interval, so it freezes at the final time when running stops.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!running || startedAt == null) return;
+    if (!running || startedAt === null) return;
     const id = window.setInterval(() => { setNow(Date.now()); }, 1000);
     return () => { window.clearInterval(id); };
   }, [running, startedAt]);
-  if (startedAt == null) return 0;
+  if (startedAt === null) return 0;
   return Math.max(0, Math.floor((now - startedAt) / 1000));
 }
 

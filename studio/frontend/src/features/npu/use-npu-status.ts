@@ -27,9 +27,11 @@ export function useNpuStatus(
   useEffect(() => {
     if (!active) return;
     let live = true;
-    void fetchOnce().then((next) => {
-      if (live && next) setStatus(next);
-    });
+    fetchOnce()
+      .then((next) => {
+        if (live && next) setStatus(next);
+      })
+      .catch(() => undefined);
     return () => {
       live = false;
     };

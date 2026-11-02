@@ -316,7 +316,7 @@ export function LlamaUpdateBanner({
   const show =
     showBannerPref &&
     visible &&
-    status != null &&
+    status !== null &&
     rows.length > 0 &&
     (llamaUpdateOffered(status) || applying);
   const tabVisible = useDocumentVisible();
@@ -574,7 +574,7 @@ export function LlamaUpdateBanner({
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={
-              updateProgress != null
+              updateProgress !== null
                 ? Math.round(updateProgress * 100)
                 : Math.round(displayProgress * 100)
             }

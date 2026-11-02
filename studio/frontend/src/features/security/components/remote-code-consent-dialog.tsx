@@ -166,7 +166,7 @@ function FindingCard({ finding }: { finding: RemoteCodeFinding }) {
 
 function modelDisplayName(modelName?: string): string | null {
   if (!modelName) return null;
-  return modelName.split("/").pop() || modelName;
+  return modelName.split("/").pop() ?? modelName;
 }
 
 function fillSlots(template: string, slots: Record<string, ReactNode>): ReactNode[] {

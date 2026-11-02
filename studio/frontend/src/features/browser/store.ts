@@ -527,10 +527,10 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       if (state.tabs.some((tab) => tab.chat === state.chat)) {
         chats[state.chat] = { open: state.open, activeTabId: state.activeTabId, fullView: state.fullView };
       } else {
-        delete chats[state.chat];
+        Reflect.deleteProperty(chats, state.chat);
       }
       const saved = chats[chat];
-      delete chats[chat];
+      Reflect.deleteProperty(chats, chat);
       const own = state.tabs.filter((tab) => tab.chat === chat);
       const activeTabId =
         saved && own.some((tab) => tab.id === saved.activeTabId) ? saved.activeTabId : (own.at(-1)?.id ?? null);
@@ -554,7 +554,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         const tabs = state.tabs.map((tab) => (tab.chat === from ? { ...tab, chat: to } : tab));
         const chats = { ...state.chats };
         const saved = chats[from];
-        delete chats[from];
+        Reflect.deleteProperty(chats, from);
         if (saved && !chats[to]) chats[to] = saved;
         return { tabs, chats, chat: state.chat === from ? to : state.chat };
       });
@@ -580,7 +580,8 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       for (const tab of get().tabs) if (tab.chat === chat) get().closeTab(tab.id);
       set((state) => {
         if (!(chat in state.chats)) return state;
-        const { [chat]: _forgotten, ...chats } = state.chats;
+        const chats = { ...state.chats };
+        Reflect.deleteProperty(chats, chat);
         return { chats };
       });
     },
@@ -642,7 +643,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
     renamingTabId: null,
     setRenamingTab: (renamingTabId) => { set({ renamingTabId }); },
     renameTab: (tabId, title) => {
-      const customTitle = title?.trim().slice(0, MAX_TAB_TITLE_CHARS) || null;
+      const customTitle = title?.trim().slice(0, MAX_TAB_TITLE_CHARS) ?? null;
       set((state) => ({ tabs: patchTab(state.tabs, tabId, (tab) => ({ ...tab, customTitle })) }));
     },
     setMuted: (tabId, muted) =>
@@ -682,7 +683,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       const openKey = key ? `file:${key}` : null;
       const fileId = newId("file");
       files.set(fileId, blob);
-      const type = contentType || blob.type;
+      const type = contentType ?? blob.type;
       const entry: BrowserEntry = {
         kind: "file",
         fileId,
@@ -810,7 +811,8 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       releaseFiles(remaining);
       pageDownloads.delete(tabId);
       dropTabPageStorage(tabId);
-      const { [tabId]: _closed, ...fileViews } = get().fileViews;
+      const fileViews = { ...get().fileViews };
+      Reflect.deleteProperty(fileViews, tabId);
       const annotateTabId = get().annotateTabId === tabId ? null : get().annotateTabId;
       const renamingTabId = get().renamingTabId === tabId ? null : get().renamingTabId;
       const next = (current: string | null) =>

@@ -147,7 +147,7 @@ function archive(bytes: Uint8Array): Reader {
     };
     const open = (name: string, max: number): Growing | undefined => {
       const data = head(name, max);
-      return data && { data, done: true, grow() {} };
+      return data && { data, done: true, grow() { /* no-op */ } };
     };
     return Object.assign(read, { size, head, open });
   }
@@ -190,7 +190,7 @@ function growing(bytes: Uint8Array, view: DataView, entry: ZipEntry, max: number
   if (entry.method === 0) {
     const whole = data.slice(0, max);
     charge(whole.length);
-    return { data: whole, done: true, cut: data.length > max, grow() {} };
+    return { data: whole, done: true, cut: data.length > max, grow() { /* no-op */ } };
   }
   if (entry.method !== 8) throw new Error(`Unsupported ZIP compression method ${entry.method}.`);
   let buffer = new Uint8Array(Math.min(max, 1 << 20));
@@ -1580,7 +1580,7 @@ export function readPptx(bytes: Uint8Array, { images = true, maxSlides = MAX_SLI
           size: sz ? sz / 100 : undefined,
           bold: isTrue(rPr?.getAttribute("b") ?? null),
           align: pPr?.getAttribute("algn") ?? undefined,
-          bullet: Boolean(pPr && (first(pPr, "buChar") || first(pPr, "buAutoNum"))),
+          bullet: Boolean(pPr && (first(pPr, "buChar") ?? first(pPr, "buAutoNum"))),
         });
       }
       if (!paragraphs.length) return false;

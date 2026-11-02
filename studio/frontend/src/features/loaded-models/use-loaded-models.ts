@@ -100,7 +100,9 @@ export function useLoadedModels(
     });
   }, []);
 
-  const refreshRef = useRef<() => void>(() => {});
+  const refreshRef = useRef<() => void>(() => {
+    /* Replaced before the first refresh is called. */
+  });
   const refresh = useCallback(() => {
     // Keyed on recording, not showing: API loads raise no event, so a closed card keeps polling.
     if (!track) return;

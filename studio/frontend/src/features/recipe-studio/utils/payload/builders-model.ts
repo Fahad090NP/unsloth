@@ -42,9 +42,9 @@ export function buildModelProvider(
     // biome-ignore lint/style/useNamingConvention: api schema
     provider_type: providerType,
     // biome-ignore lint/style/useNamingConvention: api schema
-    api_key_env: config.api_key_env?.trim() || undefined,
+    api_key_env: config.api_key_env?.trim() ?? undefined,
     // biome-ignore lint/style/useNamingConvention: api schema
-    api_key: config.api_key?.trim() || undefined,
+    api_key: config.api_key?.trim() ?? undefined,
     // biome-ignore lint/style/useNamingConvention: api schema
     extra_headers: extraHeaders ?? {},
     // biome-ignore lint/style/useNamingConvention: api schema
@@ -107,12 +107,12 @@ export function buildModelConfig(
     alias: config.name,
     model: config.model,
     // biome-ignore lint/style/useNamingConvention: api schema
-    gguf_variant: ggufVariant || undefined,
+    gguf_variant: ggufVariant ?? undefined,
     provider: config.provider || undefined,
     // biome-ignore lint/style/useNamingConvention: api schema
     inference_parameters:
       Object.keys(inference).length > 0 ? inference : undefined,
     // biome-ignore lint/style/useNamingConvention: api schema
-    skip_health_check: config.skip_health_check || undefined,
+    skip_health_check: config.skip_health_check ?? undefined,
   };
 }

@@ -224,9 +224,6 @@ const PILL = cn(
   "active:bg-[color-mix(in_oklab,var(--pill-bg),var(--foreground)_var(--pill-press))]",
 );
 
-const TOOLBAR_BUTTON =
-  "size-8 text-foreground disabled:hover:text-foreground disabled:opacity-30";
-
 /** IconButton's own look, for toolbar buttons rendered elsewhere (DownloadsButton). */
 const TOOLBAR_ICON_BUTTON =
   "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-[10px] text-muted-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_calc(6%*var(--contrast-wash-gain,1)),transparent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-muted-foreground";
@@ -1555,7 +1552,7 @@ function BrowserFileToolbar({
     });
   };
   // Null for HTML and SVG, which would run on Studio's origin from a blob URL.
-  const tabType = browserTabType(entry.name, entry.contentType || blob?.type || "");
+  const tabType = browserTabType(entry.name, entry.contentType ?? blob?.type ?? "");
   const openInBrowser = () => {
     if (!blob || !tabType) return;
     const url = URL.createObjectURL(new Blob([blob], { type: tabType }));
@@ -2092,7 +2089,7 @@ function OpenSplit({ entry, blob }: { entry: FileEntry; blob: Blob | undefined }
   const listing = useRef(false);
   // Programs and scripts never open from here (browser_open_with.rs); their folder still does.
   const runsCode = isDangerousDownload(entry.name);
-  const tabType = isTauri ? null : browserTabType(entry.name, entry.contentType || blob?.type || "");
+  const tabType = isTauri ? null : browserTabType(entry.name, entry.contentType ?? blob?.type ?? "");
   const failed = () => toast.error(t("browser.file.openFailed", { name: entry.name }));
   const listApps = () => {
     if (!isTauri || !blob || runsCode || listing.current) return;

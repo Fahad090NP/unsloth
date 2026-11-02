@@ -251,7 +251,7 @@ export function TrainModelHubList({
                   </TooltipTrigger>
                   <TooltipContent side="left" className="max-w-xs break-all">
                     {id}
-                    {fit && fit.est > 0 && gpuTotalGb != null && (
+                    {fit && fit.est > 0 && gpuTotalGb !== null && (
                       <span className="mt-1 block text-ui-10">
                         {exceeds
                           ? t("studio.modelPicker.vramNeeds", {

@@ -116,14 +116,14 @@ export function ExecutionProgressIsland({
     : null;
   const progressPercent =
     sourcePercent ?? execution.progress?.percent ?? (complete ? 100 : 0);
-  const hasProgressSignal = Boolean(
+  const hasProgressSignal = (
     (execution.progress &&
       (typeof execution.progress.done === "number" ||
         typeof execution.progress.total === "number" ||
         typeof execution.progress.percent === "number" ||
         typeof execution.progress.rate === "number" ||
         typeof execution.progress.eta_sec === "number")) ||
-      typeof sourcePercent === "number",
+      typeof sourcePercent === "number"
   );
   const showLoadingSpinner = inProgress && !hasProgressSignal;
   const batchTotal = execution.batch?.total ?? null;

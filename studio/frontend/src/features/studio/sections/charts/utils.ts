@@ -175,7 +175,7 @@ function getUpperPercentile(
 
 export function applyOutlierCap(values: number[], mode: OutlierMode): number[] {
   const cap = getUpperPercentile(values, mode);
-  if (cap == null) {
+  if (cap === null) {
     return values;
   }
   return values.map((value) => Math.min(value, cap));

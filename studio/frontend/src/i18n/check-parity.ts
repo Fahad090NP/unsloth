@@ -40,7 +40,7 @@ function placeholders(s: string): string[] {
   const out: string[] = [];
   const re = /\{([a-zA-Z0-9_]+)\}/g;
   let m: RegExpExecArray | null;
-  while (true) {
+  for (;;) {
     m = re.exec(s);
     if (m === null) {
       break;
@@ -64,7 +64,7 @@ function checkOverlay(
         missing.push(subPath);
         continue;
       }
-      const overlayV = overlay[k];
+      const overlayV: string | Tree | undefined = overlay[k];
       if (overlayV === undefined) {
         missing.push(subPath);
         continue;
@@ -166,22 +166,24 @@ for (const [locale, overlay] of Object.entries(overlays)) {
     }
   }
 
-  console.log(`\n=== ${locale} ===`);
-  console.log(`Missing keys (will fall back to en): ${missing.length}`);
+  process.stdout.write(`\n=== ${locale} ===\n`);
+  process.stdout.write(
+    `Missing keys (will fall back to en): ${missing.length}\n`,
+  );
   if (missing.length > 0) {
     anyMissing = true;
     for (const k of missing) {
-      console.log(`  - ${k}`);
+      process.stdout.write(`  - ${k}\n`);
     }
   }
   if (errors.length > 0) {
     anyError = true;
-    console.error(`Errors (${errors.length}):`);
+    process.stderr.write(`Errors (${errors.length}):\n`);
     for (const e of errors) {
-      console.error(`  - ${e}`);
+      process.stderr.write(`  - ${e}\n`);
     }
   } else {
-    console.log("No errors.");
+    process.stdout.write("No errors.\n");
   }
 }
 
@@ -189,10 +191,10 @@ if (anyError) {
   process.exit(1);
 }
 if (strict && anyMissing) {
-  console.error(
+  process.stderr.write(
     "\nMissing keys above. Add them to every overlay, or run without --strict " +
-      "to accept the English fallback.",
+      "to accept the English fallback.\n",
   );
   process.exit(1);
 }
-console.log("\nAll locale overlays pass parity.");
+process.stdout.write("\nAll locale overlays pass parity.\n");

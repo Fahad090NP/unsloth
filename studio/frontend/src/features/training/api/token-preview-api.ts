@@ -72,7 +72,7 @@ export async function fetchTokenPreview({
       model_name: start.model_name,
       model_type: config.modelType,
       load_in_4bit: start.load_in_4bit,
-      dataset_name: datasetName || null,
+      dataset_name: datasetName ?? null,
       subset: start.subset,
       train_split: start.train_split,
       dataset_local_path: start.dataset_local_path,

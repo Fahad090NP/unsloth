@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/combobox";
 import { Spinner } from "@/components/ui/spinner";
 import { useDebouncedValue } from "@/hooks";
-import { useHubDatasetSearch } from "@/features/hub/hooks/use-hub-dataset-search";
+import { useHubDatasetSearch } from "@/features/hub";
 import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
 
 interface HfDatasetComboboxProps {

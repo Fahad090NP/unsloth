@@ -16,7 +16,7 @@ export function notifyGalleryChanged(kind: GalleryKind): void {
 
 /** Calls back when kind changed elsewhere. Returns an unsubscriber. */
 export function subscribeGalleryChanged(kind: GalleryKind, onChanged: () => void): () => void {
-  if (typeof window === "undefined") return () => {};
+  if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
     const detail = (event as CustomEvent<{ kind?: string }>).detail;
     if (detail?.kind === kind) onChanged();
@@ -36,7 +36,7 @@ export function notifyArchiveChanged(kind: GalleryKind): void {
 
 /** Calls back when the archive of `kind` changed elsewhere. Returns an unsubscriber. */
 export function subscribeArchiveChanged(kind: GalleryKind, onChanged: () => void): () => void {
-  if (typeof window === "undefined") return () => {};
+  if (typeof window === "undefined") return () => { /* no-op */ };
   const handler = (event: Event) => {
     const detail = (event as CustomEvent<{ kind?: string }>).detail;
     if (detail?.kind === kind) onChanged();
@@ -209,8 +209,8 @@ export function serializeById<T>(key: string, task: () => Promise<T>): Promise<T
   const previous = queues.get(key);
   const run = previous ? previous.then(task, task) : task();
   const settled = run.then(
-    () => {},
-    () => {},
+    () => { /* no-op */ },
+    () => { /* no-op */ },
   );
   queues.set(key, settled);
   void settled.then(() => {

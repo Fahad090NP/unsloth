@@ -91,7 +91,8 @@ export const useBrowserAgentStore = create<BrowserAgentState>()(
         })),
       setSiteRule: (site, rule) =>
         set((state) => {
-          const { [site]: _old, ...sites } = state.permissions.sites;
+          const sites = { ...state.permissions.sites };
+          Reflect.deleteProperty(sites, site);
           if (rule && Object.keys(sites).length >= MAX_SITE_RULES) return state;
           return { permissions: { ...state.permissions, sites: rule ? { ...sites, [site]: rule } : sites } };
         }),
@@ -162,7 +163,8 @@ export function adoptAgentChat(from: string, to: string): void {
   useBrowserAgentStore.setState((state) => {
     const moved = state.chats[from];
     if (!moved) return state;
-    const { [from]: _moved, ...chats } = state.chats;
+    const chats = { ...state.chats };
+    Reflect.deleteProperty(chats, from);
     return { chats: chats[to] ? chats : { ...chats, [to]: moved } };
   });
 }

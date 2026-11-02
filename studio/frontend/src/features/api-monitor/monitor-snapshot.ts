@@ -18,8 +18,8 @@ export type MonitorStatusFilter =
 function sameValue(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (
-    a == null ||
-    b == null ||
+    a === null ||
+    b === null ||
     typeof a !== "object" ||
     typeof b !== "object"
   ) {
@@ -66,7 +66,7 @@ export function mergeMonitorResponse(
   previous: ApiMonitorResponse | null,
   next: ApiMonitorResponse,
 ): ApiMonitorResponse {
-  if (previous == null) return next;
+  if (previous === null) return next;
   const entries = mergeEntries(previous.entries, next.entries);
   const merged = { ...next, entries };
   if (
@@ -112,7 +112,7 @@ export function filterEntries(
       entry.reply_preview,
       entry.error,
     ].some((field) =>
-      String(field ?? "")
+      (field ?? "")
         .toLowerCase()
         .includes(needle),
     );

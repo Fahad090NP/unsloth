@@ -548,7 +548,7 @@ function notifyOffScreenQuestion(chat: string): void {
   const [type, id] = [chat.slice(0, chat.indexOf(":")), chat.slice(chat.indexOf(":") + 1)];
   const item =
     visibleChatItems(useChatNavigationStore.getState()).find((candidate) => candidate.id === id && candidate.type === type) ?? null;
-  toast(translate("browser.agent.waiting", { chat: item?.title || translate("browser.agent.otherChat", undefined, getLocale()) }, getLocale()), {
+  toast(translate("browser.agent.waiting", { chat: item?.title ?? translate("browser.agent.otherChat", undefined, getLocale()) }, getLocale()), {
     id: `browser-agent-question:${chat}`,
     action: item ? { label: translate("browser.agent.show", undefined, getLocale()), onClick: () => { openChatItemById(item); } } : undefined,
   });
@@ -902,7 +902,7 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
   if (opaque) gates.push(opaque);
   if (action.op === "select") {
     // The option the page will select: its value can differ from the label the user sees.
-    const chosen = info.role === "combobox" ? { ...info, name: info.option || action.value || "" } : info;
+    const chosen = info.role === "combobox" ? { ...info, name: info.option ?? action.value ?? "" } : info;
     // A card-expiry or other secret dropdown is the user's to fill, as its text field would be.
     if (info.tag === "select" || info.role === "combobox") gates.push(gateElement("type", info, here, action.policy, permissions(context)));
     gates.push(gateElement("select", chosen, here, action.policy, permissions(context)));
@@ -1360,8 +1360,8 @@ async function toPointScale(tab: BrowserTab, session: Session, blob: Blob, size:
     return blob;
   }
   try {
-    const cssWidth = size.width || bitmap.width;
-    const cssHeight = size.height || bitmap.height;
+    const cssWidth = size.width ?? bitmap.width;
+    const cssHeight = size.height ?? bitmap.height;
     const fit = Math.min(1, MAX_SHOT_EDGE / Math.max(cssWidth, cssHeight));
     const width = Math.max(1, Math.round(cssWidth * fit));
     const height = Math.max(1, Math.round(cssHeight * fit));

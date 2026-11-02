@@ -27,7 +27,7 @@ import {
 import { useTransferStats } from "@/features/chat/hooks/use-transfer-stats";
 import { formatEta } from "@/features/chat/utils/format-transfer";
 import { formatBytes, formatRate } from "@/features/hub";
-import { useHfTokenStore } from "@/features/hub/stores/hf-token-store";
+import { useHfTokenStore } from "@/features/hub";
 import {
   EMPTY_DOWNLOAD_STATE,
   coerceCachedStateReady,
@@ -360,9 +360,9 @@ export function TrainingStartOverlay({
     }
   }, [isStarting]);
 
-  const alreadyAnimated = jobId != null && animatedJobs.has(jobId);
+  const alreadyAnimated = jobId !== null && animatedJobs.has(jobId);
   useEffect(() => {
-    if (jobId != null) {
+    if (jobId !== null) {
       animatedJobs.add(jobId);
     }
   }, [jobId]);

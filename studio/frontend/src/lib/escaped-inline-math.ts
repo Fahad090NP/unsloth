@@ -112,16 +112,17 @@ function updateLatexBracketState(
   state: LatexBracketState,
   source: string,
 ): void {
+  const s = state;
   if (source === "\\(" || source === "\\[") {
-    state.openDelimiters.push(source[1]);
+    s.openDelimiters.push(source[1]);
     return;
   }
   if (source === "\\)" || source === "\\]") {
-    const opening = state.openDelimiters.lastIndexOf(
+    const opening = s.openDelimiters.lastIndexOf(
       source === "\\)" ? "(" : "[",
     );
     if (opening >= 0) {
-      state.openDelimiters.length = opening;
+      s.openDelimiters.length = opening;
     }
   }
 }
@@ -198,19 +199,20 @@ function consumeMathCommand(
   index: number,
   state: MathBodyProtection,
 ): number {
+  const s = state;
   if (value[index + 1] === "$") {
-    state.parts.push(String.raw`{\char"24}`);
-    state.textCommandPending = false;
+    s.parts.push(String.raw`{\char"24}`);
+    s.textCommandPending = false;
     return index + 1;
   }
   const command = COMMAND_RE.exec(value.slice(index + 1))?.[0];
   if (command) {
-    state.parts.push(`\\${command}`);
-    state.textCommandPending = TEXT_COMMANDS.has(command);
+    s.parts.push(`\\${command}`);
+    s.textCommandPending = TEXT_COMMANDS.has(command);
     return index + command.length;
   }
-  state.parts.push(value.slice(index, index + 2));
-  state.textCommandPending = false;
+  s.parts.push(value.slice(index, index + 2));
+  s.textCommandPending = false;
   return index + 1;
 }
 
@@ -219,30 +221,31 @@ function consumeMathCharacter(
   index: number,
   state: MathBodyProtection,
 ): number {
+  const s = state;
   const character = value[index];
   if (character === "\\") {
-    return consumeMathCommand(value, index, state);
+    return consumeMathCommand(value, index, s);
   }
   if (character === "{") {
-    state.textGroups.push(
-      state.textCommandPending || state.textGroups.at(-1) === true,
+    s.textGroups.push(
+      s.textCommandPending || s.textGroups.at(-1) === true,
     );
-    state.textCommandPending = false;
+    s.textCommandPending = false;
   } else if (character === "}") {
-    state.textGroups.pop();
-    state.textCommandPending = false;
+    s.textGroups.pop();
+    s.textCommandPending = false;
   } else if (character === "<") {
-    state.parts.push(
-      state.textGroups.at(-1) === true
+    s.parts.push(
+      s.textGroups.at(-1) === true
         ? String.raw`{\char"3C}`
         : String.raw`\lt `,
     );
-    state.textCommandPending = false;
+    s.textCommandPending = false;
     return index;
   } else if (character.trim() !== "") {
-    state.textCommandPending = false;
+    s.textCommandPending = false;
   }
-  state.parts.push(character);
+  s.parts.push(character);
   return index;
 }
 
@@ -436,8 +439,10 @@ function hasLikelyMathCloser(markdown: string, offset: number): boolean {
 }
 
 function escapedMathRanges(markdown: string): EscapedMathRange[] {
-  const masked = markdown.replace(CURRENCY_OPENER_RE, (opener, offset) =>
-    hasLikelyMathCloser(markdown, offset) ? opener : MASKED_DOLLAR,
+  const masked = markdown.replace(
+    CURRENCY_OPENER_RE,
+    (opener: string, offset: number) =>
+      hasLikelyMathCloser(markdown, offset) ? opener : MASKED_DOLLAR,
   );
   const openCodeTail = openCodeSpanTail(masked);
   const tree = fromMarkdown(masked, {
@@ -501,13 +506,14 @@ function mayCloseEscapedMath(
   open: number,
   budget: { pairs: number },
 ): boolean {
+  const b = budget;
   for (
     let close = markdown.indexOf("\\$", open + 2);
     close >= 0 && close - open - 2 <= MAX_BODY_LENGTH;
     close = markdown.indexOf("\\$", close + 1)
   ) {
-    budget.pairs -= 1;
-    if (budget.pairs < 0) {
+    b.pairs -= 1;
+    if (b.pairs < 0) {
       return true;
     }
     const body = markdown.slice(open + 2, close);

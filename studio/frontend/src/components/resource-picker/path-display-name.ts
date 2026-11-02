@@ -10,5 +10,5 @@ export function pathDisplayName(value: string): string {
     "",
   );
   const candidate = withoutTrailingSeparators || value;
-  return candidate.split(PATH_SEPARATOR_RE).pop() || candidate;
+  return candidate.split(PATH_SEPARATOR_RE).pop() ?? candidate;
 }

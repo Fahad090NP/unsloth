@@ -167,7 +167,7 @@ function ModelDetails({ item }: { item: LibraryItem }) {
   const rows: [string, string][] = [
     [t("library.preview.type"), t(modelLabelKey(item) ?? "library.modelKind.model")],
     [t("library.preview.baseModel"), item.model?.baseModel ?? unknown],
-    [t("library.preview.size"), formatSize(item.sizeBytes, locale, t) || unknown],
+    [t("library.preview.size"), formatSize(item.sizeBytes, locale, t) ?? unknown],
     [t("library.preview.location"), item.model?.path ?? ""],
   ];
   return (

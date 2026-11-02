@@ -82,7 +82,7 @@ export function ImageLoraExportCard({ preselect }: { preselect?: string }) {
       });
       setResult({
         ok: true,
-        text: `Saved to ${savedLabel(String(response.details?.output_path ?? saveDirectory))}. To use it on another install, copy that folder over and add it from Images > LoRAs > Folders.`,
+        text: `Saved to ${savedLabel((response.details?.output_path ?? saveDirectory))}. To use it on another install, copy that folder over and add it from Images > LoRAs > Folders.`,
       });
     } catch (error) {
       setResult({

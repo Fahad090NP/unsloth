@@ -2,7 +2,7 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { getAuthSessionEpoch, hasAuthToken } from "@/features/auth";
-import { useExternalProvidersStore } from "@/features/chat/stores/external-providers-store";
+import { useExternalProvidersStore } from "@/features/chat";
 import { syncExternalProvidersFromBackend } from "@/features/chat/sync-external-providers";
 import { hydrateHfTokenFromBackend } from "@/features/hub/stores/hf-token-store";
 import { runCredentialBootstrap } from "./reconciliation";

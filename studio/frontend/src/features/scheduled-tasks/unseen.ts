@@ -72,7 +72,7 @@ export const useUnseenScheduledRuns = create<UnseenState>()((set, get) => {
   const withoutTask = (current: Stored, taskId: string | undefined): Stored | null => {
     if (taskId === undefined || !(taskId in current.tasks)) return null;
     const tasks = { ...current.tasks };
-    delete tasks[taskId];
+    Reflect.deleteProperty(tasks, taskId);
     return { ...current, tasks };
   };
   return {

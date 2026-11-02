@@ -23,7 +23,7 @@ export function readNumberString(value: unknown): string {
 
 export function parseJson(
   input: string,
-): { data: unknown | null; error?: string } {
+): { data: unknown; error?: string } {
   try {
     return { data: JSON.parse(input) };
   } catch (error) {

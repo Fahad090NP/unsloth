@@ -105,7 +105,7 @@ export function TimedeltaDialog({
           hint="Datetime column used as anchor before offset."
         />
         <Select
-          value={config.reference_column_name?.trim() || NONE_VALUE}
+          value={config.reference_column_name?.trim() ?? NONE_VALUE}
           onValueChange={(value) =>
             { updateField("reference_column_name", value === NONE_VALUE ? "" : value); }
           }

@@ -273,7 +273,7 @@ export function LlmGeneralTab({
               items={toolProfileAliases}
               filteredItems={toolProfileAliases}
               filter={null}
-              value={config.tool_alias || null}
+              value={config.tool_alias ?? null}
               onValueChange={(value) => { onUpdate({ tool_alias: value ?? "" }); }}
               itemToStringValue={(value) => value}
               autoHighlight={true}

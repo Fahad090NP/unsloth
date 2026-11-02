@@ -45,7 +45,7 @@ export function mlxDrafterChoices(
       drafter.repo,
       drafter.named ? drafter.repo : `${drafter.repo} (same architecture)`,
     ]);
-  return selected != null && !choices.some(([repo]) => repo === selected)
+  return selected !== null && !choices.some(([repo]) => repo === selected)
     ? [[selected, selected], ...choices]
     : choices;
 }

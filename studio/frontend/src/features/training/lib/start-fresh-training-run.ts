@@ -560,7 +560,7 @@ async function submitFreshTrainingRun(
   const response = await startTraining(payload, attempt.startRequestId);
   if (response.status === "error") {
     throw new TrainingStartError(
-      response.error || response.message,
+      response.error ?? response.message,
       response.error_code ?? null,
     );
   }

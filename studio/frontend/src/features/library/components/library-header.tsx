@@ -105,7 +105,8 @@ function TabStrip({
       current.moved = true;
       event.currentTarget.setPointerCapture(event.pointerId);
     }
-    event.currentTarget.scrollLeft = current.left - dx;
+    const target = event.currentTarget;
+      target.scrollLeft = current.left - dx;
   }
 
   function onPointerEnd(event: ReactPointerEvent<HTMLDivElement>) {

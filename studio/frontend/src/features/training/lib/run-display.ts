@@ -15,7 +15,8 @@ type TrainingRunArtifactFields = Pick<
 
 function nonEmpty(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
+  if (!trimmed) return null;
+  return trimmed;
 }
 
 export function getTrainingRunDisplayTitle(

@@ -20,7 +20,7 @@ interface PreviewTraversalEntry {
 }
 
 export function formatCell(value: unknown): string {
-  if (value == null) {
+  if (value === null) {
     return "";
   }
   if (typeof value === "string") {

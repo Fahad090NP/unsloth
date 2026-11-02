@@ -89,7 +89,7 @@ function publishShellUpdateActive(active: boolean): void {
     .then(({ invoke }) =>
       invoke("set_renderer_activity", { kind: "shell_update", active }),
     )
-    .catch(() => {});
+    .catch(() => { /* no-op */ });
 }
 
 const UPDATE_VERSION_RE = /^v?\d+\.\d+\.\d+(?:(?:[-+][0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)|(?:\.(?:post|dev|rc)\d*)|(?:(?:post|dev|rc|a|b)\d*))?$/;
@@ -473,7 +473,7 @@ export function useTauriUpdate(isExternalServer = false) {
         await relaunch();
       } catch (relaunchError) {
         // No replacement process, so the marker would unhide a later login start.
-        await invoke("clear_in_app_relaunch").catch(() => {});
+        await invoke("clear_in_app_relaunch").catch(() => { /* no-op */ });
         await resumeCleanup();
         throw relaunchError;
       }

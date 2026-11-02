@@ -196,7 +196,7 @@ export function retainActiveFolderJobs(
   const retained: Record<string, FolderSyncJob> = {};
   for (const folder of folders) {
     const job = jobs[folder.id];
-    if (job && folder.activeJobId === job.id) retained[folder.id] = job;
+    if (folder.activeJobId === job.id) retained[folder.id] = job;
   }
   return retained;
 }

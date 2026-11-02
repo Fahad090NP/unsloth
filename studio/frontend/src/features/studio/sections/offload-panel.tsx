@@ -126,7 +126,7 @@ function VramBar({
           className="h-full rounded-full bg-control-accent"
           style={{ width: `${Math.min(100, (100 * used) / total)}%` }}
         />
-        {budget != null && (
+        {budget !== null && (
           <div
             className="absolute inset-y-0 w-0.5 bg-[color-mix(in_oklab,var(--foreground)_calc(70%*var(--contrast-wash-gain,1)),transparent)]"
             style={{ left: `${(100 * budget) / total}%` }}
@@ -176,7 +176,7 @@ export function OffloadPanel({ isTrainingRunning }: { isTrainingRunning: boolean
   const vramTotal = s.vram_total_bytes ?? 0;
   const cards = s.vram_devices ?? [];
   const multi = cards.length > 1;
-  const ms = (v: number | null) => (v == null ? "--" : `${v.toFixed(1)} ms`);
+  const ms = (v: number | null) => (v === null ? "--" : `${v.toFixed(1)} ms`);
 
   return (
     <SectionCard
@@ -253,7 +253,7 @@ export function OffloadPanel({ isTrainingRunning }: { isTrainingRunning: boolean
             <Stat label={t("studio.params.offloadPanelCompute")} value={ms(perLayer)} />
             <Stat
               label={t("studio.params.offloadPanelStall")}
-              value={waiting == null ? "--" : `${waiting.toFixed(1)}%`}
+              value={waiting === null ? "--" : `${waiting.toFixed(1)}%`}
             />
             <Stat
               label={t("studio.params.offloadPanelPinned")}

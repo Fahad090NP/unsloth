@@ -46,7 +46,7 @@ export function useResidentFileGrant(
     if (
       !nativePathToken ||
       !id ||
-      checkpoint == null ||
+      checkpoint === null ||
       publicModelId(checkpoint) !== id
     ) {
       return null;
@@ -90,7 +90,7 @@ export function useResidentRunTarget(
   return useMemo(() => {
     const { id, ggufVariant: monitorVariant } = monitorSelection(activeModel);
     // The picker's own test for handing Run settings the live config (runtimeIsResident).
-    if (!id || checkpoint == null || publicModelId(checkpoint) !== id) {
+    if (!id || checkpoint === null || publicModelId(checkpoint) !== id) {
       return null;
     }
     const model = models.find((entry) => entry.id === checkpoint);

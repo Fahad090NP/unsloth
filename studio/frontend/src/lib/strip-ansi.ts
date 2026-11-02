@@ -188,7 +188,8 @@ function stripAnsiReplacer(_key: string, value: unknown): unknown {
     return value;
   }
 
-  const entries = Object.entries(value).map(([key, entry]) => ({
+  const entries = Object.entries(value as Record<string, unknown>).map(
+    ([key, entry]) => ({
     key,
     cleanedKey: stripAnsi(key),
     entry,

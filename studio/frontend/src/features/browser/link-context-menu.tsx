@@ -91,11 +91,11 @@ export function LinkContextMenu({
             <ContextMenuSeparator />
             <MenuRow
               icon={Copy01Icon}
-              onSelect={() =>
-                void copyToClipboard(url).then(
-                  (ok) => ok && toast.success(t("browser.linkCopied")),
-                )
-              }
+              onSelect={() => {
+                copyToClipboard(url)
+                  .then((ok) => ok && toast.success(t("browser.linkCopied")))
+                  .catch(() => undefined);
+              }}
             >
               {t("browser.copyLink")}
             </MenuRow>

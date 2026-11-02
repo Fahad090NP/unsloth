@@ -156,11 +156,11 @@ function parseMcpProviders(input: unknown): Map<string, LlmMcpProviderConfig> {
         ? providerTypeRaw
         : "streamable_http";
     const args = Array.isArray(item.args)
-      ? item.args.map((value) => String(value))
+      ? item.args.map((value) => (value))
       : [];
     const envPairs = isRecord(item.env)
       ? Object.entries(item.env).map(([key, value]) => ({
-          key: String(key),
+          key: (key),
           value: String(value),
         }))
       : [];

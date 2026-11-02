@@ -154,13 +154,8 @@ function validateDatasetSelection(
         errorKey: "studio.training.validation.localDatasetRequired",
       };
     }
-  } else if (config.datasetSource === "s3") {
-    return validateS3Source(config);
   } else {
-    return {
-      ok: false,
-      errorKey: "studio.training.validation.unsupportedDatasetSource",
-    };
+    return validateS3Source(config);
   }
 
   return { ok: true, errorKey: null };
@@ -233,7 +228,7 @@ export function validateTrainingConfig(
   }
   if (
     config.trainingMethod === "cpt" &&
-    config.embeddingLearningRate != null &&
+    config.embeddingLearningRate !== null &&
     (!Number.isFinite(config.embeddingLearningRate) ||
       config.embeddingLearningRate <= 0 ||
       config.embeddingLearningRate >= 1)

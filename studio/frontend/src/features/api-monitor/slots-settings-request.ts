@@ -33,7 +33,7 @@ export function residentHasRunSettings(
   // An expired file token cannot reload the model, so there is nothing to apply the change to.
   return !(
     resident.nativePathToken &&
-    resident.nativePathExpiresAtMs != null &&
+    resident.nativePathExpiresAtMs !== null &&
     nowMs >= resident.nativePathExpiresAtMs
   );
 }
@@ -97,7 +97,7 @@ export function keptRunSettingsRequest(
       ...(repoId ? { loadId: model.checkpoint } : {}),
       isLora: false,
       ggufVariant,
-      isGguf: standalone || model.quant != null,
+      isGguf: standalone || model.quant !== null,
       isDownloaded: true,
     },
   };

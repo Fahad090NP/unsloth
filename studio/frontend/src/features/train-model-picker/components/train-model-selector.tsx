@@ -598,7 +598,7 @@ export function TrainModelSelector({
     const local = localModelByLookup.get(key);
     const cachedLocal = local?.source === "hf_cache" ? local : undefined;
     const canonicalId =
-      result?.id || cached?.repoId || cachedLocal?.repoId?.trim() || hubId.id;
+      result?.id ?? cached?.repoId ?? cachedLocal?.repoId?.trim() ?? hubId.id;
     const validation = validateTrainingModelCandidate(
       hubTrainingModelCandidate(canonicalId, result, cached, cachedLocal),
       { deviceType },

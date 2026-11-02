@@ -31,7 +31,9 @@ export function MediaHeaderActions({
   const need = useRef<(number | undefined)[]>([]);
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const stepRef = useRef(step);
-  stepRef.current = step;
+  useLayoutEffect(() => {
+    stepRef.current = step;
+  }, [step]);
 
   useLayoutEffect(() => {
     const slot = slotRef.current;

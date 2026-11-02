@@ -126,10 +126,16 @@ export const useBrowserHistoryStore = create<BrowserHistoryState>()(
           if (!host || icon.length > MAX_URL_CHARS || state.icons[host] === icon) return state;
           // Icons name the hosts visited, so they follow the history setting.
           if (!savesHistory(temporary)) return state;
-          const { [host]: _replaced, ...rest } = state.icons;
+          const rest = { ...state.icons };
+          Reflect.deleteProperty(rest, host);
           const hosts = Object.keys(rest);
-          for (const old of hosts.slice(0, Math.max(0, hosts.length + 1 - MAX_ICONS))) delete rest[old];
-          return { icons: { ...rest, [host]: icon } };
+          const kept = new Set(
+            hosts.slice(Math.max(0, hosts.length + 1 - MAX_ICONS)),
+          );
+          const icons = Object.fromEntries(
+            Object.entries(rest).filter(([key]) => kept.has(key)),
+          );
+          return { icons: { ...icons, [host]: icon } };
         }),
       recordVisit: (url, fullTitle, temporary = false) =>
         set((state) => {

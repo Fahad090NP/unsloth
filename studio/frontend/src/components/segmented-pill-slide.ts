@@ -74,7 +74,7 @@ function bezierCurve(): number[] {
 
 const HAS_LINEAR =
   typeof CSS !== "undefined" &&
-  Boolean(CSS.supports?.("transition-timing-function", "linear(0, 1)"));
+  CSS.supports("transition-timing-function", "linear(0, 1)");
 
 const EASING = HAS_LINEAR
   ? `linear(0, ${STOPS.map(
@@ -221,7 +221,7 @@ function slide(
       }
       for (const animation of animations) animation.cancel();
     },
-    () => {},
+    () => { /* no-op */ },
   );
 }
 

@@ -380,7 +380,7 @@ export function useLlamaUpdateCheck({
   const suppressionRef = useRef<OfferSuppression | null>(getOfferSuppression());
   const statusRef = useRef<LlamaUpdateStatus | null>(null);
   const activeRef = useRef(enabled);
-  const surfaceRef = useRef<(next: LlamaUpdateStatus | null) => void>(() => {});
+  const surfaceRef = useRef<(next: LlamaUpdateStatus | null) => void>(() => { /* no-op */ });
   const statusReadRef = useRef({ issued: 0, accepted: 0 });
 
   const readStatus = useCallback(async (forceRefresh = false) => {
@@ -432,7 +432,7 @@ export function useLlamaUpdateCheck({
       );
       const suppression = suppressionRef.current;
       const suppressed =
-        suppression != null &&
+        suppression !== null &&
         offerKeyMatches(suppression.offerKey, next) &&
         (suppression.kind === "dismissed" || suppression.until > Date.now());
       setApplying(presentation.applying);

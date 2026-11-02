@@ -6,7 +6,7 @@ import * as React from "react";
 import { Collapsible as CollapsiblePrimitive } from "radix-ui";
 
 const Collapsible = React.forwardRef<
-  React.ElementRef<typeof CollapsiblePrimitive.Root>,
+  React.ComponentRef<typeof CollapsiblePrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof CollapsiblePrimitive.Root>
 >(({ ...props }, ref) => {
   return (

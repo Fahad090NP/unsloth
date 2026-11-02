@@ -570,7 +570,7 @@ export function HistoryCardGrid({
                 >
                   <span>
                     {t("studio.history.loss")}:{" "}
-                    {run.final_loss != null ? run.final_loss.toFixed(4) : "--"}
+                    {run.final_loss !== null ? run.final_loss.toFixed(4) : "--"}
                   </span>
                   <span>
                     {t("studio.history.steps")}: {run.final_step ?? 0}/

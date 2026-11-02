@@ -103,7 +103,7 @@ function buildSamplerParams(
   }
   if (config.sampler_type === "datetime") {
     const rawUnit = config.datetime_unit?.trim();
-    let unit: string | undefined = rawUnit || undefined;
+    let unit: string | undefined = rawUnit ?? undefined;
     if (rawUnit && DATETIME_UNIT_MAP[rawUnit]) {
       unit = DATETIME_UNIT_MAP[rawUnit];
     }
@@ -124,8 +124,8 @@ function buildSamplerParams(
       // biome-ignore lint/style/useNamingConvention: api schema
       dt_max: parseNumber(config.dt_max),
       // biome-ignore lint/style/useNamingConvention: api schema
-      reference_column_name: config.reference_column_name || undefined,
-      unit: config.timedelta_unit || undefined,
+      reference_column_name: config.reference_column_name ?? undefined,
+      unit: config.timedelta_unit ?? undefined,
     };
   }
   if (config.sampler_type === "uuid") {

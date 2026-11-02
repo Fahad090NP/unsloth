@@ -14,6 +14,10 @@ import {
 
 let duplicating = false;
 
+function isDuplicateInFlight(): boolean {
+  return duplicating;
+}
+
 /** Both entry points load the same fresh draft; duplication never starts training. */
 export function useDuplicateTrainingRun() {
   const navigate = useNavigate();
@@ -21,7 +25,7 @@ export function useDuplicateTrainingRun() {
   const active = useTrainingRuntimeStore(isTrainingStartPending);
   const duplicate = async (runId: string) => {
     if (
-      duplicating ||
+      isDuplicateInFlight() ||
       isTrainingStartPending(useTrainingRuntimeStore.getState())
     ) {
       return;

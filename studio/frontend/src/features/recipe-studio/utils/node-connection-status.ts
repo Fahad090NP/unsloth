@@ -68,7 +68,7 @@ export function nodeConnectionStatus(
   }
   const hasDataEdge = others.some((otherId) => {
     const otherConfig = configs[otherId];
-    return otherConfig && !INFRA_NODE_KINDS.has(otherConfig.kind);
+    return !INFRA_NODE_KINDS.has(otherConfig.kind);
   });
   return hasDataEdge ? CONNECTED : MISSING_DATA_INPUT;
 }

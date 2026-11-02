@@ -6,7 +6,6 @@ import type {
   ModelProviderConfig,
   NodeConfig,
   ValidatorCodeLang,
-  ValidatorConfig,
 } from "../../types";
 import {
   isSupportedModelProviderType,

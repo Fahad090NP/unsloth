@@ -23,7 +23,7 @@ import { useTransformersUpgradeDialogStore } from "../stores/transformers-upgrad
 
 function modelDisplayName(modelName: string | null): string {
   if (!modelName) return "This model";
-  return modelName.split("/").pop() || modelName;
+  return modelName.split("/").pop() ?? modelName;
 }
 
 export function TransformersUpgradeDialog() {

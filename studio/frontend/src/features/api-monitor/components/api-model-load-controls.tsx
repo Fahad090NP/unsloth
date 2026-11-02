@@ -204,7 +204,7 @@ export function ApiModelLoadControls({
   const loadedModels = useChatRuntimeStore((s) => s.loadedModels);
   const loadedNames = useMemo(
     () =>
-      loadedModels.map((model) => model.id.split(/[\\/]/).pop() || model.id),
+      loadedModels.map((model) => model.id.split(/[\\/]/).pop() ?? model.id),
     [loadedModels],
   );
   const modelsFromStore = useChatRuntimeStore((s) => s.models);
@@ -347,7 +347,7 @@ export function ApiModelLoadControls({
   // The monitor reports a local GGUF by its public id (file stem), Chat's runtime by its path.
   const runtimeIsResident =
     isLoaded &&
-    runtimeCheckpoint != null &&
+    runtimeCheckpoint !== null &&
     publicModelId(runtimeCheckpoint) === effectiveModel;
 
   return (

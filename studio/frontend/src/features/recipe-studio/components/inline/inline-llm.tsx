@@ -124,7 +124,7 @@ export function InlineLlm({ config, onUpdate }: InlineLlmProps): ReactElement {
             items={toolProfileAliases}
             filteredItems={toolProfileAliases}
             filter={null}
-            value={config.tool_alias || null}
+            value={config.tool_alias ?? null}
             onValueChange={(value) =>
               { onUpdate({
                 // biome-ignore lint/style/useNamingConvention: api schema
@@ -163,7 +163,7 @@ export function InlineLlm({ config, onUpdate }: InlineLlmProps): ReactElement {
       {isCode && (
         <InlineField label="Code language">
           <Select
-            value={config.code_lang?.trim() || "python"}
+            value={config.code_lang?.trim() ?? "python"}
             onValueChange={(value) =>
               { onUpdate({
                 // biome-ignore lint/style/useNamingConvention: api schema

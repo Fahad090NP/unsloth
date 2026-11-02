@@ -15,17 +15,17 @@ export function acquireRender(
 	light: boolean,
 ): Job {
 	if (effect === "None")
-		return { promise: Promise.resolve(blob), release: () => {} };
+		return { promise: Promise.resolve(blob), release: () => { /* no-op */ } };
 	const key = `${effect}:${effect === "Dither" ? false : light}`;
 	const cached = cache.get(blob)?.get(key);
-	if (cached) return { promise: Promise.resolve(cached), release: () => {} };
+	if (cached) return { promise: Promise.resolve(cached), release: () => { /* no-op */ } };
 	const pending = jobs.get(blob) ?? new Map();
 	jobs.set(blob, pending);
 	let entry = pending.get(key);
 	if (!entry) {
 		let cancelled = false,
 			worker: Worker | undefined,
-			rejectJob: (reason: Error) => void = () => {};
+			rejectJob: (reason: Error) => void = () => { /* no-op */ };
 		const promise = new Promise<Blob>((resolve, reject) => {
 			rejectJob = reject;
 			void (async () => {

@@ -22,7 +22,7 @@ export function applyNodeRemovals(
 
   for (const id of removedIds) {
     const removed = configs[id];
-    delete configs[id];
+    Reflect.deleteProperty(configs, id);
     if (removed?.name) {
       removedNames.push(removed.name);
     }

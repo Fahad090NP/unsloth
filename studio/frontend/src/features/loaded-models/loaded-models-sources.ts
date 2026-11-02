@@ -14,7 +14,7 @@ import {
   audioWorkflowForAudioType,
   isAudioWorkflowId,
 } from "../audio/workflows.ts";
-import type { InferenceStatusResponse } from "@/features/chat/types/api";
+import type { InferenceStatusResponse } from "@/features/chat";
 import type { DiffusionStatus } from "@/features/images/api";
 import type { VideoStatus } from "@/features/video/api";
 
@@ -182,7 +182,7 @@ export function shortModelLabel(name: string): string {
 export function loadedModelLabel(
   entry: Pick<LoadedModelEntry, "name" | "label">,
 ): string {
-  return shortModelLabel(entry.label || entry.name);
+  return shortModelLabel(entry.label ?? entry.name);
 }
 
 export function formatResidentMib(mib: number | null | undefined): string | null {
@@ -261,7 +261,7 @@ export function describeInferenceStatus(
   // Matched by checkpoint, which /unload routes on: two local files can share a label.
   const serving = status.serving ?? [];
   const checkpoints = status.serving_checkpoints ?? [];
-  const activeCheckpoint = status.model_identifier || active;
+  const activeCheckpoint = status.model_identifier ?? active;
   for (let i = 0; i < serving.length; i++) {
     const name = serving[i];
     const checkpoint = checkpoints[i] || name;
@@ -468,7 +468,7 @@ export function withPendingLoads(
       rows.some(
         (row) =>
           row.source === source &&
-          (row.loading === true || model == null || row.name === model),
+          (row.loading === true || model === null || row.name === model),
       )
     ) {
       continue;
@@ -520,7 +520,7 @@ export function describeEmbeddingStatus(
 export function embeddingRowName(
   status: EmbeddingStatusResponse | null,
 ): string {
-  return (status?.loaded ? status.embedding_model : undefined) || "Embedding model";
+  return (status?.loaded ? status.embedding_model : undefined) ?? "Embedding model";
 }
 
 export function heldByAnotherAccount(

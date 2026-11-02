@@ -33,7 +33,7 @@ function retainDetail(
   cachedPrompt: string | undefined,
 ): Record<string, ApiMonitorEntry> {
   const refreshed =
-    cachedPrompt == null ? entry : { ...entry, prompt: cachedPrompt };
+    cachedPrompt === null ? entry : { ...entry, prompt: cachedPrompt };
   const retained: Record<string, ApiMonitorEntry> = { [id]: refreshed };
   let promptChars = refreshed.prompt?.length ?? 0;
   for (const [cachedId, cached] of Object.entries(previous)) {
@@ -58,7 +58,7 @@ function dropDetail(
     return previous;
   }
   const next = { ...previous };
-  delete next[id];
+  Reflect.deleteProperty(next, id);
   return next;
 }
 
@@ -106,7 +106,7 @@ export function useApiMonitor({
       const expired = Object.keys(previous).filter((id) => !ids.has(id));
       if (expired.length === 0) return previous;
       const retained = { ...previous };
-      for (const id of expired) delete retained[id];
+      for (const id of expired) Reflect.deleteProperty(retained, id);
       return retained;
     });
   }, []);
@@ -219,7 +219,7 @@ export function useApiMonitor({
       const requestGeneration = detailRequestGeneration.current;
       setLoadingDetails((prev) => new Set(prev).add(id));
       const cachedPrompt = details[id]?.prompt;
-      getApiMonitorEntry(id, cachedPrompt == null)
+      getApiMonitorEntry(id, cachedPrompt === null)
         .then((entry) => {
           if (
             detailRequestGeneration.current !== requestGeneration ||

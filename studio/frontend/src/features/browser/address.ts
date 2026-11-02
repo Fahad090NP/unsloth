@@ -90,6 +90,7 @@ export function fileNameFromUrl(url: string): string {
     try {
       last = decodeURIComponent(raw);
     } catch {
+      // Keep the raw value when it is not valid percent-encoding.
     }
     return last || hostname;
   } catch {

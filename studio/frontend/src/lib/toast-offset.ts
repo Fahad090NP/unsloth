@@ -195,7 +195,7 @@ export function watchChatSettingsInset(
   const minColumn = chatSettingsInsetMinColumn(uiSpaceScale);
   let applied: string | null = null;
   const apply = () => {
-    const width = panel?.offsetWidth || fallbackWidth;
+    const width = panel?.offsetWidth ?? fallbackWidth;
     const fits = !row || row.clientWidth - width >= minColumn;
     const next = fits ? `${width}px` : null;
     if (next === applied) return;

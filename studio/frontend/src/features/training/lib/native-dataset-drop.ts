@@ -62,9 +62,6 @@ export function classifyNativeTrainingDatasetDrop(
     return paths.length > 1 ? { kind: "multiple" } : { kind: "unsupported" };
   }
   const path = paths[0];
-  if (path === undefined) {
-    return { kind: "unsupported" };
-  }
   const filename = nativePathFilename(path);
   const extension = extensionOf(path);
   if (DATASET_EXTENSION_SET.has(extension)) {

@@ -268,12 +268,12 @@ function isModelSemanticEdge(
 ): boolean {
   const source = configs[edge.source];
   const target = configs[edge.target];
-  return Boolean(
+  return (
     source &&
       target &&
       ((source.kind === "model_provider" && target.kind === "model_config") ||
         (source.kind === "model_config" && target.kind === "llm") ||
-        (source.kind === "tool_config" && target.kind === "llm")),
+        (source.kind === "tool_config" && target.kind === "llm"))
   );
 }
 

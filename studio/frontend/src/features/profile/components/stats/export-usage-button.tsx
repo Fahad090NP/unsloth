@@ -45,7 +45,9 @@ export function ExportUsageButton() {
       size="sm"
       variant="outline"
       disabled={busy}
-      onClick={() => void onExport()}
+      onClick={() => {
+        onExport().catch(() => undefined);
+      }}
     >
       <HugeiconsIcon icon={Download01Icon} className="size-3.5" />
       {t("settings.profile.stats.exportCsv")}

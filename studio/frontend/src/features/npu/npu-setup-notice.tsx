@@ -79,7 +79,9 @@ function NpuEnableCard({ catalog }: { catalog: NpuCatalog }) {
             ? "Finishes setup and checks the NPU driver."
             : "One-time setup: downloads about 47 MB and checks the NPU driver."}
         </span>
-        <Button size="sm" onClick={() => void enable()} disabled={enabling}>
+        <Button size="sm" onClick={() => {
+          enable().catch(() => undefined);
+        }} disabled={enabling}>
           {enabling ? <Spinner className="size-3.5" /> : null}
           {action}
         </Button>

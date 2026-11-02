@@ -214,5 +214,5 @@ export function runErrorText(
 ): string {
   const key = run.errorCode ? ERROR_KEYS[run.errorCode] : undefined;
   if (key) return t(key);
-  return run.error?.trim() || t("scheduledTasks.errors.unknown");
+  return run.error?.trim() ?? t("scheduledTasks.errors.unknown");
 }

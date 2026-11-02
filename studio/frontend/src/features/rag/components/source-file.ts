@@ -14,7 +14,7 @@ export async function fetchSourceFile(
   const response = await fetch(await getDocumentFileUrl(doc.id));
   if (!response.ok) return null;
   if (maxBytes && Number(response.headers.get("content-length")) > maxBytes) {
-    void response.body?.cancel();
+    response.body?.cancel().catch(() => undefined);
     return null;
   }
   const blob = await response.blob();

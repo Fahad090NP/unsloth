@@ -160,9 +160,10 @@ function annotateEvent(message: Record<string, unknown>): AnnotateEvent | null {
 function headerList(value: unknown): [string, string][] | null {
   if (!Array.isArray(value) || value.length > MAX_REQUEST_HEADERS) return null;
   const headers: [string, string][] = [];
-  for (const entry of value) {
-    const name = Array.isArray(entry) && entry.length === 2 ? text(entry[0], MAX_HEADER_NAME_CHARS) : null;
-    const content = name === null ? null : text(entry[1], MAX_URL_CHARS);
+  for (const entry of value as unknown[]) {
+    const pair: unknown[] = Array.isArray(entry) ? entry : [];
+    const name = pair.length === 2 ? text(pair[0], MAX_HEADER_NAME_CHARS) : null;
+    const content = name === null ? null : text(pair[1], MAX_URL_CHARS);
     if (name === null || content === null) return null;
     headers.push([name, content]);
   }

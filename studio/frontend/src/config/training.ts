@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import type { ModelType } from "@/types/training";
+import type { ModelType, S3Config } from "@/types/training";
 import type { PipelineType } from "@huggingface/hub";
 export const CONTEXT_LENGTHS = [
   512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144,
@@ -191,7 +191,7 @@ export const DEFAULT_HYPERPARAMS = {
   finetuneAttentionModules: true,
   finetuneMLPModules: true,
   targetModules: TARGET_MODULES,
-  s3Config: null as import("@/types/training").S3Config | null,
+  s3Config: null as S3Config | null,
 };
 
 export const MODEL_TYPE_TO_HF_TASKS: Record<

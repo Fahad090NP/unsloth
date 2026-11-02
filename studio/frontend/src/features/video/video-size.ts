@@ -37,13 +37,13 @@ export function videoSizeLimits(
   defaults: VideoGenerationDefaults | null | undefined,
   presets: [number, number][],
 ): VideoSizeLimits {
-  const multiple = defaults?.resolution_multiple || 32;
+  const multiple = defaults?.resolution_multiple ?? 32;
   if (defaults?.custom_size_max_pixels && defaults.custom_size_min_pixels) {
     return {
       multiple,
       minPixels: defaults.custom_size_min_pixels,
       maxPixels: defaults.custom_size_max_pixels,
-      maxAspect: defaults.custom_size_max_aspect || MAX_ASPECT,
+      maxAspect: defaults.custom_size_max_aspect ?? MAX_ASPECT,
       presets,
       presetsOnly: false,
     };
@@ -52,7 +52,7 @@ export function videoSizeLimits(
     multiple,
     ...boundsFromPresets(presets),
     presets,
-    presetsOnly: defaults != null,
+    presetsOnly: defaults !== null,
   };
 }
 

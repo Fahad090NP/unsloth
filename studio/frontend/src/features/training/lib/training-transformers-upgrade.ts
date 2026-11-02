@@ -91,7 +91,7 @@ export async function confirmTrainingTransformersUpgrade({
       requiresTrustRemoteCode: false,
     };
   }
-  const requiresTrustRemoteCode = Boolean(check.requiresTrustRemoteCode);
+  const requiresTrustRemoteCode = check.requiresTrustRemoteCode;
   if (!check.upgrade) {
     return {
       proceed: true,

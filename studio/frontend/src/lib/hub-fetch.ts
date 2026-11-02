@@ -71,7 +71,7 @@ function sentHfToken(
   if (isModelScopeHubUrl(url)) return null;
   const header = requestHeaders(input, init).get("Authorization");
   const token = header?.replace(/^Bearer\s+/i, "").trim();
-  return token || null;
+  return token ?? null;
 }
 
 /** Explicit headers, so a Request input's Authorization cannot come back later. */

@@ -19,7 +19,7 @@ function moveQueuedAttachments(
     }
     if (key in pending) {
       pending = { ...pending };
-      delete pending[key];
+      Reflect.deleteProperty(pending, key);
     }
   }
   return pending;
@@ -230,7 +230,7 @@ export const useNativeIntentStore = create<NativeIntentState>((set, get) => ({
       targetKey,
     );
     const nextOwners = { ...owners };
-    for (const key of stale) delete nextOwners[key];
+    for (const key of stale) Reflect.deleteProperty(nextOwners, key);
     set({
       pendingImageAttachments,
       pendingOpenDocumentAttachments,
@@ -261,11 +261,11 @@ export const useNativeIntentStore = create<NativeIntentState>((set, get) => ({
       }
       if (key in pendingAudioAttachments) {
         pendingAudioAttachments = { ...pendingAudioAttachments };
-        delete pendingAudioAttachments[key];
+        Reflect.deleteProperty(pendingAudioAttachments, key);
       }
     }
     const nextOwners = { ...owners };
-    for (const key of stale) delete nextOwners[key];
+    for (const key of stale) Reflect.deleteProperty(nextOwners, key);
     set({ pendingAudioAttachments, audioDropOwners: nextOwners });
   },
   addVideoAttachments: (targetKey, intents) => {
@@ -329,11 +329,11 @@ export const useNativeIntentStore = create<NativeIntentState>((set, get) => ({
       }
       if (key in pendingVideoAttachments) {
         pendingVideoAttachments = { ...pendingVideoAttachments };
-        delete pendingVideoAttachments[key];
+        Reflect.deleteProperty(pendingVideoAttachments, key);
       }
     }
     const nextOwners = { ...owners };
-    for (const key of stale) delete nextOwners[key];
+    for (const key of stale) Reflect.deleteProperty(nextOwners, key);
     set({ pendingVideoAttachments, videoDropOwners: nextOwners });
   },
   addIntent: (intent) => {

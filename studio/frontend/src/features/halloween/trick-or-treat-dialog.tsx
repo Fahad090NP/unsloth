@@ -12,7 +12,7 @@ import {
   COLOR_THEMES,
   HALLOWEEN_THEME_IDS,
 } from "@/features/settings/lib/color-themes";
-import { usePalette } from "@/features/settings/stores/theme-store";
+import { usePalette } from "@/features/settings";
 import { useT } from "@/i18n";
 import {
   ChevronLeftStandardIcon,

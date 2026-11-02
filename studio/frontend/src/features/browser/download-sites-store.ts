@@ -21,9 +21,10 @@ export const useDownloadSitesStore = create<DownloadSitesState>()(
       sites: {},
       setSite: (origin, decision) =>
         set((state) => {
-          const sites = { ...state.sites };
+          const sites = Object.fromEntries(
+            Object.entries(state.sites).filter(([key]) => key !== origin),
+          );
           if (decision) sites[origin] = decision;
-          else delete sites[origin];
           return { sites };
         }),
     }),

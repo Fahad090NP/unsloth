@@ -190,8 +190,8 @@ function getConfigSummary(config: NodeConfig | undefined): string {
       return "Choose the main field";
     }
     if (config.sampler_type === "datetime") {
-      const start = config.datetime_start?.trim() || "?";
-      const end = config.datetime_end?.trim() || "?";
+      const start = config.datetime_start?.trim() ?? "?";
+      const end = config.datetime_end?.trim() ?? "?";
       return `${start} -> ${end}`;
     }
     if (config.sampler_type === "timedelta") {
@@ -204,7 +204,7 @@ function getConfigSummary(config: NodeConfig | undefined): string {
       config.sampler_type === "person" ||
       config.sampler_type === "person_from_faker"
     ) {
-      const locale = config.person_locale?.trim() || "any locale";
+      const locale = config.person_locale?.trim() ?? "any locale";
       const city = config.person_city?.trim();
       if (city) {
         return `${locale} · ${city}`;
@@ -437,7 +437,7 @@ function RecipeGraphNodeBase({
     config?.kind === "llm" &&
     (Boolean(config.prompt.trim()) ||
       Boolean(config.system_prompt.trim()) ||
-      Boolean((config.scores?.length ?? 0) > 0));
+      ((config.scores?.length ?? 0) > 0));
   const iconTone =
     config?.kind === "sampler" &&
     (config.sampler_type === "person" ||

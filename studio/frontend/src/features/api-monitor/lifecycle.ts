@@ -3,7 +3,7 @@
 
 // Own module: importing from the page would pull it into the eager bundle via __root.tsx.
 
-import type { ApiMonitorEntry } from "@/features/chat/types/api";
+import type { ApiMonitorEntry } from "@/features/chat";
 
 export function isLifecycleEntry(entry: ApiMonitorEntry): boolean {
   return entry.kind === "lifecycle";

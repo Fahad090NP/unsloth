@@ -26,7 +26,6 @@ import {
   Delete02Icon,
   Edit03Icon,
   FilterMailIcon,
-  InternetIcon,
   LinkSquare02Icon,
   MoreHorizontalIcon,
   Search01Icon,

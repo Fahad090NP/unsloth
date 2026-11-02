@@ -70,6 +70,11 @@ export function GalleryItemMenu({
   // Controlled: the menu portals to body, so the inert page wrapper cannot contain it.
   const t = useT();
   const [ownOpen, setOwnOpen] = useState(false);
+  const [wasActive, setWasActive] = useState(active);
+  if (active !== wasActive) {
+    setWasActive(active);
+    if (!active) setOwnOpen(false);
+  }
   const open = openProp ?? ownOpen;
   const setOpen = (next: boolean) => {
     setOwnOpen(next);
@@ -79,7 +84,6 @@ export function GalleryItemMenu({
   const closeProject = project.close;
   useEffect(() => {
     if (!active) {
-      setOwnOpen(false);
       closeProject();
     }
   }, [active, closeProject]);

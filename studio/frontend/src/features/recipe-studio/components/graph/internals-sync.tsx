@@ -12,7 +12,9 @@ export function InternalsSync({ nodeIds }: InternalsSyncProps): null {
   const updateNodeInternals = useUpdateNodeInternals();
   const idsKey = useMemo(() => nodeIds.join("|"), [nodeIds]);
   const nodeIdsRef = useRef(nodeIds);
-  nodeIdsRef.current = nodeIds;
+  useEffect(() => {
+    nodeIdsRef.current = nodeIds;
+  }, [nodeIds]);
 
   useEffect(() => {
     if (!idsKey) {

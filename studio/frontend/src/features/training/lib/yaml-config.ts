@@ -6,28 +6,21 @@ import type { BackendModelConfig } from "../api/models-api";
 import type { TrainingConfigState } from "../types/config";
 import { drafterRequestFrom } from "./drafter-config";
 
-const EXPECTED_TOP_KEYS = new Set(["training", "lora", "logging", "inference"]);
-
 export function parseYamlConfig(text: string): BackendModelConfig {
   const parsed = yaml.load(text);
-  if (parsed == null || typeof parsed !== "object" || Array.isArray(parsed)) {
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new Error(
       "Invalid config: expected a YAML mapping with training/lora/logging sections",
     );
   }
 
   const raw = parsed as Record<string, unknown>;
-  const unknownKeys = Object.keys(raw).filter(
-    (k) => !EXPECTED_TOP_KEYS.has(k),
-  );
-  if (unknownKeys.length > 0) {
-    console.warn("Ignored unknown YAML keys:", unknownKeys.join(", "));
-  }
+  // Unknown top-level keys are ignored.
 
   // Import is authoritative: a missing key forces vision_image_size = null.
   const rawTraining = raw.training;
   const isPlainTrainingObject =
-    rawTraining != null &&
+    rawTraining !== null &&
     typeof rawTraining === "object" &&
     !Array.isArray(rawTraining);
   let trainingObj: Record<string, unknown>;

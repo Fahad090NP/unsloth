@@ -139,7 +139,7 @@ export function insideSpan(spans: CodeSpan[], index: number): boolean {
   while (low <= high) {
     const mid = (low + high) >> 1;
     const span = spans[mid];
-    if (span === undefined || index < span.start) {
+    if (index < span.start) {
       high = mid - 1;
     } else if (index >= span.end) {
       low = mid + 1;

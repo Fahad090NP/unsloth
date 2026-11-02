@@ -9,6 +9,6 @@ export function saveDirectoryField(
   // typed and refill a cleared field with the default.
   return {
     inputValue: custom ?? defaultSaveDirectory,
-    saveDirectory: custom?.trim() || defaultSaveDirectory,
+    saveDirectory: custom?.trim() ?? defaultSaveDirectory,
   };
 }

@@ -42,7 +42,7 @@ export function stagedFromIntent(intent: NativeIntent): StagedSource {
     modifiedMs: modifiedMs ?? 0,
     // Absent metadata as 0 would collapse same-named files, so fall back to the unique token.
     dedupKey:
-      sizeBytes == null || modifiedMs == null
+      sizeBytes === null || modifiedMs === null
         ? `token:${token}`
         : `${displayLabel}|${sizeBytes}|${modifiedMs}`,
     upload: { nativeToken: token, expiresAtMs },

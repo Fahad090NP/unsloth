@@ -138,7 +138,7 @@ export function UpdateScreen({
               </div>
             )}
 
-            {downloadProgress != null && (
+            {downloadProgress !== null && (
               <div className="mt-2 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
                 <progress
                   aria-label={

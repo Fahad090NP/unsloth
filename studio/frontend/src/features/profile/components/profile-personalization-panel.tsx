@@ -140,7 +140,7 @@ export function ProfilePersonalizationPanel() {
   };
 
   // Escape unmounts without a blur, so commit drafts on the way out; saves no-op when unchanged.
-  const flushDrafts = useRef<() => void>(() => {});
+  const flushDrafts = useRef<() => void>(() => { /* no-op */ });
   useEffect(() => {
     flushDrafts.current = () => {
       saveName();

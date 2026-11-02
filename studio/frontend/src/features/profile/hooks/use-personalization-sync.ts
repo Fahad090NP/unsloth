@@ -165,7 +165,7 @@ function hasLocalSettings(
   return Boolean(
     profile.displayName ||
       profile.nickname ||
-      profile.avatarDataUrl ||
+      (profile.avatarDataUrl ?? "") !== "" ||
       profile.avatarShape !== "circle" ||
       !profile.showGreetingSloth ||
       theme !== "system" ||

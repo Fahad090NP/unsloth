@@ -72,7 +72,7 @@ function syncTrayStatus(status: BackendStatus) {
   if (!isTauri) return;
   import("@tauri-apps/api/core")
     .then(({ invoke }) => invoke("set_tray_server_status", { status }))
-    .catch(() => {});
+    .catch(() => { /* no-op */ });
 }
 
 type DesktopPreflightDisposition =
@@ -96,7 +96,6 @@ const MANAGED_ENVIRONMENT_POLL_MS = 5_000;
 // Five minutes; bounds only a gate held outside this app, e.g. a terminal update at a prompt.
 const MANAGED_ENVIRONMENT_WAIT_POLLS = 60;
 
-type TauriInvoke = typeof import("@tauri-apps/api/core").invoke;
 
 function externalConflictMessage(preflight: DesktopPreflightResult) {
   if (preflight.reason === "desktop_owned_backend_active") {
@@ -444,7 +443,7 @@ export function useTauriBackend() {
 
   async function runRepair(
     options?: { forceInstaller?: boolean; preflightReason?: string | null },
-    releaseRepair: () => void = () => {},
+    releaseRepair: () => void = () => { /* no-op */ },
   ) {
     const forceInstaller = options?.forceInstaller ?? false;
     // Survives the elevation round trip.

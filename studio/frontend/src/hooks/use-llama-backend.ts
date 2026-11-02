@@ -14,7 +14,7 @@ export function useLlamaCppBackend(): string | null {
       .then((status) => {
         if (!cancelled) setBackend(status.backend);
       })
-      .catch(() => {});
+      .catch(() => { /* no-op */ });
     return () => {
       cancelled = true;
     };

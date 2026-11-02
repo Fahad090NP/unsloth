@@ -46,7 +46,7 @@ export function buildLlmColumn(
     // biome-ignore lint/style/useNamingConvention: api schema
     multi_modal_context: buildImageContext(config, errors),
     // biome-ignore lint/style/useNamingConvention: api schema
-    tool_alias: toolAlias || undefined,
+    tool_alias: toolAlias ?? undefined,
     // biome-ignore lint/style/useNamingConvention: api schema
     with_trace: config.with_trace ?? "none",
     // biome-ignore lint/style/useNamingConvention: api schema
@@ -59,11 +59,11 @@ export function buildLlmColumn(
       column_type: "llm-code",
       ...base,
       // biome-ignore lint/style/useNamingConvention: api schema
-      code_lang: config.code_lang || "python",
+      code_lang: config.code_lang ?? "python",
     };
   }
   if (config.llm_type === "structured") {
-    let outputFormat: unknown = config.output_format || undefined;
+    let outputFormat: unknown = config.output_format ?? undefined;
     if (typeof outputFormat === "string" && outputFormat.trim()) {
       try {
         outputFormat = JSON.parse(outputFormat);
@@ -161,9 +161,9 @@ export function buildLlmMcpProvider(
     name,
     endpoint,
     // biome-ignore lint/style/useNamingConvention: api schema
-    api_key: provider.api_key?.trim() || undefined,
+    api_key: provider.api_key?.trim() ?? undefined,
     // biome-ignore lint/style/useNamingConvention: api schema
-    api_key_env: provider.api_key_env?.trim() || undefined,
+    api_key_env: provider.api_key_env?.trim() ?? undefined,
   };
 }
 

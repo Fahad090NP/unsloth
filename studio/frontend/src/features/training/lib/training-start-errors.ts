@@ -17,6 +17,12 @@ const TRAINING_START_ERROR_KEYS = new Map<string, TranslationKey>([
   ],
 ]);
 
+function messageOf(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  return "Unknown error";
+}
+
 function errorDetails(
   error: unknown,
   explicitErrorCode?: string | null,
@@ -41,11 +47,11 @@ function errorDetails(
       message:
         typeof candidate.message === "string"
           ? candidate.message
-          : String(error),
+          : messageOf(error),
       errorCode,
     };
   }
-  return { message: String(error), errorCode: explicitErrorCode ?? null };
+  return { message: messageOf(error), errorCode: explicitErrorCode ?? null };
 }
 
 export function normalizeTrainingStartError(

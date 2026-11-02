@@ -15,7 +15,9 @@ export function useNativeDropTarget(
   const { enabled = true } = options;
   const [element, setElement] = useState<HTMLElement | null>(null);
   const latest = useRef(options);
-  latest.current = options;
+  useEffect(() => {
+    latest.current = options;
+  });
 
   useEffect(() => {
     if (!isTauri || !enabled || !element) return;

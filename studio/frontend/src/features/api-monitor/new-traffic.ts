@@ -3,7 +3,7 @@
 
 // Split out of the overlay so it can be tested without a browser.
 
-import type { ApiMonitorEntry } from "@/features/chat/types/api";
+import type { ApiMonitorEntry } from "@/features/chat";
 
 export type WatchedEntry = Pick<
   ApiMonitorEntry,
@@ -39,15 +39,17 @@ export function createWatch(nowMs: number): ApiMonitorWatch {
 
 /** Re-anchor as the poll stands up, only while unseeded: the first snapshot can land much later. */
 export function startWatching(watch: ApiMonitorWatch, nowMs: number): void {
-  if (!watch.seeded) {
-    watch.watchStartedAt = nowMs;
+  const state = watch;
+  if (!state.seeded) {
+    state.watchStartedAt = nowMs;
   }
 }
 
 /** The full page took over; what it showed is not new traffic on the way back. */
 export function rearmWatch(watch: ApiMonitorWatch): void {
-  watch.seeded = false;
-  watch.resumed = true;
+  const state = watch;
+  state.seeded = false;
+  state.resumed = true;
 }
 
 /** Write off calls that landed during an opt-out, unless unseeded (no backlog yet). */
@@ -76,7 +78,7 @@ function isHistory(entry: WatchedEntry, cutoff: number | null): boolean {
   if (entry.status === "running") {
     return false;
   }
-  if (cutoff == null || !Number.isFinite(entry.started_at)) {
+  if (cutoff === null || !Number.isFinite(entry.started_at)) {
     return true;
   }
   // A call made while the tab was hidden is already terminal at the first poll.
@@ -88,30 +90,31 @@ export function observeResponse(
   response: WatchedResponse,
   nowMs: number,
 ): boolean {
+  const state = watch;
   // Fold each snapshot once; a refold would count the stand-down backlog as new.
-  if (watch.lastFolded === response) {
+  if (state.lastFolded === response) {
     return false;
   }
-  watch.lastFolded = response;
+  state.lastFolded = response;
   const { entries } = response;
-  if (!watch.seeded) {
-    watch.seeded = true;
-    const { resumed } = watch;
-    watch.resumed = false;
-    const cutoff = historyCutoff(watch, response, nowMs);
+  if (!state.seeded) {
+    state.seeded = true;
+    const { resumed } = state;
+    state.resumed = false;
+    const cutoff = historyCutoff(state, response, nowMs);
     // Returning from the full page, which showed this feed, marks everything as read.
-    watch.seenIds = new Set(
+    state.seenIds = new Set(
       entries
         .filter((entry) => resumed || isHistory(entry, cutoff))
         .map((e) => e.id),
     );
   }
-  const seen = watch.seenIds;
+  const seen = state.seenIds;
   // Only API-key traffic counts: Unsloth's own chat uses these same endpoints.
   const hasNewTraffic = entries.some(
     (entry) => entry.via_api_key && !seen.has(entry.id),
   );
   // Re-seed each poll so the set stays bounded by the server's ring buffer.
-  watch.seenIds = new Set(entries.map((entry) => entry.id));
+  state.seenIds = new Set(entries.map((entry) => entry.id));
   return hasNewTraffic;
 }

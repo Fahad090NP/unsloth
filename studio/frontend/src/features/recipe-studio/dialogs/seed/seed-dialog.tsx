@@ -755,9 +755,9 @@ export function SeedDialog({
           }
           const response = await inspectSeedDataset({
             dataset_name: datasetName,
-            hf_token: config.hf_token?.trim() || undefined,
-            split: config.hf_split?.trim() || undefined,
-            subset: config.hf_subset?.trim() || undefined,
+            hf_token: config.hf_token?.trim() ?? undefined,
+            split: config.hf_split?.trim() ?? undefined,
+            subset: config.hf_subset?.trim() ?? undefined,
             preview_size: 10,
           });
           // Only uid-namespaced upload directories are deleted (single owner).
@@ -968,7 +968,7 @@ export function SeedDialog({
                     inputId={datasetId}
                     className="flex-1"
                     value={config.hf_repo_id}
-                    accessToken={config.hf_token?.trim() || undefined}
+                    accessToken={config.hf_token?.trim() ?? undefined}
                     placeholder="org/repo"
                     onValueChange={(nextValue) =>
                       { onUpdate({

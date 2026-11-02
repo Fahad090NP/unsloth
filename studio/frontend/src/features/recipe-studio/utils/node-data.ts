@@ -72,7 +72,7 @@ export function nodeDataFromConfig(
     };
   }
   if (config.kind === "seed") {
-    const seedSourceType = config.seed_source_type ?? "hf";
+    const seedSourceType = config.seed_source_type;
     const sourceLabel =
       seedSourceType === "hf"
         ? "Hugging Face dataset"

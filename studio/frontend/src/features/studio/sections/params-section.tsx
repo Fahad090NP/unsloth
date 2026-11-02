@@ -265,9 +265,13 @@ export function ParamsSection({
                     ? Math.min(epochsSliderMax, Math.max(1, store.epochs))
                     : Math.min(maxStepsSliderMax, Math.max(1, store.maxSteps)),
                 ]}
-                onValueChange={([value]) =>
-                  { useEpochs ? store.setEpochs(value) : store.setMaxSteps(value); }
-                }
+                onValueChange={([value]) => {
+                  if (useEpochs) {
+                    store.setEpochs(value);
+                  } else {
+                    store.setMaxSteps(value);
+                  }
+                }}
                 min={1}
                 max={useEpochs ? epochsSliderMax : maxStepsSliderMax}
                 step={1}

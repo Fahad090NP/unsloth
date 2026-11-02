@@ -411,7 +411,7 @@ export function RunPreviewCard({
     hasDataset,
   });
   const methodMeta =
-    TRAINING_METHOD_META[trainingMethod] ?? TRAINING_METHOD_META.qlora;
+    TRAINING_METHOD_META[trainingMethod];
   const lengthUnit = maxSteps && maxSteps > 0 ? "step" : "epoch";
   const lengthCount = lengthUnit === "step" ? maxSteps : epochs;
   const lengthLabel = t(

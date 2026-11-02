@@ -1098,7 +1098,7 @@ export function WebAnnotateLayer({
     setDraft("");
     const files = await annotationScreenshot(page);
     const sent = await sendAnnotations(
-      { file: title || url || "", url, items: outgoing.map(({ quote, request }) => ({ quote, request })) },
+      { file: title ?? url ?? "", url, items: outgoing.map(({ quote, request }) => ({ quote, request })) },
       files,
     ).finally(() => { setSending(false); });
     if (sent) exit();

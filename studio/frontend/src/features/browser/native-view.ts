@@ -9,7 +9,7 @@ import { getLocale, translate } from "@/i18n";
 import type { TranslationKey } from "@/i18n";
 import type { InterpolationValues } from "@/i18n";
 import { openExternalLink } from "@/lib/open-link";
-import { getAppliedInterfaceZoom, subscribeAppliedInterfaceZoom } from "@/features/settings/lib/interface-scale-runtime";
+import { getAppliedInterfaceZoom, subscribeAppliedInterfaceZoom } from "@/features/settings";
 import { toast } from "@/lib/toast";
 import { BROWSER_PAGE_INSET_VAR, CHAT_SETTINGS_INSET_VAR, cornerInsets } from "@/lib/toast-offset";
 import { hostOf } from "./address";
@@ -188,7 +188,7 @@ function onDownloadPrompt(event: Extract<NativeEvent, { kind: "downloadPrompt" }
   const entry = tab ? currentEntry(tab) : null;
   if (useChatRuntimeStore.getState().incognito || (tab && entry && pageTemporary(tab.id, entry))) temporaryDownloads.add(id);
   // The site asking is the page that started it, taken then (a later site's answer must not cover it); blob: counts as its creator. With no web origin yet, the opener or the address asked for.
-  const asking = downloadSiteOf(site) ? site : entry?.kind === "web" ? entry.from || entry.url : "";
+  const asking = downloadSiteOf(site) ? site : entry?.kind === "web" ? entry.from ?? entry.url : "";
   // Picked from the context menu: the save dialog is the prompt, whatever the site's remembered answer.
   const decided =
     entry?.kind !== "web"

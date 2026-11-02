@@ -335,7 +335,13 @@ export function DataRecipesPage(): ReactElement {
   const navigate = useNavigate();
   const { recipes, ready } = useRecipes();
   const [creatingRecipe, setCreatingRecipe] = useState(false);
-  const [learningDialogOpen, setLearningDialogOpen] = useState(false);
+  const [learningDialogOpen, setLearningDialogOpen] = useState(() => {
+    if (sessionStorage.getItem(OPEN_LEARNING_RECIPES_ON_ARRIVAL_KEY) !== "1") {
+      return false;
+    }
+    sessionStorage.removeItem(OPEN_LEARNING_RECIPES_ON_ARRIVAL_KEY);
+    return true;
+  });
   const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(
     null,
   );
@@ -356,14 +362,6 @@ export function DataRecipesPage(): ReactElement {
     reloadReadySent.current = true;
     signalReady();
   }, [ready, signalReady]);
-
-  useEffect(() => {
-    if (sessionStorage.getItem(OPEN_LEARNING_RECIPES_ON_ARRIVAL_KEY) !== "1") {
-      return;
-    }
-    sessionStorage.removeItem(OPEN_LEARNING_RECIPES_ON_ARRIVAL_KEY);
-    setLearningDialogOpen(true);
-  }, []);
 
   async function openNewRecipe(): Promise<void> {
     if (creatingRecipe || loadingTemplateId) {

@@ -183,7 +183,7 @@ export function TrainingMemoryParams(): ReactElement {
         >
           <Select
             value={
-              store.visionImageSize == null
+              store.visionImageSize === null
                 ? "default"
                 : String(store.visionImageSize)
             }
@@ -198,7 +198,7 @@ export function TrainingMemoryParams(): ReactElement {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="default">Default</SelectItem>
-              {store.visionImageSize != null &&
+              {store.visionImageSize !== null &&
                 !VISION_IMAGE_SIZE_PRESETS.includes(store.visionImageSize) && (
                   <SelectItem value={String(store.visionImageSize)}>
                     {store.visionImageSize}

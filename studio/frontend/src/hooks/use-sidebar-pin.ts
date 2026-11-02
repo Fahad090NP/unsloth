@@ -69,7 +69,9 @@ function setPinnedGlobal(next: boolean) {
   pinnedValue = next;
   try {
     window.localStorage.setItem(PINNED_KEY, String(next));
-  } catch {}
+  } catch {
+    // Ignore unavailable storage; the pin still applies for this session.
+  }
   listeners.forEach((cb) => { cb(); });
 }
 

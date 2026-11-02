@@ -19,11 +19,11 @@ export function resolveResumeRemoteCodeCache({
   modelSnapshotPath: string | null;
   modelSnapshotRepoId: string | null;
 } {
-  const resolvedLocalPath = modelSnapshotPath || modelLocalPath || null;
+  const resolvedLocalPath = modelSnapshotPath ?? modelLocalPath ?? null;
   return {
     preferLocalCache: Boolean(resolvedLocalPath || modelKnownCached),
     modelLocalPath: resolvedLocalPath,
-    modelSnapshotPath: modelSnapshotPath || null,
-    modelSnapshotRepoId: modelSnapshotPath ? actualModelRepoId || null : null,
+    modelSnapshotPath: modelSnapshotPath ?? null,
+    modelSnapshotRepoId: modelSnapshotPath ? actualModelRepoId ?? null : null,
   };
 }

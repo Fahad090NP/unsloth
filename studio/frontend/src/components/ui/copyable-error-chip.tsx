@@ -65,7 +65,9 @@ export function CopyableErrorChip({
           <span className="text-xs font-medium text-destructive">Error</span>
           <button
             type="button"
-            onClick={handleCopy}
+            onClick={() => {
+              handleCopy().catch(() => undefined);
+            }}
             aria-label={copied ? "Copied" : "Copy error message"}
             className={cn(
               "btn-fill inline-flex items-center gap-1 rounded-full px-2 py-1 text-ui-11 text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",

@@ -173,9 +173,9 @@ export function RecipeStudioHeader({
                       className={`mt-0.5 size-3 shrink-0 ${w.severity === "error" ? "text-destructive" : RECIPE_STUDIO_WARNING_ICON_TONE}`}
                     />
                     <span className="text-xs text-muted-foreground">
-                      {(w.nodeName || w.nodeId) && (
+                      {(w.nodeName ?? w.nodeId) && (
                         <span className="font-medium text-foreground">
-                          {w.nodeName || w.nodeId}:{" "}
+                          {w.nodeName ?? w.nodeId}:{" "}
                         </span>
                       )}
                       {w.message}

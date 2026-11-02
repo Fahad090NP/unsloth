@@ -97,7 +97,7 @@ export function FullViewChatBar({ title }: { title: string | undefined }) {
           >
             <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
             <span className="min-w-0 truncate">
-              {title || t("browser.fullView.newChat")}
+              {title ?? t("browser.fullView.newChat")}
             </span>
             <HugeiconsIcon
               icon={ChevronDownStandardIcon}

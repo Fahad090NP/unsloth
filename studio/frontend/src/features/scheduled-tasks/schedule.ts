@@ -119,7 +119,8 @@ export function scheduleFormComplete(form: ScheduleForm): boolean {
       return form.days.length > 0;
     case "monthly":
       return Number.isInteger(form.dayOfMonth) && form.dayOfMonth >= 1 && form.dayOfMonth <= 31;
-    default:
+    case "daily":
+    case "weekdays":
       return true;
   }
 }

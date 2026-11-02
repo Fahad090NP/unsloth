@@ -5,7 +5,7 @@ import { FLOATING_PANEL_POSITION_KEYS } from "@/hooks/floating-panel-position";
 import { useFloatingPanelLayout } from "@/hooks/use-floating-panel-layout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useChatRuntimeStore } from "@/features/chat/stores/chat-runtime-store";
+import { useChatRuntimeStore } from "@/features/chat";
 import { FIND_PORTAL_ATTRIBUTE } from "@/features/find-in-page/lib/find-attributes";
 
 import { useMonitorOverlayStore } from "@/features/settings";

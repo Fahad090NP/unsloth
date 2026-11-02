@@ -76,7 +76,7 @@ function listen(): void {
         })
         .catch(() => undefined);
       const initialScale = await currentWindow.scaleFactor().catch(() => null);
-      if (!scaleReported && initialScale !== null) scaleFactor = initialScale;
+      if (initialScale !== null) scaleFactor = initialScale;
     })
     .catch(() => {
       listening = false;

@@ -43,7 +43,7 @@ export async function loadRequestError(
   const headers: Record<string, string> = {};
   for (const name of [REFUSAL_HEADER, "retry-after"]) {
     const value = response.headers.get(name);
-    if (value != null) headers[name] = value;
+    if (value !== null) headers[name] = value;
   }
   return new LoadRequestError(
     await readFastApiError(response),

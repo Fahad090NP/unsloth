@@ -55,20 +55,29 @@ export type BackgroundError =
 export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 export const MAX_PIXELS = 40_000_000;
 export const MAX_EDGE = 2048;
+
+function oneOf<T extends string>(values: readonly T[], value: unknown): value is T {
+	return typeof value === "string" && (values as readonly string[]).includes(value);
+}
+
+function isPosition(value: unknown): value is string {
+	return parsePosition(value) !== null;
+}
+
+type UnvalidatedAdjustments = {
+	[K in keyof BackgroundAdjustments]?: unknown;
+};
+
 export function sanitizeAdjustments(
-	input: Partial<BackgroundAdjustments>,
+	input: UnvalidatedAdjustments,
 ): BackgroundAdjustments {
 	const bounded = (v: unknown, max: number, fallback: number) =>
 		typeof v === "number" && Number.isFinite(v)
 			? Math.max(0, Math.min(max, Math.round(v)))
 			: fallback;
 	return {
-		scope: SCOPES.includes(input.scope!)
-			? input.scope!
-			: "chats",
-		effect: EFFECTS.includes(input.effect!)
-			? input.effect!
-			: "None",
+		scope: oneOf(SCOPES, input.scope) ? input.scope : "chats",
+		effect: oneOf(EFFECTS, input.effect) ? input.effect : "None",
 		visibility: bounded(input.visibility, 100, 70),
 		blur: bounded(input.blur, 20, 0),
 		fade: typeof input.fade === "boolean" ? input.fade : true,
@@ -79,11 +88,9 @@ export function sanitizeAdjustments(
 					? DEFAULT_ADJUSTMENTS.outline
 					: 0
 				: bounded(input.outline, 100, DEFAULT_ADJUSTMENTS.outline),
-		sizing: IMAGE_SIZING.includes(input.sizing!)
-			? input.sizing!
-			: "cover",
+		sizing: oneOf(IMAGE_SIZING, input.sizing) ? input.sizing : "cover",
 		zoom: Math.max(100, bounded(input.zoom, 300, 100)),
-		position: parsePosition(input.position) ? input.position! : "50% 50%",
+		position: isPosition(input.position) ? input.position : "50% 50%",
 	};
 }
 export function parsePosition(value: unknown): [number, number] | null {

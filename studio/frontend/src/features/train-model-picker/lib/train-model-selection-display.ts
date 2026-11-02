@@ -92,7 +92,7 @@ export function trainModelSelectionDisplayName({
     }),
   )?.title;
   return (
-    selectedTitle ?? pathDisplayName(selectedLocalPath?.trim() || selectedModel)
+    selectedTitle ?? pathDisplayName(selectedLocalPath?.trim() ?? selectedModel)
   );
 }
 
@@ -101,7 +101,7 @@ export function toTrainModelDisplayCandidate(
 ): TrainModelDisplayCandidate {
   const cachedRepoId = row.source === "hf_cache" ? row.repoId?.trim() : null;
   return {
-    id: cachedRepoId || row.loadId,
+    id: cachedRepoId ?? row.loadId,
     title: row.repoId ?? row.title,
     source: row.source,
     localPath: row.path,

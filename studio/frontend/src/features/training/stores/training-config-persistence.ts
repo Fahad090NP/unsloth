@@ -81,34 +81,35 @@ function migrateThroughVersion8(
   state: PersistedTrainingConfig,
   version: number,
 ): void {
+  const next = state;
   if (
     version < 2 &&
-    state.datasetSubset == null &&
-    state.datasetConfig != null
+    state.datasetSubset === null &&
+    state.datasetConfig !== null
   ) {
-    state.datasetSubset = state.datasetConfig;
+    next.datasetSubset = state.datasetConfig;
   }
   Reflect.deleteProperty(state, "datasetConfig");
-  if (version < 3 && state.modelDefaultsAppliedFor == null) {
-    state.modelDefaultsAppliedFor = null;
+  if (version < 3 && state.modelDefaultsAppliedFor === null) {
+    next.modelDefaultsAppliedFor = null;
   }
-  if (version < 4 && state.optimizerType == null) {
-    state.optimizerType = DEFAULT_HYPERPARAMS.optimizerType;
+  if (version < 4 && state.optimizerType === null) {
+    next.optimizerType = DEFAULT_HYPERPARAMS.optimizerType;
   }
-  if (version < 5 && state.lrSchedulerType == null) {
-    state.lrSchedulerType = DEFAULT_HYPERPARAMS.lrSchedulerType;
+  if (version < 5 && state.lrSchedulerType === null) {
+    next.lrSchedulerType = DEFAULT_HYPERPARAMS.lrSchedulerType;
   }
-  if (version < 6 && state.datasetEvalSplit == null) {
-    state.datasetEvalSplit = null;
+  if (version < 6 && state.datasetEvalSplit === null) {
+    next.datasetEvalSplit = null;
   }
   if (version < 7) {
-    state.datasetSliceStart ??= null;
-    state.datasetSliceEnd ??= null;
+    next.datasetSliceStart ??= null;
+    next.datasetSliceEnd ??= null;
   }
   if (version < 8) {
-    state.datasetSystemPrompt ??= "";
-    state.datasetLabelMapping ??= {};
-    state.datasetAdvisorNotification ??= null;
+    next.datasetSystemPrompt ??= "";
+    next.datasetLabelMapping ??= {};
+    next.datasetAdvisorNotification ??= null;
   }
 }
 
@@ -116,21 +117,22 @@ function migrateThroughVersion12(
   state: PersistedTrainingConfig,
   version: number,
 ): void {
+  const next = state;
   if (version < 9 && state.weightDecay === 0.01) {
-    state.weightDecay = DEFAULT_HYPERPARAMS.weightDecay;
+    next.weightDecay = DEFAULT_HYPERPARAMS.weightDecay;
   }
   if (version < 10 && state.trainingMethod === "cpt") {
-    state.loraRank = 128;
-    state.loraAlpha = 32;
-    state.loraVariant = "rslora";
-    state.targetModules = CPT_TARGET_MODULES;
-    state.datasetFormat = "raw";
-    if (state.learningRate == null || state.learningRate === LR_DEFAULT_LORA) {
-      state.learningRate = LR_DEFAULT_CPT;
+    next.loraRank = 128;
+    next.loraAlpha = 32;
+    next.loraVariant = "rslora";
+    next.targetModules = CPT_TARGET_MODULES;
+    next.datasetFormat = "raw";
+    if (state.learningRate === null || state.learningRate === LR_DEFAULT_LORA) {
+      next.learningRate = LR_DEFAULT_CPT;
     }
   }
   if (version < 11) {
-    state.datasetStreaming ??= false;
+    next.datasetStreaming ??= false;
   }
   if (version < 12) {
     const legacyToken =
@@ -146,18 +148,19 @@ function migrateThroughVersion16(
   state: PersistedTrainingConfig,
   version: number,
 ): void {
+  const next = state;
   if (version < 13) {
-    state.modelKnownCached ??= false;
-    state.modelLocalPath ??= null;
-    state.modelFormat ??= null;
-    state.datasetKnownCached ??= false;
-    state.datasetLocalPath ??= null;
+    next.modelKnownCached ??= false;
+    next.modelLocalPath ??= null;
+    next.modelFormat ??= null;
+    next.datasetKnownCached ??= false;
+    next.datasetLocalPath ??= null;
   }
   if (version < 14) {
     const dataset = typeof state.dataset === "string" ? state.dataset : null;
     const uploadedFile =
       typeof state.uploadedFile === "string" ? state.uploadedFile : null;
-    state.browseDatasetSelection =
+    next.browseDatasetSelection =
       state.datasetSource === "upload"
         ? createUploadBrowseDatasetSelection(uploadedFile)
         : createHfBrowseDatasetSelection(dataset, {
@@ -169,11 +172,11 @@ function migrateThroughVersion16(
           });
   }
   if (version < 15) {
-    state.isEmbeddingModel = state.modelType === "embeddings";
+    next.isEmbeddingModel = state.modelType === "embeddings";
   }
   if (version < 16) {
-    state.datasetUserTemplate = undefined;
-    state.datasetAssistantTemplate = undefined;
+    next.datasetUserTemplate = undefined;
+    next.datasetAssistantTemplate = undefined;
   }
 }
 
@@ -181,12 +184,13 @@ function migrateThroughVersion17(
   state: PersistedTrainingConfig,
   version: number,
 ): void {
+  const next = state;
   if (version < 17) {
-    state.modelDefaultsAppliedFor =
+    next.modelDefaultsAppliedFor =
       typeof state.selectedModel === "string" && state.selectedModel.length > 0
         ? state.selectedModel
         : null;
-    state.advancedSettingsBaseline = null;
+    next.advancedSettingsBaseline = null;
   }
 }
 
@@ -223,8 +227,9 @@ function migrateThroughVersion19(
   state: PersistedTrainingConfig,
   version: number,
 ): void {
+  const next = state;
   if (version < 19) {
-    state.trainingMethodProvenance = {
+    next.trainingMethodProvenance = {
       learningRateManuallySet: inferLegacyLearningRateWasManuallySet(state),
       modelAdapterLearningRate: null,
       datasetFormatBeforeCpt: null,

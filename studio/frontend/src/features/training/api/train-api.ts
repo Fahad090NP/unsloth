@@ -367,7 +367,7 @@ export async function getDrafterCapability(
   // The token rides a header, never the query string (private / gated models).
   const response = await authFetch(
     `/api/train/drafter-capability?model_name=${encodeURIComponent(modelName)}`,
-    { signal, headers: hubTokenHeader(hfToken?.trim() || null) },
+    { signal, headers: hubTokenHeader(hfToken?.trim() ?? null) },
   );
   if (!response.ok) {
     throw new Error(await readFastApiError(response));

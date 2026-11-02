@@ -27,9 +27,6 @@ export function buildProcessors(
 ): Record<string, unknown>[] {
   const output: Record<string, unknown>[] = [];
   for (const processor of processors) {
-    if (processor.processor_type !== "schema_transform") {
-      continue;
-    }
     const name = processor.name.trim();
     if (!name) {
       errors.push("Schema transform: name is required.");

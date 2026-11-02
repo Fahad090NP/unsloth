@@ -143,7 +143,7 @@ export function useWebUpdateCheck({
             setStatus(next);
           }
         })
-        .catch(() => {});
+        .catch(() => { /* no-op */ });
       // Wins over delayMs too; the only caller passing one is a unit test not setting the global.
     }, overriddenDelayMs() ?? delayMs);
 

@@ -150,7 +150,7 @@ export function LiveTrainingView(): ReactElement {
     projectName: activeProjectName,
     // The form may have been edited since start (e.g. LoRA -> Full).
     trainingMethod:
-      runConfigOverride?.trainingMethod ?? config.trainingMethod ?? "",
+      runConfigOverride?.trainingMethod ?? config.trainingMethod,
     isDecision:
       runConfigOverride?.isDecision ?? config.modelType === "decision",
     lossHistory: runtime.lossHistory,

@@ -55,7 +55,8 @@ export function blockCopy(
           ? "remoteCode.notOnModelScopeBody"
           : "remoteCode.notFoundBody",
       };
-    default:
+    case "unscannable":
+    case null:
       return {
         title: "remoteCode.checksFailedTitle",
         body: "remoteCode.checksFailedBody",

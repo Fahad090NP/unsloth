@@ -227,7 +227,7 @@ async function loadResumePayload(
   if (!(detail.run.can_resume && outputDir)) {
     // The server explains provenance refusals; this pre-request wording must not contradict it.
     throw new Error(
-      detail.run.resume_blocked_reason || translate(RESUME_UNAVAILABLE_ERROR),
+      detail.run.resume_blocked_reason ?? translate(RESUME_UNAVAILABLE_ERROR),
     );
   }
   primeNativeNotificationPermission().catch(() => undefined);
@@ -334,7 +334,7 @@ async function submitResumeTrainingRun(
   const response = await startTraining(payload, attempt.startRequestId);
   if (response.status === "error") {
     throw new TrainingStartError(
-      response.error || response.message,
+      response.error ?? response.message,
       response.error_code ?? null,
     );
   }

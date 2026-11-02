@@ -99,11 +99,11 @@ export function filterChats<T extends ChatEntry>(
     if (filters.flags.has("pinned") && !context.pinned.has(chat.id)) return false;
     if (filters.flags.has("forks") && !chat.isFork) return false;
     if (filters.flags.has("compare") && chat.type !== "compare") return false;
-    if (filters.projects.size > 0 && !filters.projects.has(chat.projectId || NO_PROJECT)) {
+    if (filters.projects.size > 0 && !filters.projects.has(chat.projectId ?? NO_PROJECT)) {
       return false;
     }
     const sectionId = context.sectionOf?.get(chat.id);
-    if (filters.sections.size > 0 && !filters.sections.has(sectionId || NO_SECTION)) {
+    if (filters.sections.size > 0 && !filters.sections.has(sectionId ?? NO_SECTION)) {
       return false;
     }
     const models = context.models.get(chat.id) ?? [];
@@ -393,11 +393,11 @@ export function groupChats<T extends ChatEntry>(
     let key: string;
     let group: Omit<ChatGroup<T>, "items">;
     if (by === "project") {
-      const projectId = chat.projectId || null;
+      const projectId = chat.projectId ?? null;
       key = `project:${projectId ?? NO_PROJECT}`;
       group = { key, projectId };
     } else if (by === "section") {
-      const sectionId = sectionOf?.get(chat.id) || null;
+      const sectionId = sectionOf?.get(chat.id) ?? null;
       key = `section:${sectionId ?? NO_SECTION}`;
       group = { key, sectionId };
     } else {

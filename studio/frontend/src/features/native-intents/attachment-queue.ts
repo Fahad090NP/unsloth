@@ -28,7 +28,8 @@ export function dequeueNativeAttachments(
   if (attachments.length === 0) {
     return [[], pending];
   }
-  const remaining = { ...pending };
-  delete remaining[targetKey];
+  const remaining = Object.fromEntries(
+    Object.entries(pending).filter(([key]) => key !== targetKey),
+  );
   return [attachments, remaining];
 }

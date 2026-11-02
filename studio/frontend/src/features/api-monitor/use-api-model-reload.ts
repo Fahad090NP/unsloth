@@ -76,11 +76,11 @@ function servedTarget(model: ReloadableModel): LastLoadRecord {
   // MLX reports its precision folder as the quant but loads as a model. Status says MLX only for the
   // primary; a kept row's folder is told by name, and names both formats use (bf16) by a GGUF repo.
   const mlxFolder =
-    model.isMlx ||
-    (variant != null && isPrecisionFolderName(variant) && !/gguf/i.test(target));
+    model.isMlx ??
+    (variant !== null && isPrecisionFolderName(variant) && !/gguf/i.test(target));
   return {
     id: target,
-    kind: variant != null && !mlxFolder ? "gguf" : "model",
+    kind: variant !== null && !mlxFolder ? "gguf" : "model",
     ggufVariant: variant,
   };
 }
@@ -149,7 +149,7 @@ export function useApiModelReload({
         nativePathToken: target.nativePathToken,
         nativePathExpiresAtMs: target.nativePathExpiresAtMs,
         config: config ?? undefined,
-        keepSpeculative: config != null,
+        keepSpeculative: config !== null,
         forceReload: true,
         isDownloaded: true,
         previousConfig: currentRuntimePerModelConfig({

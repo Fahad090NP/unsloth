@@ -89,7 +89,7 @@ async function recoverViaStatus(
         return { outputPath: st.last_op_output_path ?? null };
       }
       if (st.last_op_status === "cancelled") throw new ExportCanceledError();
-      throw new Error(st.last_op_error || "Export failed");
+      throw new Error(st.last_op_error ?? "Export failed");
     }
 
     // Our op was never observed: the POST likely died first. Fail after a grace window.
@@ -502,7 +502,7 @@ export const useExportRuntimeStore = create<ExportRuntimeStore>()((set, get) => 
             hf_token: params.token ?? params.loadToken ?? null,
             imatrix: params.useImatrix,
             imatrix_path: params.useImatrix
-              ? params.imatrixPath?.trim() || null
+              ? params.imatrixPath?.trim() ?? null
               : null,
             private: params.privateRepo,
             npu_q4nx: params.npuQ4nx,

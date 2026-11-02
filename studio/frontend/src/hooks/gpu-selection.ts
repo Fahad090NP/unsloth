@@ -96,7 +96,7 @@ export function reconcileGpuSelection(
   currentIndexKind: GpuIndexKind | null | undefined,
   pinnableIds: number[] | null,
 ): ReconciledGpuSelection {
-  if (ids == null) {
+  if (ids === null) {
     return { ids: null, indexKind: null };
   }
   const expectedIndexKind =

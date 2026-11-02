@@ -111,7 +111,7 @@ async function fetchRemoteSplits({
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     throw new Error(
-      body?.error || `Failed to fetch splits (${response.status})`,
+      body?.error ?? `Failed to fetch splits (${response.status})`,
     );
   }
   const payload = (await response.json()) as HfSplitsResponse;

@@ -154,7 +154,9 @@ export function Q4nxConvertCard() {
           >
             {result?.text ?? "No training or GPU needed."}
           </p>
-          <Button variant="dark" disabled={!canConvert} onClick={handleConvert}>
+          <Button variant="dark" disabled={!canConvert} onClick={() => {
+              handleConvert().catch(() => undefined);
+            }}>
             {running && <Spinner />}
             Convert
           </Button>

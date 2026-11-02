@@ -98,7 +98,7 @@ export interface ProfileStats {
 function timezoneQuery(): URLSearchParams {
   return new URLSearchParams({
     tz_offset_minutes: String(new Date().getTimezoneOffset()),
-    tz: Intl.DateTimeFormat().resolvedOptions().timeZone ?? "",
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
 }
 

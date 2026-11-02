@@ -39,7 +39,7 @@ export function useDrafterCapability(active: boolean): void {
   }, [active]);
 
   useEffect(() => {
-    const key = `${selectedModel}\u0000${token}`;
+    const key = `${selectedModel}\u0000${token ?? ""}`;
     if (!active) {
       if (lastProbe?.failed) lastProbe = null;
       return;

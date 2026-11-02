@@ -45,7 +45,7 @@ export function parseLlm(
             for (const [key, value] of Object.entries(rawOptions)) {
               const description =
                 typeof value === "string" ? value : JSON.stringify(value);
-              options.push({ value: String(key), description });
+              options.push({ value: key, description });
             }
             return {
               name: readString(score.name) ?? "",
