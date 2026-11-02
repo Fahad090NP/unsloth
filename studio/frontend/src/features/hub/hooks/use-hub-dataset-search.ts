@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { getHfEndpoint, useHfEndpoint } from "@/lib/hf-endpoint";
+import { getHfEndpoint } from "@/lib/hf-endpoint";
 import { fetchWithTimeout } from "../lib/network";
 import type { HubModelType } from "../types";
 import { listDatasets } from "@huggingface/hub";
@@ -427,7 +427,6 @@ export function useHubDatasetSearch(
   } = options ?? {};
   const hasQuery = query.trim().length > 0;
   const useCuratedOnly = !hasQuery && Boolean(modelType);
-  const hfEndpoint = useHfEndpoint();
   const createIter = useCallback(
     (signal: AbortSignal) => {
       if (useCuratedOnly) {
@@ -479,7 +478,7 @@ export function useHubDatasetSearch(
     }
 
     return [...boosted, ...neutral];
-  }, [enabled, search.results, modelType, query, pinnedIds, hasQuery]);
+  }, [enabled, search.results, modelType, pinnedIds, hasQuery]);
 
   return { ...search, results };
 }

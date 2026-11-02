@@ -103,10 +103,10 @@ function repositoryRevision(client: AssistantClient): unknown {
     ? methods.__internal_getRuntime
     : undefined;
   if (typeof getRuntime !== "function") return UNKNOWN_REPOSITORY;
-  const runtime = getRuntime.call(methods);
+  const runtime: unknown = getRuntime.call(methods);
   const getState = isRecord(runtime) ? runtime.getState : undefined;
   if (typeof getState !== "function") return UNKNOWN_REPOSITORY;
-  const state = getState.call(runtime);
+  const state: unknown = getState.call(runtime);
   return isRecord(state) && Array.isArray(state.messages)
     ? state.messages
     : UNKNOWN_REPOSITORY;

@@ -35,7 +35,7 @@ export async function prepareQueuedPromptFiles(
     ...item,
     attachments: await Promise.all(
       attachments.map((attachment, index) => {
-        const file = attachmentFiles[index];
+        const file = attachmentFiles[index] as File | undefined;
         if (!file) {
           throw new Error("Queued attachment snapshot is inconsistent");
         }
@@ -77,7 +77,7 @@ export function canQueueTextAttachment(attachment: Attachment): boolean {
   return (
     attachment.type === "document" &&
     attachment.status.type === "requires-action" &&
-    attachment.status.reason === "composer-send" &&
+    (attachment.status.reason as string) === "composer-send" &&
     attachment.file !== undefined &&
     cachedTextAttachment(attachment.file) !== undefined
   );
@@ -89,12 +89,13 @@ export function snapshotQueuedTextAttachments(
 ): CompleteAttachment[] | null {
   if (!attachments.length || !attachments.every(canQueueTextAttachment))
     return null;
-  return attachments.map((attachment) =>
-    completeTextAttachment(
-      attachment as PendingAttachment,
-      cachedTextAttachment(attachment.file!)!,
-    ),
-  );
+  return attachments.map((attachment) => {
+    const pendingAttachment = attachment as PendingAttachment;
+    return completeTextAttachment(
+      pendingAttachment,
+      cachedTextAttachment(pendingAttachment.file) as string,
+    );
+  });
 }
 
 export function snapshotQueuedTextPrompt(

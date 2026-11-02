@@ -43,4 +43,4 @@ export function estimateSizeFromDtypes(
   return total > 0 ? total : undefined;
 }
 
-export { isGgufLike } from "@/features/hub/lib/model-identifiers";
+export { isGgufLike } from "./model-identifiers";

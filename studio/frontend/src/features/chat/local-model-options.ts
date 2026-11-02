@@ -30,8 +30,6 @@ function baseModelLabel(source: LocalModelInfo["source"]): string {
     case "models_dir":
     case "unsloth":
       return "Local models";
-    default:
-      return "Local models";
   }
 }
 

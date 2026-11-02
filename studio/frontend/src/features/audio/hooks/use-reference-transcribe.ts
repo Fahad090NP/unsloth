@@ -23,7 +23,9 @@ export function useReferenceTranscribe({
   const [error, setError] = useState<string | null>(null);
   const abort = useRef<AbortController | null>(null);
   const onTextRef = useRef(onText);
-  onTextRef.current = onText;
+  useEffect(() => {
+    onTextRef.current = onText;
+  }, [onText]);
 
   const transcribe = useCallback(
     async (reference: AudioSourceSelection | null) => {

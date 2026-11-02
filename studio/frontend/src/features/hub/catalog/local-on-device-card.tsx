@@ -137,7 +137,7 @@ function BaseModelReference({
 }) {
   const canOpenHub = baseModelSource === "huggingface" && Boolean(baseModelHubId);
   const hfEndpoint = useHfEndpoint();
-  const hubUrl = `${hfEndpoint}/${baseModelHubId}`;
+  const hubUrl = `${hfEndpoint}/${baseModelHubId ?? ""}`;
   return (
     <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border/55 bg-muted/35 px-3 py-2">
       <div className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-background/70 text-muted-foreground">
@@ -169,7 +169,7 @@ function BaseModelReference({
               href={hubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`Open ${baseModelHubId} on Hugging Face`}
+              aria-label={`Open ${baseModelHubId ?? ""} on Hugging Face`}
               className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
               onClick={(event) => {
                 event.stopPropagation();
@@ -262,7 +262,7 @@ export function LocalOnDeviceCard({
     null,
   );
   const updateTransportConflict = useDownloadManagerStore((state) =>
-    updateConflictKey ? (state.conflicts[updateConflictKey].info ?? null) : null,
+    updateConflictKey ? state.conflicts[updateConflictKey].info : null,
   );
   const cancelUpdateConflict = useCallback(() => {
     if (updateConflictKey) downloadManager.cancelConflict(updateConflictKey);
@@ -296,7 +296,7 @@ export function LocalOnDeviceCard({
       await deleteCachedModel(repoId, undefined, hfToken || undefined, path);
     },
     resourceName: "model",
-    successMessage: () => `Deleted ${isCacheRow ? repoId : displayName}`,
+    successMessage: () => `Deleted ${isCacheRow ? (repoId ?? "") : displayName}`,
     onSuccess: () => {
       setDeleteOpen(false);
       onChange?.();
@@ -453,7 +453,8 @@ export function LocalOnDeviceCard({
         }
         currentVariantState.refresh().catch(() => { /* noop */ });
         remoteVariantState.refresh().catch(() => { /* noop */ });
-      });
+      })
+      .catch(() => { /* noop */ });
   };
   const formatLabel =
     modelFormat === "gguf"
@@ -600,14 +601,14 @@ export function LocalOnDeviceCard({
             <div className="ml-auto flex items-center gap-0.5">
               {canUpdate && (
                 <CardUpdateButton
-                  label={`Update ${repoId}`}
+                  label={`Update ${repoId ?? ""}`}
                   emphasized={true}
                   onClick={() => { setUpdateOpen(true); }}
                 />
               )}
               {canDelete && (
                 <CardDeleteButton
-                  label={`Delete ${isCacheRow ? repoId : displayName}`}
+                  label={`Delete ${isCacheRow ? (repoId ?? "") : displayName}`}
                   onClick={() => { setDeleteOpen(true); }}
                 />
               )}
@@ -709,7 +710,7 @@ export function LocalOnDeviceCard({
         onOpenChange={(o) => {
           if (!o) setUpdateOpen(false);
         }}
-        title={`Update ${repoId}?`}
+        title={`Update ${repoId ?? ""}?`}
         updating={false}
         onConfirm={handleConfirmUpdate}
         description="Re-download the latest version of this model from Hugging Face. Progress shows in the Downloads panel."

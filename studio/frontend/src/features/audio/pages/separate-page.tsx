@@ -411,7 +411,8 @@ export function SeparateOutput({
     for (const clip of group.stems) (handleTogglePin(clip.id, pinned)).catch(() => { /* noop */ });
   };
   const archiveGroup = async (group: SeparationGroup) => {
-    const [last, ...rest] = [...group.stems].reverse();
+    const last = group.stems.at(-1);
+    const rest = group.stems.slice(0, -1);
     try {
       await Promise.all(
         rest.map((clip) => setAudioClipFlags(clip.id, { archived: true })),
@@ -562,7 +563,7 @@ export function SeparateOutput({
                   <button
                     type="button"
                     onClick={() => {
-                      const first = group.stems[0];
+                      const first = group.stems.at(0);
                       if (first) selectClip(first.id);
                     }}
                     aria-current={current ? "true" : undefined}

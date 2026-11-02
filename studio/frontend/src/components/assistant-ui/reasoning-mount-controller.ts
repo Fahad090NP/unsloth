@@ -259,12 +259,10 @@ export const buildChunkGrid = (
     const key = groupKeyOf(fragment);
     const previous = groups.at(-1);
     const sameFence =
-      previous !== undefined
-      && previous.end === i
+      previous?.end === i
       && groupKeyOf(fragments[previous.first]) === key;
     if (
       sameFence
-      && previous !== undefined
       && (previous.chars < maxChars || !startsLine(fragment))
     ) {
       groups[groups.length - 1] = {

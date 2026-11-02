@@ -62,7 +62,7 @@ export function CreateKeyForm({
     ),
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);

@@ -233,7 +233,12 @@ export function RecentDictationsView({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => { openChat(selected.chatId!); }}
+                onClick={() =>
+                  {
+                    const chatId = selected.chatId;
+                    if (chatId) openChat(chatId);
+                  }
+                }
               >
                 <HugeiconsIcon
                   icon={MessageCircleIcon}
@@ -245,8 +250,8 @@ export function RecentDictationsView({
             <Button
               variant="outline"
               size="sm"
-              onClick={async () => {
-                await handleCopy(selected.text);
+              onClick={() => {
+                handleCopy(selected.text).catch(() => { /* noop */ });
               }}
             >
               <HugeiconsIcon icon={Copy01Icon} className="mr-1.5 size-3.5" />
@@ -412,8 +417,8 @@ export function RecentDictationsView({
                     ) : null}
                     <button
                       type="button"
-                      onClick={async () => {
-                        await handleCopy(dictation.text);
+                      onClick={() => {
+                        handleCopy(dictation.text).catch(() => { /* noop */ });
                       }}
                       aria-label={t("settings.voice.recents.copy")}
                       title={t("settings.voice.recents.copy")}

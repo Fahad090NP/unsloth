@@ -28,7 +28,7 @@ function snapshotContent(
     return content;
   }
   return Array.isArray(content)
-    ? ([...content] as ThreadMessage["content"])
+    ? ([...content] as unknown as ThreadMessage["content"])
     : [];
 }
 
@@ -41,7 +41,8 @@ function toEpochMillis(value: unknown): number {
 function snapshotAttachments(
   attachments: readonly CompleteAttachment[] | undefined,
 ): readonly CompleteAttachment[] {
-  return Array.isArray(attachments) ? [...attachments] : [];
+  if (!Array.isArray(attachments)) return [];
+  return [...(attachments as readonly CompleteAttachment[])];
 }
 
 export function exportedItemToRecord(
@@ -52,7 +53,8 @@ export function exportedItemToRecord(
   const content = snapshotContent(message.content);
   if (message.role === "user") {
     const attachments = snapshotAttachments(message.attachments);
-    const custom = message.metadata.custom;
+    const custom: Record<string, unknown> | undefined =
+      message.metadata.custom;
     return {
       id: message.id,
       threadId,
@@ -64,7 +66,9 @@ export function exportedItemToRecord(
       createdAt: toEpochMillis(message.createdAt),
     };
   }
-  const custom = (message.metadata.custom ?? {});
+  const custom: Record<string, unknown> | undefined =
+    message.metadata.custom;
+  const metadata = custom ?? {};
   return {
     id: message.id,
     threadId,
@@ -74,7 +78,7 @@ export function exportedItemToRecord(
       ThreadMessage,
       { role: "assistant" }
     >["content"],
-    ...(Object.keys(custom).length > 0 && { metadata: custom }),
+    ...(Object.keys(metadata).length > 0 && { metadata }),
     createdAt: toEpochMillis(message.createdAt),
   };
 }

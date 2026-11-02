@@ -26,7 +26,7 @@ interface ThreadState {
   startedAt: number;
 }
 
-const noop = (): void => {};
+const noop = (): void => undefined;
 
 const defaultTimers: RunCheckpointTimers = {
   setTimeout: (callback, ms) => window.setTimeout(callback, ms),
@@ -61,7 +61,9 @@ export function createRunCheckpointScheduler(
     try {
       return Promise.resolve(save(threadId));
     } catch (error) {
-      return Promise.reject(error);
+      return Promise.reject(
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   };
 

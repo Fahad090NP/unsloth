@@ -158,7 +158,7 @@ export function SavedModelSettingsPanel(): ReactElement {
   }, []);
 
   useEffect(() => {
-    void load();
+    load().catch(() => undefined);
   }, [load]);
 
   const forget = useCallback(
@@ -251,7 +251,7 @@ export function SavedModelSettingsPanel(): ReactElement {
                   aria-label={`Forget settings for ${modelId}`}
                   title="Forget these settings"
                   disabled={forgetting.has(modelId)}
-                  onClick={() => void forget(modelId)}
+                  onClick={() => { forget(modelId).catch(() => undefined); }}
                 >
                   {forgetting.has(modelId) ? (
                     <Spinner label="Forgetting" />

@@ -144,7 +144,7 @@ export function instrumentalChoice(
         value: false,
         reason: "This model always sings the lyrics.",
       };
-    default:
+    case undefined:
       return { shown: false, enabled: false, value: false, reason: null };
   }
 }
@@ -252,8 +252,8 @@ export function exampleLyrics(
   const tags = sectionTags(sectionCase);
   const tag = (name: string) => tags.find((item) => item.name === name)?.tag;
   return chorus
-    ? `${tag("Verse")}\n${verse}\n\n${tag("Chorus")}\n${chorus}`
-    : `${tag("Verse")}\n${verse}`;
+    ? `${tag("Verse") ?? ""}\n${verse}\n\n${tag("Chorus") ?? ""}\n${chorus}`
+    : `${tag("Verse") ?? ""}\n${verse}`;
 }
 
 export interface MusicInputs {

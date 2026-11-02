@@ -186,7 +186,12 @@ const RewindPicker: FC<{
 }> = ({ entries, onPick, onClose }) => {
   const t = useT();
   return (
-    <Dialog open={true} onOpenChange={(next) => !next && onClose()}>
+    <Dialog
+      open={true}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
       <DialogContent className="corner-squircle dialog-soft-surface gap-5 sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-ui-21">{t("rewind.title")}</DialogTitle>
@@ -314,7 +319,7 @@ const RewindChoices: FC<{
     });
   }, [conversationOnly]);
 
-  if (!hasChanges || result === null) return null;
+  if (!hasChanges) return null;
 
   const options: { value: RewindMode; label: string }[] = [
     { value: "both", label: t("rewind.modeBoth") },
@@ -323,7 +328,12 @@ const RewindChoices: FC<{
   ];
 
   return (
-    <Dialog open={true} onOpenChange={(next) => !next && !busy && onClose()}>
+    <Dialog
+      open={true}
+      onOpenChange={(next) => {
+        if (!next && !busy) onClose();
+      }}
+    >
       <DialogContent className="corner-squircle dialog-soft-surface gap-4 sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-ui-21">
@@ -379,7 +389,14 @@ const RewindChoices: FC<{
           <Button variant="outline" onClick={onClose} disabled={busy}>
             {t("rewind.cancel")}
           </Button>
-          <Button onClick={() => void rewind(mode)} disabled={busy}>
+          <Button
+            onClick={() => {
+              rewind(mode).catch((error: unknown) => {
+                console.error("Rewind failed", error);
+              });
+            }}
+            disabled={busy}
+          >
             {t("rewind.confirm")}
           </Button>
         </DialogFooter>

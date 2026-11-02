@@ -97,7 +97,8 @@ export async function listEngines(): Promise<EngineStatus[]> {
       await readFastApiError(response, "Could not read inference engines"),
     );
   }
-  return await response.json();
+  const body = (await response.json()) as EngineStatus[];
+  return body;
 }
 
 export async function changeEngine(

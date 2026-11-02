@@ -12,7 +12,7 @@ import {
 import { useLocale, useT } from "@/i18n";
 import { formatMessageDate } from "@/lib/format-message-date";
 import { messageTimestamp } from "@/lib/message-timestamp";
-import type { FC } from "react";
+import { type FC, useState } from "react";
 
 /** The menu renders only while open, so no timer. */
 export const MessageMenuTime: FC<{ onShowDetails: () => void }> = ({
@@ -20,6 +20,7 @@ export const MessageMenuTime: FC<{ onShowDetails: () => void }> = ({
 }) => {
   const t = useT();
   const locale = useLocale();
+  const [now] = useState(() => Date.now());
   const createdAt = useAuiState(({ message }) => messageTimestamp(message));
   const date =
     createdAt !== undefined && Number.isFinite(createdAt)
@@ -39,7 +40,7 @@ export const MessageMenuTime: FC<{ onShowDetails: () => void }> = ({
               dateTime={date.toISOString()}
               className="block select-none py-2 pl-3 pr-1 text-sm tabular-nums transition-colors group-hover/menu-time:text-foreground group-focus/menu-time:text-foreground"
             >
-              {formatMessageDate(date.getTime(), Date.now(), locale, {
+              {formatMessageDate(date.getTime(), now, locale, {
                 today: (time) => t("common.todayAt", { time }),
                 yesterday: (time) => t("common.yesterdayAt", { time }),
               })}

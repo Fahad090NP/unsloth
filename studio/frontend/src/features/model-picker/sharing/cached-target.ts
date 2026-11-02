@@ -41,6 +41,27 @@ export class RunConfigResolutionError extends Error {}
 const notGgufMessage =
   "This model has no GGUF files. Shared run settings apply only to GGUF models.";
 
+type CachedVariant = CachedVariantsResponse["variants"][number];
+
+function isCachedVariant(value: unknown): boolean {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const variant = value as Partial<CachedVariant>;
+  return (
+    typeof variant.filename === "string" &&
+    variant.filename.length > 0 &&
+    typeof variant.quant === "string" &&
+    variant.quant.length > 0 &&
+    typeof variant.size_bytes === "number" &&
+    Number.isFinite(variant.size_bytes) &&
+    variant.size_bytes >= 0 &&
+    (variant.downloaded === undefined ||
+      typeof variant.downloaded === "boolean") &&
+    (variant.partial === undefined || typeof variant.partial === "boolean")
+  );
+}
+
 function readVariantsResponse(value: unknown): CachedVariantsResponse {
   if (!value || typeof value !== "object") {
     throw new Error("Invalid GGUF variants response.");
@@ -48,21 +69,7 @@ function readVariantsResponse(value: unknown): CachedVariantsResponse {
   const response = value as Partial<CachedVariantsResponse>;
   if (
     !Array.isArray(response.variants) ||
-    !response.variants.every(
-      (variant) =>
-        variant &&
-        typeof variant === "object" &&
-        typeof variant.filename === "string" &&
-        variant.filename.length > 0 &&
-        typeof variant.quant === "string" &&
-        variant.quant.length > 0 &&
-        typeof variant.size_bytes === "number" &&
-        Number.isFinite(variant.size_bytes) &&
-        variant.size_bytes >= 0 &&
-        (variant.downloaded === undefined ||
-          typeof variant.downloaded === "boolean") &&
-        (variant.partial === undefined || typeof variant.partial === "boolean"),
-    ) ||
+    !response.variants.every(isCachedVariant) ||
     (response.default_variant != null &&
       typeof response.default_variant !== "string") ||
     (response.resolved_locally !== undefined &&

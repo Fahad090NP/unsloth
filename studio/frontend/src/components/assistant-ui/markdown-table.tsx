@@ -35,7 +35,7 @@ import { ExpandArrowsIcon } from "@/lib/expand-icons";
 function streamdownIcon(icon: typeof Copy01Icon) {
   return function StreamdownIcon({
     size,
-    strokeWidth: _strokeWidth,
+    strokeWidth,
     ...props
   }: ComponentProps<"svg"> & { size?: number }) {
     return <HugeiconsIcon icon={icon} size={size} {...props} />;
@@ -132,7 +132,7 @@ function paintSurface(wrapper: HTMLElement): void {
 export function MarkdownTable({
   children,
   className,
-  node: _node,
+  node,
   ...props
 }: ComponentProps<"table"> & ExtraProps) {
   const t = useT();
@@ -215,7 +215,7 @@ export function MarkdownTable({
 export function StaticMarkdownTable({
   children,
   className,
-  node: _node,
+  node,
   ...props
 }: ComponentProps<"table"> & ExtraProps) {
   return (

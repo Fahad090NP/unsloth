@@ -10,7 +10,7 @@ import {
   selectAttachmentSource,
 } from "@/components/assistant-ui/attachment-selection";
 import { useAuiState } from "@assistant-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useShallow } from "zustand/shallow";
 
 export type { AttachmentPreviewKind };
@@ -28,17 +28,15 @@ export interface AttachmentSource {
 }
 
 const useFileSrc = (file: File | undefined): string | undefined => {
-  const [objectUrl, setObjectUrl] = useState<string | undefined>(undefined);
+  const objectUrl = useMemo(
+    () => (file ? URL.createObjectURL(file) : undefined),
+    [file],
+  );
 
   useEffect(() => {
-    if (!file) {
-      setObjectUrl(undefined);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setObjectUrl(url);
-    return () => { URL.revokeObjectURL(url); };
-  }, [file]);
+    if (!objectUrl) return;
+    return () => { URL.revokeObjectURL(objectUrl); };
+  }, [objectUrl]);
 
   return objectUrl;
 };

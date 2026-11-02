@@ -9,11 +9,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatBytesGiB } from "@/lib/memory/format";
 import type { MemoryEstimate } from "../api/memory-estimate";
 import {
   type MemoryFitVerdict,
   NOTE_SEPARATOR,
-  formatMemoryGb,
   glueNoteItems,
   memoryFigureCandidates,
   mlxOffloadPercent,
@@ -293,14 +293,14 @@ export function MemoryEstimateRow({
       <div id={contentId} hidden={!expanded} className="mt-3 space-y-3">
         <MemoryBreakdownLine
           label="Weights"
-          value={formatMemoryGb(estimate.weightsBytes)}
+          value={formatBytesGiB(estimate.weightsBytes)}
           note={weightsNote || undefined}
         />
         <MemoryBreakdownLine
           label="KV cache"
           value={
             estimate.kvEstimable
-              ? formatMemoryGb(estimate.kvBytes - estimate.kvCheckpointBytes)
+              ? formatBytesGiB(estimate.kvBytes - estimate.kvCheckpointBytes)
               : "unknown"
           }
           note={estimate.kvEstimable ? kvNote : undefined}
@@ -309,18 +309,18 @@ export function MemoryEstimateRow({
         {estimate.kvEstimable && estimate.kvCheckpointBytes > 0 && (
           <MemoryBreakdownLine
             label="Context checkpoints"
-            value={formatMemoryGb(estimate.kvCheckpointBytes)}
+            value={formatBytesGiB(estimate.kvCheckpointBytes)}
             note="host RAM, filled as conversations grow"
           />
         )}
         <MemoryBreakdownLine
           label="Compute buffers"
-          value={formatMemoryGb(estimate.computeBytes)}
+          value={formatBytesGiB(estimate.computeBytes)}
         />
         {estimate.projectorRuntimeBytes > 0 && (
           <MemoryBreakdownLine
             label="Vision encoder"
-            value={formatMemoryGb(estimate.projectorRuntimeBytes)}
+            value={formatBytesGiB(estimate.projectorRuntimeBytes)}
           />
         )}
         {/* Streamed: outside Weights and Total, only the rows in use page in. Resident:
@@ -328,14 +328,14 @@ export function MemoryEstimateRow({
         {(estimate.lookupTableBytes ?? 0) > 0 && (
           <MemoryBreakdownLine
             label="Lookup tables"
-            value={formatMemoryGb(estimate.lookupTableBytes ?? 0)}
+            value={formatBytesGiB(estimate.lookupTableBytes ?? 0)}
             note={estimate.lookupTableOnDisk ? "on disk" : "in RAM, part of Weights"}
           />
         )}
         {estimate.drafterRuntimeBytes > 0 && (
           <MemoryBreakdownLine
             label="Draft cache"
-            value={formatMemoryGb(estimate.drafterRuntimeBytes)}
+            value={formatBytesGiB(estimate.drafterRuntimeBytes)}
             note={draftCacheNote}
           />
         )}

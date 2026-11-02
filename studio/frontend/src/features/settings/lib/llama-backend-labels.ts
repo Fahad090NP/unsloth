@@ -19,6 +19,6 @@ export function backendDisplayName(
   if (!backend) {
     return t(LLAMA_BACKEND_LABELS.auto);
   }
-  const key = LLAMA_BACKEND_LABELS[backend];
+  const key: TranslationKey | undefined = LLAMA_BACKEND_LABELS[backend];
   return key ? t(key) : backend;
 }

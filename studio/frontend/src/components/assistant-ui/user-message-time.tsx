@@ -10,12 +10,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAuiState } from "@assistant-ui/react";
-import type { FC } from "react";
+import { type FC, useState } from "react";
 
 export const UserMessageTime: FC = () => {
   const t = useT();
   const locale = useLocale();
   const createdAt = useAuiState(({ message }) => messageTimestamp(message));
+  const [now] = useState(() => Date.now());
   if (createdAt === undefined) {
     return null;
   }
@@ -40,7 +41,7 @@ export const UserMessageTime: FC = () => {
               dateTime={date.toISOString()}
               className="aui-user-message-time block truncate select-none"
             >
-              {formatMessageDate(createdAt, Date.now(), locale, {
+              {formatMessageDate(createdAt, now, locale, {
                 // Today reads as just the time.
                 today: (time) => time,
                 yesterday: (time) => t("common.yesterdayAt", { time }),

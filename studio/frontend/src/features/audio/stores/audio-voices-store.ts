@@ -44,7 +44,8 @@ export const useAudioVoicesStore = create<AudioVoicesState>()((set, get) => ({
       const voices = await listVoices();
       if (started !== mutations) {
         set({ loading: false });
-        return await get().refresh();
+        await get().refresh();
+        return;
       }
       set({ voices, loaded: true, loading: false, error: null });
     } catch (error) {

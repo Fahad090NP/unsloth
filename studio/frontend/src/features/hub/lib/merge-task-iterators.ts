@@ -21,7 +21,7 @@ function createTaskCursor<T>(iterator: AsyncGenerator<T>): TaskCursor<T> {
         (result): TaskPull<T> => ({ status: "fulfilled", result }),
         (reason: unknown): TaskPull<T> => ({ status: "rejected", reason }),
       );
-  let pending = pull();
+  const state = { pending: pull() };
   let active = true;
 
   return {
@@ -32,7 +32,7 @@ function createTaskCursor<T>(iterator: AsyncGenerator<T>): TaskCursor<T> {
     async take(
       onFailure: (reason: unknown) => void,
     ): Promise<IteratorResult<T>> {
-      const next = await pending;
+      const next = await state.pending;
       if (next.status === "rejected") {
         active = false;
         onFailure(next.reason);
@@ -42,7 +42,7 @@ function createTaskCursor<T>(iterator: AsyncGenerator<T>): TaskCursor<T> {
         active = false;
         return next.result;
       }
-      pending = pull();
+      state.pending = pull();
       return next.result;
     },
   };

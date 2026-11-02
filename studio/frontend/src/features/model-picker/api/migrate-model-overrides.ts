@@ -62,10 +62,11 @@ function absentFields(
   config: Parameters<typeof toApiOverride>[0],
 ): string[] {
   const fields = Object.keys(toApiOverride(config));
-  if (typeof stored !== "object" || stored == null) {
+  const raw: unknown = stored;
+  if (typeof raw !== "object" || raw === null) {
     return fields;
   }
-  return fields.filter((field) => !(field in stored));
+  return fields.filter((field) => !(field in raw));
 }
 
 /** Never deletes or overwrites: server values are the newer authority. Field by field. */

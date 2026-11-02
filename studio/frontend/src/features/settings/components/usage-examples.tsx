@@ -883,7 +883,9 @@ export function UsageExamples({
               </div>
               <button
                 type="button"
-                onClick={handleCopyUrl}
+                onClick={() => {
+                handleCopyUrl().catch(() => { /* noop */ });
+              }}
                 className={cn(
                   "flex min-w-0 items-center gap-1 rounded-full px-1.5 py-1 text-ui-11 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                   !useTunnel && "opacity-50",
@@ -1035,7 +1037,9 @@ export function UsageExamples({
             </code>
             <button
               type="button"
-              onClick={handleCopyAgent}
+              onClick={() => {
+                handleCopyAgent().catch(() => { /* noop */ });
+              }}
               className="absolute top-1.5 right-2 flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               aria-label={t("settings.apiKeys.copySnippet")}
             >

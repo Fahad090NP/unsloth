@@ -130,13 +130,13 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
       !isTauri &&
       window.isSecureContext &&
       getSpeechRecognitionAPI() !== undefined &&
-      navigator.mediaDevices.getUserMedia !== undefined
+      typeof navigator.mediaDevices.getUserMedia === "function"
     );
   }
 
   listen(): DictationAdapter.Session {
     const SpeechRecognitionAPI = getSpeechRecognitionAPI();
-    if (!SpeechRecognitionAPI || !navigator.mediaDevices.getUserMedia) {
+    if (!SpeechRecognitionAPI || typeof navigator.mediaDevices.getUserMedia !== "function") {
       throw new Error("Speech recognition is not supported in this browser.");
     }
 
@@ -160,6 +160,7 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
     let stream: MediaStream | null = null;
     let finalTranscript = "";
     let ended = false;
+    const isEnded = (): boolean => ended;
     let started = false;
     let stopping = false;
     let stopRequestedAt = 0;
@@ -305,9 +306,11 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
         i < speechEvent.results.length;
         i++
       ) {
-        const result = speechEvent.results[i];
+        const result: SpeechRecognitionResult | undefined =
+          speechEvent.results[i];
         if (!result) continue;
-        const transcript = result[0].transcript ?? "";
+        const alternative: SpeechRecognitionAlternative | undefined = result[0];
+        const transcript = alternative?.transcript ?? "";
         if (result.isFinal) {
           interimParts.delete(i);
           const corrected = applyDictationDictionary(transcript);
@@ -372,7 +375,7 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
       finish("error");
     });
 
-    void (async () => {
+    (async () => {
       try {
         const { micDeviceId } = useVoiceSettingsStore.getState();
         const baseAudio: MediaTrackConstraints = {
@@ -396,7 +399,7 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
             throw error;
           }
         }
-        if (ended) {
+        if (isEnded()) {
           stopStream(stream);
           stream = null;
           return;
@@ -413,7 +416,7 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
           recognition.start(audioTrack);
         } catch (error) {
           // Older engines lack the track overload and use the default device, so release our stream.
-          console.debug(
+          console.warn(
             "Dictation start(audioTrack) failed; retrying start().",
             error,
           );
@@ -429,7 +432,9 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
         toast.error(description);
         finish("error");
       }
-    })();
+    })().catch((error: unknown) => {
+      console.error("Dictation startup failed", error);
+    });
 
     return session;
   }

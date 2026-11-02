@@ -58,7 +58,7 @@ async function ragRequest<T>(
     noteRagResponse(204, null);
     return undefined as T;
   }
-  const json = await response.json().catch(() => null);
+  const json: unknown = await response.json().catch(() => null);
   // Every RAG endpoint but the list gates on the extension, so its status reports availability.
   noteRagResponse(response.status, json);
   if (!response.ok) throw ragError(response.status, json);
@@ -87,7 +87,7 @@ async function ragUpload(
     method: "POST",
     body: form,
   });
-  const json = await response.json().catch(() => null);
+  const json: unknown = await response.json().catch(() => null);
   noteRagResponse(response.status, json);
   if (!response.ok) throw ragError(response.status, json);
   return json as DocumentUploadResult;
@@ -105,17 +105,15 @@ export async function extractDocumentText(
     { method: "POST", body: form },
     { beforeRetry },
   );
-  const json = await response.json().catch(() => null);
+  const json: unknown = await response.json().catch(() => null);
   if (!response.ok) throw ragError(response.status, json);
   return json as { text: string; truncated: boolean };
 }
 
 export async function listKnowledgeBases(): Promise<KnowledgeBase[]> {
-  const data = await ragRequest<{
-    knowledgeBases: KnowledgeBase[];
-    ragAvailable?: boolean;
-    ragUnavailableReason?: string | null;
-  }>("/knowledge-bases");
+  const data = await ragRequest<{ knowledgeBases?: KnowledgeBase[]; ragAvailable?: boolean; ragUnavailableReason?: string | null }>(
+    "/knowledge-bases",
+  );
   // The only endpoint that returns 200 instead of 503 when RAG cannot run; the marker tells them apart.
   noteRagAvailability(data);
   return data.knowledgeBases ?? [];
@@ -173,7 +171,7 @@ export function deleteKnowledgeBase(kbId: string): Promise<{ ok: boolean }> {
 export async function listKnowledgeBaseDocuments(
   kbId: string,
 ): Promise<RagDocument[]> {
-  const data = await ragRequest<{ documents: RagDocument[] }>(
+  const data = await ragRequest<{ documents?: RagDocument[] }>(
     `/knowledge-bases/${encodeURIComponent(kbId)}/documents`,
   );
   return data.documents ?? [];
@@ -196,7 +194,7 @@ export function uploadKnowledgeBaseDocument(
 export async function listThreadDocuments(
   threadId: string,
 ): Promise<RagDocument[]> {
-  const data = await ragRequest<{ documents: RagDocument[] }>(
+  const data = await ragRequest<{ documents?: RagDocument[] }>(
     `/threads/${encodeURIComponent(threadId)}/documents`,
   );
   return data.documents ?? [];
@@ -219,7 +217,7 @@ export function uploadThreadDocument(
 export async function listProjectDocuments(
   projectId: string,
 ): Promise<RagDocument[]> {
-  const data = await ragRequest<{ documents: RagDocument[] }>(
+  const data = await ragRequest<{ documents?: RagDocument[] }>(
     `/projects/${encodeURIComponent(projectId)}/documents`,
   );
   return data.documents ?? [];
@@ -278,7 +276,7 @@ export function subscribeProjectSourcesUpdated(
 ): () => void {
   if (typeof window === "undefined") return () => undefined;
   const listener = (event: Event) => {
-    const detail = (event as CustomEvent<{ projectId?: string }>).detail;
+    const detail = (event as CustomEvent<{ projectId?: string } | undefined>).detail;
     if (detail?.projectId === projectId) onUpdated();
   };
   window.addEventListener(PROJECT_SOURCES_CHANGED_EVENT, listener);
@@ -477,7 +475,8 @@ function setRemoteProjectWork(
   from: string,
   count: number,
 ): void {
-  const bySender = remoteProjectWork.get(projectId) ?? new Map();
+  const bySender =
+    remoteProjectWork.get(projectId) ?? new Map<string, { count: number; until: number }>();
   if (count <= 0) {
     bySender.delete(from);
   } else {
@@ -543,7 +542,7 @@ export function watchProjectFolderJob(projectId: string, jobId: string): void {
   }
   watchedFolderJobs.add(jobId);
   noteProjectWork(projectId, 1);
-  void (async () => {
+  (async () => {
     // A failed read is not a finished job: a backend restart can miss a tick.
     let consecutiveFailures = 0;
     try {
@@ -570,7 +569,7 @@ export function watchProjectFolderJob(projectId: string, jobId: string): void {
       announceProjectSourcesUpdated(projectId);
       noteProjectWork(projectId, -1);
     }
-  })();
+  })().catch(() => undefined);
 }
 
 /** Throttles lookups: two bars mount at once, and later backend jobs must still be seen. */
@@ -611,7 +610,7 @@ export async function listLinkedFolders(
   const query = scope
     ? `?scope_type=${encodeURIComponent(scope.type)}&scope_id=${encodeURIComponent(scope.id)}`
     : "";
-  const data = await ragRequest<{ linkedFolders: LinkedFolder[] }>(
+  const data = await ragRequest<{ linkedFolders?: LinkedFolder[] }>(
     `/linked-folders${query}`,
   );
   return data.linkedFolders ?? [];
@@ -643,7 +642,7 @@ export function deleteLinkedFolder(
   removeIndex: boolean,
 ): Promise<{ ok: boolean }> {
   return ragRequest(
-    `/linked-folders/${encodeURIComponent(linkedFolderId)}?remove_index=${removeIndex}`,
+    `/linked-folders/${encodeURIComponent(linkedFolderId)}?remove_index=${String(removeIndex)}`,
     { method: "DELETE" },
   );
 }
@@ -675,7 +674,7 @@ export function getFolderSyncJob(jobId: string): Promise<FolderSyncJob> {
 }
 
 export async function listAllDocuments(): Promise<UploadedDocument[]> {
-  const data = await ragRequest<{ documents: UploadedDocument[] }>(
+  const data = await ragRequest<{ documents?: UploadedDocument[] }>(
     "/documents",
   );
   return data.documents ?? [];
@@ -719,7 +718,7 @@ async function openEventStream(
 ): Promise<ReadableStream<Uint8Array>> {
   const response = await openStreamResponse(authFetch, url, { signal });
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
+    const body: unknown = await response.json().catch(() => null);
     noteRagResponse(response.status, body);
     throw ragError(response.status, body);
   }

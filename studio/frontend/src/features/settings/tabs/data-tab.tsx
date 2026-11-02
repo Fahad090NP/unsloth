@@ -674,7 +674,9 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
               variant="outline"
               size="sm"
               className="mt-(--ui-title-cap-inset) shrink-0"
-              onClick={handleExportArchived}
+              onClick={() => {
+                handleExportArchived().catch(() => { /* noop */ });
+              }}
               disabled={archivedExporting}
             >
               {archivedExporting ? (
@@ -937,7 +939,9 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleExport}
+            onClick={() => {
+              handleExport().catch(() => { /* noop */ });
+            }}
             disabled={exporting || count === 0}
           >
             {exporting
@@ -1185,7 +1189,9 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
             >
               {t("common.cancel")}
             </Button>
-            <Button onClick={handleArchiveAll} disabled={archiving}>
+            <Button onClick={() => {
+              handleArchiveAll().catch(() => { /* noop */ });
+            }} disabled={archiving}>
               {archiving
                 ? t("settings.data.archivingAction")
                 : t("settings.data.archiveAllAction")}
@@ -1230,7 +1236,9 @@ export function DataTab({ searchEntry }: { searchEntry?: string }) {
             </Button>
             <Button
               variant="destructive"
-              onClick={handleClear}
+              onClick={() => {
+                handleClear().catch(() => { /* noop */ });
+              }}
               disabled={clearing}
             >
               {clearing

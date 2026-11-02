@@ -37,7 +37,7 @@ import {
   scopedVariant,
   useDownloadManagerStore,
 } from "@/features/hub";
-import { translate, useT } from "@/i18n";
+import { type TranslationKey, translate, useT } from "@/i18n";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { scrollIntoPane } from "../lib/scroll-into-pane";
@@ -117,13 +117,25 @@ export function DecisionApiSection({
   if (tryOpen && !enabled) setTryOpen(false);
 
   useEffect(() => {
-    if (!decisionTryRequested || !settings) return;
-    useSettingsDialogStore.getState().consumeDecisionTryRequest();
+    if (decisionTryRequested && settings) {
+      useSettingsDialogStore.getState().consumeDecisionTryRequest();
+    }
+  }, [decisionTryRequested, settings]);
+
+  const [handledTryRequest, setHandledTryRequest] = useState<
+    typeof decisionTryRequested | undefined
+  >(undefined);
+  if (
+    decisionTryRequested &&
+    settings &&
+    handledTryRequest !== decisionTryRequested
+  ) {
+    setHandledTryRequest(decisionTryRequested);
     if (settings.enabled && settings.model === decisionTryRequested) {
       setTryModel(decisionTryRequested);
       setTryOpen(true);
     }
-  }, [decisionTryRequested, settings]);
+  }
   const model = settings?.model ?? null;
   const backend = settings?.backend ?? "auto";
   const mlxAvailable = settings?.mlxAvailable ?? false;
@@ -139,7 +151,7 @@ export function DecisionApiSection({
       (next) => {
         if (live) setSettings(next);
       },
-      (err) => {
+      (err: unknown) => {
         if (!live) return;
         setError(
           errorMessage(err) ??
@@ -187,7 +199,7 @@ export function DecisionApiSection({
       ? jobKeyOf(DOWNLOAD_KIND.MODEL, plan.repo, scopedVariant(DOWNLOAD_SCOPE))
       : null;
   const jobState = useDownloadManagerStore((s) =>
-    jobKey ? (s.jobs[jobKey].state ?? null) : null,
+    jobKey ? s.jobs[jobKey].state : null,
   );
   const downloading = jobState === "running" || jobState === "cancelling";
   const downloadDone = jobState === "complete";
@@ -199,7 +211,7 @@ export function DecisionApiSection({
       (next) => {
         if (live) setPlanState({ model, backend, plan: next });
       },
-      (err) => {
+      (err: unknown) => {
         if (live) setError(errorMessage(err));
       },
     ).catch(() => { /* noop */ });
@@ -214,7 +226,8 @@ export function DecisionApiSection({
     if (connection) return `${connection.provider} · ${connection.model}`;
     const option = settings?.models.find((m) => m.name === name);
     if (option?.label) return option.label;
-    return DECISION_MODEL_LABELS[name] ? t(DECISION_MODEL_LABELS[name]) : name;
+    const label: TranslationKey | undefined = DECISION_MODEL_LABELS[name];
+    return label ? t(label) : name;
   };
 
   const resyncSettingsAfterError = async (message: string) => {

@@ -10,7 +10,7 @@ import { useT } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { ColorPickerIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 /* ------------------------- HSV ↔ hex conversions ------------------------- */
 
 interface Hsv { h: number; s: number; v: number }
@@ -80,15 +80,17 @@ export function ColorPickerSwatch({
   const [open, setOpen] = useState(false);
   const [hsv, setHsv] = useState<Hsv>(() => hexToHsv(value));
   const [hexDraft, setHexDraft] = useState(value);
+  const [seeded, setSeeded] = useState({ open, value });
   const areaRef = useRef<HTMLDivElement>(null);
 
   // Re-seed on open; the value may have changed via reset, palette switch or sync.
-  useEffect(() => {
+  if (seeded.open !== open || (open && seeded.value !== value)) {
+    setSeeded({ open, value });
     if (open) {
       setHsv(hexToHsv(value));
       setHexDraft(value);
     }
-  }, [open, value]);
+  }
 
   const emit = (next: Hsv) => {
     setHsv(next);

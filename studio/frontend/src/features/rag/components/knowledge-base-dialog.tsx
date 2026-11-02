@@ -142,7 +142,7 @@ export function KnowledgeBaseDialog({
           }
         : { kind: "list" },
     );
-    void refresh().then((rows) => {
+    refresh().then((rows) => {
       if (cancelled || !focus) return;
       const kb = rows?.find((row) => row.id === focus.kbId);
       if (!kb) {
@@ -158,7 +158,7 @@ export function KnowledgeBaseDialog({
         kb,
         uploads: uploads.length ? uploads : undefined,
       });
-    });
+    }).catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -300,7 +300,7 @@ export function KnowledgeBaseDialog({
               <Button variant="ghost" onClick={backToList} disabled={saving}>
                 Cancel
               </Button>
-              <Button onClick={submitForm} disabled={saving || ragUnavailable}>
+              <Button onClick={() => { submitForm().catch(() => undefined); }} disabled={saving || ragUnavailable}>
                 {saving ? <Spinner /> : null}
                 {view.kind === "edit" ? "Save changes" : "Create"}
               </Button>
@@ -413,7 +413,7 @@ export function KnowledgeBaseDialog({
               onClick={() => {
                 const kb = confirmingDelete;
                 setConfirmingDelete(null);
-                if (kb) void removeKb(kb);
+                if (kb) removeKb(kb).catch(() => undefined);
               }}
             >
               Delete
@@ -441,10 +441,10 @@ function KnowledgeBaseDocuments({
     useRagDocuments({ type: "kb", kbId: kb.id }, lister);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handleLinkedSourcesChanged = useCallback(() => {
-    void refresh({ quiet: true });
+    refresh({ quiet: true }).catch(() => undefined);
   }, [refresh]);
   const uploadNow = useCallback(
-    (items: RagUploadItem[]) => void upload(items),
+    (items: RagUploadItem[]) => { upload(items).catch(() => undefined); },
     [upload],
   );
   const { enqueue } = useUploadQueue(uploadNow, uploading, kb.id);
@@ -457,7 +457,7 @@ function KnowledgeBaseDocuments({
     if (!uploads?.length || uploading) return;
     const timer = window.setTimeout(() => {
       onUploadsStarted();
-      void upload(uploads);
+      void upload(uploads).catch(() => undefined);
     }, 0);
     return () => { window.clearTimeout(timer); };
   }, [uploads, uploading, onUploadsStarted, upload]);

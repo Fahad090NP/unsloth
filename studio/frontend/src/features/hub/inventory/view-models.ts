@@ -262,7 +262,6 @@ function sourceSortWeight(source: LocalModelInfo["source"]): number {
     case "hf_cache":
       return 5;
     case "unsloth":
-    default:
       return 6;
   }
 }

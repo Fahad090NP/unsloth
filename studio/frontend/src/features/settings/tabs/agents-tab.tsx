@@ -435,7 +435,9 @@ function SubagentSection({
           value={command}
           copyLabel={t("settings.agents.subagent.copySetupCommand")}
           copied={commandCopy.copied}
-          onCopy={commandCopy.copy}
+          onCopy={() => {
+            commandCopy.copy().catch(() => { /* noop */ });
+          }}
           sensitive={sensitive}
         />
       </div>
@@ -448,7 +450,9 @@ function SubagentSection({
           value={prompt}
           copyLabel={t("settings.agents.subagent.copyUsagePrompt")}
           copied={promptCopy.copied}
-          onCopy={promptCopy.copy}
+          onCopy={() => {
+            promptCopy.copy().catch(() => { /* noop */ });
+          }}
           breakAll={false}
         />
       </div>
@@ -557,14 +561,22 @@ export function AgentsTab() {
   const [modelSearch, setModelSearch] = useState("");
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [variants, setVariants] = useState<GgufVariantDetail[]>([]);
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(
-    chosenVariant.current &&
-    modelKey(chosenVariant.current.model) === modelKey(initialModel)
-      ? chosenVariant.current.variant
-      : initialModel === EXAMPLE_MODEL_REPO
-        ? EXAMPLE_MODEL_VARIANT
-        : null,
-  );
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(() => {
+    const storedChosen =
+      storedPrefs.agentsVariantModel && storedPrefs.agentsVariant
+        ? {
+            model: storedPrefs.agentsVariantModel,
+            variant: storedPrefs.agentsVariant,
+          }
+        : null;
+    if (
+      storedChosen &&
+      modelKey(storedChosen.model) === modelKey(initialModel)
+    ) {
+      return storedChosen.variant;
+    }
+    return initialModel === EXAMPLE_MODEL_REPO ? EXAMPLE_MODEL_VARIANT : null;
+  });
   const [variantsLoading, setVariantsLoading] = useState(true);
   const [variantsFailed, setVariantsFailed] = useState(false);
 
@@ -625,10 +637,11 @@ export function AgentsTab() {
   const selectedModelIsActive =
     activeStatusModel != null &&
     modelKey(selectedModel) === modelKey(activeStatusModel);
+  const cachedLoadIdMap: Partial<typeof cachedLoadIds> = cachedLoadIds;
   const cachedLoadId = selectedModelIsActive
     ? null
-    : (cachedLoadIds[selectedModel] ??
-      cachedLoadIds[selectedModel.toLowerCase()] ??
+    : (cachedLoadIdMap[selectedModel] ??
+      cachedLoadIdMap[selectedModel.toLowerCase()] ??
       null);
   const modelId = cachedLoadId ?? selectedModel;
   const suffixVariant = isHuggingFaceRepo(modelId);
@@ -808,10 +821,11 @@ export function AgentsTab() {
       setModels((current) =>
         current.includes(active.model) ? current : [active.model, ...current],
       );
-      if (active.variant) {
+      const variant = active.variant;
+      if (variant) {
         setKnownVariants((current) => ({
           ...current,
-          [active.model]: active.variant!,
+          [active.model]: variant,
         }));
       }
       if (!modelSelectionChanged.current) {
@@ -1427,7 +1441,9 @@ export function AgentsTab() {
             value={command}
             copyLabel={t("settings.agents.copyGeneratedCommand")}
             copied={copied}
-            onCopy={handleCopy}
+            onCopy={() => {
+              handleCopy().catch(() => { /* noop */ });
+            }}
             sensitive={freshApiKey !== null}
           />
           {selectedAgent === "vscode" && (

@@ -325,15 +325,17 @@ const ToolGroupImpl: FC<
   );
   // Keep the group open once forced so allow/deny does not snap it shut between calls. Only latch
   // what could have forced it, or turning collapsed off would snap them all open.
-  const forcedOpenRef = useRef(false);
-  if (hasPendingConfirmation || (hasLiveOutput && !collapseByDefault)) {
-    forcedOpenRef.current = true;
+  const [forcedOpen, setForcedOpen] = useState(false);
+  if (
+    !forcedOpen &&
+    (hasPendingConfirmation || (hasLiveOutput && !collapseByDefault))
+  ) {
+    setForcedOpen(true);
   }
   const forceOpen =
     hasPendingConfirmation ||
     (!collapseByDefault &&
-      ((hasLiveOutput && messageRunning) ||
-        (forcedOpenRef.current && messageRunning)));
+      ((hasLiveOutput && messageRunning) || (forcedOpen && messageRunning)));
 
   // With the fold preference on, this run shows only while the turn's first thinking block is open;
   // own-output and awaiting calls are never folded.

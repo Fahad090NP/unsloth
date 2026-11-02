@@ -5,7 +5,7 @@ import { authFetch } from "@/features/auth";
 import { consumeNativePathToken } from "@/features/native-intents";
 
 /** Lives in the import-free memory-fit module so the node test runner can reach it. */
-export { formatMemoryGb } from "../model-config/memory-fit";
+export { formatBytesGiB as formatMemoryGb } from "@/lib/memory/format";
 
 export type MemoryEstimateReason =
   | "not_gguf"
@@ -227,12 +227,12 @@ const ESTIMATE_REASONS: readonly MemoryEstimateReason[] = [
 function toMemoryEstimate(body: ApiEstimateResponse): MemoryEstimate {
   const drafterRuntimeBytes = finiteBytes(body.drafter_runtime_bytes, 0);
   const kvBytes = finiteBytes(body.kv_bytes, 0);
+  const reason = body.reason;
   return {
     available: flag(body.available, false),
     // An unknown reason would render nothing.
-    reason: ESTIMATE_REASONS.includes(body.reason!)
-      ? (body.reason!)
-      : null,
+    reason:
+      reason !== null && ESTIMATE_REASONS.includes(reason) ? reason : null,
     weightsBytes: finiteBytes(body.weights_bytes, 0),
     kvBytes,
     kvCheckpointBytes: Math.min(
@@ -283,6 +283,10 @@ function routeAbsentStatus(status: number): boolean {
 const ROUTE_ABSENT_TTL_MS = 5 * 60 * 1000;
 let routeAbsentAt: number | null = null;
 
+function setRouteAbsent(absent: boolean): void {
+  routeAbsentAt = absent ? Date.now() : null;
+}
+
 export function resetMemoryEstimateRouteMemo(): void {
   routeAbsentAt = null;
 }
@@ -315,10 +319,10 @@ export async function fetchMemoryEstimate(
   });
   if (!response.ok) {
     // Only a structural miss latches; a transient 500 clears the memo.
-    routeAbsentAt = routeAbsentStatus(response.status) ? Date.now() : null;
+    setRouteAbsent(routeAbsentStatus(response.status));
     return UNAVAILABLE;
   }
-  routeAbsentAt = null;
+  setRouteAbsent(false);
   let body: unknown;
   try {
     body = await response.json();

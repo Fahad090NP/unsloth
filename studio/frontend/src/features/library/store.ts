@@ -144,7 +144,10 @@ export const useLibraryStore = create<LibraryState>((set, get) => {
           stale = true;
           return;
         }
-        if (edits !== editsBefore) return await get().refresh();
+        if (edits !== editsBefore) {
+          await get().refresh();
+          return;
+        }
         const favorites = useLibraryFavoritesStore.getState().adopt(
           favoritesStart,
           new Set(items.filter((item) => item.favorite).map((item) => item.id)),

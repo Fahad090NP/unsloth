@@ -23,7 +23,7 @@ function flagName(token: string): string | null {
     return null;
   }
   const second = trimmed[1];
-  if (second !== undefined && (/[0-9]/.test(second) || second === ".")) {
+  if (/[0-9]/.test(second) || second === ".") {
     return null;
   }
   const name = trimmed.split("=", 1)[0];
@@ -100,7 +100,7 @@ export function stripManagedOffloadFlags(
       continue;
     }
     if (!token.includes("=")) {
-      const next = extraArgs[i + 1];
+      const next: string | undefined = extraArgs[i + 1];
       if (next !== undefined && flagName(next) === null) {
         i += 1;
       }

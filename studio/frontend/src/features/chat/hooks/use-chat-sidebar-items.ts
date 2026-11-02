@@ -170,9 +170,9 @@ export function useChatSidebarItems(options?: {
   }, [enabled, options?.projectId, requireMessages]);
 
   // Memoised for identity: dependent effects re-run each render and loop forever if they set state.
-  const items = useMemo(() => groupThreads(allThreads ?? []), [allThreads]);
+  const items = useMemo(() => groupThreads(allThreads), [allThreads]);
   const archivedItems = useMemo(
-    () => groupThreads(allThreads ?? [], true),
+    () => groupThreads(allThreads, true),
     [allThreads],
   );
   const canCompare = useChatRuntimeStore((s) => Boolean(s.params.checkpoint));

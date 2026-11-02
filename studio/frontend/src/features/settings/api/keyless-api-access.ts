@@ -79,6 +79,7 @@ export function keylessAudience(
       return "Anyone on your network";
     case "colab":
       return "Anyone who can reach this Colab runtime";
+    case null:
     default:
       return "Anything running on this computer";
   }

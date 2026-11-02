@@ -22,7 +22,7 @@ import { cn, formatCompact } from "@/lib/utils";
 import {
   Download01Icon,
   FavouriteIcon,
-  LayoutTwoColumnIcon,
+  Layout2ColumnIcon,
   Refresh01Icon,
   ViewSidebarLeftIcon,
 } from "@hugeicons/core-free-icons";
@@ -186,7 +186,7 @@ export function HubListHeader({
                 pillId={viewPillId}
                 active={view === "two"}
                 label="Two columns"
-                icon={LayoutTwoColumnIcon}
+                icon={Layout2ColumnIcon}
                 onClick={() => { onViewChange("two"); }}
               />
               <ViewToggleButton

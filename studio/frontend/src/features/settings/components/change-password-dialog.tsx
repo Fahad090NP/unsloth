@@ -24,7 +24,7 @@ import {
 import { useT } from "@/i18n";
 import { apiUrl, isTauri } from "@/lib/api-base";
 import { toast } from "@/lib/toast";
-import { type FormEvent, useEffect, useState } from "react";
+import { type SubmitEvent, useEffect, useState } from "react";
 
 const MIN_PASSWORD_LENGTH = 8;
 const WRONG_CURRENT_PASSWORD_DETAIL = "Current password is incorrect";
@@ -241,7 +241,7 @@ export function ChangePasswordDialog({
   );
   const disabled = submitting || Boolean(validationMessage);
 
-  async function submit(event: FormEvent) {
+  async function submit(event: SubmitEvent) {
     event.preventDefault();
     if (validationMessage) {
       toast.error(validationMessage);

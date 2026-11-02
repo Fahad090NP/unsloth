@@ -132,7 +132,7 @@ export function boundMcpImageEnvelopes<T extends EnvelopeCarrier>(
   const carriers: Carrier[] = [];
   for (let i = 0; i < out.length; i++) {
     const message = out[i];
-    if (!message || message.role !== "tool") continue;
+    if (message.role !== "tool") continue;
     if (typeof message.content !== "string") continue;
     const { text, images } = splitMcpImages(message.content);
     if (images.length === 0) continue;
@@ -150,10 +150,10 @@ export function boundMcpImageEnvelopes<T extends EnvelopeCarrier>(
   // Consecutive tool results are one batch on a marker target.
   const batches: Carrier[][] = [];
   for (const carrier of carriers) {
-    const previous = batches[batches.length - 1];
-    const last = previous[previous.length - 1];
+    const previous: Carrier[] | undefined = batches[batches.length - 1];
+    const last: Carrier | undefined = previous?.[previous.length - 1];
     let sameBatch = localMarkers && last !== undefined;
-    for (let j = (last.index ?? 0) + 1; sameBatch && j < carrier.index; j++) {
+    for (let j = (last?.index ?? 0) + 1; sameBatch && j < carrier.index; j++) {
       if (out[j]?.role !== "tool") sameBatch = false;
     }
     if (sameBatch && previous) previous.push(carrier);
@@ -184,7 +184,7 @@ export function stripMcpImageEnvelopes<T extends EnvelopeCarrier>(
   messages: readonly T[],
 ): T[] {
   return messages.map((message) => {
-    if (!message || message.role !== "tool") return message;
+    if (message.role !== "tool") return message;
     if (typeof message.content !== "string") return message;
     const { text, images } = splitMcpImages(message.content);
     return images.length === 0 ? message : { ...message, content: text };

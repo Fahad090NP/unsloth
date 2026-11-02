@@ -106,9 +106,12 @@ function SourceTabs({
             const step = event.key === "ArrowRight" ? 1 : -1;
             const next = (index + step + tabs.length) % tabs.length;
             onValueChange(tabs[next].value as SourceTab);
-            event.currentTarget.parentElement
-              ?.querySelectorAll<HTMLElement>('button[role="tab"]')
-              .item(next)
+            [
+              ...(event.currentTarget.parentElement?.querySelectorAll<HTMLElement>(
+                'button[role="tab"]',
+              ) ?? []),
+            ]
+              .at(next)
               ?.focus();
           }}
           onClick={() => { onValueChange(tab.value as SourceTab); }}
@@ -189,7 +192,9 @@ export function AudioSourceInput({
   const showSelected = value !== null || uploading;
 
   const onStatusChangeRef = useRef(onStatusChange);
-  onStatusChangeRef.current = onStatusChange;
+  useEffect(() => {
+    onStatusChangeRef.current = onStatusChange;
+  }, [onStatusChange]);
   useEffect(() => {
     onStatusChangeRef.current?.(status);
   }, [status]);
@@ -258,7 +263,7 @@ export function AudioSourceInput({
         if (disabled) return;
         event.preventDefault();
         setDragging(false);
-        const file = event.dataTransfer.files[0];
+        const file = event.dataTransfer.files.item(0);
         if (file) (source.pickFile(file)).catch(() => { /* noop */ });
       }}
       className="grid gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"

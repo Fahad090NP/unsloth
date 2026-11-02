@@ -22,7 +22,9 @@ async function requestLanAccess(
       await readFastApiError(response, "LAN access request failed"),
     );
   }
-  return normalizeLanAccessStatus(await response.json());
+  return normalizeLanAccessStatus(
+    (await response.json()) as Parameters<typeof normalizeLanAccessStatus>[0],
+  );
 }
 
 export const loadLanAccess = () => requestLanAccess();

@@ -34,7 +34,7 @@ export function memoryFigureCandidates(
 ): string[] {
   const safe = Number.isFinite(bytes) && bytes > 0 ? bytes : 0;
   const prefix = bounded ? "≥ " : "";
-  const candidates: string[] = bounded ? [] : [formatMemoryGb(safe)];
+  const candidates: string[] = bounded ? [] : [formatBytesGiB(safe)];
   for (const [index, unit] of ["GiB", "TiB", "PiB", "EiB"].entries()) {
     const amount = safe / 1024 ** (index + 3);
     if (index > 0 && amount < 1) break;
@@ -89,7 +89,7 @@ export interface MemoryFitCapacity {
 }
 
 function reclaimableBytes(value: number | undefined): number {
-  return Number.isFinite(value) && (value!) > 0 ? (value!) : 0;
+  return value !== undefined && Number.isFinite(value) && value > 0 ? value : 0;
 }
 
 export function resolveReclaimableMemoryCredit(
@@ -122,18 +122,21 @@ export function resolveReclaimableMemoryCredit(
 	)
 		return { totalBytes: 0, gpuBytes: 0 };
 	const files = Math.min(estimate.weightsBytes, total);
+	const requestedIds = requestedPool.ids;
+	const residentIds = residentPool.ids;
 	const includesResidentPool =
-		!requestedPool.ids?.length ||
-		(residentPool.ids != null &&
-			residentPool.ids.length > 0 &&
+		!requestedIds?.length ||
+		(requestedIds != null &&
+			residentIds != null &&
+			residentIds.length > 0 &&
 			residentPool.indexKind != null &&
 			residentPool.indexKind === requestedPool.indexKind &&
-			residentPool.ids.every((id) => requestedPool.ids!.includes(id)));
-	const residentDevices = residentPool.ids?.length
+			residentIds.every((id) => requestedIds.includes(id)));
+	const residentDevices = residentIds?.length
 		? devices.filter(
 				(device) =>
 					device.indexKind === residentPool.indexKind &&
-					residentPool.ids!.includes(device.index),
+					residentIds.includes(device.index),
 			)
 		: devices;
 	const topologyKnown =
@@ -209,9 +212,11 @@ function autoContextFigures(
   cpuOnly: boolean,
 ): { gpuBytes: number; totalBytes: number; contextShrinks: boolean } {
   const native = { gpuBytes: estimate.gpuBytes, totalBytes: estimate.totalBytes, contextShrinks: false };
+  const gpuFloorBytes = estimate.gpuFloorBytes;
   if (
     cpuOnly ||
     !hasContextFloor(estimate) ||
+    gpuFloorBytes == null ||
     !Number.isFinite(estimate.gpuBytes) ||
     !Number.isFinite(estimate.totalBytes)
   ) {
@@ -223,7 +228,7 @@ function autoContextFigures(
   if (nativeFit !== "exceeds") {
     return native;
   }
-  const shrink = Math.max(0, estimate.gpuBytes - (estimate.gpuFloorBytes!));
+  const shrink = Math.max(0, estimate.gpuBytes - gpuFloorBytes);
   return {
     gpuBytes: estimate.gpuBytes - shrink,
     totalBytes: estimate.totalBytes - shrink,
@@ -582,7 +587,7 @@ export function resolveDraftCacheNote(
     return "host RAM";
   }
   if (drafterRuntimeGpuBytes < drafterRuntimeBytes) {
-    return `${formatMemoryGb(drafterRuntimeGpuBytes)} on GPU`;
+    return `${formatBytesGiB(drafterRuntimeGpuBytes)} on GPU`;
   }
   return undefined;
 }

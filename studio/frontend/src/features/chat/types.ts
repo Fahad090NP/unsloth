@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
+import type { ThreadMessage } from "@assistant-ui/react";
+import type { ThreadScopedSettings } from "./utils/thread-scoped-settings";
+
 export type ModelType = "base" | "lora" | "model1" | "model2";
 
 export type ChatView =
@@ -53,18 +56,16 @@ export interface ThreadRecord {
   /** The scheduled task whose run made this chat (server-set). */
   scheduledTaskId?: string | null;
   /** this chat's own settings, applied when it is opened; absent means the global ones. */
-  settings?:
-    | import("./utils/thread-scoped-settings").ThreadScopedSettings
-    | null;
+  settings?: ThreadScopedSettings | null;
 }
 
 export interface MessageRecord {
   id: string;
   threadId: string;
   parentId?: string | null;
-  role: import("@assistant-ui/react").ThreadMessage["role"];
-  content: import("@assistant-ui/react").ThreadMessage["content"];
-  attachments?: import("@assistant-ui/react").ThreadMessage["attachments"];
+  role: ThreadMessage["role"];
+  content: ThreadMessage["content"];
+  attachments?: ThreadMessage["attachments"];
   metadata?: Record<string, unknown>;
   createdAt: number;
 }

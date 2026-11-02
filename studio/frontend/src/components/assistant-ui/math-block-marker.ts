@@ -75,7 +75,7 @@ const classListOf = (node: HastNode): string[] => {
 
 const addClass = (node: HastNode): void => {
   const properties: HastProperties = node.properties ?? {};
-  node.properties = properties;
+  Object.assign(node, { properties });
   const current = classListOf(node);
   if (current.includes(MATH_BLOCK_CLASS)) return;
   properties.className = [...current, MATH_BLOCK_CLASS];
@@ -155,7 +155,7 @@ export const guardEquationNumbers = (tree: HastNode): { marked: number; unmarked
       const classes = classListOf(node);
       if (classes.includes("katex-display") && !hasEquationNumber(node)) {
         const properties: HastProperties = node.properties ?? {};
-        node.properties = properties;
+        Object.assign(node, { properties });
         if (!classes.includes(MATH_DISPLAY_CLASS)) {
           properties.className = [...classes, MATH_DISPLAY_CLASS];
           marked += 1;
@@ -163,7 +163,7 @@ export const guardEquationNumbers = (tree: HastNode): { marked: number; unmarked
       }
       if (classes.includes(MATH_BLOCK_CLASS) && hasEquationNumber(node)) {
         const properties: HastProperties = node.properties ?? {};
-        node.properties = properties;
+        Object.assign(node, { properties });
         properties.className = classes.filter((c) => c !== MATH_BLOCK_CLASS);
         unmarked += 1;
       }

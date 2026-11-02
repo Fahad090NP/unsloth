@@ -32,8 +32,9 @@ export function ABCompare({
   const setAudio = useCallback(
     (element: HTMLAudioElement | null) => {
       audioRef.current = element;
-      if (typeof playerRef === "function") playerRef(element);
-      else if (playerRef) playerRef.current = element;
+      const target = playerRef;
+      if (typeof target === "function") target(element);
+      else if (target) target.current = element;
     },
     [playerRef],
   );

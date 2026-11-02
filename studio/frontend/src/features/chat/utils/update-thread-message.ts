@@ -151,8 +151,9 @@ function parseTaggedTextToContent(text: string): ContentPart[] {
     sawTag = true;
     lastIndex = index + fullTag.length;
 
-    if (match[1] !== undefined) {
-      parts.push({ type: "tool", text: fullTag, slot: Number(match[1]) });
+    const slot: string | undefined = match[1];
+    if (slot !== undefined) {
+      parts.push({ type: "tool", text: fullTag, slot: Number(slot) });
       continue;
     }
     currentType = fullTag.startsWith("</") ? "text" : "reasoning";

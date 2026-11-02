@@ -160,12 +160,20 @@ export function ToolConfirmationControls({
   // yes while the request is hidden behind one. Answering a tool call the user
   // cannot see must not be reachable by accident, so both chords ask here, before the key is taken.
   const chatUncovered = () => !isSurfaceBackgrounded(COMPOSER_INPUT_SELECTOR);
-  useShortcut("approveToolRequest", () => void resolve("allow"), {
+  useShortcut("approveToolRequest", () => {
+    resolve("allow").catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
+  }, {
     enabled: keyboardReady,
     claims: chatUncovered,
     skipInTextFields: true,
   });
-  useShortcut("declineToolRequest", () => void resolve("deny"), {
+  useShortcut("declineToolRequest", () => {
+    resolve("deny").catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
+  }, {
     enabled: keyboardReady,
     claims: chatUncovered,
     skipInTextFields: true,
@@ -189,7 +197,11 @@ export function ToolConfirmationControls({
       <Button
         size="xs"
         disabled={pending !== null || failure === "gone"}
-        onClick={() => void resolve("allow")}
+        onClick={() => {
+          resolve("allow").catch((error: unknown) => {
+            console.error("Background chat operation failed", error);
+          });
+        }}
       >
         {disclosure ? "Share image once" : "Allow"}
       </Button>
@@ -198,7 +210,11 @@ export function ToolConfirmationControls({
           size="xs"
           variant="outline"
           disabled={pending !== null || failure === "gone"}
-          onClick={() => void resolve("allow", true)}
+          onClick={() => {
+            resolve("allow", true).catch((error: unknown) => {
+              console.error("Background chat operation failed", error);
+            });
+          }}
         >
           Always allow
         </Button>
@@ -207,7 +223,11 @@ export function ToolConfirmationControls({
         size="xs"
         variant="destructive"
         disabled={pending !== null || failure === "gone"}
-        onClick={() => void resolve("deny")}
+        onClick={() => {
+          resolve("deny").catch((error: unknown) => {
+            console.error("Background chat operation failed", error);
+          });
+        }}
       >
         Deny
       </Button>
@@ -254,7 +274,7 @@ export function withToolConfirmation(
       <ToolConfirmationControls
         toolCallId={props.toolCallId}
         toolName={props.toolName}
-        result={props.result}
+        result={props.result as unknown}
         status={props.status}
       />
     </>

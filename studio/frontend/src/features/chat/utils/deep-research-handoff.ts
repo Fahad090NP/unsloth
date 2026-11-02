@@ -40,10 +40,9 @@ export function readDeepResearchToolEvent(
   if (event.type === "tool_start") {
     // The local loop emits a provisional empty tool_start first; remember only the first real question.
     const args = event.arguments;
+    const rawQuestion = (args as { question?: unknown }).question;
     const question =
-      args && typeof args === "object"
-        ? String((args as { question?: unknown }).question ?? "").trim()
-        : "";
+      typeof rawQuestion === "string" ? rawQuestion.trim() : "";
     if (handoff.question === null && question) {
       handoff.pendingCallId = callId;
       handoff.pendingQuestion = Array.from(question)

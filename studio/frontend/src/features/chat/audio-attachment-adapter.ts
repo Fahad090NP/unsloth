@@ -34,7 +34,7 @@ export class AudioAttachmentAdapter implements AttachmentAdapter {
   // Pending clip sizes by id; caps cover all clips in a message.
   private readonly attachmentSizes = new Map<string, number>();
 
-  async add({ file }: { file: File }): Promise<PendingAttachment> {
+  add({ file }: { file: File }): Promise<PendingAttachment> {
     const state = useChatRuntimeStore.getState();
     const checkpoint = state.params.checkpoint;
     const activeModel = state.models.find((m) => m.id === checkpoint);
@@ -76,14 +76,14 @@ export class AudioAttachmentAdapter implements AttachmentAdapter {
 
     const id = newAttachmentId();
     this.attachmentSizes.set(id, file.size);
-    return {
+    return Promise.resolve({
       id,
       type: "file",
       name: file.name,
       contentType: file.type,
       file,
       status: { type: "requires-action", reason: "composer-send" },
-    };
+    });
   }
 
   async send(attachment: PendingAttachment): Promise<CompleteAttachment> {

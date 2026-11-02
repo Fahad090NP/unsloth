@@ -178,7 +178,7 @@ function closeOpenBlocks(text: string): string {
     if (span) {
       const closer = new RegExp("(^|[^`])(" + span + ")(?!`)").exec(line);
       if (closer === null) continue;
-      const consumed = (closer.index ?? 0) + closer[0].length;
+      const consumed = closer.index + closer[0].length;
       line = " ".repeat(consumed) + line.slice(consumed);
       span = "";
     }
@@ -199,7 +199,7 @@ function closeOpenBlocks(text: string): string {
     const leftover = OPEN_RUN_PATTERN.exec(prose);
     if (leftover !== null && runClosesLater(parts, part + 2, leftover[2])) {
       span = leftover[2];
-      const from = (leftover.index ?? 0) + (leftover[1]).length;
+      const from = leftover.index + (leftover[1]).length;
       prose = prose.slice(0, from) + " ".repeat(prose.length - from);
     }
     let blockAt = -1;
@@ -350,7 +350,8 @@ function renderValue(label: string, value: unknown): string[] {
   if (value === undefined) return [];
   const escapedLabel = escapeMarkdownLabel(label);
   if (value === null || typeof value !== "object") {
-    const text = typeof value === "string" ? value : String(value);
+    const text =
+      typeof value === "string" ? value : (JSON.stringify(value) ?? "");
     if (LINE_BREAK_PATTERN.test(text))
       return [`**${escapedLabel}:**`, fence(text)];
     return [`**${escapedLabel}:** ${inlineCode(text)}`];
@@ -430,7 +431,7 @@ function withoutNativePartBytes(args: unknown): unknown {
   const cleaned = Array.isArray(native.parts)
     ? {
         ...native,
-        parts: native.parts.map((part) =>
+        parts: native.parts.map((part: unknown) =>
           isPlainObject(part) ? withoutInlineDataBytes(part) : part,
         ),
       }

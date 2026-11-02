@@ -239,7 +239,7 @@ function readAll(): StoredAudioOptions {
 export function readAudioOptionValues(modelId: string | null | undefined): AudioOptionValues {
   if (!modelId?.trim()) return {};
   const entry = readAll()[storageKey(modelId)];
-  if (!entry || typeof entry !== "object" || Array.isArray(entry)) return {};
+  if (typeof entry !== "object" || Array.isArray(entry)) return {};
   const values: AudioOptionValues = {};
   for (const [name, value] of Object.entries(entry)) {
     if (["boolean", "number", "string"].includes(typeof value)) {

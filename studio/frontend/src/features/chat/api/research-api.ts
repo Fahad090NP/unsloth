@@ -48,7 +48,7 @@ function camelize(value: unknown): unknown {
 }
 
 async function json<T>(response: Response): Promise<T> {
-  const body = await response.json().catch(() => null);
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const detail = (body as { detail?: unknown; message?: unknown } | null)
       ?.detail;
@@ -181,7 +181,7 @@ export async function* streamResearchEvents(
   const decoder = new TextDecoder();
   let buffer = "";
   try {
-    while (true) {
+    for (;;) {
       const { done, value } = await reader.read();
       buffer += decoder.decode(value, { stream: !done });
       // Normalize on the whole buffer so a CRLF split across chunks still frames.
@@ -213,7 +213,7 @@ export async function* streamResearchEvents(
                 ? parsed.createdAt
                 : (candidate?.updatedAt ?? Date.now()),
             data: parsed as unknown as StreamResearchEvent["data"],
-            ...(candidate?.id && candidate.status ? { run: candidate } : {}),
+            ...(candidate?.status ? { run: candidate } : {}),
           };
         }
         boundary = buffer.indexOf("\n\n");

@@ -48,7 +48,9 @@ function localLoader(source: AttachmentSource): (() => Promise<Opened>) | null {
       return !source.hasOriginal && text !== undefined
         ? () => Promise.resolve({ blob: new Blob([attachmentBodyText(text)], { type: "text/plain" }), plainText: true })
         : null;
-    default: {
+    case "audio":
+    case "image":
+    case "text": {
       if (text === undefined) return null;
       return () => {
         const parsed = parseAttachmentText(text);

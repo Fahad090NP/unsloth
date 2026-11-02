@@ -45,8 +45,9 @@ export function startLlamaCppAutoReload(intervalMs = 10_000): () => void {
   // id -> endpoint + catalog last reloaded (absent: offline).
   const online = new Map<string, string>();
   const inFlight = new Set<string>();
-  let stopped = false;
-  const endpoint = (p: ExternalProviderConfig) => `${p.baseUrl}|${p.hasApiKey === true}`;
+  let stopped: boolean = false;
+  const isStopped = (): boolean => stopped;
+  const endpoint = (p: ExternalProviderConfig) => `${p.baseUrl}|${String(p.hasApiKey === true)}`;
 
   async function probe(provider: ExternalProviderConfig) {
     inFlight.add(provider.id);
@@ -60,14 +61,13 @@ export function startLlamaCppAutoReload(intervalMs = 10_000): () => void {
       const catalog = [...new Set(listed.map((m) => m.id.trim()).filter(Boolean))];
       const key = `${endpoint(provider)}|${catalog.join("\n")}`;
       // A server still starting can list nothing: keep the last good selection.
-      if (stopped || catalog.length === 0) return;
-      // A late settings sync can restore older lists, so skip only while this catalog is shown.
+      if (isStopped() || catalog.length === 0) return;      // A late settings sync can restore older lists, so skip only while this catalog is shown.
       const shown = useExternalProvidersStore.getState().providers.find((p) => p.id === provider.id);
       if (online.get(provider.id) === key && sameList(catalog, shown?.availableModels ?? [])) return;
       // Merge against the saved row so tabs agree on the user's picks.
       const saved = (await listProviderConfigs()).find((c) => c.id === provider.id);
       const latest = autoReloadConnections().find((p) => p.id === provider.id);
-      if (stopped || !saved || !latest || endpoint(latest) !== endpoint(provider)) return;
+      if (isStopped() || !saved || !latest || endpoint(latest) !== endpoint(provider)) return;
       const hasSaved =
         (saved.models?.length ?? 0) > 0 || (saved.available_models?.length ?? 0) > 0;
       const previousModels = hasSaved ? (saved.models ?? []) : latest.models;
@@ -83,7 +83,7 @@ export function startLlamaCppAutoReload(intervalMs = 10_000): () => void {
       if (!sameList(models, previousModels) || !sameList(catalog, previousCatalog)) {
         await updateProviderConfig(provider.id, { models, availableModels: catalog });
       }
-      if (stopped) return;
+      if (isStopped()) return;
       if (edited()) return;
       const { providers, setProviders } = useExternalProvidersStore.getState();
       const current = providers.find((p) => p.id === provider.id);

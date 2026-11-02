@@ -75,7 +75,7 @@ export function usePromptQueueReorder(
     return new Map(
       Array.from(list?.querySelectorAll<HTMLElement>(ROW_SELECTOR) ?? []).map(
         (row) => [
-          row.dataset.queueItemId!,
+          row.dataset.queueItemId ?? "",
           row.getBoundingClientRect().top / scale + (list?.scrollTop ?? 0),
         ],
       ),
@@ -132,7 +132,9 @@ export function usePromptQueueReorder(
     const list = listRef.current;
     const scale = getQueueScale(list);
     for (const row of list?.querySelectorAll<HTMLElement>(ROW_SELECTOR) ?? []) {
-      const before = previous.get(row.dataset.queueItemId!);
+      const rowId = row.dataset.queueItemId;
+      if (rowId === undefined) continue;
+      const before = previous.get(rowId);
       if (before === undefined) continue;
       const offset =
         before - row.getBoundingClientRect().top / scale - (list?.scrollTop ?? 0);
@@ -219,7 +221,8 @@ export function usePromptQueueReorder(
       if (index === drag.from) shift = offset;
       else if (index > drag.from && index <= to) shift = -source.height;
       else if (index < drag.from && index >= to) shift = source.height;
-      row.element.style.transform = `translate3d(0, ${shift}px, 0)`;
+      const element = row.element;
+      element.style.transform = `translate3d(0, ${shift}px, 0)`;
     });
     drag.frame = requestAnimationFrame(updateDrag);
   }
@@ -234,18 +237,19 @@ export function usePromptQueueReorder(
     const scale = getQueueScale(list);
     const rows = Array.from(
       list.querySelectorAll<HTMLElement>(ROW_SELECTOR),
-    ).map((element) => {
-      const rect = element.getBoundingClientRect();
+    ).flatMap((element) => {
       const item = items.find(
         (item) => item.id === element.dataset.queueItemId,
-      )!;
-      return {
+      );
+      if (!item) return [];
+      const rect = element.getBoundingClientRect();
+      return [{
         id: item.id,
         element,
         top: (rect.top - bounds.top) / scale + list.scrollTop,
         height: rect.height / scale,
         movable: item.canEdit && item.canRemove,
-      };
+      }];
     });
     const from = rows.findIndex((row) => row.id === id);
     if (

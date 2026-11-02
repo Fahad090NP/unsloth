@@ -231,7 +231,7 @@ export function PromptQueueList({
                           // The candidate window owns this key; cancelling here would discard the draft.
                           if (
                             event.nativeEvent.isComposing ||
-                            event.nativeEvent.keyCode === 229
+                            event.key === "Process"
                           ) {
                             setComposing(true);
                             return;
@@ -260,7 +260,7 @@ export function PromptQueueList({
                                 altKey: event.altKey,
                                 repeat: event.repeat,
                                 isComposing: event.nativeEvent.isComposing,
-                                keyCode: event.nativeEvent.keyCode,
+                                keyCode: event.key === "Process" ? 229 : undefined,
                               },
                               sendShortcut,
                               event.currentTarget.value,
@@ -452,15 +452,21 @@ export function PromptQueueList({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onSelect={() => {
-                          void copyToClipboard(item.prompt).then((copied) =>
-                            { setAnnouncement(
-                              t(
-                                copied
-                                  ? "promptQueue.announceCopied"
-                                  : "promptQueue.announceCopyFailed",
-                              ),
-                            ); },
-                          );
+                          copyToClipboard(item.prompt)
+                            .then((copied) => {
+                              setAnnouncement(
+                                t(
+                                  copied
+                                    ? "promptQueue.announceCopied"
+                                    : "promptQueue.announceCopyFailed",
+                                ),
+                              );
+                            })
+                            .catch(() => {
+                              setAnnouncement(
+                                t("promptQueue.announceCopyFailed"),
+                              );
+                            });
                         }}
                       >
                         <HugeiconsIcon icon={Copy01Icon} strokeWidth={1.8} />

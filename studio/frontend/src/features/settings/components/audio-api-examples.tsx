@@ -112,8 +112,11 @@ export function AudioApiExamples({
   const audioApiRequested = useSettingsDialogStore((s) => s.audioApiRequested);
   const scrollTarget = useSettingsDialogStore((s) => s.scrollTarget);
 
-  useEffect(() => {
-    if (!audioApiRequested) return;
+  const [handledRequest, setHandledRequest] = useState<
+    typeof audioApiRequested | undefined
+  >(undefined);
+  if (audioApiRequested && handledRequest !== audioApiRequested) {
+    setHandledRequest(audioApiRequested);
     const next = audioApiExampleFor(audioApiRequested.workflow);
     setTab(next.tab);
     if (next.run) setRun(next.run);
@@ -126,7 +129,11 @@ export function AudioApiExamples({
           }
         : null,
     );
-    useSettingsDialogStore.getState().consumeAudioApiRequest();
+  }
+  useEffect(() => {
+    if (audioApiRequested) {
+      useSettingsDialogStore.getState().consumeAudioApiRequest();
+    }
   }, [audioApiRequested]);
 
   useEffect(() => {

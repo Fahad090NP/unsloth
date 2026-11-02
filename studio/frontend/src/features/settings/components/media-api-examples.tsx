@@ -73,14 +73,21 @@ export function MediaApiExamples({
   const mediaApiRequested = useSettingsDialogStore((s) => s.mediaApiRequested);
   const scrollTarget = useSettingsDialogStore((s) => s.scrollTarget);
 
-  useEffect(() => {
-    if (!mediaApiRequested) return;
+  const [handledRequest, setHandledRequest] = useState<
+    typeof mediaApiRequested | undefined
+  >(undefined);
+  if (mediaApiRequested && handledRequest !== mediaApiRequested) {
+    setHandledRequest(mediaApiRequested);
     const { kind: requestedKind, model } = mediaApiRequested;
     setKind(requestedKind);
     if (model) {
       setPageModels((current) => ({ ...current, [requestedKind]: model }));
     }
-    useSettingsDialogStore.getState().consumeMediaApiRequest();
+  }
+  useEffect(() => {
+    if (mediaApiRequested) {
+      useSettingsDialogStore.getState().consumeMediaApiRequest();
+    }
   }, [mediaApiRequested]);
 
   useEffect(() => {

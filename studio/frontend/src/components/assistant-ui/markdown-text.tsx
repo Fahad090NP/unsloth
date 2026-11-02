@@ -219,7 +219,7 @@ const MarkdownImage = memo(function MarkdownImage(props: ComponentProps<"img">) 
     className,
     onLoad,
     onError,
-    node: _node,
+    node,
     ...dom
   } = props as ComponentProps<"img"> & { node?: unknown };
   // Fallback scope for a src that records no session; one that does keeps it.
@@ -316,17 +316,21 @@ const MarkdownImage = memo(function MarkdownImage(props: ComponentProps<"img">) 
           type="button"
           title="Download image"
           className="aui-chat-icon-btn absolute right-2 bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-background/90 opacity-0 backdrop-blur-sm transition-all duration-200 group-hover:opacity-100"
-          onClick={async () => {
+          onClick={() => {
             // Reuse fetched bytes under the desktop CSP.
-            try {
-              const blob =
-                file !== null && sandbox.state.status === "loaded"
-                  ? sandbox.state.blob
-                  : await urlToBlob(resolved);
-              await downloadFile(blob, downloadName(blob.type), blob.type);
-            } catch (error) {
-              if (!isDownloadCancelled(error)) toast.error("Could not save file.");
-            }
+            void (async () => {
+              try {
+                const blob =
+                  file !== null && sandbox.state.status === "loaded"
+                    ? sandbox.state.blob
+                    : await urlToBlob(resolved);
+                await downloadFile(blob, downloadName(blob.type), blob.type);
+              } catch (error) {
+                if (!isDownloadCancelled(error)) toast.error("Could not save file.");
+              }
+            })().catch((error: unknown) => {
+              console.error("Image download failed", error);
+            });
           }}
         >
           <HugeiconsIcon
@@ -344,7 +348,7 @@ const LINK_CLASS =
   "text-foreground underline underline-offset-2 decoration-foreground/40 hover:decoration-foreground transition-colors cursor-pointer";
 
 function MarkdownLink({ href, children, ...props }: ComponentProps<"a">) {
-  const { node: _node, ...dom } = props as ComponentProps<"a"> & { node?: unknown };
+  const { node, ...dom } = props as ComponentProps<"a"> & { node?: unknown };
   const file = href ? sandboxFileForHref(href) : null;
   // Only file links subscribe to the chat's scope; links re-render per streamed token.
   if (href && file !== null) {
@@ -409,7 +413,7 @@ function SandboxFileLink({
       void target
         .load()
         .then((blob) => downloadFile(blob, target.name, blob.type || undefined))
-        .catch((error) => {
+        .catch((error: unknown) => {
           if (!isDownloadCancelled(error)) toast.error(t("linkMenu.saveFailed"));
         });
     };
@@ -495,7 +499,7 @@ function findMermaidFence(blockContent: string): MermaidFence {
       }
       // A bare run at top level is an opener (info may be empty), not a close.
       enclosing = { char: marker[0], run: marker.length };
-    } else if (marker[0] === enclosing.char && marker.length >= enclosing.run && isClose) {
+    } else if (marker.startsWith(enclosing.char) && marker.length >= enclosing.run && isClose) {
       enclosing = null;
     }
   }
@@ -571,7 +575,7 @@ function SvgPreview({ source }: { source: string }) {
 
 function downloadTextFile(filename: string, text: string): void {
   void downloadFile(text, filename, "text/plain;charset=utf-8").catch(
-    (error) => {
+    (error: unknown) => {
       if (!isDownloadCancelled(error)) {
         toast.error("Could not save file.");
       }
@@ -613,11 +617,15 @@ function MermaidCopyButton({ source }: { source: string }) {
       type="button"
       className="absolute top-3.5 right-20 z-20 cursor-pointer text-muted-foreground transition-all hover:text-foreground"
       title="Copy Mermaid source"
-      onClick={async () => {
-        if (!(await copyToClipboard(source))) {
-          return;
-        }
-        showCopied();
+      onClick={() => {
+        void (async () => {
+          if (!(await copyToClipboard(source))) {
+            return;
+          }
+          showCopied();
+        })().catch((error: unknown) => {
+          console.error("Copy Mermaid source failed", error);
+        });
       }}
     >
       <HugeiconsIcon
@@ -648,12 +656,16 @@ export function CodeBlockActions({
           className={ACTION_BUTTON_CLASS}
           title="Copy code"
           disabled={disabled}
-          onClick={async () => {
-            const text = typeof source === "function" ? source() : source;
-            if (!(await copyToClipboard(text))) {
-              return;
-            }
-            showCopied();
+          onClick={() => {
+            void (async () => {
+              const text = typeof source === "function" ? source() : source;
+              if (!(await copyToClipboard(text))) {
+                return;
+              }
+              showCopied();
+            })().catch((error: unknown) => {
+              console.error("Copy code failed", error);
+            });
           }}
         >
           <HugeiconsIcon
@@ -1016,12 +1028,10 @@ function useFenceTokens(
           release = awaitWorker(body.length, () => {
             if (!current()) return false;
             if (!defer()) return tokenizeNow();
-            if (cancelFallback === null) {
-              cancelFallback = queueFenceWork(() => {
-                cancelFallback = null;
-                tokenizeNow();
-              });
-            }
+            cancelFallback ??= queueFenceWork(() => {
+              cancelFallback = null;
+              tokenizeNow();
+            });
             return false;
           });
         }
@@ -1444,17 +1454,17 @@ function MarkdownTextRenderer({
       ),
     [displayText, isStreaming, messageTexts, precedingText, searchImages],
   );
-  const incrementalCacheRef = useRef({
+  const [incrementalCacheState, setIncrementalCacheState] = useState(() => ({
     messageId,
     cache: new IncrementalMarkdownCache(),
-  });
-  if (incrementalCacheRef.current.messageId !== messageId) {
-    incrementalCacheRef.current = {
+  }));
+  if (incrementalCacheState.messageId !== messageId) {
+    setIncrementalCacheState({
       messageId,
       cache: new IncrementalMarkdownCache(),
-    };
+    });
   }
-  const incrementalCache = incrementalCacheRef.current.cache;
+  const incrementalCache = incrementalCacheState.cache;
   const incrementalRender = isStreaming
     ? incrementalCache.update(processedText)
     : null;
@@ -1472,7 +1482,7 @@ function MarkdownTextRenderer({
       <SearchImagesContext.Provider value={searchImages}>
         <div data-status={statusType} className="min-w-0 max-w-full">
           <Streamdown
-            key={`${messageId}:${incrementalCache.renderGeneration}:${renderKey}:${sandboxScopeKey}:${cut}`}
+            key={`${messageId}:${incrementalCache.renderGeneration}:${renderKey}:${sandboxScopeKey}:${cut ? "1" : "0"}`}
             mode="streaming"
             parseIncompleteMarkdown={!incrementalRender}
             remend={

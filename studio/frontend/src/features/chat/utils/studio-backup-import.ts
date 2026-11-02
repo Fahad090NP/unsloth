@@ -57,7 +57,7 @@ function isDict(value: unknown): value is Dict {
 // Accept every stored content shape; a string becomes a text part rather than being dropped.
 function messageContent(raw: unknown): MessageRecord["content"] {
   if (Array.isArray(raw)) {
-    return raw.map((part) =>
+    return raw.map((part: unknown) =>
       isDict(part) ? withoutServerLinks(part) : part,
     ) as MessageRecord["content"];
   }
@@ -162,7 +162,8 @@ export function studioBackupToConversations(
   const conversations: ParsedConversation[] = [];
   threads.forEach((thread, index) => {
     const source = messagesByThread.get(thread.id as string) ?? [];
-    const threadId = threadIds.get(thread.id as string)!;
+    const threadId = threadIds.get(thread.id as string);
+    if (threadId === undefined) return;
     const ordered = source
       .map((message) => ({
         raw: message,
@@ -177,7 +178,7 @@ export function studioBackupToConversations(
       const ts = Math.max(previousTs + 1, createdAt);
       previousTs = ts;
       const record: MessageRecord = {
-        id: messageIds.get(id)!,
+        id: messageIds.get(id) as string,
         threadId,
         role: restorableRole(raw.role as string),
         content: messageContent(raw.content),

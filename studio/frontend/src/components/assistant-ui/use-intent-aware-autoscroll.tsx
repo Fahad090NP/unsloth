@@ -320,9 +320,7 @@ export function useIntentAwareAutoScroll(): {
       };
 
       const requestTick = (): void => {
-        if (rafId === null) {
-          rafId = requestAnimationFrame(tick);
-        }
+        rafId ??= requestAnimationFrame(tick);
       };
       tickRequestRef.current = requestTick;
 
@@ -472,11 +470,11 @@ export function useIntentAwareAutoScroll(): {
       };
 
       const onTouchStart = (e: TouchEvent) => {
-        touchStartY = e.touches[0].clientY ?? 0;
+        touchStartY = e.touches.item(0)?.clientY ?? 0;
       };
 
       const onTouchMove = (e: TouchEvent) => {
-        const y = e.touches[0].clientY ?? 0;
+        const y = e.touches.item(0)?.clientY ?? 0;
         // Finger moves DOWN on the screen = content scrolls UP.
         if (
           y - touchStartY > TOUCH_MOVE_THRESHOLD_PX &&

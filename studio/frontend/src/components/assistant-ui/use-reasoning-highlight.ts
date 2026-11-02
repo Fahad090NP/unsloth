@@ -188,7 +188,7 @@ export function requestFullHighlight(
     listeners.delete(id);
     patientClients.delete(id);
     awaitingReply.delete(id);
-    onResult(reply.failed ? null : (reply.result!));
+    onResult(reply.failed || !reply.result ? null : reply.result);
     if (listeners.size === 0 && worker) scheduleIdle();
   });
   const request: ReasoningHighlightRequest = {

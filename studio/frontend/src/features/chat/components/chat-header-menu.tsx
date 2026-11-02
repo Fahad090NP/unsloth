@@ -232,7 +232,11 @@ function ChatMenuItems({ menu }: { menu: ActiveChatMenu }) {
       </Item>
       <Item
         icon={Refresh01Icon}
-        onSelect={() => void regenerateChatTitleWithToast(menu.item)}
+        onSelect={() => {
+          regenerateChatTitleWithToast(menu.item).catch((error: unknown) => {
+            console.error("Regenerating the chat title failed", error);
+          });
+        }}
         disabled={generating}
       >
         {t("library.menu.regenerateTitle")}
@@ -396,7 +400,11 @@ function ChatMenuItems({ menu }: { menu: ActiveChatMenu }) {
           {chatExportOptions().map(({ label: name, format }) => (
             <DropdownMenuItem
               key={format}
-              onSelect={() => void exportAs(format)}
+              onSelect={() => {
+                exportAs(format).catch((error: unknown) => {
+                  console.error("Exporting the chat failed", error);
+                });
+              }}
             >
               {name}
             </DropdownMenuItem>

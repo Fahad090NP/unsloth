@@ -111,32 +111,46 @@ export function DocumentsRagSection(): ReactElement {
     };
   }, []);
 
-  const refreshCachedRepos = useCallback(async () => {
+  const loadCachedRepos = useCallback(async () => {
     try {
       const [models, gguf] = await Promise.all([
         listCachedModels(hfToken || undefined),
         listCachedGguf(hfToken || undefined),
       ]);
-      setCachedRepos(
-        new Set(
-          [...models, ...gguf]
-            .filter((repo) => !repo.partial)
-            .map((repo) => repo.repo_id),
-        ),
+      return new Set(
+        [...models, ...gguf]
+          .filter((repo) => !repo.partial)
+          .map((repo) => repo.repo_id),
       );
     } catch {
      /* noop */ }
+    return null;
   }, [hfToken]);
 
   useEffect(() => {
-    (refreshCachedRepos()).catch(() => { /* noop */ });
-  }, [refreshCachedRepos]);
+    let live = true;
+    (loadCachedRepos())
+      .then((repos) => {
+        if (live && repos) setCachedRepos(repos);
+      })
+      .catch(() => { /* noop */ });
+    return () => {
+      live = false;
+    };
+  }, [loadCachedRepos]);
 
   const savedModel = embeddingModel?.embeddingModel;
-  useEffect(() => {
+  const resetKey = `${savedModel ?? ""}::${hfToken ?? ""}::${resolveNonce}`;
+  const [appliedResetKey, setAppliedResetKey] = useState<string | undefined>(
+    undefined,
+  );
+  if (appliedResetKey !== resetKey) {
+    setAppliedResetKey(resetKey);
     setResolution(null);
     setForceCandidate(null);
     setSaveError(null);
+  }
+  useEffect(() => {
     if (!savedModel) return;
     let live = true;
     (resolveEmbeddingModel(savedModel, { hfToken: hfToken || undefined })
@@ -293,11 +307,11 @@ export function DocumentsRagSection(): ReactElement {
       ? jobKeyOf(DOWNLOAD_KIND.MODEL, resolution.downloadRepo, null)
       : null;
   const downloadState = useDownloadManagerStore((state) =>
-    downloadJobKey ? (state.jobs[downloadJobKey].state ?? null) : null,
+    downloadJobKey ? state.jobs[downloadJobKey].state : null,
   );
   const fullSnapshotDownloadState = useDownloadManagerStore((state) =>
     fullSnapshotJobKey
-      ? (state.jobs[fullSnapshotJobKey].state ?? null)
+      ? state.jobs[fullSnapshotJobKey].state
       : null,
   );
   const downloading =
@@ -316,10 +330,13 @@ export function DocumentsRagSection(): ReactElement {
     let live = true;
     (Promise.all([
       resolveEmbeddingModel(savedModel, { hfToken: hfToken || undefined }),
-      refreshCachedRepos(),
+      loadCachedRepos(),
     ])
-      .then(([next]) => {
-        if (live && next.embeddingModel === savedModel) setResolution(next);
+      .then(([next, repos]) => {
+        if (live && repos != null && next.embeddingModel === savedModel) {
+          setCachedRepos(repos);
+          setResolution(next);
+        }
       })
       .catch(() => {
        /* noop */ })).catch(() => { /* noop */ });
@@ -331,7 +348,7 @@ export function DocumentsRagSection(): ReactElement {
     fullSnapshotDownloadState,
     savedModel,
     hfToken,
-    refreshCachedRepos,
+    loadCachedRepos,
   ]);
   const canDownload = Boolean(
     resolution && !resolution.cached && resolution.downloadRepo,

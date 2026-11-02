@@ -57,7 +57,7 @@ export function sourceRefOf(selection: AudioSourceSelection): AudioSourceRef {
       return { input_id: selection.id };
     case "clip":
       return { clip_id: selection.id };
-    default:
+    case "voice":
       return { voice_id: selection.id };
   }
 }
@@ -69,7 +69,7 @@ export function sourceFileUrl(selection: AudioSourceSelection): string {
       return `/api/inference/audio/inputs/${id}/file`;
     case "clip":
       return `/api/inference/audio/gallery/${id}/file`;
-    default:
+    case "voice":
       return `/api/inference/audio/voices/${id}/file`;
   }
 }
@@ -278,7 +278,7 @@ export function buildAudioRunBody(
 function cleanEdit(
   edit: AudioRunEditPart | null | undefined,
 ): Record<string, unknown> | null {
-  if (!edit || (edit.mode !== "words" && edit.mode !== "delivery")) return null;
+  if (!edit) return null;
   const out: Record<string, unknown> = { mode: edit.mode };
   if (typeof edit.markup === "string" && edit.markup.trim())
     out.markup = edit.markup;

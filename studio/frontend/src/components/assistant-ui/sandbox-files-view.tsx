@@ -20,7 +20,7 @@ import { sandboxFilePath, type SandboxFile } from "./sandbox-files";
 import { revealSandbox } from "./sandbox-reveal";
 
 function formatSize(size: number | null): string {
-  if (size === null || size === undefined || Number.isNaN(size)) return "";
+  if (size === null || Number.isNaN(size)) return "";
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
@@ -64,13 +64,17 @@ function SandboxFileRow({
       file={{
         name: file.name.slice(file.name.lastIndexOf("/") + 1),
         load: () => loadSandboxFile(sessionId, file.name),
-        open: () => void save(),
+        open: () => {
+          save().catch(() => undefined);
+        },
         sandbox: { sessionId, file: file.name },
       }}
     >
       <button
         type="button"
-        onClick={save}
+        onClick={() => {
+          save().catch(() => undefined);
+        }}
         disabled={busy}
         title={`Save ${file.name}`}
         className="btn-fill flex items-center gap-2 rounded-full px-2 py-1 text-xs text-foreground disabled:opacity-60"

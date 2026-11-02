@@ -4,6 +4,7 @@
 import { getActiveGenerations } from "../api/chat-api";
 import { useChatRuntimeStore } from "../stores/chat-runtime-store";
 import { usePromptQueueUI } from "../stores/prompt-queue-ui-store";
+import type { PromptQueueUIEntry } from "../stores/prompt-queue-ui-store";
 import {
   type StopRunningChatsEffect,
   useStopRunningChatsDialogStore,
@@ -66,7 +67,8 @@ export async function confirmStopRunningChatsIfNeeded(
   const promptQueuesByThreadId = usePromptQueueUI.getState().byThreadId;
   const aliasesByQueuedRun = new Map<string, string[]>();
   for (const threadId of promptQueueThreadIds) {
-    const entry = promptQueuesByThreadId[threadId];
+    const entry: PromptQueueUIEntry | undefined =
+      promptQueuesByThreadId[threadId];
     if (!entry || entry.paused) {
       continue;
     }
@@ -91,7 +93,7 @@ export async function confirmStopRunningChatsIfNeeded(
     const active = await getActiveGenerations(model);
     const entries = active.active ?? [];
     const merged = new Set(running);
-    for (const threadId of active.thread_ids ?? []) {
+    for (const threadId of active.thread_ids) {
       merged.add(threadId);
     }
     running = [...merged];
@@ -102,7 +104,7 @@ export async function confirmStopRunningChatsIfNeeded(
     const unnamed = entries.filter((entry) => !entry.thread_id).length;
     count = entries.length
       ? running.length + unnamed + unnamedPreStreamRuns
-      : Math.max(active.count ?? 0, running.length) + unnamedPreStreamRuns;
+      : Math.max(active.count, running.length) + unnamedPreStreamRuns;
     hasNonChat = entries.some((entry) => (entry.kind ?? "chat") !== "chat");
   } catch {
     // Backend unreachable / older build: fall back to the local map only.

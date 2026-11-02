@@ -253,7 +253,9 @@ const DocumentDialog: FC<
         }
         if (!cancelled) setLoaded(next);
       })
-      .catch(() => !cancelled && setLoaded({ error: true }));
+      .catch(() => {
+        if (!cancelled) setLoaded({ error: true });
+      });
     return () => {
       cancelled = true;
     };

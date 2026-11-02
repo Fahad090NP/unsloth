@@ -134,6 +134,10 @@ function canRun(model: AudioApiModel, example: AudioApiExample): boolean {
       return (
         isCloneAndConvertFamilyId(model.id) || isConvertOnlyFamilyId(model.id)
       );
+    case "separate":
+    case "music":
+    case "edit":
+      return false;
     default:
       return false;
   }
@@ -188,7 +192,7 @@ interface Ref { upload: string }
 type Json = string | number | boolean | Ref | Json[] | { [key: string]: Json };
 
 function isRef(value: Json): value is Ref {
-  return typeof value === "object" && value != null && "upload" in value;
+  return typeof value === "object" && "upload" in value;
 }
 
 type Style = "json" | "python" | "jq" | "powershell";
@@ -201,6 +205,8 @@ function refExpr(name: string, style: Style): string {
       return `$${name}`;
     case "powershell":
       return `"$($${name}.id)"`;
+    case "json":
+      return `${name}.id`;
     default:
       return `${name}.id`;
   }
@@ -309,6 +315,8 @@ function runPlan(workflow: AudioRunWorkflow, model: string): RunPlan {
             "[verse]\nCity lights are calling me\n[chorus]\nWe dance until the morning",
         },
       };
+    case "music":
+    case "edit":
     default: {
       const edit = Object.fromEntries(
         Object.entries(
@@ -769,6 +777,11 @@ export function buildAudioApiSnippet(
       return cloneSnippet(input);
     case "transcribe":
       return transcribeSnippet(input);
+    case "separate":
+    case "convert":
+    case "music":
+    case "edit":
+      return runSnippet(example, input);
     default:
       return runSnippet(example, input);
   }

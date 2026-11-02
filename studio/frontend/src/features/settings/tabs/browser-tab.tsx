@@ -90,11 +90,15 @@ function DownloadLocationRow() {
     >
       <div className="flex gap-2">
         {folder?.custom ? (
-          <Button variant="ghost" size="sm" onClick={reset}>
+          <Button variant="ghost" size="sm" onClick={() => {
+            reset().catch(() => { /* noop */ });
+          }}>
             {t("browser.downloadLocationReset")}
           </Button>
         ) : null}
-        <Button variant="outline" size="sm" onClick={change}>
+        <Button variant="outline" size="sm" onClick={() => {
+          change().catch(() => { /* noop */ });
+        }}>
           {t("browser.downloadLocationChange")}
         </Button>
       </div>
@@ -453,7 +457,9 @@ export function BrowserTab() {
             <Button variant="outline" size="sm" onClick={() => importInput.current?.click()}>
               {t("browser.importBookmarks")}
             </Button>
-            <Button variant="outline" size="sm" onClick={exportBookmarks}>
+            <Button variant="outline" size="sm" onClick={() => {
+              exportBookmarks().catch(() => { /* noop */ });
+            }}>
               {t("browser.exportBookmarks")}
             </Button>
           </div>

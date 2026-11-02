@@ -92,7 +92,6 @@ function discoverErrorTitle(kind: DiscoverErrorKind, hub: string): string {
       return `${hub} rate limit`;
     case "server":
     case "unknown":
-    default:
       return `Couldn't reach ${hub}`;
   }
 }

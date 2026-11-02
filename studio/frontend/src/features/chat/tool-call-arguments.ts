@@ -3,7 +3,7 @@
 
 function isSingleJsonObject(text: string): boolean {
   try {
-    const value = JSON.parse(text);
+    const value: unknown = JSON.parse(text);
     return typeof value === "object" && value !== null && !Array.isArray(value);
   } catch {
     return false;
@@ -142,7 +142,7 @@ export function toolCallReplayArguments(
     return argsText;
   }
   const serialized = JSON.stringify(args ?? {});
-  if (serialized === undefined || !isSingleJsonObject(serialized)) {
+  if (!isSingleJsonObject(serialized)) {
     return "{}";
   }
   const parsed = JSON.parse(serialized) as Record<string, unknown>;
@@ -312,7 +312,8 @@ class JsonTextParser {
 }
 
 function stringifyJson(value: unknown): string {
-  return JSON.stringify(value) ?? "null";
+  const serializedValue = JSON.stringify(value);
+  return serializedValue === undefined ? "null" : serializedValue;
 }
 
 function mergeJsonNode(node: JsonTextNode, current: unknown): string {
@@ -402,7 +403,8 @@ export function streamedToolCallArguments(value: unknown): string {
     return "";
   }
   try {
-    return JSON.stringify(value) ?? "";
+    const serializedValue = JSON.stringify(value);
+    return serializedValue === undefined ? "" : serializedValue;
   } catch {
     return "";
   }

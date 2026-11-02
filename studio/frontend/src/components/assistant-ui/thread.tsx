@@ -2916,11 +2916,7 @@ const Composer: FC<{
   const setImageToolsEnabled = useChatRuntimeStore(
     (s) => s.setImageToolsEnabled,
   );
-  const toolsEnabled = useChatRuntimeStore((s) => s.toolsEnabled);
-
   const supportsTools = useChatRuntimeStore((s) => s.supportsTools);
-  const codeToolsEnabled = useChatRuntimeStore((s) => s.codeToolsEnabled);
-  const imageToolsEnabled = useChatRuntimeStore((s) => s.imageToolsEnabled);
   const supportsBuiltinImageGeneration = useChatRuntimeStore(
     (s) => s.supportsBuiltinImageGeneration,
   );
@@ -6106,7 +6102,7 @@ function useImeComposerInputHandlers({
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
       const msSinceCompositionEnd = e.timeStamp - compositionEndedAtRef.current;
       compositionEndedAtRef.current = -Infinity;
-      const imeKey = e.nativeEvent.isComposing || e.keyCode === 229;
+      const imeKey = e.nativeEvent.isComposing || e.key === "Process";
       if (imeKey) {
         if (
           imeKeydownBlocksComposerSubmit(

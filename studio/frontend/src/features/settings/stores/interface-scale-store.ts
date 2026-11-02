@@ -143,6 +143,10 @@ function releaseContainmentAfterZoom(): void {
   if (holdsContainmentAcrossZoom) releaseSkippedContent();
 }
 
+function setAppliedInterfaceScale(value: number | null): void {
+  appliedInterfaceScale = value;
+}
+
 export function applyInterfaceScale(scale: number): Promise<void> {
   if (!isTauri) {
     applyWebInterfaceScale(scale);
@@ -164,11 +168,11 @@ export function applyInterfaceScale(scale: number): Promise<void> {
     }
     if (nextScale !== requestedInterfaceScale) {
       // a timed-out command can overwrite a newer native zoom when it finishes.
-      appliedInterfaceScale = null;
+      setAppliedInterfaceScale(null);
       (applyInterfaceScale(requestedInterfaceScale).catch(() => undefined)).catch(() => { /* noop */ });
       return;
     }
-    appliedInterfaceScale = nextScale;
+    setAppliedInterfaceScale(nextScale);
     setAppliedInterfaceZoom(zoom);
   });
   interfaceScaleApplicationQueue = application.catch(() => undefined).catch(() => { /* noop */ });

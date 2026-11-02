@@ -20,7 +20,9 @@ async function requestRemoteAccess(
       await readFastApiError(response, "Remote access request failed"),
     );
   }
-  return normalizeRemoteAccessStatus(await response.json());
+  return normalizeRemoteAccessStatus(
+    (await response.json()) as Parameters<typeof normalizeRemoteAccessStatus>[0],
+  );
 }
 
 export const loadRemoteAccess = () => requestRemoteAccess();

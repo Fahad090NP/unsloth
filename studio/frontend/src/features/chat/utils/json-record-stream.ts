@@ -29,10 +29,10 @@ export async function* decodeTextChunks(
 async function* fileBytes(file: File): AsyncGenerator<Uint8Array> {
   const reader = file.stream().getReader();
   try {
-    while (true) {
+    for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
-      if (value) yield value;
+      yield value;
     }
   } finally {
     reader.releaseLock();

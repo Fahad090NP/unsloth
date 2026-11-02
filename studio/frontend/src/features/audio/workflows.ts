@@ -8,7 +8,7 @@ import {
   ClosedCaptionIcon,
   Copy02Icon,
   Edit03Icon,
-  MusicThreeIcon,
+  Music3Icon,
   SplitIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
@@ -75,7 +75,7 @@ export const AUDIO_WORKFLOWS: readonly {
     id: "music",
     label: "Music",
     heading: "Create music",
-    icon: MusicThreeIcon,
+    icon: Music3Icon,
     hint: "Songs, instrumentals and sound effects",
     slot: "speak",
     createTrain: false,

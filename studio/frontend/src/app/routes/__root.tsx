@@ -296,15 +296,19 @@ function CredentialBootstrapGate({
         return;
       }
       setReady(false);
-      void bootstrapPersistedCredentials().finally(() => {
-        if (
-          mounted &&
-          revision === runRevision.current &&
-          hasAuthToken()
-        ) {
-          setReady(true);
-        }
-      });
+      bootstrapPersistedCredentials()
+        .finally(() => {
+          if (
+            mounted &&
+            revision === runRevision.current &&
+            hasAuthToken()
+          ) {
+            setReady(true);
+          }
+        })
+        .catch((error: unknown) => {
+          console.error("Credential bootstrap failed", error);
+        });
     };
 
     window.addEventListener(AUTH_SESSION_CLEARED_EVENT, reconcile);
@@ -560,9 +564,11 @@ function RootLayout() {
     chatRuntime.setActiveThreadId(null);
     chatRuntime.setActiveProjectId(projectId);
     chatRuntime.setIncognito(Boolean(options?.incognito));
-    void navigate({
+    navigate({
       to: "/chat",
       search: projectId ? { project: projectId } : { new: createNavigationNonce() },
+    }).catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
     });
   };
 
@@ -594,7 +600,11 @@ function RootLayout() {
   const isOwner = useIsAccountOwner();
   const helpAction = (action: HelpAction) =>
     isAuthFlowRoute || !helpActionAvailable(action, isOwner) ? null : () => { runHelpAction(action); };
-  const goTo = (to: string) => () => void navigate({ to });
+  const goTo = (to: string) => () => {
+    navigate({ to }).catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
+  };
   const goAction = (enabled: boolean, go: () => void) => (enabled ? go : null);
   // Go > Settings: the pages this account can open.
   const settingsActions = Object.fromEntries(
@@ -613,7 +623,7 @@ function RootLayout() {
     "open-folder":
       routeShortcutEnabled && pathLeasesSupported && !ragUnavailable && !openingFolder
         ? () =>
-            void openFolderAsProject().then((project) => {
+            openFolderAsProject().then((project) => {
               if (!project) return;
               const chatRuntime = useChatRuntimeStore.getState();
               chatRuntime.setActiveThreadId(null);
@@ -621,6 +631,8 @@ function RootLayout() {
               navigate({ to: "/chat", search: { project: project.id } }).catch((error: unknown) => {
                 console.error("Background chat operation failed", error);
               });
+            }).catch((error: unknown) => {
+              console.error("Background chat operation failed", error);
             })
         : null,
     "toggle-sidebar": viaShortcut("toggleSidebar", sidebarMounted),
@@ -640,7 +652,11 @@ function RootLayout() {
     "help-send-feedback": helpAction("help-send-feedback"),
     "go-chat": goAction(
       routeShortcutEnabled,
-      () => void navigate({ to: "/chat", search: chatSearch }),
+      () => {
+        navigate({ to: "/chat", search: chatSearch }).catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
+      },
     ),
     "go-projects": goAction(routeShortcutEnabled, goTo("/projects")),
     "go-library": goAction(routeShortcutEnabled, goTo("/library")),
@@ -657,7 +673,11 @@ function RootLayout() {
   // Carry the frozen search back: a bare /chat is a fresh chat and would drop the thread.
   useShortcut(
     "switchToChat",
-    () => void navigate({ to: "/chat", search: chatSearch }),
+    () => {
+      navigate({ to: "/chat", search: chatSearch }).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
+    },
     { enabled: routeShortcutEnabled },
   );
   useShortcut("switchToProjects", goTo("/projects"), {

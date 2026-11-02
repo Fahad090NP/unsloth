@@ -11,11 +11,15 @@ function parseAliases(body: unknown): ModelAlias[] {
   if (!Array.isArray(aliases)) {
     return [];
   }
-  return aliases.flatMap((entry) =>
-    typeof entry?.name === "string" && typeof entry?.model === "string"
-      ? [{ name: entry.name, model: entry.model }]
-      : [],
-  );
+  return aliases.flatMap((entry: unknown) => {
+    if (!entry || typeof entry !== "object") {
+      return [];
+    }
+    const alias = entry as Partial<ModelAlias>;
+    return typeof alias.name === "string" && typeof alias.model === "string"
+      ? [{ name: alias.name, model: alias.model }]
+      : [];
+  });
 }
 
 export async function loadModelAliases(): Promise<ModelAlias[]> {

@@ -321,6 +321,10 @@ export class DecisionError extends Error {
   }
 }
 
+function isAborted(signal: AbortSignal): boolean {
+  return signal.aborted;
+}
+
 function wait(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
     const timer = window.setTimeout(resolve, ms);
@@ -372,8 +376,7 @@ export async function runDecision(
     onWaiting(message);
     const retryAfter = Number(res.headers.get("Retry-After")) || 5;
     await wait(Math.min(retryAfter * 1000, deadline - Date.now()), signal);
-    const aborted: boolean = signal.aborted;
-    if (aborted || Date.now() >= deadline) {
+    if (isAborted(signal) || Date.now() >= deadline) {
       throw new DecisionError(message, res.status);
     }
   }

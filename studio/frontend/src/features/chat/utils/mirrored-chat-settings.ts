@@ -12,9 +12,11 @@ export function normalizeResearchMcpSources(value: unknown): ResearchMcpSource[]
   if (!Array.isArray(value)) return [];
   const sources: ResearchMcpSource[] = [];
   const seen = new Set<string>();
-  for (const item of value) {
-    const serverId = item?.serverId;
-    const tool = item?.tool;
+  for (const raw of value as unknown[]) {
+    if (!raw || typeof raw !== "object") continue;
+    const item = raw as Record<string, unknown>;
+    const serverId = item.serverId;
+    const tool = item.tool;
     if (
       typeof serverId !== "string" ||
       serverId.length < 1 ||

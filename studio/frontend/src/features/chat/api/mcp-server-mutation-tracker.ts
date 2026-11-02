@@ -19,13 +19,12 @@ export function subscribeToMcpServerMutationSettlements(
 export function trackMcpServerMutation<T>(mutation: Promise<T>): Promise<T> {
   // The settlement promise always fulfills, so background waiters never add unhandled rejections.
   mcpServerMutationEpoch += 1;
-  const settlement = mutation.then(
+  const settlement: Promise<void> = mutation.then(
     () => undefined,
     () => undefined,
   );
-  pendingMcpServerMutations.add(settlement);
-  void settlement.then(() => {
-    pendingMcpServerMutations.delete(settlement);
+  const tracked = settlement.then(() => {
+    pendingMcpServerMutations.delete(tracked);
     mcpServerMutationEpoch += 1;
     const settledEpoch = mcpServerMutationEpoch;
     for (const listener of [...mutationSettlementListeners]) {
@@ -36,6 +35,7 @@ export function trackMcpServerMutation<T>(mutation: Promise<T>): Promise<T> {
       }
     }
   });
+  pendingMcpServerMutations.add(tracked);
   return mutation;
 }
 
@@ -43,7 +43,7 @@ export async function readMcpServerMutationSnapshot<T>(
   read: () => Promise<T>,
 ): Promise<T> {
   // Retry only when a mutation starts or settles during the read, not while one is pending.
-  while (true) {
+  for (;;) {
     const epochBeforeRead = mcpServerMutationEpoch;
     try {
       const result = await read();
@@ -64,7 +64,7 @@ export async function waitForPendingMcpServerMutations(): Promise<void> {
 export async function readAfterPendingMcpServerMutations<T>(
   read: () => Promise<T>,
 ): Promise<T> {
-  while (true) {
+  for (;;) {
     await waitForPendingMcpServerMutations();
     const epochBeforeRead = mcpServerMutationEpoch;
     let result: T;

@@ -38,9 +38,14 @@ export function transcriptDraftKey(): string {
 
 export function readTranscriptDraft(key: string): TranscriptDraft | null {
   try {
-    const draft = JSON.parse(sessionStorage.getItem(key) ?? "null");
+    const parsed: unknown = JSON.parse(
+      sessionStorage.getItem(key) ?? "null",
+    );
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return null;
+    }
+    const draft = parsed as Record<string, unknown>;
     if (
-      !draft ||
       typeof draft.text !== "string" ||
       !draft.text ||
       typeof draft.title !== "string" ||
@@ -54,7 +59,9 @@ export function readTranscriptDraft(key: string): TranscriptDraft | null {
       model: draft.model,
     };
     if (draft.details && typeof draft.details === "object") {
-      const details = detailsFrom(draft.details);
+      const details = detailsFrom(
+        draft.details as Partial<Record<keyof TranscriptDetails, unknown>>,
+      );
       restored.details = details;
       restored.speakerNames = speakerNamesFrom(draft.speakerNames, details);
     }

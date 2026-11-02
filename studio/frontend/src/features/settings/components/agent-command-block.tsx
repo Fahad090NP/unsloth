@@ -137,7 +137,9 @@ export function CommandBlock({ command }: { command: string }) {
       </pre>
       <button
         type="button"
-        onClick={copy}
+        onClick={() => {
+          copy().catch(() => { /* noop */ });
+        }}
         aria-label={
           copied ? t("settings.agents.copied") : t("settings.agents.copy")
         }

@@ -11,12 +11,14 @@ export async function decodePeaks(
 ): Promise<{ peaks: number[] | null; durationS: number | null }> {
   if (blob.size > DECODE_MAX_BYTES) return { peaks: null, durationS: null };
   const Offline =
-    window.OfflineAudioContext ||
+    (window as unknown as { OfflineAudioContext?: typeof OfflineAudioContext })
+      .OfflineAudioContext ??
     (
       window as unknown as {
         webkitOfflineAudioContext?: typeof OfflineAudioContext;
       }
     ).webkitOfflineAudioContext;
+  if (!Offline) return { peaks: null, durationS: null };
   try {
     const context = new Offline(1, 1, 22050);
     const buffer = await context.decodeAudioData(await blob.arrayBuffer());

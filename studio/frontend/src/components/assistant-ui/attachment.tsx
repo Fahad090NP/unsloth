@@ -97,7 +97,7 @@ const useAttachmentKind = (): {
   name: string;
   kind: AttachmentFileKind;
 } => {
-  const name = useAuiState(({ attachment }) => attachment.name ?? "");
+  const name = useAuiState(({ attachment }) => attachment.name);
   const isImage = useAuiState(({ attachment }) => attachment.type === "image");
   const contentType = useAuiState(
     ({ attachment }) =>
@@ -364,7 +364,7 @@ const PastedTextAttachmentUI: FC<{
     if (inlining) return;
     setInlining(true);
     void readPastedText(attachment)
-      .then((text) => {
+      .then(async (text) => {
         // A slow read can outlive the send that cleared the composer and leave a stray draft.
         if (!mountedRef.current || text.length === 0) return;
         const composer = aui.composer();
@@ -377,7 +377,7 @@ const PastedTextAttachmentUI: FC<{
         }
         const current = composer.getState().text;
         composer.setText(current.length > 0 ? `${current}\n\n${text}` : text);
-        aui.attachment().remove();
+        await aui.attachment().remove();
       })
       .catch(() => undefined)
       .finally(() => {

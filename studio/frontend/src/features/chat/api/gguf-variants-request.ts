@@ -68,7 +68,9 @@ export function runBoundedVariantsRequest<T>(
     started = request(abort.signal);
   } catch (err) {
     abort.dispose();
-    return Promise.reject(err);
+    return Promise.reject(
+      err instanceof Error ? err : new Error(String(err)),
+    );
   }
   return withAbort(started, abort.signal).finally(() => { abort.dispose(); });
 }

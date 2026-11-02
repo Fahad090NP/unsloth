@@ -110,7 +110,7 @@ function parseErrorText(status: number, body: unknown): string {
 }
 
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
-  const body = await response.json().catch(() => null);
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(parseErrorText(response.status, body));
   }
@@ -133,6 +133,15 @@ function loadForge(): Promise<typeof forge> {
 
 let cachedPublicKeyPem: string | null = null;
 let cachedForgeKey: forge.pki.rsa.PublicKey | null = null;
+const getCachedForgeKey = (): forge.pki.rsa.PublicKey | null => cachedForgeKey;
+const getCachedPublicKeyPem = (): string | null => cachedPublicKeyPem;
+const cacheForgeKey = (
+  pem: string,
+  key: forge.pki.rsa.PublicKey,
+): void => {
+  cachedPublicKeyPem = pem;
+  cachedForgeKey = key;
+};
 
 export function clearProviderPublicKeyCache(): void {
   cachedPublicKeyPem = null;
@@ -142,8 +151,9 @@ export function clearProviderPublicKeyCache(): void {
 async function importProviderPublicKey(
   forceRefresh = false,
 ): Promise<forge.pki.rsa.PublicKey> {
-  if (!forceRefresh && cachedForgeKey) {
-    return cachedForgeKey;
+  const cached = getCachedForgeKey();
+  if (!forceRefresh && cached) {
+    return cached;
   }
   const response = await authFetch("/api/providers/public-key");
   const body = await parseJsonOrThrow<{ public_key: string }>(response);
@@ -151,13 +161,13 @@ async function importProviderPublicKey(
   if (!publicKeyPem) {
     throw new Error("Provider public key is missing.");
   }
-  if (!forceRefresh && cachedPublicKeyPem === publicKeyPem && cachedForgeKey) {
-    return cachedForgeKey;
+  const cachedForge = getCachedForgeKey();
+  if (!forceRefresh && getCachedPublicKeyPem() === publicKeyPem && cachedForge) {
+    return cachedForge;
   }
   const { pki } = await loadForge();
   const forgeKey = pki.publicKeyFromPem(publicKeyPem);
-  cachedPublicKeyPem = publicKeyPem;
-  cachedForgeKey = forgeKey;
+  cacheForgeKey(publicKeyPem, forgeKey);
   return forgeKey;
 }
 
@@ -262,7 +272,7 @@ export async function deleteProviderConfig(providerId: string): Promise<void> {
     return;
   }
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
+    const body: unknown = await response.json().catch(() => null);
     throw new Error(parseErrorText(response.status, body));
   }
 }
@@ -499,7 +509,7 @@ export async function cancelCodexOAuthFlow(
     { method: "DELETE" },
   );
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
+    const body: unknown = await response.json().catch(() => null);
     throw new Error(parseErrorText(response.status, body));
   }
 }
@@ -509,7 +519,7 @@ export async function cancelCodexOAuthFlow(
 export async function disconnectCodexOAuth(providerId: string): Promise<void> {
   const response = await authFetch(`/api/providers/${providerId}/oauth`, { method: "DELETE" });
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
+    const body: unknown = await response.json().catch(() => null);
     throw new Error(parseErrorText(response.status, body));
   }
 }

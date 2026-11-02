@@ -85,7 +85,7 @@ export function createReasoningDurationTracker(
 ) {
   let durations: number[] = [];
   // A group can close and reopen, so measure from the first sighting.
-  const startedAt: number[] = [];
+  const startedAt: (number | undefined)[] = [];
   let activeIndex: number | null = null;
   let groupCount = 0;
   const reasoningLength: number[] = [];
@@ -134,14 +134,10 @@ export function createReasoningDurationTracker(
       const at = now();
       finishGroupAt(at);
       for (let skipped = groupCount; skipped < index; skipped += 1) {
-        if (startedAt[skipped] === undefined) {
-          startedAt[skipped] = at;
-        }
+        startedAt[skipped] ??= at;
         measure(skipped, at);
       }
-      if (startedAt[index] === undefined) {
-        startedAt[index] = at;
-      }
+      startedAt[index] ??= at;
       activeIndex = index;
       groupCount = Math.max(groupCount, index + 1);
       serverSummaryTargetIndex = index;

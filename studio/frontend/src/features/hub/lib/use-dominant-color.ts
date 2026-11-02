@@ -88,11 +88,15 @@ export function useDominantColor(url: string | null): string | null {
       promise = extractColor(url);
       inflight.set(url, promise);
     }
-    promise.then((next) => {
-      colorCache.set(url, next);
-      inflight.delete(url);
-      if (alive) setColor(next);
-    });
+    promise
+      .then((next) => {
+        colorCache.set(url, next);
+        inflight.delete(url);
+        if (alive) setColor(next);
+      })
+      .catch(() => {
+        inflight.delete(url);
+      });
     return () => {
       alive = false;
     };

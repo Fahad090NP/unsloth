@@ -48,8 +48,8 @@ function createRuntime(sessionScope: string) {
     migrateLegacy: (ids) =>
       api.migrateLegacy([...new Set([...ids, ...readLegacy()])]),
     readLegacy,
-    readFallback: journal.readFallback,
-    writeFallback: journal.writeFallback,
+    readFallback: journal.readFallback.bind(journal),
+    writeFallback: journal.writeFallback.bind(journal),
     onUnsupported: () =>
       toast.info(
         "This server saves pins in this browser. They will sync after the server is updated.",
@@ -59,8 +59,8 @@ function createRuntime(sessionScope: string) {
   const sync = createPinnedChatsSync({
     ...transport,
     readLegacy,
-    readPending: journal.readPending,
-    writePending: journal.writePending,
+    readPending: journal.readPending.bind(journal),
+    writePending: journal.writePending.bind(journal),
     isRetryable: isRetryablePinError,
     publish: (pinnedIds) => { usePinnedChatsStore.setState({ pinnedIds }); },
     onError: (error) => {
@@ -83,7 +83,7 @@ function createRuntime(sessionScope: string) {
   });
   return {
     scope: sessionScope,
-    refresh: sync.refresh,
+    refresh: sync.refresh.bind(sync),
     reset(clearPending: boolean) {
       controller.abort();
       stopWatchingDeletes();
@@ -91,7 +91,7 @@ function createRuntime(sessionScope: string) {
       sync.reset();
       setPinnedChatsActions(null);
       if (clearPending) {
-        preserveFallbackPins(localStorage, journal.readFallback);
+        preserveFallbackPins(localStorage, journal.readFallback.bind(journal));
         journal.clear();
       }
     },

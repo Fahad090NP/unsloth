@@ -260,13 +260,27 @@ export function HuggingFaceCacheFolders({
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<CacheBreakdownEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [appliedLoad, setAppliedLoad] = useState({
+    open,
+    key: entry.key,
+    version,
+  });
+  if (
+    appliedLoad.open !== open ||
+    appliedLoad.key !== entry.key ||
+    appliedLoad.version !== version
+  ) {
+    setAppliedLoad({ open, key: entry.key, version });
+    if (open) {
+      setRows(null);
+      setError(null);
+    }
+  }
   useEffect(() => {
     if (!open) {
       return;
     }
     let current = true;
-    setRows(null);
-    setError(null);
     (loadCacheBreakdown(entry.key).then(
       (next) => {
         if (current) {
@@ -275,7 +289,7 @@ export function HuggingFaceCacheFolders({
           );
         }
       },
-      (reason) => {
+      (reason: unknown) => {
         if (current) {
           setError(reason instanceof Error ? reason.message : String(reason));
         }
@@ -425,7 +439,11 @@ export function CacheStorageRows({ cache }: { cache: CacheStorage }) {
               {t("settings.resources.storage.caches.empty")}
             </p>
           ) : (
-            entries.map((entry) => (
+            entries.map((entry) => {
+              const optInCostKey = entry.optIn
+                ? OPT_IN_COST_KEYS[entry.key]
+                : undefined;
+              return (
               <div
                 key={entry.key}
                 className="flex flex-wrap items-start justify-between gap-2 border-t border-border/60 py-2.5"
@@ -440,9 +458,9 @@ export function CacheStorageRows({ cache }: { cache: CacheStorage }) {
                   >
                     {(entry.measuredPaths ?? entry.paths)[0] ?? ""}
                   </span>
-                  {entry.optIn && OPT_IN_COST_KEYS[entry.key] ? (
+                  {optInCostKey ? (
                     <span className="text-xs text-amber-600 dark:text-amber-400">
-                      {t(OPT_IN_COST_KEYS[entry.key]!)}
+                      {t(optInCostKey)}
                     </span>
                   ) : null}
                   {entry.blockedReason ? (
@@ -496,7 +514,8 @@ export function CacheStorageRows({ cache }: { cache: CacheStorage }) {
                   </div>
                 ) : null}
               </div>
-            ))
+              );
+            })
           )}
         </div>
       ) : null}

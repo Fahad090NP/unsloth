@@ -243,8 +243,6 @@ function statusDotClass(status: ApiMonitorEntry["status"]): string {
       return "bg-amber-500";
     case "completed":
       return "bg-emerald-500";
-    default:
-      return "bg-emerald-500";
   }
 }
 
@@ -257,8 +255,6 @@ function statusTextClass(status: ApiMonitorEntry["status"]): string {
     case "cancelled":
       return "text-amber-600 dark:text-amber-500";
     case "completed":
-      return "text-emerald-600 dark:text-emerald-500";
-    default:
       return "text-emerald-600 dark:text-emerald-500";
   }
 }
@@ -425,14 +421,18 @@ function CopyButton({
         variant="ghost"
         size="sm"
         aria-label={label}
-        onClick={async () => {
-          if (await copyToClipboard(value)) {
-            setCopied(true);
-            if (timerRef.current !== undefined) {
-              window.clearTimeout(timerRef.current);
-            }
-            timerRef.current = window.setTimeout(() => { setCopied(false); }, 1800);
-          }
+        onClick={() => {
+          copyToClipboard(value)
+            .then((ok) => {
+              if (ok) {
+                setCopied(true);
+                if (timerRef.current !== undefined) {
+                  window.clearTimeout(timerRef.current);
+                }
+                timerRef.current = window.setTimeout(() => { setCopied(false); }, 1800);
+              }
+            })
+            .catch(() => undefined);
         }}
         className={cn(
           "size-7 shrink-0 rounded-full p-0",
@@ -1949,7 +1949,7 @@ export function ApiMonitorPage(): ReactElement {
                 <QuickStart
                   baseUrl={baseUrl}
                   model={
-                    (served.find((m) => m.active) ?? served[0])?.name ?? null
+                    (served.find((m) => m.active) ?? served.at(0))?.name ?? null
                   }
                 />
               )}

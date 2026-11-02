@@ -65,11 +65,11 @@ export function createFenceHighlightQueue(options: FenceHighlightQueueOptions): 
       entry = entries.values().next().value;
       if (!entry) return;
       const current = entry;
-      let complete = false;
+      const progress = { complete: false };
       options.commit(() => {
-        if (entries.has(current)) complete = current.step();
+        if (entries.has(current)) progress.complete = current.step();
       });
-      if (entries.delete(current) && !complete) entries.add(current);
+      if (entries.delete(current) && !progress.complete) entries.add(current);
     } catch (error) {
       if (entry) entries.delete(entry);
       else entries.clear();
@@ -90,7 +90,9 @@ export function createFenceHighlightQueue(options: FenceHighlightQueueOptions): 
         try {
           options.commit(() => {
             while (entries.size > 0) {
-              const entry = entries.values().next().value!;
+              const nextEntry = entries.values().next();
+              if (nextEntry.done) break;
+              const entry = nextEntry.value;
               entries.delete(entry);
               try {
                 entry.finish();

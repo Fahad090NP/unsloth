@@ -141,7 +141,6 @@ export function separatePresentation(
     case "stopping":
       return { ...presentation, status: "Stopping…" };
     case null:
-    case undefined:
     default:
       return presentation;
   }

@@ -501,7 +501,7 @@ const ToolFallbackImpl: ToolCallMessagePartComponent = ({
     SANDBOX_FILE_TOOLS.has(toolName) && isSandboxToolResult(result)
       ? (result as { text: string; sessionId: string; files?: SandboxFile[] })
       : null;
-  const shown = created
+  const shown: unknown = created
     ? created.text
     : widget?.images?.length
       ? { text: widget.text, images: widget.images }

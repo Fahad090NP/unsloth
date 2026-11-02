@@ -14,12 +14,15 @@ export const toolArgText = (value: unknown): string => {
     if (typeof value === "object") {
       // Serialised, not coerced: `String({"toString":null})` throws.
       // `?? ""` covers a toJSON returning undefined.
-      const json = JSON.stringify(value) ?? "";
+      const json = JSON.stringify(value);
       return json.length > MAX_SERIALISED_LENGTH
         ? `${json.slice(0, MAX_SERIALISED_LENGTH)}…`
         : json;
     }
     // Not a template literal: `String(sym)` works, `${sym}` throws on symbols.
+    if (typeof value === "symbol" || typeof value === "function") {
+      return value.toString();
+    }
     return String(value);
   } catch {
     // Load-bearing: Firefox and Safari throw on deep nesting.

@@ -375,7 +375,11 @@ function ReasoningCopyButton({
   return (
     <IconActionButton
       label={copied ? "Copied" : "Copy reasoning"}
-      onClick={handleCopy}
+      onClick={() => {
+        handleCopy().catch((error: unknown) => {
+          console.error("Copy reasoning failed", error);
+        });
+      }}
     >
       {copied ? (
         <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="size-3" />
@@ -531,14 +535,12 @@ function ReasoningTail({
   const boxRef = useRef<HTMLDivElement>(null);
   const capped = cappable && !expanded;
   // Sticky while expanded: an unbounded box cannot measure its cap, and a trace only grows.
-  const [overflowing, setOverflowing] = useState(false);
+  const [overflowingState, setOverflowing] = useState(false);
+  const overflowing = cappable && overflowingState;
   useLayoutEffect(() => {
     const box = boxRef.current;
     const content = box?.firstElementChild as HTMLElement | null | undefined;
-    if (!cappable) {
-      setOverflowing(false);
-      return;
-    }
+    if (!cappable) return;
     if (!capped || !box || !content) return;
     const check = () => { setOverflowing(content.offsetHeight > box.clientHeight); };
     const observer = new ResizeObserver(check);
@@ -799,9 +801,7 @@ const ReasoningGroupBlock = ({
 
   useEffect(() => {
     if (isReasoningStreaming) {
-      if (startTimeRef.current === null) {
-        startTimeRef.current = Date.now();
-      }
+      startTimeRef.current ??= Date.now();
     } else if (startTimeRef.current !== null) {
       const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000);
       setDuration(elapsed);

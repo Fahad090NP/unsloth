@@ -1013,7 +1013,7 @@ export function GgufDownloadCard({
       );
     },
     successMessage: () =>
-      `Deleted ${repoId} ${deleteTargetLabel ?? deleteTarget}`,
+      `Deleted ${repoId} ${deleteTargetLabel ?? deleteTarget ?? ""}`,
     errorToast: (err) => ({
       title: err instanceof Error ? err.message : "Failed to delete",
     }),
@@ -1297,7 +1297,7 @@ export function GgufDownloadCard({
             <QuantOptionsMenu
               repoId={repoId}
               quant={selected.quant}
-              label={`${repoId} ${selectedLabel}`}
+              label={`${repoId} ${selectedLabel ?? ""}`}
               downloaded={Boolean(selected.downloaded)}
               canDelete={
                 Boolean(selected.downloaded || selected.partial) &&
@@ -1316,14 +1316,14 @@ export function GgufDownloadCard({
           )}
 
         {/* Run sets itself apart; the line only separates the download and update actions. */}
-        {(showUpdateAction || showDownloadAction) && !(showRunAction && onRun && selected) && (
+        {(showUpdateAction || showDownloadAction) && !(showRunAction && onRun) && (
           <CardDivider />
         )}
 
         {showUpdateAction && (
           <button
             type="button"
-            onClick={() => { if (selected) setUpdateTarget(selected.quant); }}
+            onClick={() => { setUpdateTarget(selected.quant); }}
             aria-label={`Update ${repoId}`}
             className="hub-action-btn ml-1 text-amber-700 dark:text-amber-300"
           >
@@ -1394,7 +1394,7 @@ export function GgufDownloadCard({
         )}
 
         {hubPlan && <span className="px-3 text-ui-12 text-muted-foreground">Downloading…</span>}
-        {showRunAction && onRun && selected && (
+        {showRunAction && onRun && (
           <ModelRunActionButton
             label={`Configure and run ${repoId} ${selectedLabel ?? selected.quant}`}
             loading={runPending}

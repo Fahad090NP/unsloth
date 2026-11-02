@@ -91,7 +91,7 @@ const CodeExecutionToolUIImpl: ToolCallMessagePartComponent = ({
   status,
   toolCallId,
 }) => {
-  const parsedArgs = (args as CodeExecutionArgs) ?? {};
+  const parsedArgs = args as CodeExecutionArgs;
   const kind = parsedArgs.kind ?? "bash";
   const command = toolArgText(parsedArgs.command);
   const path = toolArgText(parsedArgs.path);
@@ -148,7 +148,7 @@ const CodeExecutionToolUIImpl: ToolCallMessagePartComponent = ({
             <span>{runningLabel}</span>
           </div>
         ) : (
-          <CodeExecutionResultOutput result={result} />
+          <CodeExecutionResultOutput result={result as unknown} />
         )}
       </ToolFallbackContent>
     </ToolFallbackRoot>

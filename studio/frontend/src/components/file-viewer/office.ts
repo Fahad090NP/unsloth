@@ -141,7 +141,7 @@ function archive(bytes: Uint8Array): Reader {
       }
       return sizes.get(name);
     };
-    const head = (name: string, max: number) => {
+    const head = (name: string, max: number): Uint8Array | undefined => {
       if ((size(name) ?? 0) > max) throw new Error("File is too large to preview.");
       return read([name])[name];
     };
@@ -212,9 +212,11 @@ function growing(bytes: Uint8Array, view: DataView, entry: ZipEntry, max: number
     done: false,
     grow() {
       const before = length;
-      while (!part.done && length < before + (1 << 20)) {
+      let pushed = 0;
+      while (!part.done && pushed < 1 << 20) {
         inflater.push(data.subarray(from, from + 16384), from + 16384 >= data.length);
         from += 16384;
+        pushed += 16384;
         if (from >= data.length || length >= max) part.done = true;
       }
       charge(length - before);
@@ -225,8 +227,9 @@ function growing(bytes: Uint8Array, view: DataView, entry: ZipEntry, max: number
 }
 
 function xml(files: Unzipped, path: string): Document | null {
+  if (!Object.hasOwn(files, path)) return null;
   const bytes = files[path];
-  return bytes ? parseXml(strFromU8(bytes)) : null;
+  return parseXml(strFromU8(bytes));
 }
 
 function parseXml(text: string): Document | null {
@@ -436,7 +439,7 @@ function formatFraction(value: number, format: string): string | null {
   if (!match) return null;
   const text = match[0];
   const wholeCode = match[1];
-  const denominatorCode = match[2] ?? "";
+  const denominatorCode = match.at(2) ?? "";
   const abs = Math.abs(value);
   let whole = wholeCode ? Math.floor(abs) : 0;
   const rest = abs - whole;
@@ -756,7 +759,8 @@ function readStyles(doc: Document | null): { styles: CellStyle[]; cut: boolean }
   const styles = (xfs ? children(xfs, "xf") : []).map((xf) => {
     const id = Number(xf.getAttribute("numFmtId") ?? 0);
     const font = fonts[Number(xf.getAttribute("fontId") ?? 0)];
-    return { format: formats.get(id) ?? BUILTIN_FORMATS[id] ?? localeFormat(id), ...font };
+    const builtin = Object.hasOwn(BUILTIN_FORMATS, id) ? BUILTIN_FORMATS[id] : undefined;
+    return { format: formats.get(id) ?? builtin ?? localeFormat(id), ...font };
   });
   return { styles, cut };
 }
@@ -773,8 +777,23 @@ function shiftFormula(formula: string, rows: number, columns: number): string {
     .map((part, index) =>
       index % 2
         ? part
-        : part.replace(REFERENCE, (...m: string[]) => {
-            const [, lead, ca, c, ra, r, c1a, c1, c2a, c2, r1a, r1, r2a, r2] = m;
+        : part.replace(REFERENCE, (...m: (string | undefined)[]) => {
+            const [
+              ,
+              lead = "",
+              ca = "",
+              c,
+              ra = "",
+              r = "",
+              c1a = "",
+              c1,
+              c2a = "",
+              c2 = "",
+              r1a = "",
+              r1 = "",
+              r2a = "",
+              r2 = "",
+            ] = m;
             if (c !== undefined) return `${lead}${column(ca, c)}${row(ra, r)}`;
             if (c1 !== undefined) return `${lead}${column(c1a, c1)}:${column(c2a, c2)}`;
             return `${lead}${row(r1a, r1)}:${row(r2a, r2)}`;
@@ -806,24 +825,26 @@ function attribute(attributes: string, name: string): string | null {
     attributePatterns.set(name, pattern);
   }
   const match = pattern.exec(attributes);
-  return match ? decodeXml(match[1] ?? match[2] ?? "") : null;
+  return match ? decodeXml(match.at(1) ?? match.at(2) ?? "") : null;
 }
 
 const openTag = (name: string) => new RegExp(`<(?:[\\w.-]+:)?${name}(?=[\\s/>])([^>]*?)(/)?>`, "g");
 const closeTag = (name: string) => new RegExp(`</(?:[\\w.-]+:)?${name}\\s*>`, "g");
 
 function* elements(text: string, open: RegExp, close: RegExp): Generator<[string, string]> {
-  open.lastIndex = 0;
-  for (let match = open.exec(text); match; match = open.exec(text)) {
+  const openPattern = new RegExp(open.source, open.flags);
+  const closePattern = new RegExp(close.source, close.flags);
+  openPattern.lastIndex = 0;
+  for (let match = openPattern.exec(text); match; match = openPattern.exec(text)) {
     if (match[2]) {
       yield [match[1], ""];
       continue;
     }
-    close.lastIndex = open.lastIndex;
-    const end = close.exec(text);
+    closePattern.lastIndex = openPattern.lastIndex;
+    const end = closePattern.exec(text);
     if (!end) return;
-    const inner = text.slice(open.lastIndex, end.index);
-    open.lastIndex = close.lastIndex;
+    const inner = text.slice(openPattern.lastIndex, end.index);
+    openPattern.lastIndex = closePattern.lastIndex;
     yield [match[1], inner];
   }
 }
@@ -875,9 +896,10 @@ function readSheet(
   const rows: (SheetCell | undefined)[][] = [];
   const widths: (number | undefined)[] = [];
   const hidden = { rows: new Set<number>(), columns: new Set<number>() };
-  text = flattenMarkup(text);
-  const dataAt = text.search(SHEET_DATA);
-  const head = dataAt === -1 ? text : text.slice(0, dataAt);
+  const state = budget;
+  const content = flattenMarkup(text);
+  const dataAt = content.search(SHEET_DATA);
+  const head = dataAt === -1 ? content : content.slice(0, dataAt);
   for (const [attrs] of elements(head, COL_OPEN, COL_CLOSE)) {
     const min = Number(attribute(attrs, "min") ?? 1);
     const max = Math.min(Number(attribute(attrs, "max") ?? min), limits.columns);
@@ -889,7 +911,7 @@ function readSheet(
     }
   }
   if (dataAt === -1) return { name, rows, widths, truncated: false, hidden };
-  const data = text.slice(dataAt);
+  const data = content.slice(dataAt);
   // Shared formulas: the master cell holds the text and comes before the cells sharing it.
   const shared = new Map<string, { formula: string; row: number; col: number }>();
   let truncated = false;
@@ -897,11 +919,11 @@ function readSheet(
   for (const [rowAttrs, rowBody] of elements(data, ROW_OPEN, ROW_CLOSE)) {
     const r = Number(attribute(rowAttrs, "r") ?? nextRow + 1) - 1;
     nextRow = r + 1;
-    if (r >= limits.rows || budget.cells <= 0) {
+    if (r >= limits.rows || state.cells <= 0) {
       truncated = true;
       break;
     }
-    budget.cells--;
+    state.cells--;
     const rowHidden = isTrue(attribute(rowAttrs, "hidden"));
     if (rowHidden) hidden.rows.add(r);
     if (rowHidden && !rowBody.includes("shared")) continue;
@@ -941,7 +963,7 @@ function readSheet(
       }
       if (value === "" && !cellStyle.bold) continue;
       cells[col] = { text: value.slice(0, MAX_CELL_TEXT), numeric, bold: cellStyle.bold, italic: cellStyle.italic };
-      budget.cells--;
+      state.cells--;
     }
     if (!rowHidden) rows[r] = cells;
   }
@@ -1048,14 +1070,15 @@ function sharedStrings(part: Growing | undefined): (index: number) => string | u
   let ends = new Uint32Array(1024);
   let count = 0;
   const texts = new Map<number, string>();
-  let at = part ? 0 : -1;
+  const source = part;
+  let at = source ? 0 : -1;
   return (index) => {
-    while (part && at !== -1 && count <= index && count < MAX_SHARED_STRINGS) {
-      const open = findTag(part.data, at, "si", false);
-      const close = open && !open.empty ? findTag(part.data, open.end, "si", true) : null;
+    while (source && at !== -1 && count <= index && count < MAX_SHARED_STRINGS) {
+      const open = findTag(source.data, at, "si", false);
+      const close = open && !open.empty ? findTag(source.data, open.end, "si", true) : null;
       if (!open || (!open.empty && !close)) {
-        if (part.done) at = -1;
-        else part.grow();
+        if (source.done) at = -1;
+        else source.grow();
         continue;
       }
       if (count === starts.length) {
@@ -1067,12 +1090,12 @@ function sharedStrings(part: Growing | undefined): (index: number) => string | u
       count++;
       at = close ? close.end : open.end;
     }
-    if ((part?.cut || count >= MAX_SHARED_STRINGS) && index >= count) return undefined;
-    if (!part || !Number.isInteger(index) || index < 0 || index >= count) return "";
+    if ((source?.cut || count >= MAX_SHARED_STRINGS) && index >= count) return undefined;
+    if (!source || !Number.isInteger(index) || index < 0 || index >= count) return "";
     let text = texts.get(index);
     if (text === undefined) {
       const start = starts[index];
-      text = stringText(strFromU8(part.data.subarray(start, Math.min(ends[index], start + MAX_CELL_BYTES))));
+      text = stringText(strFromU8(source.data.subarray(start, Math.min(ends[index], start + MAX_CELL_BYTES))));
       texts.set(index, text);
     }
     return text;
@@ -1124,6 +1147,7 @@ export function readXlsx(bytes: Uint8Array, limits: SheetLimits = FULL_SHEET_LIM
   const stylesPath = partOf("styles", "xl/styles.xml");
   let strings: ((index: number) => string | undefined) | undefined;
   let missed = false;
+  const hasMissed = () => missed;
   const string = (index: number) => {
     const text = (strings ??= sharedStrings(read.open(stringsPath, MAX_SHEET_XML_BYTES)))(index);
     missed ||= text === undefined;
@@ -1164,7 +1188,7 @@ export function readXlsx(bytes: Uint8Array, limits: SheetLimits = FULL_SHEET_LIM
     const { text, cut } = sheetText(part, Math.min(limits.rows, budget.cells), whole);
     missed = false;
     const parsed = readSheet(text, sheet.getAttribute("name") ?? "Sheet", string, style, date1904, budget, limits);
-    if (cut || missed) parsed.truncated = true;
+    if (cut || hasMissed()) parsed.truncated = true;
     sheets.push(parsed);
   }
   return sheets;
@@ -1261,7 +1285,7 @@ const IMAGE_TYPES: Record<string, string> = {
 };
 
 const imageType = (path: string) => {
-  const extension = path.split(".").pop()!.toLowerCase();
+  const extension = path.split(".").at(-1)?.toLowerCase() ?? "";
   return Object.hasOwn(IMAGE_TYPES, extension) ? IMAGE_TYPES[extension] : undefined;
 };
 
@@ -1296,7 +1320,12 @@ const MAX_SLIDE_PIXELS = 128 * 1024 * 1024;
 
 function imagePixels(b: Uint8Array): number | undefined {
   const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
-  const ascii = (at: number, text: string) => [...text].every((c, i) => b[at + i] === c.charCodeAt(0));
+  const ascii = (at: number, text: string) => {
+    for (let i = 0; i < text.length; i++) {
+      if (b[at + i] !== text.charCodeAt(i)) return false;
+    }
+    return true;
+  };
   if (b.length >= 24 && ascii(1, "PNG")) return view.getUint32(16) * view.getUint32(20);
   if (b.length >= 10 && ascii(0, "GIF8")) return view.getUint16(6, true) * view.getUint16(8, true);
   if (b.length >= 26 && ascii(0, "BM")) {
@@ -1397,7 +1426,7 @@ function readChart(doc: Document, budget: number): { caption?: string; table: st
   const series = serNodes.slice(0, MAX_CHART_SERIES).map((ser) => {
     const tx = children(ser, "tx")[0];
     return {
-      name: clip((tx && (cache(tx)[0] ?? first(tx, "v")?.textContent)) ?? ""),
+      name: clip((tx && (cache(tx).at(0) ?? first(tx, "v")?.textContent)) ?? ""),
       categories: cache(children(ser, "cat")[0] ?? children(ser, "xVal")[0]),
       values: cache(children(ser, "val")[0] ?? children(ser, "yVal")[0]),
     };
@@ -1409,7 +1438,7 @@ function readChart(doc: Document, budget: number): { caption?: string; table: st
   for (let i = 0; i < count; i++) table.push([categories[i] ?? String(i + 1), ...series.map((s) => s.values[i] ?? "")]);
   if (cut) table.push(["…"]);
   const title = first(doc, "title");
-  const caption = title ? clip(all(title, "t").map((t) => t.textContent ?? "").join("")) : "";
+  const caption = title ? clip(all(title, "t").map((t) => t.textContent || "").join("")) : "";
   return { caption: caption || undefined, table };
 }
 
@@ -1421,7 +1450,7 @@ function paragraphText(p: Element): string {
       child.localName === "br"
         ? "\n"
         : child.localName === "r" || child.localName === "fld"
-          ? all(child, "t").map((t) => t.textContent ?? "").join("")
+          ? all(child, "t").map((t) => t.textContent || "").join("")
           : "",
     )
     .join(""));
@@ -1455,7 +1484,7 @@ function readFrame(shape: Element, cx: number, cy: number): SlideBox["frame"] {
   let flipV = isTrue(xfrm?.getAttribute("flipV") ?? null);
   for (let group = shape.parentElement; group; group = group.parentElement) {
     if (group.localName !== "grpSp") continue;
-    const box = children(group, "grpSpPr").flatMap((props) => children(props, "xfrm"))[0];
+    const box = children(group, "grpSpPr").flatMap((props) => children(props, "xfrm")).at(0);
     const [gx, gy] = point(box, "off", "x", "y") ?? [0, 0];
     const [gw, gh] = point(box, "ext", "cx", "cy") ?? [0, 0];
     const [ox, oy] = point(box, "chOff", "x", "y") ?? [0, 0];
@@ -1532,8 +1561,9 @@ export function readPptx(bytes: Uint8Array, { images = true, maxSlides = MAX_SLI
       continue;
     }
     const part = read([path, relsPath(path)], MAX_XML_PART_BYTES);
+    if (!Object.hasOwn(part, path)) continue;
     const slideXml = part[path];
-    if (!slideXml || HIDDEN_SLIDE.test(strFromU8(slideXml.subarray(0, 16384)))) continue;
+    if (HIDDEN_SLIDE.test(strFromU8(slideXml.subarray(0, 16384)))) continue;
     if (slides.length === maxSlides) {
       truncated = true;
       break;
@@ -1553,6 +1583,7 @@ export function readPptx(bytes: Uint8Array, { images = true, maxSlides = MAX_SLI
     let left = MAX_SLIDE_ITEMS;
     let pixelsLeft = MAX_SLIDE_PIXELS;
     let cut = false;
+    const wasCut = () => cut;
     const keep = (box: SlideBox): boolean => {
       boxes.push(box);
       textLeft -= boxText(box);
@@ -1629,8 +1660,9 @@ export function readPptx(bytes: Uint8Array, { images = true, maxSlides = MAX_SLI
           cut = true;
           return false;
         }
-        const data = read([target])[target];
-        if (!data) return false;
+        const files = read([target]);
+        if (!Object.hasOwn(files, target)) return false;
+        const data = files[target];
         const pixels = picturePixels(data);
         if (pixels === undefined) {
           cut = true;
@@ -1672,7 +1704,7 @@ export function readPptx(bytes: Uint8Array, { images = true, maxSlides = MAX_SLI
     };
     const tree = first(doc, "spTree");
     if (tree) walk(tree);
-    if (cut) boxes.push({ paragraphs: [{ text: "…" }] });
+    if (wasCut()) boxes.push({ paragraphs: [{ text: "…" }] });
     slides.push({ boxes });
     if (textLeft <= 0) {
       truncated = index < slidePaths.length - 1;

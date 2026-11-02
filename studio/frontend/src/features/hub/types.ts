@@ -15,7 +15,7 @@ export type {
   InventoryRow,
   LocalInventoryRow,
   LocalSource,
-} from "@/features/hub/inventory";
+} from "./inventory";
 
 export type ModelsTab = "discover" | "downloaded";
 

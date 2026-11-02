@@ -22,7 +22,6 @@ import { Scroll01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   type KeyboardEvent,
-  type MutableRefObject,
   type ReactElement,
   type RefObject,
   useCallback,
@@ -52,7 +51,7 @@ const skillMentionFormatter: Unstable_DirectiveFormatter = {
 
     // Same pattern as the send path, so a chip and a catalog lookup agree on what a mention is.
     for (const match of text.matchAll(SKILL_MENTION_PATTERN)) {
-      const whitespace = match[1] ?? "";
+      const whitespace = match[1] || "";
       const mentionStart = match.index + whitespace.length;
       if (mentionStart > lastIndex) {
         segments.push({
@@ -60,7 +59,7 @@ const skillMentionFormatter: Unstable_DirectiveFormatter = {
           text: text.slice(lastIndex, mentionStart),
         });
       }
-      const label = match[2] ?? "";
+      const label = match[2] || "";
       segments.push({
         kind: "mention",
         type: "skill",
@@ -304,7 +303,7 @@ export function useTextareaSkillMentions({
   text: string;
   setText: (text: string) => void;
   inputRef: RefObject<HTMLTextAreaElement | null>;
-  composingRef: MutableRefObject<boolean>;
+  composingRef: RefObject<boolean>;
   enabled: boolean;
 }) {
   const t = useT();

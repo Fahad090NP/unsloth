@@ -34,7 +34,7 @@ export function isTextEntryFocused(exceptFor?: string): boolean {
 
 /** Escape and Enter belong to the IME while composing; isComposing on WebKit, 229 on Chromium. */
 export function isImeComposing(event: KeyboardEvent): boolean {
-  return event.isComposing || event.keyCode === 229;
+  return event.isComposing || event.key === "Process";
 }
 
 /** Checked at press time: a dialog leaves the route mounted and need not re-render `enabled`. */

@@ -707,7 +707,7 @@ function ModelPicker({
     if (connection) return `${connection.provider} · ${connection.model}`;
     const option = settings.models.find((m) => m.name === name);
     if (option?.kind === "fine_tune" && option.label) return option.label;
-    const key = DECISION_MODEL_LABELS[name];
+    const key: TranslationKey | undefined = DECISION_MODEL_LABELS[name];
     if (!key) return name;
     return isClefDecisionModel(name)
       ? t(key)
@@ -1062,7 +1062,7 @@ export function DecisionTryDialog({
           </span>
           <span>
             {t("decisions.inputTokens", {
-              count: integer.format(outcome.response.usage?.input_tokens ?? 0),
+              count: integer.format(outcome.response.usage.input_tokens),
             })}
           </span>
           <span className="font-mono text-ui-12">{outcome.response.model}</span>

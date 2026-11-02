@@ -190,12 +190,21 @@ export function ApiExamplesPanel({
   const panelRef = useRef<HTMLDivElement | null>(null);
   const scrollTarget = useSettingsDialogStore((s) => s.scrollTarget);
   // Picking the tab mounts the card that takes the request.
+  const [handledTarget, setHandledTarget] = useState<
+    typeof scrollTarget | undefined
+  >(undefined);
+  if (handledTarget !== scrollTarget) {
+    setHandledTarget(scrollTarget);
+    const tab = scrollTarget ? TAB_FOR_TARGET[scrollTarget] : undefined;
+    if (tab && !(tab === "decision" && !isOwner)) {
+      setKind(tab);
+    }
+  }
   useEffect(() => {
     const tab = scrollTarget ? TAB_FOR_TARGET[scrollTarget] : undefined;
     const el = panelRef.current;
     if (!(scrollTarget && tab && el)) return;
     if (tab === "decision" && !isOwner) return;
-    setKind(tab);
     return pinUntilUserScrolls(el, scrollTarget);
   }, [scrollTarget, isOwner]);
   const keyless = { keylessScope, keylessExposure };

@@ -334,7 +334,7 @@ export function useSttSidecar({
         if (sttLoadAbort.current === controller) sttLoadAbort.current = null;
       }
     },
-    [refreshSttStatus, setLastSttRepo],
+    [activeRef, refreshSttStatus, setBusy, setLastSttRepo],
   );
 
   return {

@@ -35,7 +35,7 @@ function stableJson(value: unknown): string {
       .map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`)
       .join(",")}}`;
   }
-  return JSON.stringify(value) ?? "null";
+  return JSON.stringify(value);
 }
 
 export function chatContentPartAttachmentSignature(
@@ -70,7 +70,7 @@ export async function chatContentPartAttachmentIdFromSignature(
   signature: string,
 ): Promise<string> {
   let hex: string | null = null;
-  const subtle = globalThis.crypto.subtle;
+  const subtle: SubtleCrypto | undefined = globalThis.crypto.subtle;
   if (subtle) {
     try {
       const digest = await subtle.digest(
@@ -116,6 +116,11 @@ export function emitChatAttachmentDeleted(
   event: ChatAttachmentDeletedEvent,
 ): void {
   for (const listener of [...listeners]) {
-    void listener(event);
+    const pending = listener(event);
+    if (pending instanceof Promise) {
+      pending.catch((error: unknown) => {
+        console.error("Chat attachment deletion listener failed", error);
+      });
+    }
   }
 }

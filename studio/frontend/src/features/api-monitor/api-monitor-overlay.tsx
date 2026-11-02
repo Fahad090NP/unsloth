@@ -100,8 +100,6 @@ function statusDotClass(status: ApiMonitorEntry["status"]): string {
       return "bg-amber-500";
     case "completed":
       return "bg-emerald-500";
-    default:
-      return "bg-emerald-500";
   }
 }
 
@@ -314,7 +312,7 @@ function ApiMonitorPanel({
   const openApiPage = (requestId?: string): void => {
     if (requestId) focusRequest(requestId);
     close();
-    void navigate({ to: "/api-monitor" });
+    navigate({ to: "/api-monitor" }).catch(() => undefined);
   };
   const isPresent = useIsPresent();
   const [constraintsElement, setConstraintsElement] =

@@ -50,7 +50,9 @@ export const ChatDictationBar: FC<{
   const [elapsed, setElapsed] = useState(0);
   const transcribingRef = useRef(false);
   // Extra slot: newest sample lands here; the last visible bar slides toward it.
-  const barsRef = useRef<number[]>(new Array(BAR_COUNT + 1).fill(0));
+  const barsRef = useRef<number[]>(
+    Array.from({ length: BAR_COUNT + 1 }, () => 0),
+  );
   const rowRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -148,7 +150,7 @@ export const ChatDictationBar: FC<{
       transcribingRef.current = false;
       setTranscribing(null);
       setElapsed(0);
-      barsRef.current = new Array(BAR_COUNT + 1).fill(0);
+      barsRef.current = Array.from({ length: BAR_COUNT + 1 }, () => 0);
     };
   }, [isDictating]);
 

@@ -99,7 +99,7 @@ export function engineClipboardIsMapped(
   }
   let mapped = false;
   try {
-    const ua = view.navigator.userAgent ?? "";
+    const ua = view.navigator.userAgent;
     if (
       /Chrome\/|Chromium\/|Edg\//.test(ua) &&
       !/\bAppleWebKit\b(?!.*Chrome)/.test(ua)
@@ -137,7 +137,7 @@ function nativeWouldEmitAlt(image: HTMLImageElement): boolean {
   const computed = getComputedStyle(image);
   if (computed.display === "none") return false;
   if (computed.visibility !== "visible") return false;
-  const selectable = computed.userSelect ?? computed.webkitUserSelect;
+  const selectable = computed.userSelect;
   if (selectable === "none") return false;
   return true;
 }
@@ -340,13 +340,13 @@ export function attachThreadFastCopy(viewport: HTMLElement): () => void {
       viewport,
       engineClipboardIsMapped(view),
     );
-    if (decision.kind !== "fast") return;
+    if (decision.kind !== "fast" || !selection) return;
 
     let text: string;
     try {
       text = faithfulSelectionText(
-        selection!,
-        scopeElement(selection!, viewport),
+        selection,
+        scopeElement(selection, viewport),
       );
     } catch {
       // The patch failed; let the browser copy (slow and right beats fast and wrong).

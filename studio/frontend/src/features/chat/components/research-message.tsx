@@ -60,7 +60,7 @@ export function ResearchMessage(): ReactElement | null {
     }
   }, [runId, initialRun, ownsRun, session.following]);
 
-  const run = ownsRun ? (session.run ?? metadata.researchRun) : undefined;
+  const run = ownsRun ? session.run : undefined;
   if (!run) {
     if (fallbackText.trim()) {
       return (

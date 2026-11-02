@@ -51,7 +51,7 @@ export function convertPitchSupport(
 
 export function convertServerTask(
   caps: AudioConvertCaps | null,
-  workflowTasks: Readonly<Record<string, string>> | null | undefined,
+  workflowTasks: Readonly<Record<string, string | undefined>> | null | undefined,
   mode: ConvertMode,
 ): string | null {
   if (!caps?.modes.includes(mode) || !workflowTasks) return null;

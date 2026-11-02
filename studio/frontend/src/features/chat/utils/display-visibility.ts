@@ -47,8 +47,6 @@ export function defaultOpenFor(
       return false;
     case "auto":
       return active;
-    default:
-      return active;
   }
 }
 

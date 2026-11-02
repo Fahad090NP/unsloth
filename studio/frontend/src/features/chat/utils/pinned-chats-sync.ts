@@ -116,6 +116,8 @@ export function createPinnedChatsSync(options: PinnedChatsSyncOptions) {
   let generation = 0;
   let loaded = false;
   let confirmed: string[] | undefined;
+  const isLoaded = (): boolean => loaded;
+  const currentConfirmed = (): string[] | undefined => confirmed;
   let pending: PinOperation[] = [];
   let queue: Promise<void> = Promise.resolve();
   let refreshing: Promise<void> | undefined;
@@ -156,7 +158,9 @@ export function createPinnedChatsSync(options: PinnedChatsSyncOptions) {
 
   function rejected(error: unknown): Promise<void> {
     options.onError?.(error);
-    return Promise.reject(error);
+    return Promise.reject(
+      error instanceof Error ? error : new Error(String(error)),
+    );
   }
 
   function enqueue(task: (epoch: number) => Promise<void>): Promise<void> {
@@ -204,7 +208,7 @@ export function createPinnedChatsSync(options: PinnedChatsSyncOptions) {
   }
 
   async function hydrate(epoch: number, force = false): Promise<void> {
-    if (loaded && !force) {
+    if (isLoaded() && !force) {
       return;
     }
     const ids = validatePinnedIds(await options.load());
@@ -248,9 +252,11 @@ export function createPinnedChatsSync(options: PinnedChatsSyncOptions) {
         return;
       }
       const next =
-        validatePinnedIds(applyPinOperation(confirmed ?? [], operation)) ?? [];
-      const result = await options.compareAndSet(
-        confirmed?.slice(),
+        validatePinnedIds(applyPinOperation(currentConfirmed() ?? [], operation)) ?? [];
+      const result:
+        | { pinnedIds: string[] | undefined; applied: boolean }
+        | undefined = await options.compareAndSet(
+        currentConfirmed()?.slice(),
         next,
         operation,
       );
@@ -395,7 +401,11 @@ export function createPinnedChatsSync(options: PinnedChatsSyncOptions) {
       persist(next);
       pending = next;
       publish();
-      schedulePending();
+      for (const task of schedulePending()) {
+        task.catch((error: unknown) => {
+          console.error("Pinned chat sync task failed", error);
+        });
+      }
       const result = scheduled.get(operation.operationId);
       if (!result) {
         throw new Error("Pin operation was not scheduled");

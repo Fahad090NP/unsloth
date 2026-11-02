@@ -157,8 +157,9 @@ export function branchContextUsage(
       calibration = { context, estimated: usage.estimatedTokens };
     }
   });
-  if (calibration) {
-    const { context, estimated } = calibration;
+  const cal: { context: number; estimated: number } | null = calibration;
+  if (cal) {
+    const { context, estimated } = cal;
     const now = branchTokenEstimate(branch) ?? 0;
     const total = context >= estimated ? now + context - estimated : (now * context) / estimated;
     return estimatedUsage(Math.max(1, Math.round(total)));

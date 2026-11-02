@@ -46,7 +46,7 @@ function useVisible(element: HTMLElement | null): boolean {
   useEffect(() => {
     if (!element) return;
     const observer = new IntersectionObserver((entries) => {
-      const entry = entries[entries.length - 1];
+      const entry = entries.at(-1);
       if (entry) setVisible(entry.isIntersecting);
     });
     observer.observe(element);
@@ -76,8 +76,14 @@ function useLeadingText(file: File, enabled: boolean): { text: string } | "faile
     if (!enabled || done) return;
     let cancelled = false;
     queueParse(() => readAttachmentText(file, file.name, file.type), () => cancelled).then(
-      (read) => !cancelled && read && setState({ file, text: read.text.slice(0, TEXT_PREVIEW_CHARS) }),
-      () => !cancelled && setState({ file, text: null }),
+      (read) => {
+        if (!cancelled && read) {
+          setState({ file, text: read.text.slice(0, TEXT_PREVIEW_CHARS) });
+        }
+      },
+      () => {
+        if (!cancelled) setState({ file, text: null });
+      },
     );
     return () => {
       cancelled = true;

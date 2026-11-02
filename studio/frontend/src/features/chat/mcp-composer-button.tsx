@@ -191,7 +191,11 @@ export function McpComposerButton({
     if (dialogOpen) return;
     let cancelled = false;
     queueMicrotask(() => {
-      if (!cancelled) void refresh();
+      if (!cancelled) {
+        refresh().catch((error: unknown) => {
+          console.error("Refreshing the MCP server list failed", error);
+        });
+      }
     });
     return () => {
       cancelled = true;
@@ -287,12 +291,14 @@ export function McpComposerButton({
       disabled={!serversLoaded || pendingUrls.has(normalizeMcpUrl(opts.url))}
       onSelect={(e) => {
         e.preventDefault();
-        void toggleServer({
+        toggleServer({
           url: opts.url,
           displayName: opts.displayName,
           checked: !opts.enabled,
           existing: opts.existing,
           disablesWebSearch: opts.disablesWebSearch,
+        }).catch((error: unknown) => {
+          console.error("Toggling the MCP server failed", error);
         });
       }}
       onPointerEnter={opts.hint ? () => { setHintKey(opts.key); } : undefined}
@@ -329,7 +335,11 @@ export function McpComposerButton({
         open={menuOpen}
         onOpenChange={(open) => {
           setMenuOpen(open);
-          if (open) void refresh();
+          if (open) {
+            refresh().catch((error: unknown) => {
+              console.error("Refreshing the MCP server list failed", error);
+            });
+          }
         }}
       >
         <DropdownMenuTrigger asChild={true}>

@@ -263,8 +263,8 @@ export function capturePresetLoadConfig(): PresetLoadConfig | undefined {
     specDraftCacheDtype: snapshot.specDraftCacheDtype ?? null,
     ctxCheckpoints: snapshot.ctxCheckpoints ?? null,
     cacheRam: snapshot.cacheRam ?? null,
-    tensorParallel: snapshot.tensorParallel ?? false,
-    disableVision: snapshot.disableVision ?? false,
+    tensorParallel: snapshot.tensorParallel,
+    disableVision: snapshot.disableVision,
     ...(snapshot.gpuMemoryMode === "manual"
       ? { gpuMemoryMode: "manual" as const }
       : {}),
@@ -325,10 +325,10 @@ export function applyPresetLoadConfig(config?: PresetLoadConfig | null): void {
       specDraftCacheDtype: config.specDraftCacheDtype ?? null,
       ctxCheckpoints: config.ctxCheckpoints ?? null,
       cacheRam: config.cacheRam ?? null,
-      reasoningBudget: config.reasoningBudget ?? -1,
-      reasoningBudgetMessage: config.reasoningBudgetMessage ?? "",
-      tensorParallel: config.tensorParallel ?? false,
-      disableVision: config.disableVision ?? false,
+      reasoningBudget: config.reasoningBudget,
+      reasoningBudgetMessage: config.reasoningBudgetMessage,
+      tensorParallel: config.tensorParallel,
+      disableVision: config.disableVision,
       chatTemplateOverride: null,
       // Not carried by presets: enabling it always goes through its confirmation.
       mlxInt8Prefill: store.mlxInt8Prefill,

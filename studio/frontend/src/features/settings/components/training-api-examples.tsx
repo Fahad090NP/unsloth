@@ -65,10 +65,17 @@ export function TrainingApiExamples({
     (s) => s.trainingApiRequested,
   );
 
-  useEffect(() => {
-    if (!trainingApiRequested) return;
+  const [handledRequest, setHandledRequest] = useState<
+    typeof trainingApiRequested | undefined
+  >(undefined);
+  if (trainingApiRequested && handledRequest !== trainingApiRequested) {
+    setHandledRequest(trainingApiRequested);
     setRequest(trainingApiRequested);
-    useSettingsDialogStore.getState().consumeTrainingApiRequest();
+  }
+  useEffect(() => {
+    if (trainingApiRequested) {
+      useSettingsDialogStore.getState().consumeTrainingApiRequest();
+    }
   }, [trainingApiRequested]);
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";

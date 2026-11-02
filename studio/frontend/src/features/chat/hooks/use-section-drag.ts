@@ -175,12 +175,12 @@ export function useSectionDrag(
         ghost.style.transform = `translate3d(0, ${Math.round(top - ghostTop)}px, 0)`;
       }
       const blocks = drawnBlocks();
-      const drawn = blocks.map((element) => element.getAttribute(SECTION_ATTR)!);
+      const drawn = blocks.map((element) => element.getAttribute(SECTION_ATTR) ?? "");
       const others = blocks.filter((element) => element !== block);
       const hit = sectionLandingAt(
         others.map((element) => {
           const rect = element.getBoundingClientRect();
-          return { key: element.getAttribute(SECTION_ATTR)!, top: rect.top, bottom: rect.bottom };
+          return { key: element.getAttribute(SECTION_ATTR) ?? "", top: rect.top, bottom: rect.bottom };
         }),
         pointerY,
       );

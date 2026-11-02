@@ -74,11 +74,12 @@ export function pinGeminiTextThoughtSignature<T extends { type: string }>(
     return parts;
   }
   for (let index = parts.length - 1; index >= 0; index -= 1) {
-    if (parts[index].type !== "text") {
+    const part = parts[index];
+    if (part.type !== "text") {
       continue;
     }
     parts[index] = {
-      ...parts[index],
+      ...part,
       _google_thought_signature: thoughtSignature,
     };
     break;
@@ -103,8 +104,8 @@ export function appendGeminiAnswerReplayPart(
   parts.push({ ...part, afterToolCalls });
 }
 
-function replayPlacement<T extends { type: string }>(
-  parts: T[],
+function replayPlacement(
+  parts: readonly { type: string }[],
   afterToolCalls: number,
 ): { targetIndex: number; insertIndex: number } {
   let toolCallsSeen = 0;

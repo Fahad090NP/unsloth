@@ -58,7 +58,7 @@ export function parseCitations(result: unknown): Citation[] {
     const trimmed = result.trim();
     if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
       try {
-        const parsed = JSON.parse(trimmed);
+        const parsed: unknown = JSON.parse(trimmed);
         if (Array.isArray(parsed)) rows = parsed;
         else if (
           parsed &&

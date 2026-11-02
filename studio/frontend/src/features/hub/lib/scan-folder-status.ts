@@ -29,7 +29,6 @@ function permissionHint(userAgent: string): string {
     case "windows":
       return "Check the folder's security permissions, or allow Unsloth in Controlled Folder Access, then refresh the list.";
     case "other":
-    default:
       return "Check the folder's permissions, then refresh the list.";
   }
 }
@@ -66,7 +65,6 @@ export function scanFolderStatusCopy(
       };
     case "ok":
     case undefined:
-    default:
       return null;
   }
 }

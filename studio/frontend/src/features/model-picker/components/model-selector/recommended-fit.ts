@@ -84,6 +84,7 @@ export function matchesFormatFilter(
       return !isGgufId(id, hintedIsGguf) && !isMlxId(id);
     case "npu":
       return false;
+    case "all":
     default:
       return true;
   }

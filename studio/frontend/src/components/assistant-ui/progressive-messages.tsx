@@ -88,7 +88,8 @@ function restoreScrollAnchoring(viewport: HTMLElement | null): void {
 function pickAnchorRow(viewport: HTMLElement): Element | null {
   const fold = viewport.getBoundingClientRect().top;
   const rows = viewport.querySelectorAll("[data-role]");
-  let anchor: Element | null = rows.item(rows.length - 1);
+  let anchor: Element | null =
+    rows.length > 0 ? rows.item(rows.length - 1) : null;
   for (const row of rows) {
     if (row.getBoundingClientRect().bottom > fold) {
       anchor = row;
@@ -224,9 +225,9 @@ function useProgressiveMountWindow(
 
   // A run starting mid-widening drops the window: streaming and widening write the same scrollTop.
   const threadIsRunning = useAuiState(({ thread }) => thread.isRunning);
-  useEffect(() => {
-    if (threadIsRunning && mountWindow != null) setMountWindow(null);
-  }, [threadIsRunning, mountWindow]);
+  if (threadIsRunning && mountWindow != null) {
+    setMountWindow(null);
+  }
 
   // Captured against the scroll container; the correction assumes native anchoring is off.
   const anchorRef = useRef<
@@ -281,11 +282,13 @@ function useProgressiveMountWindow(
     anchorRef.current = null;
     const viewport = viewportRef.current;
     if (!captured || !viewport) return;
-    const [element, baseline] = captured.element.isConnected
-      ? [captured.element, captured as AnchorSample]
-      : captured.row?.isConnected && captured.rowSample
-        ? [captured.row, captured.rowSample]
-        : [null, null];
+    const pair: [Element | null, AnchorSample | null] =
+      captured.element.isConnected
+        ? [captured.element, captured]
+        : captured.row?.isConnected && captured.rowSample
+          ? [captured.row, captured.rowSample]
+          : [null, null];
+    const [element, baseline] = pair;
     if (!element || !baseline) return;
     const shift = anchorCorrection(baseline, sampleAnchor(viewport, element));
     // Call even with zero shift: it resyncs the hook's scroll bookkeeping.
@@ -314,11 +317,13 @@ function useProgressiveMountWindow(
         return;
       }
       // Fall back to the row if replaced; re-picking would re-base after the replacement's reflow.
-      const [element, baseline] = held.element.isConnected
-        ? [held.element, held.sample]
-        : held.row?.isConnected && held.rowSample
-          ? [held.row, held.rowSample]
-          : [null, null];
+      const pair: [Element | null, AnchorSample | null] =
+        held.element.isConnected
+          ? [held.element, held.sample]
+          : held.row?.isConnected && held.rowSample
+            ? [held.row, held.rowSample]
+            : [null, null];
+      const [element, baseline] = pair;
       if (!element || !baseline) {
         const replacement = pickAnchorRow(viewport);
         idleRef.current = replacement

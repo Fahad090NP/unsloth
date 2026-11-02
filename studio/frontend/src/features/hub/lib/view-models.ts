@@ -35,7 +35,7 @@ export {
 export {
   formatLocalUpdated,
   localSourceLabel,
-} from "@/features/hub/inventory";
+} from "../inventory";
 export { isGgufLike } from "./hf-model-meta";
 
 export const CAPABILITY_FILTER_OPTIONS: readonly {

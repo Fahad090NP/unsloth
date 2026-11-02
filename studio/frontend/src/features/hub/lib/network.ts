@@ -179,7 +179,7 @@ export function markRemoteNetworkOffline(
     failure !== undefined && (takesWindow || !lastFailureByOrigin.has(origin));
   const failureChanged =
     records && lastFailureByOrigin.get(origin)?.kind !== failure.kind;
-  if (records && failure != null) {
+  if (records) {
     lastFailureByOrigin.set(origin, failure);
   }
   if (!takesWindow) {

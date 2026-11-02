@@ -81,7 +81,7 @@ export function paragraphs(
   for (const { speaker, text: raw } of segments) {
     const text = raw.trim();
     if (!text) continue;
-    const last = result[result.length - 1];
+    const last = result.at(-1);
     if (last && last.speaker === speaker) last.text += ` ${text}`;
     else result.push({ speaker, text });
   }
@@ -118,16 +118,18 @@ export function detailsFrom(
     [value.words, "word"],
   ] as const) {
     if (!Array.isArray(list)) continue;
-    for (const item of list) {
-      if (!item || typeof item !== "object") continue;
+    for (const rawItem of list as unknown[]) {
+      if (!rawItem || typeof rawItem !== "object") continue;
+      const item = rawItem as Record<string, unknown>;
       const start = finiteSeconds(item.start);
       const end = finiteSeconds(item.end);
       if (start === null || end === null || end < start) continue;
-      if (typeof item[key] !== "string") continue;
-      if (key === "word") words.push({ start, end, word: item.word });
+      const text = item[key];
+      if (typeof text !== "string") continue;
+      if (key === "word") words.push({ start, end, word: text });
       else if (typeof item.speaker === "string" && item.speaker)
-        segments.push({ start, end, text: item.text, speaker: item.speaker });
-      else segments.push({ start, end, text: item.text });
+        segments.push({ start, end, text, speaker: item.speaker });
+      else segments.push({ start, end, text });
     }
   }
   // Records saved before the server sorted spans can carry diarized rows grouped per speaker.
@@ -135,13 +137,17 @@ export function detailsFrom(
     a.start - b.start || a.end - b.end;
   segments.sort(byTime);
   words.sort(byTime);
-  const speakers: TranscriptSpeaker[] = (
-    Array.isArray(value.speakers) ? value.speakers : []
-  )
-    .filter(
-      (item) => typeof item?.id === "string" && typeof item.label === "string",
-    )
-    .map(({ id, label }) => ({ id, label }));
+  const rawSpeakers: unknown[] = Array.isArray(value.speakers)
+    ? (value.speakers as unknown[])
+    : [];
+  const speakers: TranscriptSpeaker[] = rawSpeakers.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const candidate = item as { id?: unknown; label?: unknown };
+    return typeof candidate.id === "string" &&
+      typeof candidate.label === "string"
+      ? [{ id: candidate.id, label: candidate.label }]
+      : [];
+  });
   const raw = value.source as Partial<Record<string, unknown>> | null;
   const source: TranscriptSource | null =
     raw &&

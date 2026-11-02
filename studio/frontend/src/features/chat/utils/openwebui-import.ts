@@ -182,7 +182,8 @@ function contentWithDetailsToParts(content: string): unknown[] {
 
     const attributes = detailsAttributes(match[1]);
     const body = detailsBody(match[2], attributes.type === "reasoning");
-    if (attributes.type === undefined) {
+    const attributeType: string | undefined = attributes.type;
+    if (attributeType === undefined) {
       pushText(parts, match[0]);
     } else if (attributes.type === "tool_calls") {
       const result =
@@ -462,7 +463,8 @@ function collectNodes(chat: Dict): Node[] {
   const walk = (root: Node): void => {
     const stack: Node[] = [root];
     while (stack.length > 0) {
-      const node = stack.pop()!;
+      const node = stack.pop();
+      if (node === undefined) break;
       if (visited.has(node.id)) continue;
       if (ordered.length >= MAX_MESSAGES_PER_CHAT) return;
       visited.add(node.id);
@@ -479,7 +481,8 @@ function collectNodes(chat: Dict): Node[] {
   const reachable = new Set<string>();
   const pending = [...roots];
   while (pending.length > 0) {
-    const node = pending.pop()!;
+    const node = pending.pop();
+    if (node === undefined) break;
     if (reachable.has(node.id)) continue;
     reachable.add(node.id);
     for (const kid of children.get(node.id) ?? []) pending.push(kid);

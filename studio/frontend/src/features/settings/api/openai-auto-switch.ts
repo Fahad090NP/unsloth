@@ -136,7 +136,10 @@ export async function loadOpenAIAutoSwitchSettings() {
     }
     // The response predates the write and callers apply it directly, so refetch instead.
   }
-  return settings!;
+  if (settings === null) {
+    throw new Error("OpenAI auto-switch settings could not be loaded.");
+  }
+  return settings;
 }
 
 /** A partial write: omitted fields, `enabled` included, keep their stored value. */

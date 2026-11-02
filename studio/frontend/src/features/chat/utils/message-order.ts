@@ -111,8 +111,8 @@ export function orderBySelectedBranch<T extends ParentLinkedMessage>(
 }
 
 // remote turns can extend a saved head; use the newest leaf because assistant-ui drops descendants.
-export function resolveSavedBranchHead<T extends ParentLinkedMessage>(
-  messages: T[],
+export function resolveSavedBranchHead(
+  messages: ParentLinkedMessage[],
   savedHeadId: string | null | undefined,
 ): string | undefined {
   if (!savedHeadId) return undefined;
@@ -134,7 +134,8 @@ export function resolveSavedBranchHead<T extends ParentLinkedMessage>(
   const seen = new Set<string>();
   const pending = [savedHeadId];
   while (pending.length > 0) {
-    const id = pending.pop()!;
+    const id = pending.pop();
+    if (id === undefined) break;
     if (seen.has(id)) continue;
     seen.add(id);
     const below = children.get(id);

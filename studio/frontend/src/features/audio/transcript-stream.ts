@@ -52,10 +52,17 @@ export async function readTranscriptStream(
       if (done && buffer.trim()) lines.push(buffer);
       for (const line of lines) {
         if (!line.trim()) continue;
-        const event = JSON.parse(line);
-        if (event.type === "error") throw new Error(event.message);
-        if (event.type === "progress") onProgress(event);
-        if (event.type === "complete") return event as TranscriptResult;
+        const parsed: unknown = JSON.parse(line);
+        if (!parsed || typeof parsed !== "object") continue;
+        const event = parsed as { type?: unknown; message?: unknown };
+        if (event.type === "error")
+          throw new Error(
+            typeof event.message === "string"
+              ? event.message
+              : "Transcription failed.",
+          );
+        if (event.type === "progress") onProgress(parsed as TranscriptProgress);
+        if (event.type === "complete") return parsed as TranscriptResult;
       }
       if (done)
         throw new Error(

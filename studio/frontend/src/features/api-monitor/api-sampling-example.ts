@@ -74,10 +74,10 @@ export function buildApiSamplingExample({
   apiKey = API_EXAMPLE_KEY,
 }: ApiExampleInput): string {
   const args = CLIENT_FIELDS.filter((field) => sampling[field] != null).map(
-    (field) => `    ${field}=${sampling[field]},`,
+    (field) => `    ${field}=${String(sampling[field])},`,
   );
   const extras = EXTRA_FIELDS.filter((field) => sampling[field] != null).map(
-    (field) => `        "${field}": ${sampling[field]},`,
+    (field) => `        "${field}": ${String(sampling[field])},`,
   );
   return [
     "from openai import OpenAI",

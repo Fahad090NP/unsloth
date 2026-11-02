@@ -27,7 +27,7 @@ const RenderHtmlToolUIImpl: ToolCallMessagePartComponent = ({
   toolCallId,
 }) => {
   const { propStatus } = useToolArgsStatus<RenderHtmlArgs>();
-  const parsedArgs = (args as RenderHtmlArgs) ?? {};
+  const parsedArgs = args as RenderHtmlArgs;
   const code = typeof parsedArgs.code === "string" ? parsedArgs.code : "";
   const hasCode = code.trim().length > 0;
   const title =

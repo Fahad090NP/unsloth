@@ -53,7 +53,8 @@ export const useForkBoundaryStore = create<ForkBoundaryState>()((set) => ({
   anchorByThreadId: {},
   setForkBoundary: (threadId, boundary) =>
     { set((state) => {
-      const current = state.boundaryByThreadId[threadId];
+      const current: ForkBoundary | undefined =
+        state.boundaryByThreadId[threadId];
       if (boundary === null) {
         if (current === undefined) return state;
         const next = { ...state.boundaryByThreadId };
@@ -67,7 +68,7 @@ export const useForkBoundaryStore = create<ForkBoundaryState>()((set) => ({
     }); },
   setForkBoundaryAnchor: (threadId, anchor) =>
     { set((state) => {
-      const current = state.anchorByThreadId[threadId];
+      const current: string | undefined = state.anchorByThreadId[threadId];
       if (current === anchor) return state;
       if (anchor === undefined) {
         if (current === undefined) return state;

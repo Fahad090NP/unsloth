@@ -114,8 +114,12 @@ export function readsRequestInput(
 function convertCapsOf(value: unknown): AudioConvertCaps | null {
   if (!isPlainObject(value)) return null;
   const caps = value as Partial<AudioConvertCaps>;
-  const modes = Array.isArray(caps.modes)
-    ? caps.modes.filter((mode) => mode === "speech" || mode === "singing")
+  const rawModes: unknown = caps.modes;
+  const modes = Array.isArray(rawModes)
+    ? rawModes.filter(
+        (mode): mode is AudioConvertCaps["modes"][number] =>
+          mode === "speech" || mode === "singing",
+      )
     : [];
   if (modes.length === 0) return null;
   return {

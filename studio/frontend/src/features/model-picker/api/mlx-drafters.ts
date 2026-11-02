@@ -18,8 +18,25 @@ export async function fetchMlxDrafters(
   if (!response.ok) return [];
   const body = (await response.json()) as { drafters?: unknown };
   return Array.isArray(body.drafters)
-    ? body.drafters
-        .filter((d) => typeof d?.repo_id === "string" && typeof d?.kind === "string")
-        .map((d) => ({ repo: d.repo_id, kind: d.kind, named: d.named !== false }))
+    ? body.drafters.flatMap((d: unknown) => {
+        if (!d || typeof d !== "object") {
+          return [];
+        }
+        const drafter = d as {
+          repo_id?: unknown;
+          kind?: unknown;
+          named?: unknown;
+        };
+        return typeof drafter.repo_id === "string" &&
+          typeof drafter.kind === "string"
+          ? [
+              {
+                repo: drafter.repo_id,
+                kind: drafter.kind,
+                named: drafter.named !== false,
+              },
+            ]
+          : [];
+      })
     : [];
 }

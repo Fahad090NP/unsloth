@@ -16,21 +16,23 @@ export function updateFenceChunks<T>(
     const start = index * FENCE_CHUNK_LINES;
     const length = Math.min(FENCE_CHUNK_LINES, lines.length - start);
     const old = previous?.[index];
-    let unchanged = old?.length === length;
-    if (unchanged) {
+    let unchanged = old !== undefined && old.length === length;
+    if (unchanged && old) {
       for (let offset = 0; offset < length; offset += 1) {
-        if (old![offset] !== lines[start + offset]) {
+        if (old[offset] !== lines[start + offset]) {
           unchanged = false;
           break;
         }
       }
     }
-    if (!unchanged && next === null) next = previous!.slice();
-    if (next !== null) {
-      next[index] = unchanged ? old! : lines.slice(start, start + length);
+    let target = next;
+    if (target === null) {
+      target = previous ? previous.slice() : new Array<readonly T[]>(count);
+      next = target;
     }
+    target[index] = unchanged && old ? old : lines.slice(start, start + length);
   }
-  return next ?? previous!;
+  return next ?? previous ?? [];
 }
 
 export interface FenceBodyMemoProps<Result extends { tokens: readonly unknown[] }> {

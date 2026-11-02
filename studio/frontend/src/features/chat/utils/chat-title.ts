@@ -84,8 +84,8 @@ export function isLegacyClippedTitle(
   title: string | undefined,
   userText: string,
 ): boolean {
-  if (!couldBeLegacyClippedTitle(title)) return false;
-  const kept = (title!).slice(0, LEGACY_FALLBACK_TITLE_MAX);
+  if (typeof title !== "string" || !couldBeLegacyClippedTitle(title)) return false;
+  const kept = title.slice(0, LEGACY_FALLBACK_TITLE_MAX);
   const cleaned = firstLineOf(userText);
   return (
     cleaned.length > LEGACY_FALLBACK_TITLE_MAX &&
@@ -98,12 +98,10 @@ function textOf(message: MessageRecord | undefined): string {
   const content = message.content;
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
-  return content
-    .filter(
-      (part): part is Extract<typeof part, { type: "text" }> =>
-        part.type === "text",
-    )
-    .map((part) => part.text)
+  const parts = content as { type?: unknown; text?: unknown }[];
+  return parts
+    .filter((part) => part.type === "text")
+    .map((part) => (typeof part.text === "string" ? part.text : ""))
     .join("")
     .trim();
 }
@@ -325,9 +323,10 @@ type TitleReasoningFields = Pick<
 
 function titleReasoningCaps(connection: ResolvedExternalConnection) {
   const { provider, modelId } = connection;
+  const baseUrl: string | null = provider.baseUrl;
   return getExternalReasoningCapabilities(provider.providerType, modelId, {
     isReasoningProvider: provider.isReasoningModel === true,
-    baseUrl: provider.baseUrl ?? null,
+    baseUrl,
     apiType: provider.apiType,
     reasoningConfig: provider.reasoningConfig,
   });
@@ -377,7 +376,11 @@ function textPartsOf(message: MessageRecord): string {
     typeof content === "string"
       ? content
       : Array.isArray(content)
-        ? content.map((part) => (part?.type === "text" ? part.text : "")).join("")
+        ? (content as { type?: unknown; text?: unknown }[])
+            .map((part) =>
+              part.type === "text" && typeof part.text === "string" ? part.text : "",
+            )
+            .join("")
         : "";
   if (message.role !== "user") return text;
   // A long paste is stored as an attachment, so a paste-only turn has no inline text.
@@ -454,7 +457,7 @@ export function heuristicChatTitle(messages: readonly MessageRecord[]): string |
     }
   });
   const users = turns.filter((t) => t.role === "user").reverse();
-  const anchor =
+  const anchor: { role: string; text: string } | undefined =
     users.find((t) => (t.text.match(TITLE_WORD) ?? []).filter(isTitleWord).length >= 2) ?? users[0];
   if (!anchor) return null;
   let best: { score: number; words: string[] } | null = null;

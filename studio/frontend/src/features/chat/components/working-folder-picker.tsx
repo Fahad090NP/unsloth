@@ -83,7 +83,11 @@ export function WorkingFolderPicker({
             size="sm"
             className="shrink-0"
             disabled={disabled || picking}
-            onClick={() => void change(false)}
+            onClick={() => {
+              change(false).catch((error: unknown) => {
+                console.error("Changing the working folder failed", error);
+              });
+            }}
           >
             Use managed folder
           </Button>
@@ -94,7 +98,11 @@ export function WorkingFolderPicker({
           size="sm"
           className="shrink-0"
           disabled={!available || disabled || picking}
-          onClick={() => void change(true)}
+          onClick={() => {
+            change(true).catch((error: unknown) => {
+              console.error("Changing the working folder failed", error);
+            });
+          }}
         >
           {picking ? "Choosing…" : value ? "Change folder" : "Choose folder"}
         </Button>

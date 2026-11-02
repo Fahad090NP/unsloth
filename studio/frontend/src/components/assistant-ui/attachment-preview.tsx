@@ -119,13 +119,14 @@ const galleryImagesOf = (attachments: readonly unknown[] | undefined): GalleryIm
   });
 
 const useObjectUrl = (file: File | undefined): string | undefined => {
-  const [url, setUrl] = useState<{ file: File; url: string } | null>(null);
+  const url = useMemo(
+    () => (file ? { file, url: URL.createObjectURL(file) } : null),
+    [file],
+  );
   useEffect(() => {
-    if (!file) return;
-    const next = URL.createObjectURL(file);
-    setUrl({ file, url: next });
-    return () => { URL.revokeObjectURL(next); };
-  }, [file]);
+    if (!url) return;
+    return () => { URL.revokeObjectURL(url.url); };
+  }, [url]);
   return file && url?.file === file ? url.url : undefined;
 };
 
@@ -133,7 +134,7 @@ const loadGalleryImage = (image: GalleryImage): Promise<Blob> =>
   image.file ? Promise.resolve(image.file) : fetchBlob(image.image ?? "");
 
 const copyImage = (image: GalleryImage, t: ReturnType<typeof useT>): void => {
-  if (typeof ClipboardItem === "undefined" || !navigator.clipboard.write) {
+  if (typeof ClipboardItem === "undefined" || typeof navigator.clipboard.write !== "function") {
     toast.error(t("imageViewer.copyFailed"));
     return;
   }
@@ -369,7 +370,9 @@ const SentImageDialog: FC<PropsWithChildren<{ source: AttachmentSource; src: str
         title={t("library.dialog.deleteTitle", { name: deleting?.name || t("imageViewer.title") })}
         description={t("library.dialog.deleteAttachment")}
         confirmLabel={t("common.delete")}
-        onOpenChange={(next) => !next && setDeleting(null)}
+        onOpenChange={(next) => {
+          if (!next) setDeleting(null);
+        }}
         onConfirm={() => {
           const image = deleting;
           setDeleting(null);
@@ -624,9 +627,11 @@ const AttachmentAudioDialog: FC<
       load={
         file
           ? () => Promise.resolve(file)
-          : src || audio
-            ? () => fetchBlob(src ?? attachmentAudioSrc(audio!, source.contentType, source.name))
-            : undefined
+          : src
+            ? () => fetchBlob(src)
+            : audio
+              ? () => fetchBlob(attachmentAudioSrc(audio, source.contentType, source.name))
+              : undefined
       }
     >
       <AttachmentAudioBody source={source} />
@@ -670,9 +675,11 @@ const AttachmentVideoDialog: FC<
       load={
         file
           ? () => Promise.resolve(file)
-          : src || video
-            ? () => fetchBlob(src ?? attachmentVideoSrc(video!))
-            : undefined
+          : src
+            ? () => fetchBlob(src)
+            : video
+              ? () => fetchBlob(attachmentVideoSrc(video))
+              : undefined
       }
     >
       {failed ? (

@@ -65,7 +65,13 @@ export async function loadDebugLogSources(
       await readFastApiError(response, "Could not list the log files."),
     );
   }
-  const body = await response.json();
+  const body = (await response.json()) as {
+    sources?: Record<string, unknown>[];
+    default_source_id?: string | null;
+    matched_source_id?: string | null;
+    file_logging_disabled?: boolean;
+    log_root?: string | null;
+  };
   return {
     sources: (body.sources ?? []).map((source: Record<string, unknown>) => ({
       id: String(source.id),
@@ -106,7 +112,21 @@ export async function loadDebugLog(
       response.status,
     );
   }
-  const body = await response.json();
+  const body = (await response.json()) as {
+    status: DebugLogStatus;
+    reason?: string | null;
+    source_id?: string | null;
+    realpath?: string | null;
+    lines?: string[];
+    cursor?: string | null;
+    reset?: boolean;
+    reset_reason?: string | null;
+    dropped_bytes?: number;
+    truncated_head?: boolean;
+    more_pending?: boolean;
+    file_logging_disabled?: boolean;
+    size_bytes?: number;
+  };
   return {
     status: body.status,
     reason: body.reason ?? null,

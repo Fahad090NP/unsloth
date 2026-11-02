@@ -261,7 +261,7 @@ export const ModelCard = memo(function ModelCard({
   const partial = row.isAvailableOnDevice && row.isPartialOnDevice;
   const downloading = partial && row.isDownloadingOnDevice === true;
   const onDevice = row.isAvailableOnDevice && !row.isPartialOnDevice;
-  const topCapability = (row.capabilities[0]);
+  const topCapability = row.capabilities.at(0);
   const sizeLabel = formatModelParamLabel(row.repo, row.result.totalParams);
   const hasSize = sizeLabel !== "N/A";
   const tip = buildRowStatusTooltip({

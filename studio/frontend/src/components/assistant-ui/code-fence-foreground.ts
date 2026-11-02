@@ -26,7 +26,7 @@ export function fenceLineForeground(line: TokenLine): {
   let chosen = "";
   for (const token of line) {
     const style = token.htmlStyle ?? {};
-    const light = style.color ?? token.color;
+    const light = style.color === "" ? token.color : style.color;
     const dark = style["--shiki-dark"];
     if (
       !light ||

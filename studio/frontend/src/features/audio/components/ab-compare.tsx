@@ -42,7 +42,8 @@ async function decodeClipPeaks(
     : await fetchAudioBlob(src, signal);
   if (blob.size > DECODE_MAX_BYTES) return null;
   const Offline =
-    window.OfflineAudioContext ||
+    (window as unknown as { OfflineAudioContext?: typeof OfflineAudioContext })
+      .OfflineAudioContext ??
     (
       window as unknown as {
         webkitOfflineAudioContext?: typeof OfflineAudioContext;
@@ -58,13 +59,11 @@ async function decodeClipPeaks(
   );
 }
 
-function useClipPeaks(srcs: readonly (string | null)[]) {
+function useClipPeaks(first: string | null, second: string | null) {
   const [peaks, setPeaks] = useState<Record<string, number[] | null>>({});
-  const key = srcs.join("\n");
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `key` is the srcs, joined.
   useEffect(() => {
     const controller = new AbortController();
-    for (const src of srcs) {
+    for (const src of [first, second]) {
       if (!src) continue;
       decodeClipPeaks(src, controller.signal)
         .then((bars) => {
@@ -77,7 +76,7 @@ function useClipPeaks(srcs: readonly (string | null)[]) {
         });
     }
     return () => { controller.abort(); };
-  }, [key]);
+  }, [first, second]);
   return peaks;
 }
 
@@ -102,7 +101,7 @@ export function ABCompare({
   const pendingRef = useRef<ABState | null>(null);
   const originalBarsSrc = original.fileUrl ?? original.src;
   const editedBarsSrc = edited.fileUrl ?? edited.src;
-  const peaks = useClipPeaks([originalBarsSrc, editedBarsSrc]);
+  const peaks = useClipPeaks(originalBarsSrc, editedBarsSrc);
 
   const clips: Record<ABSide, ABClip> = { original, edited };
   const current = clips[ab.side];

@@ -19,7 +19,6 @@ export function hasChatFullAccess(
 ): boolean {
   const ownRun =
     runId !== undefined &&
-    runId !== null &&
     runId !== "" &&
     Object.hasOwn(grants, runId)
       ? grants[runId]

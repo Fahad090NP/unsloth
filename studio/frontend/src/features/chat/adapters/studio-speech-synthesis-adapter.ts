@@ -21,11 +21,13 @@ import { markdownToSpeechText } from "../utils/speech-text";
 export function findTtsVoice(
   voiceURI: string,
 ): SpeechSynthesisVoice | undefined {
-  if (typeof window === "undefined" || !window.speechSynthesis) {
+  const synthesis: SpeechSynthesis | undefined =
+    typeof window === "undefined" ? undefined : window.speechSynthesis;
+  if (!synthesis) {
     return undefined;
   }
   if (!voiceURI) return undefined;
-  const voices = window.speechSynthesis.getVoices();
+  const voices = synthesis.getVoices();
   if (voiceURI === "default") return voices.find((voice) => voice.default);
   return voices.find((voice) => voice.voiceURI === voiceURI);
 }
@@ -183,12 +185,15 @@ export function curateSystemVoices(
 
 /** The macOS browser default is often a robotic legacy voice; use the top curated one. */
 function defaultTtsVoice(): SpeechSynthesisVoice | undefined {
-  if (typeof window === "undefined" || !window.speechSynthesis) {
+  const synthesis: SpeechSynthesis | undefined =
+    typeof window === "undefined" ? undefined : window.speechSynthesis;
+  if (!synthesis) {
     return undefined;
   }
-  const voices = window.speechSynthesis.getVoices();
+  const voices = synthesis.getVoices();
+  const curated: SpeechSynthesisVoice | undefined = curateSystemVoices(voices)[0];
   return (
-    curateSystemVoices(voices)[0] ??
+    curated ??
     voices.find((voice) => voice.default) ??
     voices[0]
   );
@@ -420,6 +425,7 @@ function speakWithBackendAudio(
   let audio: HTMLAudioElement | null = null;
   let audioUrl: string | null = null;
   let cancelled = false;
+  const isCancelled = (): boolean => cancelled;
 
   // Release the element and its multi-MB WAV data URL as soon as playback ends.
   const cleanup = () => {
@@ -434,10 +440,10 @@ function speakWithBackendAudio(
     }
   };
 
-  void (async () => {
+  (async () => {
     try {
       const url = await generate(text, controller.signal);
-      if (cancelled) {
+      if (isCancelled()) {
         releaseTtsAudioUrl(url);
         return;
       }
@@ -454,18 +460,20 @@ function speakWithBackendAudio(
         handleEnd("finished");
       });
       audio.addEventListener("error", () => {
-        if (cancelled) return;
+        if (isCancelled()) return;
         cleanup();
         handleEnd("error", new Error("Audio playback failed."));
       });
       markRunning();
       await audio.play();
     } catch (error) {
-      if (cancelled || controller.signal.aborted) return;
+      if (isCancelled() || controller.signal.aborted) return;
       cleanup();
       handleEnd("error", error);
     }
-  })();
+  })().catch((error: unknown) => {
+    console.error("TTS playback failed", error);
+  });
 
   return {
     cancel: () => {

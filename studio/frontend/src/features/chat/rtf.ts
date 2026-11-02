@@ -192,7 +192,8 @@ function rtfToText(bytes: Uint8Array, filename: string): string {
   };
 
   let index = 0;
-  while (index < bytes.length && length < maxLength) {
+  while (index < bytes.length) {
+    if (length >= maxLength) break;
     const byte = bytes[index++];
     if (byte === 0x7b) {
       if (stack.length >= MAX_GROUP_DEPTH) {
@@ -264,7 +265,8 @@ function rtfToText(bytes: Uint8Array, filename: string): string {
         group.skip = true;
         group.fontTable ||= word === "fonttbl";
       } else if (CONTROL_WORD_TEXT.has(word)) {
-        emit(CONTROL_WORD_TEXT.get(word)!);
+        const mapped = CONTROL_WORD_TEXT.get(word);
+        if (mapped !== undefined) emit(mapped);
       }
     } else if (index < bytes.length) {
       const symbol = bytes[index++];

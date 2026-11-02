@@ -93,9 +93,10 @@ export function groupSeparationClips(
   const groups = order.map((key) => {
     const list = byId.get(key) ?? [];
     const roleOf = (clip: AudioGalleryClip) => clip.role || clip.id;
-    const ordered = orderStems(list.map(roleOf)).map(
-      (role) => list.find((clip) => roleOf(clip) === role)!,
-    );
+    const ordered = orderStems(list.map(roleOf)).flatMap((role) => {
+      const clip = list.find((candidate) => roleOf(candidate) === role);
+      return clip ? [clip] : [];
+    });
     const first = ordered[0];
     const expected = Math.max(
       ordered.length,
@@ -104,9 +105,9 @@ export function groupSeparationClips(
     return {
       groupId: key,
       title: first.prompt || "Separated track",
-      model: first.model ?? "",
+      model: first.model,
       durationS: Math.max(0, ...ordered.map((clip) => clip.duration_s || 0)),
-      createdAt: first.created_at ?? "",
+      createdAt: first.created_at,
       stems: ordered,
       complete: ordered.length >= expected,
       expectedStems: expected,
@@ -114,6 +115,6 @@ export function groupSeparationClips(
     };
   });
   // The oldest group may continue on the next page: hide it until loaded.
-  const tail = groups[groups.length - 1];
+  const tail = groups.at(-1);
   return hasMore && tail && !tail.complete ? groups.slice(0, -1) : groups;
 }

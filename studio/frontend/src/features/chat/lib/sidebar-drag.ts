@@ -189,33 +189,34 @@ export function planSidebarDrop(
   edge: DropEdge,
   ctx: SidebarDropContext,
 ): SidebarDropOutcome {
-  if (zone.header) {
-    const first =
-      zone.row &&
-      (zone.section === "pinned" ||
-        isCustomSection(zone.section) ||
-        zone.row.kind === drag.kind)
-        ? zone.row
-        : undefined;
-    zone = {
-      section: zone.section,
-      header: true,
-      row: first,
-      folderId: first?.kind === "project" ? first.id : undefined,
-    };
-    edge = "top";
-  }
-  if (isCustomSection(zone.section)) return planSectionDrop(drag, zone, edge, ctx);
-  if (zone.section === "pinned") {
-    return leavingSection(drag, planPinnedDrop(drag, zone, edge, ctx), ctx);
+  const first =
+    zone.header &&
+    zone.row &&
+    (zone.section === "pinned" ||
+      isCustomSection(zone.section) ||
+      zone.row.kind === drag.kind)
+      ? zone.row
+      : undefined;
+  const dropZone: SidebarDropZone = zone.header
+    ? {
+        section: zone.section,
+        header: true,
+        row: first,
+        folderId: first?.kind === "project" ? first.id : undefined,
+      }
+    : zone;
+  const dropEdge: DropEdge = zone.header ? "top" : edge;
+  if (isCustomSection(dropZone.section)) return planSectionDrop(drag, dropZone, dropEdge, ctx);
+  if (dropZone.section === "pinned") {
+    return leavingSection(drag, planPinnedDrop(drag, dropZone, dropEdge, ctx), ctx);
   }
   // Pages can't go in Projects, Recents or a folder.
   if (drag.kind === "page") return null;
   return leavingSection(
     drag,
     drag.kind === "project"
-      ? planFolderDrop(drag, zone, edge, ctx)
-      : planChatDrop(drag, zone, edge, ctx),
+      ? planFolderDrop(drag, dropZone, dropEdge, ctx)
+      : planChatDrop(drag, dropZone, dropEdge, ctx),
     ctx,
   );
 }
@@ -502,7 +503,7 @@ function planChatDrop(
     if (zone.row?.kind !== "chat") {
       // Space beside a row stays inert so it does not send the row to the end.
       const ids = ctx.orders.recents;
-      const last = ids[ids.length - 1];
+      const last: string | undefined = ids[ids.length - 1];
       if (zone.row || zone.blockEnd?.scope !== SIDEBAR_TAIL_SCOPE || last === undefined) {
         return null;
       }
@@ -596,7 +597,7 @@ function lastIn(
   chatId: string,
   sort: SidebarChatSort,
 ): Landing | null {
-  const last = ids[ids.length - 1];
+  const last: string | undefined = ids[ids.length - 1];
   return last === undefined ? null : slotAt(scope, ids, chatId, last, "bottom", sort);
 }
 

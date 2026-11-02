@@ -202,6 +202,7 @@ export function useAudioHandoff({
     navigateSelf,
     refreshGallery,
     loadMore,
+    loadingMoreRef,
     selectClip,
   ]);
 

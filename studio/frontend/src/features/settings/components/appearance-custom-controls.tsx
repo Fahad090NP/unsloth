@@ -237,8 +237,9 @@ async function loadDeviceFonts(): Promise<string[]> {
   if (families.length === 0) {
     families = detectFontsByMeasurement(CANDIDATE_DEVICE_FONTS);
   }
-  deviceFontsCache = families.sort((a, b) => a.localeCompare(b));
-  return deviceFontsCache;
+  const sortedFamilies = families.sort((a, b) => a.localeCompare(b));
+  deviceFontsCache = sortedFamilies;
+  return sortedFamilies;
 }
 
 function FontSelect({
@@ -759,9 +760,11 @@ function SizeInput({
   unit: string;
 }) {
   const [draft, setDraft] = useState(value === null ? "" : String(value));
-  useEffect(() => {
+  const [appliedValue, setAppliedValue] = useState(value);
+  if (appliedValue !== value) {
+    setAppliedValue(value);
     setDraft(value === null ? "" : String(value));
-  }, [value]);
+  }
   const commit = () => {
     const normalized = normalizeSizeInputDraft(draft, range);
     if (!normalized) {

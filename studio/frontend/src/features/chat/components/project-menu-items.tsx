@@ -166,12 +166,24 @@ export function ProjectMenuItems({
           <span>{t("common.export")}</span>
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent className={cn("w-56", subClassName)}>
-          <BulkExportItems onExport={(format, merged) => void exportProject(format, merged)} />
+          <BulkExportItems
+            onExport={(format, merged) => {
+              exportProject(format, merged).catch((error: unknown) => {
+                console.error("Exporting the project failed", error);
+              });
+            }}
+          />
         </DropdownMenuSubContent>
       </DropdownMenuSub>
       <Item
         icon={Upload01Icon}
-        onSelect={() => void pickAndImportChats({ projectId: project.id, name: project.name })}
+        onSelect={() => {
+          pickAndImportChats({ projectId: project.id, name: project.name }).catch(
+            (error: unknown) => {
+              console.error("Importing chats failed", error);
+            },
+          );
+        }}
       >
         {t("settings.chat.importChats")}
       </Item>

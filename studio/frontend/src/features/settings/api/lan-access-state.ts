@@ -79,11 +79,15 @@ function normalizeAddresses(value: unknown): LanAccessAddress[] {
   if (!Array.isArray(value)) {
     return [];
   }
-  return value.flatMap((entry) =>
-    entry && typeof entry.address === "string"
-      ? [{ address: entry.address, public: entry.public === true }]
-      : [],
-  );
+  return value.flatMap((entry: unknown) => {
+    if (!entry || typeof entry !== "object") {
+      return [];
+    }
+    const address = entry as Partial<LanAccessAddress>;
+    return typeof address.address === "string"
+      ? [{ address: address.address, public: address.public === true }]
+      : [];
+  });
 }
 
 function normalizeKeylessScope(value: unknown): LanKeylessScope {
@@ -309,6 +313,9 @@ export function lanAccessBlockMessage(
       return "This launch used --secure, which serves only through the Cloudflare link and keeps the raw port closed. Relaunch without --secure to use LAN access.";
     case "colab":
       return "LAN access is managed by the Colab runtime, which has no local network to join.";
+    case null:
+    case undefined:
+      return null;
     default:
       return null;
   }
@@ -332,7 +339,6 @@ export function lanAccessErrorMessage(
     case "stop_timed_out":
       return "LAN access could not confirm the port closed. Check the logs, then try again.";
     case null:
-    case undefined:
       return null;
     default:
       return "LAN access failed to start.";

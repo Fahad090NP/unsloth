@@ -28,5 +28,6 @@ export async function firstTokenTimeoutSettings(
   if (!response.ok) {
     throw new Error(await readFastApiError(response, fallbackMessage));
   }
-  return await response.json();
+  const body = (await response.json()) as FirstTokenTimeoutSettings;
+  return body;
 }

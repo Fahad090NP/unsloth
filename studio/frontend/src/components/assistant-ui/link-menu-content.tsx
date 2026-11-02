@@ -93,16 +93,17 @@ export function WebLinkMenuContent({ href }: { href: string }) {
       </ContextMenuItem>
       <ContextMenuSeparator />
       <ContextMenuItem
-        onSelect={() =>
-          void copyWithToast(copyToClipboard(href), t("linkMenu.linkCopied"), t("linkMenu.copyFailed"))
-        }
+        onSelect={() => {
+          copyWithToast(copyToClipboard(href), t("linkMenu.linkCopied"), t("linkMenu.copyFailed"))
+            .catch(() => { toast.error(t("linkMenu.copyFailed")); });
+        }}
       >
         <ItemIcon icon={Link01Icon} />
         {t("linkMenu.copyLink")}
       </ContextMenuItem>
       <ContextMenuItem
         onSelect={() =>
-          void saveLinkAs(href).catch((error) => {
+          void saveLinkAs(href).catch((error: unknown) => {
             if (!isDownloadCancelled(error)) toast.error(t("linkMenu.saveFailed"));
           })
         }
@@ -170,7 +171,10 @@ export function FileMenuContent({ file }: { file: ContextFile }) {
         }); },
       )
       .catch(failed("linkMenu.openFailed"));
-  const open = () => { file.open ? file.open() : openInBrowser(); };
+  const open = () => {
+    if (file.open) file.open();
+    else openInBrowser();
+  };
   const openInNewChat = () =>
     void file
       .load()
@@ -201,7 +205,7 @@ export function FileMenuContent({ file }: { file: ContextFile }) {
     void file
       .load()
       .then((blob) => downloadFile(blob, file.name, contentType || blob.type || undefined))
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (!isDownloadCancelled(error)) failed("linkMenu.saveFailed")();
       });
   const sandbox = file.sandbox;
@@ -252,13 +256,13 @@ export function FileMenuContent({ file }: { file: ContextFile }) {
       {(local && sandbox) || copyable ? <ContextMenuSeparator /> : null}
       {local && sandbox ? (
         <ContextMenuItem
-          onSelect={() =>
-            void copyWithToast(
+          onSelect={() => {
+            copyWithToast(
               copyToClipboardFrom(() => sandboxAbsolutePath(sandbox.sessionId, sandbox.file)),
               t("linkMenu.pathCopied"),
               t("linkMenu.copyFailed"),
-            )
-          }
+            ).catch(() => { toast.error(t("linkMenu.copyFailed")); });
+          }}
         >
           <ItemIcon icon={Copy01Icon} />
           {t("linkMenu.copyPath")}
@@ -266,13 +270,13 @@ export function FileMenuContent({ file }: { file: ContextFile }) {
       ) : null}
       {copyable ? (
         <ContextMenuItem
-          onSelect={() =>
-            void copyWithToast(
+          onSelect={() => {
+            copyWithToast(
               copyToClipboardFrom(() => file.load().then((blob) => blob.text())),
               t("linkMenu.contentsCopied"),
               t("linkMenu.copyFailed"),
-            )
-          }
+            ).catch(() => { toast.error(t("linkMenu.copyFailed")); });
+          }}
         >
           <ItemIcon icon={Copy01Icon} />
           {t("linkMenu.copyContents")}

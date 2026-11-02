@@ -41,9 +41,9 @@ function LazyContextMenu({
   const { ref: outerRef, ...restTriggerProps } = triggerProps;
   const setTrigger = useCallback(
     (node: HTMLSpanElement | null) => {
-      triggerRef.current = node;
+      Object.assign(triggerRef, { current: node });
       if (typeof outerRef === "function") outerRef(node);
-      else if (outerRef) outerRef.current = node;
+      else if (outerRef) Object.assign(outerRef, { current: node });
     },
     [outerRef],
   );

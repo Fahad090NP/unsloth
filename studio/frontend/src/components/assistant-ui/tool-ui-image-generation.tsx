@@ -210,7 +210,7 @@ function SandboxMediaFigure({
       downloadImagePart({ image: loaded, filename });
       return;
     }
-    void downloadUrl(loaded, filename).catch((error) => {
+    void downloadUrl(loaded, filename).catch((error: unknown) => {
       if (!isDownloadCancelled(error)) toast.error("Could not save video.");
     });
   };
@@ -301,7 +301,7 @@ const ImageGenerationToolUIImpl: ToolCallMessagePartComponent = ({
   status,
 }) => {
   const { openOverlay } = useGeneratedImageOverlay();
-  const parsedArgs = (args as ImageGenerationArgs) ?? {};
+  const parsedArgs = args as ImageGenerationArgs;
   const prompt = toolArgText(parsedArgs.prompt);
   const isRunning = isToolCallRunning(status);
 

@@ -32,6 +32,9 @@ export function useLlamaBackendSwitch() {
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const mounted = useRef(false);
   const polling = useRef(false);
+  const setPolling = (value: boolean) => {
+    polling.current = value;
+  };
   // Updates share this job; completion is ours only for the switch apply() started.
   const ownedJob = useRef<{ startedAt: string | null } | null>(null);
 
@@ -108,11 +111,11 @@ export function useLlamaBackendSwitch() {
     if (pollTimer.current) {
       clearInterval(pollTimer.current);
     }
-    pollTimer.current = setInterval(async () => {
+    const poll = async () => {
       if (polling.current) {
         return;
       }
-      polling.current = true;
+      setPolling(true);
       try {
         // The backend skips option resolution during a job, so force one probe now.
         const next = await refresh(true);
@@ -132,8 +135,11 @@ export function useLlamaBackendSwitch() {
         }
         finish(next, outcome);
       } finally {
-        polling.current = false;
+        setPolling(false);
       }
+    };
+    pollTimer.current = setInterval(() => {
+      poll().catch(() => { /* noop */ });
     }, JOB_POLL_MS);
   }, [refresh, finish]);
 

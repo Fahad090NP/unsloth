@@ -71,7 +71,7 @@ function publish(next: SkillsSnapshot): void {
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
-  const body = await response.json().catch(() => null);
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const detail =
       body && typeof body === "object" && "detail" in body
@@ -299,7 +299,8 @@ export async function settleSkillsForText(text: string): Promise<void> {
   );
   let stale = !snapshot.initialized;
   for (const match of text.matchAll(SKILL_MENTION_PATTERN)) {
-    const name = match[2] ?? "";
+    const raw: string | undefined = match[2];
+    const name = raw ?? "";
     if (!known.has(name)) {
       stale = true;
       break;

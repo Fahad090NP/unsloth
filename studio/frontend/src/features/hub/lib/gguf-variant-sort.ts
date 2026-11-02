@@ -51,7 +51,6 @@ export function ggufVariantFitRank(
     case "streamed":
       return 2;
     case "oom":
-    default:
       return 3;
   }
 }

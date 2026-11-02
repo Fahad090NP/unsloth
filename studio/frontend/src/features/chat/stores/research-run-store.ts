@@ -148,6 +148,17 @@ function statusActivity(event: ResearchEvent): ResearchActivity | null {
         detail: event.data.error ?? undefined,
         state: "failed",
       };
+    case "phase.started":
+    case "phase.progress":
+    case "phase.ended":
+    case "reasoning.updated":
+    case "plan.ready":
+    case "report.updated":
+    case "step.started":
+    case "step.completed":
+    case "step.failed":
+    case "source.added":
+      return null;
     default:
       return null;
   }
@@ -174,6 +185,9 @@ export function researchPhaseTitle(phase: ResearchPhase | undefined): string {
       return "Writing the report";
     case "decision":
       return "Choosing the next step";
+    case "unknown":
+    case undefined:
+      return "Working";
     default:
       return "Working";
   }
@@ -589,28 +603,27 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
   ingest: (run, event) =>
     { set((state) => {
       const previous = state.sessions[run.id];
-      if (event && previous && event.id <= previous.lastAppliedSeq)
+      if (event && event.id <= previous.lastAppliedSeq)
         return state;
       if (
         !event &&
-        previous &&
         (run.lastEventSeq < previous.run.lastEventSeq ||
           run.updatedAt < previous.run.updatedAt)
       ) {
         return state;
       }
       const activities = event
-        ? reduceActivity(previous.activities ?? [], event)
-        : (previous.activities ?? []);
-      const lastAppliedSeq = event?.id ?? previous.lastAppliedSeq ?? 0;
+        ? reduceActivity(previous.activities, event)
+        : previous.activities;
+      const lastAppliedSeq = event?.id ?? previous.lastAppliedSeq;
       const settled = isSettledResearchRun(run, lastAppliedSeq);
       const session: ResearchSession = {
         run,
         activities,
         lastAppliedSeq,
-        following: settled ? false : (previous.following ?? false),
-        connection: settled ? "idle" : (previous.connection ?? "idle"),
-        error: settled ? null : (previous.error ?? null),
+        following: settled ? false : previous.following,
+        connection: settled ? "idle" : previous.connection,
+        error: settled ? null : previous.error,
       };
       const currentLatestId = state.latestRunByThreadId[run.threadId];
       const currentLatestRun = currentLatestId
@@ -664,7 +677,7 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
     connection = following ? "connected" : "idle",
   ) =>
     { set((state) => {
-      const session = state.sessions[runId];
+      const session = state.sessions[runId] as ResearchSession | undefined;
       if (!session) return state;
       if (
         session.following === following &&
@@ -681,7 +694,7 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
     }); },
   setConnectionError: (runId, error) =>
     { set((state) => {
-      const session = state.sessions[runId];
+      const session = state.sessions[runId] as ResearchSession | undefined;
       if (!session) return state;
       return {
         sessions: {
@@ -709,7 +722,7 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
     }); },
   setPlanReviewOpen: (runId, open) =>
     { set((state) => {
-      const current = state.planReviewByRunId[runId];
+      const current = state.planReviewByRunId[runId] as ResearchPlanReviewState | undefined;
       if (!current || current.open === open) return state;
       return {
         planReviewByRunId: {
@@ -720,7 +733,7 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
     }); },
   setPlanReviewEditing: (runId, editing) =>
     { set((state) => {
-      const current = state.planReviewByRunId[runId];
+      const current = state.planReviewByRunId[runId] as ResearchPlanReviewState | undefined;
       if (!current || current.editing === editing) return state;
       return {
         planReviewByRunId: {
@@ -731,7 +744,7 @@ export const useResearchRunStore = create<ResearchRunState>((set) => ({
     }); },
   setPlanReviewDraft: (runId, draft) =>
     { set((state) => {
-      const current = state.planReviewByRunId[runId];
+      const current = state.planReviewByRunId[runId] as ResearchPlanReviewState | undefined;
       if (!current || current.draft === draft) return state;
       return {
         planReviewByRunId: {
@@ -817,7 +830,7 @@ function hydrateResearchReplay(
 ): void {
   if (!updates.length) return;
   useResearchRunStore.setState((state) => {
-    const previous = state.sessions[runId];
+    const previous = state.sessions[runId] as ResearchSession | undefined;
     if (!previous) return state;
     const compacted = compactReplayUpdates(
       updates.filter(
@@ -940,7 +953,10 @@ export function beginExternalResearchFollow(
 }
 
 export function openResearchRun(run: ResearchRun): void {
-  if (!useResearchRunStore.getState().sessions[run.id]) {
+  const existingSession = useResearchRunStore.getState().sessions[run.id] as
+    | ResearchSession
+    | undefined;
+  if (!existingSession) {
     ingestResearchUpdate(run);
   }
   const state = useResearchRunStore.getState();
@@ -966,11 +982,13 @@ export async function* watchResearchRun(
   signal?.addEventListener("abort", wake, { once: true });
   try {
     while (!signal?.aborted) {
-      const session = useResearchRunStore.getState().sessions[runId];
+      const session = useResearchRunStore.getState().sessions[runId] as
+        | ResearchSession
+        | undefined;
+      if (!session) return;
       if (session.error && !ownedFollowers.has(runId)) {
         throw new Error(session.error);
       }
-      if (!session) return;
       if (dirty) {
         dirty = false;
         yield session.run;
@@ -998,7 +1016,7 @@ export function ensureResearchRunFollowed(
 ): void {
   if (initialRun) ingestResearchUpdate(initialRun);
   const state = useResearchRunStore.getState();
-  const session = state.sessions[runId];
+  const session = state.sessions[runId] as ResearchSession | undefined;
   if (
     session &&
     isSettledResearchRun(session.run, session.lastAppliedSeq)
@@ -1007,14 +1025,14 @@ export function ensureResearchRunFollowed(
     state.setFollowing(runId, false, "idle");
     return;
   }
-  if (session.error) return;
+  if (!session || session.error) return;
   if (state.sessions[runId].following || ownedFollowers.has(runId)) return;
   const controller = new AbortController();
   ownedFollowers.set(runId, controller);
   state.setFollowing(runId, true, "connecting");
   void (async () => {
     let replayThroughSeq = 0;
-    let replaying = true;
+    let replaying: boolean = true;
     const replayUpdates: ResearchRunUpdate[] = [];
     const flushReplay = (markConnected = true) => {
       if (replayUpdates.length) {
@@ -1033,11 +1051,11 @@ export function ensureResearchRunFollowed(
       for await (const update of followResearchRun(runId, {
         initialRun,
         signal: controller.signal,
-        replayFrom: session.lastAppliedSeq ?? 0,
+        replayFrom: session.lastAppliedSeq,
       })) {
         if (update.source === "snapshot") {
           const appliedSeq =
-            useResearchRunStore.getState().sessions[runId].lastAppliedSeq ?? 0;
+            useResearchRunStore.getState().sessions[runId].lastAppliedSeq;
           if (!replaying && update.run.lastEventSeq > appliedSeq) {
             replaying = true;
             useResearchRunStore
@@ -1087,7 +1105,7 @@ export function ensureResearchRunFollowed(
           .setFollowing(
             runId,
             false,
-            terminalStatuses.has(run.status ?? "") ? "idle" : "disconnected",
+            terminalStatuses.has(run.status) ? "idle" : "disconnected",
           );
       }
     }

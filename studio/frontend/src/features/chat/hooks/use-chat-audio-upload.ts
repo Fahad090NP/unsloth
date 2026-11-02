@@ -265,7 +265,11 @@ export function useChatAudioUpload({
 
   useEffect(() => {
     if (!dialogOpen || disabled) return;
-    queueMicrotask(() => void refreshReadiness());
+    queueMicrotask(() => {
+      refreshReadiness().catch((error: unknown) => {
+        console.error("Refreshing dictation readiness failed", error);
+      });
+    });
   }, [dialogOpen, disabled, refreshReadiness]);
 
   useEffect(() => {
@@ -275,7 +279,11 @@ export function useChatAudioUpload({
     ) {
       return;
     }
-    const timer = window.setInterval(() => void refreshReadiness(true), 1500);
+    const timer = window.setInterval(() => {
+      refreshReadiness(true).catch((error: unknown) => {
+        console.error("Refreshing dictation readiness failed", error);
+      });
+    }, 1500);
     return () => { window.clearInterval(timer); };
   }, [dialogOpen, readiness.state, refreshReadiness]);
 

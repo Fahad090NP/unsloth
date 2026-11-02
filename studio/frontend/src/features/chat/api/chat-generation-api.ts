@@ -63,7 +63,7 @@ export interface ChatGenerationRunUpdate {
 export function normalizeChatGenerationChunkPayload(
   payload: OpenAIChatChunk | Record<string, unknown>,
 ): OpenAIChatChunk | Record<string, unknown> {
-  if (payload !== null && typeof payload === "object" && "type" in payload) {
+  if (typeof payload === "object" && "type" in payload) {
     const frameType = (payload as { type?: unknown }).type;
     if (frameType === "skill_load") {
       return { _toolEvent: skillLoadCardEvent(payload) };
@@ -166,7 +166,7 @@ export function isLegacyFallbackChatGenerationAdmissionError(
 }
 
 async function json<T>(response: Response): Promise<T> {
-  const body = await response.json().catch(() => null);
+  const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const detail = (body as { detail?: unknown; message?: unknown } | null)
       ?.detail;
@@ -271,7 +271,7 @@ export async function getActiveChatGenerationRuns(
     { signal },
   );
   if (response.status === 404 || response.status === 405) return [];
-  return (await json<{ runs: ChatGenerationRun[] }>(response)).runs ?? [];
+  return (await json<{ runs: ChatGenerationRun[] }>(response)).runs;
 }
 
 /** A reopened tab cannot tell an answered approval from a parked one, so ask the server. 404/405
@@ -295,7 +295,7 @@ export async function createChatGenerationRun(
   input: CreateChatGenerationRunInput,
 ): Promise<ChatGenerationRun> {
   let failures = 0;
-  while (true) {
+  for (;;) {
     try {
       return await json<ChatGenerationRun>(
         await authFetch("/api/inference/chat-runs", {
@@ -392,7 +392,7 @@ async function* streamChatGenerationEvents(
   const decoder = new TextDecoder();
   let buffer = "";
   try {
-    while (true) {
+    for (;;) {
       const { done, value } = await reader.read();
       buffer += decoder.decode(value, { stream: !done });
       buffer = buffer.replace(/\r\n/g, "\n");
@@ -453,9 +453,11 @@ export async function* followChatGenerationRun(
     callerSignal?.addEventListener("abort", forwardAbort, { once: true });
   }
   const signal = deadline.signal;
+  const isAborted = (): boolean => signal.aborted;
   let stallTimer: ReturnType<typeof globalThis.setTimeout> | undefined;
   // Caller abort is a clean stop; the deadline must surface as a failure, not a complete reply.
   let stalled = false;
+  const isStalled = (): boolean => stalled;
   let settled = false;
   // Spans reconnects on purpose: see the onActivity contract in streamChatGenerationEvents.
   let lastKeepAliveStamp: string | null = null;
@@ -480,13 +482,13 @@ export async function* followChatGenerationRun(
       try {
         run = await getChatGenerationRun(id, signal);
       } catch (error) {
-        if (signal.aborted) return;
+        if (isAborted()) return;
         if (isPermanent(error)) throw error;
         failures += 1;
         await waitForReconnect(reconnectDelay(failures), signal);
       }
     }
-    if (!run || signal.aborted) return;
+    if (!run || isAborted()) return;
     let currentRun = run;
     let cursor = replayFrom ?? run.lastEventSeq;
     yield { run, source: "snapshot" };
@@ -495,7 +497,7 @@ export async function* followChatGenerationRun(
       return;
     }
 
-    while (!signal.aborted) {
+    while (!isAborted()) {
       try {
         for await (const event of streamChatGenerationEvents(
           id,
@@ -518,11 +520,11 @@ export async function* followChatGenerationRun(
           }
         }
       } catch (error) {
-        if (signal.aborted) return;
+        if (isAborted()) return;
         if (isPermanent(error)) throw error;
         failures += 1;
       }
-      if (signal.aborted) return;
+      if (isAborted()) return;
       try {
         const fresh = await getChatGenerationRun(id, signal);
         const changed =
@@ -539,7 +541,7 @@ export async function* followChatGenerationRun(
           return;
         }
       } catch (error) {
-        if (signal.aborted) return;
+        if (isAborted()) return;
         if (isPermanent(error)) throw error;
         failures += 1;
       }
@@ -549,6 +551,6 @@ export async function* followChatGenerationRun(
     if (stallTimer !== undefined) globalThis.clearTimeout(stallTimer);
     callerSignal?.removeEventListener("abort", forwardAbort);
     // Every exit funnels here; `settled` stops a same-tick terminal run being reported stalled.
-    if (stalled && !settled) throw new ChatGenerationStalledError(id);
+    if (isStalled() && !settled) throw new ChatGenerationStalledError(id);
   }
 }

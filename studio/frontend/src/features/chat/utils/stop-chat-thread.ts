@@ -28,9 +28,10 @@ export function stopChatThread(threadId: string | null | undefined): boolean {
   if (!threadId) return false;
   const { runningByThreadId, cancelByThreadId, serverCancelByThreadId } =
     useChatRuntimeStore.getState();
-  const cancel = cancelByThreadId[threadId];
+  const cancel: (() => void) | undefined = cancelByThreadId[threadId];
+  const running: boolean | undefined = runningByThreadId[threadId];
   const serverCancels = serverCancelByThreadId[threadId] ?? [];
-  if (!runningByThreadId[threadId] && !cancel && serverCancels.length === 0) {
+  if (!running && !cancel && serverCancels.length === 0) {
     stopServerRunsForThread(threadId);
     return true;
   }

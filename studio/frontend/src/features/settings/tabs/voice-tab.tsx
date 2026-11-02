@@ -179,7 +179,7 @@ function SttModelPicker({
       if (!isSttModelLanguageCompatible(id, language)) continue;
       listGgufVariants(id, hfApiToken(hfToken))
         .then((listing) => {
-          const variant =
+          const variant: (typeof listing.variants)[number] | undefined =
             listing.variants.find(
               (row) => row.quant === listing.default_variant,
             ) ?? listing.variants[0];
@@ -397,9 +397,10 @@ function useAudioInputDevices() {
   const [hasLabels, setHasLabels] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (!navigator.mediaDevices.enumerateDevices) return;
+    const mediaDevices: MediaDevices | undefined = navigator.mediaDevices;
+    if (!mediaDevices?.enumerateDevices) return;
     try {
-      const all = await navigator.mediaDevices.enumerateDevices();
+      const all = await mediaDevices.enumerateDevices();
       const inputs = all.filter((d) => d.kind === "audioinput");
       setDevices(inputs);
       setHasLabels(inputs.some((d) => d.label));
@@ -409,11 +410,14 @@ function useAudioInputDevices() {
   }, []);
 
   useEffect(() => {
-    const media = navigator.mediaDevices;
-    if (!media.addEventListener) {
+    const media: MediaDevices | undefined = navigator.mediaDevices;
+    if (!media?.addEventListener) {
       return;
     }
     let cancelled = false;
+    const onDeviceChange = () => {
+      refresh().catch(() => { /* noop */ });
+    };
     media
       .enumerateDevices()
       .then((all) => {
@@ -427,24 +431,25 @@ function useAudioInputDevices() {
       .catch(() => {
         // Enumeration can fail in insecure contexts.
       }).catch(() => { /* noop */ });
-    media.addEventListener("devicechange", refresh);
+    media.addEventListener("devicechange", onDeviceChange);
     return () => {
       cancelled = true;
-      media.removeEventListener("devicechange", refresh);
+      media.removeEventListener("devicechange", onDeviceChange);
     };
   }, [refresh]);
 
   // Labels are hidden until mic permission; a short stream unlocks them.
   const requestAccess = useCallback(async () => {
     // Insecure contexts (plain http on a LAN address) have no mediaDevices.
-    if (!navigator.mediaDevices.getUserMedia) {
+    const mediaDevices: MediaDevices | undefined = navigator.mediaDevices;
+    if (!mediaDevices?.getUserMedia) {
       toast.error(t("settings.voice.dictation.micAccessUnsupported"));
       return;
     }
     // Clear a saved deny first, or WebView2 rejects without prompting.
     await resetMicrophonePermission();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const stream = await mediaDevices.getUserMedia({
         audio: true,
       });
       for (const track of stream.getTracks()) {
@@ -470,8 +475,9 @@ function useSystemVoices() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    const synth = window.speechSynthesis;
+    if (typeof window === "undefined") return;
+    const synth: SpeechSynthesis | undefined = window.speechSynthesis;
+    if (!synth) return;
     const load = () => { setVoices(synth.getVoices()); };
     load();
     synth.addEventListener("voiceschanged", load);
@@ -771,12 +777,13 @@ export function VoiceTab() {
       return;
     }
     let cancelled = false;
+    const isCancelled = () => cancelled;
     (async () => {
       // Only the first poll shows "checking" so polling does not flicker.
       setSttPhase((phase) => (phase === "idle" ? "checking" : phase));
       try {
         const status = await fetchSttStatus(statusNonce, sttModel);
-        if (cancelled) return;
+        if (isCancelled()) return;
         setDownloadedSttModels(
           new Set(
             [
@@ -860,7 +867,7 @@ export function VoiceTab() {
             landedPinned
           ) {
             // The download this tab watched just finished; load the model.
-            void autoLoadSttModel(sttModel, sttVariant);
+            autoLoadSttModel(sttModel, sttVariant).catch(() => { /* noop */ });
             return;
           }
         }
@@ -871,7 +878,7 @@ export function VoiceTab() {
           }, 600);
           return;
         }
-        if (loaded && !engineStatus.loading) {
+        if (loaded) {
           setSttDevice(engineStatus.device);
           setSttPhase("ready");
           window.setTimeout(
@@ -889,7 +896,7 @@ export function VoiceTab() {
         setSttDevice(null);
         setSttPhase("on-demand");
       } catch {
-        if (!cancelled) setSttPhase("error");
+        if (!isCancelled()) setSttPhase("error");
       }
     })().catch(() => { /* noop */ });
     return () => {
@@ -926,7 +933,7 @@ export function VoiceTab() {
         return t("settings.voice.dictation.sttUnavailable");
       case "error":
         return t("settings.voice.dictation.sttModelFailed");
-      default:
+      case "idle":
         return "";
     }
   })();
@@ -938,8 +945,8 @@ export function VoiceTab() {
 
   const sttModelStatusText = (() => {
     if (downloadingThisModel) {
-      const total = sttDownload?.bytes_total ?? 0;
-      const done = sttDownload?.bytes_done ?? 0;
+      const total = sttDownload.bytes_total ?? 0;
+      const done = sttDownload.bytes_done ?? 0;
       return t("settings.voice.dictation.sttDownloading", {
         progress:
           total > 0 ? Math.min(99, Math.round((done / total) * 100)) : 0,
@@ -957,8 +964,6 @@ export function VoiceTab() {
         return t("settings.voice.dictation.sttDownloadFailed");
       case "downloaded":
         return sttStatusText;
-      default:
-        return "";
     }
   })();
 
@@ -1335,7 +1340,9 @@ export function VoiceTab() {
                         size="sm"
                         className="text-xs"
                         disabled={sttUnloading}
-                        onClick={releaseSttModel}
+                        onClick={() => {
+                          releaseSttModel().catch(() => { /* noop */ });
+                        }}
                       >
                         {sttUnloading ? <Spinner className="mr-1.5" /> : null}
                         {sttUnloading
@@ -1359,7 +1366,9 @@ export function VoiceTab() {
                         variant="outline"
                         size="sm"
                         className="text-xs"
-                        onClick={warmSttModel}
+                        onClick={() => {
+                          warmSttModel().catch(() => { /* noop */ });
+                        }}
                       >
                         {sttPhase === "error"
                           ? t("settings.voice.dictation.sttRetry")
@@ -1533,7 +1542,9 @@ export function VoiceTab() {
               </SelectContent>
             </Select>
           ) : (
-            <Button variant="outline" size="sm" onClick={requestAccess}>
+            <Button variant="outline" size="sm" onClick={() => {
+              requestAccess().catch(() => { /* noop */ });
+            }}>
               <MicIcon className="mr-1.5 size-3.5" />
               {t("settings.voice.dictation.allowMicrophone")}
             </Button>
@@ -1847,7 +1858,7 @@ export function VoiceTab() {
                 max={2}
                 step={0.05}
                 onValueChange={([v]) => {
-                  if (v !== undefined) setTtsRate(v);
+                  setTtsRate(v);
                 }}
                 className="w-48"
                 aria-label={t("settings.voice.readAloud.speedLabel")}
@@ -1865,7 +1876,7 @@ export function VoiceTab() {
                   max={2}
                   step={0.05}
                   onValueChange={([v]) => {
-                    if (v !== undefined) setTtsPitch(v);
+                    setTtsPitch(v);
                   }}
                   className="w-48"
                   aria-label={t("settings.voice.readAloud.pitchLabel")}
@@ -1883,7 +1894,7 @@ export function VoiceTab() {
                 max={1}
                 step={0.05}
                 onValueChange={([v]) => {
-                    if (v !== undefined) setTtsVolume(v);
+                    setTtsVolume(v);
                   }}
                 className="w-48"
                 aria-label={t("settings.voice.readAloud.volumeLabel")}

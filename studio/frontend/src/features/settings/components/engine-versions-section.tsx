@@ -29,7 +29,9 @@ export function EngineVersionsSection() {
   const hw = useHardwareInfo();
   const isOwner = useIsAccountOwner();
   const { status, applying, apply, refresh } = useLlamaUpdateCheck({
-    onReloadRequired: resyncInferenceStatusAfterServerModelChange,
+    onReloadRequired: () => {
+      resyncInferenceStatusAfterServerModelChange().catch(() => { /* noop */ });
+    },
     passive: true,
   });
   const [checking, setChecking] = useState(false);

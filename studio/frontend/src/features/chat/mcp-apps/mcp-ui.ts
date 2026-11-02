@@ -135,7 +135,7 @@ export function toolResultParams(
       content.push({ ...block });
       continue;
     }
-    const image = images[next++];
+    const image = images[next++] as { data: string } | undefined;
     if (!image) continue;
     content.push(
       embedded
