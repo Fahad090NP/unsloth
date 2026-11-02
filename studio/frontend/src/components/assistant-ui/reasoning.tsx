@@ -23,6 +23,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { GRID_COLLAPSE_REASONING_ENABLED } from "@/components/assistant-ui/thread-feature-flags";
+
 import {
   CLOSE_FALLBACK_MARGIN_MS,
   UnmeasuredCollapsible,
@@ -86,6 +87,7 @@ import { shallow } from "zustand/shallow";
 import { partsHaveRenderableRenderHtmlTool } from "@/components/assistant-ui/message-derived";
 import { useMessageMemo } from "@/components/assistant-ui/use-message-memo";
 const ANIMATION_DURATION = 200;
+const isGridCollapseEnabled: boolean = GRID_COLLAPSE_REASONING_ENABLED;
 
 function selectionIntersectsElement(
   selection: Selection | null,
@@ -140,7 +142,7 @@ function ReasoningRoot({
   // margin on this path; tool-group and tool-fallback keep the plain duration.
   const lockScroll = useCollapseScrollLock(
     collapsibleRef,
-    GRID_COLLAPSE_REASONING_ENABLED
+    isGridCollapseEnabled
       ? ANIMATION_DURATION + CLOSE_FALLBACK_MARGIN_MS
       : ANIMATION_DURATION,
   );
@@ -176,7 +178,7 @@ function ReasoningRoot({
     ...props,
   };
 
-  return GRID_COLLAPSE_REASONING_ENABLED ? (
+  return isGridCollapseEnabled ? (
     <UnmeasuredCollapsible {...rootProps}>{children}</UnmeasuredCollapsible>
   ) : (
     <Collapsible {...rootProps}>{children}</Collapsible>
@@ -195,7 +197,7 @@ function ReasoningTrigger({
   foldedToolCount?: number;
 }) {
   const foldedSummary = foldedToolSummary(foldedToolCount);
-  const Trigger = GRID_COLLAPSE_REASONING_ENABLED
+  const Trigger = isGridCollapseEnabled
     ? UnmeasuredCollapsibleTrigger
     : CollapsibleTrigger;
 
@@ -262,7 +264,7 @@ function ReasoningContent({
     "data-[state=closed]:pointer-events-none",
   );
 
-  if (GRID_COLLAPSE_REASONING_ENABLED) {
+  if (isGridCollapseEnabled) {
     return (
       <UnmeasuredCollapsibleContent
         data-slot="reasoning-content"

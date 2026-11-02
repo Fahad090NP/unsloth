@@ -47,6 +47,7 @@ const extensionForMimeType = (mimeType?: string): string => {
       return "gif";
     case "image/svg+xml":
       return "svg";
+    case undefined:
     default:
       return "png";
   }
@@ -65,7 +66,7 @@ export const downloadImagePart = (
   }
   const ext = extensionForMimeType(mimeFromImage(part.image));
   const filename = part.filename ?? `image.${ext}`;
-  void downloadUrl(part.image, filename).catch((error) => {
+  downloadUrl(part.image, filename).catch((error: unknown) => {
     if (!isDownloadCancelled(error)) {
       toast.error("Could not save image.");
     }
@@ -77,14 +78,17 @@ export const copyImagePart = async (
 ): Promise<void> => {
   if (
     typeof navigator === "undefined" ||
-    !navigator.clipboard ||
     typeof ClipboardItem === "undefined"
   ) {
     throw new Error("Clipboard API is not available in this environment.");
   }
+  const clipboard: Clipboard | undefined = navigator.clipboard;
+  if (!clipboard) {
+    throw new Error("Clipboard API is not available in this environment.");
+  }
   const blob = await urlToBlob(part.image);
   const mime = mimeFromImage(part.image) || blob.type || "image/png";
-  await navigator.clipboard.write([new ClipboardItem({ [mime]: blob })]);
+  await clipboard.write([new ClipboardItem({ [mime]: blob })]);
 };
 
 const reportImageCopyError = (error: unknown): void => {
@@ -364,13 +368,18 @@ function RegenerateButton({
   return (
     <button
       type="button"
-      onClick={async () => {
-        setIsRegenerating(true);
-        try {
-          await onRegenerate();
-        } finally {
-          setIsRegenerating(false);
-        }
+      onClick={() => {
+        const handleRegenerate = async () => {
+          setIsRegenerating(true);
+          try {
+            await onRegenerate();
+          } finally {
+            setIsRegenerating(false);
+          }
+        };
+        handleRegenerate().catch((error: unknown) => {
+          console.error("Failed to regenerate image", error);
+        });
       }}
       disabled={isRegenerating}
       data-slot="image-regenerate"
@@ -402,7 +411,7 @@ function ImageActions({ part, onRegenerate, className }: ImageActionsProps) {
       <button
         type="button"
         onClick={() => {
-          copyImagePart(part).catch((error) => {
+          copyImagePart(part).catch((error: unknown) => {
             reportImageCopyError(error);
           });
         }}

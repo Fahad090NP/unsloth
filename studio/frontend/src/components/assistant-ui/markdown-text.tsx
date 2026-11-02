@@ -219,7 +219,7 @@ const MarkdownImage = memo(function MarkdownImage(props: ComponentProps<"img">) 
     className,
     onLoad,
     onError,
-    node,
+    node: _node,
     ...dom
   } = props as ComponentProps<"img"> & { node?: unknown };
   // Fallback scope for a src that records no session; one that does keeps it.
@@ -348,7 +348,7 @@ const LINK_CLASS =
   "text-foreground underline underline-offset-2 decoration-foreground/40 hover:decoration-foreground transition-colors cursor-pointer";
 
 function MarkdownLink({ href, children, ...props }: ComponentProps<"a">) {
-  const { node, ...dom } = props as ComponentProps<"a"> & { node?: unknown };
+  const { node: _node, ...dom } = props as ComponentProps<"a"> & { node?: unknown };
   const file = href ? sandboxFileForHref(href) : null;
   // Only file links subscribe to the chat's scope; links re-render per streamed token.
   if (href && file !== null) {
@@ -809,21 +809,12 @@ function StreamdownBlockContent(props: BlockProps) {
 
     return (
       <>
-        {highlightCode || highlightMode === "settled" ? (
-          <FenceBlock
-            // A closed fence in a streaming trace is settled: worker route, not the main thread.
-            isIncomplete={highlightCode ? props.isIncomplete : false}
-            language={codeFence.language}
-            source={codeFence.source}
-          />
-        ) : (
-          <PlainFenceBlock
-            actions
-            isIncomplete={props.isIncomplete}
-            language={codeFence.language}
-            source={codeFence.source}
-          />
-        )}
+        <FenceBlock
+          // A closed fence in a streaming trace is settled: worker route, not the main thread.
+          isIncomplete={highlightCode ? props.isIncomplete : false}
+          language={codeFence.language}
+          source={codeFence.source}
+        />
         {svgSource && <SvgPreview source={svgSource} />}
       </>
     );

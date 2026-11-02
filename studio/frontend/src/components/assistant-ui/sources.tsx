@@ -92,7 +92,7 @@ function Source({
   className,
   variant,
   size,
-  asChild,
+  asChild: _asChild,
   href,
   onClick,
   ...props

@@ -687,16 +687,21 @@ const SentFileItem: FC = () => {
 };
 
 // Module constants: the primitive re-renders every attachment when these change identity.
-const SENT_IMAGE_COMPONENTS = {
-  Image: SentImageTile,
-  Document: NoAttachment,
-  File: NoAttachment,
-};
-const SENT_FILE_COMPONENTS = {
-  Image: NoAttachment,
-  Document: SentFileItem,
-  File: SentFileItem,
-};
+const renderSentImageAttachment = ({
+  attachment,
+}: {
+  attachment: { type: string };
+}) => (attachment.type === "image" ? <SentImageTile /> : null);
+
+const renderSentFileAttachment = ({
+  attachment,
+}: {
+  attachment: { type: string };
+}) =>
+  attachment.type === "document" || attachment.type === "file" ? (
+    <SentFileItem />
+  ) : null;
+
 export const UserMessageAttachments: FC = () => {
   const setting = useAppearanceCustomStore(
     (s) => s.customization.sentAttachments,
@@ -710,7 +715,9 @@ export const UserMessageAttachments: FC = () => {
     <SentAttachmentLayoutContext.Provider value={layout}>
       <div className="aui-user-message-attachments-end flex w-full flex-col items-end gap-2">
         <div className="aui-user-message-attachment-images flex max-w-full flex-row flex-wrap justify-end gap-2 empty:hidden">
-          <MessagePrimitive.Attachments components={SENT_IMAGE_COMPONENTS} />
+          <MessagePrimitive.Attachments>
+            {renderSentImageAttachment}
+          </MessagePrimitive.Attachments>
         </div>
         <div
           className={cn(
@@ -720,7 +727,9 @@ export const UserMessageAttachments: FC = () => {
               : "flex flex-row flex-wrap justify-end gap-2",
           )}
         >
-          <MessagePrimitive.Attachments components={SENT_FILE_COMPONENTS} />
+          <MessagePrimitive.Attachments>
+            {renderSentFileAttachment}
+          </MessagePrimitive.Attachments>
         </div>
       </div>
     </SentAttachmentLayoutContext.Provider>

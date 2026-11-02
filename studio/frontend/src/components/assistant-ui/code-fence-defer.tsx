@@ -87,7 +87,8 @@ export const fenceMode = (): FenceMode =>
 
 const readBuildFlag = (): string => {
   try {
-    return import.meta.env.VITE_UNSLOTH_DEFER_FENCE_HIGHLIGHT ?? "";
+    const flag = import.meta.env.VITE_UNSLOTH_DEFER_FENCE_HIGHLIGHT;
+    return typeof flag === "string" ? flag : "";
   } catch {
     return "";
   }
@@ -198,7 +199,7 @@ const queueReach = (gate: FenceGate): void => {
 
 const gateOpen = (gate: FenceGate): boolean =>
   inBand(gate.node, gate.near)
-  && (gate.near === gate.outer || inBand(gate.near!, gate.outer));
+  && (gate.near === gate.outer || (gate.near !== null && inBand(gate.near, gate.outer)));
 
 /*
  * Upgrade inside this task so the browser never paints the plain shell. All three steps are needed:
@@ -557,7 +558,7 @@ export function useFenceReached(
     if (!node) return;
     const near = scrollerOf(node);
     const outer = outermostScrollerOf(node);
-    if (inBand(node, near) && (near === outer || inBand(near!, outer))) {
+    if (inBand(node, near) && (near === outer || (near !== null && inBand(near, outer)))) {
       // The cascading render is intended: once per on-screen fence, versus painted frames of plain code.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLatched(true);
@@ -573,9 +574,9 @@ export function useFenceReached(
     const near = scrollerOf(node);
     const outer = outermostScrollerOf(node);
     // Watch the pane, not the fence, against the outer root: the fence would be clipped by the pane.
-    const gates: [Element, Element | null][] = near === outer
+    const gates: [Element, Element | null][] = near === outer || near === null
       ? [[node, near]]
-      : [[node, near], [near!, outer]];
+      : [[node, near], [near, outer]];
     const seen = gates.map(() => false);
     const observers = gates.map(([, root], i) => new IntersectionObserver(
       (entries) => {
@@ -627,7 +628,7 @@ export function useFenceReached(
       unreached.delete(registered);
       unwatchScrolling();
     };
-  }, [reached, host, generation]);
+  }, [reached, host, generation, chars, language]);
 
   return reached;
 }
@@ -854,6 +855,7 @@ let findBarObserver: MutationObserver | null = null;
 let frameRects: Map<Element, DOMRect> | null = null;
 let frameFlying: Map<Element | null, boolean> | null = null;
 let frameSettle = false;
+const isFrameSettle = (): boolean => frameSettle;
 let pointerHeld: Node | null = null;
 let heldLastFrame = false;
 let frameSelection: { read: boolean; value: Selection | null } | null = null;
@@ -895,7 +897,8 @@ const draggingDuringFrame = (body: HTMLElement): boolean => {
 const selectionBoundaryLines = (codeNode: HTMLElement, body: HTMLElement): number[] => {
   const selection = selectionDuringFrame();
   const lines: number[] = [];
-  for (let index = 0; selection !== null && index < selection.rangeCount; index += 1) {
+  if (!selection) return lines;
+  for (let index = 0; index < selection.rangeCount; index += 1) {
     const range = selection.getRangeAt(index);
     for (const boundary of [range.startContainer, range.endContainer]) {
       if (!body.contains(boundary)) continue;
@@ -991,7 +994,7 @@ const remeasureWindows = (): void => {
     frameFlying = null;
     frameSelection = null;
   }
-  if (frameSettle && windowedFences.size > 0 && !printing) {
+  if (isFrameSettle() && windowedFences.size > 0 && !printing) {
     windowFrame = requestAnimationFrame(remeasureWindows);
   }
 };
@@ -1418,89 +1421,91 @@ function useLineWindow(
   const geometry = useRef<FenceGeometry | null>(null);
   const metricsStale = useRef(false);
   const lines = useRef(lineCount);
-  lines.current = lineCount;
   const hasBody = lineCount > 0;
   const overCap = lineCount > WINDOW_CAP_LINES;
   const measure = useRef<() => void>(() => undefined);
 
-  measure.current = () => {
-    const node = code.current;
-    const outer = frame.current;
-    const body = surface.current;
-    const region = wrapper.current;
-    if (!node || !outer || !body || !region) return;
-    if (lines.current <= WINDOW_CAP_LINES && current.current === null) return;
-    if (printing || findBarOpen()) {
-      if (current.current === null && pinned.current === null) return;
-      current.current = null;
-      pinned.current = null;
-      setState({ measured: true, window: null, pins: null });
-      return;
-    }
-    let known = geometry.current;
-    if (
-      known === null
-      || (known.scroller !== null && !isScrollable(known.scroller))
-    ) {
-      if (skippedByContainment(body)) return;
-      known = readFenceGeometry(node, body, region, outer, lines.current);
-      metricsStale.current = false;
-    } else if (metricsStale.current && !skippedByContainment(body)) {
-      known = {
-        scroller: known.scroller,
-        ...readFenceMetrics(node, body, region, lines.current, known),
-      };
-      metricsStale.current = false;
-    }
-    geometry.current = known;
-    const height =
-      Math.round(
-        (lines.current * known.lineHeight + known.insets) * measureIntrinsicScale(region) * 1000,
-      ) / 1000;
-    const declared = `${height}px`;
-    if (region.style.getPropertyValue(FENCE_HEIGHT_PROPERTY) !== declared) {
-      region.style.setProperty(FENCE_HEIGHT_PROPERTY, declared);
-      forgetScrollable();
-    }
-    const bounds = known.scroller === null ? null : rectDuringFrame(known.scroller);
-    const viewportTop = bounds ? bounds.top : 0;
-    const viewportHeight = bounds ? bounds.height : window.innerHeight;
-    const size = `${bounds ? bounds.width : window.innerWidth}x${viewportHeight}`;
-    if (size !== viewportSize.current) resizedAt.current = performance.now();
-    viewportSize.current = size;
-    const resized = performance.now() - resizedAt.current < RESIZE_SETTLE_MS;
-    const box = rectDuringFrame(region);
-    const reach = viewportHeight * FAR_VIEWPORTS;
-    if (
-      current.current !== null
-      && (box.bottom < viewportTop - reach || box.top > viewportTop + viewportHeight + reach)
-    ) {
-      return;
-    }
-    if (current.current !== null && flyingDuringFrame(known.scroller, viewportHeight)) return;
-    if (current.current !== null && draggingDuringFrame(body)) return;
-    const next = selectLineWindow({
-      lineCount: lines.current,
-      lineHeight: known.lineHeight,
-      contentTop: box.top + known.contentInset,
-      viewportTop,
-      viewportHeight,
-      previous: current.current,
-    });
-    const pins = pinBoundaryLines(
-      selectionBoundaryLines(node, body),
-      current.current,
-      pinned.current,
-    );
-    if (next === current.current && samePins(pins, pinned.current)) return;
-    const shifting =
-      deferShifts && current.current !== null && frameRects !== null && !resized;
-    current.current = next;
-    pinned.current = pins;
-    const update = { measured: true, window: next, pins };
-    if (shifting) startTransition(() => { setState(update); });
-    else setState(update);
-  };
+  useLayoutEffect(() => {
+    lines.current = lineCount;
+    measure.current = () => {
+      const node = code.current;
+      const outer = frame.current;
+      const body = surface.current;
+      const region = wrapper.current;
+      if (!node || !outer || !body || !region) return;
+      if (lines.current <= WINDOW_CAP_LINES && current.current === null) return;
+      if (printing || findBarOpen()) {
+        if (current.current === null && pinned.current === null) return;
+        current.current = null;
+        pinned.current = null;
+        setState({ measured: true, window: null, pins: null });
+        return;
+      }
+      let known = geometry.current;
+      if (
+        known === null
+        || (known.scroller !== null && !isScrollable(known.scroller))
+      ) {
+        if (skippedByContainment(body)) return;
+        known = readFenceGeometry(node, body, region, outer, lines.current);
+        metricsStale.current = false;
+      } else if (metricsStale.current && !skippedByContainment(body)) {
+        known = {
+          scroller: known.scroller,
+          ...readFenceMetrics(node, body, region, lines.current, known),
+        };
+        metricsStale.current = false;
+      }
+      geometry.current = known;
+      const height =
+        Math.round(
+          (lines.current * known.lineHeight + known.insets) * measureIntrinsicScale(region) * 1000,
+        ) / 1000;
+      const declared = `${height}px`;
+      if (region.style.getPropertyValue(FENCE_HEIGHT_PROPERTY) !== declared) {
+        region.style.setProperty(FENCE_HEIGHT_PROPERTY, declared);
+        forgetScrollable();
+      }
+      const bounds = known.scroller === null ? null : rectDuringFrame(known.scroller);
+      const viewportTop = bounds ? bounds.top : 0;
+      const viewportHeight = bounds ? bounds.height : window.innerHeight;
+      const size = `${bounds ? bounds.width : window.innerWidth}x${viewportHeight}`;
+      if (size !== viewportSize.current) resizedAt.current = performance.now();
+      viewportSize.current = size;
+      const resized = performance.now() - resizedAt.current < RESIZE_SETTLE_MS;
+      const box = rectDuringFrame(region);
+      const reach = viewportHeight * FAR_VIEWPORTS;
+      if (
+        current.current !== null
+        && (box.bottom < viewportTop - reach || box.top > viewportTop + viewportHeight + reach)
+      ) {
+        return;
+      }
+      if (current.current !== null && flyingDuringFrame(known.scroller, viewportHeight)) return;
+      if (current.current !== null && draggingDuringFrame(body)) return;
+      const next = selectLineWindow({
+        lineCount: lines.current,
+        lineHeight: known.lineHeight,
+        contentTop: box.top + known.contentInset,
+        viewportTop,
+        viewportHeight,
+        previous: current.current,
+      });
+      const pins = pinBoundaryLines(
+        selectionBoundaryLines(node, body),
+        current.current,
+        pinned.current,
+      );
+      if (next === current.current && samePins(pins, pinned.current)) return;
+      const shifting =
+        deferShifts && current.current !== null && frameRects !== null && !resized;
+      current.current = next;
+      pinned.current = pins;
+      const update = { measured: true, window: next, pins };
+      if (shifting) startTransition(() => { setState(update); });
+      else setState(update);
+    };
+  });
 
   useLayoutEffect(() => {
     if (!enabled) {

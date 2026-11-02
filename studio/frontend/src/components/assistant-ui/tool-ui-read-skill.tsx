@@ -23,7 +23,7 @@ import { ScrollPane } from "./scroll-pane";
 
 // `strokeWidth` is dropped: SVG types it `string | number`, HugeiconsIcon wants a number.
 function SkillIcon({
-  strokeWidth,
+  strokeWidth: _strokeWidth,
   ...props
 }: ComponentProps<"svg">) {
   return <HugeiconsIcon icon={Scroll01Icon} {...props} />;

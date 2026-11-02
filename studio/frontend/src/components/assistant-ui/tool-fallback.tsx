@@ -187,6 +187,25 @@ const statusIconMap: Record<Exclude<ToolStatus, "complete">, ElementType> = {
   "requires-action": AlertCircleGlyph,
 };
 
+function renderStatusIcon(statusType: ToolStatus, name: string) {
+  const dataSlot = "tool-fallback-trigger-icon";
+  const className = "aui-tool-fallback-trigger-icon size-4 shrink-0";
+  if (statusType === "complete") {
+    return name.startsWith("browser_") ? (
+      <InternetGlyph data-slot={dataSlot} className={className} />
+    ) : (
+      <WrenchGlyph data-slot={dataSlot} className={className} />
+    );
+  }
+  if (statusType === "running") {
+    return <LoaderIcon data-slot={dataSlot} className={className} />;
+  }
+  if (statusType === "incomplete") {
+    return <CancelCircleGlyph data-slot={dataSlot} className={className} />;
+  }
+  return <AlertCircleGlyph data-slot={dataSlot} className={className} />;
+}
+
 function ToolFallbackTrigger({
   toolName,
   mcpServer,
@@ -213,10 +232,6 @@ function ToolFallbackTrigger({
 
   const label = toolFallbackLabel(status);
   const name = toolArgText(toolName);
-  const StatusIcon =
-    statusType === "complete"
-      ? completeToolIcon(name)
-      : statusIconMap[statusType];
   const displayName = formatMcpToolName(name, mcpServer, mcpTool) ?? name;
 
   return (
@@ -238,10 +253,7 @@ function ToolFallbackTrigger({
           className="aui-tool-fallback-trigger-icon size-4 shrink-0"
         />
       ) : (
-        <StatusIcon
-          data-slot="tool-fallback-trigger-icon"
-          className="aui-tool-fallback-trigger-icon size-4 shrink-0"
-        />
+        renderStatusIcon(statusType, name)
       )}
       <span
         data-slot="tool-fallback-trigger-label"

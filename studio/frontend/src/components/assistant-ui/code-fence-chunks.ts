@@ -16,7 +16,7 @@ export function updateFenceChunks<T>(
     const start = index * FENCE_CHUNK_LINES;
     const length = Math.min(FENCE_CHUNK_LINES, lines.length - start);
     const old = previous?.[index];
-    let unchanged = old !== undefined && old.length === length;
+    let unchanged = old?.length === length;
     if (unchanged && old) {
       for (let offset = 0; offset < length; offset += 1) {
         if (old[offset] !== lines[start + offset]) {

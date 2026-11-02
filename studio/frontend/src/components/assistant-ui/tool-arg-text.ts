@@ -23,7 +23,14 @@ export const toolArgText = (value: unknown): string => {
     if (typeof value === "symbol" || typeof value === "function") {
       return value.toString();
     }
-    return String(value);
+    if (
+      typeof value === "number" ||
+      typeof value === "boolean" ||
+      typeof value === "bigint"
+    ) {
+      return String(value);
+    }
+    return "";
   } catch {
     // Load-bearing: Firefox and Safari throw on deep nesting.
     // Keep the binding bare: Firefox's is not a RangeError.

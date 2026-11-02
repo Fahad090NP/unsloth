@@ -17,7 +17,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { downloadUrl, isDownloadCancelled } from "@/lib/native-files";
 import { toast } from "@/lib/toast";
 import type { CSSProperties, MouseEvent } from "react";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useGeneratedImageOverlay } from "./generated-image-overlay-context";
 import { downloadImagePart } from "./image";
 import {
@@ -371,28 +371,28 @@ const ImageGenerationToolUIImpl: ToolCallMessagePartComponent = ({
     : false;
   const promptExpanded = expandedCaptionPrompt === captionPrompt;
 
-  const updatePromptOverflow = useCallback(() => {
-    const captionElement = captionRef.current;
-    if (!captionElement || !captionPrompt) {
-      return;
-    }
-    const computedStyle = window.getComputedStyle(captionElement);
-    const lineHeight = Number.parseFloat(computedStyle.lineHeight);
-    const collapsedHeight =
-      (Number.isFinite(lineHeight) ? lineHeight : 20) * CAPTION_COLLAPSED_LINES;
-    const hasOverflow = captionElement.scrollHeight > collapsedHeight + 1;
-    setPromptOverflow((current) =>
-      current?.prompt === captionPrompt && current.canExpand === hasOverflow
-        ? current
-        : { prompt: captionPrompt, canExpand: hasOverflow },
-    );
-  }, [captionPrompt]);
-
   useEffect(() => {
     const captionElement = captionRef.current;
     if (!captionElement || !captionPrompt) {
       return;
     }
+    const updatePromptOverflow = () => {
+      const el = captionRef.current;
+      if (!el || !captionPrompt) {
+        return;
+      }
+      const computedStyle = window.getComputedStyle(el);
+      const lineHeight = Number.parseFloat(computedStyle.lineHeight);
+      const collapsedHeight =
+        (Number.isFinite(lineHeight) ? lineHeight : 20) * CAPTION_COLLAPSED_LINES;
+      const hasOverflow = el.scrollHeight > collapsedHeight + 1;
+      setPromptOverflow((current) =>
+        current?.prompt === captionPrompt && current.canExpand === hasOverflow
+          ? current
+          : { prompt: captionPrompt, canExpand: hasOverflow },
+      );
+    };
+
     const frame = window.requestAnimationFrame(updatePromptOverflow);
     const resizeObserver =
       typeof ResizeObserver === "undefined"
@@ -405,7 +405,7 @@ const ImageGenerationToolUIImpl: ToolCallMessagePartComponent = ({
       resizeObserver?.disconnect();
       window.removeEventListener("resize", updatePromptOverflow);
     };
-  }, [captionPrompt, updatePromptOverflow]);
+  }, [captionPrompt]);
 
   const shouldClampPrompt =
     (promptOverflowMeasured ? promptCanExpand : promptLikelyNeedsExpansion) &&

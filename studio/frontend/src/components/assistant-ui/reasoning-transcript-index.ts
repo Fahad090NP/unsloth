@@ -207,8 +207,12 @@ function continuationPrefix(
   const suffix = repaired.startsWith(trimmed)
     ? repaired.slice(trimmed.length)
     : "";
-  const inlinePrefix =
-    suffix && /^[*_`]+$/.test(suffix) ? [...suffix].reverse().join("") : "";
+  let inlinePrefix = "";
+  if (suffix && /^[*_`]+$/.test(suffix)) {
+    for (let i = suffix.length - 1; i >= 0; i -= 1) {
+      inlinePrefix += suffix[i];
+    }
+  }
   return {
     prefix: listPrefix + inlinePrefix,
     listDepth: containers.filter((item) => item.list).length,
@@ -253,23 +257,24 @@ function fenceAt(source: string, start: number): Fence | null {
 }
 
 function fenceEnd(source: string, fence: Fence): number | null {
-  fence.closeStart = undefined;
-  for (let from = fence.scan; from < source.length; ) {
+  const currentFence = fence;
+  currentFence.closeStart = undefined;
+  for (let from = currentFence.scan; from < source.length; ) {
     const newline = source.indexOf("\n", from);
     const end = newline < 0 ? source.length : newline;
     const line = source.slice(from, end);
     const match = /^ {0,3}(`{3,}|~{3,})[\t ]*\r?$/.exec(line);
     if (
-      match?.[1][0] === fence.marker[0] &&
-      match[1].length >= fence.marker.length
+      match?.[1][0] === currentFence.marker[0] &&
+      match[1].length >= currentFence.marker.length
     ) {
       // A partial closing line can acquire non-whitespace on the next append.
-      fence.closeStart = from;
+      currentFence.closeStart = from;
       return newline < 0 ? null : newline + 1;
     }
     if (newline < 0) break;
     from = newline + 1;
-    fence.scan = from;
+    currentFence.scan = from;
   }
   return null;
 }
@@ -339,7 +344,7 @@ class DocumentIndex {
             bodyStart: this.fence.bodyStart - this.offset,
             bodyEnd: 0,
             incomplete: true,
-            indent: /^ */.exec(source.slice(this.offset))![0].length,
+            indent: (/^ */.exec(source.slice(this.offset))?.[0] ?? "").length,
             language: markdownBlockFallback(
               source.slice(this.offset, this.fence.bodyStart),
             ).language,
@@ -347,9 +352,11 @@ class DocumentIndex {
         });
         block.end = end ?? source.length;
         block.text = source.slice(this.offset, block.end);
-        block.fence!.bodyEnd =
-          (this.fence.closeStart ?? block.end) - this.offset;
-        block.fence!.incomplete = this.fence.closeStart === undefined;
+        if (block.fence) {
+          block.fence.bodyEnd =
+            (this.fence.closeStart ?? block.end) - this.offset;
+          block.fence.incomplete = this.fence.closeStart === undefined;
+        }
         if (end === null) {
           pending.push(block);
           break;
@@ -375,7 +382,7 @@ class DocumentIndex {
       }).children;
       for (const node of referenceDefinitions(nodes)) {
         const start =
-          this.offset + node.position!.start.offset! - this.prefix.length;
+          this.offset + (node.position?.start.offset ?? 0) - this.prefix.length;
         const key = normalizeReference(node.identifier);
         const previous = this.definitions.get(key);
         // CommonMark uses the first definition; only its still-streaming source can change.

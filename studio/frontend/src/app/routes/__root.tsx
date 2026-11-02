@@ -284,8 +284,6 @@ function CredentialBootstrapGate({
 
   useEffect(() => {
     if (!active) {
-      runRevision.current += 1;
-      setReady(false);
       return;
     }
     let mounted = true;
@@ -313,10 +311,13 @@ function CredentialBootstrapGate({
 
     window.addEventListener(AUTH_SESSION_CLEARED_EVENT, reconcile);
     window.addEventListener(AUTH_SESSION_STORED_EVENT, reconcile);
-    reconcile();
+    queueMicrotask(() => {
+      if (mounted) reconcile();
+    });
     return () => {
       mounted = false;
       runRevision.current += 1;
+      setReady(false);
       window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, reconcile);
       window.removeEventListener(AUTH_SESSION_STORED_EVENT, reconcile);
     };
@@ -622,18 +623,23 @@ function RootLayout() {
       : null,
     "open-folder":
       routeShortcutEnabled && pathLeasesSupported && !ragUnavailable && !openingFolder
-        ? () =>
-            openFolderAsProject().then((project) => {
-              if (!project) return;
-              const chatRuntime = useChatRuntimeStore.getState();
-              chatRuntime.setActiveThreadId(null);
-              chatRuntime.setActiveProjectId(project.id);
-              navigate({ to: "/chat", search: { project: project.id } }).catch((error: unknown) => {
+        ? () => {
+            openFolderAsProject()
+              .then((project) => {
+                if (!project) return;
+                const chatRuntime = useChatRuntimeStore.getState();
+                chatRuntime.setActiveThreadId(null);
+                chatRuntime.setActiveProjectId(project.id);
+                navigate({ to: "/chat", search: { project: project.id } }).catch(
+                  (error: unknown) => {
+                    console.error("Background chat operation failed", error);
+                  },
+                );
+              })
+              .catch((error: unknown) => {
                 console.error("Background chat operation failed", error);
               });
-            }).catch((error: unknown) => {
-              console.error("Background chat operation failed", error);
-            })
+          }
         : null,
     "toggle-sidebar": viaShortcut("toggleSidebar", sidebarMounted),
     "find": viaShortcut("findInPage", findMounted),

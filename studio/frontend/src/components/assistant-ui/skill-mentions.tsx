@@ -130,8 +130,8 @@ function MentionTabAccept({
 }: {
   scopeRef: RefObject<HTMLElement | null>;
 }): null {
-  const { open, items, handleKeyDown } = unstable_useTriggerPopoverScopeContext();
-  const active = open && items.length > 0;
+  const triggerScope = unstable_useTriggerPopoverScopeContext();
+  const active = triggerScope.open && triggerScope.items.length > 0;
   useEffect(() => {
     if (!active) return;
     const accept = (event: globalThis.KeyboardEvent) => {
@@ -146,23 +146,22 @@ function MentionTabAccept({
         shiftKey: false,
         preventDefault: () => { event.preventDefault(); },
       };
-      if (handleKeyDown(enter)) event.stopPropagation();
+      if (triggerScope.handleKeyDown(enter)) event.stopPropagation();
     };
     // intercept before the browser moves focus or the composer handles Tab.
     window.addEventListener("keydown", accept, true);
     return () => { window.removeEventListener("keydown", accept, true); };
-  }, [active, handleKeyDown, scopeRef]);
+  }, [active, triggerScope, scopeRef]);
   return null;
 }
 
 // replace the full token because the library insert stops at the caret and leaves trailing text.
 function MentionTokenReplacer(): null {
   const aui = useAui();
-  const { registerSelectItemOverride, setCursorPosition } =
-    unstable_useTriggerPopoverScopeContext();
+  const triggerScope = unstable_useTriggerPopoverScopeContext();
   useEffect(
     () =>
-      registerSelectItemOverride((item) => {
+      triggerScope.registerSelectItemOverride((item) => {
         const input = document.activeElement;
         if (!(input instanceof HTMLTextAreaElement)) return false;
         const text = aui.composer().getState().text;
@@ -175,13 +174,13 @@ function MentionTokenReplacer(): null {
           skillMentionFormatter.serialize(item),
         );
         aui.composer().setText(next.text);
-        setCursorPosition(next.caret);
+        triggerScope.setCursorPosition(next.caret);
         requestAnimationFrame(() => {
           input.setSelectionRange(next.caret, next.caret);
         });
         return true;
       }),
-    [aui, registerSelectItemOverride, setCursorPosition],
+    [aui, triggerScope],
   );
   return null;
 }
@@ -334,7 +333,12 @@ export function useTextareaSkillMentions({
         (text.length < range.end ||
           !text.slice(range.start, range.end).startsWith("@")))
     ) {
-      setRange(null);
+      const timer = setTimeout(() => {
+        setRange(null);
+      }, 0);
+      return () => {
+        clearTimeout(timer);
+      };
     }
   }, [mentionsEnabled, range, text]);
 

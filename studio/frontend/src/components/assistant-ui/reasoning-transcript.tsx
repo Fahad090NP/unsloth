@@ -249,7 +249,9 @@ const codeRowText = (
   leading: boolean,
 ): string[] => {
   const nodes: string[] = [];
-  for (const [at, { line, column, text }] of fragment.code!.lines.entries()) {
+  const code = fragment.code;
+  if (!code) return nodes;
+  for (const [at, { line, column, text }] of code.lines.entries()) {
     if (column === 0 && line > 0 && !(leading && at === 0)) nodes.push("\n");
     if (text !== "") nodes.push(text);
   }
@@ -262,7 +264,9 @@ const colouredRow = (
   tokens: readonly TokenLine[],
 ): React.ReactNode[] => {
   const nodes: React.ReactNode[] = [];
-  for (const [at, { line, column, text }] of fragment.code!.lines.entries()) {
+  const code = fragment.code;
+  if (!code) return nodes;
+  for (const [at, { line, column, text }] of code.lines.entries()) {
     if (column === 0 && line > 0 && !(leading && at === 0)) nodes.push("\n");
     if (text === "") continue;
     const clipped = clipLineTokens(tokens[line], column, text);
@@ -331,17 +335,18 @@ function CodeGroup({
   fragments: readonly ReasoningFragment[];
   streaming: boolean;
 }) {
-  const code = fragments[indices[0]].code!;
   const first = fragments[indices[0]];
+  const code = first?.code;
   const last = fragments[indices[indices.length - 1]];
   const surface = useRef<HTMLDivElement>(null);
   const colour = useThinkingCodeColour(
     surface,
-    code.source,
-    code.language,
+    code?.source ?? "",
+    code?.language ?? null,
     // A trace that stopped inside a fence never closes it; it is still finished.
-    !code.incomplete || !streaming,
+    !code?.incomplete || !streaming,
   );
+  if (!first || !code || !last) return null;
   const breaksAfter =
     !last.last &&
     fragments[indices[indices.length - 1] + 1]?.code?.lines[0]?.column === 0;
@@ -845,28 +850,30 @@ export function ReasoningTranscript({
       return undefined;
     };
     const passageOf = (anchor: Reading) => {
+      const currentAnchor = anchor;
       const row =
-        anchor.row.isConnected
-        && element.contains(anchor.row)
-        && anchor.row.getAttribute("data-reasoning-fragment") === anchor.key
-          ? anchor.row
+        currentAnchor.row.isConnected
+        && element.contains(currentAnchor.row)
+        && currentAnchor.row.getAttribute("data-reasoning-fragment") === currentAnchor.key
+          ? currentAnchor.row
           : element.querySelector(
-              `[data-reasoning-fragment="${CSS.escape(anchor.key)}"]`,
+              `[data-reasoning-fragment="${CSS.escape(currentAnchor.key)}"]`,
             );
       if (!row) return null;
-      anchor.row = row;
+      currentAnchor.row = row;
       passageRange ??= document.createRange();
-      return reasoningTextRange(row, anchor.text, anchor.occurrence, passageRange);
+      return reasoningTextRange(row, currentAnchor.text, currentAnchor.occurrence, passageRange);
     };
     let residue = 0;
     const hold = (anchor: Reading): boolean => {
+      const currentAnchor = anchor;
       residue = 0;
       const rootTop = element.getBoundingClientRect().top;
-      const was = rootTop + anchor.offset;
+      const was = rootTop + currentAnchor.offset;
       const bounds = scroll.getBoundingClientRect();
       if (was < bounds.top - bounds.height || was > bounds.bottom + bounds.height)
         return false;
-      const passage = passageOf(anchor);
+      const passage = passageOf(currentAnchor);
       if (!passage) return false;
       const top = passage.getBoundingClientRect().top;
       const shift = top - was;
@@ -874,14 +881,14 @@ export function ReasoningTranscript({
         residue = shift;
         return true;
       }
-      anchor.offset = top - rootTop;
-      anchor.top = was;
+      currentAnchor.offset = top - rootTop;
+      currentAnchor.top = was;
       const before = scroll.scrollTop;
       const rounded = Math.round(shift);
       const acted = adjustAbove(rounded);
       const applied = scroll.scrollTop - before;
       if (applied !== 0 || (acted && rounded !== 0)) {
-        anchor.offset -= shift - applied;
+        currentAnchor.offset -= shift - applied;
         residue = shift - applied;
       }
       return true;
@@ -1175,7 +1182,7 @@ export function ReasoningTranscript({
       streaming:
         streaming &&
         (group.code
-          ? fragments[first].code!.incomplete
+          ? Boolean(fragments[first]?.code?.incomplete)
           : first === fragments.length - 1),
     };
   };
