@@ -59,7 +59,7 @@ function App() {
                   setCreated(project);
                   setEditing(true);
                 })
-                .catch((error) => {
+                .catch((error: unknown) => {
                   throw error;
                 });
             }}
