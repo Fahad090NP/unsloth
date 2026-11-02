@@ -106,7 +106,7 @@ export async function* withTrailingPublish<T>(
   let pending: Promise<IteratorResult<T>> | null = null;
   let exhausted = false;
   try {
-    while (true) {
+    for (;;) {
       pending ??= iterator.next();
       const reopened = gate.heldUntilReopen();
       const next = reopened

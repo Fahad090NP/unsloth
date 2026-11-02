@@ -121,8 +121,7 @@ export async function* streamJsonRecords(
   let depth = 0;
   let inString = false;
   let escaped = false;
-  let sawArrayStart = false;
-  let sawArrayEnd = false;
+  const arrayState = { started: false, ended: false };
   let emittedRecord = false;
   let lineFramed = false;
 
@@ -160,7 +159,7 @@ export async function* streamJsonRecords(
         }
 
         if (start < 0) {
-          if (sawArrayEnd) {
+          if (arrayState.ended) {
             if (code !== SPACE && code !== TAB && code !== NEWLINE && code !== RETURN) {
               throw new SyntaxError(
                 "The export continues after its closing bracket, so it is not one JSON array.",
@@ -169,13 +168,13 @@ export async function* streamJsonRecords(
             scan++;
             continue;
           }
-          if (code === OPEN_BRACKET && !sawArrayStart) {
-            sawArrayStart = true;
+          if (code === OPEN_BRACKET && !arrayState.started) {
+            arrayState.started = true;
             scan++;
             continue;
           }
           if (code !== OPEN_BRACE && code !== OPEN_BRACKET) {
-            if (code === CLOSE_BRACKET && sawArrayStart) sawArrayEnd = true;
+            if (code === CLOSE_BRACKET && arrayState.started) arrayState.ended = true;
             scan++;
             continue;
           }
@@ -207,7 +206,7 @@ export async function* streamJsonRecords(
       }
 
       // A pending record is damaged once a later line starts a record; independent of chunk boundaries.
-      if (!sawArrayStart && start >= 0) {
+      if (!arrayState.started && start >= 0) {
         const lastNewline = buffer.lastIndexOf("\n");
         const boundary =
           lastNewline > start ? NEW_RECORD_LINE.exec(buffer.slice(start, lastNewline)) : null;
@@ -229,7 +228,7 @@ export async function* streamJsonRecords(
 
   const tail = start >= 0 ? buffer.slice(start).trim() : "";
   if (tail) {
-    if (sawArrayStart) {
+    if (arrayState.started) {
       // Report a truncated array record in the same words as the closing-bracket check.
       let record: unknown;
       try {
@@ -252,7 +251,7 @@ export async function* streamJsonRecords(
   }
 
   // A missing closing bracket is the only sign a download was cut between records.
-  if (sawArrayStart && !sawArrayEnd) {
+  if (arrayState.started && !arrayState.ended) {
     throw new SyntaxError(
       "The JSON array ends before its closing bracket, so the export is incomplete.",
     );

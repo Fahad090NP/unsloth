@@ -85,19 +85,20 @@ export function createRunCheckpointScheduler(
   };
 
   const schedule = (threadId: string, state: ThreadState): void => {
-    state.handle = timers.setTimeout(() => {
-      state.handle = null;
-      if (state.stopped) {
+    const current = state;
+    current.handle = timers.setTimeout(() => {
+      current.handle = null;
+      if (current.stopped) {
         return;
       }
       const reschedule = () => {
-        if (!state.stopped) {
-          schedule(threadId, state);
+        if (!current.stopped) {
+          schedule(threadId, current);
         }
       };
       // Both exits take a final save, or the last interval's output is lost.
       const capped =
-        now() - state.startedAt >= maxDurationMs && isBoundedRun(threadId);
+        now() - current.startedAt >= maxDurationMs && isBoundedRun(threadId);
       if (!isRunning(threadId) || capped) {
         stop(threadId);
         void runSave(threadId).then(noop, noop);

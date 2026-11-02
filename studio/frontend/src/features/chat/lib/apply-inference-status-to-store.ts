@@ -123,7 +123,7 @@ function ensureActiveModelInStoreList(
   const summary: ChatModelRow = {
     id: checkpointId,
     name: modelDisplayName(status.active_model ?? checkpointId),
-    isVision: status.is_vision ?? false,
+    isVision: status.is_vision,
     isLora: false,
     isGguf: status.is_gguf ?? false,
     ...caps,
@@ -766,7 +766,7 @@ export async function tryAdoptServerActiveModel(options?: {
   // Not chat-adoptable; the sweep picks a real chat model, which evicts it.
   if (
     !status.active_model ||
-    (status.loading.length ?? 0) > 0 ||
+    status.loading.length > 0 ||
     isSpeechOnlyStatus(status)
   ) {
     return false;

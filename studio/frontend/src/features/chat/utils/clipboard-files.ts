@@ -168,7 +168,7 @@ function addNativeClipboardFiles(
   addFiles: (files: readonly File[]) => void | Promise<void>,
   onError?: () => void,
 ): void {
-  void (async () => {
+  (async () => {
     try {
       const files = await readNativeClipboardFiles();
       if (files.length > 0) return files;
@@ -177,10 +177,14 @@ function addNativeClipboardFiles(
     }
     const image = await readNativeClipboardImage();
     return image ? [image] : [];
-  })().then((files) => {
-    if (files.length > 0) addClipboardFiles(files, addFiles, onError);
-    else onError?.();
-  });
+  })()
+    .then((files) => {
+      if (files.length > 0) addClipboardFiles(files, addFiles, onError);
+      else onError?.();
+    })
+    .catch((_error: unknown) => {
+      onError?.();
+    });
 }
 
 export function pasteClipboardFiles(

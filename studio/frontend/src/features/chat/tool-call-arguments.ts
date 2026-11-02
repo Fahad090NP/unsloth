@@ -312,8 +312,8 @@ class JsonTextParser {
 }
 
 function stringifyJson(value: unknown): string {
-  const serializedValue = JSON.stringify(value);
-  return serializedValue === undefined ? "null" : serializedValue;
+  const serializedValue: string | undefined = JSON.stringify(value);
+  return serializedValue ?? "null";
 }
 
 function mergeJsonNode(node: JsonTextNode, current: unknown): string {
@@ -403,8 +403,8 @@ export function streamedToolCallArguments(value: unknown): string {
     return "";
   }
   try {
-    const serializedValue = JSON.stringify(value);
-    return serializedValue === undefined ? "" : serializedValue;
+    const serializedValue: string | undefined = JSON.stringify(value);
+    return serializedValue ?? "";
   } catch {
     return "";
   }

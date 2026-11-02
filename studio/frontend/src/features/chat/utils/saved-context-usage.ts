@@ -130,18 +130,19 @@ export function branchContextUsage(
   let revisions = 0;
   let anchor = -1;
   let calibration: { context: number; estimated: number } | null = null;
-  branch.forEach((message, index) => {
+  for (let index = 0; index < branch.length; index++) {
+    const message = branch[index];
     revisions += revisionOf(message.metadata);
-    if (message.role !== "assistant") return;
-    if (typeof message.metadata?.researchRunId === "string") return;
+    if (message.role !== "assistant") continue;
+    if (typeof message.metadata?.researchRunId === "string") continue;
     const usage = message.metadata?.contextUsage as BranchContextUsage | undefined;
     const context = usage?.contextTokens ?? usage?.totalTokens;
-    if (!usage || typeof context !== "number" || !Number.isFinite(context) || context < 0) return;
-    if (ggufWindow && context > ggufWindow) return;
+    if (!usage || typeof context !== "number" || !Number.isFinite(context) || context < 0) continue;
+    if (ggufWindow && context > ggufWindow) continue;
     const modelMatches = usage.modelId
       ? usage.modelId === checkpoint
       : localWindow != null && localWindow > 0;
-    if (!modelMatches || isSummedToolLoopUsage(usage, message.content)) return;
+    if (!modelMatches || isSummedToolLoopUsage(usage, message.content)) continue;
     const current =
       (reasoningKey === undefined || usage.reasoningKey === undefined || isExternalModelId(checkpoint) || usage.reasoningKey === reasoningKey) &&
       (usage.revision ?? 0) === revisions &&
@@ -156,10 +157,9 @@ export function branchContextUsage(
     ) {
       calibration = { context, estimated: usage.estimatedTokens };
     }
-  });
-  const cal: { context: number; estimated: number } | null = calibration;
-  if (cal) {
-    const { context, estimated } = cal;
+  }
+  if (calibration) {
+    const { context, estimated } = calibration;
     const now = branchTokenEstimate(branch) ?? 0;
     const total = context >= estimated ? now + context - estimated : (now * context) / estimated;
     return estimatedUsage(Math.max(1, Math.round(total)));

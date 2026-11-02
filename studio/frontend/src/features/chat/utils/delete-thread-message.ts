@@ -27,9 +27,11 @@ function snapshotContent(
   if (typeof content === "string") {
     return content;
   }
-  return Array.isArray(content)
-    ? ([...content] as unknown as ThreadMessage["content"])
-    : [];
+  if (!Array.isArray(content)) {
+    return [];
+  }
+  const items: readonly unknown[] = content;
+  return [...items] as unknown as ThreadMessage["content"];
 }
 
 // Epoch millis pass through; `getTime?.()` alone re-dated them to now.
@@ -53,8 +55,7 @@ export function exportedItemToRecord(
   const content = snapshotContent(message.content);
   if (message.role === "user") {
     const attachments = snapshotAttachments(message.attachments);
-    const custom: Record<string, unknown> | undefined =
-      message.metadata.custom;
+    const custom = message.metadata.custom;
     return {
       id: message.id,
       threadId,
@@ -62,13 +63,12 @@ export function exportedItemToRecord(
       role: "user",
       content: content as Extract<ThreadMessage, { role: "user" }>["content"],
       ...(attachments.length > 0 && { attachments }),
-      ...(custom && Object.keys(custom).length > 0 && { metadata: custom }),
+      ...(Object.keys(custom).length > 0 && { metadata: custom }),
       createdAt: toEpochMillis(message.createdAt),
     };
   }
-  const custom: Record<string, unknown> | undefined =
-    message.metadata.custom;
-  const metadata = custom ?? {};
+  const custom = message.metadata.custom;
+  const metadata = custom;
   return {
     id: message.id,
     threadId,

@@ -88,12 +88,28 @@ function collectBlocks(
     case "listItem":
       for (const child of node.children) collectBlocks(child, out, true);
       return;
-    default:
-      if ("children" in node) {
-        for (const child of node.children) {
-          collectBlocks(child, out, inList);
-        }
+    case "blockquote":
+    case "delete":
+    case "emphasis":
+    case "footnoteDefinition":
+    case "link":
+    case "linkReference":
+    case "list":
+    case "strong":
+    case "tableCell":
+    case "tableRow":
+      for (const child of node.children) {
+        collectBlocks(child, out, inList);
       }
+      return;
+    case "break":
+    case "footnoteReference":
+    case "image":
+    case "imageReference":
+    case "inlineCode":
+    case "inlineMath":
+    case "text":
+      return;
   }
 }
 
@@ -112,8 +128,28 @@ function inline(node: Nodes): string {
       return htmlText(node.value);
     case "footnoteReference":
       return "";
-    default:
-      return "children" in node ? node.children.map(inline).join("") : "";
+    case "blockquote":
+    case "delete":
+    case "emphasis":
+    case "footnoteDefinition":
+    case "heading":
+    case "link":
+    case "linkReference":
+    case "list":
+    case "listItem":
+    case "paragraph":
+    case "root":
+    case "strong":
+    case "table":
+    case "tableCell":
+    case "tableRow":
+      return node.children.map(inline).join("");
+    case "code":
+    case "definition":
+    case "math":
+    case "thematicBreak":
+    case "yaml":
+      return "";
   }
 }
 

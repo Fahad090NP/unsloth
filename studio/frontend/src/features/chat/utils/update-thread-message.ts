@@ -151,7 +151,7 @@ function parseTaggedTextToContent(text: string): ContentPart[] {
     sawTag = true;
     lastIndex = index + fullTag.length;
 
-    const slot: string | undefined = match[1];
+    const slot = match.at(1);
     if (slot !== undefined) {
       parts.push({ type: "tool", text: fullTag, slot: Number(slot) });
       continue;

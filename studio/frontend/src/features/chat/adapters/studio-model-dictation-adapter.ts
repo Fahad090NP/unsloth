@@ -503,7 +503,8 @@ export class StudioModelDictationAdapter implements DictationAdapter {
       typeof window !== "undefined" &&
       window.isSecureContext &&
       typeof MediaRecorder !== "undefined" &&
-      navigator.mediaDevices.getUserMedia !== undefined
+      typeof (navigator.mediaDevices as Partial<MediaDevices> | undefined)
+        ?.getUserMedia === "function"
     );
   }
 
@@ -550,6 +551,8 @@ export class StudioModelDictationAdapter implements DictationAdapter {
     let stream: MediaStream | null = null;
     let ended = false;
     let cancelled = false;
+    const isCancelled = (): boolean => cancelled;
+    const isEndedOrCancelled = (): boolean => ended || cancelled;
     let finalizing = false;
     const abortController = new AbortController();
     const mimeType = pickMimeType();
@@ -668,7 +671,7 @@ export class StudioModelDictationAdapter implements DictationAdapter {
         return;
       }
       worker = true;
-      void (async () => {
+      (async () => {
         try {
           const text = await transcribeAudioBlob(item.blob, {
             model: sessionModel,
@@ -678,9 +681,9 @@ export class StudioModelDictationAdapter implements DictationAdapter {
             providerId: sessionProviderId,
             signal: abortController.signal,
           });
-          if (!cancelled) results[item.index] = text;
+          if (!isCancelled()) results[item.index] = text;
         } catch (error) {
-          if (!cancelled && !abortController.signal.aborted) {
+          if (!isCancelled() && !abortController.signal.aborted) {
             // only a lost segment is partial; preload failures cost no recorded audio
             markDictationFailed();
             reportTranscriptionError(error);
@@ -689,7 +692,9 @@ export class StudioModelDictationAdapter implements DictationAdapter {
           worker = false;
           processQueue();
         }
-      })();
+      })().catch((error: unknown) => {
+        console.error("Transcription worker error:", error);
+      });
     };
 
     // Never discard audio on RMS: a quiet mic can stay below VOICE_RMS for real speech.
@@ -850,7 +855,7 @@ export class StudioModelDictationAdapter implements DictationAdapter {
       },
     };
 
-    void (async () => {
+    (async () => {
       try {
         const { micDeviceId } = useVoiceSettingsStore.getState();
         const baseAudio: MediaTrackConstraints = {
@@ -874,7 +879,7 @@ export class StudioModelDictationAdapter implements DictationAdapter {
             throw error;
           }
         }
-        if (ended || cancelled) {
+        if (isEndedOrCancelled()) {
           stopStream(stream);
           stream = null;
           return;
@@ -905,7 +910,9 @@ export class StudioModelDictationAdapter implements DictationAdapter {
         toast.error(message);
         finishSession("error");
       }
-    })();
+    })().catch((error: unknown) => {
+      console.error("Unhandled dictation init error", error);
+    });
 
     return session;
   }

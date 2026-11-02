@@ -351,7 +351,7 @@ function renderValue(label: string, value: unknown): string[] {
   const escapedLabel = escapeMarkdownLabel(label);
   if (value === null || typeof value !== "object") {
     const text =
-      typeof value === "string" ? value : (JSON.stringify(value) ?? "");
+      typeof value === "string" ? value : JSON.stringify(value);
     if (LINE_BREAK_PATTERN.test(text))
       return [`**${escapedLabel}:**`, fence(text)];
     return [`**${escapedLabel}:** ${inlineCode(text)}`];

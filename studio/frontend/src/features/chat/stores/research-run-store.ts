@@ -159,8 +159,6 @@ function statusActivity(event: ResearchEvent): ResearchActivity | null {
     case "step.failed":
     case "source.added":
       return null;
-    default:
-      return null;
   }
 }
 
@@ -187,8 +185,6 @@ export function researchPhaseTitle(phase: ResearchPhase | undefined): string {
       return "Choosing the next step";
     case "unknown":
     case undefined:
-      return "Working";
-    default:
       return "Working";
   }
 }
@@ -1030,9 +1026,9 @@ export function ensureResearchRunFollowed(
   const controller = new AbortController();
   ownedFollowers.set(runId, controller);
   state.setFollowing(runId, true, "connecting");
-  void (async () => {
+  (async () => {
     let replayThroughSeq = 0;
-    let replaying: boolean = true;
+    const replayState = { active: true };
     const replayUpdates: ResearchRunUpdate[] = [];
     const flushReplay = (markConnected = true) => {
       if (replayUpdates.length) {
@@ -1042,7 +1038,7 @@ export function ensureResearchRunFollowed(
           markConnected ? "connected" : undefined,
         );
       }
-      replaying = false;
+      replayState.active = false;
       if (markConnected) {
         useResearchRunStore.getState().setFollowing(runId, true, "connected");
       }
@@ -1056,8 +1052,8 @@ export function ensureResearchRunFollowed(
         if (update.source === "snapshot") {
           const appliedSeq =
             useResearchRunStore.getState().sessions[runId].lastAppliedSeq;
-          if (!replaying && update.run.lastEventSeq > appliedSeq) {
-            replaying = true;
+          if (!replayState.active && update.run.lastEventSeq > appliedSeq) {
+            replayState.active = true;
             useResearchRunStore
               .getState()
               .setFollowing(runId, true, "reconnecting");
@@ -1070,16 +1066,16 @@ export function ensureResearchRunFollowed(
           if (replayThroughSeq === 0) flushReplay();
           continue;
         }
-        if (replaying && update.event && update.event.id <= replayThroughSeq) {
+        if (replayState.active && update.event && update.event.id <= replayThroughSeq) {
           replayUpdates.push(update);
           if (update.event.id >= replayThroughSeq) flushReplay();
           continue;
         }
-        if (replaying) flushReplay();
+        if (replayState.active) flushReplay();
         ingestResearchUpdate(update.run, update.event);
         useResearchRunStore.getState().setFollowing(runId, true, "connected");
       }
-      if (replaying) flushReplay();
+      if (replayState.active) flushReplay();
       useResearchRunStore.getState().setConnectionError(runId, null);
     } catch (error) {
       if (!controller.signal.aborted) {
@@ -1093,7 +1089,7 @@ export function ensureResearchRunFollowed(
           );
       }
     } finally {
-      if (replaying) flushReplay(false);
+      if (replayState.active) flushReplay(false);
       flushPendingStreamEvent(runId);
       const stillOwnsFollow = ownedFollowers.get(runId) === controller;
       if (stillOwnsFollow)

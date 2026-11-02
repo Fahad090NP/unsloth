@@ -503,7 +503,7 @@ function planChatDrop(
     if (zone.row?.kind !== "chat") {
       // Space beside a row stays inert so it does not send the row to the end.
       const ids = ctx.orders.recents;
-      const last: string | undefined = ids[ids.length - 1];
+      const last = ids.at(-1);
       if (zone.row || zone.blockEnd?.scope !== SIDEBAR_TAIL_SCOPE || last === undefined) {
         return null;
       }
@@ -597,7 +597,7 @@ function lastIn(
   chatId: string,
   sort: SidebarChatSort,
 ): Landing | null {
-  const last: string | undefined = ids[ids.length - 1];
+  const last = ids.at(-1);
   return last === undefined ? null : slotAt(scope, ids, chatId, last, "bottom", sort);
 }
 

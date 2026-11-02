@@ -667,7 +667,7 @@ function gettextHeaderCharset(text: string, truncated = false): string | null {
   if (!match) {
     return null;
   }
-  const after = text.slice((match.index ?? 0) + match[0].length);
+  const after = text.slice(match.index + match[0].length);
   if (truncated && !GETTEXT_ENTRY_ENDED_RE.test(after)) {
     return null;
   }
@@ -749,7 +749,7 @@ function emailHeaderBlocks(text: string, mbox: boolean): string[] {
     const unfolded = block.replace(HEADER_FOLD_RE, " ");
     blocks.push(unfolded);
     for (const header of unfolded.matchAll(EMAIL_CONTENT_TYPE_RE)) {
-      const value = header[1] ?? "";
+      const value = header[1];
       // Only a multipart header's boundary counts, not a quoted filename elsewhere.
       if (!MULTIPART_TYPE_RE.test(value)) continue;
       const boundary = headerParameter(value, "boundary");
@@ -848,7 +848,7 @@ function vCardParameterSections(text: string): string[] {
 
 // The whitespace after `xml` separates a declaration from PIs like xml-stylesheet.
 const XML_PROLOG_ENCODING_RE =
-  /^<\?xml[ \t\r\n][^>]*?[ \t\r\n]encoding[ \t]*=[ \t]*["\']([A-Za-z0-9._-]+)["\']/i;
+  /^<\?xml[ \t\r\n][^>]*?[ \t\r\n]encoding[ \t]*=[ \t]*["']([A-Za-z0-9._-]+)["']/i;
 // XML's S production only; `\s` would also accept form feed and no-break space.
 const XML_WHITESPACE_BYTES = new Set([0x20, 0x09, 0x0d, 0x0a]);
 
@@ -919,7 +919,7 @@ function declaredEmailCharsets(bytes: Uint8Array, fileName: string): string[] {
   const { found, add } = charsetCollector();
   for (const block of emailHeaderBlocks(text, isMbox)) {
     for (const header of block.matchAll(EMAIL_CONTENT_TYPE_RE)) {
-      add(headerCharsetParameter(header[1] ?? ""));
+      add(headerCharsetParameter(header[1]));
     }
   }
   return found;
@@ -1004,7 +1004,7 @@ function decodeVCardPerProperty(
   };
 
   const out: string[] = [];
-  let valueDecoder: TextDecoder | null = utf8;
+  let valueDecoder: TextDecoder = utf8;
   let valueCharset: string | null = null;
   let position = 0;
   while (position < bytes.length) {
@@ -1019,7 +1019,6 @@ function decodeVCardPerProperty(
     const cut = truncated && lineBreak === bytes.length;
     try {
       if (folded) {
-        if (!valueDecoder) return { failure: null };
         out.push(
           valueDecoder.decode(bytes.subarray(position, contentEnd), {
             stream: cut,
@@ -1048,10 +1047,11 @@ function decodeVCardPerProperty(
             };
           }
           valueCharset = charsets[0] ?? null;
-          valueDecoder = decoderFor(valueCharset);
-          if (!valueDecoder) {
+          const nextDecoder = decoderFor(valueCharset);
+          if (!nextDecoder) {
             return { failure: unsupportedCharsetError(fileName, valueCharset) };
           }
+          valueDecoder = nextDecoder;
           out.push(parameters, ":");
           out.push(
             valueDecoder.decode(bytes.subarray(delimiter + 1, contentEnd), {

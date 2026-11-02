@@ -520,12 +520,12 @@ function carriedPartMatches(view: CarriedPart[], recovered: CarriedPart[]) {
         return true;
       if (saved.toolApprovalId && live.toolApprovalId) return false;
       const backendId = saved.backendToolCallId;
+      if (!backendId) return false;
       return (
-        Boolean(backendId) &&
-        (live.backendToolCallId !== undefined
+        live.backendToolCallId !== undefined
           ? live.backendToolCallId === backendId
           : live.toolCallId === backendId ||
-            live.toolCallId?.startsWith(`${backendId}:`))
+            live.toolCallId?.startsWith(`${backendId}:`)
       );
     });
     if (index < 0) return;

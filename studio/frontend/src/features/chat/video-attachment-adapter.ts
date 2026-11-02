@@ -31,6 +31,7 @@ export class VideoAttachmentAdapter implements AttachmentAdapter {
   private readonly attachmentIds = new Set<string>();
 
   async add({ file }: { file: File }): Promise<PendingAttachment> {
+    await Promise.resolve();
     const state = useChatRuntimeStore.getState();
     const checkpoint = state.params.checkpoint;
     const activeModel = state.models.find((m) => m.id === checkpoint);

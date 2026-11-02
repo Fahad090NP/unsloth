@@ -15,7 +15,7 @@ import {
 } from "../api/youtube-api";
 
 function preferredCaptionLanguages(): string[] {
-  const tags = [getLocale(), ...(globalThis.navigator.languages ?? []), "en"];
+  const tags = [getLocale(), ...globalThis.navigator.languages, "en"];
   return [
     ...new Set(tags.filter((tag) => typeof tag === "string" && tag)),
   ].slice(0, 8);
@@ -84,6 +84,7 @@ export function YoutubeTranscriptPrompt({
   const attach = useCallback(async () => {
     if (fetching) return;
     const controller = new AbortController();
+    const isAborted = () => controller.signal.aborted;
     abortRef.current = controller;
     setFetching(true);
     const composer = aui.composer();
@@ -98,16 +99,16 @@ export function YoutubeTranscriptPrompt({
         transcriptFileName(transcript),
         { type: "text/plain" },
       );
-      if (controller.signal.aborted) return;
+      if (isAborted()) return;
       await composer.addAttachment(file);
       // abort cannot recall a pending addAttachment, so drop the file here.
-      if (controller.signal.aborted) {
+      if (isAborted()) {
         await detachFile(composer, file);
         return;
       }
       onClose();
     } catch (error) {
-      if (controller.signal.aborted) return;
+      if (isAborted()) return;
       setFetching(false);
       toast.error("Could not attach the transcript", {
         description: error instanceof Error ? error.message : "Unknown error",
@@ -150,7 +151,11 @@ export function YoutubeTranscriptPrompt({
               type="button"
               size="sm"
               className="text-xs"
-              onClick={() => void attach()}
+              onClick={() => {
+                attach().catch((error: unknown) => {
+                  console.error("Background chat operation failed", error);
+                });
+              }}
             >
               Attach transcript
             </Button>

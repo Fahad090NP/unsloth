@@ -200,8 +200,13 @@ export function SaveTemporaryChatMenu({
             {canSave ? (
               <DropdownMenuItem
                 onSelect={() => {
-                  if (skipConfirm()) void save();
-                  else setOpen(true);
+                  if (skipConfirm()) {
+                    save().catch((error: unknown) => {
+                      console.error("Background chat operation failed", error);
+                    });
+                  } else {
+                    setOpen(true);
+                  }
                 }}
               >
                 <HugeiconsIcon
@@ -213,7 +218,11 @@ export function SaveTemporaryChatMenu({
               </DropdownMenuItem>
             ) : null}
             <DropdownMenuItem
-              onSelect={() => void copyMarkdown(target.markdown())}
+              onSelect={() => {
+                copyMarkdown(target.markdown()).catch((error: unknown) => {
+                  console.error("Background chat operation failed", error);
+                });
+              }}
             >
               <HugeiconsIcon
                 icon={Copy01Icon}
@@ -285,7 +294,11 @@ export function SaveTemporaryChatMenu({
               </Button>
               <Button
                 type="button"
-                onClick={() => void save()}
+                onClick={() => {
+                  save().catch((error: unknown) => {
+                    console.error("Background chat operation failed", error);
+                  });
+                }}
                 disabled={saving}
               >
                 {saving ? "Saving…" : "Save chat"}

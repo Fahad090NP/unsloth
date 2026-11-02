@@ -110,12 +110,17 @@ export function OpenAICodeExecSection({
     loadActiveContainer().catch((error: unknown) => {
       console.error("Background chat operation failed", error);
     });
-    window.addEventListener(CHAT_HISTORY_UPDATED_EVENT, loadActiveContainer);
+    const onHistoryUpdated = () => {
+      loadActiveContainer().catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
+    };
+    window.addEventListener(CHAT_HISTORY_UPDATED_EVENT, onHistoryUpdated);
     return () => {
       cancelled = true;
       window.removeEventListener(
         CHAT_HISTORY_UPDATED_EVENT,
-        loadActiveContainer,
+        onHistoryUpdated,
       );
     };
   }, [activeThreadId]);
@@ -184,9 +189,11 @@ export function OpenAICodeExecSection({
   }, [apiKey, hasCredential, provider.baseUrl, provider.id]);
 
   useEffect(() => {
-    refresh().catch((error: unknown) => {
-      console.error("Background chat operation failed", error);
-    });
+    const initialTimer = window.setTimeout(() => {
+      refresh().catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
+    }, 0);
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") {
         refresh().catch((error: unknown) => {
@@ -203,6 +210,7 @@ export function OpenAICodeExecSection({
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
+      window.clearTimeout(initialTimer);
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibility);
       if (pendingRetryRef.current != null) {
@@ -224,9 +232,9 @@ export function OpenAICodeExecSection({
     const sorted = [...visibleContainers].sort(
       (a, b) => (b.lastActiveAt ?? 0) - (a.lastActiveAt ?? 0),
     );
-    const candidate = sorted[0];
+    const candidate = sorted.at(0);
     if (!candidate) return;
-    void (async () => {
+    (async () => {
       try {
         await ensureThreadRecord({
           threadId: activeThreadId,
@@ -238,7 +246,9 @@ export function OpenAICodeExecSection({
       } catch {
         // Best-effort; the chat-adapter will inherit/create on send.
       }
-    })();
+    })().catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
   }, [activeThreadId, activeContainerId, visibleContainers]);
 
   const ttlValue = provider.openaiContainerTtlMinutes ?? DEFAULT_TTL_MINUTES;
@@ -399,7 +409,11 @@ export function OpenAICodeExecSection({
             size="sm"
             variant="ghost"
             className="-mr-1 size-6 p-0 text-muted-foreground"
-            onClick={() => void refresh()}
+            onClick={() => {
+              refresh().catch((error: unknown) => {
+                console.error("Background chat operation failed", error);
+              });
+            }}
             disabled={isLoading || !hasCredential}
             aria-label="Refresh container list"
           >
@@ -423,7 +437,7 @@ export function OpenAICodeExecSection({
               const ttlMinutes = c.expiresAfterMinutes ?? DEFAULT_TTL_MINUTES;
               const canActivate =
                 activeThreadId != null && !isActive && running;
-              const statusLabel = !running ? (c.status ?? "expired") : null;
+              const statusLabel = c.status ?? "expired";
               return (
                 <li
                   key={c.id}
@@ -435,7 +449,11 @@ export function OpenAICodeExecSection({
                     running ? "" : "opacity-60"
                   }`}
                   onClick={() => {
-                    if (canActivate) void onPick(c.id);
+                    if (canActivate) {
+                      onPick(c.id).catch((error: unknown) => {
+                        console.error("Background chat operation failed", error);
+                      });
+                    }
                   }}
                   onKeyDown={(e) => {
                     if (!canActivate) return;
@@ -545,7 +563,11 @@ export function OpenAICodeExecSection({
           <Button
             size="sm"
             className="shrink-0 text-xs"
-            onClick={() => void onCreate()}
+            onClick={() => {
+              onCreate().catch((error: unknown) => {
+                console.error("Background chat operation failed", error);
+              });
+            }}
             disabled={creating || !createName.trim() || !hasCredential}
           >
             {creating ? "Creating…" : "Create"}

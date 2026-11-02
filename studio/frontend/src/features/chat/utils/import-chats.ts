@@ -83,7 +83,13 @@ export async function pickAndImportChats(target: ChatImportTarget): Promise<void
     input.accept = CHAT_IMPORT_ACCEPT;
     input.onchange = () => {
       const file = input.files?.[0];
-      if (file) void runChatImport(fileImportSource(file), target);
+      if (file) {
+        runChatImport(fileImportSource(file), target).catch((error: unknown) => {
+          toast.error("Import failed.", {
+            description: error instanceof Error ? error.message : String(error),
+          });
+        });
+      }
     };
     input.click();
     return;

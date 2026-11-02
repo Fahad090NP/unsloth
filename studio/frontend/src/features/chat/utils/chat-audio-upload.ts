@@ -52,7 +52,9 @@ export class ChatAudioReadinessRefreshQueue {
       this.activeController?.abort();
     }
 
-    let release = () => {};
+    let release = (): void => {
+      void 0;
+    };
     const turn = new Promise<void>((resolve) => {
       release = resolve;
     });

@@ -93,7 +93,7 @@ export function snapshotQueuedTextAttachments(
     const pendingAttachment = attachment as PendingAttachment;
     return completeTextAttachment(
       pendingAttachment,
-      cachedTextAttachment(pendingAttachment.file) as string,
+      cachedTextAttachment(pendingAttachment.file) ?? "",
     );
   });
 }

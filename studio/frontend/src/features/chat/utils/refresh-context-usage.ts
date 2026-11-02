@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import type { ThreadMessage } from "@assistant-ui/react";
+import type { MessageTiming, ThreadMessage } from "@assistant-ui/react";
 import {
   buildLocalTokenCountExtras,
   buildLocalTokenCountHistory,
@@ -16,7 +16,10 @@ import { isExternalModelId } from "../external-providers";
 import { localMediaToolsForTurn, useChatRuntimeStore } from "../stores/chat-runtime-store";
 import type { MessageRecord } from "../types";
 import { savedBranchHead } from "./branch-head";
-import { contextUsageReasoningKey } from "./context-usage-reasoning";
+import {
+  type ContextUsageReasoningFields,
+  contextUsageReasoningKey,
+} from "./context-usage-reasoning";
 import { listStoredChatMessages } from "./chat-history-storage";
 import { orderBySelectedBranch } from "./message-order";
 
@@ -39,6 +42,10 @@ let completedCount: {
   >;
 } | null = null;
 
+function setCompletedCount(value: typeof completedCount): void {
+  completedCount = value;
+}
+
 function storedMessageToRunMessage(record: MessageRecord): ThreadMessage {
   const content =
     Array.isArray(record.content) && record.content.length > 0
@@ -60,7 +67,7 @@ function storedMessageToRunMessage(record: MessageRecord): ThreadMessage {
 
   const custom = record.metadata ?? {};
   const savedTiming = custom.timing as
-    | import("@assistant-ui/react").MessageTiming
+    | MessageTiming
     | undefined;
   return {
     id: record.id,
@@ -93,7 +100,7 @@ function foldHash(text: string, seed: number): number {
 function foldPart(part: unknown, seed: number): number {
   let serialized: string;
   try {
-    serialized = JSON.stringify(part) ?? "";
+    serialized = JSON.stringify(part);
   } catch {
     serialized = String((part as { type?: unknown }).type);
   }
@@ -202,7 +209,7 @@ export async function refreshContextUsage(
     (options?.afterModelLoad &&
       (!pendingCount?.afterModelLoad || pendingCount.loadId !== store.activeLoadId))
   ) {
-    completedCount = null;
+    setCompletedCount(null);
     countEpoch += 1;
   }
 
@@ -227,7 +234,7 @@ export async function refreshContextUsage(
   const usageBeforeCount = useChatRuntimeStore.getState().contextUsage;
 
   // The endpoint refuses during any run, external included, and run end re-fires this effect.
-  if (Object.values(store.runningByThreadId ?? {}).some(Boolean)) return;
+  if (Object.values(store.runningByThreadId).some(Boolean)) return;
 
   const capturedThreadId = threadId ?? null;
   const capturedCheckpoint = checkpoint;
@@ -320,7 +327,7 @@ export async function refreshContextUsage(
         // Compared even when null: a count started with no thread must not land on one since opened.
         currentStore.activeThreadId === capturedThreadId &&
         currentStore.contextUsage === usageBeforeCount &&
-        !Object.values(currentStore.runningByThreadId ?? {}).some(Boolean)
+        !Object.values(currentStore.runningByThreadId).some(Boolean)
       );
     };
 
@@ -386,10 +393,12 @@ export async function refreshContextUsage(
       totalTokens: inputTokens,
       cachedTokens: 0,
       cacheWriteTokens: 0,
-      reasoningKey: contextUsageReasoningKey(JSON.parse(capturedReasoning)),
+      reasoningKey: contextUsageReasoningKey(
+        JSON.parse(capturedReasoning) as ContextUsageReasoningFields,
+      ),
     };
     if (promptChanged() || branchChanged()) return;
-    completedCount = { key: countKey, payload: serializedPayload, usage };
+    setCompletedCount({ key: countKey, payload: serializedPayload, usage });
     if (!canPublish()) return;
 
     useChatRuntimeStore.getState().setContextUsage(usage);
@@ -417,9 +426,9 @@ export async function refreshContextUsage(
       (settingsChanged ||
         (hadQueued && (replayQueued || inputsChanged() || queued?.invalidate)))
     ) {
-      void refreshContextUsage(
+      refreshContextUsage(
         hadQueued ? queued : { ...options, invalidate: false },
-      );
+      ).catch((_error: unknown) => undefined);
     }
   }
 }

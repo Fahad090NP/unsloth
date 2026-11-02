@@ -90,10 +90,7 @@ export function encodeWav(
 }
 
 function createAudioContext(): AudioContext {
-  const Ctx =
-    window.AudioContext ||
-    (window as unknown as { webkitAudioContext?: typeof AudioContext })
-      .webkitAudioContext;
+  const Ctx = window.AudioContext;
   try {
     return new Ctx({ sampleRate: TARGET_SAMPLE_RATE });
   } catch {
@@ -176,6 +173,7 @@ export class PcmRecorder implements SegmentRecorder {
 
   /** `timesliceMs` is ignored; it exists only for MediaRecorder parity. */
   start(_timesliceMs?: number): void {
+    void _timesliceMs;
     if (this.recordingState !== "inactive") return;
     this.recordingState = "recording";
     // Started before a user gesture on some engines; a suspended context delivers no audioprocess callbacks at all.

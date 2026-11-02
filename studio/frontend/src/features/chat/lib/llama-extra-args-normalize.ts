@@ -100,7 +100,7 @@ export function stripManagedOffloadFlags(
       continue;
     }
     if (!token.includes("=")) {
-      const next: string | undefined = extraArgs[i + 1];
+      const next = extraArgs.at(i + 1);
       if (next !== undefined && flagName(next) === null) {
         i += 1;
       }

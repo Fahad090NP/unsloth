@@ -34,7 +34,7 @@ db.version(3)
     tx
       .table("threads")
       .toCollection()
-      .modify((thread) => {
+      .modify((thread: { modelId?: string }) => {
         if (!thread.modelId) thread.modelId = "";
       }),
   );
@@ -48,7 +48,9 @@ export function useLiveQuery<T>(
 ): T | undefined {
   const [value, setValue] = useState<T>();
   const querierRef = useRef(querier);
-  querierRef.current = querier;
+  useEffect(() => {
+    querierRef.current = querier;
+  });
 
   useEffect(() => {
     const sub = liveQuery(() => querierRef.current()).subscribe({

@@ -102,8 +102,8 @@ function unescapeHtml(value: string): string {
     .replace(/&amp;/g, "&");
 }
 
-function detailsAttributes(rawAttributes: string): Record<string, string> {
-  const attributes: Record<string, string> = {};
+function detailsAttributes(rawAttributes: string): Record<string, string | undefined> {
+  const attributes: Record<string, string | undefined> = {};
   ATTRIBUTE.lastIndex = 0;
   let match = ATTRIBUTE.exec(rawAttributes);
   while (match !== null) {

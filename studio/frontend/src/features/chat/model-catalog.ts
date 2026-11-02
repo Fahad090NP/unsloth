@@ -97,16 +97,18 @@ function hydrateLiveCatalog(): void {
   try {
     const parsed = JSON.parse(
       localStorage.getItem(LIVE_CATALOG_KEY) ?? "{}",
-    ) as Record<string, LiveCatalogRecord>;
+    ) as Record<string, unknown>;
     for (const [providerType, record] of Object.entries(parsed)) {
       if (
         record &&
         typeof record === "object" &&
+        "fetchedAt" in record &&
         typeof record.fetchedAt === "number" &&
+        "models" in record &&
         record.models &&
         typeof record.models === "object"
       ) {
-        LIVE_CATALOG.set(providerType, record);
+        LIVE_CATALOG.set(providerType, record as unknown as LiveCatalogRecord);
       }
     }
   } catch {
@@ -131,15 +133,17 @@ function hydrateModelsDev(): void {
   modelsDevHydrated = true;
   if (!canUseStorage()) return;
   try {
-    const parsed = JSON.parse(localStorage.getItem(MODELS_DEV_KEY) ?? "null") as ModelCatalogResponse | null;
+    const parsed = JSON.parse(localStorage.getItem(MODELS_DEV_KEY) ?? "null") as unknown;
     if (
       parsed &&
       typeof parsed === "object" &&
+      "fetched_at" in parsed &&
       typeof parsed.fetched_at === "number" &&
+      "providers" in parsed &&
       parsed.providers &&
       typeof parsed.providers === "object"
     ) {
-      modelsDev = parsed;
+      modelsDev = parsed as unknown as ModelCatalogResponse;
     }
   } catch {
     // Invalid browser state; the next refresh rewrites it.
@@ -181,23 +185,24 @@ function catalogNamespace(providerType: string): string {
 function snapshotNamespace(
   providerType: string,
 ): Readonly<Record<string, ModelCatalogSnapshotEntry>> | undefined {
-  providerType = catalogNamespace(providerType);
+  const normalizedProviderType = catalogNamespace(providerType);
   hydrateModelsDev();
-  const served = modelsDev?.providers[providerType];
-  const bundled = MODEL_CATALOG_SNAPSHOT[providerType];
+  const served = modelsDev?.providers[normalizedProviderType];
+  const bundled: Readonly<Record<string, ModelCatalogSnapshotEntry>> | undefined =
+    MODEL_CATALOG_SNAPSHOT[normalizedProviderType];
   if (!served) return bundled;
   if (!bundled) return served;
   // Merge per model so a stale cache cannot hide models the bundled snapshot knows.
-  if (!mergedNamespaces) mergedNamespaces = new Map();
-  const cached = mergedNamespaces.get(providerType);
+  mergedNamespaces ??= new Map();
+  const cached = mergedNamespaces.get(normalizedProviderType);
   if (cached) return cached;
   const merged: Record<string, ModelCatalogSnapshotEntry> = { ...bundled };
   for (const [id, entry] of Object.entries(served)) {
     // Older backends lack the context field, so fall back to the bundled value.
-    const context = entry.context ?? bundled[id].context;
+    const context = entry.context ?? bundled[id]?.context;
     merged[id] = context == null ? entry : { ...entry, context };
   }
-  mergedNamespaces.set(providerType, merged);
+  mergedNamespaces.set(normalizedProviderType, merged);
   return merged;
 }
 
@@ -304,18 +309,18 @@ export function resolveModelCatalogEntry(
   const live = LIVE_CATALOG.get(normalizedProvider)?.models;
   if (live) {
     for (const candidate of candidates) {
-      const entry = live[candidate];
+      const entry: ModelCatalogEntry | undefined = live[candidate];
       if (!entry) continue;
       if (entry.contextLength != null || !snapshot) return entry;
       const fallback = candidates
-        .map((id) => snapshot[id].context)
+        .map((id) => snapshot[id]?.context)
         .find((context) => typeof context === "number" && context > 0);
       return fallback == null ? entry : { ...entry, contextLength: fallback };
     }
   }
   if (!snapshot) return null;
   for (const candidate of candidates) {
-    const entry = snapshot[candidate];
+    const entry: ModelCatalogSnapshotEntry | undefined = snapshot[candidate];
     if (entry) return fromSnapshotEntry(entry);
   }
   if (normalizedProvider === "ollama") {

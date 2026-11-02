@@ -277,7 +277,7 @@ export function ProjectsPage({
         }
         setProjectChats((prev) => {
           const kept: typeof prev = {};
-          for (const id of open) if (prev[id] !== undefined) kept[id] = prev[id];
+          for (const id of open) if (Object.hasOwn(prev, id)) kept[id] = prev[id];
           return kept;
         });
         for (const id of open) loadProjectChats(id, true);
@@ -408,7 +408,8 @@ export function ProjectsPage({
       return next;
     });
     if (!opening) return;
-    const cached = projectChats[projectId];
+    const cached: (SidebarItem[] | "loading" | "error") | undefined =
+      projectChats[projectId];
     const loaded = cached !== undefined && cached !== "error";
     if (loaded && !staleProjectIds.has(projectId)) return;
     // Stale rows stay on screen while the retry runs.
@@ -802,7 +803,8 @@ export function ProjectsPage({
           {visibleProjects.map((project) => {
             const pinned = pinnedProjectIdSet.has(project.id);
             const chatsOpen = openProjectIds.has(project.id);
-            const chats = projectChats[project.id];
+            const chats: (SidebarItem[] | "loading" | "error") | undefined =
+              projectChats[project.id];
             return (
             <div key={`wrap-${project.id}`}>
             <div

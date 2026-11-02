@@ -191,11 +191,11 @@ function defaultTtsVoice(): SpeechSynthesisVoice | undefined {
     return undefined;
   }
   const voices = synthesis.getVoices();
-  const curated: SpeechSynthesisVoice | undefined = curateSystemVoices(voices)[0];
+  const curated = curateSystemVoices(voices).at(0);
   return (
     curated ??
     voices.find((voice) => voice.default) ??
-    voices[0]
+    voices.at(0)
   );
 }
 

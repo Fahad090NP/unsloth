@@ -64,11 +64,11 @@ export async function confirmStopRunningChatsIfNeeded(
     }
   }
   let promptQueueThreadIds = model ? [] : getLocalPromptQueueThreadIds();
-  const promptQueuesByThreadId = usePromptQueueUI.getState().byThreadId;
+  const promptQueuesByThreadId: Record<string, PromptQueueUIEntry | undefined> =
+    usePromptQueueUI.getState().byThreadId;
   const aliasesByQueuedRun = new Map<string, string[]>();
   for (const threadId of promptQueueThreadIds) {
-    const entry: PromptQueueUIEntry | undefined =
-      promptQueuesByThreadId[threadId];
+    const entry = promptQueuesByThreadId[threadId];
     if (!entry || entry.paused) {
       continue;
     }

@@ -70,7 +70,7 @@ export function clampReasoningEffortToLevels(
     const below = searchable.filter(
       (level) => REASONING_EFFORT_SCALE.indexOf(level) < rank,
     );
-    const nearest = below.length > 0 ? below[below.length - 1] : searchable[0];
+    const nearest = below.length > 0 ? below.at(-1) : searchable.at(0);
     if (nearest !== undefined) {
       return nearest;
     }
@@ -1198,7 +1198,7 @@ function catalogCapabilities(
   modelId: string,
   byName = false,
 ): ExternalReasoningCapabilities | null {
-  const wire = CATALOG_REASONING_WIRE[providerType];
+  const wire: ReasoningWire | undefined = CATALOG_REASONING_WIRE[providerType];
   if (!wire) return null;
   const entry = byName
     ? resolveModelCatalogEntryByName(modelId)

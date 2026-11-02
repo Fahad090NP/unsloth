@@ -363,12 +363,13 @@ export function useChatSearchIndex(enabled: boolean): {
     if (enabled && readCachedIndex() === null) {
       if (items.length > 0) setItems([]);
       if (!loading) setLoading(true);
+    } else if (!enabled && loading) {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     if (!enabled) {
-      setLoading(false);
       // Release after the exit animation, not in the closing render.
       let release: ReturnType<typeof setTimeout> | null = null;
       const scheduleRelease = () => {

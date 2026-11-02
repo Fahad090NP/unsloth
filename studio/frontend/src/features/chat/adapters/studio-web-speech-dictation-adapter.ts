@@ -306,10 +306,13 @@ export class StudioWebSpeechDictationAdapter implements DictationAdapter {
         i < speechEvent.results.length;
         i++
       ) {
-        const result: SpeechRecognitionResult | undefined =
-          speechEvent.results[i];
+        const result = speechEvent.results[i] as
+          | SpeechRecognitionResult
+          | undefined;
         if (!result) continue;
-        const alternative: SpeechRecognitionAlternative | undefined = result[0];
+        const alternative = result[0] as
+          | SpeechRecognitionAlternative
+          | undefined;
         const transcript = alternative?.transcript ?? "";
         if (result.isFinal) {
           interimParts.delete(i);

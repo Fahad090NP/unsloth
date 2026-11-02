@@ -51,7 +51,7 @@ function isMacPlatform(): boolean {
   if (macPlatform !== null) return macPlatform;
   if (typeof navigator === "undefined") return false;
   macPlatform = /mac|iphone|ipad|ipod/i.test(
-    `${navigator.platform ?? ""} ${navigator.userAgent ?? ""}`,
+    `${navigator.platform} ${navigator.userAgent}`,
   );
   return macPlatform;
 }
@@ -183,7 +183,8 @@ function attachmentBodyRange(content: string): { start: number; end: number } {
     : isPastedTextContent(content)
       ? PASTED_TEXT_TAG
       : undefined;
-  const headerEnd = tag === undefined ? -1 : content.indexOf("\n");
+  if (tag === undefined) return { start: 0, end: content.length };
+  const headerEnd = content.indexOf("\n");
   if (headerEnd === -1) return { start: 0, end: content.length };
 
   const closing = `\n</${tag}>`;

@@ -180,7 +180,9 @@ function SandboxLevelMenuPicker({ onOsSandboxMissing }: { onOsSandboxMissing?: (
   const { checked, disabled } = sandboxSwitchState(sandboxLevel, permissionMode, capability);
   const active = disabled ? "off" : checked ? "high" : "low";
   const options = SANDBOX_LEVEL_OPTIONS.filter((option) => disabled || option.value !== "off");
-  const activeOption = SANDBOX_LEVEL_OPTIONS.find((option) => option.value === active)!;
+  const activeOption =
+    SANDBOX_LEVEL_OPTIONS.find((option) => option.value === active) ??
+    SANDBOX_LEVEL_OPTIONS[0];
   const descriptionId = useId();
   const chipRef = useRef<HTMLDivElement | null>(null);
   const [offsets, setOffsets] = useState({ side: SANDBOX_PICKER_GAP, align: 0 });
@@ -280,10 +282,12 @@ function SandboxLevelMenuPicker({ onOsSandboxMissing }: { onOsSandboxMissing?: (
             disabled={disabled && option.value !== "off"}
             onSelect={() => {
               if (option.value === active || option.value === "off") return;
-              void pickSandboxLevel(option.value, setSandboxLevel, () =>
+              pickSandboxLevel(option.value, setSandboxLevel, () =>
                 // Deferred past the menu's focus restore.
                 setTimeout(onOsSandboxMissing ?? (() => { setSandboxSetupOpen(true); }), 0),
-              );
+              ).catch((error: unknown) => {
+                console.error("Failed to pick sandbox level", error);
+              });
             }}
             className={cn("items-start gap-2 py-2", active === option.value && "font-medium")}
           >
@@ -333,9 +337,13 @@ export function useSandboxCapability(enabled: boolean): SandboxCapability | null
     let reads = 0;
     const read = () => {
       const id = ++reads;
-      void loadSandboxCapability().then((next) => {
-        if (live && id === reads) setCapability(next);
-      });
+      loadSandboxCapability()
+        .then((next) => {
+          if (live && id === reads) setCapability(next);
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to load sandbox capability", error);
+        });
     };
     read();
     const stop = onSandboxCapabilityChange(read);
@@ -549,7 +557,7 @@ export function PermissionModeDropdown({
   /** Off in Settings, which shows the level and the setup in their own rows. */
   sandboxControls?: boolean;
 } = {}) {
-  const { permissionMode, fullAccessAllowed } = useAccountPermissionMode();
+  const { permissionMode } = useAccountPermissionMode();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sandboxSetupOpen, setSandboxSetupOpen] = useState(false);
   const active = permissionModeOption(permissionMode);
@@ -608,7 +616,7 @@ export function PermissionModeComposerPill({
 }: {
   side?: "top" | "bottom";
 } = {}) {
-  const { permissionMode, fullAccessAllowed } = useAccountPermissionMode();
+  const { permissionMode } = useAccountPermissionMode();
   const setBypassConfirmOpen = useChatRuntimeStore(
     (s) => s.setBypassConfirmOpen,
   );

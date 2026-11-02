@@ -281,7 +281,11 @@ export function EditProjectDialog({
             </Button>
             <Button
               type="button"
-              onClick={() => void save()}
+              onClick={() => {
+                save().catch((error: unknown) => {
+                  console.error("Background chat operation failed", error);
+                });
+              }}
               disabled={busy || folderBusy || !trimmedName}
             >
               {busy ? "Saving…" : "Save"}

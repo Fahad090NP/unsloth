@@ -45,7 +45,7 @@ export function startLlamaCppAutoReload(intervalMs = 10_000): () => void {
   // id -> endpoint + catalog last reloaded (absent: offline).
   const online = new Map<string, string>();
   const inFlight = new Set<string>();
-  let stopped: boolean = false;
+  let stopped = false;
   const isStopped = (): boolean => stopped;
   const endpoint = (p: ExternalProviderConfig) => `${p.baseUrl}|${String(p.hasApiKey === true)}`;
 

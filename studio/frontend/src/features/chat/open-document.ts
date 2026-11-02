@@ -112,12 +112,12 @@ async function readOpenDocumentXmlFiles(
     });
   }
 
-  const content = files["content.xml"];
+  const content: Uint8Array | undefined = files["content.xml"];
   if (!content) {
     throw new Error(`OpenDocument file is missing content.xml: ${file.name}`);
   }
 
-  const styles = files["styles.xml"];
+  const styles: Uint8Array | undefined = files["styles.xml"];
   assertOpenDocumentXmlSize(file.name, "content.xml", content.length);
   if (styles) {
     assertOpenDocumentXmlSize(file.name, "styles.xml", styles.length);
@@ -164,7 +164,7 @@ function parseOpenDocumentXml(xml: string, filename: string): XMLDocument {
 
 function extractOpenDocumentText(doc: XMLDocument): string {
   const body =
-    doc.getElementsByTagNameNS(OFFICE_NAMESPACE, "body")[0] ??
+    doc.getElementsByTagNameNS(OFFICE_NAMESPACE, "body").item(0) ??
     doc.documentElement;
   const blocks = collectVisibleOpenDocumentTextBlocks(body);
 
@@ -185,7 +185,7 @@ function extractOpenDocumentSpreadsheetText(
     stylesDoc,
   );
   const body =
-    doc.getElementsByTagNameNS(OFFICE_NAMESPACE, "body")[0] ??
+    doc.getElementsByTagNameNS(OFFICE_NAMESPACE, "body").item(0) ??
     doc.documentElement;
   const tables = getOpenDocumentChildElements(body, OFFICE_NAMESPACE, [
     "spreadsheet",

@@ -53,10 +53,12 @@ export const useForkBoundaryStore = create<ForkBoundaryState>()((set) => ({
   anchorByThreadId: {},
   setForkBoundary: (threadId, boundary) =>
     { set((state) => {
-      const current: ForkBoundary | undefined =
-        state.boundaryByThreadId[threadId];
+      const hasCurrent = Object.hasOwn(state.boundaryByThreadId, threadId);
+      const current = hasCurrent
+        ? state.boundaryByThreadId[threadId]
+        : undefined;
       if (boundary === null) {
-        if (current === undefined) return state;
+        if (!hasCurrent) return state;
         const next = { ...state.boundaryByThreadId };
         Reflect.deleteProperty(next, threadId);
         return { boundaryByThreadId: next };
@@ -68,10 +70,10 @@ export const useForkBoundaryStore = create<ForkBoundaryState>()((set) => ({
     }); },
   setForkBoundaryAnchor: (threadId, anchor) =>
     { set((state) => {
-      const current: string | undefined = state.anchorByThreadId[threadId];
+      const hasCurrent = Object.hasOwn(state.anchorByThreadId, threadId);
+      const current = hasCurrent ? state.anchorByThreadId[threadId] : undefined;
       if (current === anchor) return state;
       if (anchor === undefined) {
-        if (current === undefined) return state;
         const next = { ...state.anchorByThreadId };
         Reflect.deleteProperty(next, threadId);
         return { anchorByThreadId: next };

@@ -254,7 +254,7 @@ export function createPinnedChatsSync(options: PinnedChatsSyncOptions) {
       const next =
         validatePinnedIds(applyPinOperation(currentConfirmed() ?? [], operation)) ?? [];
       const result:
-        | { pinnedIds: string[] | undefined; applied: boolean }
+        | { pinnedIds?: string[]; applied?: boolean }
         | undefined = await options.compareAndSet(
         currentConfirmed()?.slice(),
         next,

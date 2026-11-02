@@ -1267,10 +1267,13 @@ function ExportModal({
   const [format, setFormat] = useState<ExportFormat>("jsonl");
 
   const csvAvailable = scope === "single";
-
-  useEffect(() => {
-    if (!csvAvailable) setFormat("jsonl");
-  }, [csvAvailable]);
+  const [prevCsvAvailable, setPrevCsvAvailable] = useState(csvAvailable);
+  if (prevCsvAvailable !== csvAvailable) {
+    setPrevCsvAvailable(csvAvailable);
+    if (!csvAvailable && format !== "jsonl") {
+      setFormat("jsonl");
+    }
+  }
 
   const handleExport = useCallback(async () => {
     try {
@@ -1317,7 +1320,7 @@ function ExportModal({
       ? "Single Prompt"
       : ctx.kind === "list"
         ? "Prompt List"
-        : ctx.kind === "bulk" && ctx.tab === "prompts"
+        : ctx.tab === "prompts"
           ? "All Prompts"
           : "All Prompt Lists";
 
@@ -1326,7 +1329,7 @@ function ExportModal({
       ? "Export raw prompt name and text"
       : ctx.kind === "list"
         ? "Export list name and all prompt items"
-        : ctx.kind === "bulk" && ctx.tab === "prompts"
+        : ctx.tab === "prompts"
           ? "One JSONL or CSV record per saved prompt"
           : "One JSONL or CSV record per saved list";
 
@@ -1800,6 +1803,9 @@ function useCreateGuard(): {
   create: (fn: () => Promise<void>) => Promise<void>;
 } {
   const creatingRef = useRef(false);
+  const resetCreatingRef = () => {
+    creatingRef.current = false;
+  };
   const [creating, setCreating] = useState(false);
   const create = useCallback(async (fn: () => Promise<void>) => {
     if (creatingRef.current) return;
@@ -1808,7 +1814,7 @@ function useCreateGuard(): {
     try {
       await fn();
     } finally {
-      creatingRef.current = false;
+      resetCreatingRef();
       setCreating(false);
     }
   }, []);
@@ -2372,19 +2378,23 @@ export function PromptStorageDialog({
     [],
   );
 
-  const refreshEntries = useCallback(async () => {
-    try {
-          setPromptEntries(await listPromptEntries());
-        } catch {
-          // Keep the previous entries when the request fails.
-        }
+  const refreshEntries = useCallback(() => {
+    return listPromptEntries()
+      .then((entries) => {
+        setPromptEntries(entries);
+      })
+      .catch(() => {
+        // Keep the previous entries when the request fails.
+      });
   }, []);
-  const refreshLists = useCallback(async () => {
-    try {
-          setPromptLists(await listPromptLists());
-        } catch {
-          // Keep the previous lists when the request fails.
-        }
+  const refreshLists = useCallback(() => {
+    return listPromptLists()
+      .then((lists) => {
+        setPromptLists(lists);
+      })
+      .catch(() => {
+        // Keep the previous lists when the request fails.
+      });
   }, []);
 
   useEffect(() => {
@@ -2497,7 +2507,7 @@ export function PromptStorageDialog({
     );
     const at = rows.indexOf(document.activeElement as HTMLButtonElement);
     if (at < 0) return;
-    const next = rows[at + (e.key === "ArrowDown" ? 1 : -1)];
+    const next = rows.at(at + (e.key === "ArrowDown" ? 1 : -1));
     if (!next) return;
     e.preventDefault();
     next.focus();

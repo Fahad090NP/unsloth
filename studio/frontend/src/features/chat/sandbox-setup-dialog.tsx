@@ -88,21 +88,25 @@ function SandboxSetupContent({
 
   const check = useCallback(() => {
     const id = ++checks.current;
-    void loadSettledSandboxCapability().then((next) => {
-      if (!mounted.current || id !== checks.current) return;
-      if (next === null) {
-        setLoadFailed(true);
-        return;
-      }
-      setCapability(next);
-      if (next.canRunSetup) {
-        void loadSandboxSetup(t("sandboxSetup.startError"))
-          .then((current) => {
-            if (mounted.current && current.state === "running") setJob(current);
-          })
-          .catch(() => undefined);
-      }
-    });
+    loadSettledSandboxCapability()
+      .then((next) => {
+        if (!mounted.current || id !== checks.current) return;
+        if (next === null) {
+          setLoadFailed(true);
+          return;
+        }
+        setCapability(next);
+        if (next.canRunSetup) {
+          loadSandboxSetup(t("sandboxSetup.startError"))
+            .then((current) => {
+              if (mounted.current && current.state === "running") setJob(current);
+            })
+            .catch(() => undefined);
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load sandbox capability", error);
+      });
   }, [t]);
 
   useEffect(() => {
@@ -118,19 +122,23 @@ function SandboxSetupContent({
     (finished: SandboxSetupJob) => {
       if (finished.state !== "succeeded") return;
       forgetSandboxCapability();
-      void loadSettledSandboxCapability().then((next) => {
-        if (!mounted.current) return;
-        if (next) setCapability(next);
-        if (next && sandboxReady(next)) {
-          if (useChatRuntimeStore.getState().sandboxLevel === levelAtOpen.current) {
-            setSandboxLevel("high");
+      loadSettledSandboxCapability()
+        .then((next) => {
+          if (!mounted.current) return;
+          if (next) setCapability(next);
+          if (next && sandboxReady(next)) {
+            if (useChatRuntimeStore.getState().sandboxLevel === levelAtOpen.current) {
+              setSandboxLevel("high");
+            }
+            toast.success(t("sandboxSetup.succeeded"));
+            onOpenChange(false);
+          } else {
+            setStillUnavailable(true);
           }
-          toast.success(t("sandboxSetup.succeeded"));
-          onOpenChange(false);
-        } else {
-          setStillUnavailable(true);
-        }
-      });
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to load settled sandbox capability", error);
+        });
     },
     [onOpenChange, setSandboxLevel, t],
   );
@@ -138,13 +146,13 @@ function SandboxSetupContent({
   useEffect(() => {
     if (job?.state !== "running") return;
     const timer = window.setTimeout(() => {
-      void loadSandboxSetup(t("sandboxSetup.startError"))
+      loadSandboxSetup(t("sandboxSetup.startError"))
         .then((next) => {
           if (!mounted.current) return;
           setJob(next);
           if (next.state !== "running") finish(next);
         })
-        .catch((pollError) => {
+        .catch((pollError: unknown) => {
           if (!mounted.current) return;
           setActionError(
             pollError instanceof Error
@@ -289,7 +297,11 @@ function SandboxSetupContent({
           <Button
             size="sm"
             disabled={view.installDisabled}
-            onClick={() => void install()}
+            onClick={() => {
+              install().catch((error: unknown) => {
+                console.error("Failed to install sandbox", error);
+              });
+            }}
           >
             {view.running ? <Spinner /> : null}
             {view.install === "windows"
@@ -302,7 +314,11 @@ function SandboxSetupContent({
             size="sm"
             variant="outline"
             title={view.command}
-            onClick={() => void copy()}
+            onClick={() => {
+              copy().catch((error: unknown) => {
+                console.error("Failed to copy sandbox command", error);
+              });
+            }}
           >
             {t("sandboxSetup.copyCommand")}
           </Button>

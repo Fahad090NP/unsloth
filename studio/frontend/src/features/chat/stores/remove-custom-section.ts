@@ -51,7 +51,7 @@ export function removeCustomSectionWithUndo(section: SidebarCustomSection): () =
         sectionByChatId,
         sectionByProjectId,
         sectionByPageId,
-        hiddenSections: [...now.hiddenSections, section.id],
+        hiddenSections: hidden ? [...now.hiddenSections, section.id] : now.hiddenSections,
         manualOrder: {
           ...now.manualOrder,
           [customSectionScope(section.id)]: order,

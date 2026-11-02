@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export function usePillActivationOrder(states: Record<string, boolean>): string[] {
   const [order, setOrder] = useState<string[]>(() =>
@@ -10,7 +10,10 @@ export function usePillActivationOrder(states: Record<string, boolean>): string[
   const signature = Object.keys(states)
     .map((key) => `${key}:${states[key] ? 1 : 0}`)
     .join(",");
-  useEffect(() => {
+  const [prevSignature, setPrevSignature] = useState(signature);
+
+  if (prevSignature !== signature) {
+    setPrevSignature(signature);
     setOrder((prev) => {
       const next = prev.filter((key) => states[key]);
       for (const key of Object.keys(states)) {
@@ -20,6 +23,7 @@ export function usePillActivationOrder(states: Record<string, boolean>): string[
         next.length === prev.length && next.every((key, i) => key === prev[i]);
       return unchanged ? prev : next;
     });
-  }, [signature]);
+  }
+
   return order;
 }

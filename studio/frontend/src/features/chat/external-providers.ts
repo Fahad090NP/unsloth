@@ -173,10 +173,13 @@ function hydrateProviderModelCapabilities(): void {
   try {
     const parsed = JSON.parse(
       localStorage.getItem(REGISTRY_MODEL_CAPABILITIES_KEY) ?? "{}",
-    ) as Record<string, Record<string, ProviderModelCapability>>;
+    ) as Record<string, unknown>;
     for (const [providerType, capabilities] of Object.entries(parsed)) {
       if (capabilities && typeof capabilities === "object") {
-        REGISTRY_MODEL_CAPABILITIES.set(providerType, capabilities);
+        REGISTRY_MODEL_CAPABILITIES.set(
+          providerType,
+          capabilities as Record<string, ProviderModelCapability>,
+        );
       }
     }
   } catch {

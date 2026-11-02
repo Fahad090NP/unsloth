@@ -88,6 +88,8 @@ export function resolveUiProviderTypeFromConfig(
   _registryRows: ProviderRegistryEntry[],
   _existingProviderType: string | undefined,
 ): string {
+  void _registryRows;
+  void _existingProviderType;
   if (configProviderType !== CUSTOM_BACKEND_PROVIDER_TYPE) {
     return configProviderType;
   }
@@ -297,7 +299,7 @@ export async function syncExternalProvidersFromBackend(
         // Only the stored type decides what the backend accepts (legacy rows differ from the UI type).
         backendProviderType: config.provider_type,
         name: config.display_name,
-        baseUrl: config.base_url ?? "",
+        baseUrl: config.base_url,
         ...connectionApiFields(config.api_type),
         models: resolvedModels,
         availableModels: resolvedAvailableModels,
@@ -344,7 +346,7 @@ const MODEL_CATALOG_PROVIDER_BASE_URLS: Record<string, string> = {
 function usesProviderCatalogEndpoint(provider: ExternalProviderConfig): boolean {
   const expected = MODEL_CATALOG_PROVIDER_BASE_URLS[provider.providerType];
   if (!expected) return false;
-  const baseUrl = (provider.baseUrl ?? "").trim().replace(/\/+$/, "").toLowerCase();
+  const baseUrl = provider.baseUrl.trim().replace(/\/+$/, "").toLowerCase();
   return baseUrl === "" || baseUrl === expected;
 }
 

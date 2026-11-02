@@ -157,14 +157,15 @@ export function ArtifactCard({
   const threadIdFromContext = useAuiState(
     ({ threads }) => threads.mainThreadId,
   );
-  const artifactThreadId = threadIdFromContext ?? activeThreadId ?? null;
+  const artifactThreadId =
+    (threadIdFromContext as string | null | undefined) ?? activeThreadId ?? null;
   const artifact = useMemo<ChatArtifact>(
     () =>
       createChatArtifact({
         code,
         title,
         source,
-        sourceMessageId: sourceMessageId ?? messageIdFromContext ?? null,
+        sourceMessageId: sourceMessageId ?? messageIdFromContext,
         sourceToolCallId: sourceToolCallId ?? null,
         threadId: artifactThreadId,
         isStreaming,
@@ -191,15 +192,18 @@ export function ArtifactCard({
         : null,
     [artifact.code, artifact.title, isReact],
   );
-  const open = (view: FileViewMode) =>
-    { isReact && reactTitle !== null
-      ? openReactInBrowser({
-          key: artifact.id,
-          name: getArtifactFilename({ title: reactTitle }, lang),
-          code: artifact.code,
-          view,
-        })
-      : openArtifactInBrowser(artifact, view); };
+  const open = (view: FileViewMode) => {
+    if (isReact && reactTitle !== null) {
+      openReactInBrowser({
+        key: artifact.id,
+        name: getArtifactFilename({ title: reactTitle }, lang),
+        code: artifact.code,
+        view,
+      });
+    } else {
+      openArtifactInBrowser(artifact, view);
+    }
+  };
   // Once per mount, and only when the page is complete.
   const autoOpenAttemptedRef = useRef(false);
 
@@ -226,24 +230,33 @@ export function ArtifactCard({
     }
     open(view);
   };
-  const download = () =>
-    void downloadFile(
+  const download = () => {
+    downloadFile(
       artifact.code,
       filename,
       isReact ? "text/plain;charset=utf-8" : "text/html;charset=utf-8",
-    ).catch((error) => {
+    ).catch((error: unknown) => {
       if (!isDownloadCancelled(error)) {
         toast.error(isReact ? "Couldn't save the code." : "Couldn't save the HTML.");
       }
     });
-  const copy = () =>
-    void copyToClipboard(artifact.code).then(
-      (ok) => ok && toast.success(isReact ? "Code copied" : "HTML copied"),
-    );
-  const openDefault = () =>
+  };
+  const copy = () => {
+    copyToClipboard(artifact.code)
+      .then((ok) => {
+        if (ok) {
+          toast.success(isReact ? "Code copied" : "HTML copied");
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to copy artifact code", error);
+      });
+  };
+  const openDefault = () => {
     openInDefaultBrowser(isReact ? reactPage(artifact.code, lang, pageTitle) : artifact.code).catch((error: unknown) => {
       console.error("Background chat operation failed", error);
     });
+  };
 
   return (
     <div className={cn("my-2 w-full max-w-xl", className)}>

@@ -112,7 +112,7 @@ export function ThreadSidebar({
 
   const [renamingItem, setRenamingItem] = useState<SidebarItem | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
-  const renameImeRef = useRef(newInputImeState());
+  const [renameIme] = useState(newInputImeState);
 
   function viewForItem(item: SidebarItem): ChatView {
     return item.type === "single"
@@ -233,13 +233,27 @@ export function ThreadSidebar({
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent avoidCollisions={false} className="w-52">
                     {COMBINED_EXPORT_FORMATS_LIST.map(({ fmt, label }) => (
-                      <DropdownMenuItem key={`r-m-${fmt}`} onSelect={() => void handleBulkExport("recents", fmt, true)}>
+                      <DropdownMenuItem
+                        key={`r-m-${fmt}`}
+                        onSelect={() => {
+                          handleBulkExport("recents", fmt, true).catch((error: unknown) => {
+                            console.error("Export failed", error);
+                          });
+                        }}
+                      >
                         {label} — combined
                       </DropdownMenuItem>
                     ))}
                     <DropdownMenuSeparator />
                     {EXPORT_FORMATS_LIST.map(({ fmt, label }) => (
-                      <DropdownMenuItem key={`r-s-${fmt}`} onSelect={() => void handleBulkExport("recents", fmt, false)}>
+                      <DropdownMenuItem
+                        key={`r-s-${fmt}`}
+                        onSelect={() => {
+                          handleBulkExport("recents", fmt, false).catch((error: unknown) => {
+                            console.error("Export failed", error);
+                          });
+                        }}
+                      >
                         {label} — per chat
                       </DropdownMenuItem>
                     ))}
@@ -252,13 +266,27 @@ export function ThreadSidebar({
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent avoidCollisions={false} className="w-52">
                     {COMBINED_EXPORT_FORMATS_LIST.map(({ fmt, label }) => (
-                      <DropdownMenuItem key={`a-m-${fmt}`} onSelect={() => void handleBulkExport("all", fmt, true)}>
+                      <DropdownMenuItem
+                        key={`a-m-${fmt}`}
+                        onSelect={() => {
+                          handleBulkExport("all", fmt, true).catch((error: unknown) => {
+                            console.error("Export failed", error);
+                          });
+                        }}
+                      >
                         {label} — combined
                       </DropdownMenuItem>
                     ))}
                     <DropdownMenuSeparator />
                     {EXPORT_FORMATS_LIST.map(({ fmt, label }) => (
-                      <DropdownMenuItem key={`a-s-${fmt}`} onSelect={() => void handleBulkExport("all", fmt, false)}>
+                      <DropdownMenuItem
+                        key={`a-s-${fmt}`}
+                        onSelect={() => {
+                          handleBulkExport("all", fmt, false).catch((error: unknown) => {
+                            console.error("Export failed", error);
+                          });
+                        }}
+                      >
                         {label} — per chat
                       </DropdownMenuItem>
                     ))}
@@ -306,7 +334,11 @@ export function ThreadSidebar({
                           {EXPORT_FORMATS.map(({ label, fn }) => (
                             <DropdownMenuItem
                               key={label}
-                              onSelect={() => handleExport(item, fn)}
+                              onSelect={() => {
+                                handleExport(item, fn).catch((error: unknown) => {
+                                  console.error("Export failed", error);
+                                });
+                              }}
                             >
                               {label}
                             </DropdownMenuItem>
@@ -316,7 +348,11 @@ export function ThreadSidebar({
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
-                        onSelect={() => void handleDelete(item)}
+                        onSelect={() => {
+                          handleDelete(item).catch((error: unknown) => {
+                            console.error("Delete failed", error);
+                          });
+                        }}
                       >
                         <HugeiconsIcon icon={Delete02Icon} className="mr-2 size-4" />
                         Delete
@@ -358,7 +394,7 @@ export function ThreadSidebar({
       <Dialog open={renamingItem !== null} onOpenChange={(open) => { if (!open) setRenamingItem(null); }}>
         <DialogContent
           className="corner-squircle dialog-soft-surface sm:max-w-sm"
-          onEscapeKeyDown={(e) => { if (e.isComposing || e.keyCode === 229) e.preventDefault(); }}
+          onEscapeKeyDown={(e) => { if (e.isComposing || e.key === "Process") e.preventDefault(); }}
         >
           <DialogHeader>
             <DialogTitle>Rename chat</DialogTitle>
@@ -366,17 +402,25 @@ export function ThreadSidebar({
           <Input
             value={renameDraft}
             onChange={(e) => { setRenameDraft(e.target.value); }}
-            {...inputImeHandlers(renameImeRef.current)}
+            {...inputImeHandlers(renameIme)}
             onKeyDown={(e) => {
-              if (imeOwnsInputKeydown(e, renameImeRef.current)) return;
-              if (e.key === "Enter") void commitRename();
+              if (imeOwnsInputKeydown(e, renameIme)) return;
+              if (e.key === "Enter") {
+                commitRename().catch((error: unknown) => {
+                  console.error("Failed to commit rename", error);
+                });
+              }
             }}
             autoFocus
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => { setRenamingItem(null); }}>Cancel</Button>
             <Button
-              onClick={() => void commitRename()}
+              onClick={() => {
+                commitRename().catch((error: unknown) => {
+                  console.error("Failed to commit rename", error);
+                });
+              }}
               disabled={!renameDraft.trim() || renameDraft.trim() === renamingItem?.title}
             >
               Rename

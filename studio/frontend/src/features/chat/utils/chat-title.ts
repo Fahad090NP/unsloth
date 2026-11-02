@@ -458,7 +458,7 @@ export function heuristicChatTitle(messages: readonly MessageRecord[]): string |
   });
   const users = turns.filter((t) => t.role === "user").reverse();
   const anchor: { role: string; text: string } | undefined =
-    users.find((t) => (t.text.match(TITLE_WORD) ?? []).filter(isTitleWord).length >= 2) ?? users[0];
+    users.find((t) => (t.text.match(TITLE_WORD) ?? []).filter(isTitleWord).length >= 2) ?? users.at(0);
   if (!anchor) return null;
   let best: { score: number; words: string[] } | null = null;
   for (const clause of anchor.text.split(/[.?!;:,\n()"“”]+/)) {

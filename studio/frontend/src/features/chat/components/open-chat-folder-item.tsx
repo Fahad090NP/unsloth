@@ -65,7 +65,7 @@ export function OpenChatFolderItem({
     <Item
       title={t("library.chats.folder.openChatTitle")}
       onSelect={() => {
-        void (async () => {
+        (async () => {
           try {
             // Read from history: a chat moved between projects keeps its old sandbox.
             const ids = threadIds.length > 0 ? threadIds : [item.id];
@@ -80,7 +80,9 @@ export function OpenChatFolderItem({
           } catch (error) {
             reportRevealError(error, t, "chat");
           }
-        })();
+        })().catch((error: unknown) => {
+          console.error("Background chat operation failed", error);
+        });
       }}
     >
       <HugeiconsIcon icon={FolderOpenIcon} strokeWidth={1.75} className="size-icon" />
@@ -106,9 +108,13 @@ export function UploadToChatFolderItem({
   return (
     <Item
       title={t("library.chats.folder.uploadTitle")}
-      onSelect={() =>
-        { openFilePicker("*", (files) => void uploadToChatFolder(sandboxSessionId, files, t)); }
-      }
+      onSelect={() => {
+        openFilePicker("*", (files) => {
+          uploadToChatFolder(sandboxSessionId, files, t).catch((error: unknown) => {
+            console.error("Background chat operation failed", error);
+          });
+        });
+      }}
     >
       <HugeiconsIcon icon={Upload01Icon} strokeWidth={1.75} className="size-icon" />
       <span>{t("library.chats.folder.upload")}</span>
@@ -155,7 +161,11 @@ async function uploadToChatFolder(
       {
         action: {
           label: t("library.chats.folder.replace"),
-          onClick: () => void uploadToChatFolder(sessionId, taken, t, true),
+          onClick: () => {
+            uploadToChatFolder(sessionId, taken, t, true).catch((error: unknown) => {
+              console.error("Background chat operation failed", error);
+            });
+          },
         },
       },
     );

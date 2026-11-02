@@ -59,16 +59,16 @@ function cancelTimers(): void {
 
 function runRefresh(): void {
   cancelTimers();
-  for (const threadId of entries.keys()) void refresh(threadId);
+  for (const threadId of entries.keys()) {
+    refresh(threadId).catch((_error: unknown) => undefined);
+  }
 }
 
 function onHistoryUpdated(): void {
   // Clear and reschedule: a leading-edge throttle would refetch every window during streaming.
   if (pendingRefresh) clearTimeout(pendingRefresh);
   pendingRefresh = setTimeout(runRefresh, FORK_COUNT_REFRESH_DEBOUNCE_MS);
-  if (!maxWaitTimer) {
-    maxWaitTimer = setTimeout(runRefresh, FORK_COUNT_REFRESH_MAX_WAIT_MS);
-  }
+  maxWaitTimer ??= setTimeout(runRefresh, FORK_COUNT_REFRESH_MAX_WAIT_MS);
 }
 
 export function subscribeForkCounts(

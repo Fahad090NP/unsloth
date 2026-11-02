@@ -160,7 +160,11 @@ export function McpImageMappings({
               size="sm"
               variant="outline"
               disabled={disabled || loading}
-              onClick={() => void discover(serverId)}
+              onClick={() => {
+                discover(serverId).catch((error: unknown) => {
+                  console.error("Failed to discover tools", error);
+                });
+              }}
             >
               {loading ? <Spinner /> : null}
               Choose image field

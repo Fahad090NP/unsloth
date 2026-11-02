@@ -14,13 +14,13 @@ export const useCompactRequestStore = create<CompactRequestState>()((set) => ({
   requested: {},
   request: (threadId) =>
     { set((state) =>
-      state.requested[threadId]
+      Object.hasOwn(state.requested, threadId)
         ? state
         : { requested: { ...state.requested, [threadId]: true } },
     ); },
   clear: (threadId) =>
     { set((state) => {
-      if (!state.requested[threadId]) return state;
+      if (!Object.hasOwn(state.requested, threadId)) return state;
       const requested = { ...state.requested };
       Reflect.deleteProperty(requested, threadId);
       return { requested };
@@ -34,7 +34,7 @@ export function requestThreadCompaction(threadId: string): void {
 export function takeThreadCompactionRequest(threadId: string | undefined): boolean {
   if (!threadId) return false;
   const state = useCompactRequestStore.getState();
-  if (!state.requested[threadId]) return false;
+  if (!Object.hasOwn(state.requested, threadId)) return false;
   state.clear(threadId);
   return true;
 }

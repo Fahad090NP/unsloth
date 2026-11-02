@@ -277,7 +277,7 @@ export function ChatSearchDialog() {
       );
     }
     const activityAt = (project: (typeof projects)[number]) =>
-      Math.max(project.updatedAt ?? project.createdAt, newestChat.get(project.id) ?? 0);
+      Math.max(project.updatedAt, newestChat.get(project.id) ?? 0);
     return {
       projects: projects
         .filter((project) => !project.archived)
@@ -562,8 +562,11 @@ function downloadedModelRows(
   localRows: readonly LocalInventoryRow[],
   navigate: ReturnType<typeof useNavigate>,
 ): Row[] {
-  const open = (id: string) => () =>
-    navigate({ to: "/hub", search: { tab: "downloaded", model: id } });
+  const open = (id: string) => () => {
+    navigate({ to: "/hub", search: { tab: "downloaded", model: id } }).catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
+  };
   const cached = cachedRows
     .filter(
       (row) =>
@@ -635,7 +638,7 @@ function chatRow(
           ? GitBranchIcon
           : MessageCircleIcon,
     meta: item.type === "compare" ? t("shell.search.compare") : undefined,
-    open: () =>
+    open: () => {
       navigate({
         to: "/chat",
         search:
@@ -648,7 +651,10 @@ function chatRow(
                 compare: item.id,
                 ...(item.projectId ? { project: item.projectId } : {}),
               },
-      }),
+      }).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
+    },
   };
 }
 
@@ -671,11 +677,14 @@ function libraryRow(
       .join(" ")
       .toLowerCase(),
     icon,
-    open: () =>
+    open: () => {
       navigate({
         to: "/library",
         search: { show: kind === "models" ? "models" : "all", item: item.id },
-      }),
+      }).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
+    },
   };
 }
 

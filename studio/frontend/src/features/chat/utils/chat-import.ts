@@ -172,7 +172,7 @@ function oaiMessagesToRecords(
       if (Array.isArray(msg.tool_calls)) {
         for (const tc of msg.tool_calls) {
           const tcObj = tc as Record<string, unknown>;
-          const fn = (tcObj.function as Record<string, unknown>) ?? {};
+          const fn = (tcObj.function as Record<string, unknown> | undefined) ?? {};
           const tcId = typeof tcObj.id === "string" ? tcObj.id : crypto.randomUUID();
           const name = typeof fn.name === "string" ? fn.name : "unknown";
           const argsStr = typeof fn.arguments === "string" ? fn.arguments : "{}";
@@ -407,7 +407,7 @@ async function writeConversation(
     title,
     modelType: "base",
     archived: conversation.archived ?? false,
-    createdAt: messages[0]?.createdAt ?? conversation.createdAt ?? Date.now(),
+    createdAt: messages.at(0)?.createdAt ?? conversation.createdAt ?? Date.now(),
     ...conversation.thread,
     // undefined lets the backup's grouping decide; null is an explicit Recents choice.
     projectId:
@@ -566,7 +566,17 @@ export async function importConversationsFromSource(
   report();
 
   if (failure !== undefined) {
-    const reason = failure instanceof Error ? failure.message : String(failure);
+    const reason =
+      failure instanceof Error
+        ? failure.message
+        : typeof failure === "string"
+          ? failure
+          : typeof failure === "object" &&
+              failure !== null &&
+              "message" in failure &&
+              typeof (failure as { message?: unknown }).message === "string"
+            ? (failure as { message: string }).message
+            : (JSON.stringify(failure) ?? "Import failed");
     throw new Error(
       progress.imported > 0
         ? `${reason} ${progress.imported} conversation${progress.imported === 1 ? " was" : "s were"} imported before it stopped.`

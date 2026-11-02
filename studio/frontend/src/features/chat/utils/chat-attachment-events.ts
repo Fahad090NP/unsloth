@@ -70,7 +70,7 @@ export async function chatContentPartAttachmentIdFromSignature(
   signature: string,
 ): Promise<string> {
   let hex: string | null = null;
-  const subtle: SubtleCrypto | undefined = globalThis.crypto.subtle;
+  const subtle = (globalThis.crypto as { subtle?: SubtleCrypto }).subtle;
   if (subtle) {
     try {
       const digest = await subtle.digest(

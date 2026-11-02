@@ -39,6 +39,9 @@ export function WorkingFolderPicker({
     };
   }, []);
   const available = isTauri && supported && isOwner;
+  const resetPending = () => {
+    pending.current = false;
+  };
 
   async function change(choose: boolean) {
     if ((choose && !available) || disabled || pending.current) return;
@@ -55,7 +58,7 @@ export function WorkingFolderPicker({
         });
       }
     } finally {
-      pending.current = false;
+      resetPending();
       if (mounted.current) {
         setPicking(false);
         onPendingChange?.(false);

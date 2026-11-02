@@ -46,7 +46,7 @@ export function BlenderMcpSetup({ servers, disabled, onBusyChange }: {
     try {
       const rows = await listMcpBuiltins(wait);
       if (generation.current !== current) return;
-      const blender = rows.find((row) => row.builtin_id === "blender");
+      const blender = rows.find((row) => (row.builtin_id as string) === "blender");
       if (!blender) throw new Error("Blender MCP is not available from this Unsloth backend.");
       setConfig(blender);
       setLoadError(null);
@@ -63,8 +63,18 @@ export function BlenderMcpSetup({ servers, disabled, onBusyChange }: {
   useEffect(() => {
     mounted.current = true;
     let cancelled = false;
-    queueMicrotask(() => { if (!cancelled) void refresh(); });
-    const unsubscribe = subscribeToMcpServerMutationSettlements(() => void refresh(false));
+    queueMicrotask(() => {
+      if (!cancelled) {
+        refresh().catch((error: unknown) => {
+          console.error("Failed to refresh Blender MCP config", error);
+        });
+      }
+    });
+    const unsubscribe = subscribeToMcpServerMutationSettlements(() => {
+      refresh(false).catch((error: unknown) => {
+        console.error("Failed to refresh Blender MCP config", error);
+      });
+    });
     return () => {
       cancelled = true;
       mounted.current = false;
@@ -77,6 +87,10 @@ export function BlenderMcpSetup({ servers, disabled, onBusyChange }: {
   const validPort = /^\d+$/.test(port) && Number(port) >= 1 && Number(port) <= 65535;
   const locked = disabled || busy;
   const duplicate = servers.some((server) => !server.builtin_id && /blender|blmcp/i.test(`${server.display_name} ${server.url}`));
+
+  const clearBusy = () => {
+    busyRef.current = false;
+  };
 
   async function act(action: "test" | "save" | "enable" | "disable") {
     if (busyRef.current || disabled) return;
@@ -113,7 +127,7 @@ export function BlenderMcpSetup({ servers, disabled, onBusyChange }: {
       if (mounted.current && action === "test") setConnection("failed");
       if (mounted.current) setError(err instanceof Error ? err.message : String(err));
     } finally {
-      busyRef.current = false;
+      clearBusy();
       if (mounted.current) {
         setBusy(false);
         onBusyChange(false);
@@ -157,10 +171,44 @@ export function BlenderMcpSetup({ servers, disabled, onBusyChange }: {
       )}
       <div className="flex flex-wrap items-center gap-2">
         {config && !config.is_enabled && (
-          <Button size="sm" disabled={locked || !config.available || !validPort || !consent} onClick={() => void act("enable")}>Enable Blender MCP</Button>
+          <Button
+            size="sm"
+            disabled={locked || !config.available || !validPort || !consent}
+            onClick={() => {
+              act("enable").catch((error: unknown) => {
+                console.error("Failed to enable Blender MCP", error);
+              });
+            }}
+          >
+            Enable Blender MCP
+          </Button>
         )}
-        <Button size="sm" variant="outline" disabled={locked || !config?.available || !validPort || (!config.is_enabled && !consent)} onClick={() => void act("test")}>Test connection</Button>
-        {config?.is_enabled && <Button size="sm" variant="outline" disabled={locked} onClick={() => void act("disable")}>Disable</Button>}
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={locked || !config?.available || !validPort || (!config.is_enabled && !consent)}
+          onClick={() => {
+            act("test").catch((error: unknown) => {
+              console.error("Failed to test Blender MCP", error);
+            });
+          }}
+        >
+          Test connection
+        </Button>
+        {config?.is_enabled && (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={locked}
+            onClick={() => {
+              act("disable").catch((error: unknown) => {
+                console.error("Failed to disable Blender MCP", error);
+              });
+            }}
+          >
+            Disable
+          </Button>
+        )}
         {busy && <span role="status" className="inline-flex items-center gap-2 text-xs text-muted-foreground"><Spinner />Setting up / checking MCP…</span>}
       </div>
       <Collapsible className="border-t pt-3">
@@ -200,13 +248,41 @@ export function BlenderMcpSetup({ servers, disabled, onBusyChange }: {
               <Input id="blender-mcp-path" value={blenderPath} disabled={locked || !config} placeholder="Auto-detect Blender" onChange={(event) => { setBlenderPath(event.target.value); setMessage(null); setConnection(null); }} />
             </div>
           </div>
-          <Button size="sm" variant="outline" disabled={locked || !config || !validPort} onClick={() => void act("save")}>Save &amp; disable</Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={locked || !config || !validPort}
+            onClick={() => {
+              act("save").catch((error: unknown) => {
+                console.error("Failed to save Blender MCP config", error);
+              });
+            }}
+          >
+            Save &amp; disable
+          </Button>
         </div>
         </CollapsibleContent>
       </Collapsible>
       {config?.unavailable_reason && <p className="text-xs text-muted-foreground">{config.unavailable_reason}</p>}
       {message && <p role="status" className="text-xs">{message}</p>}
-      {(error || loadError) && <div role="alert" className="text-xs text-destructive">{error || loadError}{loadError && <Button size="sm" variant="ghost" onClick={() => void refresh()}>Retry</Button>}</div>}
+      {(error || loadError) && (
+        <div role="alert" className="text-xs text-destructive">
+          {error || loadError}
+          {loadError && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                refresh().catch((error: unknown) => {
+                  console.error("Failed to retry Blender MCP refresh", error);
+                });
+              }}
+            >
+              Retry
+            </Button>
+          )}
+        </div>
+      )}
     </section>
   );
 }

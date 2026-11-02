@@ -339,6 +339,10 @@ export function useChatAudioUpload({
     pickerSnapshotRef.current = null;
   }, []);
 
+  const resetControllerRef = useCallback(() => {
+    controllerRef.current = null;
+  }, []);
+
   const runTranscription = useCallback(
     async (file: File, source: ChatAudioUploadSnapshot) => {
       if (disabled || controllerRef.current || accountTransitionPending())
@@ -411,7 +415,7 @@ export function useChatAudioUpload({
       } finally {
         if (activeFenceRef.current === source) {
           activeFenceRef.current = null;
-          controllerRef.current = null;
+          resetControllerRef();
           setBusy(false);
           if (failure) {
             const next = { file, snapshot: source, error: failure };
@@ -422,7 +426,7 @@ export function useChatAudioUpload({
         }
       }
     },
-    [clearOperation, disabled, t],
+    [clearOperation, disabled, resetControllerRef, t],
   );
 
   const selectFile = useCallback(

@@ -177,10 +177,9 @@ export function cspFrameQuery(csp: unknown): string {
 
 /** getRandomValues, not randomUUID (missing over plain-HTTP LAN); null without Web Crypto. */
 export function newBridgeToken(): string | null {
+  if (typeof globalThis.crypto?.getRandomValues !== "function") return null;
   const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
-  return bytes
-    ? Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
-    : null;
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /** A MessageChannel port bound to THIS document (a navigated page cannot use it), exposed as window.parent/top. */
@@ -204,7 +203,7 @@ export function withBridgeShim(html: string, shim: string): string {
   const doc = new DOMParser().parseFromString(html, "text/html");
   const script = doc.createElement("script");
   script.textContent = shim;
-  const parent = doc.head ?? doc.documentElement;
+  const parent = doc.head;
   parent.insertBefore(script, parent.firstChild);
   // Only an existing doctype: adding one to a quirks-mode template changes its layout.
   const doctype = doc.doctype ? `<!DOCTYPE ${doc.doctype.name}>\n` : "";

@@ -150,8 +150,8 @@ export function boundMcpImageEnvelopes<T extends EnvelopeCarrier>(
   // Consecutive tool results are one batch on a marker target.
   const batches: Carrier[][] = [];
   for (const carrier of carriers) {
-    const previous: Carrier[] | undefined = batches[batches.length - 1];
-    const last: Carrier | undefined = previous?.[previous.length - 1];
+    const previous = batches.at(-1);
+    const last = previous?.at(-1);
     let sameBatch = localMarkers && last !== undefined;
     for (let j = (last?.index ?? 0) + 1; sameBatch && j < carrier.index; j++) {
       if (out[j]?.role !== "tool") sameBatch = false;

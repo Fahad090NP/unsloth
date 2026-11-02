@@ -299,7 +299,7 @@ export async function settleSkillsForText(text: string): Promise<void> {
   );
   let stale = !snapshot.initialized;
   for (const match of text.matchAll(SKILL_MENTION_PATTERN)) {
-    const raw: string | undefined = match[2];
+    const raw = match.at(2);
     const name = raw ?? "";
     if (!known.has(name)) {
       stale = true;

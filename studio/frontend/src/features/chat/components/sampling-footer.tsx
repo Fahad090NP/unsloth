@@ -86,14 +86,18 @@ export default function SamplingFooter({
   const [busy, setBusy] = useState(false);
   // Until the first read lands, an edit or save would be overwritten by its older result.
   const [loaded, setLoaded] = useState(false);
+  const [prevModelId, setPrevModelId] = useState(modelId);
+  if (prevModelId !== modelId) {
+    setPrevModelId(modelId);
+    setSaved(null);
+    setRemember(false);
+    setLoaded(false);
+  }
   const rememberId = useId();
   const statusId = useId();
 
   useEffect(() => {
     const controller = new AbortController();
-    setSaved(null);
-    setRemember(false);
-    setLoaded(false);
     readSavedSampling(modelId, controller.signal)
       .then((value) => {
         setSaved(value);

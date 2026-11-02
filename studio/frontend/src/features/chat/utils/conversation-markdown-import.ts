@@ -55,7 +55,8 @@ function parseFramedDocument(
     }
     offset = metadataEnd + FRAME_END.length;
     const messages: ConversationMarkdownMessage[] = [];
-    for (const [index, length] of lengths.entries()) {
+    const messageLengths = lengths as number[];
+    for (const [index, length] of messageLengths.entries()) {
       const section = text.slice(offset, offset + length);
       const heading = ROLE_LINE.exec(section);
       if (section.length !== length || !heading) {
@@ -135,7 +136,7 @@ function messagesFromNodes(
     return heading ? [heading] : [];
   });
   return headings.flatMap(({ role, contentStart }, index) => {
-    const next = headings[index + 1];
+    const next = headings.at(index + 1);
     const contentEnd = next ? next.start - 2 : end;
     const content = text.slice(contentStart, contentEnd);
     const value = next ? content : content.replace(/\n$/, "");

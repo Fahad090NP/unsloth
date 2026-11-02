@@ -474,83 +474,87 @@ export async function* followChatGenerationRun(
     }, stallTimeoutMs);
   };
 
-  try {
-    noteProgress();
-    let run = options.initialRun;
-    let failures = 0;
-    while (!(run || signal.aborted)) {
-      try {
-        run = await getChatGenerationRun(id, signal);
-      } catch (error) {
-        if (isAborted()) return;
-        if (isPermanent(error)) throw error;
-        failures += 1;
-        await waitForReconnect(reconnectDelay(failures), signal);
+  async function* stream(): AsyncGenerator<ChatGenerationRunUpdate> {
+    try {
+      noteProgress();
+      let run = options.initialRun;
+      let failures = 0;
+      while (!(run || signal.aborted)) {
+        try {
+          run = await getChatGenerationRun(id, signal);
+        } catch (error) {
+          if (isAborted()) return;
+          if (isPermanent(error)) throw error;
+          failures += 1;
+          await waitForReconnect(reconnectDelay(failures), signal);
+        }
       }
-    }
-    if (!run || isAborted()) return;
-    let currentRun = run;
-    let cursor = replayFrom ?? run.lastEventSeq;
-    yield { run, source: "snapshot" };
-    if (isTerminalChatGenerationRun(run) && replayFrom === undefined) {
-      settled = true;
-      return;
-    }
+      if (!run || isAborted()) return;
+      let currentRun = run;
+      let cursor = replayFrom ?? run.lastEventSeq;
+      yield { run, source: "snapshot" };
+      if (isTerminalChatGenerationRun(run) && replayFrom === undefined) {
+        settled = true;
+        return;
+      }
 
-    while (!isAborted()) {
-      try {
-        for await (const event of streamChatGenerationEvents(
-          id,
-          cursor,
-          signal,
-          noteProgress,
-        )) {
-          if (event.seq <= cursor) continue;
-          cursor = event.seq;
-          if (event.run) currentRun = event.run;
-          failures = 0;
-          noteProgress();
-          yield { run: currentRun, event, source: "event" };
-          if (
-            isTerminalChatGenerationRun(currentRun) &&
-            cursor >= currentRun.lastEventSeq
-          ) {
+      while (!isAborted()) {
+        try {
+          for await (const event of streamChatGenerationEvents(
+            id,
+            cursor,
+            signal,
+            noteProgress,
+          )) {
+            if (event.seq <= cursor) continue;
+            cursor = event.seq;
+            if (event.run) currentRun = event.run;
+            failures = 0;
+            noteProgress();
+            yield { run: currentRun, event, source: "event" };
+            if (
+              isTerminalChatGenerationRun(currentRun) &&
+              cursor >= currentRun.lastEventSeq
+            ) {
+              settled = true;
+              return;
+            }
+          }
+        } catch (error) {
+          if (isAborted()) return;
+          if (isPermanent(error)) throw error;
+          failures += 1;
+        }
+        if (isAborted()) return;
+        try {
+          const fresh = await getChatGenerationRun(id, signal);
+          const changed =
+            fresh.status !== currentRun.status ||
+            fresh.updatedAt !== currentRun.updatedAt ||
+            fresh.lastEventSeq !== currentRun.lastEventSeq;
+          currentRun = fresh;
+          if (changed || cursor < fresh.lastEventSeq) {
+            noteProgress();
+            yield { run: fresh, source: "snapshot" };
+          }
+          if (isTerminalChatGenerationRun(fresh) && cursor >= fresh.lastEventSeq) {
             settled = true;
             return;
           }
+        } catch (error) {
+          if (isAborted()) return;
+          if (isPermanent(error)) throw error;
+          failures += 1;
         }
-      } catch (error) {
-        if (isAborted()) return;
-        if (isPermanent(error)) throw error;
-        failures += 1;
+        await waitForReconnect(reconnectDelay(failures), signal);
       }
-      if (isAborted()) return;
-      try {
-        const fresh = await getChatGenerationRun(id, signal);
-        const changed =
-          fresh.status !== currentRun.status ||
-          fresh.updatedAt !== currentRun.updatedAt ||
-          fresh.lastEventSeq !== currentRun.lastEventSeq;
-        currentRun = fresh;
-        if (changed || cursor < fresh.lastEventSeq) {
-          noteProgress();
-          yield { run: fresh, source: "snapshot" };
-        }
-        if (isTerminalChatGenerationRun(fresh) && cursor >= fresh.lastEventSeq) {
-          settled = true;
-          return;
-        }
-      } catch (error) {
-        if (isAborted()) return;
-        if (isPermanent(error)) throw error;
-        failures += 1;
-      }
-      await waitForReconnect(reconnectDelay(failures), signal);
+    } finally {
+      if (stallTimer !== undefined) globalThis.clearTimeout(stallTimer);
+      callerSignal?.removeEventListener("abort", forwardAbort);
     }
-  } finally {
-    if (stallTimer !== undefined) globalThis.clearTimeout(stallTimer);
-    callerSignal?.removeEventListener("abort", forwardAbort);
-    // Every exit funnels here; `settled` stops a same-tick terminal run being reported stalled.
-    if (isStalled() && !settled) throw new ChatGenerationStalledError(id);
   }
+
+  yield* stream();
+  // Every exit funnels here; `settled` stops a same-tick terminal run being reported stalled.
+  if (isStalled() && !settled) throw new ChatGenerationStalledError(id);
 }

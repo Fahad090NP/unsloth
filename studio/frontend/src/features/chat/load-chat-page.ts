@@ -10,18 +10,16 @@ let chatPageModule: Promise<ChatPageModule> | null = null;
 let loadedModule: ChatPageModule | null = null;
 
 export function loadChatPage(): Promise<ChatPageModule> {
-  if (chatPageModule === null) {
-    chatPageModule = import("./chat-page").then(
-      (module) => {
-        loadedModule = module;
-        return module;
-      },
-      (error: unknown) => {
-        chatPageModule = null;
-        throw error;
-      },
-    );
-  }
+  chatPageModule ??= import("./chat-page").then(
+    (module) => {
+      loadedModule = module;
+      return module;
+    },
+    (error: unknown) => {
+      chatPageModule = null;
+      throw error;
+    },
+  );
   return chatPageModule;
 }
 

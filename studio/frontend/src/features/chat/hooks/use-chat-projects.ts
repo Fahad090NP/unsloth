@@ -48,6 +48,10 @@ function getProjectsSnapshot(): ProjectRecord[] {
   return cachedProjects;
 }
 
+function isProjectsRefreshPending(): boolean {
+  return projectsRefreshPending;
+}
+
 function publishProjects(projects: ProjectRecord[]): void {
   projectsLoadedAt = Date.now();
   if (projectsLoaded && JSON.stringify(projects) === JSON.stringify(cachedProjects)) return;
@@ -90,7 +94,7 @@ function loadProjects(
         if (!isExpectedBackgroundChatStorageError(error)) throw error;
         nextProjects = null;
       }
-    } while (projectsRefreshPending);
+    } while (isProjectsRefreshPending());
     if (nextProjects !== null) publishProjects(nextProjects);
     return cachedProjects;
   }
@@ -142,9 +146,11 @@ export function useChatProjects(): {
     // browser tab or API client.
     // one function per consumer: a shared reference is one DOM listener the first unmount would remove
     const onActivity = () => { onChatActivity(); };
-    void refresh(
+    refresh(
       projectsLoaded && Date.now() - projectsLoadedAt > MOUNT_REVALIDATE_AFTER_MS,
-    );
+    ).catch((error: unknown) => {
+      console.error("Background chat operation failed", error);
+    });
     window.addEventListener(CHAT_PROJECTS_UPDATED_EVENT, onProjectsUpdated);
     window.addEventListener(CHAT_HISTORY_UPDATED_EVENT, onActivity);
     return () => {

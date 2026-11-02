@@ -96,6 +96,9 @@ export function NewProjectDialog({
   // Single-use grants plus lost responses: reconcile each submit against what was sent vs confirmed.
   const sentLeases = useRef(new Set<string>());
   const appliedLease = useRef<string | null>(null);
+  const setAppliedLease = (lease: string | null) => {
+    appliedLease.current = lease;
+  };
   useEffect(() => {
     // Set on setup too: StrictMode replays setup/cleanup/setup.
     mounted.current = true;
@@ -145,18 +148,18 @@ export function NewProjectDialog({
       if (!project) {
         if (token) sentLeases.current.add(token);
         project = await createChatProject(trimmed, token ?? undefined, projectId.current);
-        if (token && project.workingFolder) appliedLease.current = token;
+        if (token && project.workingFolder) setAppliedLease(token);
         setCreatedProject(project);
       }
       // A backend predating create-time folders ignores the lease, leaving it unspent.
       if (token && appliedLease.current !== token) {
         sentLeases.current.add(token);
         project = await setChatProjectWorkingFolder(project.id, token);
-        appliedLease.current = token;
+        setAppliedLease(token);
         setCreatedProject(project);
       } else if (!token && project.workingFolder) {
         project = await setChatProjectWorkingFolder(project.id, null);
-        appliedLease.current = null;
+        setAppliedLease(null);
         setCreatedProject(project);
       }
       // Upload before closing so the Sources panel lists them on first fetch.
@@ -175,7 +178,9 @@ export function NewProjectDialog({
       const runtime = useChatRuntimeStore.getState();
       runtime.setActiveThreadId(null);
       runtime.setActiveProjectId(project.id);
-      navigate({ to: "/chat", search: { project: project.id } });
+      navigate({ to: "/chat", search: { project: project.id } }).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
     } catch (err) {
       // A replay 400s on a grant its lost first attempt already spent: re-read what was saved.
       if (token && appliedLease.current !== token) {
@@ -186,7 +191,7 @@ export function NewProjectDialog({
           notifyChatProjectsUpdated();
           // With one grant ever sent, a saved folder can only be this one.
           if (saved.workingFolder && sentLeases.current.size === 1) {
-            appliedLease.current = token;
+            setAppliedLease(token);
           }
         }
         if (appliedLease.current !== token) setNeedsReselect(true);
@@ -282,7 +287,11 @@ export function NewProjectDialog({
           <Button
             variant="dark"
             type="button"
-            onClick={() => void commitCreate()}
+            onClick={() => {
+              commitCreate().catch((error: unknown) => {
+                console.error("Background chat operation failed", error);
+              });
+            }}
             disabled={
               !name.trim() ||
               busy ||

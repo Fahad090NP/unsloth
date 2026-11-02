@@ -340,14 +340,14 @@ const SETTING_CHECKS: SettingCheck[] = [
     chatOnly: true,
     pinned: () => true,
     agrees: (c, s) =>
-      (c.reasoningBudget ?? -1) ===
+      c.reasoningBudget ===
       (s.requested_reasoning_budget ?? s.reasoning_budget ?? -1),
   },
   {
     chatOnly: true,
     pinned: () => true,
     agrees: (c, s) =>
-      (c.reasoningBudgetMessage ?? "") ===
+      c.reasoningBudgetMessage ===
       (s.requested_reasoning_budget_message ??
         s.reasoning_budget_message ??
         ""),
@@ -522,7 +522,7 @@ function cpuFallbackPlacementPreserved(
   const mode = config.gpuMemoryMode ?? standing.gpuMemoryMode;
   const layers = config.gpuLayers ?? standing.gpuLayers;
   return (
-    (mode === "auto" || (mode === "manual" && layers === 0)) &&
+    (mode === "auto" || layers === 0) &&
     !standing.reconcileGpuIds(
       config.selectedGpuIds ?? null,
       config.selectedGpuIndexKind,

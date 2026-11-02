@@ -178,7 +178,7 @@ export function studioBackupToConversations(
       const ts = Math.max(previousTs + 1, createdAt);
       previousTs = ts;
       const record: MessageRecord = {
-        id: messageIds.get(id) as string,
+        id: messageIds.get(id) ?? id,
         threadId,
         role: restorableRole(raw.role as string),
         content: messageContent(raw.content),
@@ -212,7 +212,7 @@ export function studioBackupToConversations(
     const projectId = str(thread.projectId);
     const pairId = str(thread.pairId);
     const modelId = str(thread.modelId);
-    const createdAt = num(thread.createdAt) ?? messages[0]?.createdAt ?? Date.now();
+    const createdAt = num(thread.createdAt) ?? messages.at(0)?.createdAt ?? Date.now();
     conversations.push({
       title: str(thread.title) ?? `${fallbackTitle} ${index + 1}`,
       threadId,

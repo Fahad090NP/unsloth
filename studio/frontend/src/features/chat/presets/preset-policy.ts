@@ -114,8 +114,8 @@ export function getPresetOwnedParams(
     repetitionPenalty: params.repetitionPenalty,
     presencePenalty: params.presencePenalty,
     maxTokens: params.maxTokens,
-    systemPrompt: params.systemPrompt ?? "",
-    systemVariables: params.systemVariables ?? "",
+    systemPrompt: params.systemPrompt,
+    systemVariables: params.systemVariables,
     // Normalised so presets saved before the field existed are not modified.
     seed: params.seed ?? null,
   };

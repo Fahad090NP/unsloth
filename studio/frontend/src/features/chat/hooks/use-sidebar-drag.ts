@@ -231,7 +231,7 @@ export function placeCue(ghost: RowGhost) {
   for (const cue of document.querySelectorAll<HTMLElement>(`.${DROP_CUE_CLASS}`)) {
     const style = getComputedStyle(cue, "::before");
     if (style.content === "none" || cue.offsetHeight === 0) continue;
-    let overlay = ghost.cues[shown];
+    let overlay: HTMLElement | undefined = ghost.cues.at(shown);
     if (!overlay) {
       overlay = document.createElement("div");
       overlay.setAttribute("aria-hidden", "true");
@@ -264,10 +264,11 @@ export function placeCue(ghost: RowGhost) {
 }
 
 export function placeGhost(ghost: RowGhost, y: number) {
-  const view = ghost.view.getBoundingClientRect();
-  const height = ghost.element.offsetHeight;
-  const top = Math.min(Math.max(y - ghost.grab, view.top), view.bottom - height);
-  ghost.element.style.transform = `translate3d(0, ${Math.round(top - ghost.top)}px, 0)`;
+  const { element, view: ghostView, grab, top: ghostTop } = ghost;
+  const view = ghostView.getBoundingClientRect();
+  const height = element.offsetHeight;
+  const top = Math.min(Math.max(y - grab, view.top), view.bottom - height);
+  element.style.transform = `translate3d(0, ${Math.round(top - ghostTop)}px, 0)`;
 }
 
 function zoneOf(element: Element): SidebarDropZone | null {

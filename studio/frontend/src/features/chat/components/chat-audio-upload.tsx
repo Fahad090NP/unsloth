@@ -55,9 +55,14 @@ export function ChatAudioUpload({ audioUpload }: ChatAudioUploadProps) {
   };
 
   const acceptFile = (input: HTMLInputElement) => {
-    const file = input.files?.[0];
-    input.value = "";
-    if (file) audioUpload.selectFile(file);
+    const el = input;
+    const file = el.files?.[0];
+    el.value = "";
+    if (file) {
+      audioUpload.selectFile(file).catch((error: unknown) => {
+        console.error("Background chat operation failed", error);
+      });
+    }
   };
 
   const readinessText = (() => {
@@ -191,7 +196,11 @@ export function ChatAudioUpload({ audioUpload }: ChatAudioUploadProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => void audioUpload.refreshReadiness()}
+              onClick={() => {
+                audioUpload.refreshReadiness().catch((error: unknown) => {
+                  console.error("Background chat operation failed", error);
+                });
+              }}
             >
               {t("settings.voice.dictation.sttRetry")}
             </Button>

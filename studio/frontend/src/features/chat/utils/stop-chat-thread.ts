@@ -26,10 +26,17 @@ function stopServerRunsForThread(threadId: string): void {
  *  share the "__default" key, so every handle under it is stopped. */
 export function stopChatThread(threadId: string | null | undefined): boolean {
   if (!threadId) return false;
-  const { runningByThreadId, cancelByThreadId, serverCancelByThreadId } =
-    useChatRuntimeStore.getState();
-  const cancel: (() => void) | undefined = cancelByThreadId[threadId];
-  const running: boolean | undefined = runningByThreadId[threadId];
+  const {
+    runningByThreadId,
+    cancelByThreadId,
+    serverCancelByThreadId,
+  }: {
+    runningByThreadId: Record<string, boolean | undefined>;
+    cancelByThreadId: Record<string, (() => void) | undefined>;
+    serverCancelByThreadId: Record<string, (() => void)[] | undefined>;
+  } = useChatRuntimeStore.getState();
+  const cancel = cancelByThreadId[threadId];
+  const running = runningByThreadId[threadId];
   const serverCancels = serverCancelByThreadId[threadId] ?? [];
   if (!running && !cancel && serverCancels.length === 0) {
     stopServerRunsForThread(threadId);

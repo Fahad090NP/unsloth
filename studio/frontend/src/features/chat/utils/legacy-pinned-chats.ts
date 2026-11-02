@@ -11,12 +11,29 @@ function ids(value: unknown): string[] {
   return [...new Set(value.filter(isValidPinId))].slice(0, 10_000);
 }
 
+interface LegacyPinnedStorage {
+  state?: {
+    pinnedIds?: unknown;
+    manualOrderIncluded?: unknown;
+  };
+}
+
+interface LegacyOrganizationStorage {
+  state?: {
+    manualOrder?: {
+      pinned?: unknown;
+    };
+  };
+}
+
 /** Read the old browser-only pins once the server confirms it has no pin state. */
 export function readLegacyPinnedChatIds(
   storage: Pick<Storage, "getItem">,
 ): string[] {
   try {
-    const saved = JSON.parse(storage.getItem("unsloth_pinned_chats") ?? "null");
+    const saved = JSON.parse(
+      storage.getItem("unsloth_pinned_chats") ?? "null",
+    ) as LegacyPinnedStorage | null;
     const pinned = ids(saved?.state?.pinnedIds);
     if (saved?.state?.manualOrderIncluded === true) {
       return pinned;
@@ -25,7 +42,7 @@ export function readLegacyPinnedChatIds(
     try {
       const organization = JSON.parse(
         storage.getItem(SIDEBAR_ORGANIZATION_STORAGE_KEY) ?? "null",
-      );
+      ) as LegacyOrganizationStorage | null;
       order = ids(organization?.state?.manualOrder?.pinned);
     } catch {
       // A damaged sidebar preference must not discard otherwise valid pins.
