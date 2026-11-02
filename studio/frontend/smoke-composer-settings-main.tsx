@@ -10,7 +10,7 @@ import {
   useAui,
   useAuiState,
 } from "@assistant-ui/react";
-import { ComposerSettings } from "@/features/settings/components/composer-settings";
+import { ComposerSettings } from "@/features/settings";
 import { ComposerDraftPreview } from "@/components/assistant-ui/composer-draft-preview";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
