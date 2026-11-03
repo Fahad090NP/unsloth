@@ -214,7 +214,7 @@ function ViewerBody() {
     observer.observe(stage);
     return () => { observer.disconnect(); };
   }, [fitted, fitZoom]);
-  const scale = zoom && image && zoom.key === image.key ? zoom.value : null;
+  const scale = image && zoom?.key === image.key ? zoom.value : null;
   const setScale = (value: number, fit = false) => {
     if (image) setZoom({ key: image.key, value, fit });
   };

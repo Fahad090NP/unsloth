@@ -4342,16 +4342,19 @@ export function AppSidebar() {
             console.error("Failed to fork chat", error);
           });
         },
-        moveToProject: (projectId) =>
-          projectId === null
-            ? moveChatToProject(item, null).catch((error: unknown) => {
-                console.error("Failed to move chat", error);
-              })
-            : moveChatToProjectFromMenu(item, projectId).catch(
-                (error: unknown) => {
-                  console.error("Failed to move chat", error);
-                },
-              ),
+        moveToProject: (projectId) => {
+          if (projectId === null) {
+            void moveChatToProject(item, null).catch((error: unknown) => {
+              console.error("Failed to move chat", error);
+            });
+            return;
+          }
+          void moveChatToProjectFromMenu(item, projectId).catch(
+            (error: unknown) => {
+              console.error("Failed to move chat", error);
+            },
+          );
+        },
         newProject: () => {
           setProjectCreateMoveTarget(item);
           setCreatingProject(true);
@@ -5615,7 +5618,7 @@ export function AppSidebar() {
               draggingRow?.id === item.id && "opacity-40",
               dropCueClass(list.scope, item.id),
             )}
-            onContextMenu={() => { list && selectForContextMenu(item, list); }}
+            onContextMenu={() => { selectForContextMenu(item, list); }}
             {...rowDragProps({
               item: {
                 kind: "chat",
@@ -5648,7 +5651,7 @@ export function AppSidebar() {
               data-selected={selectedChatIds.has(item.id) ? "true" : undefined}
               className={buttonClass}
               onClick={(event) => {
-                if (list && handleSelectionClick(event, item, list)) return;
+                if (handleSelectionClick(event, item, list)) return;
                 openChatItem(item);
               }}
               // The chat opens on the first click and the rename dialog on the second.
@@ -7263,7 +7266,7 @@ export function AppSidebar() {
         className="corner-squircle dialog-soft-surface sm:max-w-md"
         // Radix handles Escape before the input; don't close on IME dismissal.
         onEscapeKeyDown={(event) => {
-          if (event.isComposing || event.keyCode === 229) event.preventDefault();
+          if (event.isComposing || event.key === "Process") event.preventDefault();
         }}
       >
         <DialogHeader>

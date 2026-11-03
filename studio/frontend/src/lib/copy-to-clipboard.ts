@@ -63,9 +63,10 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     return true;
   }
 
-  if (typeof navigator.clipboard.writeText === "function") {
+  const clipboard: Clipboard | undefined = navigator.clipboard;
+  if (clipboard && typeof clipboard.writeText === "function") {
     try {
-      await navigator.clipboard.writeText(text);
+      await clipboard.writeText(text);
       return true;
     } catch {
       // Fall back to execCommand below.

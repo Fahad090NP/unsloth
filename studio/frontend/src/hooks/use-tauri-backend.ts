@@ -167,51 +167,62 @@ export function useTauriBackend() {
   // Read through: the listener lives in an effect that cannot reach this render's setState.
   const closing = useSyncExternalStore(subscribeAppClosing, isAppClosing);
 
-  function setBackendStatus(nextStatus: BackendStatus) {
+  const setBackendStatus = useCallback((nextStatus: BackendStatus) => {
     if (authFailureRef.current) return;
     // A native install or repair outlives a reload; do not let the next poll overwrite its state.
-    stopManagedEnvironmentWait();
+    if (environmentWaitRef.current) {
+      clearTimeout(environmentWaitRef.current);
+      environmentWaitRef.current = null;
+    }
+    environmentWaitPollsRef.current = 0;
     statusRef.current = nextStatus;
     setStatus(nextStatus);
     setInstallDiskFull(false);
     syncTrayStatus(nextStatus);
-  }
+  }, []);
 
-  function setBackendError(
-    nextError: string,
-    nextStatus: BackendStatus = "error",
-    diskFull = false,
-  ) {
-    if (authFailureRef.current) return;
-    stopManagedEnvironmentWait();
-    statusRef.current = nextStatus;
-    setStatus(nextStatus);
-    setError(nextError);
-    setInstallDiskFull(diskFull);
-    syncTrayStatus(nextStatus);
-  }
+  const setBackendError = useCallback(
+    (
+      nextError: string,
+      nextStatus: BackendStatus = "error",
+      diskFull = false,
+    ) => {
+      if (authFailureRef.current) return;
+      if (environmentWaitRef.current) {
+        clearTimeout(environmentWaitRef.current);
+        environmentWaitRef.current = null;
+      }
+      environmentWaitPollsRef.current = 0;
+      statusRef.current = nextStatus;
+      setStatus(nextStatus);
+      setError(nextError);
+      setInstallDiskFull(diskFull);
+      syncTrayStatus(nextStatus);
+    },
+    [],
+  );
 
-  function clearBackendError() {
+  const clearBackendError = useCallback(() => {
     if (authFailureRef.current) return;
     setError(null);
-  }
+  }, []);
 
-  function setRunningStatus() {
+  const setRunningStatus = useCallback(() => {
     setBackendStatus("running");
-  }
+  }, [setBackendStatus]);
 
-  function setAuthFailure(detail: string) {
+  const setAuthFailure = useCallback((detail: string) => {
     authFailureRef.current = detail;
     statusRef.current = "error";
     setStatus("error");
     setError(detail);
     syncTrayStatus("error");
-  }
+  }, []);
 
-  function clearAuthFailure() {
+  const clearAuthFailure = useCallback(() => {
     authFailureRef.current = null;
     clearTauriAuthFailure();
-  }
+  }, []);
 
   const markStarting = useCallback((value: boolean): void => {
     startingRef.current = value;
@@ -232,15 +243,15 @@ export function useTauriBackend() {
     [],
   );
 
-  function stopExternalServerPoll() {
+  const stopExternalServerPoll = useCallback(() => {
     externalPollAbortedRef.current = true;
     if (externalPollRef.current) {
       clearInterval(externalPollRef.current);
       externalPollRef.current = null;
     }
-  }
+  }, []);
 
-  function startExternalServerPoll(port: number) {
+  const startExternalServerPoll = useCallback((port: number) => {
     stopExternalServerPoll();
     externalPollAbortedRef.current = false;
     let failures = 0;
@@ -271,21 +282,23 @@ export function useTauriBackend() {
         console.error("Failed to poll the external server", error);
       });
     }, 15_000);
-  }
+  }, [setBackendError, stopExternalServerPoll]);
 
   useEffect(() => {
     statusRef.current = status;
   }, [status]);
 
-  function stopManagedEnvironmentWait() {
+  const stopManagedEnvironmentWait = useCallback(() => {
     if (environmentWaitRef.current) {
       clearTimeout(environmentWaitRef.current);
       environmentWaitRef.current = null;
     }
     environmentWaitPollsRef.current = 0;
-  }
+  }, []);
 
-  function waitForManagedEnvironment(bounded: boolean) {
+  const checkInstallAndStartRef = useRef<() => Promise<void>>(async () => {});
+
+  const waitForManagedEnvironment = useCallback((bounded: boolean) => {
     // setBackendStatus is a no-op here, so the poll would run on behind the error.
     if (authFailureRef.current) return;
     if (bounded && environmentWaitPollsRef.current >= MANAGED_ENVIRONMENT_WAIT_POLLS) {
@@ -301,13 +314,132 @@ export function useTauriBackend() {
     environmentWaitPollsRef.current = polls;
     environmentWaitRef.current = setTimeout(() => {
       environmentWaitRef.current = null;
-      checkInstallAndStart().catch((error: unknown) => {
+      checkInstallAndStartRef.current().catch((error: unknown) => {
         console.error("Failed to check the managed install", error);
       });
     }, MANAGED_ENVIRONMENT_POLL_MS);
-  }
+  }, [setBackendError, setBackendStatus]);
 
-  async function checkInstallAndStart() {
+  const startManagedServer = useCallback(async () => {
+    // Before the re-entry guard: a requested start retires the earlier stop.
+    clearServerStopIntent();
+    if (startingRef.current) {
+      return;
+    }
+    startingRef.current = true;
+    setStartupMessage(INITIAL_STARTUP_MESSAGE);
+    portRef.current = null;
+    startTimedOutRef.current = false;
+
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      // backend/run.py keeps the 8888-8908 fallback via server-port/TAURI_PORT.
+      await invoke("start_managed_server", { port: 8888 });
+
+      // Rust emits server-port only after validating the process; no second health poll needed.
+      const startupResult = await waitForManagedServerPort(
+        () => portRef.current,
+        () => startingRef.current,
+        portWakeRef.current.wait,
+      );
+
+      if (startupResult.status === "ready") {
+        setApiBase(startupResult.port);
+        setRunningStatus();
+        markStarting(false);
+        return;
+      }
+
+      return;
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("already running")) {
+        markStarting(false);
+        setBackendError(
+          "Managed server is already running but did not report a port. Restart Unsloth and try again.",
+        );
+        return;
+      }
+      setBackendError(msg);
+    }
+    markStarting(false);
+  }, [markStarting, setBackendError, setRunningStatus]);
+
+  const runRepair = useCallback(
+    async (
+      options?: { forceInstaller?: boolean; preflightReason?: string | null },
+      releaseRepair: () => void = () => { /* no-op */ },
+    ) => {
+      const forceInstaller = options?.forceInstaller ?? false;
+      // Survives the elevation round trip.
+      forcedRepairRef.current = forceInstaller;
+      repairReasonRef.current = options?.preflightReason ?? null;
+      elevationResumeRef.current = null;
+      setCurrentStepIndex(-1);
+      setProgressDetail(null);
+      seenStepsRef.current.clear();
+      startingRef.current = false;
+      portRef.current = null;
+      setIsExternalServer(false);
+      stopExternalServerPoll();
+      setLogs([]);
+      clearBackendError();
+      setBackendStatus("repairing");
+
+      const { invoke } = await import("@tauri-apps/api/core");
+      try {
+        await invoke("start_managed_repair", { forceInstaller });
+        recordRuntimeRepair(repairReasonRef.current);
+        // The old backend's export verdict would otherwise outlive the repair: the shell remounts
+        // from the module cache, so Export stays disabled after Repair added PyTorch.
+        invalidateHardwareInfo();
+        // The repair ends here; what follows is an ordinary start, and holding the flag across it
+        // swallows the Retry that server-start-timeout offers.
+        releaseRepair();
+      } catch (e) {
+        const msg = String(e);
+        if (msg.includes("NEEDS_ELEVATION")) return;
+        setBackendError(
+          isLlamaRuntimeReason(repairReasonRef.current) ? runtimeRepairFailureMessage(msg) : msg,
+          "repair-error",
+        );
+        return;
+      }
+      setBackendStatus("starting");
+      elevationResumeRef.current = null;
+      await startManagedServer();
+    },
+    [
+      clearBackendError,
+      setBackendError,
+      setBackendStatus,
+      startManagedServer,
+      stopExternalServerPoll,
+    ],
+  );
+
+  // `forceInstaller` skips `studio update`, which would keep a CPU-only PyTorch; only manual repair
+  // sets it.
+  const startRepair = useCallback(
+    async (options?: { forceInstaller?: boolean; preflightReason?: string | null }) => {
+      if (repairInFlightRef.current) return;
+      repairInFlightRef.current = true;
+      let ownsRepair = true;
+      const releaseRepair = () => {
+        if (!ownsRepair) return;
+        ownsRepair = false;
+        repairInFlightRef.current = false;
+      };
+      try {
+        await runRepair(options, releaseRepair);
+      } finally {
+        releaseRepair();
+      }
+    },
+    [runRepair],
+  );
+
+  const checkInstallAndStart = useCallback(async () => {
     // Honor a persisted stop before preflight; the native command can adopt a reaping backend.
     if (hasServerStopIntent()) {
       setBackendStatus("stopped");
@@ -400,132 +532,28 @@ export function useTauriBackend() {
     } finally {
       releasePreflight();
     }
-  }
+  }, [
+    markAllowHeldRuntimeRepair,
+    setBackendError,
+    setBackendStatus,
+    setRunningStatus,
+    startExternalServerPoll,
+    startManagedServer,
+    startRepair,
+    stopExternalServerPoll,
+    waitForManagedEnvironment,
+  ]);
 
-  async function startManagedServer() {
-    // Before the re-entry guard: a requested start retires the earlier stop.
-    clearServerStopIntent();
-    if (startingRef.current) {
-      return;
-    }
-    startingRef.current = true;
-    setStartupMessage(INITIAL_STARTUP_MESSAGE);
-    portRef.current = null;
-    startTimedOutRef.current = false;
+  useEffect(() => {
+    Object.assign(checkInstallAndStartRef, { current: checkInstallAndStart });
+  }, [checkInstallAndStart]);
 
-    try {
-      const { invoke } = await import("@tauri-apps/api/core");
-      // backend/run.py keeps the 8888-8908 fallback via server-port/TAURI_PORT.
-      await invoke("start_managed_server", { port: 8888 });
-
-      // Rust emits server-port only after validating the process; no second health poll needed.
-      const startupResult = await waitForManagedServerPort(
-        () => portRef.current,
-        () => startingRef.current,
-        portWakeRef.current.wait,
-      );
-
-      if (startupResult.status === "ready") {
-        setApiBase(startupResult.port);
-        setRunningStatus();
-        markStarting(false);
-        return;
-      }
-
-      return;
-    } catch (e) {
-      const msg = String(e);
-      if (msg.includes("already running")) {
-        markStarting(false);
-        setBackendError(
-          "Managed server is already running but did not report a port. Restart Unsloth and try again.",
-        );
-        return;
-      }
-      setBackendError(msg);
-    }
-    markStarting(false);
-  }
-
-  // `forceInstaller` skips `studio update`, which would keep a CPU-only PyTorch; only manual repair
-  // sets it.
-  async function startRepair(options?: { forceInstaller?: boolean; preflightReason?: string | null }) {
-    if (repairInFlightRef.current) return;
-    repairInFlightRef.current = true;
-    let ownsRepair = true;
-    const releaseRepair = () => {
-      if (!ownsRepair) return;
-      ownsRepair = false;
-      repairInFlightRef.current = false;
-    };
-    try {
-      await runRepair(options, releaseRepair);
-    } finally {
-      releaseRepair();
-    }
-  }
-
-  async function runRepair(
-    options?: { forceInstaller?: boolean; preflightReason?: string | null },
-    releaseRepair: () => void = () => { /* no-op */ },
-  ) {
-    const forceInstaller = options?.forceInstaller ?? false;
-    // Survives the elevation round trip.
-    forcedRepairRef.current = forceInstaller;
-    repairReasonRef.current = options?.preflightReason ?? null;
-    elevationResumeRef.current = null;
-    setCurrentStepIndex(-1);
-    setProgressDetail(null);
-    seenStepsRef.current.clear();
-    startingRef.current = false;
-    portRef.current = null;
-    setIsExternalServer(false);
-    stopExternalServerPoll();
-    setLogs([]);
-    clearBackendError();
-    setBackendStatus("repairing");
-
-    const { invoke } = await import("@tauri-apps/api/core");
-    try {
-      await invoke("start_managed_repair", { forceInstaller });
-      recordRuntimeRepair(repairReasonRef.current);
-      // The old backend's export verdict would otherwise outlive the repair: the shell remounts
-      // from the module cache, so Export stays disabled after Repair added PyTorch.
-      invalidateHardwareInfo();
-      // The repair ends here; what follows is an ordinary start, and holding the flag across it
-      // swallows the Retry that server-start-timeout offers.
-      releaseRepair();
-    } catch (e) {
-      const msg = String(e);
-      if (msg.includes("NEEDS_ELEVATION")) return;
-      setBackendError(
-        isLlamaRuntimeReason(repairReasonRef.current) ? runtimeRepairFailureMessage(msg) : msg,
-        "repair-error",
-      );
-      return;
-    }
-    setBackendStatus("starting");
-    elevationResumeRef.current = null;
-    await startManagedServer();
-  }
-
-  async function startServer() {
+  const startServer = useCallback(async () => {
     setBackendStatus("starting");
     await startManagedServer();
-  }
+  }, [setBackendStatus, startManagedServer]);
 
-  // statusRef stays "running" until the invoke resolves, so a second tray Stop would double-shutdown.
-  async function stopServer() {
-    if (stoppingRef.current) return;
-    stoppingRef.current = true;
-    try {
-      await runStopServer();
-    } finally {
-      markStopping(false);
-    }
-  }
-
-  async function runStopServer() {
+  const runStopServer = useCallback(async () => {
     if (isExternalServer) {
       startingRef.current = false;
       setIsExternalServer(false);
@@ -545,42 +573,56 @@ export function useTauriBackend() {
     }
     startingRef.current = false;
     setBackendStatus("stopped");
-  }
+  }, [isExternalServer, setBackendStatus, stopExternalServerPoll]);
+
+  // statusRef stays "running" until the invoke resolves, so a second tray Stop would double-shutdown.
+  const stopServer = useCallback(async () => {
+    if (stoppingRef.current) return;
+    stoppingRef.current = true;
+    try {
+      await runStopServer();
+    } finally {
+      markStopping(false);
+    }
+  }, [markStopping, runStopServer]);
 
   // Strict check: onClick passes a click event here.
-  async function startInstall(options?: { skipLongPaths?: boolean; chatOnly?: boolean }) {
-    const skipLongPaths = options?.skipLongPaths === true;
-    // Kept for the Linux elevation resume, which restarts the install without options.
-    if (options) {
-      chatOnlyRef.current = options.chatOnly === true;
-    }
-    const chatOnly = chatOnlyRef.current;
-    elevationResumeRef.current = null;
-    setCurrentStepIndex(-1);
-    setProgressDetail(null);
-    seenStepsRef.current.clear();
-    setBackendStatus("installing");
-    setLogs([]);
-    clearBackendError();
-    const { invoke } = await import("@tauri-apps/api/core");
-    try {
-      await invoke("start_install", { skipLongPaths, chatOnly });
-      // Install done: start the managed backend we just installed. Don't run the general preflight
-      // here, it can attach to an unrelated running CLI/backend before launching ours. The
-      // install-complete listener does NOT call startServer() to avoid a double-start race.
-      setBackendStatus("starting");
+  const startInstall = useCallback(
+    async (options?: { skipLongPaths?: boolean; chatOnly?: boolean }) => {
+      const skipLongPaths = options?.skipLongPaths === true;
+      // Kept for the Linux elevation resume, which restarts the install without options.
+      if (options) {
+        chatOnlyRef.current = options.chatOnly === true;
+      }
+      const chatOnly = chatOnlyRef.current;
       elevationResumeRef.current = null;
-      await startServer();
-    } catch (e) {
-      const msg = String(e);
-      // Rust also emits install-needs-elevation; do not race it with install-error.
-      if (msg.includes("NEEDS_ELEVATION")) return;
-      // install-failed is emitted before the command returns and already set this error
-      // with its disk-full flag; setting it again here would clear that flag.
-      if (statusRef.current === "install-error") return;
-      setBackendError(msg, "install-error");
-    }
-  }
+      setCurrentStepIndex(-1);
+      setProgressDetail(null);
+      seenStepsRef.current.clear();
+      setBackendStatus("installing");
+      setLogs([]);
+      clearBackendError();
+      const { invoke } = await import("@tauri-apps/api/core");
+      try {
+        await invoke("start_install", { skipLongPaths, chatOnly });
+        // Install done: start the managed backend we just installed. Don't run the general preflight
+        // here, it can attach to an unrelated running CLI/backend before launching ours. The
+        // install-complete listener does NOT call startServer() to avoid a double-start race.
+        setBackendStatus("starting");
+        elevationResumeRef.current = null;
+        await startServer();
+      } catch (e) {
+        const msg = String(e);
+        // Rust also emits install-needs-elevation; do not race it with install-error.
+        if (msg.includes("NEEDS_ELEVATION")) return;
+        // install-failed is emitted before the command returns and already set this error
+        // with its disk-full flag; setting it again here would clear that flag.
+        if (statusRef.current === "install-error") return;
+        setBackendError(msg, "install-error");
+      }
+    },
+    [clearBackendError, setBackendError, setBackendStatus, startServer],
+  );
 
   const retry = useCallback(() => {
     // Retry on a FORCED repair re-runs it: the transactional installer restores the old environment, so
@@ -613,7 +655,13 @@ export function useTauriBackend() {
     checkInstallAndStart().catch((error: unknown) => {
       console.error("Failed to check the managed install", error);
     });
-  }, [checkInstallAndStart, startRepair]);
+  }, [
+    checkInstallAndStart,
+    clearAuthFailure,
+    startRepair,
+    stopExternalServerPoll,
+    stopManagedEnvironmentWait,
+  ]);
 
   const retryInstall = useCallback(async () => {
     const resume = elevationResumeRef.current;
@@ -634,7 +682,7 @@ export function useTauriBackend() {
       return;
     }
     setBackendStatus("not-installed");
-  }, [setBackendError, setBackendStatus, markElevationResume]);
+  }, [clearBackendError, setBackendError, setBackendStatus, markElevationResume]);
 
   const approveElevation = useCallback(async () => {
     const resume = elevationResumeRef.current ?? "install";
@@ -858,7 +906,15 @@ export function useTauriBackend() {
       stopExternalServerPoll();
       stopManagedEnvironmentWait();
     };
-  }, [retry, setBackendError, setBackendStatus, stopServer]);
+  }, [
+    retry,
+    setAuthFailure,
+    setBackendError,
+    setBackendStatus,
+    stopExternalServerPoll,
+    stopManagedEnvironmentWait,
+    stopServer,
+  ]);
 
   return {
     status, logs, error, installDiskFull, isExternalServer, closing,
