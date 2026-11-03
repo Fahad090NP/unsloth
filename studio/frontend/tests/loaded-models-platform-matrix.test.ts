@@ -23,6 +23,7 @@ function chat(
 ): InferenceStatusResponse {
   return {
     active_model: null,
+    loading: [],
     loaded: [],
     is_gguf: false,
     is_mlx: false,
@@ -116,19 +117,35 @@ test("audio models split three ways, not two", () => {
   const speaks = ["snac", "csm", "bicodec", "dac"];
   for (const audioType of speaks) {
     const rows = describeInferenceStatus(
-      chat({ active_model: `m/${audioType}`, is_audio: true, audio_type: audioType }),
+      chat({
+        active_model: `m/${audioType}`,
+        is_audio: true,
+        audio_type: audioType,
+      }),
     );
     assert.equal(rows[0].kind, "tts", `${audioType} produces audio`);
   }
   const whisper = describeInferenceStatus(
     chat({ active_model: "m/whisper", is_audio: true, audio_type: "whisper" }),
   );
-  assert.equal(whisper[0].kind, "stt", "whisper transcribes, it does not answer");
+  assert.equal(
+    whisper[0].kind,
+    "stt",
+    "whisper transcribes, it does not answer",
+  );
   // Transformers can report is_audio true for Gemma 3n.
   const vlm = describeInferenceStatus(
-    chat({ active_model: "unsloth/gemma-3n-E4B-it", is_audio: true, audio_type: "audio_vlm" }),
+    chat({
+      active_model: "unsloth/gemma-3n-E4B-it",
+      is_audio: true,
+      audio_type: "audio_vlm",
+    }),
   );
-  assert.equal(vlm[0].kind, "text", "an audio VLM is a chat model that listens");
+  assert.equal(
+    vlm[0].kind,
+    "text",
+    "an audio VLM is a chat model that listens",
+  );
 });
 
 test("an audio flag with no type still reads as speech", () => {

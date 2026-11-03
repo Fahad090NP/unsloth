@@ -43,7 +43,8 @@ function activeConfig(patch: Record<string, unknown> = {}) {
       },
     },
   );
-  const config = (readActiveModelConfig().config ?? assert.fail("expected a non-null value"));
+  const config =
+    readActiveModelConfig().config ?? assert.fail("expected a non-null value");
   const { currentRuntimePerModelConfig } = loadWithStubs<{
     currentRuntimePerModelConfig: () => NonNullable<
       ActiveModelConfigState["config"]
@@ -55,8 +56,23 @@ function activeConfig(patch: Record<string, unknown> = {}) {
     ),
     {
       "@/features/chat/stores/chat-runtime-store": {
-        useChatRuntimeStore: { getState: () => state },
+        useChatRuntimeStore: {
+          getState: () => state,
+          setState: () => undefined,
+        },
         normalizeSpeculativeType: (value: unknown) => value ?? null,
+      },
+      "@/features/chat": {
+        GPU_LAYERS_AUTO: -1,
+        defaultInferenceParams: { maxSeqLength: 2048 },
+        normalizeSpeculativeType: (value: unknown) => value ?? null,
+        readPersistedGpuMemoryMode: () => null,
+        readPersistedSpeculativeType: () => null,
+        reconcilePersistedGpuSelection: (value: unknown) => value ?? null,
+        useChatRuntimeStore: {
+          getState: () => state,
+          setState: () => undefined,
+        },
       },
       "@/features/chat/presets/preset-policy": {},
       "./config-signature": {},
@@ -102,7 +118,13 @@ test("explicit and legacy reasoning values remain available", () => {
 for (const engine of ["vllm", "sglang"]) {
   test(`${engine} resident precision survives editor hydration`, () => {
     const config = activeConfig({
-      params: { checkpoint: "unsloth/Qwen2.5-0.5B-Instruct", maxSeqLength: 2048, engine, enginePrecision: "int4", engineParallelism: "pipeline" },
+      params: {
+        checkpoint: "unsloth/Qwen2.5-0.5B-Instruct",
+        maxSeqLength: 2048,
+        engine,
+        enginePrecision: "int4",
+        engineParallelism: "pipeline",
+      },
       selectedGpuIds: [0, 1],
       selectedGpuIndexKind: "physical",
     });

@@ -12,7 +12,7 @@ const HOOK = readText("../src/features/loaded-models/use-loaded-models.ts");
 const API = readText("../src/features/loaded-models/loaded-models-api.ts");
 
 test("the read reports which sources it could not see", () => {
-  assert.match(API, /export type LoadedModelsRead = \{/);
+  assert.match(API, /export (?:type|interface) LoadedModelsRead\b/);
   assert.match(API, /unreadable: LoadedModelSource\[\];/);
   assert.match(API, /unreadable\.push\(source\);/);
   assert.match(API, /return \{ entries, unreadable, heldByOther \};/);
@@ -24,7 +24,10 @@ test("an unreadable source keeps its settled row", () => {
     HOOK.indexOf("const refreshRef ="),
   );
   assert.match(retire, /unreadable: LoadedModelSource\[\] = \[\]/);
-  assert.match(retire, /\.filter\(\s*\(source\) => !unreadable\.includes\(source\)/);
+  assert.match(
+    retire,
+    /\.filter\(\s*\(source\) => !unreadable\.includes\(source\)/,
+  );
   assert.match(retire, /settledRef\.current = new Set\(/);
 });
 
