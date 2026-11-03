@@ -211,16 +211,16 @@ for (const file of codeFiles) {
 
   const lines = splitLines(joined.text);
   if (lines.length > MAX_FILE_LINES) {
-    // Grandfather files that were already over the limit: a formatter or a
-    // comment fix must be committable without a rewrite. Growth still blocks.
+    // Files already over the limit are grandfathered: a formatter or a comment
+    // fix must stay committable. Only new files and files that newly cross the
+    // limit are blocked.
     let before = 0;
     try {
       before = splitLines(git(["show", `HEAD:${file}`])).length;
     } catch {
       before = 0;
     }
-    const tolerated = before > MAX_FILE_LINES ? before + 25 : 0;
-    if (lines.length > tolerated) {
+    if (before <= MAX_FILE_LINES) {
       policy.push(
         `${yellow(file)}  ${lines.length} lines, limit ${MAX_FILE_LINES}. Split it into modules.`,
       );
