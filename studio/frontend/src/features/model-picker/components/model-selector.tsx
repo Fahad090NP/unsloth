@@ -13,7 +13,7 @@ import { ApiProviderLogo } from "@/features/chat";
 
 import type { HubCapabilityFilter } from "@/features/hub";
 import type { HfTaskFilter } from "@/features/hub";
-// eslint-disable-next-line no-restricted-imports -- The settings barrel imports this feature back.
+ 
 import { useSettingsDialogStore } from "@/features/settings";
 import { isNpuModelId, NPU_MODEL_PREFIX, useNpuStatus } from "@/features/npu";
 import { useT } from "@/i18n";

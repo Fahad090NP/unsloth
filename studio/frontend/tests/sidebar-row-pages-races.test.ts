@@ -84,7 +84,18 @@ function hookHarness(fetchSidebarRows: (request: { limit: number; cursor: string
   };
   const react = {
     useRef: (value: unknown) => cell(() => ({ current: value })).v,
-    useReducer: () => [0, () => { /* no-op */ }],
+    useReducer: (
+      reducer: (state: unknown, action: unknown) => unknown,
+      initial: unknown,
+    ) => {
+      const c = cell<unknown>(() => initial);
+      return [
+        c.v,
+        (action: unknown) => {
+          c.v = reducer(c.v, action);
+        },
+      ];
+    },
     useMemo: (fn: () => unknown) => fn(),
     useEffect: (fn: () => unknown, deps?: unknown[]) => {
       const c = cell<{ deps?: unknown[] } | null>(() => null);

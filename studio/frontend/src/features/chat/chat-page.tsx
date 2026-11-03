@@ -1261,11 +1261,12 @@ function useCompareReloadReadiness(pairId: string): (pane: string) => void {
   } | null>(null);
   return useCallback(
     (pane: string) => {
-      let state = stateRef.current;
-      if (state === null || state.pairId !== pairId) {
-        state = { pairId, panes: new Set<string>(), sent: false };
-        stateRef.current = state;
-      }
+      const current = stateRef.current;
+      const state =
+        current?.pairId === pairId
+          ? current
+          : { pairId, panes: new Set<string>(), sent: false };
+      stateRef.current = state;
       if (state.sent) {
         return;
       }
@@ -2145,7 +2146,9 @@ function ProjectLanding({
       // Leaving a created chat for a new one: rotate the nonce so the runtime switches to a fresh thread.
       if (pendingNewThreadId) {
         rotateNewThreadNonce();
-        clearPendingNewThreadId();
+        queueMicrotask(() => {
+          clearPendingNewThreadId();
+        });
       }
       return;
     }
@@ -2164,7 +2167,9 @@ function ProjectLanding({
         activeThreadId,
         captured?.nonce === newThreadNonce ? captured.claim : NO_SUCH_CLAIM,
       );
-    rememberPendingNewThreadId(activeThreadId);
+    queueMicrotask(() => {
+      rememberPendingNewThreadId(activeThreadId);
+    });
   }, [
     active,
     activeThreadId,
@@ -2967,35 +2972,37 @@ export function ChatPage({
     [],
   );
   useLayoutEffect(() => {
-    updateNewChatLatch((previous) => {
-      let next = previous;
-      if (
-        search.new &&
-        (activeThreadId === null || isAssistantLocalThreadId(activeThreadId))
-      ) {
-        if (next.blanked !== search.new) {
-          next = { ...next, blanked: search.new };
+    queueMicrotask(() => {
+      updateNewChatLatch((previous) => {
+        let next = previous;
+        if (
+          search.new &&
+          (activeThreadId === null || isAssistantLocalThreadId(activeThreadId))
+        ) {
+          if (next.blanked !== search.new) {
+            next = { ...next, blanked: search.new };
+          }
         }
-      }
-      // leaving Chat clears activeThreadId and restores it later, so the shown thread id is latched.
-      if (search.new && activeThreadId === null) {
-        if (next.identityBlanked !== search.new) {
-          next = { ...next, identityBlanked: search.new };
+        // leaving Chat clears activeThreadId and restores it later, so the shown thread id is latched.
+        if (search.new && activeThreadId === null) {
+          if (next.identityBlanked !== search.new) {
+            next = { ...next, identityBlanked: search.new };
+          }
         }
-      }
-      // re-latch after every blank: a nonce whose chat was deleted while hidden comes back on a fresh thread.
-      if (
-        search.new &&
-        activeThreadId &&
-        next.identityBlanked === search.new
-      ) {
-        next = {
-          ...next,
-          identityBlanked: null,
-          chat: { nonce: search.new, threadId: activeThreadId },
-        };
-      }
-      return next;
+        // re-latch after every blank: a nonce whose chat was deleted while hidden comes back on a fresh thread.
+        if (
+          search.new &&
+          activeThreadId &&
+          next.identityBlanked === search.new
+        ) {
+          next = {
+            ...next,
+            identityBlanked: null,
+            chat: { nonce: search.new, threadId: activeThreadId },
+          };
+        }
+        return next;
+      });
     });
   }, [search.new, activeThreadId, updateNewChatLatch]);
   const newChatThreadId =
@@ -3520,9 +3527,11 @@ export function ChatPage({
     );
   }, []);
   useEffect(() => {
-    updateProjectBrowserBaseline(
-      projectViewId ? useBrowserStore.getState().openSequence : null,
-    );
+    queueMicrotask(() => {
+      updateProjectBrowserBaseline(
+        projectViewId ? useBrowserStore.getState().openSequence : null,
+      );
+    });
   }, [projectViewId, updateProjectBrowserBaseline]);
   const artifactViewKey =
     view.mode === "single"
@@ -3566,7 +3575,9 @@ export function ChatPage({
     if (view.mode === "compare") {
       return;
     }
-    rememberBaseView({ view, attachmentTargetKey: artifactViewKey });
+    queueMicrotask(() => {
+      rememberBaseView({ view, attachmentTargetKey: artifactViewKey });
+    });
   }, [view, artifactViewKey, rememberBaseView]);
   const baseView = view.mode === "compare" ? (keptBaseView?.view ?? null) : view;
   const baseAttachmentTargetKey =
@@ -3616,45 +3627,47 @@ export function ChatPage({
     [],
   );
   useLayoutEffect(() => {
-    updateProjectChatLatch((previous) => {
-      let next = previous;
-      if (view.mode === "project" && activeThreadId === null) {
-        const blanked = next.blanked;
-        if (
-          blanked === null ||
-          blanked.projectId !== view.projectId ||
-          blanked.nonce !== projectNewThreadNonce
-        ) {
-          next = {
-            ...next,
-            blanked: { projectId: view.projectId, nonce: projectNewThreadNonce },
-          };
+    queueMicrotask(() => {
+      updateProjectChatLatch((previous) => {
+        let next = previous;
+        if (view.mode === "project" && activeThreadId === null) {
+          const blanked = next.blanked;
+          if (
+            blanked?.projectId !== view.projectId ||
+            blanked.nonce !== projectNewThreadNonce
+          ) {
+            next = {
+              ...next,
+              blanked: {
+                projectId: view.projectId,
+                nonce: projectNewThreadNonce,
+              },
+            };
+          }
         }
-      }
-      if (
-        view.mode === "project" &&
-        activeThreadId &&
-        next.blanked !== null &&
-        next.blanked.projectId === view.projectId &&
-        next.blanked.nonce === projectNewThreadNonce
-      ) {
-        const chat = next.chat;
         if (
-          chat === null ||
-          chat.projectId !== view.projectId ||
-          chat.nonce !== projectNewThreadNonce
+          view.mode === "project" &&
+          activeThreadId &&
+          next.blanked?.projectId === view.projectId &&
+          next.blanked.nonce === projectNewThreadNonce
         ) {
-          next = {
-            ...next,
-            chat: {
-              projectId: view.projectId,
-              nonce: projectNewThreadNonce,
-              threadId: activeThreadId,
-            },
-          };
+          const chat = next.chat;
+          if (
+            chat?.projectId !== view.projectId ||
+            chat.nonce !== projectNewThreadNonce
+          ) {
+            next = {
+              ...next,
+              chat: {
+                projectId: view.projectId,
+                nonce: projectNewThreadNonce,
+                threadId: activeThreadId,
+              },
+            };
+          }
         }
-      }
-      return next;
+        return next;
+      });
     });
   }, [view, activeThreadId, projectNewThreadNonce, updateProjectChatLatch]);
   const projectChat = projectChatLatch.chat;

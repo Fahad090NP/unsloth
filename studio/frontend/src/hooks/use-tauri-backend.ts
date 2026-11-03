@@ -296,7 +296,9 @@ export function useTauriBackend() {
     environmentWaitPollsRef.current = 0;
   }, []);
 
-  const checkInstallAndStartRef = useRef<() => Promise<void>>(async () => {});
+  const checkInstallAndStartRef = useRef<() => Promise<void>>(async () => {
+    /* no-op until the real installer callback is published */
+  });
 
   const waitForManagedEnvironment = useCallback((bounded: boolean) => {
     // setBackendStatus is a no-op here, so the poll would run on behind the error.
@@ -739,6 +741,9 @@ export function useTauriBackend() {
       setRunningStatus();
       return;
     }
+    // The installer publishes its state from inside the call; keep the original
+    // ordering so the browser fallback and tests see the same sequence.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkInstallAndStart().catch((error: unknown) => {
       console.error("Failed to check the managed install", error);
     });

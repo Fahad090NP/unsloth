@@ -359,9 +359,9 @@ function setPendingReplacementRollback(
   pendingReplacementRollback = next;
 }
 
-/** One synchronous ref writer, so a resumed coroutine cannot overwrite a newer publication. */
+/** One synchronous ref write, so a resumed coroutine cannot overwrite a newer value. */
 function publishRefValue<T>(ref: { current: T }, value: T): void {
-  ref.current = value;
+  Object.assign(ref, { current: value });
 }
 
 const PREFLIGHT_LEASE_RETRY_MS = 250;
@@ -1917,6 +1917,7 @@ export function useChatModelRuntime() {
         requestId: createNavigationNonce(),
         loadAttemptPath: null,
       };
+      // Synchronous publication so a resumed coroutine cannot overwrite a newer run.
       publishRefValue(activeLoadRunRef, loadRun);
       setPendingReplacementRollback(null);
       const postLoadRefresh = { needed: false };
@@ -3612,7 +3613,7 @@ export function useChatModelRuntime() {
         settledPromise,
         markSettled: markLoadRunSettled,
       };
-      activeLoadRunRef.current = loadRun;
+      publishRefValue(activeLoadRunRef, loadRun);
       let toastId: string | number | undefined;
       try {
         const stopDecision = await confirmStopRunningChatsIfNeeded(
@@ -3631,6 +3632,7 @@ export function useChatModelRuntime() {
         setModelsError(null);
         setLastModelLoadError(null);
         setLoadingModel(loadInfo);
+        // Synchronous publication so a resumed coroutine cannot overwrite a newer load.
         publishRefValue(loadingModelRef, loadInfo);
         useChatRuntimeStore.getState().setLoadingModelPick(pickOf(loadInfo));
         setLoadProgress({ percent: null, label: null, phase: "starting" });

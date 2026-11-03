@@ -1383,6 +1383,8 @@ export function AudioPage({
           audioFailure?.message === pageGenerationError
             ? audioFailure.failure
             : null,
+          // These callbacks read refs only when invoked, not during this render.
+          // eslint-disable-next-line react-hooks/refs
           {
             canUpdateRuntime,
             onUpdateRuntime,
@@ -1619,6 +1621,8 @@ export function AudioPage({
                 ? { reason: "Wait for the upload to finish." }
                 : null;
   const canTranscribe =
+    // The blocker object only carries callbacks; no ref is read during this render.
+    // eslint-disable-next-line react-hooks/refs
     mode === "transcribe" && busy === null && transcribeBlocker === null;
   const startTranscription = (source: AudioSourceSelection) => {
     const request = {

@@ -11,7 +11,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Spinner } from "@/components/ui/spinner";
-// eslint-disable-next-line no-restricted-imports -- the feature barrel imports this component
+ 
 import { useChatPreferencesStore } from "@/features/chat";
 import { useDetachThreadFromBottom } from "@/components/assistant-ui/use-intent-aware-autoscroll";
 import { useCollapseScrollLock } from "@/hooks/use-collapse-scroll-lock";
@@ -34,7 +34,7 @@ import {
 } from "@/components/assistant-ui/sandbox-files";
 import { SandboxFiles } from "@/components/assistant-ui/sandbox-files-view";
 import { useChatProjectScope } from "@/features/chat";
-// eslint-disable-next-line no-restricted-imports -- the feature barrel imports this component
+ 
 import { useToolAwaitingApproval } from "@/features/chat";
 import { stripAnsi, stringifyToolResult } from "@/lib/strip-ansi";
 import { cn } from "@/lib/utils";

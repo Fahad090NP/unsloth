@@ -283,6 +283,23 @@ export default defineConfig([
     },
   },
   {
+    // Platform and third-party APIs with no non-deprecated replacement in the
+    // supported browser / assistant-ui versions. Migrating these would change
+    // behaviour (AudioWorklet loading, speech adapters, contentEditable editing),
+    // so the deliberate uses are recorded here instead of at each call site.
+    files: [
+      "src/features/chat/adapters/pcm-recorder.ts",
+      "src/features/browser/agent/page-agent.ts",
+      "src/lib/copy-to-clipboard.ts",
+      "src/components/assistant-ui/auto-read-aloud.tsx",
+      "src/components/assistant-ui/thread.tsx",
+      "src/components/assistant-ui/skill-mentions.tsx",
+    ],
+    rules: {
+      "@typescript-eslint/no-deprecated": "off",
+    },
+  },
+  {
     files: ["src/**/*.{ts,tsx}"],
     plugins: {
       "better-tailwindcss": betterTailwindcss,

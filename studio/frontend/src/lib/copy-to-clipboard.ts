@@ -52,6 +52,11 @@ function copyWithExecCommand(text: string): boolean {
   }
 }
 
+/** `navigator.clipboard` is absent in insecure and pre-hydration web views. */
+function getClipboard(): Clipboard | undefined {
+  return navigator.clipboard;
+}
+
 export async function copyToClipboard(text: string): Promise<boolean> {
   if (typeof text !== "string" || text.length === 0) {
     return false;
@@ -63,7 +68,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     return true;
   }
 
-  const clipboard: Clipboard | undefined = navigator.clipboard;
+  const clipboard = getClipboard();
   if (clipboard && typeof clipboard.writeText === "function") {
     try {
       await clipboard.writeText(text);

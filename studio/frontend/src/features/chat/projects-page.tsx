@@ -38,25 +38,29 @@ import { isDownloadCancelled, pickNativeChatImport } from "@/lib/native-files";
 import { toast } from "@/lib/toast";
 import {
   chatExportOptions,
-  DeleteChatFilesSwitch,
-  OpenChatFolderItem,
-  archiveChatItem,
-  deleteChatItem,
-  deleteChatProject,
   exportConversationByFormat,
   getSidebarItemThreadIds,
-  notifyChatHistoryUpdated,
-  renameChatItem,
-  useChatNavigationStore,
-  useChatPreferencesStore,
-  useChatProjects,
-  projectActivityAt,
-  useChatRuntimeStore,
-  usePinnedChatsStore,
-  usePinnedProjectsStore,
   type ConversationExportFormat,
-  type ProjectRecord,
-} from "@/features/chat";
+} from "./components/chat-row-menu";
+import { DeleteChatFilesSwitch } from "./components/delete-chat-files-switch";
+import { OpenChatFolderItem } from "./components/open-chat-folder-item";
+import {
+  archiveChatItem,
+  deleteChatItem,
+  renameChatItem,
+} from "./hooks/use-chat-sidebar-items";
+import {
+  deleteChatProject,
+  projectActivityAt,
+  useChatProjects,
+} from "./hooks/use-chat-projects";
+import { notifyChatHistoryUpdated } from "./api/chat-api";
+import { useChatNavigationStore } from "./stores/chat-navigation-store";
+import { useChatPreferencesStore } from "./stores/chat-preferences-store";
+import { useChatRuntimeStore } from "./stores/chat-runtime-store";
+import { usePinnedChatsStore } from "./stores/pinned-chats-store";
+import { usePinnedProjectsStore } from "./stores/pinned-projects-store";
+import type { ProjectRecord } from "./types";
 import { useSettingsDialogStore } from "@/features/settings";
 import { formatRelativeTime, useLocale, useT, type Locale, type TranslationKey } from "@/i18n";
 import { GuidedTour, useGuidedTourController } from "@/features/tour";

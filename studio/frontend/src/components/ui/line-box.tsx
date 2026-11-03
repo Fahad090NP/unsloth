@@ -12,7 +12,7 @@ export function LineBox({
   className,
   ...props
 }: React.HTMLAttributes<HTMLElement> & { as?: "code" | "div" | "p" }) {
-  const [ref, single] = useSingleLine<HTMLElement>();
+  const [ref, single] = useSingleLine();
   return (
     <Tag
       ref={ref}

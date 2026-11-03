@@ -465,7 +465,7 @@ function canonicalVariants(needle: string, dotted: boolean): string[] {
 /** Hangul L*V*T* runs must win before the generic character alternative. */
 const CLUSTER_PATTERN =
   // biome-ignore lint/suspicious/noMisleadingCharacterClass: Jamo and combining marks intentionally form canonical clusters.
-  /(?:[ᄀ-ᅟꥠ-꥿]+[ᅠ-ᆧힰ-ퟆ]+[ᆨ-ᇿퟋ-ퟻ]*|[\s\S])[̀-ͯ҃-҉᪰-᫿᷀-᷿⃐-⃰︠-︯]*/gu;
+  /(?:[ᄀ-ᅟꥠ-꥿]+[ᅠ-ᆧힰ-ퟆ]+[ᆨ-ᇿퟋ-ퟻ]*|[\s\S])[\p{Mn}\p{Me}]*/gu;
 
 const OPEN_HANGUL_CLUSTER_PATTERN =
   /^[\u1100-\u115f\ua960-\ua97f]+[\u1160-\u11a7\ud7b0-\ud7c6]+$/u;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { create } from "zustand";
-// eslint-disable-next-line no-restricted-imports -- Avoid the auth barrel's React login page.
+ 
 import { AUTH_SESSION_CLEARED_EVENT } from "@/features/auth";
 import { followResearchRun, type ResearchRunUpdate } from "../api/research-api";
 import type {

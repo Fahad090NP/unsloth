@@ -264,6 +264,18 @@ function unionRows(previous: RowUnion, parts: SidebarItem[][]): RowUnion {
 
 /** `items` is every loaded row once, in slot order, for lookups; `listedItems` leaves out
  *  lookup-only slots, so a list never draws a row its own pages have not reached. */
+interface SidebarRowPagesSnapshot {
+  lists: Record<string, SidebarRowPages>;
+  items: SidebarItem[];
+  listedItems: SidebarItem[];
+}
+
+const EMPTY_SNAPSHOT: SidebarRowPagesSnapshot = {
+  lists: {},
+  items: EMPTY_ROWS,
+  listedItems: EMPTY_ROWS,
+};
+
 export function useSidebarRowPages(
   slots: Record<string, SidebarRowSlot | null>,
   enabled: boolean,
@@ -273,10 +285,20 @@ export function useSidebarRowPages(
   listedItems: SidebarItem[];
 } {
   const pagersRef = useRef(new Map<string, SidebarPager>());
-  const [version, bump] = useReducer((n: number) => n + 1, 0);
+  const unionRef = useRef<RowUnion>({ parts: [], items: EMPTY_ROWS });
+  const listedRef = useRef<RowUnion>({ parts: [], items: EMPTY_ROWS });
+  const [snapshot, publishSnapshot] = useReducer(
+    (_current: SidebarRowPagesSnapshot, next: SidebarRowPagesSnapshot) =>
+      next,
+    EMPTY_SNAPSHOT,
+  );
 
-  const active = Object.entries(slots).filter(
-    (entry): entry is [string, SidebarRowSlot] => entry[1] !== null,
+  const active = useMemo(
+    () =>
+      Object.entries(slots).filter(
+        (entry): entry is [string, SidebarRowSlot] => entry[1] !== null,
+      ),
+    [slots],
   );
   const slotKey = enabled
     ? JSON.stringify(
@@ -287,10 +309,13 @@ export function useSidebarRowPages(
         ]),
       )
     : "";
+  // Effects read the slots of the render they run for; the ref carries that read out
+  // of render without making every new `slots` object a dependency of the pager effect.
   const slotsRef = useRef(active);
-  slotsRef.current = active;
+  useEffect(() => {
+    slotsRef.current = active;
+  });
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `slotKey` names every slot's query
   useEffect(() => {
     const pagers = pagersRef.current;
     const wanted = enabled ? slotsRef.current : [];
@@ -324,19 +349,62 @@ export function useSidebarRowPages(
         console.error("Background chat operation failed", error);
       });
     }
+
+    const publish = () => {
+      const lists: Record<string, SidebarRowPages> = {};
+      const parts: SidebarItem[][] = [];
+      const listedParts: SidebarItem[][] = [];
+      for (const [name, slot] of slotsRef.current) {
+        const pager = pagersRef.current.get(name);
+        if (!pager) {
+          lists[name] = IDLE_LIST;
+          continue;
+        }
+        const state = pager.getState();
+        parts.push(state.rows);
+        if (!slot.lookupOnly) listedParts.push(state.rows);
+        lists[name] = {
+          ...state,
+          // Publish as soon as the page settles so a caller acting on the rows renders next.
+          loadMore: () =>
+            (state.error ? pager.retry() : pager.loadMore()).finally(publish),
+          // rejects when a page failed, so a caller never takes the partial list for the whole
+          loadAll: async () => {
+            await pager.loadAll();
+            // render now, not on the batched timer: a caller acting on the rows (Select All) renders next
+            publish();
+            const { error } = pager.getState();
+            if (error) {
+              throw error instanceof Error
+                ? error
+                : new Error("Sidebar rows failed to load.");
+            }
+          },
+          retry: () => pager.retry().finally(publish),
+        };
+      }
+      unionRef.current = unionRows(unionRef.current, parts);
+      listedRef.current = unionRows(listedRef.current, listedParts);
+      publishSnapshot({
+        lists,
+        items: unionRef.current.items,
+        listedItems: listedRef.current.items,
+      });
+    };
+
     // one sidebar render per 16 ms however many lists answer; a timer, as a page drawing no frames never runs rAF
     let timer: ReturnType<typeof setTimeout> | null = null;
     const schedule = () => {
       if (timer !== null) return;
       timer = setTimeout(() => {
         timer = null;
-        bump();
+        publish();
       }, 16);
     };
     const unsubscribes = [...pagers.values()].map((pager) =>
       pager.subscribe(schedule),
     );
-    bump();
+    publish();
     return () => {
       for (const unsubscribe of unsubscribes) unsubscribe();
       if (timer !== null) clearTimeout(timer);
@@ -351,43 +419,29 @@ export function useSidebarRowPages(
     };
   }, []);
 
-  const unionRef = useRef<RowUnion>({ parts: [], items: EMPTY_ROWS });
-  const listedRef = useRef<RowUnion>({ parts: [], items: EMPTY_ROWS });
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `version` moves on every pager change
+  // Render derives from the last published snapshot. A slot the effect has not registered
+  // yet still gets an idle list, so the first render after a slot appears reads a full map.
   return useMemo(() => {
-    const lists: Record<string, SidebarRowPages> = {};
-    const parts: SidebarItem[][] = [];
-    const listedParts: SidebarItem[][] = [];
-    for (const [name, slot] of slotsRef.current) {
-      const pager = pagersRef.current.get(name);
-      if (!pager) {
-        lists[name] = IDLE_LIST;
-        continue;
+    const names = new Set(active.map(([name]) => name));
+    const current = snapshot.lists;
+    let complete = Object.keys(current).length === names.size;
+    if (complete) {
+      for (const name of names) {
+        if (!(name in current)) {
+          complete = false;
+          break;
+        }
       }
-      const state = pager.getState();
-      parts.push(state.rows);
-      if (!slot.lookupOnly) listedParts.push(state.rows);
-      lists[name] = {
-        ...state,
-        loadMore: () => (state.error ? pager.retry() : pager.loadMore()),
-        // rejects when a page failed, so a caller never takes the partial list for the whole
-        loadAll: async () => {
-          await pager.loadAll();
-          // render now, not on the batched timer: a caller acting on the rows (Select All) renders next
-          bump();
-          const { error } = pager.getState();
-          if (error) {
-            throw error instanceof Error
-              ? error
-              : new Error("Sidebar rows failed to load.");
-          }
-        },
-        retry: () => pager.retry(),
-      };
     }
-    unionRef.current = unionRows(unionRef.current, parts);
-    listedRef.current = unionRows(listedRef.current, listedParts);
-    return { lists, items: unionRef.current.items, listedItems: listedRef.current.items };
-  }, [version, slotKey]);
+    if (complete) return snapshot;
+    const lists: Record<string, SidebarRowPages> = { ...current };
+    for (const name of names) {
+      if (!(name in lists)) lists[name] = IDLE_LIST;
+    }
+    return {
+      lists,
+      items: snapshot.items,
+      listedItems: snapshot.listedItems,
+    };
+  }, [snapshot, active]);
 }

@@ -16,14 +16,14 @@ import {
   combineAbortSignals,
   disposableTimeoutSignal,
 } from "@/features/hub/lib/abort-signals";
-// eslint-disable-next-line no-restricted-imports
+ 
 import { hubTokenHeader } from "@/features/hub";
-// eslint-disable-next-line no-restricted-imports
+ 
 import { isHuggingFaceOffline } from "@/features/hub";
 import { dismissCarveoutAdviceForModel, showCarveoutAdvice } from "@/features/igpu-carveout";
-// eslint-disable-next-line no-restricted-imports
+ 
 import { consumeNativePathToken } from "@/features/native-intents";
-// eslint-disable-next-line no-restricted-imports
+ 
 import { checkDiskSpace } from "@/features/settings";
 import { formatApiErrorBody } from "@/lib/format-fastapi-error";
 import {

@@ -829,3 +829,4 @@ export { PASTED_TEXT_THRESHOLD_CHOICES } from "./utils/pasted-text";
 export { CHAT_PROJECT_ATTACHMENT_TARGET_KEY } from "./utils/project-attachment-target";
 export type { ProjectAttachmentTarget } from "./utils/project-attachment-target";
 export { isAssistantLocalThreadId } from "./utils/thread-ids";
+export { ProjectsPage } from "./projects-page";

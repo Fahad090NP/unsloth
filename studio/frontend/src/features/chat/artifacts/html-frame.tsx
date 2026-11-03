@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-// eslint-disable-next-line no-restricted-imports -- the settings barrel imports this feature back
+ 
 import { useSettingsDialogStore } from "@/features/settings";
 import { useLocale, useT } from "@/i18n";
 import { apiUrl } from "@/lib/api-base";

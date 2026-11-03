@@ -89,4 +89,7 @@ export interface AudioToolPanel<V> {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: each panel owns its value shape; the host only passes it through.
+// TypeScript has no existential types; `any` is the only erased registry type that keeps
+// each panel's value shape assignable to the shared host.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyAudioToolPanel = AudioToolPanel<any>;

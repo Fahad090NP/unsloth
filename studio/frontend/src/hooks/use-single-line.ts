@@ -19,24 +19,26 @@ function fitsOneLine(el: HTMLElement): boolean {
  * usually one line but can wrap (a command, a URL) is a pill on one line and a 16px box once
  * wrapped; CSS cannot tell the two apart.
  */
-export function useSingleLine<T extends HTMLElement>(): [
-  (node: T | null) => void,
-  boolean,
-] {
+export function useSingleLine(): [(node: HTMLElement | null) => void, boolean] {
   const [single, setSingle] = useState(true);
   const observer = useRef<ResizeObserver | null>(null);
 
-  const ref: (node: T | null) => void = useCallback((node: T | null) => {
-    observer.current?.disconnect();
-    observer.current = null;
-    if (!node || typeof ResizeObserver === "undefined") {
-      return;
-    }
-    const update = () => { setSingle(fitsOneLine(node)); };
-    update();
-    observer.current = new ResizeObserver(update);
-    observer.current.observe(node);
-  }, []);
+  const ref: (node: HTMLElement | null) => void = useCallback(
+    (node: HTMLElement | null) => {
+      observer.current?.disconnect();
+      observer.current = null;
+      if (!node || typeof ResizeObserver === "undefined") {
+        return;
+      }
+      const update = () => {
+        setSingle(fitsOneLine(node));
+      };
+      update();
+      observer.current = new ResizeObserver(update);
+      observer.current.observe(node);
+    },
+    [],
+  );
 
   useEffect(() => () => observer.current?.disconnect(), []);
 

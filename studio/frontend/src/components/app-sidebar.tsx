@@ -4559,10 +4559,9 @@ export function AppSidebar() {
   // sorts its pins, Projects groups the sidebar and sorts its folders, and Recents adds which
   // sections show and a new one. A custom section's own "..." manages that section.
   function renderSidebarHeaderMenu(
-    options: { ariaLabel: string } & (
-      | { kind: "pinned" | "projects" | "recents" }
-      | { kind: "section"; section: SidebarCustomSection }
-    ),
+    options:
+      | { ariaLabel: string; kind: "pinned" | "projects" | "recents" }
+      | { ariaLabel: string; kind: "section"; section: SidebarCustomSection },
   ) {
     const stayOpen = (event: Event) => { event.preventDefault(); };
     const organizeSubmenu = (
@@ -4670,7 +4669,7 @@ export function AppSidebar() {
         </>
       );
     } else {
-      if (options.kind !== "section") return null;
+      if (!("section" in options)) return null;
       const { section } = options;
       const chats = (customSectionRows.get(section.id) ?? []).flatMap((row) =>
         row.kind === "chat" ? [row.item] : [],

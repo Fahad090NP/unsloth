@@ -3,7 +3,7 @@
 
 "use client";
 
-/* eslint-disable react-refresh/only-export-components */
+ 
 
 import { ChevronDownStandardIcon } from "@/lib/chevron-icons";
 import { CodeHighlightModeContext } from "@/components/assistant-ui/code-highlight-context";

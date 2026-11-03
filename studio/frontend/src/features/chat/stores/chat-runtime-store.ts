@@ -15,7 +15,7 @@ import {
   mirrorHfTokenInto,
   useHfTokenStore,
 } from "@/features/hub";
-// eslint-disable-next-line no-restricted-imports -- Leaf module; the model-picker index pulls in chat.
+ 
 import {
   pinnedReasoningEffort,
   useModelReasoningEffortStore,

@@ -13,7 +13,7 @@ import { useAuiState } from "@assistant-ui/react";
 import { useMessageMemo } from "@/components/assistant-ui/use-message-memo";
 import { useChatRuntimeStore } from "@/features/chat";
 import { useChatPreferencesStore } from "@/features/chat";
-// eslint-disable-next-line no-restricted-imports -- this file is in the startup cycle; the chat barrel closes it.
+ 
 import { useReasoningRoundStore } from "@/features/chat";
 import {
   endsFoldedSpan,
@@ -41,7 +41,7 @@ import {
   syncToolActivityPreference,
   toolActivityOpen,
 } from "./tool-activity-open-state";
-// eslint-disable-next-line no-restricted-imports -- this file is in the startup cycle; the chat barrel closes it.
+ 
 import { foldIsActive } from "@/features/chat";
 import { WrenchIcon } from "@/lib/wrench-icon";
 

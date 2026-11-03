@@ -4398,6 +4398,8 @@ export function ChatRuntimeProvider({
         pairId,
         initialThreadId,
         onInitialHistoryReady,
+        // Consumed by the configured runtime hook, never read during this render.
+        // eslint-disable-next-line react-hooks/refs
         runtimeRefs,
       ),
     [initialThreadId, modelType, onInitialHistoryReady, pairId, runtimeRefs],

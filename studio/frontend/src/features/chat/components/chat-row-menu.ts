@@ -89,7 +89,6 @@ export async function exportConversationByFormat(
       return;
     case CONVERSATION_MARKDOWN_FORMAT:
       await exportConversationMarkdown(threadId);
-      return;
   }
 }
 

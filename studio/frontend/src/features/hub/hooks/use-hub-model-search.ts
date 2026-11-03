@@ -897,7 +897,7 @@ export function useHubModelSearch(
     let searchQuery = t;
     if (m && m[1].toLowerCase() !== "unsloth") {
       isPublisherQuery = true;
-      searchQuery = m[2] ?? t;
+      searchQuery = m.at(2) ?? t;
     }
     return {
       isPublisherQuery,

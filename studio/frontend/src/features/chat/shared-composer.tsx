@@ -1626,7 +1626,7 @@ export function SharedComposer({
         requestLocalPromptQueueStop(compareStopDecision?.promptQueueThreadIds);
       };
       async function ensureModelLoaded(
-        sel: CompareModelSelection,
+        sel: Readonly<CompareModelSelection>,
       ): Promise<string> {
         throwIfCompareCancelled(compareSignal);
         const currentStore = useChatRuntimeStore.getState();
@@ -2152,6 +2152,8 @@ export function SharedComposer({
             description: name1,
             duration: Infinity,
           });
+          // The compiler cannot see that this only reads the selection.
+          // eslint-disable-next-line react-hooks/immutability
           const status1 = await ensureModelLoaded(model1);
           throwIfCompareCancelled(compareSignal);
           releaseCompareModelLifecycle();
@@ -2185,6 +2187,8 @@ export function SharedComposer({
               duration: Infinity,
             });
           }
+          // The compiler cannot see that this only reads the selection.
+          // eslint-disable-next-line react-hooks/immutability
           const status2 = await ensureModelLoaded(model2);
           throwIfCompareCancelled(compareSignal);
           releaseCompareModelLifecycle();
@@ -3101,6 +3105,8 @@ export function SharedComposer({
                   setCompositionState(false);
                   setCurrentText(e.currentTarget.value);
                 }}
+                // Forwards the key event only; it does not mutate the selection.
+                // eslint-disable-next-line react-hooks/immutability
                 onKeyDown={(event) => {
                   if (!skillMentions.onKeyDown(event)) onKeyDown(event);
                 }}

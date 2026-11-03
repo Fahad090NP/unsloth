@@ -337,6 +337,11 @@ function loadModeOverrideNotice(
 }
 
 /** Hard floor 2, else served slots; a build without --kv-unified serves one slot. */
+/** Parse the content key so memos can depend on an immutable primitive. */
+function parsePinnedGpuIds(key: string | null): number[] | null {
+  return key === null ? null : key === "" ? [] : key.split(",").map(Number);
+}
+
 function effectiveBatchFloor(
   requestedSlots: number | null | undefined,
   limits:
@@ -3431,21 +3436,19 @@ export function ModelConfigPage({
   const inferenceGpu = useInferenceGpuInfo();
   // A pin can only use the cards it names, so judge the fit against those.
   // Snapshot the selection: the store may reuse the array while replacing its contents.
-  const pinnedGpuIds = useMemo(
-    () => runtimeConfig.selectedGpuIds?.slice() ?? null,
-    [runtimeConfig.selectedGpuIds],
-  );
+  // Key on the contents: the store may reuse the array while replacing its contents.
+  const selectedGpuIdsKey = runtimeConfig.selectedGpuIds?.join(",") ?? null;
+  const pinnedGpuIds = parsePinnedGpuIds(selectedGpuIdsKey);
   // Per-device unified_memory, `.every()`: one discrete device means real VRAM beside RAM.
   // `[].every()` is true, so the empty set is excluded; use-gpu-info.ts uses `.some()` on purpose.
-  const hasUnifiedMemory = useMemo(() => {
-    if (isAppleUnifiedMemory) return true;
-    const governing =
-      pinnedGpuIds && pinnedGpuIds.length > 0
-        ? gpuDevices.filter((device) => pinnedGpuIds.includes(device.index))
-        : gpuDevices;
-    if (governing.length === 0) return false;
-    return governing.every((device) => device.unifiedMemory === true);
-  }, [gpuDevices, pinnedGpuIds, isAppleUnifiedMemory]);
+  const governingGpus =
+    pinnedGpuIds && pinnedGpuIds.length > 0
+      ? gpuDevices.filter((device) => pinnedGpuIds.includes(device.index))
+      : gpuDevices;
+  const hasUnifiedMemory =
+    isAppleUnifiedMemory ||
+    (governingGpus.length > 0 &&
+      governingGpus.every((device) => device.unifiedMemory === true));
   // The budget slider caps per-GPU use; seeded with VRAM_FRACTION_DEFAULT, which loads apply
   // until the async read lands (or on an older backend).
   const [memoryVramBudgetFraction, setMemoryVramBudgetFraction] =
@@ -3486,33 +3489,18 @@ export function ModelConfigPage({
     gb: memoryFreeGpuCapacityGb,
     known: memoryFreeGpuCapacityKnown,
     reserveDeficitGb: memoryFreeGpuReserveDeficitGb,
-  } = useMemo(
-    () =>
-      resolveFreeGpuCapacityGb({
-        devices: gpuDevices,
-        pinnedGpuIds,
-        budgetFraction: memoryEffectiveBudgetFraction,
-        unifiedMemory: hasUnifiedMemory,
-        unifiedPoolReportedAsGpuMemory: isAppleUnifiedMemory,
-        usableSystemRamGb: memoryUsableSystemRamGb,
-        systemRamReserveDeficitGb: memorySystemRamReserveDeficitGb,
-        systemRamAvailableKnown: inferenceGpu.systemRamAvailableKnown,
-        loadedGpuIds,
-        loadedGpuIndexKind,
-      }),
-    [
-      gpuDevices,
-      pinnedGpuIds,
-      memoryEffectiveBudgetFraction,
-      hasUnifiedMemory,
-      isAppleUnifiedMemory,
-      memoryUsableSystemRamGb,
-      memorySystemRamReserveDeficitGb,
-      inferenceGpu.systemRamAvailableKnown,
-      loadedGpuIds,
-      loadedGpuIndexKind,
-    ],
-  );
+  } = resolveFreeGpuCapacityGb({
+    devices: gpuDevices,
+    pinnedGpuIds: parsePinnedGpuIds(selectedGpuIdsKey),
+    budgetFraction: memoryEffectiveBudgetFraction,
+    unifiedMemory: hasUnifiedMemory,
+    unifiedPoolReportedAsGpuMemory: isAppleUnifiedMemory,
+    usableSystemRamGb: memoryUsableSystemRamGb,
+    systemRamReserveDeficitGb: memorySystemRamReserveDeficitGb,
+    systemRamAvailableKnown: inferenceGpu.systemRamAvailableKnown,
+    loadedGpuIds,
+    loadedGpuIndexKind,
+  });
   const {
     gpuCapacityGb: memoryGpuCapacityGb,
     totalCapacityGb: memoryTotalCapacityGb,

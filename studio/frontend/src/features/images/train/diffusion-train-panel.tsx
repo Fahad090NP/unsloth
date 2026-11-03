@@ -53,7 +53,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { TrainingSeriesPoint } from "@/features/training";
-// eslint-disable-next-line no-restricted-imports -- matches images-page.tsx's token access
 import { getHfToken, hfApiToken } from "@/features/hub";
 import { cn } from "@/lib/utils";
 import {
@@ -190,15 +189,18 @@ const CUSTOM_BASE = "__custom__";
 const UPLOAD_DATASET = "__upload__";
 // The backend rejects dense base precisions for a bnb-4bit repo.
 const DENSE_PRECISIONS = new Set(["bf16", "int8", "fp8", "mxfp8"]);
-// The upload guard is a ref read and written across awaits; funnel it through these so the
-// check-and-set stays synchronous and the reset cannot race a stale read.
-function beginUploadGuard(guard: { current: boolean }): boolean {
-  if (guard.current) return false;
-  guard.current = true;
-  return true;
-}
-function endUploadGuard(guard: { current: boolean }): void {
-  guard.current = false;
+// The upload guard is read and written across awaits. A small holder keeps the
+// check-and-set synchronous and the reset cannot race a stale read.
+class UploadGuard {
+  private held = false;
+  begin(): boolean {
+    if (this.held) return false;
+    this.held = true;
+    return true;
+  }
+  end(): void {
+    this.held = false;
+  }
 }
 // Mirrors the backend repo_is_prequantized heuristic.
 function repoIsPrequantized(baseModel: string): boolean {
@@ -463,7 +465,7 @@ export function DiffusionTrainPanel({
   const folderCreatesDataset = useRef(false);
   const [dropActive, setDropActive] = useState(false);
   // Authoritative in-flight guard: `uploading` state reads stale in closures.
-  const uploadInFlight = useRef(false);
+  const uploadInFlight = useRef(new UploadGuard());
   const [gridOpen, setGridOpen] = useState(false);
   const [gridRefresh, setGridRefresh] = useState(0);
   const [examples, setExamples] = useState<DiffusionDatasetExample[]>([]);
@@ -864,7 +866,7 @@ export function DiffusionTrainPanel({
         );
         return;
       }
-      if (!beginUploadGuard(uploadInFlight)) {
+      if (!uploadInFlight.current.begin()) {
         toast.error("An upload is already running. Wait for it to finish, then try again.");
         return;
       }
@@ -980,7 +982,7 @@ export function DiffusionTrainPanel({
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Upload failed");
       } finally {
-        endUploadGuard(uploadInFlight);
+        uploadInFlight.current.end();
         setUploading(false);
       }
     },
@@ -1013,7 +1015,7 @@ export function DiffusionTrainPanel({
         toast.error(takenNameMessage);
         return;
       }
-      if (!beginUploadGuard(uploadInFlight)) {
+      if (!uploadInFlight.current.begin()) {
         toast.error("An upload is already running. Wait for it to finish, then drop again.");
         return;
       }
@@ -1029,7 +1031,7 @@ export function DiffusionTrainPanel({
         return;
       } finally {
         // uploadTo re-takes it synchronously, so no await sits in the gap.
-        endUploadGuard(uploadInFlight);
+        uploadInFlight.current.end();
         setUploading(false);
       }
       if (dropped.length === 0) {

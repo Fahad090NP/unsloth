@@ -745,6 +745,13 @@ function formatTimezoneOffset(now: Date): string {
   return `${sign}${padDatePart(hours)}:${padDatePart(minutes)}`;
 }
 
+/** A plain boolean predicate: the type-guard form narrowed the false branch to `never`. */
+function isExternalCheckpoint(
+  checkpoint: string | null | undefined,
+): boolean {
+  return typeof checkpoint === "string" && isExternalModelId(checkpoint);
+}
+
 function stringifyTemplateValue(value: unknown): string {
   if (value == null) {
     return "";
@@ -756,11 +763,10 @@ function stringifyTemplateValue(value: unknown): string {
     return String(value);
   }
   try {
-    return JSON.stringify(value);
+    const encoded = JSON.stringify(value) as string | undefined;
+    return encoded ?? Object.prototype.toString.call(value);
   } catch {
-    return typeof value === "object"
-      ? Object.prototype.toString.call(value)
-      : String(value);
+    return Object.prototype.toString.call(value);
   }
 }
 
@@ -1254,12 +1260,10 @@ function serializeToolResultPart(
     }
   } else {
     try {
-      content = JSON.stringify(result);
+      const encoded = JSON.stringify(result) as string | undefined;
+      content = encoded ?? Object.prototype.toString.call(result);
     } catch {
-      content =
-        typeof result === "object"
-          ? Object.prototype.toString.call(result)
-          : String(result);
+      content = Object.prototype.toString.call(result);
     }
   }
 
@@ -1893,7 +1897,7 @@ function extractImageBase64(input: string): string | undefined {
 function findLatestUserImageBase64(messages: RunMessages): string | undefined {
   const visibleMessages = messages.map(modelVisibleMessage);
   for (let i = visibleMessages.length - 1; i >= 0; i -= 1) {
-    const message: RunMessage | undefined = visibleMessages[i];
+    const message: RunMessage | undefined = visibleMessages.at(i);
     if (message?.role !== "user") {
       continue;
     }
@@ -2002,7 +2006,7 @@ function latestUserAudioClips(messages: RunMessages): string[] {
   const visibleMessages = messages.map(modelVisibleMessage);
   const clips: string[] = [];
   for (let i = visibleMessages.length - 1; i >= 0; i -= 1) {
-    const message: RunMessage | undefined = visibleMessages[i];
+    const message: RunMessage | undefined = visibleMessages.at(i);
     if (message?.role !== "user") continue;
 
     for (const part of message.content) {
@@ -2065,7 +2069,7 @@ export function findLatestUserVideoBase64(
 ): string | undefined {
   const visibleMessages = messages.map(modelVisibleMessage);
   for (let i = visibleMessages.length - 1; i >= 0; i -= 1) {
-    const message: RunMessage | undefined = visibleMessages[i];
+    const message: RunMessage | undefined = visibleMessages.at(i);
     if (message?.role !== "user") continue;
     for (const part of message.content) {
       const base64 = extractVideoPartBase64(part);
@@ -3245,8 +3249,12 @@ async function ensureDefaultModelDownloaded(
     );
     cleanups.push(
       useDownloadManagerStore.subscribe((state) => {
-        const job: (typeof state.jobs)[string] | undefined =
-          state.jobs[jobKey];
+        const job: (typeof state.jobs)[string] | undefined = Object.hasOwn(
+          state.jobs,
+          jobKey,
+        )
+          ? state.jobs[jobKey]
+          : undefined;
         if (!job) return;
         // Cancelled during the preflights: stop it as soon as it exists, once, not on every store tick.
         if (cancelRequested) {
@@ -3350,7 +3358,7 @@ async function waitForSettledServerStatus(options?: {
 
       options?.abortSignal?.throwIfAborted();
       if (options?.stopEarly?.()) return { outcome: "stopped" };
-      if (status && status.loading.length === 0) {
+      if (status?.loading.length === 0) {
         return { outcome: "settled", status };
       }
       if (status && !announced) {
@@ -4362,7 +4370,7 @@ async function resolveQueuedEmptyLocalModel(abortSignal: AbortSignal): Promise<{
   try {
     abortSignal.throwIfAborted();
     const visibleState = useChatRuntimeStore.getState();
-    if (isExternalModelId(visibleState.params.checkpoint) === true) {
+    if (isExternalCheckpoint(visibleState.params.checkpoint)) {
       // Hold the lifecycle lease across the probe and fail closed: a failed or mid-replacement read is
       // not evidence the server is empty.
       const settled = await waitForSettledServerStatus({ abortSignal });
@@ -8230,7 +8238,7 @@ export function createOpenAIStreamAdapter(
                     Boolean(matchedName) &&
                     callName !== matchedName &&
                     bringsArgs;
-                  if (announcesOverAnnouncement) {
+                  if (announcesOverAnnouncement && matched) {
                     (matched as PositionedToolCallPart)._superseded = true;
                   }
                   // Metadata on a repeated closed-card name belongs to the next call; merging overwrites its signature.

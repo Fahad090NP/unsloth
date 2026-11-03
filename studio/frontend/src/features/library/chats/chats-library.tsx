@@ -116,7 +116,7 @@ import {
   SectionRow,
 } from "./chats-items";
 import { ChatsToolbar, type SortChoice, SortMenu } from "./chats-toolbar";
-import { ProjectsPage } from "@/features/chat/projects-page";
+import { ProjectsPage } from "@/features/chat";
 import {
   type ChatFilters,
   type ChatGroup,

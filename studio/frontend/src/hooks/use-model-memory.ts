@@ -3,18 +3,14 @@
 
 /** Answers are cached by their inputs since `/kv-cache-estimate` reads GGUF metadata off disk. */
 
-// Deep paths, not the `@/features/chat` barrel: the barrel imports this file back, and the cycle
-// blanks the page under dev's unbundled ESM.
-import { estimateKvCache } from "@/features/chat/api/chat-api";
 import {
   CHAT_GPU_MEMORY_MODE_KEY,
   CHAT_SPECULATIVE_TYPE_KEY,
-} from "@/features/chat/stores/chat-runtime-keys";
-import {
+  estimateKvCache,
   readPersistedGpuMemoryMode,
   readPersistedSpeculativeType,
   useChatRuntimeStore,
-} from "@/features/chat/stores/chat-runtime-store";
+} from "@/features/chat";
 import {
   normalizeGgufVariantIdentity,
   normalizeModelIdentity,

@@ -118,7 +118,7 @@ export function AgentIcon({
 export function CommandBlock({ command }: { command: string }) {
   const t = useT();
   const { copied, copy } = useCopyButton(command);
-  const [preRef, singleLine] = useSingleLine<HTMLPreElement>();
+  const [preRef, singleLine] = useSingleLine();
 
   return (
     <div

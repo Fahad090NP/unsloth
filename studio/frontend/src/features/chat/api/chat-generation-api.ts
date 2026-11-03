@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-// eslint-disable-next-line no-restricted-imports -- Avoid the auth barrel's React login page.
+ 
 import { authFetch } from "@/features/auth";
 import type {
   OpenAIChatChunk,
