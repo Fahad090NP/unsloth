@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-// Husky installs relative to the git root, but this npm package lives in a
+// Husky installs relative to the git root, but this package lives in a
 // subdirectory. Run the installer from the root so `core.hooksPath` and the
 // hook shims are created in the repository.
 import { spawnSync } from "node:child_process";
@@ -31,8 +31,12 @@ const installer = `import(${JSON.stringify(
   }
 })`;
 
-const result = spawnSync(process.execPath, ["--input-type=module", "-e", installer], {
-  cwd: root,
-  stdio: "inherit",
-});
+const result = spawnSync(
+  process.execPath,
+  ["--input-type=module", "-e", installer],
+  {
+    cwd: root,
+    stdio: "inherit",
+  },
+);
 process.exit(result.status ?? 1);

@@ -23,8 +23,8 @@ const highlightedCode = PARTS.slice(
 );
 
 test("command boxes wrap long commands instead of scrolling under the copy button", () => {
-  const pre = (/<pre\s[^>]*?className="([^"]+)"/.exec(commandBlock))?.[1] ?? "";
-  const code = (/<code className="([^"]+)"/.exec(commandBlock))?.[1] ?? "";
+  const pre = /<pre\s[^>]*?className="([^"]+)"/.exec(commandBlock)?.[1] ?? "";
+  const code = /<code className="([^"]+)"/.exec(commandBlock)?.[1] ?? "";
   assert.doesNotMatch(pre, /overflow-x-auto/);
   assert.match(pre, /\bpr-11\b/);
   assert.match(code, /\bwhitespace-pre-wrap\b/);
@@ -49,10 +49,16 @@ test("long API examples are capped and scroll inside a keyboard-reachable region
   );
   // wrapped lines broke mid-token and ran back to the line-number gutter
   const cls =
-    (/<section[\s\S]*?className="([^"]+)"/.exec(highlightedCode))?.[1] ?? "";
-  assert.match(cls, /\[html:not\(\[data-code-wrap\]\)_&_pre\]:!whitespace-pre(?!-)/);
+    /<section[\s\S]*?className="([^"]+)"/.exec(highlightedCode)?.[1] ?? "";
+  assert.match(
+    cls,
+    /\[html:not\(\[data-code-wrap\]\)_&_pre\]:whitespace-pre!(?!-)/,
+  );
   assert.doesNotMatch(cls, /break-words|break-all|whitespace-pre-wrap/);
-  assert.match(cls, /\[html:not\(\[data-code-wrap\]\)_&_\[data-streamdown=code-block\]\]:!min-w-max\b/);
+  assert.match(
+    cls,
+    /\[html:not\(\[data-code-wrap\]\)_&_\[data-streamdown=code-block\]\]:min-w-max!/,
+  );
   // all three example sections share one code box
   for (const caller of [USAGE, AUDIO, MEDIA]) {
     assert.match(

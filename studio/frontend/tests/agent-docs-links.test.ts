@@ -23,7 +23,10 @@ test("the API tab hands owners to the Agents tab and gives other accounts the ag
     src,
     /\{isOwner \? \([\s\S]*?setAgentsTabAgent\(agent\);[\s\S]{0,300}else useSettingsDialogStore\.getState\(\)\.setActiveTab\("agents"\);[\s\S]*?\) : \([\s\S]*?href=\{agentDetails\.docsUrl\}/,
   );
-  assert.match(src, /if \(agentsOnly\) useSettingsDialogStore\.getState\(\)\.openDialog\("agents"\);/);
+  assert.match(
+    src,
+    /if \(agentsOnly\) useSettingsDialogStore\.getState\(\)\.openDialog\("agents"\);/,
+  );
   const visibility = readSrc("features/settings/settings-tab-visibility.ts");
   assert.match(visibility, /OWNER_ONLY_SETTINGS_TABS[\s\S]*?"agents"/);
   assert.doesNotMatch(src, /const DOC_LINKS/);
@@ -67,12 +70,12 @@ test("every API example section has a platform toggle that follows the user's ma
   // copy stays put over the code area, on its first line
   assert.match(
     parts,
-    /<button\s*type="button"\s*onClick=\{handleCopy\}\s*className="absolute top-2\.5 right-3 [^"]*"[\s\S]*?<\/button>\s*<HighlightedCode/,
+    /<button\s*type="button"\s*onClick=\{[\s\S]*?handleCopy\(\)[\s\S]*?\}\s*className="absolute top-2\.5 right-3 [^"]*"[\s\S]*?<\/button>\s*<HighlightedCode/,
   );
   // code scrolling up fades out under the header row
   assert.match(
     parts,
-    /\[mask-image:linear-gradient\(to_bottom,transparent,#000_0\.75rem\)\]/,
+    /mask-\[linear-gradient\(to_bottom,transparent,#000_0\.75rem\)\]/,
   );
   // Language and Platform keep the old usage-example pills; what the example does is a toggle
   assert.match(parts, /variant = "pills"/);
@@ -128,7 +131,7 @@ test("the example code box starts short, drags taller, and its copy button is ic
   // the cap is lifted so a drag can grow it; a height is set, from the drag once there is one
   assert.match(
     src,
-    /"relative \[&>section\]:max-h-none \[&>section\]:min-h-24 \[&>section\]:pr-8 \[&_\[data-streamdown=code-block-header\]\]:hidden",\s*height === null\s*\? fitContent\s*\? "\[&>section\]:max-h-\[60dvh\]"\s*: tall && "\[&>section\]:h-46"\s*: "\[&>section\]:h-\(--example-h\)"/,
+    /"relative \[&>section\]:max-h-none \[&>section\]:min-h-24 \[&>section\]:pr-8 \*\*:data-\[streamdown=code-block-header\]:hidden",\s*height === null\s*\? fitContent\s*\? "\[&>section\]:max-h-\[60dvh\]"\s*: tall && "\[&>section\]:h-46"\s*: "\[&>section\]:h-\(--example-h\)"/,
   );
   // our own handle: CSS resize draws a native grabber the rounded corner clips into an arc
   assert.doesNotMatch(src, /resize-y|webkit-resizer/);

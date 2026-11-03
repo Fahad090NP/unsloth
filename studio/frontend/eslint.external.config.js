@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-// Non-type-aware config for the small TS/JS projects outside studio/frontend.
-// They do not share the frontend tsconfig or dependencies, so this config is
-// intentionally syntax-only; the frontend keeps the typed rules.
+// Repository-wide ESLint config for every JS/TS file outside studio/frontend.
+// The frontend keeps its typed config; this one is syntax-only because those
+// projects do not share the frontend tsconfig or its dependencies.
 // First, before typescript-eslint loads: it needs the TypeScript 6 API (see the script).
 import "./scripts/eslint-typescript6.cjs";
 
@@ -16,7 +16,13 @@ import tseslint from "typescript-eslint";
 export default defineConfig([
   gitignore(),
   {
-    files: ["**/*.{ts,tsx}"],
+    // Every TS/JS file in the repository is covered by exactly one config:
+    // the frontend owns its tree, this config owns everything else. New files
+    // anywhere outside `studio/frontend` are picked up automatically.
+    ignores: ["studio/frontend/**", "studio/backend/assets/docs_ui/**"],
+  },
+  {
+    files: ["**/*.{ts,tsx,mts,cts}"],
     extends: [js.configs.recommended, tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: 2026,
@@ -42,7 +48,7 @@ export default defineConfig([
           varsIgnorePattern: "^_",
         },
       ],
-      "eqeqeq": ["error", "always"],
+      eqeqeq: ["error", "always"],
       "no-console": "off",
       "no-var": "error",
       "no-unused-vars": [
@@ -69,7 +75,7 @@ export default defineConfig([
       },
     },
     rules: {
-      "eqeqeq": ["error", "always"],
+      eqeqeq: ["error", "always"],
       "no-console": "off",
       "no-unused-vars": [
         "error",
