@@ -1944,9 +1944,7 @@ export function AudioPage({
               externalModels={
                 mode === "transcribe"
                   ? transcribeExternalModels
-                  : mode === "speak"
-                    ? speakConnection.models
-                    : undefined
+                  : speakConnection.models
               }
               rowFilter={selectorRowFilter}
               moreModels={selectorMoreModels}

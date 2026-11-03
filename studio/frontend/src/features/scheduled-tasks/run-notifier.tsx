@@ -279,25 +279,27 @@ export function ScheduledTaskRunNotifier() {
         });
         if (isDisposed()) return;
         if (mine === null) {
-          state.recheckAfterPoll = true;
+          Object.assign(state, { recheckAfterPoll: true });
           return;
         }
-        state.seen = result.seen;
+        Object.assign(state, { seen: result.seen });
         const nextAt = result.last.nextRunAt !== null ? String(result.last.nextRunAt) : "";
         const nextState = `${result.last.activeRuns}:${nextAt}`;
         // The first answer only sets the baseline: a page that just mounted read its own list.
         const changed = result.fresh.length > 0 || (state.lastState !== "" && nextState !== state.lastState);
-        state.lastState = nextState;
+        Object.assign(state, { lastState: nextState });
         if (changed) refreshFor(result.fresh);
         if (mine.length > 0) announce(mine);
-        state.lastDelay = nextPollDelay(result.last, changed ? 0 : state.lastDelay);
+        Object.assign(state, {
+          lastDelay: nextPollDelay(result.last, changed ? 0 : state.lastDelay),
+        });
         schedule(pollDelayFor(state.lastDelay, document.visibilityState === "hidden"));
       } catch {
         schedule(IDLE_POLL_MS);
       } finally {
-        state.polling = false;
+        Object.assign(state, { polling: false });
         if (state.recheckAfterPoll) {
-          state.recheckAfterPoll = false;
+          Object.assign(state, { recheckAfterPoll: false });
           schedule(RECHECK_MS);
         }
       }

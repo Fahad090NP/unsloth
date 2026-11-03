@@ -147,7 +147,9 @@ function userActive(frame: HTMLIFrameElement, message: FrameMessage): boolean {
   if (document.activeElement !== frame) return false;
   // Older runtimes and test environments may not expose the activation API.
   const activation = (
-    navigator as Navigator & { userActivation?: UserActivation }
+    navigator as Omit<Navigator, "userActivation"> & {
+      userActivation?: UserActivation;
+    }
   ).userActivation;
   return activation?.isActive ?? message.type !== "external";
 }

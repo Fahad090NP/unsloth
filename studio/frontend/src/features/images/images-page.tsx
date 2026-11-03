@@ -4227,10 +4227,6 @@ export function ImagesPage({
     );
   }
 
-  function queuedDownloadKeys() {
-    return new Set(downloadOnlyPlans.current.map(planKey));
-  }
-
   function startQueuedDownload() {
     const next = downloadOnlyPlans.current.at(0);
     if (!next) return false;
@@ -4329,6 +4325,8 @@ export function ImagesPage({
     ): Promise<boolean> => {
       const downloadOnly =
         downloadSnapshot !== undefined || (!forceLoad && modelSelectionAction === "download");
+      const queuedDownloadKeys = () =>
+        new Set(downloadOnlyPlans.current.map(planKey));
       // Read before the first await: a confirmed Load anyway retry sets it only around this call.
       const oversizedRetry = oversizedLoadOnce.current && !downloadOnly;
       // Staging never sets `busy`, so a second pick passes the guard while this plan is in flight, and
@@ -4470,7 +4468,7 @@ export function ImagesPage({
       }
       return await handleLoadRef.current(repoId, opts, advanced, pickToastId);
     },
-    [stage, currentLoadAdvanced, pickComponentFiles, requestDownloadPlan, modelSelectionAction, pickGuard, pickToast, engineFor, offerLoadAnyway, dismissLoadAnyway, queuedDownloadKeys],
+    [stage, currentLoadAdvanced, pickComponentFiles, requestDownloadPlan, modelSelectionAction, pickGuard, pickToast, engineFor, offerLoadAnyway, dismissLoadAnyway],
   );
   const loadOrStageRef = useRef(loadOrStage);
   useEffect(() => {
@@ -4894,10 +4892,8 @@ export function ImagesPage({
       applyImageModelDefaults,
       beginPick,
       busy,
-      currentLoadAdvanced,
       familyOverride,
       guidance,
-      handleLoad,
       loadGgufRepoPick,
       loadOrStage,
       modelSelectionAction,

@@ -706,12 +706,14 @@ export function UsageExamples({
   useEffect(() => {
     // Browser loopback URLs can be port forwards, so only the desktop app uses PATH checks.
     if (!localAgentDetection) {
-      setDetectedAgents([]);
-      // An auto-pick was only verified against the backend PATH; never touch a manual pick.
-      if (!agentPickedByUserRef.current) {
-        // The effect below corrects this; isGguf here would be a stale closure.
-        setAgent(DEFAULT_AGENT);
-      }
+      queueMicrotask(() => {
+        setDetectedAgents([]);
+        // An auto-pick was only verified against the backend PATH; never touch a manual pick.
+        if (!agentPickedByUserRef.current) {
+          // The effect below corrects this; isGguf here would be a stale closure.
+          setAgent(DEFAULT_AGENT);
+        }
+      });
       return;
     }
 
@@ -748,8 +750,10 @@ export function UsageExamples({
     const reset = fallbackAgent(isGguf, availableAgents);
     if (reset === null) return;
     agentPickedByUserRef.current = false;
-    setStoredAgent(null);
-    setAgent(reset);
+    queueMicrotask(() => {
+      setStoredAgent(null);
+      setAgent(reset);
+    });
   }, [
     agent,
     agentsLoaded,
@@ -771,7 +775,9 @@ export function UsageExamples({
       availableAgents,
     );
     if (next !== null) {
-      setAgent(next);
+      queueMicrotask(() => {
+        setAgent(next);
+      });
     }
   }, [
     agent,

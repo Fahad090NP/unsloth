@@ -730,13 +730,14 @@ export function AgentsTab() {
     if (agents.includes(selectedAgent)) return;
     agentSelectionChanged.current = false;
     setStoredAgent(null);
-    setSelectedAgent(
-      (agents.find(
+    const nextAgent =
+      agents.find(
         (agent) =>
           detectedAgents.has(agent) && !NOT_AUTO_PICKED_AGENTS.has(agent),
-      ) ??
-        agents[0]),
-    );
+      ) ?? agents[0];
+    queueMicrotask(() => {
+      setSelectedAgent(nextAgent);
+    });
   }, [
     agents,
     detectedAgents,
@@ -980,8 +981,10 @@ export function AgentsTab() {
       };
     }
 
-    setVariants([]);
-    setVariantsLoading(true);
+    queueMicrotask(() => {
+      setVariants([]);
+      setVariantsLoading(true);
+    });
     // Offer quants from where the command loads, not remote-only ones.
     listGgufVariants(selectedModel, hfToken || undefined, {
       preferLocalCache: localDir != null,

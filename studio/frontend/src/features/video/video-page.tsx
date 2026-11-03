@@ -1634,7 +1634,7 @@ function VideoGenerator({
       const size = fitVideoSize(params.width, params.height, sizeLimits);
       const durationIndex = closestDurationIndex(durationOptions, params.durationSeconds);
       const durationFrames =
-        durationOptions[durationIndex]?.frames ?? durationOptions.at(0)?.frames ?? numFrames;
+        durationOptions.at(durationIndex)?.frames ?? durationOptions.at(0)?.frames ?? numFrames;
       setResolutionIntent(size);
       const matched = matchAspect(size[0], size[1]);
       setAspect(matched.key);

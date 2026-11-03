@@ -2939,7 +2939,9 @@ export function ModelConfigPage({
     ].filter((key, index, all) => all.indexOf(key) === index);
     // The draft alone: hosts derive different candidate key lists.
     if (isExtraArgsHydratedForDraft(draftKey)) {
-      setExtraArgsHydrating(false);
+      queueMicrotask(() => {
+        setExtraArgsHydrating(false);
+      });
       return;
     }
     let cancelled = false;
@@ -3428,7 +3430,11 @@ export function ModelConfigPage({
   const [memoryBreakdownOpen, setMemoryBreakdownOpen] = useState(false);
   const inferenceGpu = useInferenceGpuInfo();
   // A pin can only use the cards it names, so judge the fit against those.
-  const pinnedGpuIds = runtimeConfig.selectedGpuIds;
+  // Snapshot the selection: the store may reuse the array while replacing its contents.
+  const pinnedGpuIds = useMemo(
+    () => runtimeConfig.selectedGpuIds?.slice() ?? null,
+    [runtimeConfig.selectedGpuIds],
+  );
   // Per-device unified_memory, `.every()`: one discrete device means real VRAM beside RAM.
   // `[].every()` is true, so the empty set is excluded; use-gpu-info.ts uses `.some()` on purpose.
   const hasUnifiedMemory = useMemo(() => {

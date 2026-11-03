@@ -396,9 +396,11 @@ export function ExportPage() {
     const match = models.find((m) => m.name === preselectRun);
     if (!match) return;
     appliedRunRef.current = preselectRun;
-    setSourceMode("checkpoint");
-    setSelectedModelIdx(match.name);
-    setExportMethod("gguf");
+    queueMicrotask(() => {
+      setSourceMode("checkpoint");
+      setSelectedModelIdx(match.name);
+      setExportMethod("gguf");
+    });
   }, [preselectRun, models]);
 
   useEffect(() => {

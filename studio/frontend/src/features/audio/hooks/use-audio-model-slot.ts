@@ -546,7 +546,7 @@ export function useAudioModelSlot({
     /* no-op */
   });
   useEffect(() => {
-    loadTtsModelRef.current = loadTtsModel;
+    Object.assign(loadTtsModelRef, { current: loadTtsModel });
   }, [loadTtsModel]);
   /** Repeat the last load into CPU RAM; false when there is none to repeat. */
   const reloadOnCpu = useCallback(() => {

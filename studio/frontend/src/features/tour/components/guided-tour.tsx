@@ -79,7 +79,9 @@ export function GuidedTour({
 
   useEffect(() => {
     if (!open) return;
-    setTargetRect(null);
+    queueMicrotask(() => {
+      setTargetRect(null);
+    });
     closeLockRef.current = false;
     lastRectRef.current = null;
   }, [open]);

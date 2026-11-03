@@ -280,14 +280,12 @@ function offsetIn(index: TextIndex, node: Node, offset: number): number {
   const start = index.at.get(node);
   if (start !== undefined) return start + offset;
   // A point beside a text node, as around a span's own text.
-  const next: Node | null = node.childNodes.item(offset);
-  const after = next ? index.at.get(next) : undefined;
+  const next = node.childNodes.item(offset);
+  const after = index.at.get(next);
   if (after !== undefined) return after;
-  const prior: Node | null = node.childNodes.item(offset - 1);
-  if (prior) {
-    const before = index.at.get(prior);
-    if (before !== undefined) return before + (prior.textContent?.length ?? 0);
-  }
+  const prior = node.childNodes.item(offset - 1);
+  const before = index.at.get(prior);
+  if (before !== undefined) return before + (prior.textContent?.length ?? 0);
   // Elsewhere between nodes: count the text nodes that start before it.
   const point = document.createRange();
   point.setStart(node, offset);

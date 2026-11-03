@@ -621,7 +621,6 @@ export function DiffusionTrainPanel({
   }, [loadedFamily, families, setFamilyName]);
 
   useEffect(() => {
-    if (!family) return;
     // Compare by name: an info refresh yields a new object but is not a family change.
     if (seededBaseFamily.current !== family.name) {
       seededBaseFamily.current = family.name;

@@ -326,7 +326,7 @@ async function* mergedModelIterator(
   const tasks = normalizeTaskFilter(task);
   const common = {
     additionalFields: ALL_FIELDS,
-    ...(accessToken ? { credentials: { accessToken } } : {}),
+    ...(accessToken ? { accessToken } : {}),
   };
 
   const unslothIter = mergeTaskIterators(
@@ -359,7 +359,7 @@ async function* mergedModelIterator(
         name: pinnedId,
         additionalFields: ALL_FIELDS,
         fetch: makeHfFetch(signal),
-        ...(accessToken ? { credentials: { accessToken } } : {}),
+        ...(accessToken ? { accessToken } : {}),
       }).catch(() => null)
     : null;
 
@@ -428,7 +428,7 @@ async function* priorityThenListingIterator(
   const tasks = normalizeTaskFilter(task);
   const common = {
     additionalFields: ALL_FIELDS,
-    ...(accessToken ? { credentials: { accessToken } } : {}),
+    ...(accessToken ? { accessToken } : {}),
   };
 
   // Phase 1: priority models in parallel via modelInfo
@@ -440,7 +440,7 @@ async function* priorityThenListingIterator(
         name: id,
         additionalFields: ALL_FIELDS,
         fetch: makeHfFetch(signal),
-        ...(accessToken ? { credentials: { accessToken } } : {}),
+        ...(accessToken ? { accessToken } : {}),
       }),
     ),
   );
@@ -529,7 +529,7 @@ async function* providerUnslothFirstIterator(
       additionalFields: ALL_FIELDS,
       fetch: makeSortFetch(opts.sortBy, opts.sortDirection, opts.signal, opts.parameterFilter),
       sort: hubListingSort(opts.sortBy),
-      ...(opts.accessToken ? { credentials: { accessToken: opts.accessToken } } : {}),
+      ...(opts.accessToken ? { accessToken: opts.accessToken } : {}),
     }) as AsyncGenerator;
   // Read by hand: breaking out of a for-await would close the listing its tail continues.
   const take = async (iter: AsyncGenerator) => {
@@ -574,7 +574,8 @@ async function* providerUnslothFirstIterator(
       }
     }
     for (const model of rankListing([...group.values()], opts.sortBy, opts.sortDirection)) {
-      const name = nameOf(model) as string;
+      const name = nameOf(model);
+      if (!name) continue;
       shown.add(name);
       primeFromListing(name, opts.accessToken, model);
       yield model as unknown;
@@ -699,9 +700,7 @@ function createChannelIterator(
       opts.parameterFilter,
     ),
     sort: hubListingSort(opts.sortBy),
-    ...(opts.accessToken
-      ? { credentials: { accessToken: opts.accessToken } }
-      : {}),
+    ...(opts.accessToken ? { accessToken: opts.accessToken } : {}),
   }) as AsyncGenerator;
 }
 
@@ -722,7 +721,7 @@ async function* channelUnslothFirstIterator(
 ): AsyncGenerator {
   const queryString = opts.query || channel.query || undefined;
   const creds = opts.accessToken
-    ? { credentials: { accessToken: opts.accessToken } }
+    ? { accessToken: opts.accessToken }
     : {};
   const seen = new Set<string>();
 
@@ -894,11 +893,16 @@ export function useHubModelSearch(
   const { isPublisherQuery, searchQuery, pinnedId, trimmed } = useMemo(() => {
     const t = query.trim();
     const m = PUBLISHER_RE.exec(t);
-    const is = !!m && m[1].toLowerCase() !== "unsloth";
+    let isPublisherQuery = false;
+    let searchQuery = t;
+    if (m && m[1].toLowerCase() !== "unsloth") {
+      isPublisherQuery = true;
+      searchQuery = m[2] ?? t;
+    }
     return {
-      isPublisherQuery: is,
-      searchQuery: is ? m![2] : t,
-      pinnedId: is ? t : undefined,
+      isPublisherQuery,
+      searchQuery,
+      pinnedId: isPublisherQuery ? t : undefined,
       trimmed: t,
     };
   }, [query]);
@@ -919,7 +923,7 @@ export function useHubModelSearch(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [hfEndpoint, accessToken],
   );
-  const hasFilters = !!filters && hasModelSearchFilters(filters);
+  const hasFilters = filters ? hasModelSearchFilters(filters) : false;
   const filterRange = filters ? parameterRange(filters) : "";
   const createListing = useCallback(
     (signal: AbortSignal, filterPriority?: ModelListingTransform) => {
@@ -1031,7 +1035,7 @@ export function useHubModelSearch(
                 filterRange,
               ),
               sort: hubListingSort(sortBy),
-              ...(accessToken ? { credentials: { accessToken } } : {}),
+              ...(accessToken ? { accessToken } : {}),
             }) as AsyncGenerator,
           signal,
         );
@@ -1051,7 +1055,7 @@ export function useHubModelSearch(
           additionalFields: ALL_FIELDS,
           fetch: makeSortFetch(sortBy, sortDirection, signal, filterRange),
           sort: hubListingSort(sortBy),
-          ...(accessToken ? { credentials: { accessToken } } : {}),
+          ...(accessToken ? { accessToken } : {}),
         }) as AsyncGenerator;
         return queryProvider
           ? providerUnslothFirstIterator(queryProvider, orgSearch, {
@@ -1121,7 +1125,7 @@ export function useHubModelSearch(
       hideEmptyUploads,
     ],
   );
-  const needsMetadata = !!filters && needsModelMetadata(filters);
+  const needsMetadata = filters ? needsModelMetadata(filters) : false;
   // Only a row the list can show is worth a per-row Hub request.
   const keepRow = useMemo(
     () =>
@@ -1166,7 +1170,10 @@ export function useHubModelSearch(
           );
         }
         try {
-          const data = response.status === 404 ? null : await response.json();
+          const data =
+            response.status === 404
+              ? null
+              : ((await response.json()) as Record<string, unknown>);
           if (!signal.aborted) {
             filterMetadata.set(path, {
               data,
@@ -1181,7 +1188,7 @@ export function useHubModelSearch(
       const fetchJson = (path: string) => {
         let request = metadata.get(path);
         if (!request) {
-          request = requestJson(path).catch(() => { /* noop */ });
+          request = requestJson(path).catch(() => null);
           metadata.set(path, request);
         }
         return request;
@@ -1200,7 +1207,7 @@ export function useHubModelSearch(
               name: pinnedId,
               additionalFields: ALL_FIELDS,
               fetch: makeHfFetch(signal),
-              ...(accessToken ? { credentials: { accessToken } } : {}),
+              ...(accessToken ? { accessToken } : {}),
             }).catch(() => null)
           : undefined;
       return filterModelListing(
