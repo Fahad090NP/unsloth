@@ -288,21 +288,6 @@ function collectTests(directory) {
 const testFiles = collectTests(path.join(FRONTEND, "tests"));
 const exact = new Set();
 const loose = new Set();
-const GENERIC = new Set([
-  "index",
-  "types",
-  "type",
-  "utils",
-  "util",
-  "config",
-  "api",
-  "store",
-  "main",
-  "app",
-  "lib",
-  "helpers",
-  "constants",
-]);
 const escape = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 for (const file of codeFiles) {
@@ -314,19 +299,12 @@ for (const file of codeFiles) {
   }
   const relative = file.slice("studio/frontend/".length);
   const base = path.basename(relative).replace(CODE, "");
-  const directory = path.posix.dirname(relative);
   const word = new RegExp(`(^|[^A-Za-z0-9_])${escape(base)}($|[^A-Za-z0-9_])`);
   for (const test of testFiles) {
     const source = readFileSync(test, "utf8");
     if (source.includes(relative) || source.includes(`"${base}"`)) {
       exact.add(test);
     } else if (word.test(source)) {
-      loose.add(test);
-    } else if (
-      directory.includes("/") &&
-      !GENERIC.has(base) &&
-      source.includes(`${directory}/`)
-    ) {
       loose.add(test);
     }
   }
