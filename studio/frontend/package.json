@@ -17,7 +17,7 @@
     "format:check": "bun fmt --check",
     "prepare": "node scripts/install-husky.mjs",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types --test --test-force-exit \"tests/**/*.test.ts\"",
+    "test": "node --experimental-strip-types --test \"tests/**/*.test.ts\"",
     "bundle:check": "node --experimental-strip-types scripts/check-bundle-budget.ts",
     "typecheck": "node scripts/typecheck.mjs --tests",
     "i18n:check": "node --experimental-strip-types --no-warnings src/i18n/check-parity.ts",

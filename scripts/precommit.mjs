@@ -341,7 +341,6 @@ if (selected.length > 0) {
     [
       "--experimental-strip-types",
       "--test",
-      "--test-force-exit",
       "--test-timeout=120000",
       ...selected.map((file) => path.relative(FRONTEND, file)),
     ],
