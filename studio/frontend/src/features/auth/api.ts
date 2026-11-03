@@ -246,6 +246,7 @@ async function asTransportFailure(err: unknown): Promise<unknown> {
   if (
     !isTauri &&
     typeof navigator !== "undefined" &&
+    typeof navigator.onLine === "boolean" &&
     !navigator.onLine
   ) {
     return Object.assign(

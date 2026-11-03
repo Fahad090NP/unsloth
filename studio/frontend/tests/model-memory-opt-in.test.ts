@@ -73,7 +73,7 @@ test("only a row that could draw a bar watches the runtime store", () => {
   // The store ticks per streamed token, so ungated subscriptions multiply work by row count.
   assert.match(
     HOOK,
-    /const watching = enabled && source != null;/,
+    /const watching = enabled && source !== undefined;/,
     "the store subscription is not gated on the row having a source",
   );
   assert.match(
