@@ -51,7 +51,6 @@
     }
   }
 
-
   function freshTiming() {
     return { totalMs: 0, maxMs: 0, samples: 0 };
   }
@@ -68,7 +67,7 @@
       moCallbacks: 0,
       moRecords: 0,
       customPropSets: 0,
-      stabilizerPropSets: 0
+      stabilizerPropSets: 0,
     };
   }
 
@@ -76,7 +75,7 @@
     return {
       scrollHeightRead: freshTiming(),
       scrollTo: freshTiming(),
-      moCallback: freshTiming()
+      moCallback: freshTiming(),
     };
   }
 
@@ -87,7 +86,7 @@
       observersWithAriaExpandedFilter: 0,
       observeCalls: 0,
       viewportObserver: freshMoBucket(),
-      other: freshMoBucket()
+      other: freshMoBucket(),
     };
   }
 
@@ -104,13 +103,13 @@
       scrollTop: false,
       scrollTo: false,
       mutationObserver: false,
-      customProps: false
+      customProps: false,
     },
     unavailable: [],
     selfCost: null,
     clockGranularityMs: null,
     // Sink so the discarded read cannot be optimised out.
-    sink: 0
+    sink: 0,
   };
 
   const originals = {
@@ -118,7 +117,7 @@
     scrollTopDesc: null,
     scrollToDesc: null,
     setPropertyDesc: null,
-    MutationObserver: null
+    MutationObserver: null,
   };
 
   function markUnavailable(name, reason) {
@@ -192,7 +191,7 @@
       scrollTopWrites: 0,
       scrollToCalls: 0,
       scrollToMs: 0,
-      scrollToMaxMs: 0
+      scrollToMaxMs: 0,
     };
     state.breakdown[key] = b;
     if (!isOther) {
@@ -201,7 +200,6 @@
     }
     return b;
   }
-
 
   const ElementProto =
     typeof W.Element === "function" && W.Element.prototype
@@ -267,7 +265,7 @@
           }
           return value;
         },
-        set: d.set
+        set: d.set,
       });
       state.attempted.scrollHeight = true;
     } catch (e) {
@@ -304,7 +302,7 @@
             /* fall through to the real setter regardless */
           }
           origSet.call(this, v);
-        }
+        },
       });
       state.attempted.scrollTop = true;
     } catch (e) {
@@ -352,7 +350,7 @@
             /* never turn a scroll into an exception */
           }
           return out;
-        }
+        },
       });
       state.attempted.scrollTo = true;
     } catch (e) {
@@ -360,7 +358,6 @@
       markUnavailable("scrollTo", "defineProperty threw: " + e);
     }
   }
-
 
   function installSetProperty() {
     const proto =
@@ -397,7 +394,11 @@
         value: function (name) {
           if (state.active) {
             try {
-              if (typeof name === "string" && name.charCodeAt(0) === 45 && name.charCodeAt(1) === 45) {
+              if (
+                typeof name === "string" &&
+                name.charCodeAt(0) === 45 &&
+                name.charCodeAt(1) === 45
+              ) {
                 state.counters.customPropSets += 1;
                 if (name === STABILIZER_PROP) {
                   state.counters.stabilizerPropSets += 1;
@@ -408,7 +409,7 @@
             }
           }
           return orig.apply(this, arguments);
-        }
+        },
       });
       state.attempted.customProps = true;
     } catch (e) {
@@ -428,8 +429,7 @@
     }
     originals.MutationObserver = Native;
 
-    const moStates =
-      typeof W.WeakMap === "function" ? new W.WeakMap() : null;
+    const moStates = typeof W.WeakMap === "function" ? new W.WeakMap() : null;
 
     function bucketOf(obsState) {
       return obsState && (obsState.matchedViewport || obsState.hasAriaExpanded)
@@ -452,7 +452,10 @@
             }
             let n = 0;
             try {
-              n = records && typeof records.length === "number" ? records.length : 0;
+              n =
+                records && typeof records.length === "number"
+                  ? records.length
+                  : 0;
             } catch (e) {
               n = 0;
             }
@@ -530,7 +533,7 @@
     try {
       Object.defineProperty(Wrapped, "name", {
         value: "MutationObserver",
-        configurable: true
+        configurable: true,
       });
     } catch (e) {
       /* cosmetic only: some feature detection sniffs constructor names */
@@ -544,7 +547,6 @@
       markUnavailable("MutationObserver", "assignment to window threw: " + e);
     }
   }
-
 
   function measureClockGranularityMs() {
     let best = null;
@@ -573,7 +575,7 @@
       mo: copyPlain(state.mo),
       breakdown: copyPlain(state.breakdown),
       breakdownKeyCount: state.breakdownKeyCount,
-      breakdownCapped: state.breakdownCapped
+      breakdownCapped: state.breakdownCapped,
     };
   }
 
@@ -599,9 +601,10 @@
     if (!state.attempted.scrollHeight || !originals.scrollHeightDesc) {
       return {
         attempted: false,
-        reason: "scrollHeight getter was not patched, so there is no overhead to measure",
+        reason:
+          "scrollHeight getter was not patched, so there is no overhead to measure",
         samples: 0,
-        hasHiResClock: hasHiResClock
+        hasHiResClock: hasHiResClock,
       };
     }
     if (!doc || typeof doc.createElement !== "function") {
@@ -609,7 +612,7 @@
         attempted: false,
         reason: "no document to build a probe element in",
         samples: 0,
-        hasHiResClock: hasHiResClock
+        hasHiResClock: hasHiResClock,
       };
     }
 
@@ -665,7 +668,7 @@
           "dirty attached element would force. Multiply overheadMsPerCall by " +
           "counters.scrollHeightReads to bound how much of the reported scrollHeight total " +
           "belongs to the instrument. Cross-check against the driver's paired run with the " +
-          "instrument absent."
+          "instrument absent.",
       };
       state.clockGranularityMs = granularity;
     } catch (e) {
@@ -673,7 +676,7 @@
         attempted: false,
         reason: "probe threw: " + e,
         samples: 0,
-        hasHiResClock: hasHiResClock
+        hasHiResClock: hasHiResClock,
       };
     } finally {
       try {
@@ -686,7 +689,6 @@
     state.selfCost = result;
     return copyPlain(result);
   }
-
 
   function copyPlain(v) {
     // Hand written: JSON turns non-finite into null and drops undefined.
@@ -731,7 +733,7 @@
         otherKey: OTHER_KEY,
         clockGranularityMs: state.clockGranularityMs,
         hasHiResClock: hasHiResClock,
-        selfCost: copyPlain(state.selfCost)
+        selfCost: copyPlain(state.selfCost),
       };
     } catch (e) {
       out = { enabled: false, error: String(e) };
@@ -761,14 +763,22 @@
     state.active = false;
     try {
       if (originals.scrollHeightDesc && ElementProto) {
-        Object.defineProperty(ElementProto, "scrollHeight", originals.scrollHeightDesc);
+        Object.defineProperty(
+          ElementProto,
+          "scrollHeight",
+          originals.scrollHeightDesc,
+        );
       }
     } catch (e) {
       /* leave it wrapped rather than throw */
     }
     try {
       if (originals.scrollTopDesc && ElementProto) {
-        Object.defineProperty(ElementProto, "scrollTop", originals.scrollTopDesc);
+        Object.defineProperty(
+          ElementProto,
+          "scrollTop",
+          originals.scrollTopDesc,
+        );
       }
     } catch (e) {
       /* as above */
@@ -785,7 +795,7 @@
         Object.defineProperty(
           W.CSSStyleDeclaration.prototype,
           "setProperty",
-          originals.setPropertyDesc
+          originals.setPropertyDesc,
         );
       }
     } catch (e) {
@@ -818,7 +828,7 @@
     snapshot: snapshot,
     reset: reset,
     uninstall: uninstall,
-    selfCostEstimate: selfCostEstimate
+    selfCostEstimate: selfCostEstimate,
   };
 
   W.__sbLayoutCost = api;
