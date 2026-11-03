@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
+import { runSource } from "./helpers/eval-source.ts";
 import ts from "@typescript/typescript6";
 import { classifyUnslothSupport } from "../src/features/hub/lib/unsloth-support.ts";
 import type { HfModelResult } from "../src/features/hub/hooks/use-hub-model-search.ts";
@@ -28,15 +28,22 @@ const end = source.indexOf("\n}\n", start) + 2;
 const context = {
   exports: {} as { makeMapModel: MapModel },
   classifyUnslothSupport,
-  EMBEDDING_TAGS: new Set(["feature-extraction", "sentence-transformers", "sentence-similarity", "text-embeddings-inference", "embeddings"]),
+  EMBEDDING_TAGS: new Set([
+    "feature-extraction",
+    "sentence-transformers",
+    "sentence-similarity",
+    "text-embeddings-inference",
+    "embeddings",
+  ]),
   isGgufLike: (id: string) => id.endsWith("-GGUF"),
   estimateSizeFromDtypes: (): number | undefined => undefined,
   detectBaseModel: (): string | null => null,
   ggufRepoParams,
 };
-runInNewContext(
-  ts.transpileModule(source.slice(start, end), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText +
-    "; exports.makeMapModel = makeMapModel;",
+runSource(
+  ts.transpileModule(source.slice(start, end), {
+    compilerOptions: { target: ts.ScriptTarget.ES2022 },
+  }).outputText + "; exports.makeMapModel = makeMapModel;",
   context,
 );
 const makeMapModel = context.exports.makeMapModel;
@@ -51,19 +58,36 @@ for (const device of ["mac", "cuda"]) {
     for (const raw of [
       { name: "openai-community/gpt2", tags: GPT2 },
       { name: "sentence-transformers/all-MiniLM-L6-v2", tags: MINILM },
-      { name: "owner/model", tags: ["onnx", "openvino", "tflite", "coreml", "safetensors"] },
+      {
+        name: "owner/model",
+        tags: ["onnx", "openvino", "tflite", "coreml", "safetensors"],
+      },
     ]) {
       assert.equal(map(raw)?.id, raw.name);
     }
   });
 
   test(`${device}: search still rejects export-only and quantized models`, () => {
-    for (const format of ["onnx", "openvino", "tflite", "coreml", "gptq", "awq"]) {
+    for (const format of [
+      "onnx",
+      "openvino",
+      "tflite",
+      "coreml",
+      "gptq",
+      "awq",
+    ]) {
       assert.equal(map({ name: "owner/model", tags: [format] }), null);
-      assert.equal(map({ name: `owner/model-${format}`, tags: [format, "tf"] }), null);
+      assert.equal(
+        map({ name: `owner/model-${format}`, tags: [format, "tf"] }),
+        null,
+      );
     }
     assert.equal(
-      map({ name: "owner/model", tags: ["onnx", "safetensors"], config: { quantization_config: { quant_method: "gptq" } } }),
+      map({
+        name: "owner/model",
+        tags: ["onnx", "safetensors"],
+        config: { quantization_config: { quant_method: "gptq" } },
+      }),
       null,
     );
   });
@@ -71,18 +95,34 @@ for (const device of ["mac", "cuda"]) {
   test(`${device}: discover and embeddings keep their existing exceptions`, () => {
     const discover = makeMapModel(false, true, "", device);
     assert.ok(discover({ name: "owner/model", tags: ["onnx"] }));
-    assert.ok(map({ name: "owner/embedding", tags: ["sentence-transformers", "onnx"] }));
+    assert.ok(
+      map({ name: "owner/embedding", tags: ["sentence-transformers", "onnx"] }),
+    );
   });
 }
 
 for (const device of ["mac", "cuda"]) {
   test(`${device}: supported quantization does not bypass export rejection`, () => {
     const map = makeMapModel(false, false, "", device);
-    for (const quant_method of ["bitsandbytes", "bnb", "bnb_4bit", "bnb_8bit"]) {
+    for (const quant_method of [
+      "bitsandbytes",
+      "bnb",
+      "bnb_4bit",
+      "bnb_8bit",
+    ]) {
       for (const format of ["onnx", "openvino", "tflite", "coreml"]) {
         const config = { quantization_config: { quant_method } };
-        assert.equal(map({ name: "owner/model", tags: [format], config }), null);
-        assert.ok(map({ name: "openai-community/gpt2", tags: [...GPT2, format], config }));
+        assert.equal(
+          map({ name: "owner/model", tags: [format], config }),
+          null,
+        );
+        assert.ok(
+          map({
+            name: "openai-community/gpt2",
+            tags: [...GPT2, format],
+            config,
+          }),
+        );
       }
     }
   });

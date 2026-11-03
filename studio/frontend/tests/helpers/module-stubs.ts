@@ -45,8 +45,34 @@ export function loadWithStubs<T>(
     },
   });
   const loaded = { exports: {} as T };
+  const barrelStub = (specifier: string): Record<string, unknown> | null => {
+    // A source that imports the barrel (`@/features/auth`) while the test stubs
+    // its deep modules gets their exports merged, which keeps a lint-driven
+    // import rewrite from breaking an otherwise valid fixture.
+    const prefix = `${specifier}/`;
+    const merged: Record<string, unknown> = {};
+    let found = false;
+    for (const [key, value] of Object.entries(stubs)) {
+      if (!key.startsWith(prefix)) continue;
+      if (value === null || typeof value !== "object") continue;
+      found = true;
+      for (const [name, exported] of Object.entries(value)) {
+        if (!(name in merged)) merged[name] = exported;
+      }
+    }
+    return found ? merged : null;
+  };
   const requireStub = (specifier: string): unknown => {
-    if (specifier in stubs) return stubs[specifier];
+    if (specifier in stubs) {
+      const exact = stubs[specifier];
+      const merged = barrelStub(specifier);
+      if (merged && exact !== null && typeof exact === "object") {
+        return { ...merged, ...exact };
+      }
+      return exact;
+    }
+    const merged = barrelStub(specifier);
+    if (merged) return merged;
     // Opt-in so unrelated new imports do not break tests; off by default to keep the throw.
     if (options.relativePassthrough && specifier.startsWith(".")) {
       return loadWithStubs(resolveSibling(path, specifier), stubs, options);

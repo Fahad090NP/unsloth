@@ -13,7 +13,7 @@ const read = (relative: string) => readFileSync(new URL(relative, SRC), "utf8");
 test("the hardware details carry the audio.cpp version to the About tab", () => {
   assert.match(
     read("hooks/use-hardware-info.ts"),
-    /audioCpp: data\?\.audio_cpp \?\? null,/,
+    /audioCpp: data\??\.audio_cpp \?\? null,/,
   );
   assert.match(
     read("features/settings/tabs/about-tab.tsx"),
@@ -46,7 +46,7 @@ test("the Engines section lists llama.cpp, whisper.cpp and audio.cpp", () => {
 test("the Engines section shows MLX only where it is installed", () => {
   assert.match(
     read("hooks/use-hardware-info.ts"),
-    /mlx: data\?\.versions\?\.mlx \?\? null,/,
+    /mlx: data\??\.versions\??\.mlx \?\? null,/,
   );
   const section = read(
     "features/settings/components/engine-versions-section.tsx",
@@ -78,7 +78,10 @@ test("only the owner gets the engine Update button, which the update route requi
     "features/settings/components/engine-versions-section.tsx",
   );
   assert.match(section, /const isOwner = useIsAccountOwner\(\);/);
-  assert.match(section, /\{isOwner \? \(\s*<Button[^]*?data-testid="engine-update"/);
+  assert.match(
+    section,
+    /\{isOwner \? \(\s*<Button[^]*?data-testid="engine-update"/,
+  );
 });
 
 test("a self-managed llama.cpp still lets Update install an offered audio.cpp release", () => {

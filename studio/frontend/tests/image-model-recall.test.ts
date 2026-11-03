@@ -3,7 +3,8 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compileFunction, runInNewContext } from "node:vm";
+import { compileFunction } from "node:vm";
+import { runSource } from "./helpers/eval-source.ts";
 import ts from "@typescript/typescript6";
 import { explicitFamily } from "../src/features/model-picker/components/model-selector/family-override.ts";
 import {
@@ -87,9 +88,10 @@ test("recalling a quantized model carries the selected adapters into its load", 
       },
       ...overrides,
     };
-    const compile = compileFunction(outputText, Object.keys(scope)) as unknown as (
-      ...args: unknown[]
-    ) => {
+    const compile = compileFunction(
+      outputText,
+      Object.keys(scope),
+    ) as unknown as (...args: unknown[]) => {
       handleGenerateWithRecall: () => Promise<unknown>;
       currentLoadAdvanced: (repoId: string) => { loras?: unknown };
     };
@@ -114,7 +116,9 @@ test("recalling a quantized model carries the selected adapters into its load", 
       rememberedModel: model,
     });
     await callbacks.handleGenerateWithRecall();
-    const pending = scope.pendingRecalledGeneration.current as { allowOversized?: boolean } | null;
+    const pending = scope.pendingRecalledGeneration.current as {
+      allowOversized?: boolean;
+    } | null;
     assert.equal(pending?.allowOversized, false);
     assert.equal(loads.length, 1);
     assert.equal(loads[0][0], model.repoId);
@@ -139,13 +143,23 @@ test("recalling a quantized model carries the selected adapters into its load", 
   }
 
   const { loads, callbacks } = recall({
-    rememberedModel: { repoId: "/cache/models--org--custom/snapshots/abc", kind: "pipeline", familyOverride: "flux.1" },
+    rememberedModel: {
+      repoId: "/cache/models--org--custom/snapshots/abc",
+      kind: "pipeline",
+      familyOverride: "flux.1",
+    },
   });
   await callbacks.handleGenerateWithRecall();
-  assert.equal((loads[0][2] as { family_override?: string }).family_override, "flux.1");
+  assert.equal(
+    (loads[0][2] as { family_override?: string }).family_override,
+    "flux.1",
+  );
 
   // A recalled build loads with its own encoder / VAE files, never the live fields.
-  interface Files { text_encoder_file?: string[]; vae_file?: string }
+  interface Files {
+    text_encoder_file?: string[];
+    vae_file?: string;
+  }
   const supplied = {
     repoId: "/comfy/models/diffusion_models",
     kind: "gguf",
@@ -153,9 +167,16 @@ test("recalling a quantized model carries the selected adapters into its load", 
     textEncoderFiles: ["../text_encoders/qwen_3_4b.safetensors"],
     vaeFile: "../vae/ae.safetensors",
   };
-  const withFiles = recall({ rememberedModel: supplied, textEncoderFiles: "live.safetensors", vaeFile: "live_vae.safetensors" });
+  const withFiles = recall({
+    rememberedModel: supplied,
+    textEncoderFiles: "live.safetensors",
+    vaeFile: "live_vae.safetensors",
+  });
   await withFiles.callbacks.handleGenerateWithRecall();
-  assert.deepEqual((withFiles.loads[0][2] as Files).text_encoder_file, supplied.textEncoderFiles);
+  assert.deepEqual(
+    (withFiles.loads[0][2] as Files).text_encoder_file,
+    supplied.textEncoderFiles,
+  );
   assert.equal((withFiles.loads[0][2] as Files).vae_file, supplied.vaeFile);
   // After a refresh with the model still resident, the stored paths survive (status names only basenames).
   const resident = recall({
@@ -165,29 +186,49 @@ test("recalling a quantized model carries the selected adapters into its load", 
       repo_id: supplied.repoId,
       model_kind: "gguf",
       gguf_filename: "z.gguf",
-      component_files: { text_encoder: "qwen_3_4b.safetensors", vae: "ae.safetensors" },
+      component_files: {
+        text_encoder: "qwen_3_4b.safetensors",
+        vae: "ae.safetensors",
+      },
     },
     matchesRememberedModel,
     componentFilesMatch,
     withEngagedFamily: (m: Record<string, unknown>) => m,
-    rememberImageModel: (m: unknown) => { storage.setItem("unsloth:images:last-model", JSON.stringify(m)); },
-    setRememberedModel: () => { /* noop */ },
+    rememberImageModel: (m: unknown) => {
+      storage.setItem("unsloth:images:last-model", JSON.stringify(m));
+    },
+    setRememberedModel: () => {
+      /* noop */
+    },
     handleGenerate: async () => {
       await Promise.resolve();
     },
   });
   await resident.callbacks.handleGenerateWithRecall();
-  assert.deepEqual(readImageModel()?.textEncoderFiles, supplied.textEncoderFiles);
+  assert.deepEqual(
+    readImageModel()?.textEncoderFiles,
+    supplied.textEncoderFiles,
+  );
   assert.equal(readImageModel()?.vaeFile, supplied.vaeFile);
   // Another client reloaded the same checkpoint without the files: the stale paths are dropped.
   const reloaded = recall({
     rememberedModel: supplied,
-    status: { loaded: true, repo_id: supplied.repoId, model_kind: "gguf", gguf_filename: "z.gguf", component_files: null },
+    status: {
+      loaded: true,
+      repo_id: supplied.repoId,
+      model_kind: "gguf",
+      gguf_filename: "z.gguf",
+      component_files: null,
+    },
     matchesRememberedModel,
     componentFilesMatch,
     withEngagedFamily: (m: Record<string, unknown>) => m,
-    rememberImageModel: (m: unknown) => { storage.setItem("unsloth:images:last-model", JSON.stringify(m)); },
-    setRememberedModel: () => { /* noop */ },
+    rememberImageModel: (m: unknown) => {
+      storage.setItem("unsloth:images:last-model", JSON.stringify(m));
+    },
+    setRememberedModel: () => {
+      /* noop */
+    },
     handleGenerate: async () => {
       await Promise.resolve();
     },
@@ -199,19 +240,36 @@ test("recalling a quantized model carries the selected adapters into its load", 
   const ownStale = recall({
     rememberedModel: null,
     lastLoad: { current: supplied },
-    status: { loaded: true, repo_id: supplied.repoId, model_kind: "gguf", gguf_filename: "z.gguf", component_files: null },
+    status: {
+      loaded: true,
+      repo_id: supplied.repoId,
+      model_kind: "gguf",
+      gguf_filename: "z.gguf",
+      component_files: null,
+    },
     matchesRememberedModel,
     componentFilesMatch,
     withEngagedFamily: (m: Record<string, unknown>) => m,
-    rememberImageModel: (m: unknown) => { storage.setItem("unsloth:images:last-model", JSON.stringify(m)); },
-    setRememberedModel: () => { /* noop */ },
+    rememberImageModel: (m: unknown) => {
+      storage.setItem("unsloth:images:last-model", JSON.stringify(m));
+    },
+    setRememberedModel: () => {
+      /* noop */
+    },
     handleGenerate: async () => {
       await Promise.resolve();
     },
   });
   await ownStale.callbacks.handleGenerateWithRecall();
   assert.equal(readImageModel()?.textEncoderFiles, undefined);
-  const without = recall({ rememberedModel: { ...supplied, textEncoderFiles: undefined, vaeFile: undefined }, textEncoderFiles: "live.safetensors" });
+  const without = recall({
+    rememberedModel: {
+      ...supplied,
+      textEncoderFiles: undefined,
+      vaeFile: undefined,
+    },
+    textEncoderFiles: "live.safetensors",
+  });
   await without.callbacks.handleGenerateWithRecall();
   assert.equal((without.loads[0][2] as Files).text_encoder_file, undefined);
   assert.equal((without.loads[0][2] as Files).vae_file, undefined);
@@ -222,12 +280,18 @@ test("recall keeps supplied encoder / VAE file paths", () => {
     repoId: "/comfy/models/diffusion_models",
     kind: "gguf" as const,
     filename: "z.gguf",
-    textEncoderFiles: ["../text_encoders/clip_l.safetensors", "../text_encoders/t5xxl.safetensors"],
+    textEncoderFiles: [
+      "../text_encoders/clip_l.safetensors",
+      "../text_encoders/t5xxl.safetensors",
+    ],
     vaeFile: "../vae/ae.safetensors",
   };
   rememberImageModel(model);
   assert.deepEqual(readImageModel(), model);
-  storage.setItem("unsloth:images:last-model", JSON.stringify({ ...model, textEncoderFiles: [1, ""], vaeFile: 2 }));
+  storage.setItem(
+    "unsloth:images:last-model",
+    JSON.stringify({ ...model, textEncoderFiles: [1, ""], vaeFile: 2 }),
+  );
   const read = readImageModel();
   assert.equal(read?.textEncoderFiles, undefined);
   assert.equal(read?.vaeFile, undefined);
@@ -297,7 +361,10 @@ test("a new model pick cancels recalled generation and retires the staged load",
   );
   let declaration: ts.VariableDeclaration | undefined;
   function visit(node: ts.Node) {
-    if (ts.isVariableDeclaration(node) && node.name.getText(tree) === "beginPick") {
+    if (
+      ts.isVariableDeclaration(node) &&
+      node.name.getText(tree) === "beginPick"
+    ) {
       assert.equal(declaration, undefined, "beginPick must have one owner");
       declaration = node;
     }
@@ -317,14 +384,19 @@ test("a new model pick cancels recalled generation and retires the staged load",
     pendingLoadEntries: { current: ["previous"] },
     stagedLoadDeferred: { current: true },
     stagedQuantRevert: { current: { prev: "Q8_0" } },
-    pickToast: { dismissed: 0, dismissAll() { this.dismissed += 1; } },
+    pickToast: {
+      dismissed: 0,
+      dismissAll() {
+        this.dismissed += 1;
+      },
+    },
     // An older pick's Load anyway toast and dialog retire with it.
     loadAnyway: { dismissed: 0 },
     dismissLoadAnyway: () => {
       scope.loadAnyway.dismissed += 1;
     },
   };
-  runInNewContext(outputText, scope);
+  runSource(outputText, scope);
   assert.equal(scope.pickToast.dismissed, 1);
   assert.equal(scope.loadAnyway.dismissed, 1);
   assert.equal(scope.pendingRecalledGeneration.current, null);

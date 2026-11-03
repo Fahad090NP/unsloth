@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import ts from "@typescript/typescript6";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
+import { runSource } from "./helpers/eval-source.ts";
 import { loadWithStubs } from "./helpers/module-stubs.ts";
 
 interface AutoAuth {
@@ -47,7 +47,10 @@ function fixture(
   let access: string | null = null;
   let refresh: string | null = null;
   let passwordChange = false;
-  let response: unknown = { access_token: "owner-access", refresh_token: "owner-refresh" };
+  let response: unknown = {
+    access_token: "owner-access",
+    refresh_token: "owner-refresh",
+  };
   let invokeCalls = 0;
   const invokes: unknown[][] = [];
   let refreshCalls = 0;
@@ -59,16 +62,30 @@ function fixture(
     requires_password_change: boolean;
     login_mode: string;
     full_access?: boolean;
-  } = { initialized: true, requires_password_change: false, login_mode: "single" };
+  } = {
+    initialized: true,
+    requires_password_change: false,
+    login_mode: "single",
+  };
   const navigations: unknown[] = [];
   const session = {
     hasAuthToken: () => Boolean(access),
     hasRefreshToken: () => Boolean(refresh),
     mustChangePassword: () => passwordChange,
-    setMustChangePassword: (value: boolean) => { passwordChange = value; },
-    storeAuthTokens: (a: string, r: string) => { access = a; refresh = r; },
-    clearAuthTokens: () => { access = null; refresh = null; passwordChange = false; },
-    getPostAuthRoute: () => tauri ? "/chat" : passwordChange ? "/change-password" : "/chat",
+    setMustChangePassword: (value: boolean) => {
+      passwordChange = value;
+    },
+    storeAuthTokens: (a: string, r: string) => {
+      access = a;
+      refresh = r;
+    },
+    clearAuthTokens: () => {
+      access = null;
+      refresh = null;
+      passwordChange = false;
+    },
+    getPostAuthRoute: () =>
+      tauri ? "/chat" : passwordChange ? "/change-password" : "/chat",
     refreshSession: async () => {
       await Promise.resolve();
       refreshCalls++;
@@ -88,73 +105,111 @@ function fixture(
   const apiBase = { isTauri: tauri, apiUrl: (path: string) => path };
   const transitions: { account: unknown; route: string }[] = [];
   const loginModes: unknown[] = [];
-  const auth = loadWithStubs<AutoAuth>(new URL("../src/features/auth/tauri-auto-auth.ts", import.meta.url), {
-    "@/lib/api-base": apiBase,
-    "./session": session,
-    "./api": session,
-    "./login-client": {
-      setLoginMode: (mode: string, fullAccess?: boolean) => {
-        loginModes.push([mode, fullAccess]);
+  const auth = loadWithStubs<AutoAuth>(
+    new URL("../src/features/auth/tauri-auto-auth.ts", import.meta.url),
+    {
+      "@/lib/api-base": apiBase,
+      "./session": session,
+      "./api": session,
+      "./login-client": {
+        setLoginMode: (mode: string, fullAccess?: boolean) => {
+          loginModes.push([mode, fullAccess]);
+        },
+      },
+      "@/lib/account-transition": {
+        OWNER_BROWSER_ACCOUNT: "unsloth",
+        transitionBrowserAccount: async (
+          account: unknown,
+          route: string,
+          commitSession: () => void,
+        ) => {
+          await Promise.resolve();
+          transitions.push({ account, route });
+          commitSession();
+          return false;
+        },
+      },
+      "@tauri-apps/api/core": {
+        invoke: async (command: string, args?: unknown) => {
+          await Promise.resolve();
+          invokes.push([command, args]);
+          if (command === "desktop_mark_signed_out")
+            return void Reflect.set(shell, "signedOut", true);
+          if (command === "desktop_clear_signed_out")
+            return void Reflect.set(shell, "signedOut", false);
+          assert.equal(command, "desktop_auth");
+          invokeCalls++;
+          if (shell.signedOut) return { signed_out: true };
+          if (response instanceof Error) throw response;
+          return response;
+        },
+      },
+      "@/app/router": {
+        router: {
+          navigate: async (options: unknown) => {
+            await Promise.resolve();
+            navigations.push(options);
+          },
+        },
       },
     },
-    "@/lib/account-transition": {
-      OWNER_BROWSER_ACCOUNT: "unsloth",
-      transitionBrowserAccount: async (
-        account: unknown,
-        route: string,
-        commitSession: () => void,
-      ) => {
-        await Promise.resolve();
-        transitions.push({ account, route });
-        commitSession();
-        return false;
+  );
+  const guards = loadWithStubs<Guards>(
+    new URL("../src/app/auth-guards.ts", import.meta.url),
+    {
+      "@tanstack/react-router": { redirect: (options: unknown) => options },
+      "@/lib/api-base": apiBase,
+      "@/features/auth": session,
+      "@/features/auth/tauri-auto-auth": auth,
+      "@/features/auth/login-client": {
+        setLoginMode: (mode: string, fullAccess?: boolean) => {
+          loginModes.push([mode, fullAccess]);
+        },
       },
     },
-    "@tauri-apps/api/core": {
-      invoke: async (command: string, args?: unknown) => {
-        await Promise.resolve();
-        invokes.push([command, args]);
-        if (command === "desktop_mark_signed_out") return void Reflect.set(shell, "signedOut", true);
-        if (command === "desktop_clear_signed_out") return void Reflect.set(shell, "signedOut", false);
-        assert.equal(command, "desktop_auth");
-        invokeCalls++;
-        if (shell.signedOut) return { signed_out: true };
-        if (response instanceof Error) throw response;
-        return response;
-      },
-    },
-    "@/app/router": { router: { navigate: async (options: unknown) => { await Promise.resolve();  navigations.push(options); } } },
-  });
-  const guards = loadWithStubs<Guards>(new URL("../src/app/auth-guards.ts", import.meta.url), {
-    "@tanstack/react-router": { redirect: (options: unknown) => options },
-    "@/lib/api-base": apiBase,
-    "@/features/auth": session,
-    "@/features/auth/tauri-auto-auth": auth,
-    "@/features/auth/login-client": {
-      setLoginMode: (mode: string, fullAccess?: boolean) => {
-        loginModes.push([mode, fullAccess]);
-      },
-    },
-  });
+  );
   globalThis.fetch = async () => {
     await Promise.resolve();
     statusCalls++;
     return new Response(JSON.stringify(status), { status: 200 });
   };
   return {
-    auth, guards, session, events, navigations, loginModes, transitions, shell,
-    setResponse: (value: unknown) => { response = value; },
-    setStatus: (value: typeof status) => { status = value; },
-    setRefreshSucceeds: (value: boolean) => { refreshSucceeds = value; },
+    auth,
+    guards,
+    session,
+    events,
+    navigations,
+    loginModes,
+    transitions,
+    shell,
+    setResponse: (value: unknown) => {
+      response = value;
+    },
+    setStatus: (value: typeof status) => {
+      status = value;
+    },
+    setRefreshSucceeds: (value: boolean) => {
+      refreshSucceeds = value;
+    },
     setRefreshOutcome: (value: "ok" | "rejected" | "unavailable" | null) => {
       refreshOutcome = value;
     },
-    get access() { return access; },
-    get refresh() { return refresh; },
-    get invokeCalls() { return invokeCalls; },
+    get access() {
+      return access;
+    },
+    get refresh() {
+      return refresh;
+    },
+    get invokeCalls() {
+      return invokeCalls;
+    },
     invokes,
-    get refreshCalls() { return refreshCalls; },
-    get statusCalls() { return statusCalls; },
+    get refreshCalls() {
+      return refreshCalls;
+    },
+    get statusCalls() {
+      return statusCalls;
+    },
   };
 }
 
@@ -163,7 +218,10 @@ const multi = { login_required: true, login_mode: "multi" };
 test("single-account desktop keeps token storage, password bypass and coalescing", async (t) => {
   const f = fixture(t);
   f.session.setMustChangePassword(true);
-  assert.deepEqual(await Promise.all([f.auth.tauriAutoAuth(), f.auth.tauriAutoAuth()]), [true, true]);
+  assert.deepEqual(
+    await Promise.all([f.auth.tauriAutoAuth(), f.auth.tauriAutoAuth()]),
+    [true, true],
+  );
   assert.equal(f.invokeCalls, 1);
   assert.equal(f.access, "owner-access");
   assert.equal(f.refresh, "owner-refresh");
@@ -245,7 +303,10 @@ test("returning to one account restores desktop auto-login and guard shortcuts",
   const f = fixture(t);
   f.setResponse(multi);
   await f.auth.tauriAutoAuth({ force: true });
-  f.setResponse({ access_token: "restored-owner", refresh_token: "restored-refresh" });
+  f.setResponse({
+    access_token: "restored-owner",
+    refresh_token: "restored-refresh",
+  });
   assert.equal(await f.auth.tauriAutoAuth({ force: true }), true);
   assert.equal(f.auth.isTauriLoginRequired(), false);
   assert.equal(f.access, "restored-owner");
@@ -276,7 +337,10 @@ test("owner tokens after the last managed account is deleted clear that account'
   const f = fixture(t);
   f.setResponse(multi);
   await f.auth.tauriAutoAuth({ force: true });
-  f.setResponse({ access_token: "owner-access", refresh_token: "owner-refresh" });
+  f.setResponse({
+    access_token: "owner-access",
+    refresh_token: "owner-refresh",
+  });
   assert.equal(await f.auth.tauriAutoAuth({ force: true }), true);
   assert.deepEqual(f.transitions, [{ account: "unsloth", route: "/chat" }]);
   assert.deepEqual(f.loginModes, [["single", undefined]]);
@@ -328,9 +392,15 @@ for (const tauri of [true, false]) {
       }
       f.session.storeAuthTokens("alice-access", "alice-refresh");
       f.session.setMustChangePassword(requiresChange);
-      f.setStatus({ initialized: true, requires_password_change: !requiresChange, login_mode: "multi" });
+      f.setStatus({
+        initialized: true,
+        requires_password_change: !requiresChange,
+        login_mode: "multi",
+      });
       if (requiresChange) {
-        await assert.rejects(f.guards.requireAuth(), { to: "/change-password" });
+        await assert.rejects(f.guards.requireAuth(), {
+          to: "/change-password",
+        });
         await f.guards.requirePasswordChangeFlow();
       } else {
         await f.guards.requireAuth();
@@ -364,7 +434,11 @@ test("browser mode never invokes the desktop shell", async (t) => {
   assert.equal(f.invokeCalls, 0);
 });
 
-const SINGLE_SEEDED = { initialized: true, requires_password_change: true, login_mode: "single" };
+const SINGLE_SEEDED = {
+  initialized: true,
+  requires_password_change: true,
+  login_mode: "single",
+};
 
 test("an explicit desktop logout keeps the shell secret from signing the owner back in", async (t) => {
   const f = fixture(t);
@@ -423,11 +497,21 @@ test("Continue as owner on a multi-account install leaves the login form up", as
 });
 
 function sidebarSignOut(scope: Record<string, unknown>): () => Promise<void> {
-  const source = readFileSync(new URL("../src/components/app-sidebar.tsx", import.meta.url), "utf8");
-  const tree = ts.createSourceFile("app-sidebar.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const source = readFileSync(
+    new URL("../src/components/app-sidebar.tsx", import.meta.url),
+    "utf8",
+  );
+  const tree = ts.createSourceFile(
+    "app-sidebar.tsx",
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
   let handler = "";
   const visit = (node: ts.Node) => {
-    if (ts.isFunctionDeclaration(node) && node.name?.text === "signOut") handler = node.getText(tree);
+    if (ts.isFunctionDeclaration(node) && node.name?.text === "signOut")
+      handler = node.getText(tree);
     ts.forEachChild(node, visit);
   };
   visit(tree);
@@ -435,11 +519,23 @@ function sidebarSignOut(scope: Record<string, unknown>): () => Promise<void> {
   const { outputText } = ts.transpileModule(`return (${handler});`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   });
-  return runInNewContext(outputText, scope) as () => Promise<void>;
+  return runSource(outputText, scope) as () => Promise<void>;
 }
 
-interface SignOutCase { tauri: boolean; owner: boolean; status?: unknown; offline?: boolean; markerFails?: boolean }
-async function runSignOut({ tauri, owner, status, offline, markerFails }: SignOutCase): Promise<string[]> {
+interface SignOutCase {
+  tauri: boolean;
+  owner: boolean;
+  status?: unknown;
+  offline?: boolean;
+  markerFails?: boolean;
+}
+async function runSignOut({
+  tauri,
+  owner,
+  status,
+  offline,
+  markerFails,
+}: SignOutCase): Promise<string[]> {
   const events: string[] = [];
   await sidebarSignOut({
     isTauri: tauri,
@@ -455,7 +551,11 @@ async function runSignOut({ tauri, owner, status, offline, markerFails }: SignOu
     },
     toast: { error: () => events.push("toast") },
     t: (key: string) => key,
-    useSettingsDialogStore: { getState: () => ({ openDialog: (tab: string) => events.push(`open:${tab}`) }) },
+    useSettingsDialogStore: {
+      getState: () => ({
+        openDialog: (tab: string) => events.push(`open:${tab}`),
+      }),
+    },
     markDesktopSignedOut: async () => {
       await Promise.resolve();
       if (markerFails) throw new Error("permission denied");
@@ -467,22 +567,38 @@ async function runSignOut({ tauri, owner, status, offline, markerFails }: SignOu
       if (offline) throw new TypeError("Failed to fetch");
     },
     clearAuthTokens: () => events.push("clear"),
-    navigate: ({ to }: { to: string }) => events.push(`navigate:${to}`),
+    navigate: async ({ to }: { to: string }) => {
+      events.push(`navigate:${to}`);
+    },
   })();
   return events;
 }
 
 test("desktop Log out suppresses auto-auth before revoking, and still clears the session offline", async () => {
   const seeded = { login_mode: "single", requires_password_change: true };
-  assert.deepEqual(await runSignOut({ tauri: true, owner: true, status: seeded }), [
-    "status", "signed-out", "logout", "navigate:/login",
-  ]);
-  assert.deepEqual(await runSignOut({ tauri: true, owner: true, status: seeded, offline: true }), [
-    "status", "signed-out", "logout", "clear", "navigate:/login",
-  ]);
+  assert.deepEqual(
+    await runSignOut({ tauri: true, owner: true, status: seeded }),
+    ["status", "signed-out", "logout", "navigate:/login"],
+  );
+  assert.deepEqual(
+    await runSignOut({
+      tauri: true,
+      owner: true,
+      status: seeded,
+      offline: true,
+    }),
+    ["status", "signed-out", "logout", "clear", "navigate:/login"],
+  );
   // A managed account has no seeded password to worry about; the web build has no shell secret to hold back.
-  assert.deepEqual(await runSignOut({ tauri: true, owner: false }), ["signed-out", "logout", "navigate:/login"]);
-  assert.deepEqual(await runSignOut({ tauri: false, owner: true }), ["logout", "navigate:/login"]);
+  assert.deepEqual(await runSignOut({ tauri: true, owner: false }), [
+    "signed-out",
+    "logout",
+    "navigate:/login",
+  ]);
+  assert.deepEqual(await runSignOut({ tauri: false, owner: true }), [
+    "logout",
+    "navigate:/login",
+  ]);
 });
 
 test("a multi-account desktop owner on the seeded password sets one before Log out", async () => {
@@ -496,13 +612,25 @@ test("a multi-account desktop owner on the seeded password sets one before Log o
 
 test("desktop Log out keeps the session when the password state or the marker is unknown", async () => {
   // Status unreachable: a seeded multi-account owner would be locked out.
-  assert.deepEqual(await runSignOut({ tauri: true, owner: true }), ["status", "toast"]);
+  assert.deepEqual(await runSignOut({ tauri: true, owner: true }), [
+    "status",
+    "toast",
+  ]);
   // Marker not written: a relaunch would sign straight back in.
   const single = { login_mode: "single", requires_password_change: false };
-  assert.deepEqual(await runSignOut({ tauri: true, owner: true, status: single, markerFails: true }), [
-    "status", "toast",
-  ]);
-  assert.deepEqual(await runSignOut({ tauri: true, owner: false, markerFails: true }), ["toast"]);
+  assert.deepEqual(
+    await runSignOut({
+      tauri: true,
+      owner: true,
+      status: single,
+      markerFails: true,
+    }),
+    ["status", "toast"],
+  );
+  assert.deepEqual(
+    await runSignOut({ tauri: true, owner: false, markerFails: true }),
+    ["toast"],
+  );
 });
 
 test("a second desktop window cannot auto-sign in after another window logs out", async (t) => {

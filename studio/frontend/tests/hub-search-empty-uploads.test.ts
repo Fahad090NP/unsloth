@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
+import { runSource } from "./helpers/eval-source.ts";
 import ts from "@typescript/typescript6";
 import { classifyUnslothSupport } from "../src/features/hub/lib/unsloth-support.ts";
 import type { HfModelResult } from "../src/features/hub/hooks/use-hub-model-search.ts";
@@ -33,9 +33,10 @@ const context = {
   detectBaseModel: (): string | null => null,
   ggufRepoParams,
 };
-runInNewContext(
-  ts.transpileModule(source.slice(start, end), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText +
-    "; exports.makeMapModel = makeMapModel;",
+runSource(
+  ts.transpileModule(source.slice(start, end), {
+    compilerOptions: { target: ts.ScriptTarget.ES2022 },
+  }).outputText + "; exports.makeMapModel = makeMapModel;",
   context,
 );
 const makeMapModel = context.exports.makeMapModel;
@@ -44,15 +45,28 @@ const makeMapModel = context.exports.makeMapModel;
 const PLACEHOLDER = {
   name: "unsloth/MiniMax-M3.1-Flash-GGUF",
   pipeline_tag: "image-text-to-text",
-  tags: ["unsloth", "image-text-to-text", "base_model:MiniMaxAI/MiniMax-M3.1-Flash", "region:us"],
+  tags: [
+    "unsloth",
+    "image-text-to-text",
+    "base_model:MiniMaxAI/MiniMax-M3.1-Flash",
+    "region:us",
+  ],
 };
 const UPLOADED = [
-  { name: "unsloth/flint-GGUF", gguf: { total: 39785287456 }, tags: ["gguf", "unsloth"] },
+  {
+    name: "unsloth/flint-GGUF",
+    gguf: { total: 39785287456 },
+    tags: ["gguf", "unsloth"],
+  },
   // A mirror that drops expand=gguf still reports the tag.
   { name: "unsloth/Qwen3-8B-GGUF", tags: ["gguf"] },
   // A non-GGUF repo is never judged by this rule.
   { name: "unsloth/FLUX.1-dev-FP8", tags: ["diffusers"] },
-  { name: "unsloth/MiniMax-M3.1-Flash", safetensors: { total: 220490854016 }, tags: [] },
+  {
+    name: "unsloth/MiniMax-M3.1-Flash",
+    safetensors: { total: 220490854016 },
+    tags: [],
+  },
 ];
 
 test("the picker drops a GGUF repo with nothing uploaded yet", () => {
@@ -62,12 +76,18 @@ test("the picker drops a GGUF repo with nothing uploaded yet", () => {
 });
 
 test("listings that do not opt in keep the placeholder", () => {
-  assert.equal(makeMapModel(false, true, "", "cuda")(PLACEHOLDER)?.id, PLACEHOLDER.name);
+  assert.equal(
+    makeMapModel(false, true, "", "cuda")(PLACEHOLDER)?.id,
+    PLACEHOLDER.name,
+  );
 });
 
 test("every Hub listing in the model picker opts in", () => {
   const picker = readFileSync(
-    new URL("../src/features/model-picker/components/model-selector/pickers.tsx", import.meta.url),
+    new URL(
+      "../src/features/model-picker/components/model-selector/pickers.tsx",
+      import.meta.url,
+    ),
     "utf8",
   );
   const calls = picker.split("useHubModelSearch(").slice(1);
@@ -88,8 +108,29 @@ test("a GGUF repo's size is its largest reading, not the drafter the Hub sampled
   });
   assert.equal(nemotron?.totalParams, 120e9);
   // Metadata stays when it is the larger, more exact figure, or the name has no size.
-  assert.equal(map({ name: "unsloth/Qwen3-30B-A3B-GGUF", gguf: { total: 30.5e9 }, tags: ["gguf"] })?.totalParams, 30.5e9);
-  assert.equal(map({ name: "unsloth/flint-GGUF", gguf: { total: 39785287456 }, tags: ["gguf"] })?.totalParams, 39785287456);
+  assert.equal(
+    map({
+      name: "unsloth/Qwen3-30B-A3B-GGUF",
+      gguf: { total: 30.5e9 },
+      tags: ["gguf"],
+    })?.totalParams,
+    30.5e9,
+  );
+  assert.equal(
+    map({
+      name: "unsloth/flint-GGUF",
+      gguf: { total: 39785287456 },
+      tags: ["gguf"],
+    })?.totalParams,
+    39785287456,
+  );
   // Safetensors totals already count every weight and keep precedence.
-  assert.equal(map({ name: "unsloth/MiniMax-M3.1-Flash", safetensors: { total: 220490854016 }, tags: [] })?.totalParams, 220490854016);
+  assert.equal(
+    map({
+      name: "unsloth/MiniMax-M3.1-Flash",
+      safetensors: { total: 220490854016 },
+      tags: [],
+    })?.totalParams,
+    220490854016,
+  );
 });

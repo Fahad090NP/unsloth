@@ -3,37 +3,87 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
+import { runSource } from "./helpers/eval-source.ts";
 import ts from "@typescript/typescript6";
 
 import { readSrc } from "./helpers/kit.ts";
 
-interface Result { source: string; language: string | null; revision?: number }
-interface Props { source: string; language: string | null; enabled: boolean; streaming: boolean }
-interface Effect { deps: unknown[]; cleanup?: () => void }
+interface Result {
+  source: string;
+  language: string | null;
+  revision?: number;
+}
+interface Props {
+  source: string;
+  language: string | null;
+  enabled: boolean;
+  streaming: boolean;
+}
+interface Effect {
+  deps: unknown[];
+  cleanup?: () => void;
+}
 const source = readSrc("components/assistant-ui/markdown-text.tsx");
-const hookSource = source.slice(source.indexOf("function useFenceTokens("), source.indexOf("\n/**", source.indexOf("function useFenceTokens(")));
-const compiled = ts.transpileModule(hookSource, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.Preserve } }).outputText;
+const hookSource = source.slice(
+  source.indexOf("function useFenceTokens("),
+  source.indexOf("\n/**", source.indexOf("function useFenceTokens(")),
+);
+const compiled = ts.transpileModule(hookSource, {
+  compilerOptions: {
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.Preserve,
+  },
+}).outputText;
 
 function harness(initial: Partial<Props> = {}) {
   const slots: unknown[] = [];
   const effects = new Map<number, Effect>();
-  let pending: { index: number; deps: unknown[]; effect: () => (() => void) | undefined }[] = [];
+  let pending: {
+    index: number;
+    deps: unknown[];
+    effect: () => (() => void) | undefined;
+  }[] = [];
   let cursor = 0;
   let dirty = false;
   let mounted = true;
-  let props: Props = { source: "old source", language: "javascript", enabled: true, streaming: false, ...initial };
+  let props: Props = {
+    source: "old source",
+    language: "javascript",
+    enabled: true,
+    streaming: false,
+    ...initial,
+  };
   const jobs = new Set<() => void>();
-  const workers: { callback: (result: Result | null) => void; cancelled: boolean; patient: boolean }[] = [];
+  const workers: {
+    callback: (result: Result | null) => void;
+    cancelled: boolean;
+    patient: boolean;
+  }[] = [];
   const printing = new Set<() => boolean>();
   const calls: string[] = [];
   const late: ((result: Result) => void)[] = [];
   const cache = new Map<string, Result>();
-  const options = { mode: "defer", force: false, recent: false, offThread: false, long: false, grammar: true, workerAvailable: true };
-  const same = (a: unknown[], b: unknown[]) => a.length === b.length && a.every((value, index) => Object.is(value, b[index]));
-  const runHighlight = ({ code, language }: { code: string; language: string | null }, callback: (result: Result) => void): Result | null => {
+  const options = {
+    mode: "defer",
+    force: false,
+    recent: false,
+    offThread: false,
+    long: false,
+    grammar: true,
+    workerAvailable: true,
+  };
+  const same = (a: unknown[], b: unknown[]) =>
+    a.length === b.length &&
+    a.every((value, index) => Object.is(value, b[index]));
+  const runHighlight = (
+    { code, language }: { code: string; language: string | null },
+    callback: (result: Result) => void,
+  ): Result | null => {
     calls.push(code);
-    if (!options.grammar) { late.push(callback); return null; }
+    if (!options.grammar) {
+      late.push(callback);
+      return null;
+    }
     const result = { source: code, language };
     cache.set(`${language ?? "none"}:${code}`, result);
     return result;
@@ -41,11 +91,24 @@ function harness(initial: Partial<Props> = {}) {
   const context = {
     useState(initialValue: unknown) {
       const index = cursor++;
-      if (!(index in slots)) slots[index] = typeof initialValue === "function" ? (initialValue as () => unknown)() : initialValue;
-      return [slots[index], (value: unknown) => {
-        const next = typeof value === "function" ? (value as (previous: unknown) => unknown)(slots[index]) : value;
-        if (!Object.is(next, slots[index])) { slots[index] = next; dirty = true; }
-      }];
+      if (!(index in slots))
+        slots[index] =
+          typeof initialValue === "function"
+            ? (initialValue as () => unknown)()
+            : initialValue;
+      return [
+        slots[index],
+        (value: unknown) => {
+          const next =
+            typeof value === "function"
+              ? (value as (previous: unknown) => unknown)(slots[index])
+              : value;
+          if (!Object.is(next, slots[index])) {
+            slots[index] = next;
+            dirty = true;
+          }
+        },
+      ];
     },
     useRef(initialValue: unknown) {
       const index = cursor++;
@@ -54,48 +117,86 @@ function harness(initial: Partial<Props> = {}) {
     },
     useCallback(callback: unknown, deps: unknown[]) {
       const index = cursor++;
-      const previous = slots[index] as { callback: unknown; deps: unknown[] } | undefined;
-      if (!previous || !same(previous.deps, deps)) slots[index] = { callback, deps };
+      const previous = slots[index] as
+        { callback: unknown; deps: unknown[] } | undefined;
+      if (!previous || !same(previous.deps, deps))
+        slots[index] = { callback, deps };
       return (slots[index] as { callback: unknown }).callback;
     },
     useLayoutEffect(effect: () => (() => void) | undefined, deps: unknown[]) {
       const index = cursor++;
       const previous = effects.get(index);
-      if (!previous || !same(previous.deps, deps)) pending.push({ index, deps, effect });
+      if (!previous || !same(previous.deps, deps))
+        pending.push({ index, deps, effect });
     },
-    fenceNeedsQuietWork: (_language: unknown, _source: unknown, streaming: boolean) =>
-      !streaming && options.mode === "defer" && !options.force && !options.recent,
+    fenceNeedsQuietWork: (
+      _language: unknown,
+      _source: unknown,
+      streaming: boolean,
+    ) =>
+      !streaming &&
+      options.mode === "defer" &&
+      !options.force &&
+      !options.recent,
     queueFenceWork: (work: () => void) => {
-      if (options.force) { work(); return () => { /* empty */ }; }
+      if (options.force) {
+        work();
+        return () => {
+          /* empty */
+        };
+      }
       jobs.add(work);
-      return () => { jobs.delete(work); };
+      return () => {
+        jobs.delete(work);
+      };
     },
     trimTrailingNewlines: (body: string) => body.replace(/\n+$/, ""),
-    fenceHighlightOptions: (code: string, language: string | null) => ({ code, language }),
+    fenceHighlightOptions: (code: string, language: string | null) => ({
+      code,
+      language,
+    }),
     settlesOffThread: () => options.offThread,
     tokenizesOffThread: () => options.long,
     code: {
       highlight: runHighlight,
       highlightExact: runHighlight,
-      cached: ({ code, language }: { code: string; language: string | null }) => cache.get(`${language ?? "none"}:${code}`) ?? null,
+      cached: ({ code, language }: { code: string; language: string | null }) =>
+        cache.get(`${language ?? "none"}:${code}`) ?? null,
       cover: () => ({ result: null }),
-      seed: ({ code, language }: { code: string; language: string | null }, result: Result) => {
+      seed: (
+        { code, language }: { code: string; language: string | null },
+        result: Result,
+      ) => {
         cache.set(`${language ?? "none"}:${code}`, result);
       },
     },
-    requestFullHighlight: (_body: unknown, _language: unknown, callback: (result: Result | null) => void, _speculative: unknown, patient: boolean) => {
+    requestFullHighlight: (
+      _body: unknown,
+      _language: unknown,
+      callback: (result: Result | null) => void,
+      _speculative: unknown,
+      patient: boolean,
+    ) => {
       if (!options.workerAvailable) return null;
       const worker = { callback, cancelled: false, patient };
       workers.push(worker);
-      return () => { worker.cancelled = true; };
+      return () => {
+        worker.cancelled = true;
+      };
     },
     awaitWorker: (_chars: unknown, callback: () => boolean) => {
       printing.add(callback);
-      return () => { printing.delete(callback); };
+      return () => {
+        printing.delete(callback);
+      };
     },
   };
-  const hook = runInNewContext(compiled + "\nreturn useFenceTokens;", context) as
-    (source: string, language: string | null, enabled: boolean, streaming: boolean) => Result | null;
+  const hook = runSource(compiled + "\nreturn useFenceTokens;", context) as (
+    source: string,
+    language: string | null,
+    enabled: boolean,
+    streaming: boolean,
+  ) => Result | null;
   let result: Result | null = null;
   const isDirty = () => dirty;
   const render = (change: Partial<Props> = {}) => {
@@ -107,12 +208,20 @@ function harness(initial: Partial<Props> = {}) {
       dirty = false;
       cursor = 0;
       pending = [];
-      result = hook(props.source, props.language, props.enabled, props.streaming);
+      result = hook(
+        props.source,
+        props.language,
+        props.enabled,
+        props.streaming,
+      );
       if (isDirty()) continue;
       for (const entry of pending) {
         effects.get(entry.index)?.cleanup?.();
         const cleanup = entry.effect();
-        effects.set(entry.index, { deps: entry.deps, cleanup: cleanup ?? undefined });
+        effects.set(entry.index, {
+          deps: entry.deps,
+          cleanup: cleanup ?? undefined,
+        });
       }
     } while (isDirty());
     return result;
@@ -128,7 +237,18 @@ function harness(initial: Partial<Props> = {}) {
     for (const entry of effects.values()) entry.cleanup?.();
     mounted = false;
   };
-  return { render, flushOne, unmount, jobs, workers, printing, calls, late, options, result: () => result };
+  return {
+    render,
+    flushOne,
+    unmount,
+    jobs,
+    workers,
+    printing,
+    calls,
+    late,
+    options,
+    result: () => result,
+  };
 }
 
 test("cold completed fences perform no tokenization before their queued turn", () => {
@@ -149,7 +269,10 @@ test("streaming, window, off and recent completions retain immediate origin", ()
     assert.equal(h.render()?.source, "old source");
     h.options.recent = false;
     h.options.mode = "defer";
-    assert.equal(h.render({ source: "next source", streaming: false })?.source, "next source");
+    assert.equal(
+      h.render({ source: "next source", streaming: false })?.source,
+      "next source",
+    );
     assert.equal(h.jobs.size, 0);
     h.unmount();
   }

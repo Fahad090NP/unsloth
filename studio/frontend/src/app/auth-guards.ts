@@ -78,10 +78,9 @@ async function fetchAuthStatus(): Promise<AuthStatus> {
 }
 
 function authRedirect(to: string): never {
-  // TanStack Router performs the redirect by throwing this response itself.
-  redirect({ to, throw: true });
-  // Unreachable; keeps the `never` contract for callers.
-  throw new Error("redirect() did not throw");
+  // TanStack Router turns this into a thrown redirect response.
+  // eslint-disable-next-line @typescript-eslint/only-throw-error
+  throw redirect({ to });
 }
 
 export async function requireAuth(): Promise<void> {

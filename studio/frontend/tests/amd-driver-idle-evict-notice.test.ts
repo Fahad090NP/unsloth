@@ -7,7 +7,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
+import { runSource } from "./helpers/eval-source.ts";
 
 import { readSrcAsync, registerBundlerResolver } from "./helpers/kit.ts";
 
@@ -37,11 +37,14 @@ function noticeFor(
   gpuInventory: { driver_warning?: Warning | null } | null,
   dismissedDriverWarning: string | null = null,
 ) {
-  const run = (gpuInventory: { driver_warning?: Warning | null } | null, dismissedDriverWarning: string | null) =>
-    runInNewContext(
-      `${derivation}\n return driverWarning;`,
-      { gpuInventory, dismissedDriverWarning },
-    ) as Warning | null;
+  const run = (
+    gpuInventory: { driver_warning?: Warning | null } | null,
+    dismissedDriverWarning: string | null,
+  ) =>
+    runSource(`${derivation}\n return driverWarning;`, {
+      gpuInventory,
+      dismissedDriverWarning,
+    }) as Warning | null;
   return run(gpuInventory, dismissedDriverWarning);
 }
 
