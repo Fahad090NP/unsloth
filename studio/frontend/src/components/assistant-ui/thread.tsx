@@ -612,6 +612,22 @@ interface PromptQueueRun {
   deepResearchConsumed: boolean;
 }
 
+/** Commit fields on a live queue run; the object identity is part of the coordination contract. */
+function setPromptQueueRunFields(
+  run: PromptQueueRun,
+  fields: Partial<Omit<PromptQueueRun, "id">>,
+) {
+  Object.assign(run, fields);
+}
+
+/** Same for a queue item, whose identity is matched by the active-run checks. */
+function setPromptQueueItemFields(
+  item: PromptQueueItem,
+  fields: Partial<Omit<PromptQueueItem, "id">>,
+) {
+  Object.assign(item, fields);
+}
+
 const PROMPT_QUEUE_INDEXING_RETRY_MS = 500;
 const PROMPT_QUEUE_DISPATCH_RETRY_MS = 500;
 const PROMPT_QUEUE_TARGET_STATE_POLL_MS = 50;
@@ -657,11 +673,11 @@ function clearPromptQueueRetryTimer(run: PromptQueueRun) {
     return;
   }
   clearTimeout(run.retryTimer);
-  run.retryTimer = null;
+  setPromptQueueRunFields(run, { retryTimer: null });
 }
 
 function deletePromptQueueRun(run: PromptQueueRun) {
-  run.generation += 1;
+  setPromptQueueRunFields(run, { generation: run.generation + 1 });
   clearPromptQueueRetryTimer(run);
   promptQueueActiveRunIds.delete(run.id);
   promptQueueDispatchingRunIds.delete(run.id);
@@ -714,10 +730,10 @@ function handleQueuedPromptAppendFailure(
   if (!isActivePromptQueueItem(run, item, run.generation)) {
     return;
   }
-  item.dispatched = false;
+  setPromptQueueItemFields(item, { dispatched: false });
   promptQueueActiveRunIds.delete(run.id);
   syncPromptQueueUI();
-  item.dispatchRetries += 1;
+  setPromptQueueItemFields(item, { dispatchRetries: item.dispatchRetries + 1 });
   if (item.dispatchRetries > PROMPT_QUEUE_MAX_DISPATCH_RETRIES) {
     console.error("Prompt queue dispatch failed permanently:", error);
     try {
@@ -745,14 +761,14 @@ function consumePromptQueueDeepResearch(
   ) {
     return;
   }
-  run.deepResearchConsumed = true;
+  setPromptQueueRunFields(run, { deepResearchConsumed: true });
   for (const item of run.items) {
     item.target.consumeDeepResearch();
   }
 }
 
 function appendQueuedPrompt(run: PromptQueueRun, item: PromptQueueItem) {
-  item.dispatched = true;
+  setPromptQueueItemFields(item, { dispatched: true });
   promptQueueActiveRunIds.add(run.id);
   syncPromptQueueUI();
   try {
@@ -847,12 +863,13 @@ function scheduleQueuedPromptDispatch(
   generation = run.generation,
 ) {
   clearPromptQueueRetryTimer(run);
-  run.retryTimer = setTimeout(() => {
-    run.retryTimer = null;
+  const retryTimer = setTimeout(() => {
+    setPromptQueueRunFields(run, { retryTimer: null });
     if (isActivePromptQueueItem(run, item, generation)) {
       requestPromptQueuePump();
     }
   }, delay);
+  setPromptQueueRunFields(run, { retryTimer });
 }
 
 function isPromptQueueRunReadyToDispatch(run: PromptQueueRun) {
@@ -951,8 +968,10 @@ async function dispatchQueuedPrompt(
       useChatRuntimeStore.getState().runningByThreadId,
     )
   ) {
-    run.waitingForTargetIdle = true;
-    run.prevStoreRunning = true;
+    setPromptQueueRunFields(run, {
+      waitingForTargetIdle: true,
+      prevStoreRunning: true,
+    });
     promptQueueActiveRunIds.delete(run.id);
     syncPromptQueueUI();
     ensurePromptQueueSubscription();
@@ -1319,9 +1338,11 @@ function advancePromptQueue(run: PromptQueueRun) {
     deletePromptQueueRun(run);
     return;
   }
-  run.index = nextIndex;
-  run.waitingForTargetIdle = false;
-  run.prevStoreRunning = false;
+  setPromptQueueRunFields(run, {
+    index: nextIndex,
+    waitingForTargetIdle: false,
+    prevStoreRunning: false,
+  });
   syncPromptQueueUI();
   requestPromptQueuePump(100);
 }
@@ -1340,8 +1361,8 @@ function schedulePromptQueueTargetStatePoll(run: PromptQueueRun) {
     return;
   }
   const generation = run.generation;
-  run.retryTimer = setTimeout(() => {
-    run.retryTimer = null;
+  const retryTimer = setTimeout(() => {
+    setPromptQueueRunFields(run, { retryTimer: null });
     if (
       promptQueueRuns.get(run.id) !== run ||
       generation !== run.generation ||
@@ -1360,6 +1381,7 @@ function schedulePromptQueueTargetStatePoll(run: PromptQueueRun) {
       schedulePromptQueueTargetStatePoll(run);
     }
   }, PROMPT_QUEUE_TARGET_STATE_POLL_MS);
+  setPromptQueueRunFields(run, { retryTimer });
 }
 
 function getRunningThreadCount(runningByThreadId: Record<string, boolean>) {
@@ -1381,7 +1403,7 @@ function handlePromptQueueRunState(
   }
   const isRunning = isPromptQueueRunTargetRunning(run, runningByThreadId);
   const wasRunning = run.prevStoreRunning;
-  run.prevStoreRunning = isRunning;
+  setPromptQueueRunFields(run, { prevStoreRunning: isRunning });
   if (!wasRunning || isRunning) {
     return;
   }
@@ -1395,7 +1417,7 @@ function handlePromptQueueRunState(
     (run.index >= 0 && !getActivePromptQueueItem(run).dispatched)
   ) {
     clearPromptQueueRetryTimer(run);
-    run.waitingForTargetIdle = false;
+    setPromptQueueRunFields(run, { waitingForTargetIdle: false });
     if (run.index >= 0 && run.index < run.items.length) {
       requestPromptQueuePump(50);
     }
@@ -1652,8 +1674,10 @@ function stopPromptQueueRunForThreadIds(threadIds: string[]) {
 function waitForPromptQueueTargetIdle(run: PromptQueueRun) {
   clearPromptQueueRetryTimer(run);
   promptQueueActiveRunIds.delete(run.id);
-  run.waitingForTargetIdle = true;
-  run.prevStoreRunning = true;
+  setPromptQueueRunFields(run, {
+    waitingForTargetIdle: true,
+    prevStoreRunning: true,
+  });
   syncPromptQueueUI();
   ensurePromptQueueSubscription();
 }
@@ -1680,7 +1704,9 @@ function stopLocalPromptQueueRun(run: PromptQueueRun) {
   }
 
   const heldItems = plan.heldItemIndexes.map((index) => run.items[index]);
-  run.items = plan.retainedItemIndexes.map((index) => run.items[index]);
+  setPromptQueueRunFields(run, {
+    items: plan.retainedItemIndexes.map((index) => run.items[index]),
+  });
   for (const item of heldItems) {
     // Held like a failed load: the row stays editable and Resume sends it to the model loaded then.
     item.blockedByModelFailure = true;
@@ -1712,7 +1738,7 @@ function stopLocalPromptQueueRun(run: PromptQueueRun) {
   }
   if (getActivePromptQueueItem(run).blockedByModelFailure) {
     // Invalidate an attempt already underway for the now-held item.
-    run.generation += 1;
+    setPromptQueueRunFields(run, { generation: run.generation + 1 });
     clearPromptQueueRetryTimer(run);
     promptQueueDispatchingRunIds.delete(run.id);
     promptQueueActiveRunIds.delete(run.id);
@@ -3194,12 +3220,22 @@ const Composer: FC<{
   const uiSpaceScale = useUiSpaceScale();
   const oneRowHeight = Math.round(40 * uiSpaceScale);
   const [editorHeight, setEditorHeight] = useState(40);
-  const [isWritingExpanded, setIsWritingExpanded] = useState(false);
+  const threadListItemId = useAuiState(
+    ({ threadListItem }) => threadListItem.id,
+  );
+  // Not referenceThreadId: it moves null -> remote id on first persist of the same composer.
+  const composerIdentity = threadListItemId;
+  // Keyed by composer identity: switching chats collapses without a state-resetting effect.
+  const [expandedComposerIdentity, setExpandedComposerIdentity] =
+    useState<string | null>(null);
+  const isWritingExpanded = expandedComposerIdentity === composerIdentity;
   const detachFromBottom = useDetachThreadFromBottom();
   const scrollThreadToBottom = useScrollThreadToBottom();
   const threadEmpty = useAuiState(({ thread }) => thread.isEmpty);
   const toggleWritingExpanded = () => {
-    setIsWritingExpanded((expanded) => !expanded);
+    setExpandedComposerIdentity((current) =>
+      current === composerIdentity ? null : composerIdentity,
+    );
     inputRef.current?.focus({ preventScroll: true });
   };
   // Welcome page: the bottom pin's stabilizer padding shifted the expanded frame up. On every
@@ -3400,11 +3436,6 @@ const Composer: FC<{
   // A parked send must not fire on a failed drop. Assigned below once the callback exists.
   const cancelQueuedSendRef = useRef<(() => void) | null>(null);
   const composerIdentityRef = useRef("");
-  const threadListItemId = useAuiState(
-    ({ threadListItem }) => threadListItem.id,
-  );
-  // Not referenceThreadId: it moves null -> remote id on first persist of the same composer.
-  const composerIdentity = threadListItemId;
   useEffect(() => {
     composerIdentityRef.current = composerIdentity;
   }, [composerIdentity]);
@@ -4194,7 +4225,7 @@ const Composer: FC<{
     );
     // Here, not beside send(): handleSubmit returns early on the three queueing
     // paths, which empty the composer too.
-    setIsWritingExpanded(false);
+    setExpandedComposerIdentity(null);
   }, [imeSessionOpenRef]);
   const clearStoredDraft = useCallback(() => {
     if (draftSaveTimerRef.current !== null) {
@@ -4583,7 +4614,6 @@ const Composer: FC<{
             return;
           }
           // The runtime's append is typed void but may return a promise; keep the rejection handled.
-          if (!thread) return;
           const activeThread = thread;
           const appendToThread = activeThread.append.bind(activeThread) as (
             ...args: Parameters<typeof activeThread.append>
@@ -4993,7 +5023,9 @@ const Composer: FC<{
     heldTextRef.current = null;
     dismissWaitToast();
   }, [dismissWaitToast]);
-  cancelQueuedSendRef.current = cancelQueuedSend;
+  useLayoutEffect(() => {
+    cancelQueuedSendRef.current = cancelQueuedSend;
+  }, [cancelQueuedSend]);
 
   const enqueueSend = useCallback(
     (
@@ -5304,9 +5336,6 @@ const Composer: FC<{
   usePublishedFrame(composerEl);
   const dictationBaseTextRef = useRef("");
   const dictationComposerRef = useRef("");
-  useEffect(() => {
-    setIsWritingExpanded(false);
-  }, [composerIdentity]);
   // Window capture runs before the document listeners, where cancelOnEscape preventDefaults
   // every Escape, so defaultPrevented cannot tell them apart.
   useEffect(() => {
@@ -5318,7 +5347,7 @@ const Composer: FC<{
         event.target instanceof Node &&
         editorRef.current?.contains(event.target)
       ) {
-        setIsWritingExpanded(false);
+        setExpandedComposerIdentity(null);
       }
     };
     window.addEventListener("keydown", collapseOnEscape, true);
@@ -6725,8 +6754,7 @@ const ToolStatusDisplay: FC = () => {
       return;
     }
 
-    setNow(Date.now());
-
+    // Elapsed is clamped from the store start time, so a new run reads 0 until the next tick.
     // 300ms debounce unless already visible, so short tool calls never flash the badge.
     let showTimer: ReturnType<typeof setTimeout> | undefined;
     if (!visibleRef.current) {
@@ -8856,17 +8884,15 @@ const AssistantActionBar: FC = () => {
             </TooltipIconButton>
           </ActionBarPrimitive.Reload>
         )}
-        {ttsEnabled && (
-          <MessagePrimitive.If speaking={false}>
-            <ActionBarPrimitive.Speak asChild={true}>
-              <TooltipIconButton tooltip="Read aloud" aria-label="Read aloud">
-                <HugeiconsIcon icon={ReadAloudIcon} strokeWidth={1.75} className="size-icon" />
-              </TooltipIconButton>
-            </ActionBarPrimitive.Speak>
-          </MessagePrimitive.If>
+        {ttsEnabled && !speaking && (
+          <ActionBarPrimitive.Speak asChild={true}>
+            <TooltipIconButton tooltip="Read aloud" aria-label="Read aloud">
+              <HugeiconsIcon icon={ReadAloudIcon} strokeWidth={1.75} className="size-icon" />
+            </TooltipIconButton>
+          </ActionBarPrimitive.Speak>
         )}
         {/* Not gated on ttsEnabled: disabling it mid-read must not remove the only stop control. */}
-        <MessagePrimitive.If speaking={true}>
+        {speaking && (
           <ActionBarPrimitive.StopSpeaking asChild={true}>
             <TooltipIconButton
               tooltip="Stop reading"
@@ -8876,7 +8902,7 @@ const AssistantActionBar: FC = () => {
               <HugeiconsIcon icon={VolumeMute02Icon} strokeWidth={1.75} className="size-icon" />
             </TooltipIconButton>
           </ActionBarPrimitive.StopSpeaking>
-        </MessagePrimitive.If>
+        )}
         <ForkCountBadge />
         <ForkMessageButton />
         <DeleteMessageButton />

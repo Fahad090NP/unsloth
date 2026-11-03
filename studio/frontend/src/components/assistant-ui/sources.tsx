@@ -97,7 +97,8 @@ function Source({
   ...props
 }: SourceProps) {
   // `asChild` is consumed by this wrapper (the Badge below always uses it).
-  delete props.asChild;
+  const forwardedProps = { ...props };
+  delete forwardedProps.asChild;
   return (
     <Badge
       asChild
@@ -118,7 +119,7 @@ function Source({
           }
           onClick?.(e);
         }}
-        {...(props)}
+        {...forwardedProps}
       />
     </Badge>
   );

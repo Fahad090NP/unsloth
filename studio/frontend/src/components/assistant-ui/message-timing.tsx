@@ -193,7 +193,7 @@ export const MessageTiming: FC<{
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Prompt</span>
                   <span className="font-mono tabular-nums">
-                    {formatNumber((st.diffusion_prompt_n ?? st.prompt_n) as number)} tokens
+                    {formatNumber(st.diffusion_prompt_n ?? st.prompt_n ?? 0)} tokens
                   </span>
                 </div>
               )}

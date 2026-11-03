@@ -39,10 +39,11 @@ function streamdownIcon(icon: typeof Copy01Icon) {
   }: ComponentProps<"svg"> & { size?: number }) {
     // Dropped rather than forwarded: SVG types strokeWidth `string | number`,
     // while HugeiconsIcon expects a number.
-    delete props.strokeWidth;
+    const forwardedProps = { ...props };
+    delete forwardedProps.strokeWidth;
     return (
       <HugeiconsIcon
-        {...(props as ComponentProps<typeof HugeiconsIcon>)}
+        {...(forwardedProps as ComponentProps<typeof HugeiconsIcon>)}
         icon={icon}
         size={size}
       />
@@ -144,7 +145,8 @@ export function MarkdownTable({
 }: ComponentProps<"table"> & ExtraProps) {
   const t = useT();
   // `node` is react-markdown's AST node, not a DOM prop.
-  delete props.node;
+  const tableProps = { ...props };
+  delete tableProps.node;
   const { isAnimating } = useContext(StreamdownContext);
   const [expanded, setExpanded] = useState(false);
   const label = defaultTranslations.viewFullscreen;
@@ -165,7 +167,7 @@ export function MarkdownTable({
       onPointerEnter={repaint}
       onFocus={repaint}
     >
-      <TableScroll className={className} props={props}>
+      <TableScroll className={className} props={tableProps}>
         {children}
       </TableScroll>
       <div className="aui-md-table-actions">
@@ -197,7 +199,7 @@ export function MarkdownTable({
         >
           <DialogTitle className="sr-only">{label}</DialogTitle>
           <div className="aui-md-table aui-md-table-dialog max-h-full max-w-[min(72rem,100%)] overflow-y-auto rounded-3xl bg-popover px-6 py-8 ring-1 ring-border/60 sm:px-14 sm:py-12">
-            <TableScroll className={className} props={props}>
+            <TableScroll className={className} props={tableProps}>
               {children}
             </TableScroll>
           </div>
@@ -227,10 +229,11 @@ export function StaticMarkdownTable({
   ...props
 }: ComponentProps<"table"> & ExtraProps) {
   // `node` is react-markdown's AST node, not a DOM prop.
-  delete props.node;
+  const tableProps = { ...props };
+  delete tableProps.node;
   return (
     <div className="aui-md-table">
-      <TableScroll className={className} props={props}>
+      <TableScroll className={className} props={tableProps}>
         {children}
       </TableScroll>
     </div>
