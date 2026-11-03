@@ -172,7 +172,10 @@ export class PcmRecorder implements SegmentRecorder {
   }
 
   /** `timesliceMs` is ignored by this recorder; the parameter exists only for MediaRecorder parity. */
-  start(_timesliceMs?: number): void {
+  start(timesliceMs?: number): void {
+    if (timesliceMs !== undefined) {
+      // Ignored: kept only so callers can treat both recorders alike.
+    }
     if (this.recordingState !== "inactive") return;
     this.recordingState = "recording";
     // Started before a user gesture on some engines; a suspended context delivers no audioprocess callbacks at all.

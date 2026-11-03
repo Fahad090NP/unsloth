@@ -76,15 +76,20 @@ export async function exportConversationByFormat(
 ): Promise<void> {
   switch (format) {
     case "raw-jsonl":
-      return await exportConversationRawJsonl(threadId);
+      await exportConversationRawJsonl(threadId);
+      return;
     case "messages-jsonl":
-      return await exportConversationMessagesJsonl(threadId);
+      await exportConversationMessagesJsonl(threadId);
+      return;
     case "csv":
-      return await exportConversationCsv(threadId);
+      await exportConversationCsv(threadId);
+      return;
     case "sharegpt-jsonl":
-      return await exportConversationShareGPT(threadId);
+      await exportConversationShareGPT(threadId);
+      return;
     case CONVERSATION_MARKDOWN_FORMAT:
-      return await exportConversationMarkdown(threadId);
+      await exportConversationMarkdown(threadId);
+      return;
   }
 }
 

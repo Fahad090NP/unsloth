@@ -26,30 +26,28 @@ import {
 import { authFetch, getAuthToken } from "@/features/auth";
 import { withSandboxAttachmentPaths } from "../sandbox-attachments";
 import { prepareHfTokenForUse } from "@/features/hf-auth";
-import { DOWNLOAD_KIND } from "@/features/hub";
 import {
+  DOWNLOAD_KIND,
   downloadManager,
+  isHiddenModelId,
   jobKeyOf,
+  type LocalModelInfo,
+  listLocalModels,
   selectActiveJob,
   subscribeJobListeners,
   useDownloadManagerStore,
-} from "@/features/hub/download-manager/download-manager-controller";
-import {
-  type LocalModelInfo,
-  listLocalModels,
 } from "@/features/hub";
-import { isHiddenModelId } from "@/features/hub";
 import {
+  fetchLoadExtraArgs,
+  isMlxId,
   isServedByLlamaCpp,
+  loadManagedLlamaFlags,
+  loadedContextFields,
   resumesThought,
   isServedByMlx,
-  loadedContextFields,
   resolveInitialConfig,
+  sanitizeStoredExtraArgs,
 } from "@/features/model-picker";
-import { isMlxId } from "@/features/model-picker/components/model-selector/recommended-fit";
-import { loadManagedLlamaFlags } from "@/features/model-picker/api/llama-flags";
-import { fetchLoadExtraArgs } from "@/features/model-picker/api/model-overrides";
-import { sanitizeStoredExtraArgs } from "@/features/model-picker/model-config/llama-extra-args";
 import { usePlatformStore } from "@/config/env";
 import { resolveSpeculativeType } from "@/lib/speculative-modes";
 
@@ -77,10 +75,12 @@ function userTexts(
     .filter((message) => message.role === "user")
     .map((message) => messageText(message.content));
 }
-import { endBrowserAgentRun } from "@/features/browser/agent/agent-store";
-import { browserAgentToolsForTurn } from "@/features/browser/agent/tools";
-import { shownBrowserChat } from "@/features/browser/panel-availability";
-import { projectHasSources } from "@/features/rag/api/rag-api";
+import {
+  browserAgentToolsForTurn,
+  endBrowserAgentRun,
+  shownBrowserChat,
+} from "@/features/browser";
+import { projectHasSources } from "@/features/rag";
 import {
   IMAGE_SENTINEL_TOOLS,
   SANDBOX_FILE_TOOLS,
@@ -364,7 +364,7 @@ import {
 import {
   createThinkTagTracker,
   extractDeltaText,
-  parseAssistantContent,
+  type parseAssistantContent,
 } from "../utils/parse-assistant-content";
 import { createSegmentedAssistantText } from "../utils/incremental-assistant-content";
 import {
@@ -683,6 +683,7 @@ function parseSystemVariablesMap(raw: string): Record<string, unknown> {
       return parsed as Record<string, unknown>;
     }
   } catch {
+    // Malformed variables JSON: fall back to an empty map below.
   }
   return {};
 }
@@ -694,7 +695,7 @@ function hasOwn(object: object, key: string): boolean {
 function getNestedValue(
   values: Record<string, unknown>,
   path: string,
-): unknown | undefined {
+): unknown {
   const parts = path
     .split(".")
     .map((part) => part.trim())
@@ -757,7 +758,9 @@ function stringifyTemplateValue(value: unknown): string {
   try {
     return JSON.stringify(value);
   } catch {
-    return String(value);
+    return typeof value === "object"
+      ? Object.prototype.toString.call(value)
+      : String(value);
   }
 }
 
@@ -795,7 +798,7 @@ function resolveSystemPromptVariables(
 
 export const ThreadAutosaveHandle: ThreadAutosaveHandle = {
   registerFirstSave(threadId, promise) {
-    const trackedPromise = promise.catch(() => {});
+    const trackedPromise = promise.catch(() => undefined);
     const cleanupPromise = trackedPromise.finally(() => {
       if (pendingFirstThreadSaves.get(threadId) === cleanupPromise) {
         pendingFirstThreadSaves.delete(threadId);
@@ -884,14 +887,17 @@ function buildTiming(
 }
 
 function collectTextParts(message: RunMessage): string[] {
-  message = modelVisibleMessage(message);
-  const textParts = message.content
+  const visibleMessage = modelVisibleMessage(message);
+  const textParts = visibleMessage.content
     .filter((part) => part.type === "text")
     .map((part) => part.text);
 
-  if ("attachments" in message && (message.attachments?.length ?? 0) > 0) {
-    for (const attachment of message.attachments ?? []) {
-      for (const part of attachment.content ?? []) {
+  if (
+    "attachments" in visibleMessage &&
+    (visibleMessage.attachments?.length ?? 0) > 0
+  ) {
+    for (const attachment of visibleMessage.attachments ?? []) {
+      for (const part of attachment.content) {
         if (part.type === "text") {
           textParts.push(part.text);
         }
@@ -905,7 +911,7 @@ function collectTextParts(message: RunMessage): string[] {
 function collectImageParts(
   message: RunMessage,
 ): { type: "image_url"; image_url: { url: string } }[] {
-  message = modelVisibleMessage(message);
+  const visibleMessage = modelVisibleMessage(message);
   const parts: { type: "image_url"; image_url: { url: string } }[] = [];
   const pushImagePart = (part: { type: string }) => {
     if (part.type !== "image" || !("image" in part)) {
@@ -925,13 +931,16 @@ function collectImageParts(
     });
   };
 
-  for (const part of message.content ?? []) {
+  for (const part of visibleMessage.content) {
     pushImagePart(part);
   }
 
-  if ("attachments" in message && (message.attachments?.length ?? 0) > 0) {
-    for (const attachment of message.attachments ?? []) {
-      for (const part of attachment.content ?? []) {
+  if (
+    "attachments" in visibleMessage &&
+    (visibleMessage.attachments?.length ?? 0) > 0
+  ) {
+    for (const attachment of visibleMessage.attachments ?? []) {
+      for (const part of attachment.content) {
         pushImagePart(part);
       }
     }
@@ -1044,10 +1053,11 @@ type ToolPartReplayMetadata = {
 function getToolPartReplayMetadata(
   tc: ToolCallMessagePart,
 ): ToolPartReplayMetadata {
-  const toolNameLower = (tc.toolName ?? "").toLowerCase();
+  const toolNameLower = tc.toolName.toLowerCase();
+  const rawArgs: unknown = tc.args;
   const argsObj =
-    tc.args && typeof tc.args === "object"
-      ? (tc.args as Record<string, unknown>)
+    rawArgs && typeof rawArgs === "object"
+      ? (rawArgs as Record<string, unknown>)
       : null;
   const argsGoogle =
     argsObj && typeof argsObj.google === "object" && argsObj.google !== null
@@ -1128,7 +1138,7 @@ function serializeAssistantToolCallPart(
     id: tc.toolCallId,
     type: "function" as const,
     function: {
-      name: tc.toolName ?? "",
+      name: tc.toolName,
       arguments: argumentsStr,
     },
   };
@@ -1221,13 +1231,13 @@ function serializeToolResultPart(
     // Backend ChatMessage rejects role="tool" with empty content; a sentinel JSON round-trips it.
     content = result.length > 0 ? result : JSON.stringify({ result: "" });
   } else if (
-    isMcpUiToolResult(result, tc.toolName ?? "") ||
+    isMcpUiToolResult(result, tc.toolName) ||
     // Unwrap the live parser's exact {text, images} wrapper by shape, or JSON.stringify replays the
     // base64 as prompt text; a client tool's result with other fields keeps normal serialization.
     (isMcpImageToolResult(result) &&
       (isImageToolName(tc.toolName) || isBareMcpImageWrapper(result))) ||
     isSearchImagesToolResult(result) ||
-    isSandboxWrapper(result, tc.toolName ?? "")
+    isSandboxWrapper(result, tc.toolName)
   ) {
     // Replay stdout only; image tokens stay since they resolve against the producing message.
     const replayText = isSearchImagesToolResult(result)
@@ -1239,14 +1249,17 @@ function serializeToolResultPart(
     if (isMcpImageToolResult(result) && isImageToolName(tc.toolName)) {
       content += mcpImagesEnvelope(result.images);
     } else if (isMcpToolName(tc.toolName)) {
-      const uiImages = mcpUiReplayImages(result, tc.toolName ?? "");
+      const uiImages = mcpUiReplayImages(result, tc.toolName);
       if (uiImages.length > 0) content += mcpImagesEnvelope(uiImages);
     }
   } else {
     try {
       content = JSON.stringify(result);
     } catch {
-      content = String(result);
+      content =
+        typeof result === "object"
+          ? Object.prototype.toString.call(result)
+          : String(result);
     }
   }
 
@@ -1331,7 +1344,9 @@ function setAssistantCodexReasoning(
     !Array.isArray(message.extra_content)
       ? (message.extra_content as Record<string, unknown>)
       : {};
-  message.extra_content = { ...extra, openai_codex_reasoning: reasoning };
+  Object.assign(message, {
+    extra_content: { ...extra, openai_codex_reasoning: reasoning },
+  });
 }
 
 function setAssistantOpenAIResponsesReasoning(
@@ -1345,7 +1360,9 @@ function setAssistantOpenAIResponsesReasoning(
     !Array.isArray(message.extra_content)
       ? (message.extra_content as Record<string, unknown>)
       : {};
-  message.extra_content = { ...extra, openai_responses_reasoning: reasoning };
+  Object.assign(message, {
+    extra_content: { ...extra, openai_responses_reasoning: reasoning },
+  });
 }
 
 function providerCompactionAssistant(
@@ -1636,7 +1653,7 @@ function serializeAssistantReplayMessages(
     pendingLocalToolRoundId = null;
   };
 
-  for (const part of message.content ?? []) {
+  for (const part of message.content) {
     if (part.type === "reasoning") {
       if (pendingToolCalls.length > 0) {
         flushAssistantAndToolResults();
@@ -1714,30 +1731,27 @@ function toOpenAIMessages(
   includeReasoningContent = false,
   expandGeminiContinuations = false,
 ): SerializedMessage[] {
-  message = modelVisibleMessage(message);
-  if (
-    message.role !== "system" &&
-    message.role !== "user" &&
-    message.role !== "assistant"
-  ) {
+  const visibleMessage = modelVisibleMessage(message);
+  const role: string = visibleMessage.role;
+  if (role !== "system" && role !== "user" && role !== "assistant") {
     return [];
   }
 
-  if (message.role === "assistant") {
+  if (visibleMessage.role === "assistant") {
     const serialized = fillStoppedAssistantReplay(
-      message,
-      serializeAssistantReplayMessages(message, includeReasoningContent),
+      visibleMessage,
+      serializeAssistantReplayMessages(visibleMessage, includeReasoningContent),
     );
     return expandGeminiContinuations
-      ? expandGeminiContinuationReplay(message, serialized)
+      ? expandGeminiContinuationReplay(visibleMessage, serialized)
       : serialized;
   }
 
-  const textContent = collectTextParts(message).join("\n");
-  const imageParts = collectImageParts(message);
+  const textContent = collectTextParts(visibleMessage).join("\n");
+  const imageParts = collectImageParts(visibleMessage);
   return [
     {
-      role: message.role,
+      role: visibleMessage.role,
       content: buildReplayContent(textContent, imageParts),
     },
   ];
@@ -1745,7 +1759,7 @@ function toOpenAIMessages(
 
 /** Tool calls do not count: a dropped uncarryable call would merge two user turns. */
 function assistantTurnCarriesPayload(message: RunMessage): boolean {
-  for (const part of message.content ?? []) {
+  for (const part of message.content) {
     // sanitizeAssistantReplayText only substitutes, never empties, so the raw part is equivalent here.
     if (part.type === "text" && part.text.trim().length > 0) return true;
   }
@@ -1817,7 +1831,7 @@ function isAbandonedAssistantTurn(
   // A reasoning-only turn is a reply even if the provider serialises reasoning empty.
   if (
     !assistantTurnEndedEarly(message) &&
-    (message.content ?? []).some((part) => part.type === "reasoning")
+    message.content.some((part) => part.type === "reasoning")
   ) {
     return false;
   }
@@ -1856,7 +1870,7 @@ function pruneOutboundHistory(
     if (refused || abandoned[index]) {
       if (refused || index < lastSurviving) {
         const last = surviving.at(-1);
-        if (last && last.role === "user") surviving.pop();
+        if (last?.role === "user") surviving.pop();
       }
       continue;
     }
@@ -1877,23 +1891,23 @@ function extractImageBase64(input: string): string | undefined {
 }
 
 function findLatestUserImageBase64(messages: RunMessages): string | undefined {
-  messages = messages.map(modelVisibleMessage);
-  for (let i = messages.length - 1; i >= 0; i -= 1) {
-    const message = messages[i];
-    if (!message || message.role !== "user") {
+  const visibleMessages = messages.map(modelVisibleMessage);
+  for (let i = visibleMessages.length - 1; i >= 0; i -= 1) {
+    const message: RunMessage | undefined = visibleMessages[i];
+    if (message?.role !== "user") {
       continue;
     }
 
-    for (const part of message.content ?? []) {
+    for (const part of message.content) {
       if (part.type === "image" && "image" in part) {
         const encoded = extractImageBase64(part.image);
         if (encoded) return encoded;
       }
     }
 
-    if ("attachments" in message && (message.attachments.length ?? 0) > 0) {
-      for (const attachment of message.attachments ?? []) {
-        for (const part of attachment.content ?? []) {
+    if ("attachments" in message && message.attachments.length > 0) {
+      for (const attachment of message.attachments) {
+        for (const part of attachment.content) {
           if (part.type !== "image") {
             continue;
           }
@@ -1912,7 +1926,7 @@ function findLatestUserImageBase64(messages: RunMessages): string | undefined {
 function extractAudioPartBase64(
   part: { type: string } | null | undefined,
 ): string | undefined {
-  if (!part || part.type !== "audio" || !("audio" in part)) return undefined;
+  if (part?.type !== "audio" || !("audio" in part)) return undefined;
   const audioPart = (
     part as unknown as {
       type: "audio";
@@ -1926,18 +1940,18 @@ function extractAudioPartBase64(
 
 // A predicate rather than collectImageParts: building the parts would copy the base64 this exists to avoid touching.
 export function messagesContainImage(messages: RunMessages): boolean {
-  messages = messages.map(modelVisibleMessage);
+  const visibleMessages = messages.map(modelVisibleMessage);
   const isImage = (part: { type: string }) =>
     part.type === "image" &&
     "image" in part &&
     Boolean((part as { image: string }).image);
-  for (const message of messages) {
-    for (const part of message.content ?? []) {
+  for (const message of visibleMessages) {
+    for (const part of message.content) {
       if (isImage(part)) return true;
     }
     if ("attachments" in message) {
       for (const attachment of message.attachments ?? []) {
-        for (const part of attachment.content ?? []) {
+        for (const part of attachment.content) {
           if (isImage(part)) return true;
         }
       }
@@ -1965,7 +1979,7 @@ export function messagesUsePrivateContent(messages: RunMessages): boolean {
   }
   return messages.some((message) => {
     if (
-      (message.content ?? []).some(
+      message.content.some(
         (part) =>
           (part.type === "tool-call" &&
             (part as { toolName?: string }).toolName === "search_knowledge_base") ||
@@ -1976,7 +1990,7 @@ export function messagesUsePrivateContent(messages: RunMessages): boolean {
     }
     if (!("attachments" in message)) return false;
     return (message.attachments ?? []).some((attachment) =>
-      (attachment.content ?? []).some(
+      attachment.content.some(
         (part) => part.type === "text" || isPrivateMediaPart(part),
       ),
     );
@@ -1985,20 +1999,20 @@ export function messagesUsePrivateContent(messages: RunMessages): boolean {
 
 /** Every clip on the newest user message, in the order it was attached. */
 function latestUserAudioClips(messages: RunMessages): string[] {
-  messages = messages.map(modelVisibleMessage);
+  const visibleMessages = messages.map(modelVisibleMessage);
   const clips: string[] = [];
-  for (let i = messages.length - 1; i >= 0; i -= 1) {
-    const message = messages[i];
-    if (!message || message.role !== "user") continue;
+  for (let i = visibleMessages.length - 1; i >= 0; i -= 1) {
+    const message: RunMessage | undefined = visibleMessages[i];
+    if (message?.role !== "user") continue;
 
-    for (const part of message.content ?? []) {
+    for (const part of message.content) {
       const base64 = extractAudioPartBase64(part);
       if (base64) clips.push(base64);
     }
 
     if ("attachments" in message) {
-      for (const attachment of message.attachments ?? []) {
-        for (const part of attachment.content ?? []) {
+      for (const attachment of message.attachments) {
+        for (const part of attachment.content) {
           const base64 = extractAudioPartBase64(part);
           if (base64) clips.push(base64);
         }
@@ -2036,7 +2050,7 @@ export function findLatestUserExtraAudioBase64(
 function extractVideoPartBase64(
   part: { type: string } | null | undefined,
 ): string | undefined {
-  if (!part || part.type !== "file") return undefined;
+  if (part?.type !== "file") return undefined;
   const filePart = part as unknown as { data?: string; mimeType?: string };
   if (!filePart.data || !/^video\//i.test(filePart.mimeType ?? ""))
     return undefined;
@@ -2049,17 +2063,17 @@ function extractVideoPartBase64(
 export function findLatestUserVideoBase64(
   messages: RunMessages,
 ): string | undefined {
-  messages = messages.map(modelVisibleMessage);
-  for (let i = messages.length - 1; i >= 0; i -= 1) {
-    const message = messages[i];
-    if (!message || message.role !== "user") continue;
-    for (const part of message.content ?? []) {
+  const visibleMessages = messages.map(modelVisibleMessage);
+  for (let i = visibleMessages.length - 1; i >= 0; i -= 1) {
+    const message: RunMessage | undefined = visibleMessages[i];
+    if (message?.role !== "user") continue;
+    for (const part of message.content) {
       const base64 = extractVideoPartBase64(part);
       if (base64) return base64;
     }
     if ("attachments" in message) {
-      for (const attachment of message.attachments ?? []) {
-        for (const part of attachment.content ?? []) {
+      for (const attachment of message.attachments) {
+        for (const part of attachment.content) {
           const base64 = extractVideoPartBase64(part);
           if (base64) return base64;
         }
@@ -2088,7 +2102,7 @@ function boundMcpImageResults(
     if (!Array.isArray(parts)) return;
     const toolParts: { index: number; part: ToolCallMessagePart }[] = [];
     parts.forEach((part, p) => {
-      if (part.type === "tool-call") {
+      if ((part as { type?: unknown }).type === "tool-call") {
         toolParts.push({ index: p, part: part as ToolCallMessagePart });
       }
     });
@@ -2107,7 +2121,8 @@ function boundMcpImageResults(
       byExchange.set(exchanges[k], batch);
     });
     for (const key of [...byExchange.keys()].sort((a, b) => a - b)) {
-      perExchange.push(byExchange.get(key)!);
+      const batch = byExchange.get(key);
+      if (batch !== undefined) perExchange.push(batch);
     }
   });
   if (perExchange.length === 0) return messages;
@@ -2121,29 +2136,30 @@ function boundMcpImageResults(
       )
     : batches.map((batch) => batch.map((): McpImage[] => []));
   const edits = new Map<number, Map<number, McpImage[]>>();
-  batches.forEach((batch, b) =>
+  batches.forEach((batch, b) => {
     batch.forEach((carrier, r) => {
       const kept = plan[b][r];
       if (kept.length === carrier.images.length) return;
-      const forMessage = edits.get(carrier.message) ?? new Map<number, McpImage[]>();
+      const forMessage =
+        edits.get(carrier.message) ?? new Map<number, McpImage[]>();
       forMessage.set(carrier.part, kept);
       edits.set(carrier.message, forMessage);
-    }),
-  );
+    });
+  });
   if (edits.size === 0) return messages;
   return messages.map((message, m) => {
     const forMessage = edits.get(m);
     if (!forMessage || !Array.isArray(message.content)) return message;
-    const content = message.content.map((part, p) => {
+    const content = message.content.map((part: Record<string, unknown>, p) => {
       const kept = forMessage.get(p);
       if (!kept) return part;
-      const result = (part as { result: McpImageToolResult }).result;
+      const result = part.result as McpImageToolResult;
       return {
         ...part,
         result: kept.length > 0 ? { ...result, images: kept } : result.text,
       };
     });
-    return { ...message, content } as typeof message;
+    return { ...message, content } as unknown as typeof message;
   }) as RunMessages;
 }
 
@@ -2451,7 +2467,7 @@ function resolveAgentsMd(projectId: string | null): Promise<AgentsMdRecord> {
   const now = Date.now();
   const edits = agentsMdEditCount();
   const hit = agentsMdByProject.get(key);
-  if (hit && hit.edits === edits && now - hit.at < AGENTS_MD_TTL_MS) {
+  if (hit?.edits === edits && now - hit.at < AGENTS_MD_TTL_MS) {
     return hit.value;
   }
   const value = getChatAgentsMd(projectId).catch(() => EMPTY_AGENTS_MD);
@@ -2551,7 +2567,11 @@ function waitForModelReady(abortSignal?: AbortSignal): Promise<void> {
     const check = () => {
       if (abortSignal?.aborted) {
         // Uncaught in the adapter, and a Stop that is not an AbortError files as a failure (#10428).
-        reject(abortSignal.reason ?? new DOMException("Aborted", "AbortError"));
+        reject(
+          abortSignal.reason instanceof Error
+            ? abortSignal.reason
+            : new DOMException("Aborted", "AbortError"),
+        );
         return;
       }
       if (!useChatRuntimeStore.getState().modelLoading) {
@@ -2605,16 +2625,16 @@ function hasBigEndianGgufMarker(
   const quantKey = quant?.trim().toLowerCase() || "";
   const quantIndex = quantKey ? stem.indexOf(quantKey) : -1;
   const quantInParentOnly =
-    !!parent &&
+    Boolean(parent) &&
     quantIndex < 0 &&
-    ((!!quantKey && parent.includes(quantKey)) ||
+    ((Boolean(quantKey) && parent.includes(quantKey)) ||
       (!quantKey && GGUF_KNOWN_QUANT_RE.test(parent)));
   for (const match of stem.matchAll(BIG_ENDIAN_GGUF_FILENAME_RE)) {
-    if (quantIndex >= 0 && quantIndex < (match.index ?? 0)) {
+    if (quantIndex >= 0 && quantIndex < match.index) {
       return true;
     }
     const tail = stem
-      .slice((match.index ?? 0) + match[0].length)
+      .slice(match.index + match[0].length)
       .replace(/^[._-]+/, "");
     if (!tail || !GGUF_KNOWN_QUANT_RE.test(tail)) {
       return !quantInParentOnly;
@@ -2933,7 +2953,7 @@ function runsOnThisPlatform(row: LocalModelInfo): boolean {
   return (
     platform.deviceType === "mac" &&
     (isMlxId(row.id) ||
-      isMlxId(row.display_name ?? "") ||
+      isMlxId(row.display_name) ||
       isMlxId(row.model_id ?? ""))
   );
 }
@@ -3170,9 +3190,12 @@ async function ensureDefaultModelDownloaded(
     if (cancelInFlight || active.state === "cancelling") return true;
     cancelInFlight = true;
     cancelEverIssued = true;
-    void downloadManager.cancel(active.key).finally(() => {
-      cancelInFlight = false;
-    });
+    downloadManager
+      .cancel(active.key)
+      .finally(() => {
+        cancelInFlight = false;
+      })
+      .catch(() => undefined);
     return true;
   };
   const cancelDownload = (): void => {
@@ -3207,16 +3230,23 @@ async function ensureDefaultModelDownloaded(
     cleanups.push(
       subscribeJobListeners(request.kind, request.repoId, {
         // A cancel can fail and the transfer finish anyway; the bytes are still not handed to a load.
-        onComplete: (variant) =>
-          isOurVariant(variant) &&
-          finish(cancelRequested ? "cancelled" : "ready"),
-        onCancelled: (variant) => isOurVariant(variant) && finish("cancelled"),
-        onError: (variant) => isOurVariant(variant) && finish("failed"),
+        onComplete: (variant) => {
+          if (isOurVariant(variant)) {
+            finish(cancelRequested ? "cancelled" : "ready");
+          }
+        },
+        onCancelled: (variant) => {
+          if (isOurVariant(variant)) finish("cancelled");
+        },
+        onError: (variant) => {
+          if (isOurVariant(variant)) finish("failed");
+        },
       }),
     );
     cleanups.push(
       useDownloadManagerStore.subscribe((state) => {
-        const job = state.jobs[jobKey];
+        const job: (typeof state.jobs)[string] | undefined =
+          state.jobs[jobKey];
         if (!job) return;
         // Cancelled during the preflights: stop it as soon as it exists, once, not on every store tick.
         if (cancelRequested) {
@@ -3236,9 +3266,13 @@ async function ensureDefaultModelDownloaded(
     );
     // Stopping the send stops the wait, not the transfer.
     if (abortSignal) {
-      const onAbort = () => finish("cancelled");
+      const onAbort = () => {
+        finish("cancelled");
+      };
       abortSignal.addEventListener("abort", onAbort, { once: true });
-      cleanups.push(() => abortSignal.removeEventListener("abort", onAbort));
+      cleanups.push(() => {
+        abortSignal.removeEventListener("abort", onAbort);
+      });
     }
 
     void downloadManager.requestStart(request).then(
@@ -3255,7 +3289,9 @@ async function ensureDefaultModelDownloaded(
         // "conflict" and "busy" need the Hub download card; "error" already toasted.
         finish("failed");
       },
-      () => finish("failed"),
+      () => {
+        finish("failed");
+      },
     );
   });
 }
@@ -3314,7 +3350,7 @@ async function waitForSettledServerStatus(options?: {
 
       options?.abortSignal?.throwIfAborted();
       if (options?.stopEarly?.()) return { outcome: "stopped" };
-      if (status && (status.loading.length ?? 0) === 0) {
+      if (status && status.loading.length === 0) {
         return { outcome: "settled", status };
       }
       if (status && !announced) {
@@ -3413,7 +3449,12 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
       description,
       duration: Number.POSITIVE_INFINITY,
       action: onCancel
-        ? { label: "Cancel", onClick: () => onCancel() }
+        ? {
+            label: "Cancel",
+            onClick: () => {
+              onCancel();
+            },
+          }
         : undefined,
     });
   };
@@ -3457,6 +3498,14 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
 
   // Set once the user declines the HF token dialog, so nothing asks again.
   let autoLoadCancelled = false;
+
+  // Read through helpers: these flags only change inside nested functions, so TS would
+  // otherwise narrow them to their initial literal at every outermost-scope use.
+  const isBlockedByTrustRemoteCode = (): boolean => blockedByTrustRemoteCode;
+  const autoLoadBudgetSpent = (): boolean =>
+    autoLoadCancelled ||
+    loadAttempts >= MAX_AUTO_LOAD_ATTEMPTS ||
+    validateFailures >= MAX_AUTO_VALIDATE_FAILURES;
 
   function noteLoadFailure(label: string, error: unknown): void {
     const detail =
@@ -3612,6 +3661,9 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
     }
     // The override may live only on the server, and nothing is resident at startup to inherit;
     // sanitized into an explicit list /load validates strictly.
+    // Snapshot the configured value so the branches below never read the mutable `let`
+    // across an await (require-atomic-updates).
+    const configuredExtraArgs = config.llamaExtraArgs;
     let resolvedExtraArgs = config.llamaExtraArgs;
     if (candidate.kind === "gguf" && !isDiffusion) {
       try {
@@ -3621,7 +3673,7 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
             maxBytes: managed?.maxBytes,
             windowsCommandBudget: managed?.windowsCommandBudget,
           });
-        if (resolvedExtraArgs === undefined) {
+        if (configuredExtraArgs === undefined) {
           const stored = await fetchLoadExtraArgs(
             modelPath,
             // Cached inventory can resolve to a different loadId than the advertised repo id.
@@ -3637,10 +3689,13 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
             // An empty list clears; omitting the field would let /load carry old arguments over.
             resolvedExtraArgs = [];
           }
-        } else if (resolvedExtraArgs !== null && resolvedExtraArgs.length > 0) {
+        } else if (
+          configuredExtraArgs !== null &&
+          configuredExtraArgs.length > 0
+        ) {
           // Clean the local copy too: newly managed flags would be sent explicitly and get a 400.
-          const cleaned = clean(resolvedExtraArgs);
-          if (cleaned.length !== resolvedExtraArgs.length) {
+          const cleaned = clean(configuredExtraArgs);
+          if (cleaned.length !== configuredExtraArgs.length) {
             resolvedExtraArgs = cleaned.length > 0 ? cleaned : [];
           }
         }
@@ -3818,7 +3873,7 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
       // Upsert: the load response is the authority on audio capability, which a pre-load catalog entry lacks.
       syncModelCapabilities(loadedModelId, {
         ...loadResp,
-        display_name: loadResp.display_name ?? candidate.id,
+        display_name: loadResp.display_name,
         is_gguf: loadResp.is_gguf ?? candidate.kind === "gguf",
       });
       const committedSlots =
@@ -3955,7 +4010,7 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
           activeModelIsLocal: loadResp.is_local_model ?? false,
         });
       }
-      if (!(loadResp.is_lora ?? false)) {
+      if (!loadResp.is_lora) {
         recordLastLocalModelLoad({
           id: candidate.id,
           kind: candidate.kind,
@@ -4013,11 +4068,7 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
     // A target can be in several lists; a twin is tried only if the preferred row resolved nothing.
     const candidateResolvedFor = new Set<string>();
     for (const source of sources) {
-      if (
-        autoLoadCancelled ||
-        loadAttempts >= MAX_AUTO_LOAD_ATTEMPTS ||
-        validateFailures >= MAX_AUTO_VALIDATE_FAILURES
-      ) {
+      if (autoLoadBudgetSpent()) {
         break;
       }
       const sourceKey = autoLoadSourceKey(source);
@@ -4035,11 +4086,7 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
         );
       try {
         // Each failure marks one quant tried, so one corrupt file does not cost the whole repo.
-        while (
-          !autoLoadCancelled &&
-          loadAttempts < MAX_AUTO_LOAD_ATTEMPTS &&
-          validateFailures < MAX_AUTO_VALIDATE_FAILURES
-        ) {
+        while (!autoLoadBudgetSpent()) {
           const candidate = await resolveAutoLoadCandidate(
             source,
             isRemembered ? (lastLoaded?.ggufVariant ?? null) : null,
@@ -4098,7 +4145,7 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
       return {
         loaded: false,
         blockedByTrustRemoteCode:
-          blockedByTrustRemoteCode && !hadNonTrustFailure,
+          isBlockedByTrustRemoteCode() && !hadNonTrustFailure,
         loadFailureReported: loadFailure.current !== null,
       };
     }
@@ -4207,8 +4254,8 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
         );
         const defaultModel: ChatModelRow = {
           id: DEFAULT_CHAT_MODEL_REPO,
-          name: loadResp.display_name ?? DEFAULT_CHAT_MODEL_LABEL,
-          isVision: loadResp.is_vision ?? false,
+          name: loadResp.display_name,
+          isVision: loadResp.is_vision,
           isLora: false,
           isGguf: true,
           isMlx: false,
@@ -4283,7 +4330,7 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
       return {
         loaded: false,
         blockedByTrustRemoteCode:
-          blockedByTrustRemoteCode && !hadNonTrustFailure,
+          isBlockedByTrustRemoteCode() && !hadNonTrustFailure,
       };
     }
   } catch {
@@ -4292,7 +4339,8 @@ async function autoLoadSmallestModel(options?: AutoLoadOptions): Promise<{
     hadNonTrustFailure = true;
     return {
       loaded: false,
-      blockedByTrustRemoteCode: blockedByTrustRemoteCode && !hadNonTrustFailure,
+      blockedByTrustRemoteCode:
+        isBlockedByTrustRemoteCode() && !hadNonTrustFailure,
     };
   }
 }
@@ -4314,7 +4362,7 @@ async function resolveQueuedEmptyLocalModel(abortSignal: AbortSignal): Promise<{
   try {
     abortSignal.throwIfAborted();
     const visibleState = useChatRuntimeStore.getState();
-    if (isExternalModelId(visibleState.params.checkpoint)) {
+    if (isExternalModelId(visibleState.params.checkpoint) === true) {
       // Hold the lifecycle lease across the probe and fail closed: a failed or mid-replacement read is
       // not evidence the server is empty.
       const settled = await waitForSettledServerStatus({ abortSignal });
@@ -4352,7 +4400,7 @@ async function resolveQueuedEmptyLocalModel(abortSignal: AbortSignal): Promise<{
             loadedIsMlx: loadedContextFields(status).loadedIsMlx,
             loadedIsMultimodal: isMultimodalResponse(status),
             modelCapabilities: {
-              isVision: status.is_vision ?? false,
+              isVision: status.is_vision,
               isGguf: status.is_gguf ?? false,
               isMlx: status.is_mlx ?? false,
               isAudio: status.is_audio ?? false,
@@ -4371,6 +4419,9 @@ async function resolveQueuedEmptyLocalModel(abortSignal: AbortSignal): Promise<{
       const visibleRoute = window.location.href;
       let result: Awaited<ReturnType<typeof autoLoadSmallestModel>>;
       let modelRuntime: QueuedResolvedModelRuntime | null = null;
+      // Set only from the capture callback above; read through this so TS does not narrow
+      // the check below against the initial `null`.
+      const isModelRuntimeMissing = (): boolean => modelRuntime === null;
       try {
         result = await autoLoadSmallestModel({
           skipAdoptServerModel: true,
@@ -4380,7 +4431,7 @@ async function resolveQueuedEmptyLocalModel(abortSignal: AbortSignal): Promise<{
           },
           abortSignal,
         });
-        if (result.loaded && !modelRuntime) {
+        if (result.loaded && isModelRuntimeMissing()) {
           modelRuntime = queuedResolvedModelFromStore(
             useChatRuntimeStore.getState(),
           );
@@ -4453,6 +4504,11 @@ export function createOpenAIStreamAdapter(
         );
       }
       let runtime = useChatRuntimeStore.getState();
+      // Assigned through a helper so the late reassignment below is not read as a race by
+      // require-atomic-updates (the value is recomputed from fresh store reads each time).
+      const setRuntime = (next: typeof runtime): void => {
+        runtime = next;
+      };
       // Capture the thread ID once so it stays stable across chat switches during model load.
       const resolvedThreadId =
         (runThreadId ?? runtime.activeThreadId) || undefined;
@@ -4520,21 +4576,12 @@ export function createOpenAIStreamAdapter(
       ) {
         if (runtime.modelLoading) {
           toast.info("Waiting for model to finish loading…");
-          try {
-            await waitForModelReady(transitionSignal);
-          } catch (error) {
-            throw error;
-          }
+          await waitForModelReady(transitionSignal);
         }
         if (!runtime.params.checkpoint) {
-          let resolution: Awaited<
+          const resolution: Awaited<
             ReturnType<typeof resolveQueuedEmptyLocalModel>
-          >;
-          try {
-            resolution = await resolveQueuedEmptyLocalModel(transitionSignal);
-          } catch (error) {
-            throw error;
-          }
+          > = await resolveQueuedEmptyLocalModel(transitionSignal);
           queuedEmptyModelRuntime = resolution.modelRuntime;
           if (!resolution.loaded) {
             // A reported failure already names the model; generic advice buries it.
@@ -4608,7 +4655,9 @@ export function createOpenAIStreamAdapter(
         if (!userMessage) throw new Error("Research requires a user message.");
         const userMessageIndex = rawMessages.indexOf(userMessage);
         const userMessageParentId =
-          userMessageIndex > 0 ? rawMessages[userMessageIndex - 1]!.id : null;
+          userMessageIndex > 0
+            ? (rawMessages.at(userMessageIndex - 1)?.id ?? null)
+            : null;
         const { params } = runtime;
         const selectedCheckpoint = params.checkpoint.trim();
         const researchExternalSelection =
@@ -4705,15 +4754,20 @@ export function createOpenAIStreamAdapter(
         // Background stop/archive/delete reach the run only via this map; register before create.
         let researchRunId: string | null = null;
         let researchStopRequested = false;
+        // Read through a helper: only the nested cancel callback assigns it, so TS would
+        // narrow the direct read below to the initial `false`.
+        const isResearchStopRequested = (): boolean => researchStopRequested;
         const researchServerCancel = () => {
           researchStopRequested = true;
           if (researchRunId) {
-            void cancelResearchRun(researchRunId).catch(() => {});
+            void cancelResearchRun(researchRunId).catch(() => undefined);
           }
         };
         runtime.registerThreadServerCancel(threadKey, researchServerCancel);
         releaseCurrentPreStreamRun();
-        void persistRunModel(params.checkpoint, runtime.activeGgufVariant);
+        persistRunModel(params.checkpoint, runtime.activeGgufVariant).catch(
+          () => undefined,
+        );
         runtime.setThreadRunning(threadKey, true, {
           owner: researchServerCancel,
         });
@@ -4739,7 +4793,7 @@ export function createOpenAIStreamAdapter(
             threadId: resolvedThreadId,
             // A stored null is an edited root; `??` would reparent it.
             parentId:
-              storedUserMessage && storedUserMessage.parentId !== undefined
+              storedUserMessage?.parentId !== undefined
                 ? storedUserMessage.parentId
                 : userMessageParentId,
             role: "user",
@@ -4747,7 +4801,7 @@ export function createOpenAIStreamAdapter(
             ...(userMessage.attachments.length
               ? { attachments: userMessage.attachments }
               : {}),
-            createdAt: userMessage.createdAt.getTime() ?? Date.now(),
+            createdAt: userMessage.createdAt.getTime(),
           });
           const createdRun = await createResearchRun({
             threadId: resolvedThreadId,
@@ -4771,9 +4825,9 @@ export function createOpenAIStreamAdapter(
             ...tabCloseRunFields(runtime.keepRunningWhenTabClosed),
           });
           researchRunId = createdRun.id;
-          if (researchStopRequested) {
+          if (isResearchStopRequested()) {
             // replay stop once creation supplies the missing run id.
-            void cancelResearchRun(createdRun.id).catch(() => {});
+            void cancelResearchRun(createdRun.id).catch(() => undefined);
             return;
           }
           releaseResearchFollow = beginExternalResearchFollow(
@@ -4920,8 +4974,9 @@ export function createOpenAIStreamAdapter(
       }
 
       const liveRuntime = useChatRuntimeStore.getState();
-      runtime = queuedRunSettings
-        ? queuedRunSettings.params.checkpoint
+      setRuntime(
+        queuedRunSettings
+          ? queuedRunSettings.params.checkpoint
           ? { ...liveRuntime, ...queuedRunSettings }
           : {
               ...liveRuntime,
@@ -4981,7 +5036,8 @@ export function createOpenAIStreamAdapter(
                 queuedEmptyModelRuntime?.modelCapabilities ?? null,
               ),
             }
-        : liveRuntime;
+        : liveRuntime
+      );
       runtime = withChatFullAccess(runtime, liveRuntime.chatFullAccessGrants, resolvedThreadId);
       const { params } = runtime;
       const sandboxSessionId = await resolveSandboxSessionId(
@@ -5388,12 +5444,12 @@ export function createOpenAIStreamAdapter(
         const firstMessage = targetMessages[0];
         if (firstMessage.role === "system") {
           if (typeof firstMessage.content === "string") {
-            targetMessages[0] = {
+            targetMessages.splice(0, 1, {
               ...firstMessage,
               content: `${firstMessage.content}\n\n${text}`,
-            };
+            });
           } else {
-            targetMessages[0] = {
+            targetMessages.splice(0, 1, {
               ...firstMessage,
               content: [
                 ...(Array.isArray(firstMessage.content)
@@ -5401,7 +5457,7 @@ export function createOpenAIStreamAdapter(
                   : []),
                 { type: "text", text: `\n\n${text}` },
               ],
-            };
+            });
           }
           return;
         }
@@ -5444,7 +5500,7 @@ export function createOpenAIStreamAdapter(
           ),
           externalModelLabel: externalSelection?.modelId ?? null,
           loadedIsMultimodal: runtime.loadedIsMultimodal,
-          modelLoaded: !!params.checkpoint && !runtime.modelLoading,
+          modelLoaded: Boolean(params.checkpoint) && !runtime.modelLoading,
           loadError: runtime.lastModelLoadError,
           visionDisabledByUser: runtime.loadedVisionDisabledByUser,
           mmprojFallbackReason: runtime.mmprojFallbackReason,
@@ -5510,9 +5566,13 @@ export function createOpenAIStreamAdapter(
       // Per-run abort chained to assistant-ui's signal: cancelByThreadId only holds the visible thread's cancelRun().
       const runAbort = new AbortController();
       const runSignal = runAbort.signal;
-      const forwardAbort = () => runAbort.abort(abortSignal.reason);
+      const forwardAbort = () => {
+        runAbort.abort(abortSignal.reason);
+      };
       // Declared here because it doubles as this run's identity token on the per-thread maps.
-      const serverCancel = () => runAbort.abort();
+      const serverCancel = () => {
+        runAbort.abort();
+      };
       if (abortSignal.aborted) {
         forwardAbort();
       } else {
@@ -5582,6 +5642,10 @@ export function createOpenAIStreamAdapter(
       });
       let generationDecision: "pending" | "durable" | "legacy" =
         generationCandidate ? "pending" : "legacy";
+      // Read through a helper: only nested callbacks/other branches assign it, so a direct
+      // read here would narrow to a literal and upset require-atomic-updates.
+      const generationDecisionIsPending = (): boolean =>
+        generationDecision === "pending";
       let generationRun: ChatGenerationRun | null = null;
       let generationRunId: string | null = null;
       let generationSeq = 0;
@@ -5589,9 +5653,14 @@ export function createOpenAIStreamAdapter(
       let generationFirstChunkAt: number | undefined;
       let generationChunkCount = 0;
       let generationStopRequested = false;
+      // Only the abort callback assigns this, so read it through a helper to keep TS from
+      // narrowing both reads below to the initial `false`.
+      const isGenerationStopRequested = (): boolean => generationStopRequested;
       // Both this stream and recovery followers persist it, or reload blocks the composer again.
       let generationStalled = false;
       let parseThink = true;
+      // Flipped only inside setParseThink below, so read it through this to keep the type boolean.
+      const parsesThink = (): boolean => parseThink;
       const generationCustom = () =>
         generationRunId
           ? {
@@ -5611,10 +5680,14 @@ export function createOpenAIStreamAdapter(
             }
           : {};
       if (activeModel?.isAudio && !activeModel.hasAudioInput) {
-        const audioCancel = () => runAbort.abort();
+        const audioCancel = () => {
+          runAbort.abort();
+        };
         runtime.registerThreadServerCancel(threadKey, audioCancel);
         releaseCurrentPreStreamRun();
-        void persistRunModel(params.checkpoint, runtime.activeGgufVariant);
+        persistRunModel(params.checkpoint, runtime.activeGgufVariant).catch(
+          () => undefined,
+        );
         runtime.setThreadRunning(threadKey, true, { owner: audioCancel });
         try {
           yield {
@@ -5667,6 +5740,8 @@ export function createOpenAIStreamAdapter(
 
       let waitingFirstChunk = true;
       let firstTokenSettled = false;
+      // Settled from the nested helpers below, so the cleanup read goes through this.
+      const isFirstTokenSettled = (): boolean => firstTokenSettled;
       const streamStartTime = Date.now();
       let responseModelId = externalSelection?.modelId ?? params.checkpoint;
       let firstTokenTime: number | undefined;
@@ -5679,7 +5754,7 @@ export function createOpenAIStreamAdapter(
         rejectFirstToken = reject;
       });
       // Avoid unhandled rejections if toast.promise never attached.
-      void firstTokenPromise.catch(() => {});
+      void firstTokenPromise.catch(() => undefined);
 
       function settleFirstTokenOk(): void {
         if (firstTokenSettled) return;
@@ -5702,7 +5777,9 @@ export function createOpenAIStreamAdapter(
       // The swap gate counts only local runs; backend excludes external ones likewise.
       releaseCurrentPreStreamRun();
       // Past every gate that refuses the send, and not awaited: only what reopening the chat offers.
-      void persistRunModel(params.checkpoint, runtime.activeGgufVariant);
+      persistRunModel(params.checkpoint, runtime.activeGgufVariant).catch(
+        () => undefined,
+      );
       runtime.setThreadRunning(threadKey, true, {
         local: !isExternalRequest,
         owner: serverCancel,
@@ -5903,7 +5980,7 @@ export function createOpenAIStreamAdapter(
           const at = toolCallParts.findIndex((p) => p.toolCallId === tailId);
           if (at === -1) continue;
           const part = toolCallParts[at];
-          const scanned = splitTopLevelJsonObjects(part.argsText ?? "");
+          const scanned = splitTopLevelJsonObjects(part.argsText);
           if (scanned.complete.length > 0 && !scanned.tail) continue;
           toolCallParts.splice(at, 1);
           releaseStreamedCard(part.toolCallId);
@@ -6197,7 +6274,7 @@ export function createOpenAIStreamAdapter(
               externalSelection.modelId,
               {
                 isReasoningProvider: externalProvider.isReasoningModel === true,
-                baseUrl: externalProvider.baseUrl ?? null,
+                baseUrl: externalProvider.baseUrl,
                 apiType: externalProvider.apiType,
                 reasoningConfig: externalProvider.reasoningConfig,
               },
@@ -6387,7 +6464,7 @@ export function createOpenAIStreamAdapter(
           generationRunId,
         );
         if (stopPlan.cancelRunId) {
-          void cancelChatGenerationRun(stopPlan.cancelRunId).catch(() => {});
+          void cancelChatGenerationRun(stopPlan.cancelRunId).catch(() => undefined);
         }
         if (!stopPlan.postLegacyCancel) return;
         const body: Record<string, string> = { cancel_id: cancelId };
@@ -6403,7 +6480,7 @@ export function createOpenAIStreamAdapter(
           },
           body: JSON.stringify(body),
           keepalive: true,
-        }).catch(() => {});
+        }).catch(() => undefined);
       };
 
       // Reaches non-visible threads; for external providers the abort is the stop (no cancel_id).
@@ -6553,7 +6630,7 @@ export function createOpenAIStreamAdapter(
                 ) {
                   void updateStoredChatThreadEventually(resolvedThreadId, {
                     openaiCodeExecContainerId: null,
-                  }).catch(() => {});
+                  }).catch(() => undefined);
                   openaiCodeExecContainerId = null;
                 }
               }
@@ -6576,13 +6653,13 @@ export function createOpenAIStreamAdapter(
                     ) {
                       void updateStoredChatThreadEventually(t.id, {
                         openaiCodeExecContainerId: null,
-                      }).catch(() => {});
+                      }).catch(() => undefined);
                       continue;
                     }
                     openaiCodeExecContainerId = t.openaiCodeExecContainerId;
                     void updateStoredChatThreadEventually(resolvedThreadId, {
                       openaiCodeExecContainerId,
-                    }).catch(() => {});
+                    }).catch(() => undefined);
                     break;
                   }
                 } catch {
@@ -6612,7 +6689,7 @@ export function createOpenAIStreamAdapter(
                   openaiCodeExecContainerId = created.id;
                   void updateStoredChatThreadEventually(resolvedThreadId, {
                     openaiCodeExecContainerId: created.id,
-                  }).catch(() => {});
+                  }).catch(() => undefined);
                 } catch {
                   // Fall back to the backend's container_auto path on failure; the next turn can retry.
                   openaiCodeExecContainerId = null;
@@ -6966,7 +7043,7 @@ export function createOpenAIStreamAdapter(
         };
 
         let retriedWithRefreshedKey = false;
-        while (true) {
+        for (;;) {
           try {
             let requestPayload: OpenAIChatCompletionsRequest;
             try {
@@ -6990,7 +7067,15 @@ export function createOpenAIStreamAdapter(
                 runtime.loadedContextLength ??
                 (params.maxSeqLength || null));
             await ThreadAutosaveHandle.awaitFirstSave(resolvedThreadId);
-            if (generationDecision === "pending") {
+            const pendingThreadId = resolvedThreadId;
+            const pendingUserMessageId = generationUserMessage?.id;
+            const pendingAssistantMessageId = unstable_assistantMessageId;
+            if (
+              generationDecisionIsPending() &&
+              pendingThreadId !== undefined &&
+              pendingUserMessageId !== undefined &&
+              pendingAssistantMessageId !== undefined
+            ) {
               // Keyed on `enabled_tools`, never `requestPayload.tools`: see durable-gate.ts.
               if (turnRequiresLegacyStream(requestPayload)) {
                 // Only a tool chain the BROWSER must execute needs the live tab; everything else is durable.
@@ -6998,7 +7083,7 @@ export function createOpenAIStreamAdapter(
               } else {
                 const admission = explicitStopSignal(runSignal);
                 const supported = await supportsChatGenerationRuns(
-                  resolvedThreadId!,
+                  pendingThreadId,
                   admission.signal,
                 ).finally(admission.dispose);
                 if (!supported) {
@@ -7006,16 +7091,16 @@ export function createOpenAIStreamAdapter(
                 } else {
                   generationDecision = "durable";
                   // Claim before admission: the run is visible through /active as soon as the POST lands.
-                  claimLiveGenerationRun(cancelId, resolvedThreadId!, {
+                  claimLiveGenerationRun(cancelId, pendingThreadId, {
                     provisional: true,
                   });
                   try {
                     generationRun = await createChatGenerationRunUntilAbort(
                       {
                         runId: cancelId,
-                        threadId: resolvedThreadId!,
-                        userMessageId: generationUserMessage!.id,
-                        assistantMessageId: unstable_assistantMessageId!,
+                        threadId: pendingThreadId,
+                        userMessageId: pendingUserMessageId,
+                        assistantMessageId: pendingAssistantMessageId,
                         requestPayload,
                         ...tabCloseRunFields(
                           runtime.keepRunningWhenTabClosed,
@@ -7046,11 +7131,11 @@ export function createOpenAIStreamAdapter(
                   } else {
                     generationRunId = generationRun.id;
                     // Re-claimed in case the server echoes a different id; both are released in the finally.
-                    claimLiveGenerationRun(generationRunId, resolvedThreadId!);
+                    claimLiveGenerationRun(generationRunId, pendingThreadId);
                     generationStatus = generationRun.status;
-                    if (generationStopRequested) {
+                    if (isGenerationStopRequested()) {
                       void cancelChatGenerationRun(generationRun.id).catch(
-                        () => {},
+                        () => undefined,
                       );
                     }
                   }
@@ -7059,11 +7144,14 @@ export function createOpenAIStreamAdapter(
             }
 
             const durableStream = async function* () {
+              const durableRunId = generationRunId;
+              const durableRun = generationRun;
+              if (durableRunId === null || durableRun === null) return;
               try {
                 for await (const update of followChatGenerationRun(
-                  generationRunId!,
+                  durableRunId,
                   {
-                    initialRun: generationRun!,
+                    initialRun: durableRun,
                     replayFrom: 0,
                     signal: runSignal,
                   },
@@ -7225,7 +7313,7 @@ export function createOpenAIStreamAdapter(
               )._contextUsage;
               if (liveContext !== undefined) {
                 const { prompt_tokens, completion_tokens, context_tokens, cached_tokens } =
-                  liveContext ?? {};
+                  liveContext;
                 if (
                   typeof prompt_tokens === "number" &&
                   typeof completion_tokens === "number" &&
@@ -7329,7 +7417,7 @@ export function createOpenAIStreamAdapter(
                         : "openaiCodeExecContainerId";
                     void updateStoredChatThreadEventually(resolvedThreadId, {
                       [field]: newContainerId,
-                    }).catch(() => {});
+                    }).catch(() => undefined);
                   }
                   continue;
                 }
@@ -7383,7 +7471,7 @@ export function createOpenAIStreamAdapter(
                         : "openaiCodeExecContainerId";
                     void updateStoredChatThreadEventually(resolvedThreadId, {
                       [field]: null,
-                    }).catch(() => {});
+                    }).catch(() => undefined);
                   }
                   continue;
                 }
@@ -7417,7 +7505,7 @@ export function createOpenAIStreamAdapter(
                     ({ parseBrowserAction, runBrowserAction }) => {
                       const action = parseBrowserAction(request);
                       if (action) {
-                        void runBrowserAction(action, {
+                        runBrowserAction(action, {
                           runKey: cancelId,
                           chat: browserChat,
                           // Resolved per action: a first turn is re-keyed from "__default" to its id.
@@ -7428,12 +7516,12 @@ export function createOpenAIStreamAdapter(
                           ),
                           temporary: browserTemporary,
                           signal: runSignal,
-                        });
+                        }).catch(() => undefined);
                       }
                     },
                     // A stale chunk after an update: answer now rather than leave the tool waiting.
                     () => {
-                      const raw = (request ?? {}) as Record<string, unknown>;
+                      const raw = request as Record<string, unknown>;
                       if (typeof raw.id !== "string") return;
                       void authFetch("/api/inference/browser-action-result", {
                         method: "POST",
@@ -7553,14 +7641,15 @@ export function createOpenAIStreamAdapter(
                     ? toolPartIdByBackendId.get(backendToolCallId)
                     : undefined;
                   const reuseOpenPart =
-                    !!openPartId &&
+                    Boolean(openPartId) &&
                     toolCallParts.some((p) => p.toolCallId === openPartId);
                   const id =
                     awaitingConfirmation && approvalId && !reuseOpenPart
                       ? `${toolConfirmationScopeId}:${approvalId}`
                       : backendToolCallId
                         ? resolveToolPartId(backendToolCallId)
-                        : approvalId || `${toolEvent.tool_name}_${Date.now()}`;
+                        : approvalId ||
+                          `${String(toolEvent.tool_name)}_${Date.now()}`;
                   if (awaitingConfirmation && backendToolCallId) {
                     toolConfirmationIdsByBackendId.set(backendToolCallId, id);
                   }
@@ -7646,7 +7735,7 @@ export function createOpenAIStreamAdapter(
                     id &&
                     shouldPreserveFullOutput(
                       liveOutput,
-                      (toolEvent.result as string) ?? "",
+                      (toolEvent.result as string | undefined) ?? "",
                     )
                   ) {
                     useChatRuntimeStore
@@ -7660,17 +7749,18 @@ export function createOpenAIStreamAdapter(
                     (p) => p.toolCallId === id,
                   );
                   if (idx !== -1) {
-                    const rawEvent = (toolEvent.result as string) ?? "";
+                    const rawEvent =
+                      (toolEvent.result as string | undefined) ?? "";
                     // Extracted before __IMAGES__, and only for tools that emit it; elsewhere the line is content.
                     const { text: withUi, files: createdFiles } =
-                      SANDBOX_FILE_TOOLS.has(toolCallParts[idx].toolName ?? "")
+                      SANDBOX_FILE_TOOLS.has(toolCallParts[idx].toolName)
                         ? extractCreatedFiles(rawEvent)
                         : { text: rawEvent, files: [] as SandboxFile[] };
                     // Ahead of the image slice, which parses to end of string.
                     const { text: rawResult, ui: mcpUi } =
                       extractMcpUiEnvelope(
                         withUi,
-                        toolCallParts[idx].toolName ?? "",
+                        toolCallParts[idx].toolName,
                       );
                     // Same rule: only from the tool that emits it.
                     const { text: searchText, images: webImages } =
@@ -7680,7 +7770,7 @@ export function createOpenAIStreamAdapter(
                     const imgMarker = "\n__IMAGES__:";
                     // Only from tools that emit the envelope; elsewhere the backend keeps the line for the model.
                     const imgIdx = IMAGE_SENTINEL_TOOLS.has(
-                      toolCallParts[idx].toolName ?? "",
+                      toolCallParts[idx].toolName,
                     )
                       ? rawResult.lastIndexOf(imgMarker)
                       : -1;
@@ -7745,7 +7835,7 @@ export function createOpenAIStreamAdapter(
                       }
                     } else if (
                       createdFiles.length > 0 ||
-                      SANDBOX_RUN_TOOLS.has(toolCallParts[idx].toolName ?? "")
+                      SANDBOX_RUN_TOOLS.has(toolCallParts[idx].toolName)
                     ) {
                       // Structured even without files or images: the session is the only record of WHERE it ran.
                       parsedResult = {
@@ -7776,7 +7866,7 @@ export function createOpenAIStreamAdapter(
                         ? (toolEvent.arguments as ToolCallMessagePart["args"])
                         : undefined;
                     const mergedArgs = mergeGoogleNativeParts(
-                      { ...(toolCallParts[idx].args ?? {}), ...(nextArgs ?? {}) },
+                      { ...toolCallParts[idx].args, ...(nextArgs ?? {}) },
                       toolEvent.google,
                     ) as ToolCallMessagePart["args"];
                     const overwrittenArgumentKeys =
@@ -8100,32 +8190,35 @@ export function createOpenAIStreamAdapter(
                     );
                     return held.complete.length > 0 && !held.tail;
                   })();
+                  const callName = call.function?.name;
+                  const matchedName = matched?.toolName;
                   // A fragment repeating the id this part holds continues it however complete the arguments look.
                   const namesThisCall =
-                    !!stablePartId && matched?.toolCallId === stablePartId;
+                    Boolean(stablePartId) &&
+                    matched?.toolCallId === stablePartId;
                   // Only a "{" opens a next call; splitting on a scalar suffix runs the tool twice.
                   const bringsArgs = deltaArgs.trim().startsWith("{");
                   const closedSlot = slotIsClosed && !namesThisCall;
                   // An id naming a DIFFERENT call opens the next even before its arguments arrive.
                   const idNamesAnotherCall =
-                    !!stablePartId &&
-                    !!call.function?.name &&
-                    !!matched?.toolName &&
+                    Boolean(stablePartId) &&
+                    Boolean(callName) &&
+                    Boolean(matchedName) &&
                     // Not a prefix test: a catalog holds both "web" and "web_search".
-                    call.function.name !== matched.toolName;
+                    callName !== matchedName;
                   // Snapshot providers repeat a finished call once it has an id; match exact repeats only.
                   const resendsThisCall =
-                    !!stablePartId &&
-                    !!matched &&
+                    Boolean(stablePartId) &&
+                    matched != null &&
                     !matched._has_stable_id &&
-                    call.function?.name === matched.toolName &&
+                    callName === matchedName &&
                     deltaArgs === matched.argsText;
                   // A name at a closed slot announces the next call, but the SAME name is a
                   // resend (llama-server, vLLM).
                   const namesNextCall =
-                    !!call.function?.name &&
-                    !!matched?.toolName &&
-                    call.function.name !== matched.toolName;
+                    Boolean(callName) &&
+                    Boolean(matchedName) &&
+                    callName !== matchedName;
                   // A different name bringing an object after an announcement is a new call, not a name suffix.
                   const announcesOverAnnouncement =
                     ((matched as PositionedToolCallPart | undefined)
@@ -8133,19 +8226,19 @@ export function createOpenAIStreamAdapter(
                       (matched as PositionedToolCallPart | undefined)
                         ?._resend_suspect === true) &&
                     !matched?.argsText &&
-                    !!call.function?.name &&
-                    !!matched?.toolName &&
-                    call.function.name !== matched.toolName &&
+                    Boolean(callName) &&
+                    Boolean(matchedName) &&
+                    callName !== matchedName &&
                     bringsArgs;
-                  if (announcesOverAnnouncement && matched) {
+                  if (announcesOverAnnouncement) {
                     (matched as PositionedToolCallPart)._superseded = true;
                   }
                   // Metadata on a repeated closed-card name belongs to the next call; merging overwrites its signature.
                   const extraIsAmbiguous =
                     closedSlot &&
-                    !!call.function?.name &&
-                    !!matched?.toolName &&
-                    call.function.name === matched.toolName &&
+                    Boolean(callName) &&
+                    Boolean(matchedName) &&
+                    callName === matchedName &&
                     isPlainRecord(call.extra_content);
                   const opensNextCall =
                     (closedSlot &&
@@ -8164,7 +8257,7 @@ export function createOpenAIStreamAdapter(
                   streamedChars +=
                     argsFragment.length + (call.function?.name?.length ?? 0);
                   if (existing) {
-                    const prevName = existing.toolName ?? "";
+                    const prevName = existing.toolName;
                     // llama-server resends the growing name, OpenAI streams fragments; same rule as the backend.
                     const nameFragment = call.function?.name ?? "";
                     // Never rename once the object closed with a name set; naming an unnamed card is fine.
@@ -8176,8 +8269,8 @@ export function createOpenAIStreamAdapter(
                           : prevName + nameFragment;
                     // A snapshot repeated to carry the id adds nothing; appending gives `{"a":1}{"a":1}`.
                     const merged = resendsThisCall
-                      ? (existing.argsText ?? "")
-                      : (existing.argsText ?? "") + argsFragment;
+                      ? existing.argsText
+                      : existing.argsText + argsFragment;
                     // Two objects in one slot are two calls (vLLM id-less deltas, #9807); cut on the object boundary.
                     const split = stablePartId
                       ? { complete: [], tail: "" }
@@ -8189,8 +8282,7 @@ export function createOpenAIStreamAdapter(
                       : split.complete;
                     const isSplit = segments.length > 1;
                     const slotText = isSplit ? segments[0] : merged;
-                    let parsedArgs: ToolCallMessagePart["args"] =
-                      existing.args ?? {};
+                    let parsedArgs: ToolCallMessagePart["args"] = existing.args;
                     if (slotText) {
                       try {
                         parsedArgs = JSON.parse(
@@ -8469,7 +8561,7 @@ export function createOpenAIStreamAdapter(
               streamedChars += reasoning.length + delta.length;
               producedReplyText = true;
               const textEndsInsideThink =
-                parseThink && thinkTags.endsInsideThink();
+                parsesThink() && thinkTags.endsInsideThink();
               const assistantContent = liveAssistantContent();
 
               // Fallback when no server-side reasoning_summary arrives.
@@ -8642,7 +8734,7 @@ export function createOpenAIStreamAdapter(
         if (incompleteReason === "length") {
           incompleteReason = lengthIncompleteReason(
             lengthStopCause({
-              cap: requestedMaxTokens ?? null,
+              cap: requestedMaxTokens,
               contextLength: servedContextLength,
               promptTokens: meta?.usage?.prompt_tokens ?? null,
               completionTokens: windowCount,
@@ -8680,9 +8772,15 @@ export function createOpenAIStreamAdapter(
             // Bounded so a slow engine cannot hold a finished answer; linked by hand since
             // AbortSignal.any is newer than the Safari floor.
             const lookupAbort = new AbortController();
-            const onRunAbort = () => lookupAbort.abort();
-            runAbort.signal.addEventListener("abort", onRunAbort, { once: true });
-            const lookupTimer = setTimeout(() => lookupAbort.abort(), 15_000);
+            const onRunAbort = () => {
+              lookupAbort.abort();
+            };
+            runAbort.signal.addEventListener("abort", onRunAbort, {
+              once: true,
+            });
+            const lookupTimer = setTimeout(() => {
+              lookupAbort.abort();
+            }, 15_000);
             try {
               // authFetch refreshes a token that expired mid-generation; a login redirect is harmless here.
               const response = await authFetch(
@@ -8833,10 +8931,9 @@ export function createOpenAIStreamAdapter(
             shouldOfferMinPRecovery(msg, externalProvider?.providerType, params)
           ) {
             keepMinPRecovery = true;
-            const cleanupTimer = setTimeout(
-              () => minPRecoveryGuard.dispose(),
-              8000,
-            );
+            const cleanupTimer = setTimeout(() => {
+              minPRecoveryGuard.dispose();
+            }, 8000);
             const disposeRecovery = () => {
               clearTimeout(cleanupTimer);
               minPRecoveryGuard.dispose();
@@ -8906,7 +9003,7 @@ export function createOpenAIStreamAdapter(
             const tooLong =
               `${latestTurnOwnTokens(irreducible).toLocaleString()} tokens on its own, ` +
               `against the ${budget.toLocaleString()} tokens this ` +
-              `${irreducible?.context_length?.toLocaleString()}-token window leaves for the prompt. ` +
+              `${String(irreducible?.context_length?.toLocaleString())}-token window leaves for the prompt. ` +
               "The earlier turns were already removed and it still does not fit, so " +
               "shortening the conversation will not help. ";
             toast.error("Context limit reached", {
@@ -8939,11 +9036,14 @@ export function createOpenAIStreamAdapter(
           }
           // Only a status read shows a killed worker's model is gone; quiet, the failure has its toast.
           if (!isExternalRequest) {
-            void syncInferenceStatusToStore({ includeLoras: false, quiet: true });
+            syncInferenceStatusToStore({
+              includeLoras: false,
+              quiet: true,
+            }).catch(() => undefined);
           }
         }
         // An explicit Stop is an abort too, but must persist its latched "cancelled" reason via the replacement yield below.
-        if (!abortSignal.aborted || generationStopRequested) {
+        if (!abortSignal.aborted || isGenerationStopRequested()) {
           closeReasoningContent();
           const partialText = mergeContinuation(cumulativeText, { final: true });
           const partialContent = buildAssistantContent(partialText);
@@ -9034,7 +9134,7 @@ export function createOpenAIStreamAdapter(
         runtime.clearLiveGenerationForThread(cleanupKey);
         clearTimeout(warmupTimer);
         if (waitingFirstChunk) {
-          if (firstTokenSettled) {
+          if (isFirstTokenSettled()) {
             settleFirstTokenOk();
           } else if (runSignal.aborted) {
             settleFirstTokenErr(new Error("Cancelled"));
@@ -9067,7 +9167,7 @@ export function createOpenAIStreamAdapter(
       } catch (error) {
         if (!args.abortSignal.aborted) {
           notifyPromptQueueRunFailed(
-            args.unstable_threadId ?? preStreamThreadIds[0] ?? null,
+            args.unstable_threadId ?? preStreamThreadIds.at(0) ?? null,
           );
         }
         throw error;

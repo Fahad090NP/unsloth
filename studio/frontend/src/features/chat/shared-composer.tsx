@@ -906,6 +906,12 @@ export function SharedComposer({
   const isCompareMode = Boolean(model1?.id || model2?.id);
   // Compare defers the image check to send: the catalog can lag real capabilities.
   const attachUnavailableReason = isCompareMode ? null : imageUnavailableReason;
+  const attachUnavailableReasonRef = useRef(attachUnavailableReason);
+  useEffect(() => {
+    Object.assign(attachUnavailableReasonRef, {
+      current: attachUnavailableReason,
+    });
+  }, [attachUnavailableReason]);
   const effectiveExternalModelId =
     selectedExternalProvider?.providerType === "openrouter" &&
     externalSelection?.modelId === "openrouter/free" &&
@@ -1238,6 +1244,7 @@ export function SharedComposer({
   const addFilesUntracked = useCallback(
     async (input: FileList | readonly File[] | null) => {
       if (!input?.length) return;
+      const attachUnavailableReason = attachUnavailableReasonRef.current;
       // Classify first so an audio-only 3GP is not refused as video by extension.
       const files = await classifiedAttachmentFiles(input);
       const next: PendingImage[] = [];
@@ -1327,7 +1334,7 @@ export function SharedComposer({
       }
       setPendingImages((prev) => [...prev, ...next]);
     },
-    [attachUnavailableReason],
+    [],
   );
 
   const [addingFiles, setAddingFiles] = useState(0);
@@ -1690,15 +1697,17 @@ export function SharedComposer({
               );
               const cleaned = clean(resolvedArgs.tokens);
               if (cleaned.length > 0) {
-                ownConfig.llamaExtraArgs = cleaned;
+                Object.assign(ownConfig, { llamaExtraArgs: cleaned });
               } else if (resolvedArgs.explicit) {
                 // Send an explicit empty list, or /load carries the resident model's args over.
-                ownConfig.llamaExtraArgs = [];
+                Object.assign(ownConfig, { llamaExtraArgs: [] });
               }
             } else if (local !== null && local.length > 0) {
               const cleaned = clean(local);
               if (cleaned.length !== local.length) {
-                ownConfig.llamaExtraArgs = cleaned.length > 0 ? cleaned : [];
+                Object.assign(ownConfig, {
+                  llamaExtraArgs: cleaned.length > 0 ? cleaned : [],
+                });
               }
             }
           } catch {

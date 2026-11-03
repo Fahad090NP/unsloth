@@ -117,8 +117,11 @@ export function McpAppFrame(props: McpAppFrameProps) {
 
   useEffect(() => {
     let cancelled = false;
-    setResource(null);
-    setError(null);
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setResource(null);
+      setError(null);
+    });
     readMcpUiResource(serverId, ui.resourceUri, { threadId, sessionId }).then(
       (loaded) => {
         if (!cancelled) {
@@ -161,7 +164,9 @@ export function McpAppFrame(props: McpAppFrameProps) {
     portRef.current?.close();
     portRef.current = null;
     setQueue([]);
-    setHeight(DEFAULT_HEIGHT);
+    queueMicrotask(() => {
+      setHeight(DEFAULT_HEIGHT);
+    });
     if (!frame) return;
 
     const callTool = async (name: unknown, rawArgs: unknown) => {

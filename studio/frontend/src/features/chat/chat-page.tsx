@@ -1254,18 +1254,19 @@ function ComparePane({
 
 function useCompareReloadReadiness(pairId: string): (pane: string) => void {
   const signalReady = useAppShellReadySignal();
-  const stateRef = useRef({
-    pairId,
-    panes: new Set<string>(),
-    sent: false,
-  });
-  if (stateRef.current.pairId !== pairId) {
-    stateRef.current = { pairId, panes: new Set<string>(), sent: false };
-  }
+  const stateRef = useRef<{
+    pairId: string;
+    panes: Set<string>;
+    sent: boolean;
+  } | null>(null);
   return useCallback(
     (pane: string) => {
-      const state = stateRef.current;
-      if (state.pairId !== pairId || state.sent) {
+      let state = stateRef.current;
+      if (state === null || state.pairId !== pairId) {
+        state = { pairId, panes: new Set<string>(), sent: false };
+        stateRef.current = state;
+      }
+      if (state.sent) {
         return;
       }
       state.panes.add(pane);
@@ -1770,6 +1771,12 @@ function createThreadNonce(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+// Read through a function so TypeScript's narrowing of the readonly `aborted` flag after an
+// earlier check does not hide the later, still-meaningful abort checks across an await.
+function isAbortSignalAborted(signal: AbortSignal): boolean {
+  return signal.aborted;
+}
+
 type ProjectChatExportFormat =
   | "raw-jsonl"
   | "messages-jsonl"
@@ -1795,16 +1802,26 @@ async function exportProjectConversation(
   format: ProjectChatExportFormat,
 ): Promise<void> {
   switch (format) {
-    case "raw-jsonl":
-      return await exportConversationRawJsonl(threadId);
-    case "messages-jsonl":
-      return await exportConversationMessagesJsonl(threadId);
-    case "csv":
-      return await exportConversationCsv(threadId);
-    case CONVERSATION_MARKDOWN_FORMAT:
-      return await exportConversationMarkdown(threadId);
-    case "sharegpt-jsonl":
-      return await exportConversationShareGPT(threadId);
+    case "raw-jsonl": {
+      await exportConversationRawJsonl(threadId);
+      break;
+    }
+    case "messages-jsonl": {
+      await exportConversationMessagesJsonl(threadId);
+      break;
+    }
+    case "csv": {
+      await exportConversationCsv(threadId);
+      break;
+    }
+    case CONVERSATION_MARKDOWN_FORMAT: {
+      await exportConversationMarkdown(threadId);
+      break;
+    }
+    case "sharegpt-jsonl": {
+      await exportConversationShareGPT(threadId);
+      break;
+    }
   }
 }
 
@@ -2104,6 +2121,13 @@ function ProjectLanding({
     });
   }, [newThreadNonce]);
 
+  const clearPendingNewThreadId = useCallback(() => {
+    setPendingNewThreadId(null);
+  }, []);
+  const rememberPendingNewThreadId = useCallback((threadId: string) => {
+    setPendingNewThreadId(threadId);
+  }, []);
+
   useEffect(() => {
     const resumed = active && !wasActiveRef.current;
     wasActiveRef.current = active;
@@ -2121,7 +2145,7 @@ function ProjectLanding({
       // Leaving a created chat for a new one: rotate the nonce so the runtime switches to a fresh thread.
       if (pendingNewThreadId) {
         rotateNewThreadNonce();
-        setPendingNewThreadId(null);
+        clearPendingNewThreadId();
       }
       return;
     }
@@ -2140,7 +2164,7 @@ function ProjectLanding({
         activeThreadId,
         captured?.nonce === newThreadNonce ? captured.claim : NO_SUCH_CLAIM,
       );
-    setPendingNewThreadId(activeThreadId);
+    rememberPendingNewThreadId(activeThreadId);
   }, [
     active,
     activeThreadId,
@@ -2148,6 +2172,8 @@ function ProjectLanding({
     pendingNewThreadId,
     newThreadNonce,
     rotateNewThreadNonce,
+    clearPendingNewThreadId,
+    rememberPendingNewThreadId,
   ]);
 
   useEffect(() => {
@@ -2917,28 +2943,65 @@ export function ChatPage({
     ? null
     : activeThreadId;
   // ?new=<nonce> lacks a URL thread; wait for ThreadNewChatSwitch to clear stale activeThreadId.
-  const newChatBlankedRef = useRef<string | null>(null);
-  if (
-    search.new &&
-    (activeThreadId === null || isAssistantLocalThreadId(activeThreadId))
-  ) {
-    newChatBlankedRef.current = search.new;
-  }
+  // The blank observation and created-thread handoff are render latches, so they live in state and
+  // advance together in a layout effect instead of being written to refs during render.
+  const [newChatLatch, setNewChatLatch] = useState<{
+    blanked: string | null;
+    identityBlanked: string | null;
+    chat: { nonce: string; threadId: string } | null;
+  }>({ blanked: null, identityBlanked: null, chat: null });
+  const updateNewChatLatch = useCallback(
+    (
+      updater: (previous: {
+        blanked: string | null;
+        identityBlanked: string | null;
+        chat: { nonce: string; threadId: string } | null;
+      }) => {
+        blanked: string | null;
+        identityBlanked: string | null;
+        chat: { nonce: string; threadId: string } | null;
+      },
+    ) => {
+      setNewChatLatch(updater);
+    },
+    [],
+  );
+  useLayoutEffect(() => {
+    updateNewChatLatch((previous) => {
+      let next = previous;
+      if (
+        search.new &&
+        (activeThreadId === null || isAssistantLocalThreadId(activeThreadId))
+      ) {
+        if (next.blanked !== search.new) {
+          next = { ...next, blanked: search.new };
+        }
+      }
+      // leaving Chat clears activeThreadId and restores it later, so the shown thread id is latched.
+      if (search.new && activeThreadId === null) {
+        if (next.identityBlanked !== search.new) {
+          next = { ...next, identityBlanked: search.new };
+        }
+      }
+      // re-latch after every blank: a nonce whose chat was deleted while hidden comes back on a fresh thread.
+      if (
+        search.new &&
+        activeThreadId &&
+        next.identityBlanked === search.new
+      ) {
+        next = {
+          ...next,
+          identityBlanked: null,
+          chat: { nonce: search.new, threadId: activeThreadId },
+        };
+      }
+      return next;
+    });
+  }, [search.new, activeThreadId, updateNewChatLatch]);
   const newChatThreadId =
-    search.new && newChatBlankedRef.current === search.new
+    search.new && newChatLatch.blanked === search.new
       ? persistedActiveThreadId
       : null;
-  // leaving Chat clears activeThreadId and restores it later, so the shown thread id is latched.
-  const newChatIdentityBlankedRef = useRef<string | null>(null);
-  if (search.new && activeThreadId === null) {
-    newChatIdentityBlankedRef.current = search.new;
-  }
-  // re-latch after every blank: a nonce whose chat was deleted while hidden comes back on a fresh thread.
-  const newChatRef = useRef<{ nonce: string; threadId: string } | null>(null);
-  if (search.new && activeThreadId && newChatIdentityBlankedRef.current === search.new) {
-    newChatRef.current = { nonce: search.new, threadId: activeThreadId };
-    newChatIdentityBlankedRef.current = null;
-  }
   const modelOperationInProgress = useChatRuntimeStore(
     (state) => state.modelLoading,
   );
@@ -3451,9 +3514,16 @@ export function ChatPage({
   // one left open in a chat before.
   const [projectBrowserBaseline, setProjectBrowserBaseline] = useState<number | null>(null);
   const projectViewId = view.mode === "project" ? view.projectId : null;
+  const updateProjectBrowserBaseline = useCallback((baseline: number | null) => {
+    setProjectBrowserBaseline((current) =>
+      current === baseline ? current : baseline,
+    );
+  }, []);
   useEffect(() => {
-    setProjectBrowserBaseline(projectViewId ? useBrowserStore.getState().openSequence : null);
-  }, [projectViewId]);
+    updateProjectBrowserBaseline(
+      projectViewId ? useBrowserStore.getState().openSequence : null,
+    );
+  }, [projectViewId, updateProjectBrowserBaseline]);
   const artifactViewKey =
     view.mode === "single"
       ? `single:${view.threadId ?? view.newThreadNonce ?? "new"}`
@@ -3467,16 +3537,42 @@ export function ChatPage({
       : artifactViewKey;
 
   // Kept mounted behind compare: unmounting detaches the runtime and the backend cancels the run.
-  const keptBaseViewRef = useRef<{
+  // The last non-compare view is kept in state; while not comparing the live view is used directly,
+  // so only the transition into Compare reads the latched copy.
+  const [keptBaseView, setKeptBaseView] = useState<{
     view: Exclude<ChatView, { mode: "compare" }>;
     attachmentTargetKey: string;
-  } | null>(null);
-  if (view.mode !== "compare") {
-    keptBaseViewRef.current = { view, attachmentTargetKey: artifactViewKey };
-  }
-  const baseView = keptBaseViewRef.current?.view ?? null;
+  } | null>(() =>
+    view.mode === "compare"
+      ? null
+      : { view, attachmentTargetKey: artifactViewKey },
+  );
+  const rememberBaseView = useCallback(
+    (next: {
+      view: Exclude<ChatView, { mode: "compare" }>;
+      attachmentTargetKey: string;
+    }) => {
+      setKeptBaseView((previous) =>
+        previous !== null &&
+        previous.view === next.view &&
+        previous.attachmentTargetKey === next.attachmentTargetKey
+          ? previous
+          : next,
+      );
+    },
+    [],
+  );
+  useLayoutEffect(() => {
+    if (view.mode === "compare") {
+      return;
+    }
+    rememberBaseView({ view, attachmentTargetKey: artifactViewKey });
+  }, [view, artifactViewKey, rememberBaseView]);
+  const baseView = view.mode === "compare" ? (keptBaseView?.view ?? null) : view;
   const baseAttachmentTargetKey =
-    keptBaseViewRef.current?.attachmentTargetKey ?? artifactViewKey;
+    view.mode === "compare"
+      ? (keptBaseView?.attachmentTargetKey ?? artifactViewKey)
+      : artifactViewKey;
   const baseBackgrounded = view.mode === "compare";
 
   // Keyed by project, not a boolean: the hoisted provider is not remounted on project change.
@@ -3496,30 +3592,72 @@ export function ChatPage({
     clearAutoOpenedArtifacts();
   }, [artifactViewKey]);
 
-  const newChat = newChatRef.current;
+  const newChat = newChatLatch.chat;
   const newChatShownId =
     newChat && view.mode === "single" && view.newThreadNonce === newChat.nonce ? newChat.threadId : null;
-  const projectChatBlankedRef = useRef<{ projectId: string; nonce: string } | null>(null);
-  if (view.mode === "project" && activeThreadId === null) {
-    projectChatBlankedRef.current = { projectId: view.projectId, nonce: projectNewThreadNonce };
-  }
-  const projectChatRef = useRef<{ projectId: string; nonce: string; threadId: string } | null>(null);
-  const projectChatBlanked = projectChatBlankedRef.current;
-  if (
-    view.mode === "project" &&
-    activeThreadId &&
-    projectChatBlanked?.projectId === view.projectId &&
-    projectChatBlanked.nonce === projectNewThreadNonce &&
-    (projectChatRef.current?.projectId !== view.projectId ||
-      projectChatRef.current.nonce !== projectNewThreadNonce)
-  ) {
-    projectChatRef.current = {
-      projectId: view.projectId,
-      nonce: projectNewThreadNonce,
-      threadId: activeThreadId,
-    };
-  }
-  const projectChat = projectChatRef.current;
+  // Project chats latch the same way: observe the blank once, then keep the created thread id for
+  // that project/nonce until the next blank. State plus a layout effect replaces the render-time refs.
+  const [projectChatLatch, setProjectChatLatch] = useState<{
+    blanked: { projectId: string; nonce: string } | null;
+    chat: { projectId: string; nonce: string; threadId: string } | null;
+  }>({ blanked: null, chat: null });
+  const updateProjectChatLatch = useCallback(
+    (
+      updater: (previous: {
+        blanked: { projectId: string; nonce: string } | null;
+        chat: { projectId: string; nonce: string; threadId: string } | null;
+      }) => {
+        blanked: { projectId: string; nonce: string } | null;
+        chat: { projectId: string; nonce: string; threadId: string } | null;
+      },
+    ) => {
+      setProjectChatLatch(updater);
+    },
+    [],
+  );
+  useLayoutEffect(() => {
+    updateProjectChatLatch((previous) => {
+      let next = previous;
+      if (view.mode === "project" && activeThreadId === null) {
+        const blanked = next.blanked;
+        if (
+          blanked === null ||
+          blanked.projectId !== view.projectId ||
+          blanked.nonce !== projectNewThreadNonce
+        ) {
+          next = {
+            ...next,
+            blanked: { projectId: view.projectId, nonce: projectNewThreadNonce },
+          };
+        }
+      }
+      if (
+        view.mode === "project" &&
+        activeThreadId &&
+        next.blanked !== null &&
+        next.blanked.projectId === view.projectId &&
+        next.blanked.nonce === projectNewThreadNonce
+      ) {
+        const chat = next.chat;
+        if (
+          chat === null ||
+          chat.projectId !== view.projectId ||
+          chat.nonce !== projectNewThreadNonce
+        ) {
+          next = {
+            ...next,
+            chat: {
+              projectId: view.projectId,
+              nonce: projectNewThreadNonce,
+              threadId: activeThreadId,
+            },
+          };
+        }
+      }
+      return next;
+    });
+  }, [view, activeThreadId, projectNewThreadNonce, updateProjectChatLatch]);
+  const projectChat = projectChatLatch.chat;
   const projectChatShownId =
     projectChat &&
     view.mode === "project" &&
@@ -4574,7 +4712,7 @@ export function ChatPage({
             baseModel: target.baseModel,
           });
           await selectWithConfig(selection);
-          if (lifecycle.signal.aborted) return;
+          if (isAbortSignalAborted(lifecycle.signal)) return;
           useChatRuntimeStore.getState().setActiveThreadId(null);
           useChatRuntimeStore.getState().setContextUsage(null);
           await navigate({
@@ -4594,7 +4732,7 @@ export function ChatPage({
             id: handoff.baseModel,
           });
           await selectWithConfig({ id: handoff.baseModel, isLora: false });
-          if (lifecycle.signal.aborted) return;
+          if (isAbortSignalAborted(lifecycle.signal)) return;
         } else {
           console.warn("[chat-handoff] no lora/base match found", {
             requestedBaseModel: handoff.baseModel,

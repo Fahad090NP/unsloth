@@ -3130,8 +3130,10 @@ function createRuntimeHook(
   pairId?: string,
   reloadReadyThreadId?: string,
   onInitialHistoryReady?: () => void,
-  backgroundedRef?: { current: boolean },
-  newThreadSwitchStateRef?: { current: NewThreadSwitchState },
+  runtimeRefs?: {
+    backgrounded?: { current: boolean };
+    newThreadSwitch?: { current: NewThreadSwitchState };
+  },
 ) {
   return function useConfiguredRuntimeHook(): ReturnType<
     typeof useLocalRuntime
@@ -3141,8 +3143,8 @@ function createRuntimeHook(
       pairId,
       reloadReadyThreadId,
       onInitialHistoryReady,
-      backgroundedRef,
-      newThreadSwitchStateRef,
+      runtimeRefs?.backgrounded,
+      runtimeRefs?.newThreadSwitch,
     );
   };
 }
@@ -4381,6 +4383,14 @@ export function ChatRuntimeProvider({
     nonceThread: null,
     landedAttempt: 0,
   });
+  // Bundled so the hook factory receives one stable handle instead of raw refs.
+  const runtimeRefs = useMemo(
+    () => ({
+      backgrounded: backgroundedRef,
+      newThreadSwitch: newThreadSwitchStateRef,
+    }),
+    [],
+  );
   const runtimeHook = useMemo(
     () =>
       createRuntimeHook(
@@ -4388,10 +4398,9 @@ export function ChatRuntimeProvider({
         pairId,
         initialThreadId,
         onInitialHistoryReady,
-        backgroundedRef,
-        newThreadSwitchStateRef,
+        runtimeRefs,
       ),
-    [initialThreadId, modelType, onInitialHistoryReady, pairId],
+    [initialThreadId, modelType, onInitialHistoryReady, pairId, runtimeRefs],
   );
   const runtime = useRemoteThreadListRuntime({
     runtimeHook,
