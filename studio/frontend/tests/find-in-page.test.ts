@@ -1503,7 +1503,7 @@ test("the bar stays out of a backgrounded scope, and off the document origin", a
 });
 
 const FIND_SURFACE_GEOMETRY =
-  /className="find-bar-surface [^"]*top-\[calc\(var\(--studio-content-top-inset,0px\)\+3\.5rem\)\] [^"]*\bh-13\b/;
+  /className="find-bar-surface [^"]*top-\[calc\(var\(--studio-content-top-inset,0\)\+3\.5rem\)\] [^"]*\bh-13\b/;
 const TOAST_UNDER_FIND_BAR =
   /offset-top: calc\(var\(--studio-content-top-inset, 0px\) \+ 3\.5rem \+ 3\.25rem \* var\(--ui-space-scale, 1\) \+ 0\.5rem\) !important;\s*--mobile-offset-top: calc\(var\(--studio-content-top-inset, 0px\) \+ 3\.5rem \+ 3\.25rem \* var\(--ui-space-scale, 1\) \+ 0\.5rem\) !important;/;
 
@@ -1915,7 +1915,7 @@ test("a query that needs no pattern is not given one", () => {
 test("plain text does not pay for the boundary check", () => {
   assert.match(
     FIND_TEXT_INDEX,
-    /const JOINS_GRAPHEME = \/\[\^\\u0000-\\u02ff\]\//,
+    /const JOINS_GRAPHEME = \/\[\\u0300-\\u\{10FFFF\}\]\/u/,
   );
   const guard = FIND_TEXT_INDEX.slice(
     FIND_TEXT_INDEX.indexOf("function alignsToGraphemes"),
@@ -2457,7 +2457,7 @@ test("a surface inside the scope, or inside one already taken, is not indexed tw
 });
 
 test("the observer watches the document, since a portal lands outside the scope", () => {
-  assert.match(USE_FIND_IN_PAGE, /scope\?\.ownerDocument\?\.body \?\? scope/);
+  assert.match(USE_FIND_IN_PAGE, /scope\?\.ownerDocument\.body \?\? scope/);
   assert.match(USE_FIND_IN_PAGE, /attributeFilter: \[[^\]]*"data-state"/);
 });
 
@@ -2585,8 +2585,8 @@ test("the ordinal survives an append and nothing else", () => {
 });
 
 test("every navigation waits for the query to settle, buttons included", () => {
-  assert.match(FIND_BAR, /onClick=\{\(\) => stepWhenSettled\(-1\)\}/);
-  assert.match(FIND_BAR, /onClick=\{\(\) => stepWhenSettled\(1\)\}/);
+  assert.match(FIND_BAR, /onClick=\{\(\) => \{ stepWhenSettled\(-1\); \}\}/);
+  assert.match(FIND_BAR, /onClick=\{\(\) => \{ stepWhenSettled\(1\); \}\}/);
   assert.equal(/onClick=\{(next|previous)\}/.test(FIND_BAR), false);
   assert.match(
     FIND_BAR,

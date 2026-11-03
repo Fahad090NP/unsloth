@@ -18,7 +18,10 @@ test("Archive chats reads every chat in the project, not the sidebar's loaded pa
     /await readAllSidebarRows\(sidebarRowQuery\(\{ projectId: project\.id \}\)\)/,
   );
   assert.match(menu, /await archiveChatItems\(all\);/);
-  assert.match(menu, /onSelect=\{\(\) => void archiveProjectChats\(\)\}/);
+  assert.match(
+    menu,
+    /onSelect=\{\(\) => \{\n\s*archiveProjectChats\(\)\.catch\(\(error: unknown\) => \{/,
+  );
   // A collapsed folder lists no rows, so gating on them would disable the item for a full project.
   assert.doesNotMatch(menu, /listedChatsByProjectId/);
   assert.doesNotMatch(menu, /disabled=\{projectChats/);

@@ -12,7 +12,7 @@ test("typing a Hub search clears an opened model but not the split view's auto-p
   const handler = src.slice(at, src.indexOf("setQuery(next);", at));
   assert.match(
     handler,
-    /const openedModel =\s*!!urlModel && urlModel !== autoPreviewIdRef\.current;/,
+    /const openedModel =\s*Boolean\(urlModel\) && urlModel !== autoPreviewIdRef\.current;/,
   );
   assert.match(handler, /if \(openedModel \|\| urlSection\) \{/);
   assert.match(src, /autoPreviewIdRef\.current = firstId;/);

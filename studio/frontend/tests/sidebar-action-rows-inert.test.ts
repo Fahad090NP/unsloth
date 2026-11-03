@@ -50,11 +50,11 @@ test("custom titlebar branding centers on the chat header's model picker",  () =
   const header = APP_SIDEBAR.split("<SidebarHeader")[1].split("</SidebarHeader>")[0];
   assert.match(
     header,
-    /usesCustomTitlebar\s*\?\s*"shrink-0 p-0 pt-\[calc\(var\(--studio-content-top-inset,0px\)\+var\(--studio-chat-header-padding-top,11px\)\)\]"/,
+    /usesCustomTitlebar\s*\?\s*"shrink-0 p-0 pt-\[calc\(var\(--studio-content-top-inset,0\)\+var\(--studio-chat-header-padding-top,11px\)\)\]"/,
   );
   assert.match(
     header,
-    /usesCustomTitlebar && "h-\[var\(--studio-chat-control-height,34px\)\]"/,
+    /usesCustomTitlebar && "h-\(--studio-chat-control-height,34px\)"/,
   );
 return Promise.resolve(); });
 
@@ -77,7 +77,7 @@ test("navigation rows align while the profile footer ignores the scroll rail",  
   const source = APP_SIDEBAR;
   assert.match(
     source,
-    /const rowPadding = usesDesktopTitlebar\s*\?\s*"ps-\[5px\] pe-\[calc\(var\(--sidebar-rail,0px\)\+5px\*var\(--ui-space-scale,1\)\)\]"\s*:\s*"ps-1\.5 pe-\[calc\(var\(--sidebar-rail,0px\)\+6px\*var\(--ui-space-scale,1\)\)\]"/,
+    /const rowPadding = usesDesktopTitlebar\s*\?\s*"ps-\[5px\] pe-\[calc\(var\(--sidebar-rail,0\)\+5px\*var\(--ui-space-scale,1\)\)\]"\s*:\s*"ps-1\.5 pe-\[calc\(var\(--sidebar-rail,0\)\+6px\*var\(--ui-space-scale,1\)\)\]"/,
   );
   assert.match(
     source,
@@ -131,7 +131,7 @@ test("the sidebar list measures its scroll rail",  () => {
   assert.match(source, /if \(rail === railWidthRef\.current\) return;/);
   assert.match(
     source,
-    /absolute start-0 end-\[var\(--sidebar-rail,0px\)\] bottom-full/,
+    /absolute inset-s-0 inset-e-\(--sidebar-rail,0\) bottom-full/,
   );
   // Only the Windows-wide auto reset may set a width; a width override hid the rail.
   const railWidthDecls = (

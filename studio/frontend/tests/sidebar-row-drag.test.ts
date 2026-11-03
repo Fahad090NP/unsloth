@@ -1058,7 +1058,7 @@ test("a sort picked while a move is in flight is not overwritten", () => {
 test("the Pinned tail strip adds no space under the section", () => {
   assert.match(
     APP_SIDEBAR,
-    /<SidebarGroup className="[^"]*data-\[state=open\]:-mb-\[calc\(8px\*var\(--ui-space-scale,1\)\)\]"/,
+    /<SidebarGroup className="[^"]*data-\[state=open\]:mb-\[calc\(-8px\*var\(--ui-space-scale,1\)\)\]"/,
   );
 });
 
@@ -1134,7 +1134,7 @@ test("a chat can be dropped after a folder that ends the Pinned list", () => {
   assert.ok(pinnedMenu.length > 0, "the Pinned section moved");
   assert.match(
     pinnedMenu,
-    /<SidebarMenuItem\n\s*aria-hidden\n\s*className=\{cn\(\n\s*\/\/[^\n]*\n\s*"relative z-\[1\] h-\[calc\(8px\*var\(--ui-space-scale,1\)\)\]",\n\s*dropCueClass\(SIDEBAR_TAIL_SCOPE, "pinned"\),/,
+    /<SidebarMenuItem\n\s*aria-hidden\n\s*className=\{cn\(\n\s*\/\/[^\n]*\n\s*"relative z-1 h-\[calc\(8px\*var\(--ui-space-scale,1\)\)\]",\n\s*dropCueClass\(SIDEBAR_TAIL_SCOPE, "pinned"\),/,
   );
   assert.ok(
     !pinnedMenu.includes('draggingRow && '),
@@ -1169,10 +1169,13 @@ test("the edge keeps scrolling while the pointer rests on it", () => {
 test("a carried row lifts a copy that follows the pointer", () => {
   assert.match(HOOK, /started = true;\n\s*scroller\.current = scrollerOf\(row\);\n\s*ghost\.current = liftRow\(/);
   assert.match(HOOK, /const face = row\.querySelector<HTMLElement>\(ROW_FACE_SELECTOR\);/);
-  assert.match(HOOK, /Math\.min\(Math\.max\(y - ghost\.grab, view\.top\), view\.bottom - height\)/);
+  assert.match(
+    HOOK,
+    /const top = Math\.min\(Math\.max\(y - grab, view\.top\), view\.bottom - height\);/,
+  );
   // Placed at the row first, so a frame before the first transform is not at the top.
   assert.match(HOOK, /top: `\$\{rect\.top\}px`,/);
-  assert.match(HOOK, /translate3d\(0, \$\{Math\.round\(top - ghost\.top\)\}px, 0\)/);
+  assert.match(HOOK, /translate3d\(0, \$\{Math\.round\(top - ghostTop\)\}px, 0\)/);
   assert.match(HOOK, /dragLayer\(\)\.append\(element\);/);
   assert.match(HOOK, /dragLayer\(\)\.append\(overlay\);/);
   assert.doesNotMatch(HOOK, /document\.body\.append\((element|overlay)\)/);
@@ -1195,7 +1198,10 @@ test("a carried row lifts a copy that follows the pointer", () => {
 test("a dropped row slides from where it was let go, unless motion is reduced", () => {
   assert.match(HOOK, /const from = ghost\.current\?\.element\.getBoundingClientRect\(\)\.top \?\? null;\n\s*clear\(\);/);
   assert.match(HOOK, /onDrop\(aimed\.outcome, dragged\);\n\s*if \(from !== null && !optionsRef\.current\.reducedMotion\?\.\(\)\) settleRow\(dragged, from\);/);
-  assert.match(APP_SIDEBAR, /onDrop: \(plan, dragged\) => commitDrop\(plan, dragged\),\n\s*reducedMotion: prefersReducedMotion,/);
+  assert.match(
+    APP_SIDEBAR,
+    /onDrop: \(plan, dragged\) => \{ commitDrop\(plan, dragged\); \},\n\s*reducedMotion: prefersReducedMotion,/,
+  );
   assert.match(HOOK, /zone\.folderId === item\.id &&/);
   assert.match(HOOK, /!all\.some\(\(other\) => other !== element && other\.contains\(element\)\)/);
 });

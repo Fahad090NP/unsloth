@@ -94,7 +94,10 @@ test("a chat's Move to submenu groups projects and sections, New first and Remov
   }
   const order = Object.values(at);
   assert.deepEqual([...order].sort((a, b) => a - b), order, "the Move to submenu is out of order");
-  assert.match(sub, /\{item\.projectId && \(\n\s*<P\.Item onSelect=\{\(\) => void moveChatToProject\(item, null\)\}>/);
+  assert.match(
+    sub,
+    /\{item\.projectId && \(\n\s*<P\.Item\n\s*onSelect=\{\(\) => \{\n\s*moveChatToProject\(item, null\)\.catch\(\(error: unknown\) => \{/,
+  );
   assert.match(sub, /icon=\{PlusSignIcon\}[^\n]*\n\s*<span>New project<\/span>/);
   const items = APP_SIDEBAR.slice(
     APP_SIDEBAR.indexOf("function renderSectionItems("),
@@ -116,7 +119,7 @@ test("a chat's Move to submenu groups projects and sections, New first and Remov
   );
   assert.match(
     APP_SIDEBAR,
-    /<P\.Item onSelect=\{\(\) => setEditingProject\(project\)\}>\n\s*<HugeiconsIcon icon=\{Settings01Icon\}/,
+    /<P\.Item onSelect=\{\(\) => \{ setEditingProject\(project\); \}\}>\n\s*<HugeiconsIcon icon=\{Settings01Icon\}/,
   );
   assert.ok(!APP_SIDEBAR.includes("newSectionEllipsis"));
 });
@@ -137,14 +140,17 @@ test("the folder menu leads with where to go, then what to change", async () => 
     "New chat is still in the folder menu",
   );
   assert.ok(!APP_SIDEBAR.includes("<span>Rename project</span>"));
-  assert.match(APP_SIDEBAR, /onSelect=\{\(\) => setEditingProject\(project\)\}/);
+  assert.match(
+    APP_SIDEBAR,
+    /onSelect=\{\(\) => \{ setEditingProject\(project\); \}\}/,
+  );
   assert.match(
     APP_SIDEBAR,
     /<EditProjectDialog\n\s*project=\{editingProject\}/,
   );
   assert.match(
     APP_SIDEBAR,
-    /onDelete=\{\(project\) => openDeleteDialog\(\{ kind: "project", project \}\)\}/,
+    /onDelete=\{\(project\) => \{ openDeleteDialog\(\{ kind: "project", project \}\); \}\}/,
   );
   assert.ok(!APP_SIDEBAR.includes('renamingTarget?.kind === "project"'));
 
@@ -204,7 +210,7 @@ test("a pinned folder keeps the order it was dragged into", () => {
   assert.deepEqual(order(["b", "a"]), ["b", "a"]);
   assert.match(
     APP_SIDEBAR,
-    /manualOrder\[PINNED_PROJECT_ORDER_SCOPE\]\?\.length\n\s*\? manualOrder\[PINNED_PROJECT_ORDER_SCOPE\]\n\s*: manualOrder\[PROJECT_ORDER_SCOPE\],/,
+    /pinnedProjectOrder\?\.length\n\s*\? pinnedProjectOrder\n\s*: manualOrder\[PROJECT_ORDER_SCOPE\],/,
   );
 });
 
@@ -291,7 +297,10 @@ test("the project page edits through the same dialog the sidebar opens", async (
   const page = await readSrcAsync("features/chat/chat-page.tsx");
   assert.ok(!page.includes("Rename project"), "the rename-only dialog is still there");
   assert.ok(!page.includes("commitProjectRename"), "the rename call is still there");
-  assert.match(page, /onEdit=\{\(\) => setEditingProject\(true\)\}/);
+  assert.match(
+    page,
+    /onEdit=\{\(\) => \{\n\s*setEditingProject\(true\);\n\s*\}\}/,
+  );
   assert.match(
     page,
     /projects\.find\(\(project\) => project\.id === projectId\)/,

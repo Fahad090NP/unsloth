@@ -50,5 +50,5 @@ test("a folder row reserves the room its touch actions take",  () => {
     source,
   );
   assert.ok(row, "could not find the project folder row");
-  assert.match(row[1], /\[@media\(pointer:coarse\)\]:pr-16/);
+  assert.match(row[1], /pointer-coarse:pr-16/);
 return Promise.resolve(); });

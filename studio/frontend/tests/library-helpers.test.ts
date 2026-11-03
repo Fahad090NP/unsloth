@@ -80,7 +80,7 @@ test("a folder that is gone sends its view back to where it was, or to Folders",
   for (const line of [
     'status === "ready" && folderId !== null && currentFolder === null',
     "parentOfOpen && folderById.has(parentOfOpen) ? parentOfOpen : undefined",
-    'go({ folder: parent, show: "folders" }, true);',
+    'go({ folder: parent, show: "folders" }, true).catch(() => undefined);',
   ]) {
     assert.ok(effect.includes(line), line);
   }
@@ -327,7 +327,7 @@ test("a card's date shows on hover, on keyboard focus and always on touch", () =
   const date = /"([^"]*)",\s*\)}\s*>\s*\{formatCardTime/.exec(readSrc("features/library/components/library-cards.tsx"))?.[1].split(" ");
   for (const reveal of [
     "group-hover/library-card:opacity-100",
-    "group-has-[:focus-visible]/library-card:opacity-100",
+    "group-has-focus-visible/library-card:opacity-100",
     "pointer-coarse:opacity-100",
   ]) {
     assert.ok(date?.includes(reveal), reveal);

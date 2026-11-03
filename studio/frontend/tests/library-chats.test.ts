@@ -238,16 +238,22 @@ test("the Chats tab opens on All, and a project opens its home in Chat", () => {
   const library = readSrc("features/library/chats/chats-library.tsx");
   assert.match(library, /search\.chatSection \? "chats" : \(search\.chatView \?\? "all"\)/);
   assert.match(library, /go\(entry === "all" \? \{\} : \{ chatView: entry \}\)/);
-  assert.match(library, /void navigate\(\{ to: "\/chat", search: \{ project: id \} \}\)/);
+  assert.match(
+    library,
+    /navigate\(\{ to: "\/chat", search: \{ project: id \} \}\)\.catch\(\(\) => undefined\);/,
+  );
   assert.doesNotMatch(readSrc("features/library/search.ts"), /project\?: string/);
   assert.doesNotMatch(readSrc("features/settings/tabs/data-tab.tsx"), /manageChats/);
   assert.match(
     readSrc("features/settings/tabs/chat-tab.tsx"),
-    /void navigate\(\{ to: "\/library", search: \{ show: "chats" \} \}\)/,
+    /\(navigate\(\{ to: "\/library", search: \{ show: "chats" \} \}\)\)\.catch\(\(\) => \{ \/\* noop \*\/ \}\);/
   );
   assert.match(library, /return chatListing\(true\);/);
   assert.match(library, /mixEntries\(visibleChats, visibleProjects, visibleSections, \{/);
-  assert.match(library, /const ungrouped = embedded \|\| section === "all";/);
+  assert.match(
+    library,
+    /const ungrouped = Boolean\(embedded\) \|\| section === "all";/,
+  );
   assert.match(library, /pinned: pinnedFirst && !ungrouped \? pinned : undefined,/);
   assert.match(readSrc("features/library/chats/chats-items.tsx"), /<OpenChatFolderItem item=\{chat\} \/>/);
 });
@@ -595,7 +601,10 @@ test("a project's home and the Projects page use the Library project menu", () =
   assert.match(page, /<SectionNameDialog\s+open=\{active && creatingSection\}/);
   const projects = readSrc("features/chat/projects-page.tsx");
   assert.match(projects, /<ProjectMenuItems\s+project=\{project\}\s+onNewChat=/);
-  assert.match(projects, /onNewChat=\{\(\) => newChatInProject\(project\.id\)\}/);
+  assert.match(
+    projects,
+    /onNewChat=\{\(\) => \{ newChatInProject\(project\.id\); \}\}/,
+  );
   for (const source of [page, projects, readSrc("features/library/chats/chats-library.tsx"), items]) {
     assert.match(source, /useFileProjectInSection\(\)/);
   }
@@ -623,7 +632,10 @@ test("Import chats sits in the project and section menus", () => {
 
 test("the empty space in a Projects page row opens its chats", () => {
   const page = readSrc("features/chat/projects-page.tsx");
-  assert.match(page, /<span\s+aria-hidden="true"\s+onClick=\{\(\) => toggleProjectChats\(project\.id\)\}\s+className="-my-4 min-w-0 flex-1 cursor-pointer self-stretch"/);
+  assert.match(
+    page,
+    /<span\s+aria-hidden="true"\s+onClick=\{\(\) => \{ toggleProjectChats\(project\.id\); \}\}\s+className="-my-4 min-w-0 flex-1 cursor-pointer self-stretch"/,
+  );
   const chevron = page.indexOf("<ChevronDownIcon");
   const spacer = page.indexOf('className="-my-4 min-w-0 flex-1 cursor-pointer self-stretch"');
   const updated = page.indexOf('className="hidden w-40 shrink-0 text-sm text-muted-foreground sm:block"');
@@ -640,7 +652,7 @@ test("clearing the selection drops the shift-click anchor", () => {
   const library = readSrc("features/library/chats/chats-library.tsx");
   assert.match(
     library,
-    /const setSelection = useCallback\(\(next: SetStateAction<Set<string>>\) => \{\n\s*if \(typeof next !== "function" && next\.size === 0\) selectionAnchor\.current = null;/,
+    /if \(selection\.size === 0\) selectionAnchor\.current = null;/,
   );
   assert.doesNotMatch(library, /setSelectionState\(new Set\(\)\)/);
 });
@@ -649,12 +661,18 @@ test("a section's menu reads New chat, New project and Edit", () => {
   const items = readSrc("features/library/chats/chats-items.tsx");
   const menu = items.slice(items.indexOf("export function SectionMenuItems("), items.indexOf("function sectionCountLabel("));
   assert.match(menu, /label=\{t\("library\.chats\.toolbar\.newChat"\)\}/);
-  assert.match(menu, /icon=\{FolderAddIcon\}\s*label=\{t\("library\.chats\.toolbar\.newProject"\)\}\s*onSelect=\{\(\) => actions\.newProjectInSection\(section\.id\)\}/);
+  assert.match(
+    menu,
+    /icon=\{FolderAddIcon\}\s*label=\{t\("library\.chats\.toolbar\.newProject"\)\}\s*onSelect=\{\(\) => \{ actions\.newProjectInSection\(section\.id\); \}\}/,
+  );
   assert.match(menu, /icon=\{Settings01Icon\}\s*label=\{t\("shell\.sections\.edit"\)\}/);
   assert.doesNotMatch(menu, /newChatInSection"\)|renameTitle/);
   const library = readSrc("features/library/chats/chats-library.tsx");
   assert.match(library, /if \(newProjectSection\) fileProjectInSection\(project, newProjectSection\);/);
-  assert.match(library, /openSectionId \? newProjectInSection\(openSectionId\) : setCreatingProject\(true\)/);
+  assert.match(
+    library,
+    /const newProjectInSection = \(sectionId: string\) => \{\n\s*setNewProjectSection\(sectionId\);\n\s*setCreatingProject\(true\);/,
+  );
 });
 
 test("a chat card's location has its project or section icon; menus leave out View chats", () => {

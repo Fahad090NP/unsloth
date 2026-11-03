@@ -110,7 +110,7 @@ test("double-clicking a chat title opens the Rename chat dialog", () => {
 test("a chat row marks itself read or unread from its own menu", () => {
   assert.match(
     APP_SIDEBAR,
-    /onSelect=\{\(\) =>\n\s*alreadyUnread\n\s*\? clearThreadsUnread\(threadIds\)\n\s*: markThreadsUnread\(threadIds, rowIdByThreadId\)\n\s*\}/,
+    /onSelect=\{\(\) => \{\n\s*if \(alreadyUnread\) clearThreadsUnread\(threadIds\);\n\s*else markThreadsUnread\(threadIds, rowIdByThreadId\);\n\s*\}\}/,
   );
   assert.ok(
     !APP_SIDEBAR.includes("disabled={alreadyUnread}"),
@@ -242,7 +242,7 @@ test("a chat row forks from its own menu", async () => {
   );
   assert.match(
     APP_SIDEBAR,
-    /setActiveThreadId\(result\.thread\.id\);\n\s*navigate\(\{ to: "\/chat", search: \{ thread: result\.thread\.id \} \}\);/,
+    /setActiveThreadId\(result\.thread\.id\);\n\s*navigate\(\{ to: "\/chat", search: \{ thread: result\.thread\.id \} \}\)\.catch\(/,
   );
 });
 

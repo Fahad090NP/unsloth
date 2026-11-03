@@ -53,7 +53,7 @@ test("a compare pane loads its remembered vLLM or SGLang settings", () => {
     },
     reconcile,
   );
-  assert.deepEqual(fields, {
+  assert.deepEqual({ ...fields }, {
     engine: "sglang",
     engine_precision: "int4",
     engine_parallelism: "pipeline",

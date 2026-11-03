@@ -194,7 +194,7 @@ test("no sidebar list sorts by priority", () => {
   assert.doesNotMatch(APP_SIDEBAR, /"priority"|PINNED_SORT_OPTIONS/);
   assert.match(
     APP_SIDEBAR,
-    /\}> = \[\n {2}\{ value: "updated", key: "shell\.organize\.lastUpdated" \},\n {2}\{ value: "manual", key: "shell\.organize\.manualOrder" \},\n\];/,
+    /\[\n\s*\{ value: "updated", key: "shell\.organize\.lastUpdated" \},\n\s*\{ value: "manual", key: "shell\.organize\.manualOrder" \},\n\];/,
   );
   const merged = mergePersistedOrganization(
     {
@@ -552,8 +552,8 @@ test("each list header's menu carries only what that list is about, as in ChatGP
     menu.slice(menu.indexOf(from), to ? menu.indexOf(to) : undefined);
   const pinned = branch('if (options.kind === "pinned")', '} else if (options.kind === "projects")');
   const projects = branch('} else if (options.kind === "projects")', '} else if (options.kind === "recents")');
-  const recents = branch('} else if (options.kind === "recents")', '} else if (options.kind === "section")');
-  const section = branch('} else if (options.kind === "section")', "return (\n      <NonModalDropdownMenu");
+  const recents = branch('} else if (options.kind === "recents")', '} else {\n      if (!("section" in options))');
+  const section = branch('if (!("section" in options)) return null;', "      <NonModalDropdownMenu");
   assert.match(pinned, /value=\{pinnedSort\}/);
   assert.doesNotMatch(pinned, /organizeSubmenu|renderSortSubmenu|setSectionHidden|mode: "create"/);
   assert.match(projects, /\{organizeSubmenu\}/);
@@ -613,11 +613,14 @@ test("a section's header starts a chat that is filed there on its first send", (
     APP_SIDEBAR.indexOf("function renderCustomSection("),
     APP_SIDEBAR.indexOf("function renderProjectsSection("),
   );
-  assert.match(section, /onClick=\{\(\) => openNewChatInSection\(section\.id\)\}/);
+  assert.match(
+    section,
+    /onClick=\{\(\) => \{ openNewChatInSection\(section\.id\); \}\}/,
+  );
   assert.match(section, /icon=\{PencilEdit02Icon\}/);
   assert.match(
     APP_SIDEBAR,
-    /navigate\(\{ to: "\/chat", search: \{ new: nonce \} \}\)\.then\(\(\) =>\n\s*setPendingNewChatSection\(\{ sectionId, nonce \}\),/,
+    /navigate\(\{ to: "\/chat", search: \{ new: nonce \} \}\)\n\s*\.then\(\(\) => \{\n\s*setPendingNewChatSection\(\{ sectionId, nonce \}\);/,
   );
   const effect = APP_SIDEBAR.slice(APP_SIDEBAR.indexOf("if (!pendingNewChatSection) return;"));
   assert.match(effect, /const fresh = isChatRoute && !search\.thread && !search\.project;/);
@@ -644,10 +647,13 @@ test("sections above Recents drag by their headers, and Recents stays last", asy
     APP_SIDEBAR,
     /\{orderedSectionKeys\.map\(\(key\) => \(\n\s*<Fragment key=\{key\}>\{renderOrderedSection\(key\)\}<\/Fragment>/,
   );
-  assert.match(APP_SIDEBAR, /data-sidebar-section=\{key\}\n\s*onPointerDown=\{\(event\) => startSectionDrag\(event, key\)\}/);
   assert.match(
     APP_SIDEBAR,
-    /useSectionDrag\(\{\n\s*onDrop: \(key, landing\) => moveSection\(key, landing\.target, landing\.edge\),/,
+    /data-sidebar-section=\{key\}\n\s*onPointerDown=\{\(event\) => \{ startSectionDrag\(event, key\); \}\}/,
+  );
+  assert.match(
+    APP_SIDEBAR,
+    /useSectionDrag\(\{\n\s*onDrop: \(key, landing\) => \{ moveSection\(key, landing\.target, landing\.edge\); \},/,
   );
   const drag = await readSrcAsync("features/chat/hooks/use-section-drag.ts");
   // Not by touch, which scrolls.
@@ -689,8 +695,8 @@ test("the sidebar and account menus share one flat surface and type; other menus
 
 test("a custom section's menu edits it, acts on its chats, and removes it", () => {
   const menu = APP_SIDEBAR.slice(
-    APP_SIDEBAR.indexOf('} else if (options.kind === "section") {'),
-    APP_SIDEBAR.indexOf("    return (\n      // Opens out to the right"),
+    APP_SIDEBAR.indexOf('if (!("section" in options)) return null;'),
+    APP_SIDEBAR.indexOf("    return (\n      // Opens out"),
   );
   const labels = [...menu.matchAll(/t\("(shell\.[\w.]+)"\)/g)].map((match) => match[1]);
   assert.deepEqual(labels, [
@@ -703,7 +709,10 @@ test("a custom section's menu edits it, acts on its chats, and removes it", () =
   assert.match(menu, /row\.kind === "chat" \? \[row\.item\] : \[\]/);
   // the whole section's unread chats, not only its loaded pages
   assert.match(menu, /disabled=\{unreadInSection\.length === 0\}/);
-  assert.match(menu, /onSelect=\{\(\) => clearThreadsUnread\(unreadInSection\)\}/);
+  assert.match(
+    menu,
+    /onSelect=\{\(\) => \{ clearThreadsUnread\(unreadInSection\); \}\}/,
+  );
   assert.match(menu, /disabled=\{chats\.length === 0\}\n\s*onSelect=\{\(\) => void archiveSection\(\)\.catch\(\(\) => undefined\)\}/);
   assert.match(menu, /await archiveChatItems\(all\);/);
   assert.match(menu, /icon=\{Settings01Icon\}[\s\S]*icon=\{Tick02Icon\}[\s\S]*icon=\{Archive03Icon\}[\s\S]*icon=\{Cancel01Icon\}/);
@@ -849,11 +858,20 @@ test("a later drop of a chat supersedes its earlier drop's pending move", () => 
 
 test("a chat moved into a project from its menu leaves its section, as a drop does", () => {
   const fn = APP_SIDEBAR.slice(APP_SIDEBAR.indexOf("async function moveChatToProjectFromMenu("));
-  assert.match(fn, /if \(!\(await moveChatToProject\(item, projectId\)\) \|\| filedSince\) return;/);
-  assert.match(fn, /filedSince \|\|= now\.sectionByChatId\[item\.id\] !== before\.sectionByChatId\[item\.id\];/);
+  assert.match(
+    fn,
+    /if \(!\(await moveChatToProject\(item, projectId\)\) \|\| filedSince\.current\) return;/,
+  );
+  assert.match(
+    APP_SIDEBAR,
+    /filedSince \|\|= now\.sectionByChatId\[item\.id\] !== before\.sectionByChatId\[item\.id\];/,
+  );
   assert.match(fn, /now\.organizeBy === "project" &&\n\s*!usePinnedChatsStore\.getState\(\)\.pinnedIds\.includes\(item\.id\)\n\s*\) \{\n\s*setChatsSection\(\[item\.id\], null\);/);
   assert.match(fn, /\} finally \{\n\s*stopWatching\(\);/);
-  assert.match(APP_SIDEBAR, /onSelect=\{\(\) => void moveChatToProjectFromMenu\(item, project\.id\)\}/);
+  assert.match(
+    APP_SIDEBAR,
+    /void moveChatToProjectFromMenu\(item, projectId\)\.catch\(/,
+  );
   assert.match(APP_SIDEBAR, /await moveChatToProjectFromMenu\(moveTarget, project\.id\);/);
   assert.doesNotMatch(APP_SIDEBAR, /onSelect=\{\(\) => void moveChatToProject\(item, project\.id\)\}/);
 });
@@ -974,7 +992,7 @@ test("signing in as another account drops the previous account's sections", asyn
 test("a row's section menu offers Remove from section only when it is in one", async () => {
   assert.match(
     APP_SIDEBAR,
-    /\{config\.anyFiled && \(\n\s*<P\.Item onSelect=\{\(\) => fileSectionTarget\(target, null\)\}>/,
+    /\{config\.anyFiled && \(\n\s*<P\.Item onSelect=\{\(\) => \{ fileSectionTarget\(target, null\); \}\}>/,
   );
   assert.doesNotMatch(APP_SIDEBAR, /disabled=\{!config\.anyFiled\}/);
   assert.match(APP_SIDEBAR, /anyFiled: !pinnedIdSet\.has\(item\.id\) && Boolean\(sectionByChatId\[item\.id\]\),/);

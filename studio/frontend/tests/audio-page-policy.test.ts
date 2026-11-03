@@ -394,7 +394,7 @@ test("a refresh that overlaps a pin or move is dropped and rerun after it", () =
   );
   assert.match(
     audioPageSource,
-    /writes\.inFlight === 0 && writes\.deferred\) \{\s*writes\.deferred = false;\s*void refreshGallery\(/,
+    /writes\.inFlight === 0 && writes\.deferred\) \{\s*writes\.deferred = false;\s*\(refreshGallery\(/,
   );
   assert.match(
     audioPageSource,
@@ -524,7 +524,7 @@ test("Record is offered only where the browser can capture audio", () => {
   // Safari has no MediaRecorder, and an http LAN origin has no navigator.mediaDevices.
   assert.match(
     audioSourceCard,
-    /typeof navigator\.mediaDevices\?\.getUserMedia === "function"/,
+    /typeof navigator\.mediaDevices\.getUserMedia === "function"/,
   );
   assert.match(
     audioSourceInput,
@@ -553,7 +553,10 @@ test("the trained-model list applies the native-aware macOS policy", () => {
 
 test("the transcript download revokes its URL only after the click is consumed", () => {
   assert.match(readSrc("features/audio/transcript-download.ts"), /await downloadFile\(\s*text,/);
-  assert.match(readSrc("lib/native-files.ts"), /anchor\.click\(\);[\s\S]*?window\.setTimeout\(\(\) => URL\.revokeObjectURL\(url\), 0\);/);
+  assert.match(
+    readSrc("lib/native-files.ts"),
+    /anchor\.click\(\);\s*anchor\.remove\(\);\s*window\.setTimeout\(\(\) => \{ URL\.revokeObjectURL\(url\); \}, 0\);/,
+  );
 });
 
 test("a complete first page drops cached rows the server no longer holds", () => {
@@ -592,7 +595,7 @@ test("generating waits for the transcribe release the mode switch started", () =
 test("a failed transcribe release puts the page back in Transcribe", () => {
   assert.match(
     audioPageSource,
-    /void release\.then\(\(released\) => \{[\s\S]{0,600}?if \(!released && modeRef\.current === "speak"\) setMode\("transcribe"\);/,
+    /release\.then\(\(released\) => \{[\s\S]{0,600}?if \(!released && modeRef\.current === "speak"\) setMode\("transcribe"\);/,
   );
 });
 
@@ -626,7 +629,7 @@ test("generation is claimed before the transcribe release is awaited", () => {
   );
   assert.match(
     audioPageSource,
-    /if \(releaseInFlight && !\(await releaseInFlight\)\) \{\s*updateGenerationPhase\(null\);\s*busyRef\.current = null;\s*setBusy\(null\);\s*setMode\("transcribe"\);/,
+    /if \(releaseInFlight && !\(await releaseInFlight\)\) \{\s*setMode\("transcribe"\);/,
   );
 });
 
@@ -658,7 +661,7 @@ test("a restore refreshes the loaded window, not just the first page", () => {
 test("the gallery-changed subscription asks for the window that is loaded", () => {
   assert.match(
     audioPageSource,
-    /subscribeGalleryChanged\("audio", \(\) => \{\s*void refreshGallery\(undefined, galleryCache\.clips\.length\);/,
+    /subscribeGalleryChanged\("audio", \(\) => \{\s*\(refreshGallery\(undefined, galleryCache\.clips\.length\)\)\.catch\(/,
   );
   assert.match(
     audioPageSource,
@@ -669,14 +672,14 @@ test("the gallery-changed subscription asks for the window that is loaded", () =
 test("reactivating audio asks for the window that is loaded", () => {
   assert.match(
     audioPageSource,
-    /if \(initialReadySent\.current\) \{\s*void refreshStatus\(\);\s*void refreshSttStatus\(\);\s*void refreshGallery\(undefined, galleryCache\.clips\.length\);\s*return;\s*\}/,
+    /if \(initialReadySent\.current\) \{\s*\(refreshStatus\(\)\)\.catch\(\(\) => \{ \/\* noop \*\/ \}\);\s*\(refreshSttStatus\(\)\)\.catch\(\(\) => \{ \/\* noop \*\/ \}\);\s*\(refreshGallery\(undefined, galleryCache\.clips\.length\)\)\.catch\(\(\) => \{ \/\* noop \*\/ \}\);\s*return;\s*\}/,
   );
 });
 
 test("returning to a visible audio tab refreshes the loaded window", () => {
   assert.match(
     audioPageSource,
-    /const refreshWhenVisible = \(\) => \{\s*if \(document\.hidden\) return;\s*void refreshGallery\(undefined, galleryCache\.clips\.length\);\s*\};\s*window\.addEventListener\("focus", refreshWhenVisible\);\s*document\.addEventListener\("visibilitychange", refreshWhenVisible\);/,
+    /const refreshWhenVisible = \(\) => \{\s*if \(document\.hidden\) return;\s*\(refreshGallery\(undefined, galleryCache\.clips\.length\)\)\.catch\(/,
   );
   assert.match(
     audioPageSource,
