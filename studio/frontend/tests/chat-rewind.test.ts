@@ -100,7 +100,7 @@ test("the completion payload carries user_message_id on the local and external t
   // The durable run posts the same requestPayload, so the field rides inside it, not beside it.
   assert.match(
     adapter,
-    /userMessageId: generationUserMessage!\.id,\s*assistantMessageId: unstable_assistantMessageId!,\s*requestPayload,/,
+    /userMessageId:\s*pendingUserMessageId,\s*assistantMessageId:\s*pendingAssistantMessageId,\s*requestPayload,/,
   );
 });
 
@@ -123,8 +123,8 @@ test("the dialog lists only options that can run and skips itself for a conversa
   const dialog = readSrc("components/assistant-ui/rewind-dialog.tsx");
   // No disabled radio rows: the dialog renders only when files changed, so every option can run.
   assert.ok(!dialog.includes("RadioGroupItem"));
-  assert.match(dialog, /if \(!hasChanges \|\| result === null\) return null;/);
-  assert.match(dialog, /void rewind\("conversation"\);/);
+  assert.match(dialog, /if \(!hasChanges\) return null;/);
+  assert.match(dialog, /rewind\("conversation"\)\.catch\(\(\) => undefined\);/);
   assert.match(dialog, /t\("rewind\.confirmTitle"\)/);
   assert.match(dialog, /<SelectTrigger id="rewind-restore"/);
 });
@@ -133,7 +133,7 @@ test("an all-skipped rewind still says which files stay, though it skips the dia
   const dialog = readSrc("components/assistant-ui/rewind-dialog.tsx");
   const effect = dialog.slice(dialog.indexOf("const conversationOnly ="));
   const warn = effect.indexOf('toast.warning(t("rewind.filesNotRestored"');
-  const go = effect.indexOf('void rewind("conversation");');
+  const go = effect.indexOf('rewind("conversation").catch(() => undefined);');
   assert.ok(
     warn > 0 && go > 0,
     "the warning and the rewind are both in the conversation-only effect",

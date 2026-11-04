@@ -41,7 +41,7 @@ test("a saved edit is not hidden by the AGENTS.md read cache", () => {
   forgetAgentsMd();
   assert.equal(agentsMdEditCount(), before + 1);
   assert.match(section, /forgetAgentsMd\(\);/);
-  assert.match(adapter, /hit\.edits === edits/);
+  assert.match(adapter, /hit\?\.edits === edits/);
 });
 
 test("the memory switch and editor have accessible names", () => {

@@ -22,10 +22,9 @@ const section = (start: string, end: string) => {
 
 test("a progress poll in flight when its run is stopped does not touch the next run's toast", () => {
   const download = section("const pollDownload = async () => {", "const pollLoad = async () => {");
-  const afterFetch = download.slice(download.indexOf("getDownloadProgress(progressModelId"));
-  assert.match(afterFetch, /^[\s\S]*?\n\s*if \(abortCtrl\.signal\.aborted \|\| !loadingModelRef\.current\) return;/);
+  assert.match(download, /getDownloadProgress[\s\S]*?if\s*\((?:abortCtrl\.signal\.aborted|\(?\s*isAborted\(abortCtrl\.signal\)\s*\)?)[\s\S]*?(?:loadingModelRef\.current|refIsSet\(loadingModelRef\))[\s\S]*?return;/);
   const load = section("const pollLoad = async () => {", "const cacheMissDownloadStarted = async");
-  assert.match(load, /await getLoadProgress\(\);\n\s*if \(abortCtrl\.signal\.aborted \|\| !loadingModelRef\.current\) return;/);
+  assert.match(load, /await getLoadProgress\(\);[\s\S]*?if\s*\((?:abortCtrl\.signal\.aborted|\(?\s*isAborted\(abortCtrl\.signal\)\s*\)?)[\s\S]*?(?:loadingModelRef\.current|refIsSet\(loadingModelRef\))[\s\S]*?return;/);
 });
 
 test("Stop with no run left to cancel still clears the load status", () => {

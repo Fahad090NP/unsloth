@@ -317,9 +317,7 @@ const RewindChoices: FC<{
       toast.warning(t("rewind.filesNotRestored", { count: skipped }));
     }
     queueMicrotask(() => {
-      rewind("conversation").catch((error: unknown) => {
-        console.error("Background chat operation failed", error);
-      });
+      rewind("conversation").catch(() => undefined);
     });
   }, [conversationOnly, dryRunError, result, rewind, t]);
 

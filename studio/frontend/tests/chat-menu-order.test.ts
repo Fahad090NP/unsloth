@@ -85,7 +85,7 @@ test("dragging a chat menu row stays inside the list and saves the order once, o
   // A hard stop at the list: the row no longer slides over the fixed rows or the heading.
   assert.match(src, /dragConstraints=\{bounds\}\s*dragElastic=\{0\}/);
   // Swaps go to a local draft; the persisted store (read by both + menus) only takes the drop.
-  assert.match(src, /onReorder=\{\(ids: PlusMenuItemId\[\]\) => setDraft\(ids\)\}/);
+  assert.match(src, /onReorder=\{\(ids: PlusMenuItemId\[\]\) => \{ setDraft\(ids\); \}\}/);
   assert.match(src, /onDragEnd=\{onDrop\}/);
   assert.match(src, /if \(draftRef\.current\) \{\s*setOrder\(withFixed\(draftRef\.current\)\);/);
   // layoutScroll on the settings pane would double-count its scroll against the constraints.

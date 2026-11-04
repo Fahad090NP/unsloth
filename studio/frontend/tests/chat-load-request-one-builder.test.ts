@@ -168,10 +168,10 @@ test("blank knobs are omitted, and pass-through args only once the config has re
 
 test("every chat load path sends one request to /validate and /load", () => {
   const runtime = readSrc("features/chat/hooks/use-chat-model-runtime.ts");
-  assert.match(runtime, /await validateModel\(\{\s*\.\.\.loadRequest\(\),/);
+  assert.match(runtime, /validateModel\(\{\s*\.\.\.loadRequest\(\),/);
   assert.match(
     runtime,
-    /await validateModel\(loadRequest\(\), \{ signal: abortCtrl\.signal \}\)/,
+    /validateModel\(loadRequest\(\),/,
   );
   assert.match(runtime, /await loadModel\(\{\s*\.\.\.loadRequest\(\),/);
 

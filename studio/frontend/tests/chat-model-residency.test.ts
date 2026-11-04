@@ -127,7 +127,7 @@ test("another runtime loading re-reads the chat status", () => {
   );
   assert.match(
     USE_CHAT_MODEL_RUNTIME,
-    /void refresh\(\{\s*includeLoras: false,\s*externalChatSlotLoad: runtime === "tts",\s*\}\)/,
+    /refresh\(\{\s*includeLoras: false,\s*externalChatSlotLoad: runtime === "tts",\s*\}\)/,
   );
   assert.match(USE_CHAT_MODEL_RUNTIME, /residentCheckpoint: null,/);
 });

@@ -2043,7 +2043,7 @@ export function useChatModelRuntime() {
             inheritedPendingRollback?.residentUnloaded === true;
           const pendingLoadConfig =
             typeof selection !== "string" ? selection.config : undefined;
-          // Roll back from the inherited target, never from this pick's own config.
+          // Every rollback read below uses the INHERITED target, never this pick's own
           const rollbackConfig = previousConfigForReplacement;
           const previousNParallel = rollbackConfig
             ? (rollbackConfig.nParallel ?? null)

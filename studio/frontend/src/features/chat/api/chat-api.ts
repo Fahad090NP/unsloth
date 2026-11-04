@@ -10,7 +10,6 @@ import { skillLoadCardEvent } from "./skill-load-event";
 import { authFetch, getAuthSessionEpoch } from "@/features/auth";
 import { prepareHfTokenForUse } from "@/features/hf-auth";
 // These helpers are deliberately API-layer-only, not part of their features' public barrels.
-// eslint-disable-next-line no-restricted-imports
 import {
   abortError,
   combineAbortSignals,
@@ -305,7 +304,19 @@ async function parseJsonOrThrow<T>(
   response: Response,
   paddedLabel?: string,
 ): Promise<T> {
-  const body: unknown = await response.json().catch(() => null);
+  let body: unknown = null;
+  try {
+    const json = (response as { json?: () => unknown }).json;
+    if (typeof json === "function") {
+      const result = json.call(response);
+      body =
+        result && typeof (result as Promise<unknown>).then === "function"
+          ? await (result as Promise<unknown>).catch(() => null)
+          : result;
+    }
+  } catch {
+    body = null;
+  }
   if (!response.ok) {
     const detail = (body as { detail?: unknown } | null)?.detail;
     throw new LoadModelError(parseErrorText(response.status, body), response.status, detail);
@@ -1457,7 +1468,19 @@ export async function saveChatMessage(
     response.headers.get(CONFLICT_KIND_HEADER) === CONFLICT_KIND_PROTECTED
   ) {
     // Read here, not in parseJsonOrThrow: a body is single-use.
-    const body: unknown = await response.json().catch(() => null);
+    let body: unknown = null;
+    try {
+      const json = (response as { json?: () => unknown }).json;
+      if (typeof json === "function") {
+        const result = json.call(response);
+        body =
+          result && typeof (result as Promise<unknown>).then === "function"
+            ? await (result as Promise<unknown>).catch(() => null)
+            : result;
+      }
+    } catch {
+      body = null;
+    }
     throw new ChatMessageProtectedError(
       message.threadId,
       message.id,
