@@ -27,10 +27,7 @@ import { getTauriAuthFailure, tauriAutoAuth } from "@/features/auth";
 import { resyncInferenceStatusAfterServerModelChange } from "@/features/chat";
 import { DeepLinkHandler } from "@/features/deep-links";
 import { receiveSharedRunConfigUrls } from "@/features/model-picker";
-import {
-  DownloadManagerPanel,
-  dismissStartToasts,
-} from "@/features/hub";
+import { DownloadManagerPanel, dismissStartToasts } from "@/features/hub";
 import { LoadedModelsIndicator } from "@/features/loaded-models";
 import { NativeIntentDrain } from "@/features/native-intents";
 import {
@@ -119,11 +116,7 @@ type TauriMonitor = NonNullable<
 // Keep in step with MOBILE_BREAKPOINT in hooks/use-mobile.ts.
 const MIN_DESKTOP_LAYOUT_WIDTH = 768;
 
-// Room the corner rail keeps around its cards so its overflow clip does not cut their shadows off (#9246).
-// Sized off the deepest card shadow, the dark-mode one: 0 8px 28px -6px reaches 22px to a card's left
-// and 14px above it, and a shorter gutter ends the halo on a hard line. Only those two edges show it:
-// the rail is flush with the bottom-right corner, so the clip there lands on the screen edge. Both
-// gutters come out of the cap, never out of the cards: 100dvh less 16 and 16 is the band they had.
+// Gutters keep the rail's overflow clip off the card shadows.
 const STACK_SHADOW_GUTTER_BOTTOM = 16;
 const STACK_SHADOW_GUTTER_TOP = 16;
 const STACK_SHADOW_GUTTER_LEFT = 28;
@@ -391,9 +384,8 @@ async function applyAppWindowLayout(
 ): Promise<void> {
   const windowModule = await import("@tauri-apps/api/window");
   const { invoke } = await import("@tauri-apps/api/core");
-  const { restoreStateCurrent, StateFlags } = await import(
-    "@tauri-apps/plugin-window-state"
-  );
+  const { restoreStateCurrent, StateFlags } =
+    await import("@tauri-apps/plugin-window-state");
   if (!isCurrent()) return;
 
   const win = windowModule.getCurrentWindow();
@@ -544,7 +536,9 @@ function TauriUpdateLayer({
   // Sync the parent titlebar before paint to avoid flashing sidebar chrome.
   useLayoutEffect(() => {
     onUpdateScreenChange(isUpdating);
-    return () => { onUpdateScreenChange(false); };
+    return () => {
+      onUpdateScreenChange(false);
+    };
   }, [isUpdating, onUpdateScreenChange]);
 
   const content = isUpdating ? (
@@ -553,8 +547,12 @@ function TauriUpdateLayer({
       logs={update.logs}
       progress={update.progress}
       error={update.error}
-      onRetry={() => { runInBackground(update.retryUpdate()); }}
-      onSkipRestart={() => { runInBackground(update.skipAndRestart()); }}
+      onRetry={() => {
+        runInBackground(update.retryUpdate());
+      }}
+      onSkipRestart={() => {
+        runInBackground(update.skipAndRestart());
+      }}
       onCopyDiagnostics={update.copyDiagnostics}
     />
   ) : (
@@ -584,7 +582,9 @@ function TauriUpdateLayer({
         manualReleaseUrl={update.manualReleaseUrl}
         releasePageUrl={update.releasePageUrl}
         positioned={false}
-        onInstall={() => { runInBackground(update.installUpdate()); }}
+        onInstall={() => {
+          runInBackground(update.installUpdate());
+        }}
         onDismiss={update.dismiss}
         onCopyDiagnostics={update.copyDiagnostics}
       />
@@ -734,7 +734,9 @@ function TauriWrapper({ children }: { children: ReactNode }) {
   const repairController = useMemo(
     () => ({
       repairInstall: () => {
-        setUpgradingToFull(usePlatformStore.getState().chatOnlyReason === "no_torch");
+        setUpgradingToFull(
+          usePlatformStore.getState().chatOnlyReason === "no_torch",
+        );
         return startRepairRef.current({ forceInstaller: true });
       },
       isExternalServer,
@@ -762,7 +764,9 @@ function TauriWrapper({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isTauri) return;
     setDesktopShellReady(canMountApp && appShellReady);
-    return () => { setDesktopShellReady(false); };
+    return () => {
+      setDesktopShellReady(false);
+    };
   }, [canMountApp, appShellReady]);
 
   // Readiness comes from the mounted boundary, so an obsolete async load cannot reveal us.
@@ -771,8 +775,12 @@ function TauriWrapper({ children }: { children: ReactNode }) {
     if (!isTauri) return;
     if (!canMountApp || appShellReady) return;
     // A failed chunk must not strand the user behind the splash; never bypass credential auth.
-    const timeout = window.setTimeout(() => { setAppShellReady(true); }, 15_000);
-    return () => { window.clearTimeout(timeout); };
+    const timeout = window.setTimeout(() => {
+      setAppShellReady(true);
+    }, 15_000);
+    return () => {
+      window.clearTimeout(timeout);
+    };
   }, [canMountApp, appShellReady]);
 
   const [windowRevealRevision, setWindowRevealRevision] = useState(0);
@@ -879,18 +887,20 @@ function TauriWrapper({ children }: { children: ReactNode }) {
     if (!isTauri || status !== "running") return;
 
     let disposed = false;
-    tauriAutoAuth({ force: true }).then((authenticated) => {
-      if (disposed) return;
-      if (authenticated) {
-        setDesktopAuthReady(true);
-        return;
-      }
-      if (!getTauriAuthFailure()) {
-        window.setTimeout(() => {
-          if (!disposed) setDesktopAuthRetry((value) => value + 1);
-        }, 500);
-      }
-    }).catch(() => undefined);
+    tauriAutoAuth({ force: true })
+      .then((authenticated) => {
+        if (disposed) return;
+        if (authenticated) {
+          setDesktopAuthReady(true);
+          return;
+        }
+        if (!getTauriAuthFailure()) {
+          window.setTimeout(() => {
+            if (!disposed) setDesktopAuthRetry((value) => value + 1);
+          }, 500);
+        }
+      })
+      .catch(() => undefined);
 
     return () => {
       disposed = true;
@@ -1023,10 +1033,16 @@ function TauriWrapper({ children }: { children: ReactNode }) {
             startupMessage={startupMessage}
             elevationPackages={elevationPackages}
             upgradingToFull={upgradingToFull}
-            onInstall={(options) => { runInBackground(startInstall(options)); }}
+            onInstall={(options) => {
+              runInBackground(startInstall(options));
+            }}
             onRetry={retry}
-            onRetryInstall={() => { runInBackground(retryInstall()); }}
-            onApproveElevation={() => { runInBackground(approveElevation()); }}
+            onRetryInstall={() => {
+              runInBackground(retryInstall());
+            }}
+            onApproveElevation={() => {
+              runInBackground(approveElevation());
+            }}
             onStartServer={retry}
             onCopyDiagnostics={copyDiagnostics}
           />

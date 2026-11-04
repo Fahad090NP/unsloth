@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 # Run the staged commit gate.
+
 command -v bun >/dev/null 2>&1 || {
   echo "bun is required for the commit gate" >&2
   exit 1
