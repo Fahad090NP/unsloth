@@ -134,8 +134,14 @@ test("the popup is mounted on every route and only takes chords in the desktop a
   const root = readSrc("app/routes/__root.tsx");
   const zoom = readSrc("features/interface-zoom/components/interface-zoom.tsx");
   assert.match(root, /<InterfaceZoom \/>/);
-  assert.match(zoom, /const scope = zoomScopeFor\(event\.target\);\s*if \(!\(scope \|\| isTauri\)\) return;/);
-  assert.match(zoom, /if \(scope\) zoomScopeFromChord\(scope, direction\);\s*else zoomInterfaceFromChord\(direction\);/);
+  assert.match(
+    zoom,
+    /const scope = zoomScopeFor\(event\.target\);\s*if \(!\(scope \|\| isTauri\)\) return;/,
+  );
+  assert.match(
+    zoom,
+    /if \(scope\) zoomScopeFromChord\(scope, direction\);\s*else zoomInterfaceFromChord\(direction\);/,
+  );
   assert.match(
     zoom,
     /if \(zoomChordTaken\(event, direction, mac, owned\)\) return;/,
@@ -186,7 +192,7 @@ test("the popup keeps one on-screen size and does not dismiss a modal", () => {
   assert.match(zoom, /\{ zoom: 1 \/ pageZoom \}/);
   assert.match(
     zoom,
-    /onPointerDown=\{\(event\) => event\.stopPropagation\(\)\}/,
+    /onPointerDown=\{\(event\) => \{?\s*event\.stopPropagation\(\);?\s*\}?\}/,
   );
   assert.match(zoom, /pointer-events-auto/);
   assert.match(
@@ -198,21 +204,66 @@ test("the popup keeps one on-screen size and does not dismiss a modal", () => {
     zoom,
     /if \(event\.defaultPrevented \|\| !isZoomWheel\(event\)\) return;\s*const scope = zoomScopeFor\(event\.target\);\s*if \(scope\) \{\s*event\.preventDefault\(\);/,
   );
-  assert.match(zoom, /if \(!isTauri \|\| mac\) return;\s*event\.preventDefault\(\);/);
-  assert.match(zoom, /window\.addEventListener\("wheel", onWheel, \{ passive: false \}\)/);
-  assert.match(zoom, /if \(mac\) \{\s*armWheel\(\);\s*\} else \{/, "only macOS keeps the blocking listener armed, since a pinch reaches its zoom scopes without a keydown; anywhere else a blocking window wheel listener puts every scroll on the main thread, which dropped 40% of desktop frames in a long maths chat");
-  assert.match(zoom, /const onPassiveWheel = \(event: WheelEvent\) => \{\s*if \(wheelArmed \|\| !isZoomWheel\(event\)\) return;\s*modifierHeld = true;\s*syncWheel\(\);\s*\};/, "a Ctrl+wheel whose keydown went to another window arms the blocking listener, so only that first notch scrolls instead of zooming");
-  assert.match(zoom, /window\.addEventListener\("wheel", onPassiveWheel, \{ passive: true \}\);/);
+  assert.match(
+    zoom,
+    /if \(!isTauri \|\| mac\) return;\s*event\.preventDefault\(\);/,
+  );
+  assert.match(
+    zoom,
+    /window\.addEventListener\("wheel", onWheel, \{ passive: false \}\)/,
+  );
+  assert.match(
+    zoom,
+    /if \(mac\) \{\s*armWheel\(\);\s*\} else \{/,
+    "only macOS keeps the blocking listener armed, since a pinch reaches its zoom scopes without a keydown; anywhere else a blocking window wheel listener puts every scroll on the main thread, which dropped 40% of desktop frames in a long maths chat",
+  );
+  assert.match(
+    zoom,
+    /const onPassiveWheel = \(event: WheelEvent\) => \{\s*if \(wheelArmed \|\| !isZoomWheel\(event\)\) return;\s*modifierHeld = true;\s*syncWheel\(\);\s*\};/,
+    "a Ctrl+wheel whose keydown went to another window arms the blocking listener, so only that first notch scrolls instead of zooming",
+  );
+  assert.match(
+    zoom,
+    /window\.addEventListener\("wheel", onPassiveWheel, \{ passive: true \}\);/,
+  );
   assert.match(zoom, /window\.removeEventListener\("wheel", onPassiveWheel\);/);
-  assert.match(zoom, /if \(modifierHeld && !event\.ctrlKey && !event\.metaKey\) \{\s*modifierHeld = false;\s*syncWheel\(\);\s*\}/, "a plain wheel disarms a listener that a missed keyup left armed, so scrolling does not stay on the main thread");
-  assert.match(zoom, /if \(wheelArmed\) return;\s*wheelArmed = true;\s*window\.addEventListener\("wheel", onWheel, \{ passive: false \}\);/, "arming is idempotent, so a Ctrl+wheel zooms once");
-  assert.match(zoom, /modifierHeld = event\.ctrlKey \|\| event\.metaKey;\s*pointerInScope = zoomScopeFor/, "a modifier pressed while another window had focus arms the listener as soon as the pointer moves");
-  assert.match(zoom, /const syncWheel = \(\) => \{\s*if \(modifierHeld \|\| pointerInScope\) armWheel\(\);\s*else disarmWheel\(\);\s*\};/, "in the browser the blocking listener is armed while Ctrl/Meta is held or the pointer is over a zoom scope, so a pinch, which arrives as Ctrl+wheel with no keydown, still reaches the scope");
-  assert.match(zoom, /pointerInScope = zoomScopeFor\(event\.target\) !== null;/);
-  assert.match(zoom, /window\.addEventListener\("pointerover", onPointerOver, true\);/);
-  assert.match(zoom, /window\.removeEventListener\("pointerover", onPointerOver, true\);/);
+  assert.match(
+    zoom,
+    /if \(modifierHeld && !event\.ctrlKey && !event\.metaKey\) \{\s*modifierHeld = false;\s*syncWheel\(\);\s*\}/,
+    "a plain wheel disarms a listener that a missed keyup left armed, so scrolling does not stay on the main thread",
+  );
+  assert.match(
+    zoom,
+    /if \(wheelArmed\) return;\s*wheelArmed = true;\s*window\.addEventListener\("wheel", onWheel, \{ passive: false \}\);/,
+    "arming is idempotent, so a Ctrl+wheel zooms once",
+  );
+  assert.match(
+    zoom,
+    /modifierHeld = event\.ctrlKey \|\| event\.metaKey;\s*pointerInScope = zoomScopeFor/,
+    "a modifier pressed while another window had focus arms the listener as soon as the pointer moves",
+  );
+  assert.match(
+    zoom,
+    /const syncWheel = \(\) => \{\s*if \(modifierHeld \|\| pointerInScope\) armWheel\(\);\s*else disarmWheel\(\);\s*\};/,
+    "in the browser the blocking listener is armed while Ctrl/Meta is held or the pointer is over a zoom scope, so a pinch, which arrives as Ctrl+wheel with no keydown, still reaches the scope",
+  );
+  assert.match(
+    zoom,
+    /pointerInScope = zoomScopeFor\(event\.target\) !== null;/,
+  );
+  assert.match(
+    zoom,
+    /window\.addEventListener\("pointerover", onPointerOver, true\);/,
+  );
+  assert.match(
+    zoom,
+    /window\.removeEventListener\("pointerover", onPointerOver, true\);/,
+  );
   // Below the shortcut recorder's window capture listener, so recording Mod+= does not zoom.
-  assert.match(zoom, /document\.addEventListener\("keydown", onKeyDown, true\)/);
+  assert.match(
+    zoom,
+    /document\.addEventListener\("keydown", onKeyDown, true\)/,
+  );
   assert.match(
     readSrc("features/settings/tabs/keyboard-shortcuts-tab.tsx"),
     /event\.stopPropagation\(\);[\s\S]*window\.addEventListener\("keydown", onKeyDown, \{ capture: true \}\)/,
@@ -232,7 +283,7 @@ test("the zoom popup takes the find bar's corner", () => {
     /set\("--studio-content-top-inset", usesCustomTitlebar \? "34px" : null\);/,
   );
   const top =
-    /top-\[calc\(var\(--studio-content-top-inset,0px\)\+3\.5rem\)\] right-4 z-50 flex h-13/;
+    /top-\[calc\(var\(--studio-content-top-inset,0(?:px)?\)\+3\.5rem\)\] right-4 z-50 flex h-13/;
   assert.match(findBar, top);
   assert.match(findInPage, top);
   assert.match(
@@ -249,10 +300,13 @@ test("the zoom popup takes the find bar's corner", () => {
     /useLayoutEffect\(\(\) => \{\s*if \(!active\) return;\s*return acquireDocumentFlag\(name\);/,
     "a screen that mounts from a background update painted under the find bar for a frame before a passive effect set the flag",
   );
-  assert.match(provider, /data-blocking-screen=""\s*className="fixed inset-0 z-40 bg-background"/);
+  assert.match(
+    provider,
+    /data-blocking-screen=""\s*className="fixed inset-0 z-40 bg-background"/,
+  );
   assert.match(
     readSrc("components/tauri/startup-screen.tsx"),
-    /data-blocking-screen=""\s*className="pointer-events-auto fixed inset-0 z-\[9999\]"/,
+    /data-blocking-screen=""\s*className="pointer-events-auto fixed inset-0 z-(?:\[9999\]|9999)"/,
   );
   assert.match(
     readSrc("features/interface-zoom/components/interface-zoom.tsx"),
