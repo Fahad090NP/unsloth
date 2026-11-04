@@ -9,10 +9,10 @@
   "scripts": {
     "dev": "bun --bun vite",
     "build": "bun scripts/typecheck.mjs && bun --bun vite build",
-    "lint": "bun node_modules/eslint/bin/eslint.js . --max-warnings=0 --cache",
+    "lint": "node --max-old-space-size=8192 node_modules/eslint/bin/eslint.js . --max-warnings=0 --cache",
     "lint:external": "cd ../.. && bun studio/frontend/node_modules/eslint/bin/eslint.js --config studio/frontend/eslint.external.config.js . --max-warnings=0",
     "lint:all": "bun run lint && bun run lint:external",
-    "lint:fix": "bun node_modules/eslint/bin/eslint.js . --fix --max-warnings=0 --cache",
+    "lint:fix": "node --max-old-space-size=8192 node_modules/eslint/bin/eslint.js . --fix --max-warnings=0 --cache",
     "format": "bun fmt",
     "format:check": "bun fmt --check",
     "prepare": "bun scripts/install-husky.mjs",
