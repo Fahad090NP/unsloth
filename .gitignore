@@ -1,5 +1,6 @@
 # Repository-wide ignore rules.
 
+# Operating system and editor files.
 .DS_Store
 ._*
 Thumbs.db
