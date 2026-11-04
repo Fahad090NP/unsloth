@@ -18,9 +18,7 @@ import { useT, type TranslationKey } from "@/i18n";
 import { ChevronDownStandardIcon } from "@/lib/chevron-icons";
 import { MenuTickIcon } from "@/lib/tick-icon";
 // Shared settings primitives: avoid importing the settings barrel into this feature.
-// eslint-disable-next-line no-restricted-imports
 import { SettingsSection } from "@/features/settings/components/settings-section";
-// eslint-disable-next-line no-restricted-imports
 import { SettingsRow } from "@/features/settings/components/settings-row";
 import { ChatBackground } from "./index";
 import {

@@ -3,7 +3,6 @@
 
 import { isStandaloneGgufPath } from "@/features/hub/lib/model-identity";
 import { cachedRepoConfigId } from "@/features/model-picker/model-config/model-identity";
-// eslint-disable-next-line no-restricted-imports -- The barrel pulls in React components, which node tests cannot load.
 import {
   type ModelConfigHandoffRequest,
   modelConfigTarget,

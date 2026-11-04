@@ -18,7 +18,6 @@ import {
 } from "@/features/training";
 import { useT } from "@/i18n";
 import { MediaPageLink } from "@/components/media-page-link";
-// eslint-disable-next-line no-restricted-imports -- the Images barrel would pull ImagesPage out of its lazy chunk.
 import { useImageWorkflowStore } from "@/features/images/stores/image-workflow-store";
 import {
   Image03Icon,

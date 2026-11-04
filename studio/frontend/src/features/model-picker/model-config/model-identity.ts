@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
-
-// eslint-disable-next-line no-restricted-imports -- Avoid the hub barrel's React and download-manager exports.
 import {
   isHfCacheSnapshotPath,
   isOllamaLinkPath,
@@ -11,8 +9,6 @@ import {
   publicModelId,
 } from "@/features/hub/lib/model-identity";
 import { looksLikeLocalPath } from "@/lib/local-path";
-
-// eslint-disable-next-line no-restricted-imports -- Avoid the hub barrel's React and download-manager exports.
 export {
   isNativeFileLabel,
   isOllamaLinkPath,
@@ -138,9 +134,11 @@ export function ggufQuantLabel(filename: string): string {
       fallback ??= match;
       continue;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- an optional group is undefined at runtime.
     return `${match[1] ?? ""}${match[2]}`;
   }
   if (fallback) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- an optional group is undefined at runtime.
     return `${fallback[1] ?? ""}${fallback[2]}`;
   }
   return stem || "gguf";

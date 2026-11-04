@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
-
-// eslint-disable-next-line no-restricted-imports
 import { AUTH_SESSION_CLEARED_EVENT } from "@/features/auth/session-events";
-// eslint-disable-next-line no-restricted-imports
 import { useHfTokenStore } from "@/features/hub/stores/hf-token-store";
-// eslint-disable-next-line no-restricted-imports
 import { useSettingsDialogStore } from "@/features/settings/stores/settings-dialog-store";
 import { type HfTokenValidationResult, validateHfToken } from "./api";
 import { useHfTokenWarningStore } from "./store";

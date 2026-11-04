@@ -17,7 +17,6 @@ import {
   ToolGroupTrigger,
 } from "@/components/assistant-ui/tool-group";
 import { useToolActivityOpen } from "@/components/assistant-ui/use-tool-activity-open";
-// eslint-disable-next-line no-restricted-imports -- a harness entry point, not app code.
 import { useChatPreferencesStore } from "@/features/chat/stores/chat-preferences-store";
 import { TerminalIcon } from "lucide-react";
 import { StrictMode, useEffect, useState } from "react";

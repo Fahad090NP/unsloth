@@ -19,7 +19,6 @@ import {
   isSvgFence,
 } from "@/features/chat";
 // Leaf module, not the barrel: SEARCH_IMAGE_TAG is read at module scope and the barrel cycles (TDZ).
-// eslint-disable-next-line no-restricted-imports
 import {
   holdBackPartialSearchImageToken,
   parseSearchImagesSignature,

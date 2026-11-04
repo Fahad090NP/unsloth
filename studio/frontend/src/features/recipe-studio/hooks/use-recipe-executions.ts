@@ -10,7 +10,6 @@ import {
   validateModel,
 } from "@/features/chat";
 import { unpinnedLoadContext } from "@/features/chat";
-// eslint-disable-next-line no-restricted-imports -- Avoid the hub barrel's React and download-manager exports.
 import { isOllamaModelId } from "@/features/hub/lib/model-identity";
 import { DEFAULT_MAX_SEQ_LENGTH, isServedByMlx } from "@/features/model-picker";
 import { createLoadingToastIcon, toast } from "@/lib/toast";

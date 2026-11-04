@@ -9,7 +9,6 @@ import {
   LR_DEFAULT_FULL,
   LR_DEFAULT_LORA,
 } from "@/config/training";
-// eslint-disable-next-line no-restricted-imports -- Avoid the hub barrel's unrelated React exports.
 import { stageLegacyHfTokenForMigration } from "@/features/hub/stores/hf-token-store";
 import { isTrainingMethod } from "@/types/training";
 import type { DatasetFormat } from "@/types/training";

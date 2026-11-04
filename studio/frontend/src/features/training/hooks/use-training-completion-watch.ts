@@ -4,7 +4,6 @@
 import { useEffect } from "react";
 
 import { getTrainingStatus } from "../api/train-api";
-// eslint-disable-next-line no-restricted-imports
 import { checkDiskSpace } from "@/features/settings/low-disk-check";
 import { createSingleFlightRequest } from "@/lib/single-flight-request";
 import {

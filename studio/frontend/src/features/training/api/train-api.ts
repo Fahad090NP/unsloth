@@ -4,7 +4,6 @@
 import { authFetch } from "@/features/auth";
 import { hubTokenHeader } from "@/features/hub";
 import { readFastApiError } from "@/lib/format-fastapi-error";
-// eslint-disable-next-line no-restricted-imports
 import { checkDiskSpace } from "@/features/settings/low-disk-check";
 import { openStreamResponse } from "@/lib/open-stream-response";
 import { createScopedSingleFlightRequest } from "@/lib/single-flight-request";

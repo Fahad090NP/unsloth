@@ -72,19 +72,16 @@ import {
   useTransformersUpgradeDialogStore,
 } from "@/features/transformers-upgrade";
 import { consumeNativePathToken } from "@/features/native-intents";
-// eslint-disable-next-line no-restricted-imports -- Avoid the hub barrel's React and download-manager exports.
 import {
   isOllamaModelId,
   modelDisplayName,
 } from "@/features/hub/lib/model-identity";
-// eslint-disable-next-line no-restricted-imports -- Avoid the hub barrel's React and download-manager exports.
 import { subscribeResidentStatusRefresh } from "@/features/hub/lib/resident-status-refresh";
 import {
   beginServerModelWait,
   serverModelWaitOutstanding,
   statusPollSignal,
 } from "../lib/server-model-wait";
-// eslint-disable-next-line no-restricted-imports -- The hub barrel imports chat; this lifecycle leaf does not.
 import { dismissStartToastsForModelSelection } from "@/features/hub/download-manager";
 import { prepareHfTokenForUse } from "@/features/hf-auth";
 import { ModelLoadDescription } from "../components/model-load-status";

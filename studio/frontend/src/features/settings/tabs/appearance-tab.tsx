@@ -2,7 +2,6 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 // Keep the background settings UI in this lazy tab, outside the chat startup barrel.
-// eslint-disable-next-line no-restricted-imports
 import { ChatBackgroundControls } from "@/features/chat-background/controls";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";

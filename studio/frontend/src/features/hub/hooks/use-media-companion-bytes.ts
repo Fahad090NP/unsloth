@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
-
-// eslint-disable-next-line no-restricted-imports -- Direct API imports keep the media pages code-split.
 import { getDiffusionDownloadPlan } from "@/features/images/api";
-// eslint-disable-next-line no-restricted-imports -- Direct API imports keep the media pages code-split.
 import { getVideoDownloadPlan } from "@/features/video/api";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GgufVariantDetail } from "../inventory";

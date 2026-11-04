@@ -5,11 +5,8 @@ import { type ReactElement, useMemo } from "react";
 
 import type { TrainingSeriesPoint } from "@/features/training";
 // Reuse the presentational cards directly; ChartsSection also renders LR and Eval Loss.
-// eslint-disable-next-line no-restricted-imports
 import { GradNormChartCard } from "@/features/studio/sections/charts/grad-norm-chart-card";
-// eslint-disable-next-line no-restricted-imports
 import { TrainingLossChartCard } from "@/features/studio/sections/charts/training-loss-chart-card";
-// eslint-disable-next-line no-restricted-imports
 import {
   MAX_RENDER_POINTS,
   buildStepTicks,

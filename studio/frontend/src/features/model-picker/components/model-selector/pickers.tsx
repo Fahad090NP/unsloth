@@ -51,7 +51,6 @@ import type {
   LocalModelInfo,
 } from "@/features/chat";
 import type { ProviderApiType } from "@/features/chat";
-// eslint-disable-next-line no-restricted-imports -- Connection contract has no React dependencies.
 import type { CustomReasoningConfig } from "@/features/chat/custom-reasoning";
 import { normalizeGgufVisionCapability } from "@/features/chat";
 import {

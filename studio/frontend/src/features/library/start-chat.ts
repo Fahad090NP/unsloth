@@ -3,7 +3,6 @@
 
 import type { useNavigate } from "@tanstack/react-router";
 import { getAuthSessionEpoch } from "@/features/auth";
-// eslint-disable-next-line no-restricted-imports -- the chat barrel imports the Library back
 import { useChatRuntimeStore } from "@/features/chat/stores/chat-runtime-store";
 import { createModelConfigHandoffRequestId } from "@/features/model-picker";
 import { translate } from "@/i18n";

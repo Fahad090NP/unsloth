@@ -2,7 +2,6 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { authFetch } from "@/features/auth";
-// eslint-disable-next-line no-restricted-imports
 import { disposableTimeoutSignal } from "@/features/hub/lib/abort-signals";
 import { observeDiskPressure, type DiskPressure } from "./low-disk";
 

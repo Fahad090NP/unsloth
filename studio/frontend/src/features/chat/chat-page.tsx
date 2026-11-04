@@ -86,9 +86,7 @@ import { isNpuModelId } from "@/features/npu";
 import { GuidedTour, useGuidedTourController } from "@/features/tour";
 import { isTauri } from "@/lib/api-base";
 // The images and video barrels export only their pages; the status calls alone keep those pages out of the chat chunk.
-// eslint-disable-next-line no-restricted-imports
 import { getDiffusionStatus } from "@/features/images/api";
-// eslint-disable-next-line no-restricted-imports
 import { getVideoStatus } from "@/features/video/api";
 import {
   subscribeModelEjected,
