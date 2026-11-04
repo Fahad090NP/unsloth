@@ -134,11 +134,9 @@ export function ggufQuantLabel(filename: string): string {
       fallback ??= match;
       continue;
     }
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- an optional group is undefined at runtime.
     return `${match[1] ?? ""}${match[2]}`;
   }
   if (fallback) {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- an optional group is undefined at runtime.
     return `${fallback[1] ?? ""}${fallback[2]}`;
   }
   return stem || "gguf";
