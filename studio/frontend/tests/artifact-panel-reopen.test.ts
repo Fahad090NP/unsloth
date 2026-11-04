@@ -83,7 +83,9 @@ test("compare's hidden base view leaves the browser to the overlay, so a page ru
 
 test("a project has no side pane, so a browser opened from it shows over it, not one left open before", () => {
   const page = read("../src/features/chat/chat-page.tsx");
-  assert.match(page, /setProjectBrowserBaseline\(projectViewId \? useBrowserStore\.getState\(\)\.openSequence : null\);/);
+  // The effect defers the write to a microtask (lint: no sync setState in effects).
+  assert.match(page, /queueMicrotask\(\(\) => \{\s*updateProjectBrowserBaseline\(\s*projectViewId \? useBrowserStore\.getState\(\)\.openSequence : null,?\s*\);\s*\}\);/);
+  assert.match(page, /current === baseline \? current : baseline,/);
   assert.match(page, /\(view\.mode === "project" &&\s*projectBrowserBaseline !== null &&\s*browserOpenSequence > projectBrowserBaseline\)/);
 });
 
@@ -144,8 +146,8 @@ test("a project's browser overlay stages Request edits in the project composer",
 test("leaving Chat and coming back keeps a new chat's pages open", () => {
   const page = read("../src/features/chat/chat-page.tsx");
   // outside Chat, activeThreadId is cleared and restored, so ?new uses the first shown thread id.
-  assert.match(page, /if \(search\.new && activeThreadId === null\) \{\s*newChatIdentityBlankedRef\.current = search\.new;/);
-  assert.match(page, /if \(search\.new && activeThreadId && newChatIdentityBlankedRef\.current === search\.new\) \{/);
+  assert.match(page, /if \(search\.new && activeThreadId === null\) \{\s*if \(next\.identityBlanked !== search\.new\) \{\s*next = \{ \.\.\.next, identityBlanked: search\.new \};/);
+  assert.match(page, /search\.new &&\s*activeThreadId &&\s*next\.identityBlanked === search\.new/);
   assert.match(page, /view\.newThreadNonce === newChat\.nonce \? newChat\.threadId : null;/);
   const key = page.slice(page.indexOf("const shownChatKey ="), page.indexOf("closeChatPages();"));
   assert.match(key, /view\.threadId \?\? newChatShownId \?\? activeThreadId/);
@@ -153,17 +155,18 @@ test("leaving Chat and coming back keeps a new chat's pages open", () => {
 
 test("a new chat deleted while Chat is hidden re-latches onto its replacement thread", () => {
   const page = read("../src/features/chat/chat-page.tsx");
-  const identity = page.slice(page.indexOf("const newChatIdentityBlankedRef"), page.indexOf("const modelOperationInProgress"));
+  // The refs became a state latch inside one useLayoutEffect (lint: no ref writes during render).
+  const identity = page.slice(page.indexOf("// leaving Chat clears activeThreadId"), page.indexOf("const modelOperationInProgress"));
   // ThreadNewChatSwitch starts a fresh thread under the same nonce when the recorded one is tombstoned.
-  assert.match(identity, /newChatRef\.current = \{ nonce: search\.new, threadId: activeThreadId \};\s*newChatIdentityBlankedRef\.current = null;/);
+  assert.match(identity, /identityBlanked: null,\s*chat: \{ nonce: search\.new, threadId: activeThreadId \},/);
   assert.doesNotMatch(identity, /newChatRef\.current\?\.nonce !== search\.new/);
 });
 
 test("Back and Forward cannot assign an outgoing local thread to an incoming new-chat nonce", () => {
   const page = read("../src/features/chat/chat-page.tsx");
-  const identity = page.slice(page.indexOf("const newChatIdentityBlankedRef"), page.indexOf("const modelOperationInProgress"));
+  const identity = page.slice(page.indexOf("// leaving Chat clears activeThreadId"), page.indexOf("const modelOperationInProgress"));
   assert.match(identity, /search\.new && activeThreadId === null/);
-  assert.match(identity, /newChatIdentityBlankedRef\.current === search\.new/);
+  assert.match(identity, /next\.identityBlanked === search\.new/);
   assert.doesNotMatch(identity, /isAssistantLocalThreadId/);
 });
 
@@ -194,8 +197,8 @@ test("a project chat keeps its pages when its new thread gains a URL", () => {
 
 test("leaving Chat and coming back keeps a new project chat's pages open", () => {
   const page = read("../src/features/chat/chat-page.tsx");
-  const key = page.slice(page.indexOf("const projectChatBlankedRef"), page.indexOf("closeChatPages();"));
+  const key = page.slice(page.indexOf("const [projectChatLatch"), page.indexOf("closeChatPages();"));
   // RootLayout clears activeThreadId while Chat is hidden, so retain the first created thread by nonce.
-  assert.match(key, /projectChatRef\.current = \{\s*projectId: view\.projectId,\s*nonce: projectNewThreadNonce,\s*threadId: activeThreadId,/);
+  assert.match(key, /chat: \{\s*projectId: view\.projectId,\s*nonce: projectNewThreadNonce,\s*threadId: activeThreadId,/);
   assert.match(key, /projectChat\.nonce === projectNewThreadNonce\s*\? projectChat\.threadId\s*:\s*null/);
 });

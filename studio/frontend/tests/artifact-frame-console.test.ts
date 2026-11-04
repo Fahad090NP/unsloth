@@ -194,10 +194,10 @@ test("the fix prompt lists five errors and counts the rest", () => {
 });
 
 test("the frame checks the load stamp before it keeps an error or console report", () => {
-  const parseAt = frameSource.indexOf("parseCanvasReport(event.data)");
+  const parseAt = frameSource.indexOf("parseCanvasReport(data)");
   assert.ok(parseAt > 0, "the frame does not parse canvas reports");
   const typeAt = frameSource.lastIndexOf('"unsloth:artifact-console"', parseAt);
-  const guardAt = frameSource.indexOf("event.data.v !== loadVersion", typeAt);
+  const guardAt = frameSource.indexOf("data.v !== loadVersion", typeAt);
   assert.ok(typeAt > 0 && guardAt > typeAt && guardAt < parseAt);
 });
 
@@ -242,7 +242,8 @@ test("the Console and Run again buttons switch views through the store too", () 
     panel,
     /const runAgain = \(\) => \{\s*if \(kind === "html"\) setView\(\{ mode: "preview" \}\);/,
   );
-  assert.match(panel, /: setView\(\{ mode: "preview", consoleOpen: true \}\);/);
+  // The log branch became if/else from a ternary (lint: no nested ternaries).
+  assert.match(panel, /else setView\(\{ mode: "preview", consoleOpen: true \}\);/);
 });
 
 test("opening straight to the source view does not run the page", () => {

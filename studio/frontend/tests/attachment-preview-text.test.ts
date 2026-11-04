@@ -554,7 +554,8 @@ test("extractPdfAttachmentText destroys the PDF proxy after success and failure"
     );
     assert.deepEqual(destroyed, ["success", "failure"]);
   } finally {
-    await definePDFJSModule(() => import("unpdf/pdfjs"));
+    // unpdf 1.9's bundled proxy has no destroy(); the pdfjs-dist legacy build does.
+    await definePDFJSModule(() => import("pdfjs-dist/legacy/build/pdf.mjs"));
   }
 });
 

@@ -848,7 +848,8 @@ function docxMathText(element: Element, w: string): string {
     ["0", "false", "off"].includes(prop(`${key}Hide`, "off")) ? join(children(key).slice(0, 1)) : "";
   const prop = (key: string, fallback: string) => {
     const node = children(`${name}Pr`).flatMap((pr) => childElements(pr, ns, key)).at(0);
-    return node?.getAttributeNS(ns, "val") || fallback;
+    // A val-less hide element means "hidden"; it yields "" (falsy), not the fallback.
+    return node ? (node.getAttributeNS(ns, "val") ?? "") : fallback;
   };
   const scripts = (sub: string, sup: string) => (sub ? `_{${sub}}` : "") + (sup ? `^{${sup}}` : "");
   const all = Array.from(element.childNodes).filter((node): node is Element => node.nodeType === 1);
@@ -1905,7 +1906,8 @@ function declaredHtmlEncoding(bytes: Uint8Array): string | null {
     bytes.subarray(0, HTML_PRESCAN_BYTES),
   );
   for (const [, tag, attributes] of head.matchAll(HTML_PRESCAN_TAG_RE)) {
-    if (tag.toLowerCase() !== "meta") {
+    // The comment and catch-all branches capture no tag group; guard it.
+    if (tag?.toLowerCase() !== "meta") {
       continue;
     }
     const attrs = new Map<string, string>();

@@ -2,7 +2,8 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { documentKind, isMarkdown, sheetDelimiter } from "@/components/file-viewer/kind";
-import { isAudioAttachment } from "@/features/chat";
+// Direct module, not the barrel: the barrel eagerly loads tsx files node cannot parse.
+import { isAudioAttachment } from "@/features/chat/attachment-content";
 
 export type AttachmentPreviewKind = "image" | "audio" | "video" | "text" | "document";
 

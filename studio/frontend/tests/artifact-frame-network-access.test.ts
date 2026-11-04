@@ -228,7 +228,7 @@ test("blocked reports from a stale frame load are rejected", () => {
   const visit = (node: ts.Node): void => {
     if (
       ts.isIfStatement(node) &&
-      node.expression.getText().includes('event.data.v !== loadVersion') &&
+      node.expression.getText().includes('data.v !== loadVersion') &&
       node.thenStatement.getText().includes("return")
     ) {
       guarded = true;
@@ -274,7 +274,7 @@ test("the grant is not offered for a scheme it cannot widen", () => {
   const visit = (node: ts.Node): void => {
     if (
       ts.isIfStatement(node) &&
-      node.expression.getText().includes('GRANT_CANNOT_FIX_SCHEME[event.data.effectiveDirective] === uri') &&
+      node.expression.getText().includes('GRANT_CANNOT_FIX_SCHEME[directive] === uri') &&
       node.thenStatement.getText().includes("return")
     ) {
       filtered = true;
@@ -296,7 +296,7 @@ test("the grant is not offered for directives it cannot fix", () => {
   const visit = (node: ts.Node): void => {
     if (
       ts.isIfStatement(node) &&
-      node.expression.getText().includes('GRANT_CANNOT_FIX.has(event.data.effectiveDirective)') &&
+      node.expression.getText().includes('GRANT_CANNOT_FIX.has(directive)') &&
       node.thenStatement.getText().includes("return")
     ) {
       filtered = true;
@@ -460,7 +460,8 @@ test("the shared alert uses logical alignment and action spacing", () => {
   );
   assert.match(source, /text-start/);
   assert.match(source, /has-data-\[slot=alert-action\]:pe-18/);
-  assert.match(source, /absolute top-2\.5 end-3/);
+  // oxlint's tailwind rename: end-* -> inset-e-* (same inset-inline-end CSS).
+  assert.match(source, /absolute top-2\.5 inset-e-3/);
   assert.doesNotMatch(source, /\btext-left\b|\bpr-18\b|\bright-3\b/);
 });
 
