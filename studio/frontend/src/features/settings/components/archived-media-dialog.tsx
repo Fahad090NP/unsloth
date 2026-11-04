@@ -46,10 +46,13 @@ import {
   fetchGalleryVideoThumbnail,
   getVideoGallery,
   setGalleryVideoFlags,
-  videoThumbnailQueue,
-} from "@/features/video";
+} from "@/features/video/api";
+import { videoThumbnailQueue } from "@/features/video/thumbnail-request-queue";
 import { BlobUrlCache } from "@/lib/blob-url-cache";
-import { notifyArchiveChanged, notifyGalleryChanged } from "@/lib/gallery-flags";
+import {
+  notifyArchiveChanged,
+  notifyGalleryChanged,
+} from "@/lib/gallery-flags";
 import { translate, useLocale, useT } from "@/i18n";
 import { toast } from "@/lib/toast";
 
@@ -192,7 +195,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
   useEffect(() => {
     let cancelled = false;
     const isCancelled = () => cancelled;
-    ((async () => {
+    (async () => {
       setLoading(true);
       try {
         const page = await loadPage(0);
@@ -211,7 +214,9 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
       } finally {
         if (!isCancelled()) setLoading(false);
       }
-    })()).catch(() => { /* noop */ });
+    })().catch(() => {
+      /* noop */
+    });
     return () => {
       cancelled = true;
     };
@@ -219,17 +224,20 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
 
   useEffect(() => {
     const cache = blobs.current;
-    return () => { cache.clear(); };
+    return () => {
+      cache.clear();
+    };
   }, []);
 
   // Without IntersectionObserver (jsdom, old webviews) every row counts as visible.
   useEffect(() => {
     const root = listRef.current;
     if (!root) return;
-    setVisible((previous) =>
-      new Set(
-        displayed.filter((row) => previous.has(row.id)).map((row) => row.id),
-      ),
+    setVisible(
+      (previous) =>
+        new Set(
+          displayed.filter((row) => previous.has(row.id)).map((row) => row.id),
+        ),
     );
     let observing = true;
     if (typeof IntersectionObserver === "undefined") {
@@ -296,7 +304,7 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
     if (isAudio) return;
     let cancelled = false;
     const isCancelled = () => cancelled;
-    ((async () => {
+    (async () => {
       for (const row of rows) {
         if (isCancelled()) return;
         if (!visible.has(row.id)) continue;
@@ -348,7 +356,9 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
           }
         }
       }
-    })()).catch(() => { /* noop */ });
+    })().catch(() => {
+      /* noop */
+    });
     return () => {
       cancelled = true;
     };
@@ -467,10 +477,16 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
   useEffect(() => {
     if (!scanAll || loading || paging || pageError || busy || !hasMore) return;
     const timer = setTimeout(
-      () => { (showMore()).catch(() => { /* noop */ }); },
+      () => {
+        showMore().catch(() => {
+          /* noop */
+        });
+      },
       rows.length <= ARCHIVED_PAGE_SIZE ? 250 : 0,
     );
-    return () => { clearTimeout(timer); };
+    return () => {
+      clearTimeout(timer);
+    };
   }, [
     scanAll,
     loading,
@@ -552,7 +568,13 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
                 })}
         </span>
         {bulkIntent ? (
-          <Button variant="ghost" size="sm" onClick={() => { setBulkIntent(null); }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setBulkIntent(null);
+            }}
+          >
             {t("common.cancel")}
           </Button>
         ) : (
@@ -561,7 +583,9 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
               variant="ghost"
               size="sm"
               disabled={busy || (rows.length === 0 && !hasMore)}
-              onClick={() => { setBulkIntent("restore"); }}
+              onClick={() => {
+                setBulkIntent("restore");
+              }}
             >
               {filters.query.trim()
                 ? t("settings.data.library.unarchiveResults")
@@ -572,7 +596,9 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
               size="sm"
               disabled={busy || (rows.length === 0 && !hasMore)}
               className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => { setBulkIntent("delete"); }}
+              onClick={() => {
+                setBulkIntent("delete");
+              }}
             >
               <HugeiconsIcon icon={Delete02Icon} className="mr-1.5 size-4" />
               {filters.query.trim()
@@ -624,9 +650,9 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
                     })}
                     title={t("common.delete")}
                     className="text-muted-foreground hover:text-destructive"
-                    onClick={() =>
-                      { setConfirming({ rows: [row], action: "delete" }); }
-                    }
+                    onClick={() => {
+                      setConfirming({ rows: [row], action: "delete" });
+                    }}
                   >
                     <HugeiconsIcon icon={Delete02Icon} className="size-4" />
                   </Button>
@@ -638,7 +664,11 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
                       title: row.title,
                     })}
                     className="rounded-full bg-muted/60 hover:bg-muted"
-                    onClick={() => { (run([row], "restore")).catch(() => { /* noop */ }); }}
+                    onClick={() => {
+                      run([row], "restore").catch(() => {
+                        /* noop */
+                      });
+                    }}
                   >
                     {t("settings.data.library.unarchive")}
                   </Button>
@@ -664,13 +694,20 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
             size="sm"
             disabled={paging || busy}
             onClick={() => {
-              if (pageError) (showMore()).catch(() => { /* noop */ });
+              if (pageError)
+                showMore().catch(() => {
+                  /* noop */
+                });
               else if (filtered.length > visibleCount)
                 setVisibleCount((count) => count + ARCHIVED_PAGE_SIZE);
               else
-                (showMore().then(() =>
-                  { setVisibleCount((count) => count + ARCHIVED_PAGE_SIZE); },
-                )).catch(() => { /* noop */ });
+                showMore()
+                  .then(() => {
+                    setVisibleCount((count) => count + ARCHIVED_PAGE_SIZE);
+                  })
+                  .catch(() => {
+                    /* noop */
+                  });
             }}
           >
             {paging
@@ -721,7 +758,10 @@ export function ArchivedMediaView({ kind }: { kind: ArchivedMediaKind }) {
               }
               onClick={(event) => {
                 event.preventDefault();
-                if (confirming) (run(confirming.rows, confirming.action)).catch(() => { /* noop */ });
+                if (confirming)
+                  run(confirming.rows, confirming.action).catch(() => {
+                    /* noop */
+                  });
               }}
             >
               {busy

@@ -7,7 +7,7 @@ import { requirePasswordChangeFlow } from "../auth-guards";
 import { Route as rootRoute } from "./__root";
 
 const ChangePasswordPage = lazy(() =>
-  import("@/features/auth").then((m) => ({
+  import("@/features/auth/change-password-page").then((m) => ({
     default: m.ChangePasswordPage,
   })),
 );

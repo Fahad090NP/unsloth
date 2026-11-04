@@ -567,8 +567,9 @@ async function runSignOut({
       if (offline) throw new TypeError("Failed to fetch");
     },
     clearAuthTokens: () => events.push("clear"),
-    navigate: async ({ to }: { to: string }) => {
+    navigate: ({ to }: { to: string }) => {
       events.push(`navigate:${to}`);
+      return Promise.resolve();
     },
   })();
   return events;

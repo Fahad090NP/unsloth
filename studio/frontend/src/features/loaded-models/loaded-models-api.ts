@@ -16,11 +16,8 @@ import {
 } from "@/features/chat";
 import { disposableTimeoutSignal } from "@/features/hub";
 import { modelIdsMatch } from "@/features/hub";
-import {
-  getDiffusionStatus,
-  unloadDiffusionModel,
-} from "@/features/images";
-import { getVideoStatus, unloadVideoModel } from "@/features/video";
+import { getDiffusionStatus, unloadDiffusionModel } from "@/features/images";
+import { getVideoStatus, unloadVideoModel } from "@/features/video/api";
 import { unloadEmbeddingModel } from "@/features/settings";
 import { useEmbeddingModelStore } from "@/features/settings";
 import { notifyModelEjected } from "@/lib/model-lifecycle-events";

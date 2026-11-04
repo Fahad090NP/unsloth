@@ -2,20 +2,21 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import { authFetch } from "@/features/auth";
-import { AUTH_SESSION_CLEARED_EVENT, AUTH_SESSION_STORED_EVENT } from "@/features/auth";
+import {
+  AUTH_SESSION_CLEARED_EVENT,
+  AUTH_SESSION_STORED_EVENT,
+} from "@/features/auth";
 import {
   revokeChatFullAccess,
   withChatFullAccess,
   type ChatFullAccessGrant,
   type ChatFullAccessGrants,
 } from "../utils/chat-full-access.ts";
+import { updateStoredChatThread } from "../utils/chat-history-storage";
 import { forgetThreadReads } from "../api/thread-read-cache.ts";
 import type { ImageDisclosure } from "../api/mcp-image";
-import {
-  mirrorHfTokenInto,
-  useHfTokenStore,
-} from "@/features/hub";
- 
+import { mirrorHfTokenInto, useHfTokenStore } from "@/features/hub";
+
 import {
   pinnedReasoningEffort,
   useModelReasoningEffortStore,
@@ -233,9 +234,12 @@ function isSupportedResearchModelTimeout(value: number): boolean {
 }
 
 function loadResearchModelTimeoutSeconds(): number {
-  if (typeof window === "undefined") return DEFAULT_RESEARCH_MODEL_TIMEOUT_SECONDS;
+  if (typeof window === "undefined")
+    return DEFAULT_RESEARCH_MODEL_TIMEOUT_SECONDS;
   try {
-    const raw = window.localStorage.getItem(CHAT_DEEP_RESEARCH_MODEL_TIMEOUT_KEY);
+    const raw = window.localStorage.getItem(
+      CHAT_DEEP_RESEARCH_MODEL_TIMEOUT_KEY,
+    );
     if (raw === null) return DEFAULT_RESEARCH_MODEL_TIMEOUT_SECONDS;
     const value = Number(raw);
     return isSupportedResearchModelTimeout(value)
@@ -250,7 +254,8 @@ function loadResearchWebsitePolicy(): ResearchWebsitePolicy {
   if (typeof window === "undefined") return DEFAULT_RESEARCH_WEBSITE_POLICY;
   try {
     const parsed = JSON.parse(
-      window.localStorage.getItem(CHAT_DEEP_RESEARCH_WEBSITE_POLICY_KEY) || "{}",
+      window.localStorage.getItem(CHAT_DEEP_RESEARCH_WEBSITE_POLICY_KEY) ||
+        "{}",
     ) as Partial<ResearchWebsitePolicy>;
     return {
       allowedDomains: Array.isArray(parsed.allowedDomains)
@@ -308,7 +313,10 @@ function saveRagSource(value: RagSource): void {
 
 function loadProjectAttachmentTarget(): ProjectAttachmentTarget {
   return normalizeProjectAttachmentTarget(
-    loadString(CHAT_PROJECT_ATTACHMENT_TARGET_KEY, DEFAULT_PROJECT_ATTACHMENT_TARGET),
+    loadString(
+      CHAT_PROJECT_ATTACHMENT_TARGET_KEY,
+      DEFAULT_PROJECT_ATTACHMENT_TARGET,
+    ),
   );
 }
 
@@ -406,9 +414,7 @@ function saveLastExternalCheckpoint(value: string | null): void {
 }
 
 export type ReasoningStyle =
-  | "enable_thinking"
-  | "reasoning_effort"
-  | "enable_thinking_effort";
+  "enable_thinking" | "reasoning_effort" | "enable_thinking_effort";
 export type DiffusionCanvasFrame = {
   block: number;
   step: number;
@@ -457,13 +463,7 @@ export type LoadingModelPick = {
   nativePathToken: string | null;
 };
 export type ReasoningEffort =
-  | "none"
-  | "minimal"
-  | "low"
-  | "medium"
-  | "high"
-  | "max"
-  | "xhigh";
+  "none" | "minimal" | "low" | "medium" | "high" | "max" | "xhigh";
 
 let hasShownSettingsPersistenceWarning = false;
 let customPresetsMutationVersion = 0;
@@ -617,7 +617,8 @@ export async function flushPendingChatSettings(): Promise<void> {
     clearTimeout(pendingTimer);
     pendingTimer = null;
   }
-  if (queued) enqueueSettingsFlush().catch((error: unknown) => {
+  if (queued)
+    enqueueSettingsFlush().catch((error: unknown) => {
       console.error("Failed to enqueue settings flush", error);
     });
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -663,9 +664,13 @@ function flushSettingsOnPageHidden(terminal: boolean): void {
 }
 
 if (typeof window !== "undefined") {
-  window.addEventListener("beforeunload", () => { flushSettingsOnPageHidden(true); });
+  window.addEventListener("beforeunload", () => {
+    flushSettingsOnPageHidden(true);
+  });
   // beforeunload never fires on discarded mobile tabs, so also use pagehide/visibilitychange.
-  window.addEventListener("pagehide", () => { flushSettingsOnPageHidden(true); });
+  window.addEventListener("pagehide", () => {
+    flushSettingsOnPageHidden(true);
+  });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") flushSettingsOnPageHidden(false);
   });
@@ -701,7 +706,8 @@ type MirroredSettingCodec = {
 
 const BOOLEAN_SETTING: MirroredSettingCodec = {
   encode: (value) => (value ? "true" : "false"),
-  decode: (raw) => (raw === "true" ? true : raw === "false" ? false : undefined),
+  decode: (raw) =>
+    raw === "true" ? true : raw === "false" ? false : undefined,
 };
 
 const STRING_SETTING: MirroredSettingCodec = {
@@ -954,7 +960,10 @@ export function threadScopedOverride<K extends ThreadScopedSettingKey>(
     return pillOverride(key) as ThreadScopedSettings[K] | undefined;
   }
   // Effort is captured before a model pin can overwrite the live value.
-  if (key === "reasoningEffort" && activeThreadScopedSettings?.reasoningEffort !== undefined) {
+  if (
+    key === "reasoningEffort" &&
+    activeThreadScopedSettings?.reasoningEffort !== undefined
+  ) {
     return activeThreadScopedSettings.reasoningEffort as ThreadScopedSettings[K];
   }
   if (
@@ -1168,8 +1177,8 @@ export function localMediaReadyFromStatus(
   return {
     image: Boolean(
       image?.loaded &&
-        image.yours !== false &&
-        (!image.workflows || image.workflows.includes("txt2img")),
+      image.yours !== false &&
+      (!image.workflows || image.workflows.includes("txt2img")),
     ),
     // Ref2VA needs reference media the chat tool never sends.
     video: Boolean(
@@ -1213,7 +1222,10 @@ function withoutActiveThreadParams(
   state: ChatRuntimeStore,
   params: InferenceParams,
 ): InferenceParams {
-  if (threadScopedSettingsThreadId === null && pendingPairingThreadId === null) {
+  if (
+    threadScopedSettingsThreadId === null &&
+    pendingPairingThreadId === null
+  ) {
     return params;
   }
   const remembered = params.checkpoint
@@ -1359,13 +1371,18 @@ export function replayUnconfirmedThreadSettings(): void {
   for (const [threadId, body] of Object.entries(pending)) {
     // Bounded: every settings write waits on these.
     const timeout = new AbortController();
-    const timer = setTimeout(() => { timeout.abort(); }, THREAD_SETTINGS_REPLAY_TIMEOUT_MS);
-    const request = authFetch(`/api/chat/threads/${encodeURIComponent(threadId)}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: timeout.signal,
-    })
+    const timer = setTimeout(() => {
+      timeout.abort();
+    }, THREAD_SETTINGS_REPLAY_TIMEOUT_MS);
+    const request = authFetch(
+      `/api/chat/threads/${encodeURIComponent(threadId)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: timeout.signal,
+      },
+    )
       .finally(() => {
         clearTimeout(timer);
         forgetThreadReads([threadId]);
@@ -1439,7 +1456,9 @@ function sendThreadScopedSettingsBeacon(
     body: JSON.stringify(body),
     keepalive: true,
   })
-    .finally(() => { forgetThreadReads([threadId]); })
+    .finally(() => {
+      forgetThreadReads([threadId]);
+    })
     .catch(() => undefined);
 }
 
@@ -1486,9 +1505,6 @@ function writeThreadScopedSettings(
       const controller = new AbortController();
       threadSettingsWriteAborts.set(threadId, controller);
       try {
-        const { updateStoredChatThread } = await import(
-          "../utils/chat-history-storage"
-        );
         await updateStoredChatThread(
           threadId,
           { settings, settingsSeq, settingsWriter: threadSettingsWriter },
@@ -1523,7 +1539,9 @@ export async function settleThreadScopedSettingsForCopy(
     await commitHeldThreadScopedEditsToTheirThread();
   }
   if (!(await awaitThreadScopedSettingsWrite(threadId))) {
-    throw new Error("This chat's settings could not be saved before copying it");
+    throw new Error(
+      "This chat's settings could not be saved before copying it",
+    );
   }
 }
 
@@ -1541,7 +1559,11 @@ export async function awaitThreadScopedSettingsWrite(
 
 export async function awaitStartedThreadScopedSettingsWrites(): Promise<void> {
   // Repeats because a settled chain can leave a newer one; bounded so it cannot hang.
-  for (let pass = 0; pass < 20 && threadSettingsWriteChains.size > 0; pass += 1) {
+  for (
+    let pass = 0;
+    pass < 20 && threadSettingsWriteChains.size > 0;
+    pass += 1
+  ) {
     await Promise.allSettled([...threadSettingsWriteChains.values()]);
   }
 }
@@ -1672,7 +1694,9 @@ function closeThreadScopedPairingGate(threadId: string | null): void {
   const stillWaiting =
     pendingPairingThreadId !== null &&
     pairingSettledByThreadId.has(pendingPairingThreadId);
-  if (useChatRuntimeStore.getState().threadScopedSettingsPending !== stillWaiting) {
+  if (
+    useChatRuntimeStore.getState().threadScopedSettingsPending !== stillWaiting
+  ) {
     useChatRuntimeStore.setState({ threadScopedSettingsPending: stillWaiting });
   }
 }
@@ -1692,7 +1716,9 @@ export function awaitThreadScopedPairing(
   return Promise.race([
     gate.promise.then(() => true),
     new Promise<boolean>((resolve) =>
-      setTimeout(() => { resolve(false); }, THREAD_PAIRING_WAIT_MS),
+      setTimeout(() => {
+        resolve(false);
+      }, THREAD_PAIRING_WAIT_MS),
     ),
   ]);
 }
@@ -1740,10 +1766,8 @@ function restoreDefaultsOverCommittedEdits(
   held: { field: string }[],
 ): void {
   if (useChatRuntimeStore.getState().activeThreadId === threadId) return;
-  const before = (pairingWindowDefaults ?? globalThreadScopedDefaults) as Record<
-    string,
-    unknown
-  > | null;
+  const before = (pairingWindowDefaults ??
+    globalThreadScopedDefaults) as Record<string, unknown> | null;
   const fields: Record<string, unknown> = {};
   const params: Record<string, unknown> = {};
   for (const edit of held) {
@@ -1768,7 +1792,10 @@ function restoreDefaultsOverCommittedEdits(
       }
     }
     return hasKeys(params)
-      ? ({ ...fields, params: { ...state.params, ...params } } as Partial<ChatRuntimeStore>)
+      ? ({
+          ...fields,
+          params: { ...state.params, ...params },
+        } as Partial<ChatRuntimeStore>)
       : (fields as Partial<ChatRuntimeStore>);
   });
 }
@@ -1786,10 +1813,7 @@ function heldThreadScopedChanges(
         (isClampedPillKey(edit.field) &&
           (live.modelLoading || isPillClampedOff(live, edit.field))))
         ? edit.value
-        : readThreadScopedValue(
-            live,
-            edit.field as ThreadScopedSettingKey,
-          );
+        : readThreadScopedValue(live, edit.field as ThreadScopedSettingKey);
   }
   return sanitizeThreadScopedSettings(edited);
 }
@@ -1810,9 +1834,6 @@ async function mergeThreadScopedSettingsIntoRow(
         return;
       }
       try {
-        const { updateStoredChatThread } = await import(
-          "../utils/chat-history-storage"
-        );
         await updateStoredChatThread(threadId, {
           settingsPatch: changes,
           settingsSeq,
@@ -1847,7 +1868,8 @@ function threadCapturesSampling(): boolean {
   const threadId = useChatRuntimeStore.getState().activeThreadId;
   return (
     threadId !== null &&
-    (threadId === threadScopedSettingsThreadId || threadId === pendingPairingThreadId)
+    (threadId === threadScopedSettingsThreadId ||
+      threadId === pendingPairingThreadId)
   );
 }
 
@@ -1949,7 +1971,6 @@ export function resolvePreserveThinkingOnLoad(resp: {
   return storedPreserveThinking ?? preserveThinkingDefaultFromLoad(resp);
 }
 
-
 /** "full" is never restored: it disables the sandbox and every confirmation gate, so it needs
  *  the warning dialog each session. First run derives from the legacy confirm toggle. */
 /** Anything but an explicit "low" (missing, garbled, a newer value) reads as the default, "high". */
@@ -2015,7 +2036,6 @@ function chatFullAccessPermissionPatch(
     deepResearchEnabled: permissions.deepResearchEnabled,
   };
 }
-
 
 function loadString(key: string, fallback: string): string {
   return readStorageValue(key) ?? fallback;
@@ -2102,7 +2122,9 @@ export function saveSpeculativeType(value: string | null): void {
 }
 
 export function readPersistedGpuMemoryMode(): "auto" | "manual" {
-  return loadString(CHAT_GPU_MEMORY_MODE_KEY, "auto") === "manual" ? "manual" : "auto";
+  return loadString(CHAT_GPU_MEMORY_MODE_KEY, "auto") === "manual"
+    ? "manual"
+    : "auto";
 }
 
 export function saveGpuMemoryMode(value: "auto" | "manual"): void {
@@ -2129,7 +2151,8 @@ function largestRemainder(shares: number[], total: number): number[] {
   const byFrac = shares
     .map((x, i) => ({ i, frac: x - Math.floor(x) }))
     .sort((a, b) => b.frac - a.frac);
-  for (let k = 0; rem > 0 && k < byFrac.length; k++, rem--) out[byFrac[k].i] += 1;
+  for (let k = 0; rem > 0 && k < byFrac.length; k++, rem--)
+    out[byFrac[k].i] += 1;
   return out;
 }
 
@@ -2175,11 +2198,7 @@ export function reconcilePersistedGpuIds(
   savedIndexKind?: GpuIndexKind | null,
   forDiffusion = false,
 ): number[] | null {
-  return reconcilePersistedGpuSelection(
-    ids,
-    savedIndexKind,
-    forDiffusion,
-  ).ids;
+  return reconcilePersistedGpuSelection(ids, savedIndexKind, forDiffusion).ids;
 }
 
 export function reconcilePersistedGpuSelection(
@@ -2340,7 +2359,11 @@ type ToolStatusEntry = {
   owner?: () => void;
 };
 
-export type LoadedModelSummary = { id: string; quant?: string | null; checkpoint?: string };
+export type LoadedModelSummary = {
+  id: string;
+  quant?: string | null;
+  checkpoint?: string;
+};
 
 type ChatRuntimeStore = {
   settingsHydrated: boolean;
@@ -2595,13 +2618,16 @@ type ChatRuntimeStore = {
   contextUsage: ContextUsageSnapshot | null;
   contextUsageByThreadId: Record<string, ContextUsageSnapshot>;
   modelLoading: boolean;
-  loadingModelPick: (LoadingModelPick & { selectionSuperseded: boolean }) | null;
+  loadingModelPick:
+    (LoadingModelPick & { selectionSuperseded: boolean }) | null;
   activeLoadId: string | null;
   activeNativePathToken: string | null;
   // The desktop host prunes file leases on a TTL, so an expired token forces re-selection.
   activeNativePathExpiresAtMs: number | null;
   hydratePersistedSettings: () => Promise<void>;
-  beginModelLoading: (phase?: ModelLifecyclePhase) => ModelLifecycleLease | null;
+  beginModelLoading: (
+    phase?: ModelLifecyclePhase,
+  ) => ModelLifecycleLease | null;
   endModelLoading: (lease: ModelLifecycleLease) => void;
   setLoadingModelPick: (pick: LoadingModelPick | null) => void;
   clearLoadingModelPick: (expected: LoadingModelPick) => void;
@@ -2716,8 +2742,10 @@ type ChatRuntimeStore = {
     threadId: string | null,
     target: ProjectAttachmentTarget,
   ) => void;
-  adoptPendingProjectAttachmentTarget: (threadId: string, claim?: number) =>
-    void;
+  adoptPendingProjectAttachmentTarget: (
+    threadId: string,
+    claim?: number,
+  ) => void;
   clearPendingProjectAttachmentTarget: () => void;
   setRagMode: (mode: RagMode) => void;
   setRagTopK: (topK: number) => void;
@@ -2740,7 +2768,10 @@ type ChatRuntimeStore = {
     canvas: DiffusionCanvasFrame,
   ) => void;
   clearActiveDiffusionCanvasForThread: (threadId: string | null) => void;
-  setLivePrefill: (threadId: string | null, prefill: LivePrefillProgress) => void;
+  setLivePrefill: (
+    threadId: string | null,
+    prefill: LivePrefillProgress,
+  ) => void;
   setLiveDecode: (threadId: string | null, decode: LiveDecodeProgress) => void;
   clearLiveGenerationForThread: (threadId: string | null) => void;
   setAutoHealToolCalls: (enabled: boolean) => void;
@@ -2883,7 +2914,10 @@ const modelsShowingPresetPick = new Set<string>();
 // The set above is overlaid wholesale, which is right for a row built from a hydrated entry but
 // not for one typed before there was an entry: that row names only the keys the user touched, so
 // replacing with it would drop the temperature, top-p or seed the response is about to bring.
-const modelParamEditsBeforeHydration = new Map<string, PersistedInferenceParams>();
+const modelParamEditsBeforeHydration = new Map<
+  string,
+  PersistedInferenceParams
+>();
 /** Lazy and memoized, or the += 1 bumps stop accumulating; import cycle leaves the const in its TDZ. */
 let inferenceParamMutationVersionsCache: Record<
   PersistedInferenceParamKey,
@@ -2923,8 +2957,7 @@ export function noteLoadedModelReasoningMode(
       threadScopedOverride("reasoningEnabled") !== undefined
         ? installationReasoningEnabled(state)
         : enabled,
-    reasoningMutationVersion:
-      scalarSettingMutationVersions.reasoningEnabled,
+    reasoningMutationVersion: scalarSettingMutationVersions.reasoningEnabled,
     // Sticky: refresh() calls this again with false right after the load marks it.
     fromLoad:
       fromLoad ||
@@ -3081,10 +3114,19 @@ function getParamsByModelAfterEdit(
       pickRememberedChanges(changedParams),
       rememberedWindow(nextParams.checkpoint),
     );
-    const partial = state.rememberParamsPerModel && hasKeys(delta)
-      ? { ...base, [nextParams.checkpoint]: { ...base[nextParams.checkpoint], ...delta } }
-      : null;
-    return trackParamsByModel(state, partial, nextParams.checkpoint) ?? outgoing;
+    const partial =
+      state.rememberParamsPerModel && hasKeys(delta)
+        ? {
+            ...base,
+            [nextParams.checkpoint]: {
+              ...base[nextParams.checkpoint],
+              ...delta,
+            },
+          }
+        : null;
+    return (
+      trackParamsByModel(state, partial, nextParams.checkpoint) ?? outgoing
+    );
   }
   const recorded = trackParamsByModel(
     state,
@@ -3303,7 +3345,9 @@ function pickLocallyEditedParams(
 ): PersistedInferenceParams {
   const edited: PersistedInferenceParams = {};
   for (const key of REMEMBERED_INFERENCE_PARAM_KEYS) {
-    if (inferenceParamMutationVersions()[key] !== versions.inferenceParams[key]) {
+    if (
+      inferenceParamMutationVersions()[key] !== versions.inferenceParams[key]
+    ) {
       setInferenceParam(edited as InferenceParams, key, params[key]);
     }
   }
@@ -3385,9 +3429,9 @@ function externalCheckpointRefusesDeepResearch(
 function localCheckpointRefusesDeepResearch(state: ChatRuntimeStore): boolean {
   return Boolean(
     state.params.checkpoint &&
-      !state.modelLoading &&
-      !isExternalModelId(state.params.checkpoint) &&
-      !state.supportsTools,
+    !state.modelLoading &&
+    !isExternalModelId(state.params.checkpoint) &&
+    !state.supportsTools,
   );
 }
 
@@ -3456,8 +3500,7 @@ function getHydratedSettingsState(
     }
     for (const modelId of locallyRememberedModels) {
       const local = state.paramsByModel[modelId] as
-        | PersistedInferenceParams
-        | undefined;
+        PersistedInferenceParams | undefined;
       if (local) {
         hydrated[modelId] = local;
       }
@@ -3766,8 +3809,7 @@ function qwenMigrationThinkingOn(
 function qwenMigrationRemembersPerModel(
   settings: PersistedChatSettings,
   state: ChatRuntimeStore,
-  rememberParamsPerModelMutationVersion =
-    scalarSettingMutationVersions.rememberParamsPerModel,
+  rememberParamsPerModelMutationVersion = scalarSettingMutationVersions.rememberParamsPerModel,
 ): boolean {
   return settings.rememberParamsPerModel !== undefined &&
     scalarSettingMutationVersions.rememberParamsPerModel ===
@@ -3815,11 +3857,12 @@ function qwenMigrationExpectedAbsentPaths(
   rawSettings: unknown,
   patch: PersistedChatSettings,
 ): [keyof PersistedChatSettings, string][] {
-  const nested = (field: keyof PersistedChatSettings): Record<string, unknown> =>
+  const nested = (
+    field: keyof PersistedChatSettings,
+  ): Record<string, unknown> =>
     typeof rawSettings === "object" && rawSettings !== null
-      ? ((rawSettings as Record<string, unknown>)[field] as
-          | Record<string, unknown>
-          | undefined) ?? {}
+      ? (((rawSettings as Record<string, unknown>)[field] as
+          Record<string, unknown> | undefined) ?? {})
       : {};
   const paths: [keyof PersistedChatSettings, string][] = [];
   if (patch.inferenceParams !== undefined) {
@@ -3866,8 +3909,8 @@ function applyLegacyQwenDefaultsAfterPresetChange(
     );
     if (!migration.patch) return state;
 
-    const activeModelId = migration.migratedModelIds.find(
-      (modelId) => sameCheckpointIdentity(modelId, checkpoint),
+    const activeModelId = migration.migratedModelIds.find((modelId) =>
+      sameCheckpointIdentity(modelId, checkpoint),
     );
     const activePatch = activeModelId
       ? migration.patch.inferenceParamsByModel?.[activeModelId]
@@ -3924,8 +3967,7 @@ function adoptMigratedFieldsAfterLocalEdit(
       return state;
     }
     const storedRow = state.paramsByModel[checkpoint] as
-      | PersistedInferenceParams
-      | undefined;
+      PersistedInferenceParams | undefined;
     return {
       // As the normal application path does: applying a thread pin advances no
       // mutation version, so nothing above would have noticed it.
@@ -4156,7 +4198,10 @@ function scheduleLegacyQwenDefaultsRetry(
     )
       .finally(settleMigration)
       .catch((error: unknown) => {
-        console.error("Failed to retry legacy Qwen defaults after preset change", error);
+        console.error(
+          "Failed to retry legacy Qwen defaults after preset change",
+          error,
+        );
       });
   });
 }
@@ -4226,7 +4271,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
   keepModelsLoaded: false,
   localImageModelReady: false,
   localVideoModelReady: false,
-  codeToolsEnabled: loadBool(CHAT_CODE_TOOLS_ENABLED_KEY, pillDefault("codeToolsEnabled")),
+  codeToolsEnabled: loadBool(
+    CHAT_CODE_TOOLS_ENABLED_KEY,
+    pillDefault("codeToolsEnabled"),
+  ),
   codeToolsDeclinedUnderFullAccess: false,
   imageToolsEnabled: loadBool(CHAT_IMAGE_TOOLS_ENABLED_KEY, false),
   deepResearchEnabled: loadBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false),
@@ -4389,7 +4437,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       return;
     }
     if (settingsHydrationPromise) {
-      await settingsHydrationPromise; return;
+      await settingsHydrationPromise;
+      return;
     }
     settingsHydrationPromise = (async () => {
       const hydrationVersions = getSettingsHydrationVersions();
@@ -4461,8 +4510,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
                       !qwenMigrationRemembersPerModel(
                         confirmed,
                         confirmedState,
-                        hydrationVersions.scalarSettings
-                          .rememberParamsPerModel,
+                        hydrationVersions.scalarSettings.rememberParamsPerModel,
                       ),
                   )
                 : unmigrated(confirmed);
@@ -4478,10 +4526,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
                 confirmed,
                 migration.patch,
                 qwenMigrationExpectedAbsent(confirmedRaw),
-                qwenMigrationExpectedAbsentPaths(
-                  confirmedRaw,
-                  migration.patch,
-                ),
+                qwenMigrationExpectedAbsentPaths(confirmedRaw, migration.patch),
               );
               migration = {
                 ...migration,
@@ -4558,12 +4603,13 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       set({ modelLoading: false });
     }
   },
-  setLoadingModelPick: (pick) => { set({
-      loadingModelPick: pick
-        ? { ...pick, selectionSuperseded: false }
-        : null,
-    }); },
-  clearLoadingModelPick: (expected) => { set((state) => {
+  setLoadingModelPick: (pick) => {
+    set({
+      loadingModelPick: pick ? { ...pick, selectionSuperseded: false } : null,
+    });
+  },
+  clearLoadingModelPick: (expected) => {
+    set((state) => {
       const current = state.loadingModelPick;
       if (
         current?.id !== expected.id ||
@@ -4573,8 +4619,11 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         return state;
       }
       return { loadingModelPick: null };
-    }); },
-  setModelRequiresTrustRemoteCode: (modelRequiresTrustRemoteCode) => { set({ modelRequiresTrustRemoteCode }); },
+    });
+  },
+  setModelRequiresTrustRemoteCode: (modelRequiresTrustRemoteCode) => {
+    set({ modelRequiresTrustRemoteCode });
+  },
   setParams: (params, options) => {
     set((state) => {
       // The local load path can move params.checkpoint via setParams() before setCheckpoint.
@@ -4583,13 +4632,21 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const outgoing = checkpointChanged
         ? rememberOutgoingModel(state, state.params)
         : null;
-      notePresetOnLoad(state, params.checkpoint, checkpointChanged, fromModelDefaults);
+      notePresetOnLoad(
+        state,
+        params.checkpoint,
+        checkpointChanged,
+        fromModelDefaults,
+      );
       // An interactive local load arrives with the destination checkpoint and recommended params, reaching
       // setCheckpoint only later, so replay here or the switch never restores the model's own settings.
       noteLoadedContext(params.checkpoint, options?.maxTokensCap);
       const replayed = checkpointChanged || fromModelDefaults;
       const incomingParams = fromModelDefaults
-        ? { ...params, minPMode: withoutActiveThreadParams(state, params).minPMode }
+        ? {
+            ...params,
+            minPMode: withoutActiveThreadParams(state, params).minPMode,
+          }
         : params;
       const nextParams = getReplayedParams(
         state.rememberParamsPerModel,
@@ -4675,16 +4732,20 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       );
     }
   },
-  setCustomPresets: (customPresets) => { set(() => {
+  setCustomPresets: (customPresets) => {
+    set(() => {
       customPresetsMutationVersion += 1;
       saveSettingsPatch({ customPresets });
       return { customPresets };
-    }); },
-  setActivePreset: (activePreset) => { set(() => {
+    });
+  },
+  setActivePreset: (activePreset) => {
+    set(() => {
       activePresetMutationVersion += 1;
       saveSettingsPatch({ activePreset });
       return { activePreset };
-    }); },
+    });
+  },
   setActivePresetSource: (activePresetSource) => {
     // A holder, not a `let`: the store callback runs synchronously but TS cannot see the write.
     const returnedToBuiltInDefault = { value: false };
@@ -4703,9 +4764,14 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       );
     }
   },
-  setModels: (models) => { set({ models }); },
-  setLoras: (loras) => { set({ loras, loraInventorySettled: true }); },
-  setThreadRunning: (threadId, running, options) => { set((state) => {
+  setModels: (models) => {
+    set({ models });
+  },
+  setLoras: (loras) => {
+    set({ loras, loraInventorySettled: true });
+  },
+  setThreadRunning: (threadId, running, options) => {
+    set((state) => {
       const next = { ...state.runningByThreadId };
       const nextLocal = { ...state.localRunByThreadId };
       const nextOwner = { ...state.runOwnerByThreadId };
@@ -4747,14 +4813,16 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         localRunByThreadId: nextLocal,
         runOwnerByThreadId: nextOwner,
       };
-    }); },
-  adoptDefaultThreadRun: (threadId) => { set((state) => {
+    });
+  },
+  adoptDefaultThreadRun: (threadId) => {
+    set((state) => {
       const key = "__default";
       if (!threadId || threadId === key) return state;
       // Two first turns can share "__default"; moving wholesale could hand over a sibling's handle.
       if (state.runOwnerByThreadId[key].length > 1) return state;
       const moved: Partial<ChatRuntimeStore> = {};
-      const move = <T,>(
+      const move = <T>(
         map: Record<string, T>,
         name: keyof ChatRuntimeStore,
       ) => {
@@ -4785,32 +4853,43 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         if (confirmations) moved.toolConfirmations = confirmations;
       }
       return Object.keys(moved).length > 0 ? moved : state;
-    }); },
+    });
+  },
   runKeyForOwner: (fallbackKey, owner) => {
     for (const [key, entries] of Object.entries(get().runOwnerByThreadId)) {
       if (entries.some((e) => e.owner === owner)) return key;
     }
     return fallbackKey;
   },
-  registerThreadCancel: (threadId, cancel) => { set((state) => {
+  registerThreadCancel: (threadId, cancel) => {
+    set((state) => {
       const next = { ...state.cancelByThreadId };
       next[threadId] = cancel;
       return { cancelByThreadId: next };
-    }); },
-  clearThreadCancel: (threadId, cancel) => { set((state) => {
+    });
+  },
+  clearThreadCancel: (threadId, cancel) => {
+    set((state) => {
       if (!(threadId in state.cancelByThreadId)) return state;
       if (cancel && state.cancelByThreadId[threadId] !== cancel) return state;
       const next = { ...state.cancelByThreadId };
       Reflect.deleteProperty(next, threadId);
       return { cancelByThreadId: next };
-    }); },
-  registerThreadServerCancel: (threadId, cancel) => { set((state) => {
+    });
+  },
+  registerThreadServerCancel: (threadId, cancel) => {
+    set((state) => {
       const next = { ...state.serverCancelByThreadId };
-      next[threadId] = [...(state.serverCancelByThreadId[threadId] ?? []), cancel];
+      next[threadId] = [
+        ...(state.serverCancelByThreadId[threadId] ?? []),
+        cancel,
+      ];
       return { serverCancelByThreadId: next };
-    }); },
+    });
+  },
   // Unresolved ids share "__default", so remove only this run's cancel.
-  clearThreadServerCancel: (threadId, cancel) => { set((state) => {
+  clearThreadServerCancel: (threadId, cancel) => {
+    set((state) => {
       const current = state.serverCancelByThreadId[threadId];
       if (!Object.hasOwn(state.serverCancelByThreadId, threadId)) return state;
       const remaining =
@@ -4823,14 +4902,23 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         Reflect.deleteProperty(next, threadId);
       }
       return { serverCancelByThreadId: next };
-    }); },
-  setAutoTitle: (autoTitle) => { set((state) => {
+    });
+  },
+  setAutoTitle: (autoTitle) => {
+    set((state) => {
       setScalarSettingVersion("autoTitle", autoTitle, state.autoTitle);
       return { autoTitle };
-    }); },
-  setHfToken: (hfToken) => { useHfTokenStore.getState().setToken(hfToken); },
-  setModelsError: (modelsError) => { set({ modelsError }); },
-  setLastModelLoadError: (lastModelLoadError) => { set({ lastModelLoadError }); },
+    });
+  },
+  setHfToken: (hfToken) => {
+    useHfTokenStore.getState().setToken(hfToken);
+  },
+  setModelsError: (modelsError) => {
+    set({ modelsError });
+  },
+  setLastModelLoadError: (lastModelLoadError) => {
+    set({ lastModelLoadError });
+  },
   setCheckpoint: (modelId, ggufVariant, options) => {
     // A holder, not a `let`: the store callback runs synchronously but TS cannot see the write.
     const scheduleQwenMigration = { value: false };
@@ -4840,7 +4928,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       // Only disarm research for a connection that cannot drive it: the id prefix alone switched
       // it off for capable providers.
       const clampsDeepResearch =
-        isExternalModelId(modelId) && !externalModelSupportsStudioTools(modelId);
+        isExternalModelId(modelId) &&
+        !externalModelSupportsStudioTools(modelId);
       // Clear stale per-turn usage on model change, or the relaxed external render gate shows it.
       const checkpointChanged = state.params.checkpoint !== modelId;
       if (checkpointChanged && !state.settingsHydrated) {
@@ -4867,7 +4956,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       if (
         !checkpointChanged &&
         options?.maxTokensCap !== undefined &&
-        ((previousWindow !== null && state.params.maxTokens >= previousWindow) ||
+        ((previousWindow !== null &&
+          state.params.maxTokens >= previousWindow) ||
           (state.rememberParamsPerModel &&
             state.paramsByModel[modelId].maxTokens ===
               REMEMBERED_MAX_TOKENS_MAX))
@@ -4959,20 +5049,27 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     }
   },
   // Re-apply the incoming thread's usage: background runs never wrote the visible value.
-  setActiveThreadId: (activeThreadId) => { set((state) => {
+  setActiveThreadId: (activeThreadId) => {
+    set((state) => {
       const own = activeThreadId
         ? (state.contextUsageByThreadId[activeThreadId] ?? null)
         : null;
       return {
-        ...chatFullAccessPermissionPatch(state, state.chatFullAccessGrants, activeThreadId),
+        ...chatFullAccessPermissionPatch(
+          state,
+          state.chatFullAccessGrants,
+          activeThreadId,
+        ),
         activeThreadId,
         chatFullAccessPendingRunId: null,
         activeThreadEpoch: state.activeThreadEpoch + 1,
         contextUsage:
           own?.modelId && own.modelId !== state.params.checkpoint ? null : own,
       };
-    }); },
-  applyThreadScopedSettings: (threadId, incomingSettings) => { set((state) => {
+    });
+  },
+  applyThreadScopedSettings: (threadId, incomingSettings) => {
+    set((state) => {
       const settings = normalizeSavedThreadScopedSettings(incomingSettings);
       flushThreadScopedSettingsWrite();
       // Edits made while this chat's snapshot was in flight are kept and stored on the chat.
@@ -4985,10 +5082,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           if (edit.field === "reasoningEffort" && edit.value !== undefined) {
             heldEffort = edit.value as ReasoningEffort;
           }
-          if (
-            isClampedPillKey(edit.field) &&
-            typeof edit.value === "boolean"
-          ) {
+          if (isClampedPillKey(edit.field) && typeof edit.value === "boolean") {
             heldPills[edit.field] = edit.value;
           }
         }
@@ -5029,7 +5123,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           hydratedDefaultsByHeldField.delete(field);
         }
         // A pin in the live effort must not become the default for snapshot-less chats.
-        if (pinOwnsLiveReasoningEffort(state) && !heldFields.has("reasoningEffort")) {
+        if (
+          pinOwnsLiveReasoningEffort(state) &&
+          !heldFields.has("reasoningEffort")
+        ) {
           const onRecord = reasoningEffortOnRecord();
           if (onRecord === undefined) delete captured.reasoningEffort;
           else captured.reasoningEffort = onRecord;
@@ -5065,8 +5162,12 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
             }
           } else if (key === "reasoningEffort" && heldEffort !== undefined) {
             applied[key] = heldEffort;
-            activeThreadScopedSettings = { ...activeThreadScopedSettings, reasoningEffort: heldEffort };
-            if (pinOwnsLiveReasoningEffort(state)) effortDisplacedByPin = heldEffort;
+            activeThreadScopedSettings = {
+              ...activeThreadScopedSettings,
+              reasoningEffort: heldEffort,
+            };
+            if (pinOwnsLiveReasoningEffort(state))
+              effortDisplacedByPin = heldEffort;
             else nextState.reasoningEffort = heldEffort;
           } else {
             applied[key] = readThreadScopedValue(state, key);
@@ -5081,7 +5182,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
             loadPermissionMode();
           if (underneath !== "full") {
             applied[key] = underneath;
-            if (state.chatFullAccessPreviousMode !== null) nextState.chatFullAccessPreviousMode = underneath;
+            if (state.chatFullAccessPreviousMode !== null)
+              nextState.chatFullAccessPreviousMode = underneath;
           }
           continue;
         }
@@ -5148,18 +5250,21 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         threadScopedSettingsPending: pending,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setActiveProjectId: (activeProjectId) => { set({ activeProjectId }); },
+    });
+  },
+  setActiveProjectId: (activeProjectId) => {
+    set({ activeProjectId });
+  },
   setIncognito: (incognito) => {
     if (incognito) saveBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false);
-    set(
-      incognito
-        ? { incognito, deepResearchEnabled: false }
-        : { incognito },
-    );
+    set(incognito ? { incognito, deepResearchEnabled: false } : { incognito });
   },
-  setSettingsPanelOpen: (settingsPanelOpen) => { set({ settingsPanelOpen }); },
-  setEditingMessageId: (id) => { set({ editingMessageId: id }); },
+  setSettingsPanelOpen: (settingsPanelOpen) => {
+    set({ settingsPanelOpen });
+  },
+  setEditingMessageId: (id) => {
+    set({ editingMessageId: id });
+  },
   clearCheckpoint: () => {
     saveLastExternalCheckpoint(null);
     const restoredEffort = pinHoldsLiveEffort()
@@ -5263,7 +5368,7 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       loadedCacheRam: null,
       tensorParallel: false,
       loadedTensorParallel: null,
-  loadedDisableVision: null,
+      loadedDisableVision: null,
       disableVision: false,
       loadedVisionDisabledByUser: null,
       gpuMemoryMode: readPersistedGpuMemoryMode(),
@@ -5291,7 +5396,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       pendingImageEditReference: null,
     }));
   },
-  setReasoningEnabled: (reasoningEnabled, options) => { set((state) => {
+  setReasoningEnabled: (reasoningEnabled, options) => {
+    set((state) => {
       if (options?.persist !== false) {
         saveBool(CHAT_REASONING_ENABLED_KEY, reasoningEnabled);
       } else {
@@ -5301,13 +5407,19 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         reasoningEnabled,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setLastOpenRouterChosenModel: (lastOpenRouterChosenModel) => { set({ lastOpenRouterChosenModel }); },
-  setReasoningStyle: (reasoningStyle) => { set((state) => ({
+    });
+  },
+  setLastOpenRouterChosenModel: (lastOpenRouterChosenModel) => {
+    set({ lastOpenRouterChosenModel });
+  },
+  setReasoningStyle: (reasoningStyle) => {
+    set((state) => ({
       reasoningStyle,
       queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
-    })); },
-  setRememberedParamsForModel: (modelId, patch) => { set((state) => {
+    }));
+  },
+  setRememberedParamsForModel: (modelId, patch) => {
+    set((state) => {
       if (!modelId || !hasKeys(patch)) return state;
       const merged = { ...state.paramsByModel[modelId], ...patch };
       const next = { ...state.paramsByModel, [modelId]: merged };
@@ -5342,7 +5454,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
             }
           : {}),
       };
-    }); },
+    });
+  },
   setReasoningEffort: (reasoningEffort) => {
     const checkpoint = useChatRuntimeStore.getState().params.checkpoint;
     const { effortByModel, setModelReasoningEffort } =
@@ -5364,7 +5477,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       };
     });
   },
-  setPreserveThinking: (preserveThinking) => { set((state) => {
+  setPreserveThinking: (preserveThinking) => {
+    set((state) => {
       setScalarSettingVersion(
         "preserveThinking",
         preserveThinking,
@@ -5375,8 +5489,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         preserveThinking,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setToolsEnabled: (toolsEnabled, options) => { set((state) => {
+    });
+  },
+  setToolsEnabled: (toolsEnabled, options) => {
+    set((state) => {
       if (options?.persist !== false) {
         saveBool(CHAT_TOOLS_ENABLED_KEY, toolsEnabled);
       } else {
@@ -5389,14 +5505,21 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           : { toolsEnabled }),
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setKeepModelsLoaded: (keepModelsLoaded) => { set({ keepModelsLoaded }); },
-  setLocalMediaModelsReady: ({ image, video }) => { set((state) =>
-      state.localImageModelReady === image && state.localVideoModelReady === video
+    });
+  },
+  setKeepModelsLoaded: (keepModelsLoaded) => {
+    set({ keepModelsLoaded });
+  },
+  setLocalMediaModelsReady: ({ image, video }) => {
+    set((state) =>
+      state.localImageModelReady === image &&
+      state.localVideoModelReady === video
         ? state
         : { localImageModelReady: image, localVideoModelReady: video },
-    ); },
-  setCodeToolsEnabled: (codeToolsEnabled) => { set((state) => {
+    );
+  },
+  setCodeToolsEnabled: (codeToolsEnabled) => {
+    set((state) => {
       saveBool(CHAT_CODE_TOOLS_ENABLED_KEY, codeToolsEnabled);
       if (codeToolsEnabled) saveBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false);
       return {
@@ -5407,8 +5530,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           !codeToolsEnabled && state.permissionMode === "full",
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setImageToolsEnabled: (imageToolsEnabled) => { set((state) => {
+    });
+  },
+  setImageToolsEnabled: (imageToolsEnabled) => {
+    set((state) => {
       saveBool(CHAT_IMAGE_TOOLS_ENABLED_KEY, imageToolsEnabled);
       if (imageToolsEnabled) saveBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false);
       return {
@@ -5417,8 +5542,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           : { imageToolsEnabled }),
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setDeepResearchEnabled: (deepResearchEnabled) => { set((state) => {
+    });
+  },
+  setDeepResearchEnabled: (deepResearchEnabled) => {
+    set((state) => {
       if (
         deepResearchEnabled &&
         isPillClampedOff(state, "deepResearchEnabled")
@@ -5449,7 +5576,11 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
             chatFullAccessPreviousMode: null,
             chatPermissionChoiceVersion: state.chatPermissionChoiceVersion + 1,
             chatFullAccessPendingRunId: null,
-            chatFullAccessGrants: revokeChatFullAccess(state.chatFullAccessGrants, state.activeThreadId, state.chatFullAccessPendingRunId),
+            chatFullAccessGrants: revokeChatFullAccess(
+              state.chatFullAccessGrants,
+              state.activeThreadId,
+              state.chatFullAccessPendingRunId,
+            ),
             confirmToolCalls:
               permissionMode === "ask" || permissionMode === "auto",
             queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
@@ -5458,15 +5589,19 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
             deepResearchEnabled,
             queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
           };
-    }); },
-  setResearchWebsitePolicy: (researchWebsitePolicy) => { set((state) => {
+    });
+  },
+  setResearchWebsitePolicy: (researchWebsitePolicy) => {
+    set((state) => {
       saveResearchWebsitePolicy(researchWebsitePolicy);
       return {
         researchWebsitePolicy,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setResearchModelTimeoutSeconds: (researchModelTimeoutSeconds) => { set((state) => {
+    });
+  },
+  setResearchModelTimeoutSeconds: (researchModelTimeoutSeconds) => {
+    set((state) => {
       const seconds = isSupportedResearchModelTimeout(
         researchModelTimeoutSeconds,
       )
@@ -5477,8 +5612,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         researchModelTimeoutSeconds: seconds,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setResearchMcpSources: (researchMcpSources) => { set((state) => {
+    });
+  },
+  setResearchMcpSources: (researchMcpSources) => {
+    set((state) => {
       const sources = normalizeResearchMcpSources(researchMcpSources);
       persistSetting(
         CHAT_DEEP_RESEARCH_MCP_SOURCES_KEY,
@@ -5488,23 +5625,31 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         researchMcpSources: sources,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setCollapseHtmlArtifacts: (collapseHtmlArtifacts) => { set(() => {
+    });
+  },
+  setCollapseHtmlArtifacts: (collapseHtmlArtifacts) => {
+    set(() => {
       saveBool(CHAT_COLLAPSE_HTML_ARTIFACTS_KEY, collapseHtmlArtifacts);
       return { collapseHtmlArtifacts };
-    }); },
-  setAllowArtifactNetworkAccess: (allowArtifactNetworkAccess) => { set(() => {
+    });
+  },
+  setAllowArtifactNetworkAccess: (allowArtifactNetworkAccess) => {
+    set(() => {
       saveBool(
         CHAT_ALLOW_ARTIFACT_NETWORK_ACCESS_KEY,
         allowArtifactNetworkAccess,
       );
       return { allowArtifactNetworkAccess };
-    }); },
-  setSearchImages: (searchImages) => { set(() => {
+    });
+  },
+  setSearchImages: (searchImages) => {
+    set(() => {
       saveBool(CHAT_SEARCH_IMAGES_KEY, searchImages);
       return { searchImages };
-    }); },
-  setMcpEnabledForChat: (mcpEnabledForChat) => { set((state) => {
+    });
+  },
+  setMcpEnabledForChat: (mcpEnabledForChat) => {
+    set((state) => {
       saveBool(CHAT_MCP_ENABLED_KEY, mcpEnabledForChat);
       if (mcpEnabledForChat) saveBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false);
       return {
@@ -5513,8 +5658,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           : { mcpEnabledForChat }),
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setConfirmToolCalls: (confirmToolCalls) => { set((state) => {
+    });
+  },
+  setConfirmToolCalls: (confirmToolCalls) => {
+    set((state) => {
       saveBool(CHAT_CONFIRM_TOOL_CALLS_KEY, confirmToolCalls);
       if (state.permissionMode === "full") {
         return {
@@ -5531,12 +5678,19 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         chatPermissionChoiceVersion: state.chatPermissionChoiceVersion + 1,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setSandboxLevel: (sandboxLevel) => { set((state) => {
+    });
+  },
+  setSandboxLevel: (sandboxLevel) => {
+    set((state) => {
       saveString(CHAT_SANDBOX_LEVEL_KEY, sandboxLevel);
-      return { sandboxLevel, queuedSettingsEpoch: state.queuedSettingsEpoch + 1 };
-    }); },
-  setPermissionMode: (permissionMode) => { set((state) => {
+      return {
+        sandboxLevel,
+        queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
+      };
+    });
+  },
+  setPermissionMode: (permissionMode) => {
+    set((state) => {
       savePermissionMode(permissionMode);
       if (permissionMode === "full") {
         // Full access sends confirm_tool_calls=false; keep the store flag in sync.
@@ -5547,7 +5701,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           bypassPermissions: true,
           confirmToolCalls: false,
           deepResearchEnabled: false,
-          codeToolsDeclinedUnderFullAccess: codeDeclinedOnEnteringFullAccess(state),
+          codeToolsDeclinedUnderFullAccess:
+            codeDeclinedOnEnteringFullAccess(state),
           chatPermissionChoiceVersion: state.chatPermissionChoiceVersion + 1,
           queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
         };
@@ -5559,15 +5714,21 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         permissionMode,
         chatFullAccessPreviousMode: null,
         chatFullAccessPendingRunId: null,
-        chatFullAccessGrants: revokeChatFullAccess(state.chatFullAccessGrants, state.activeThreadId, state.chatFullAccessPendingRunId),
+        chatFullAccessGrants: revokeChatFullAccess(
+          state.chatFullAccessGrants,
+          state.activeThreadId,
+          state.chatFullAccessPendingRunId,
+        ),
         bypassPermissions: false,
         confirmToolCalls,
         codeToolsDeclinedUnderFullAccess: false,
         chatPermissionChoiceVersion: state.chatPermissionChoiceVersion + 1,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setBypassPermissions: (bypassPermissions) => { set((state) => {
+    });
+  },
+  setBypassPermissions: (bypassPermissions) => {
+    set((state) => {
       if (bypassPermissions) {
         saveBool(CHAT_DEEP_RESEARCH_ENABLED_KEY, false);
         return {
@@ -5576,7 +5737,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           chatFullAccessPreviousMode: null,
           confirmToolCalls: false,
           deepResearchEnabled: false,
-          codeToolsDeclinedUnderFullAccess: codeDeclinedOnEnteringFullAccess(state),
+          codeToolsDeclinedUnderFullAccess:
+            codeDeclinedOnEnteringFullAccess(state),
           chatPermissionChoiceVersion: state.chatPermissionChoiceVersion + 1,
           queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
         };
@@ -5588,14 +5750,20 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         permissionMode,
         chatFullAccessPreviousMode: null,
         chatFullAccessPendingRunId: null,
-        chatFullAccessGrants: revokeChatFullAccess(state.chatFullAccessGrants, state.activeThreadId, state.chatFullAccessPendingRunId),
+        chatFullAccessGrants: revokeChatFullAccess(
+          state.chatFullAccessGrants,
+          state.activeThreadId,
+          state.chatFullAccessPendingRunId,
+        ),
         confirmToolCalls: permissionMode === "ask" || permissionMode === "auto",
         codeToolsDeclinedUnderFullAccess: false,
         chatPermissionChoiceVersion: state.chatPermissionChoiceVersion + 1,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  grantChatFullAccess: (incomingGrant) => { set((state) => {
+    });
+  },
+  grantChatFullAccess: (incomingGrant) => {
+    set((state) => {
       if (!incomingGrant.runId || !incomingGrant.sessionId) return state;
       const grant = {
         ...incomingGrant,
@@ -5608,49 +5776,62 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const grants = { ...state.chatFullAccessGrants, [grant.runId]: grant };
       return {
         chatFullAccessGrants: grants,
-        chatFullAccessPendingRunId: !grant.threadId && state.activeThreadId === null
-          ? grant.runId : state.chatFullAccessPendingRunId,
+        chatFullAccessPendingRunId:
+          !grant.threadId && state.activeThreadId === null
+            ? grant.runId
+            : state.chatFullAccessPendingRunId,
         ...chatFullAccessPermissionPatch(state, grants, state.activeThreadId),
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  adoptChatFullAccessRun: (runId, threadId) => { set((state) => {
+    });
+  },
+  adoptChatFullAccessRun: (runId, threadId) => {
+    set((state) => {
       if (!runId || !threadId || threadId === "__default") return state;
       const grant = state.chatFullAccessGrants[runId] as
-        | ChatFullAccessGrant
-        | undefined;
+        ChatFullAccessGrant | undefined;
       const recorded = state.chatFullAccessThreadByRunId[runId];
       if (recorded && recorded !== threadId) return state;
       const runThreads = recorded
         ? state.chatFullAccessThreadByRunId
         : { ...state.chatFullAccessThreadByRunId, [runId]: threadId };
-      if (!grant || grant.threadId) return recorded ? state : { chatFullAccessThreadByRunId: runThreads };
+      if (!grant || grant.threadId)
+        return recorded ? state : { chatFullAccessThreadByRunId: runThreads };
       const grants = { ...state.chatFullAccessGrants };
-      if (grant.choiceVersion === state.chatPermissionChoiceVersion) grants[runId] = { ...grant, threadId };
+      if (grant.choiceVersion === state.chatPermissionChoiceVersion)
+        grants[runId] = { ...grant, threadId };
       else Reflect.deleteProperty(grants, runId);
       return {
         chatFullAccessGrants: grants,
         chatFullAccessThreadByRunId: runThreads,
-        chatFullAccessPendingRunId: state.chatFullAccessPendingRunId === runId ? null : state.chatFullAccessPendingRunId,
+        chatFullAccessPendingRunId:
+          state.chatFullAccessPendingRunId === runId
+            ? null
+            : state.chatFullAccessPendingRunId,
         ...chatFullAccessPermissionPatch(state, grants, state.activeThreadId),
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  clearUnadoptedChatFullAccessRun: (runId) => { set((state) => {
+    });
+  },
+  clearUnadoptedChatFullAccessRun: (runId) => {
+    set((state) => {
       // The run's thread mapping stays: a first-turn upgrade acknowledged after the run ended binds through it.
       const grant = state.chatFullAccessGrants[runId] as
-        | ChatFullAccessGrant
-        | undefined;
+        ChatFullAccessGrant | undefined;
       if (!grant || grant.threadId) return state;
       const grants = { ...state.chatFullAccessGrants };
       Reflect.deleteProperty(grants, runId);
       return {
         chatFullAccessGrants: grants,
-        chatFullAccessPendingRunId: state.chatFullAccessPendingRunId === runId
-          ? null : state.chatFullAccessPendingRunId,
+        chatFullAccessPendingRunId:
+          state.chatFullAccessPendingRunId === runId
+            ? null
+            : state.chatFullAccessPendingRunId,
       };
-    }); },
-  clearChatFullAccessGrants: () => { set((state) => {
+    });
+  },
+  clearChatFullAccessGrants: () => {
+    set((state) => {
       const permissions = withChatFullAccess(state, {}, state.activeThreadId);
       return {
         chatFullAccessGrants: {},
@@ -5662,15 +5843,20 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         chatFullAccessPreviousMode: null,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setBypassConfirmOpen: (bypassConfirmOpen) => { set(() => ({ bypassConfirmOpen })); },
-  allowToolAlways: (sessionId, toolName) => { set((state) => {
+    });
+  },
+  setBypassConfirmOpen: (bypassConfirmOpen) => {
+    set(() => ({ bypassConfirmOpen }));
+  },
+  allowToolAlways: (sessionId, toolName) => {
+    set((state) => {
       const current = state.alwaysAllowToolsBySession.get(sessionId);
       if (current?.has(toolName)) return state;
       const next = new Map(state.alwaysAllowToolsBySession);
       next.set(sessionId, new Set(current ?? []).add(toolName));
       return { alwaysAllowToolsBySession: next };
-    }); },
+    });
+  },
   setToolConfirmation: (
     toolCallId,
     approvalId,
@@ -5679,7 +5865,8 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     threadId,
     imageDisclosure,
     runId,
-  ) => { set((state) => ({
+  ) => {
+    set((state) => ({
       toolConfirmations: {
         ...state.toolConfirmations,
         [toolCallId]: {
@@ -5691,8 +5878,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           runId,
         },
       },
-    })); },
-  clearToolConfirmation: (toolCallId) => { set((state) => {
+    }));
+  },
+  clearToolConfirmation: (toolCallId) => {
+    set((state) => {
       if (
         !Object.prototype.hasOwnProperty.call(
           state.toolConfirmations,
@@ -5704,30 +5893,43 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const next = { ...state.toolConfirmations };
       Reflect.deleteProperty(next, toolCallId);
       return { toolConfirmations: next };
-    }); },
-  setWebFetchToolsEnabled: (webFetchToolsEnabled) => { set((state) => {
+    });
+  },
+  setWebFetchToolsEnabled: (webFetchToolsEnabled) => {
+    set((state) => {
       saveBool(CHAT_WEB_FETCH_TOOLS_ENABLED_KEY, webFetchToolsEnabled);
       return {
         webFetchToolsEnabled,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setRagEnabled: (ragEnabled) => { set((state) => {
+    });
+  },
+  setRagEnabled: (ragEnabled) => {
+    set((state) => {
       // The only thread-scoped setting with no global slot, so no persist helper reaches it.
-      if (ragEnabled !== state.ragEnabled) captureThreadScopedEdit("ragEnabled");
+      if (ragEnabled !== state.ragEnabled)
+        captureThreadScopedEdit("ragEnabled");
       return {
         ragEnabled,
         ragPanelHidden: false,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setRagPanelHidden: (ragPanelHidden) => { set({ ragPanelHidden }); },
-  setRagPanelFileCount: (ragPanelFileCount) => { set({ ragPanelFileCount }); },
-  setProjectAttachmentTarget: (projectAttachmentTarget) => { set(() => {
+    });
+  },
+  setRagPanelHidden: (ragPanelHidden) => {
+    set({ ragPanelHidden });
+  },
+  setRagPanelFileCount: (ragPanelFileCount) => {
+    set({ ragPanelFileCount });
+  },
+  setProjectAttachmentTarget: (projectAttachmentTarget) => {
+    set(() => {
       saveString(CHAT_PROJECT_ATTACHMENT_TARGET_KEY, projectAttachmentTarget);
       return { projectAttachmentTarget };
-    }); },
-  setThreadProjectAttachmentTarget: (threadId, target) => { set((state) => {
+    });
+  },
+  setThreadProjectAttachmentTarget: (threadId, target) => {
+    set((state) => {
       if (threadId === null) {
         pendingAttachmentTargetClaim += 1;
       }
@@ -5737,8 +5939,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           [threadId ?? PENDING_CHAT_ATTACHMENT_KEY]: target,
         },
       };
-    }); },
-  adoptPendingProjectAttachmentTarget: (threadId, claim) => { set((state) => {
+    });
+  },
+  adoptPendingProjectAttachmentTarget: (threadId, claim) => {
+    set((state) => {
       if (claim !== undefined && claim !== pendingAttachmentTargetClaim) {
         return state;
       }
@@ -5755,8 +5959,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       Reflect.deleteProperty(next, PENDING_CHAT_ATTACHMENT_KEY);
       next[threadId] = pending;
       return { projectAttachmentTargetByThread: next };
-    }); },
-  clearPendingProjectAttachmentTarget: () => { set((state) => {
+    });
+  },
+  clearPendingProjectAttachmentTarget: () => {
+    set((state) => {
       const byThread = state.projectAttachmentTargetByThread;
       if (!(PENDING_CHAT_ATTACHMENT_KEY in byThread)) {
         return state;
@@ -5765,8 +5971,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const next = { ...byThread };
       Reflect.deleteProperty(next, PENDING_CHAT_ATTACHMENT_KEY);
       return { projectAttachmentTargetByThread: next };
-    }); },
-  setRememberParamsPerModel: (rememberParamsPerModel) => { set((state) => {
+    });
+  },
+  setRememberParamsPerModel: (rememberParamsPerModel) => {
+    set((state) => {
       setScalarSettingVersion(
         "rememberParamsPerModel",
         rememberParamsPerModel,
@@ -5808,37 +6016,47 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         rememberParamsPerModel,
         ...(paramsByModel ? { paramsByModel } : {}),
       };
-    }); },
-  setRagSource: (ragSource) => { set((state) => {
+    });
+  },
+  setRagSource: (ragSource) => {
+    set((state) => {
       saveRagSource(ragSource);
       return {
         ragSource,
         ragPanelHidden: false,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setRagMode: (ragMode) => { set((state) => {
+    });
+  },
+  setRagMode: (ragMode) => {
+    set((state) => {
       saveString(CHAT_RAG_MODE_KEY, ragMode);
       return {
         ragMode,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setRagTopK: (ragTopK) => { set((state) => {
+    });
+  },
+  setRagTopK: (ragTopK) => {
+    set((state) => {
       saveString(CHAT_RAG_TOP_K_KEY, String(ragTopK));
       return {
         ragTopK,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setRagAutoInject: (ragAutoInject) => { set((state) => {
+    });
+  },
+  setRagAutoInject: (ragAutoInject) => {
+    set((state) => {
       saveString(CHAT_RAG_AUTOINJECT_KEY, ragAutoInject);
       return {
         ragAutoInject,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setRagAutoInjectMinScore: (ragAutoInjectMinScore) => { set((state) => {
+    });
+  },
+  setRagAutoInjectMinScore: (ragAutoInjectMinScore) => {
+    set((state) => {
       saveString(
         CHAT_RAG_AUTOINJECT_MIN_SCORE_KEY,
         String(ragAutoInjectMinScore),
@@ -5847,16 +6065,22 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         ragAutoInjectMinScore,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setRagOcrScanned: (ragOcrScanned) => { set(() => {
+    });
+  },
+  setRagOcrScanned: (ragOcrScanned) => {
+    set(() => {
       saveBool(CHAT_RAG_OCR_KEY, ragOcrScanned);
       return { ragOcrScanned };
-    }); },
-  setRagCaptionFigures: (ragCaptionFigures) => { set(() => {
+    });
+  },
+  setRagCaptionFigures: (ragCaptionFigures) => {
+    set(() => {
       saveBool(CHAT_RAG_CAPTION_KEY, ragCaptionFigures);
       return { ragCaptionFigures };
-    }); },
-  setToolStatus: (threadId, status, owner) => { set((state) => {
+    });
+  },
+  setToolStatus: (threadId, status, owner) => {
+    set((state) => {
       const next = { ...state.toolStatusByThreadId };
       const entries = state.toolStatusByThreadId[threadId] ?? [];
       const mine = entries.find((e) => e.owner === owner);
@@ -5877,28 +6101,36 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           : [...entries, entry];
       }
       return { toolStatusByThreadId: next };
-    }); },
-  appendToolLiveOutput: (toolCallId, text) => { set((state) => ({
+    });
+  },
+  appendToolLiveOutput: (toolCallId, text) => {
+    set((state) => ({
       toolLiveOutput: {
         ...state.toolLiveOutput,
         [toolCallId]: (state.toolLiveOutput[toolCallId] ?? "") + text,
       },
-    })); },
-  setToolFullOutput: (toolCallId, text) => { set((state) => ({
+    }));
+  },
+  setToolFullOutput: (toolCallId, text) => {
+    set((state) => ({
       toolFullOutput: {
         ...state.toolFullOutput,
         [toolCallId]: text,
       },
-    })); },
-  clearToolFullOutput: (toolCallId) => { set((state) => {
+    }));
+  },
+  clearToolFullOutput: (toolCallId) => {
+    set((state) => {
       if (!(toolCallId in state.toolFullOutput)) {
         return {};
       }
       const next = { ...state.toolFullOutput };
       Reflect.deleteProperty(next, toolCallId);
       return { toolFullOutput: next };
-    }); },
-  clearToolLiveOutput: (toolCallId) => { set((state) => {
+    });
+  },
+  clearToolLiveOutput: (toolCallId) => {
+    set((state) => {
       if (toolCallId === undefined) {
         return Object.keys(state.toolLiveOutput).length
           ? { toolLiveOutput: {} }
@@ -5910,23 +6142,33 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
       const next = { ...state.toolLiveOutput };
       Reflect.deleteProperty(next, toolCallId);
       return { toolLiveOutput: next };
-    }); },
-  setActiveDiffusionCanvas: (threadId, canvas) => { set((state) => ({
+    });
+  },
+  setActiveDiffusionCanvas: (threadId, canvas) => {
+    set((state) => ({
       activeDiffusionCanvasByThreadId: {
         ...state.activeDiffusionCanvasByThreadId,
         [threadId || "__default"]: canvas,
       },
-    })); },
-  clearActiveDiffusionCanvasForThread: (threadId) => { set((state) => {
+    }));
+  },
+  clearActiveDiffusionCanvasForThread: (threadId) => {
+    set((state) => {
       const key = threadId || "__default";
-      if (!Object.hasOwn(state.activeDiffusionCanvasByThreadId, key)) return state;
+      if (!Object.hasOwn(state.activeDiffusionCanvasByThreadId, key))
+        return state;
       const next = { ...state.activeDiffusionCanvasByThreadId };
       Reflect.deleteProperty(next, key);
       return { activeDiffusionCanvasByThreadId: next };
-    }); },
-  setLivePrefill: (threadId, prefill) => { set((state) => {
+    });
+  },
+  setLivePrefill: (threadId, prefill) => {
+    set((state) => {
       const key = threadId || "__default";
-      const prefillShown = prefillLabelShown(state.liveGenerationByThreadId[key], prefill);
+      const prefillShown = prefillLabelShown(
+        state.liveGenerationByThreadId[key],
+        prefill,
+      );
       // A new prompt pass (the next round of a tool loop) starts over, so its decode figures go too.
       return {
         liveGenerationByThreadId: {
@@ -5934,8 +6176,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           [key]: { prefill, prefillShown, decode: null },
         },
       };
-    }); },
-  setLiveDecode: (threadId, decode) => { set((state) => {
+    });
+  },
+  setLiveDecode: (threadId, decode) => {
+    set((state) => {
       const key = threadId || "__default";
       const current = state.liveGenerationByThreadId[key];
       return {
@@ -5948,16 +6192,22 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
           },
         },
       };
-    }); },
-  clearLiveGenerationForThread: (threadId) => { set((state) => {
+    });
+  },
+  clearLiveGenerationForThread: (threadId) => {
+    set((state) => {
       const key = threadId || "__default";
       if (!Object.hasOwn(state.liveGenerationByThreadId, key)) return state;
       const next = { ...state.liveGenerationByThreadId };
       Reflect.deleteProperty(next, key);
       return { liveGenerationByThreadId: next };
-    }); },
-  setGeneratingStatus: (generatingStatus) => { set({ generatingStatus }); },
-  setAutoHealToolCalls: (autoHealToolCalls) => { set((state) => {
+    });
+  },
+  setGeneratingStatus: (generatingStatus) => {
+    set({ generatingStatus });
+  },
+  setAutoHealToolCalls: (autoHealToolCalls) => {
+    set((state) => {
       setScalarSettingVersion(
         "autoHealToolCalls",
         autoHealToolCalls,
@@ -5967,8 +6217,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         autoHealToolCalls,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setNudgeToolCalls: (nudgeToolCalls) => { set((state) => {
+    });
+  },
+  setNudgeToolCalls: (nudgeToolCalls) => {
+    set((state) => {
       setScalarSettingVersion(
         "nudgeToolCalls",
         nudgeToolCalls,
@@ -5978,8 +6230,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         nudgeToolCalls,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setDeduplicateToolCalls: (deduplicateToolCalls) => { set((state) => {
+    });
+  },
+  setDeduplicateToolCalls: (deduplicateToolCalls) => {
+    set((state) => {
       setScalarSettingVersion(
         "deduplicateToolCalls",
         deduplicateToolCalls,
@@ -5989,8 +6243,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         deduplicateToolCalls,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setAutoCompactEnabled: (autoCompactEnabled) => { set((state) => {
+    });
+  },
+  setAutoCompactEnabled: (autoCompactEnabled) => {
+    set((state) => {
       setScalarSettingVersion(
         "autoCompactEnabled",
         autoCompactEnabled,
@@ -6000,8 +6256,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         autoCompactEnabled,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setKeepRunningWhenTabClosed: (keepRunningWhenTabClosed) => { set((state) => {
+    });
+  },
+  setKeepRunningWhenTabClosed: (keepRunningWhenTabClosed) => {
+    set((state) => {
       setScalarSettingVersion(
         "keepRunningWhenTabClosed",
         keepRunningWhenTabClosed,
@@ -6011,8 +6269,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         keepRunningWhenTabClosed,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setMaxToolCallsPerMessage: (maxToolCallsPerMessage) => { set((state) => {
+    });
+  },
+  setMaxToolCallsPerMessage: (maxToolCallsPerMessage) => {
+    set((state) => {
       setScalarSettingVersion(
         "maxToolCallsPerMessage",
         maxToolCallsPerMessage,
@@ -6022,8 +6282,10 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         maxToolCallsPerMessage,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
-  setToolCallTimeout: (toolCallTimeout) => { set((state) => {
+    });
+  },
+  setToolCallTimeout: (toolCallTimeout) => {
+    set((state) => {
       setScalarSettingVersion(
         "toolCallTimeout",
         toolCallTimeout,
@@ -6033,17 +6295,28 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         toolCallTimeout,
         queuedSettingsEpoch: state.queuedSettingsEpoch + 1,
       };
-    }); },
+    });
+  },
   // Persisted only on a successful load, so an unapplied pick does not stick.
-  setGpuMemoryMode: (gpuMemoryMode) => { set({ gpuMemoryMode }); },
-  setGpuLayers: (gpuLayers) => { set({ gpuLayers }); },
-  setNCpuMoe: (nCpuMoe) => { set({ nCpuMoe }); },
-  setSplitRatio: (splitRatio) => { set({ splitRatio }); },
-  setSelectedGpuIds: (selectedGpuIds, selectedGpuIndexKind = null) => { set({
+  setGpuMemoryMode: (gpuMemoryMode) => {
+    set({ gpuMemoryMode });
+  },
+  setGpuLayers: (gpuLayers) => {
+    set({ gpuLayers });
+  },
+  setNCpuMoe: (nCpuMoe) => {
+    set({ nCpuMoe });
+  },
+  setSplitRatio: (splitRatio) => {
+    set({ splitRatio });
+  },
+  setSelectedGpuIds: (selectedGpuIds, selectedGpuIndexKind = null) => {
+    set({
       selectedGpuIds,
       selectedGpuIndexKind:
         selectedGpuIds == null ? null : selectedGpuIndexKind,
-    }); },
+    });
+  },
   setExpandQuantizations: (expandQuantizations) => {
     saveBool(CHAT_EXPAND_QUANTIZATIONS_KEY, expandQuantizations);
     set({ expandQuantizations });
@@ -6060,12 +6333,21 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
     saveBool(MODELS_FIT_ON_DEVICE_ONLY_KEY, fitOnDeviceOnly);
     set({ fitOnDeviceOnly });
   },
-  setPendingAudio: (base64, name) => { set({ pendingAudioBase64: base64, pendingAudioName: name }); },
-  clearPendingAudio: () => { set({ pendingAudioBase64: null, pendingAudioName: null }); },
-  setPendingImageEditReference: (pendingImageEditReference) => { set({ pendingImageEditReference }); },
-  clearPendingImageEditReference: () => { set({ pendingImageEditReference: null }); },
+  setPendingAudio: (base64, name) => {
+    set({ pendingAudioBase64: base64, pendingAudioName: name });
+  },
+  clearPendingAudio: () => {
+    set({ pendingAudioBase64: null, pendingAudioName: null });
+  },
+  setPendingImageEditReference: (pendingImageEditReference) => {
+    set({ pendingImageEditReference });
+  },
+  clearPendingImageEditReference: () => {
+    set({ pendingImageEditReference: null });
+  },
   // Write through to the thread's entry: the history loader runs once per mount.
-  setContextUsage: (contextUsage) => { set((state) => {
+  setContextUsage: (contextUsage) => {
+    set((state) => {
       const stamped =
         contextUsage && !contextUsage.modelId && state.params.checkpoint
           ? { ...contextUsage, modelId: state.params.checkpoint }
@@ -6078,10 +6360,13 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
         Reflect.deleteProperty(next, state.activeThreadId);
       }
       return { contextUsage: stamped, contextUsageByThreadId: next };
-    }); },
-  setThreadContextUsage: (threadId, usage) => { set((state) => {
+    });
+  },
+  setThreadContextUsage: (threadId, usage) => {
+    set((state) => {
       if (!usage) {
-        if (!Object.hasOwn(state.contextUsageByThreadId, threadId)) return state;
+        if (!Object.hasOwn(state.contextUsageByThreadId, threadId))
+          return state;
         const next = { ...state.contextUsageByThreadId };
         Reflect.deleteProperty(next, threadId);
         return { contextUsageByThreadId: next };
@@ -6095,21 +6380,39 @@ export const useChatRuntimeStore = create<ChatRuntimeStore>((set, get) => ({
               : { ...usage, modelId: state.params.checkpoint },
         },
       };
-    }); },
+    });
+  },
 }));
 
-const clearChatFullAccessOnAuthChange = () => { useChatRuntimeStore.getState().clearChatFullAccessGrants(); };
-if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
-  window.addEventListener(AUTH_SESSION_CLEARED_EVENT, clearChatFullAccessOnAuthChange);
-  window.addEventListener(AUTH_SESSION_STORED_EVENT, clearChatFullAccessOnAuthChange);
+const clearChatFullAccessOnAuthChange = () => {
+  useChatRuntimeStore.getState().clearChatFullAccessGrants();
+};
+if (
+  typeof window !== "undefined" &&
+  typeof window.addEventListener === "function"
+) {
+  window.addEventListener(
+    AUTH_SESSION_CLEARED_EVENT,
+    clearChatFullAccessOnAuthChange,
+  );
+  window.addEventListener(
+    AUTH_SESSION_STORED_EVENT,
+    clearChatFullAccessOnAuthChange,
+  );
 }
 
 const unsubscribeHfTokenMirror = mirrorHfTokenInto(useChatRuntimeStore);
 if (import.meta.hot) {
   import.meta.hot.dispose(unsubscribeHfTokenMirror);
   import.meta.hot.dispose(() => {
-    window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, clearChatFullAccessOnAuthChange);
-    window.removeEventListener(AUTH_SESSION_STORED_EVENT, clearChatFullAccessOnAuthChange);
+    window.removeEventListener(
+      AUTH_SESSION_CLEARED_EVENT,
+      clearChatFullAccessOnAuthChange,
+    );
+    window.removeEventListener(
+      AUTH_SESSION_STORED_EVENT,
+      clearChatFullAccessOnAuthChange,
+    );
   });
 }
 
@@ -6128,8 +6431,7 @@ export function resolveSpeculativeSettingsForLoad({
   return {
     speculativeType,
     specDraftNMax:
-      !usePersistedPreference &&
-      DRAFT_N_MAX_SPEC_TYPES.has(speculativeType)
+      !usePersistedPreference && DRAFT_N_MAX_SPEC_TYPES.has(speculativeType)
         ? state.specDraftNMax
         : null,
   };

@@ -13,7 +13,7 @@ import { SidebarEdgeTrigger } from "@/components/sidebar-edge-trigger";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { fetchDeviceType, usePlatformStore } from "@/config/env";
 import { videoNavHint } from "@/config/hardware-verdict";
-import { ApiMonitorOverlay } from "@/features/api-monitor";
+import { ApiMonitorOverlay } from "@/features/api-monitor/api-monitor-overlay";
 import { DownloadApprovalDialog } from "@/features/browser";
 import {
   AUTH_SESSION_CLEARED_EVENT,
@@ -36,7 +36,10 @@ import {
 import { useExportRuntimeLifecycle } from "@/features/export";
 import { FIND_SCOPE_ATTRIBUTE, FindInPage } from "@/features/find-in-page";
 import { HfTokenWarningDialog } from "@/features/hf-auth";
-import { InterfaceZoom, zoomInterfaceFromMenu } from "@/features/interface-zoom";
+import {
+  InterfaceZoom,
+  zoomInterfaceFromMenu,
+} from "@/features/interface-zoom";
 import { bootstrapPersistedCredentials } from "@/features/credentials";
 import {
   ManagedEngineOfferDialog,
@@ -80,7 +83,6 @@ import { AnimatePresence, motion } from "motion/react";
 import {
   type ComponentType,
   lazy,
-
   type ReactNode,
   Suspense,
   useCallback,
@@ -88,12 +90,15 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-
   useState,
 } from "react";
 import { AppProvider } from "../provider";
 import { useDesktopShellReady } from "../desktop-shell-ready";
-import { type HelpAction, helpActionAvailable, runHelpAction } from "@/components/help-actions";
+import {
+  type HelpAction,
+  helpActionAvailable,
+  runHelpAction,
+} from "@/components/help-actions";
 import type { SettingsMenuAction } from "../app-menu-chords";
 import { hasAppMenus, useAppMenuActions } from "../use-app-menu-actions";
 
@@ -141,9 +146,7 @@ function ReloadSnapshotPrivacy() {
       incognito,
     );
     return () => {
-      document.documentElement.removeAttribute(
-        "data-reload-snapshot-private",
-      );
+      document.documentElement.removeAttribute("data-reload-snapshot-private");
     };
   }, [incognito]);
 
@@ -165,7 +168,10 @@ function RouteBoundary({
   );
 }
 
-interface ChatPageProps { search: ChatSearch; active: boolean }
+interface ChatPageProps {
+  search: ChatSearch;
+  active: boolean;
+}
 type ChatPageAttemptProps = ChatPageProps & { onRetry: () => void };
 
 function ChatPageLoadFailure({
@@ -215,7 +221,9 @@ function chatPageAttempt(): ComponentType<ChatPageAttemptProps> {
 function ChatPage(props: ChatPageProps) {
   // Kept until a failure: swapping component type would remount the page and drop its state.
   const [Page, setPage] = useState(chatPageAttempt);
-  const retry = useCallback(() => { setPage(() => chatPageAttempt()); }, []);
+  const retry = useCallback(() => {
+    setPage(() => chatPageAttempt());
+  }, []);
   return (
     <Suspense fallback={<RouteFallback />}>
       <Page {...props} onRetry={retry} />
@@ -271,7 +279,6 @@ function ChatSettingsHydrationMount() {
   return null;
 }
 
-
 function CredentialBootstrapGate({
   active,
   children,
@@ -296,11 +303,7 @@ function CredentialBootstrapGate({
       setReady(false);
       bootstrapPersistedCredentials()
         .finally(() => {
-          if (
-            mounted &&
-            revision === runRevision.current &&
-            hasAuthToken()
-          ) {
+          if (mounted && revision === runRevision.current && hasAuthToken()) {
             setReady(true);
           }
         })
@@ -429,8 +432,7 @@ function RootLayout() {
 
   // ChatPage is mounted persistently so generation survives leaving the tab; search frozen off-route.
   const rawSearch = useRouterState({ select: (s) => s.location.search }) as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   const rawThread =
     typeof rawSearch?.thread === "string" ? rawSearch.thread : undefined;
   const rawCompare =
@@ -486,7 +488,8 @@ function RootLayout() {
   }
   const shouldMountAudio = isAudioRoute || audioMounted;
   // All four pages render their own full-height shell: no outer inset or scroll.
-  const isChatLike = isChatRoute || isImagesRoute || isVideoRoute || isAudioRoute;
+  const isChatLike =
+    isChatRoute || isImagesRoute || isVideoRoute || isAudioRoute;
   // Uses Navbar's hook, not the md breakpoint: a narrowed desktop window keeps the desktop navbar.
   const nonChatTopInset = useIsMobileShell()
     ? "pt-14"
@@ -540,13 +543,16 @@ function RootLayout() {
 
   useShortcut(
     "openSettings",
-    () => { useSettingsDialogStore.getState().openDialog(); },
+    () => {
+      useSettingsDialogStore.getState().openDialog();
+    },
     { enabled: !isAuthFlowRoute },
   );
   useShortcut(
     "openKeyboardShortcuts",
-    () =>
-      { useSettingsDialogStore.getState().openDialog("keyboard-shortcuts"); },
+    () => {
+      useSettingsDialogStore.getState().openDialog("keyboard-shortcuts");
+    },
     { enabled: !isAuthFlowRoute },
   );
   const startNewChat = (options?: {
@@ -567,7 +573,9 @@ function RootLayout() {
     chatRuntime.setIncognito(Boolean(options?.incognito));
     navigate({
       to: "/chat",
-      search: projectId ? { project: projectId } : { new: createNavigationNonce() },
+      search: projectId
+        ? { project: projectId }
+        : { new: createNavigationNonce() },
     }).catch((error: unknown) => {
       console.error("Background chat operation failed", error);
     });
@@ -576,17 +584,31 @@ function RootLayout() {
   // Gated like the workspace chords below: /login has no shell, and /chat
   // bounces straight back off requireAuth.
   const routeShortcutEnabled = !isAuthFlowRoute && !settingsDialogOpen;
-  useShortcut("newChat", () => { startNewChat(); }, {
-    enabled: routeShortcutEnabled,
-  });
+  useShortcut(
+    "newChat",
+    () => {
+      startNewChat();
+    },
+    {
+      enabled: routeShortcutEnabled,
+    },
+  );
   useShortcut(
     "newTemporaryChat",
-    () => { startNewChat({ incognito: true, standalone: true }); },
+    () => {
+      startNewChat({ incognito: true, standalone: true });
+    },
     { enabled: routeShortcutEnabled },
   );
-  useShortcut("newStandaloneChat", () => { startNewChat({ standalone: true }); }, {
-    enabled: routeShortcutEnabled,
-  });
+  useShortcut(
+    "newStandaloneChat",
+    () => {
+      startNewChat({ standalone: true });
+    },
+    {
+      enabled: routeShortcutEnabled,
+    },
+  );
 
   const pathLeasesSupported = useNativePathLeasesSupported();
   const ragUnavailable = useRagAvailabilityStore((s) => s.isUnavailable());
@@ -596,11 +618,17 @@ function RootLayout() {
   const findMounted = useShortcutAvailable("findInPage", hasAppMenus);
   const previousChatMounted = useShortcutAvailable("previousChat", hasAppMenus);
   const nextChatMounted = useShortcutAvailable("nextChat", hasAppMenus);
-  const viaShortcut = (id: Parameters<typeof triggerShortcut>[0], mounted: boolean) =>
-    mounted ? () => void triggerShortcut(id) : null;
+  const viaShortcut = (
+    id: Parameters<typeof triggerShortcut>[0],
+    mounted: boolean,
+  ) => (mounted ? () => void triggerShortcut(id) : null);
   const isOwner = useIsAccountOwner();
   const helpAction = (action: HelpAction) =>
-    isAuthFlowRoute || !helpActionAvailable(action, isOwner) ? null : () => { runHelpAction(action); };
+    isAuthFlowRoute || !helpActionAvailable(action, isOwner)
+      ? null
+      : () => {
+          runHelpAction(action);
+        };
   const goTo = (to: string) => () => {
     navigate({ to }).catch((error: unknown) => {
       console.error("Background chat operation failed", error);
@@ -612,69 +640,103 @@ function RootLayout() {
     SETTINGS_TABS.map((tab) => [
       `settings-${tab}`,
       !isAuthFlowRoute && settingsTabVisible(tab, isOwner)
-        ? () => { useSettingsDialogStore.getState().openDialog(tab); }
+        ? () => {
+            useSettingsDialogStore.getState().openDialog(tab);
+          }
         : null,
     ]),
   ) as Record<SettingsMenuAction, (() => void) | null>;
-  useAppMenuActions({
-    "new-chat": routeShortcutEnabled ? () => { startNewChat(); } : null,
-    "new-temporary-chat": routeShortcutEnabled
-      ? () => { startNewChat({ incognito: true, standalone: true }); }
-      : null,
-    "open-folder":
-      routeShortcutEnabled && pathLeasesSupported && !ragUnavailable && !openingFolder
+  useAppMenuActions(
+    {
+      "new-chat": routeShortcutEnabled
         ? () => {
-            openFolderAsProject()
-              .then((project) => {
-                if (!project) return;
-                const chatRuntime = useChatRuntimeStore.getState();
-                chatRuntime.setActiveThreadId(null);
-                chatRuntime.setActiveProjectId(project.id);
-                navigate({ to: "/chat", search: { project: project.id } }).catch(
-                  (error: unknown) => {
-                    console.error("Background chat operation failed", error);
-                  },
-                );
-              })
-              .catch((error: unknown) => {
-                console.error("Background chat operation failed", error);
-              });
+            startNewChat();
           }
         : null,
-    "toggle-sidebar": viaShortcut("toggleSidebar", sidebarMounted),
-    "find": viaShortcut("findInPage", findMounted),
-    "previous-chat": viaShortcut("previousChat", previousChatMounted),
-    "next-chat": viaShortcut("nextChat", nextChatMounted),
-    "back": routeShortcutEnabled ? () => { window.history.back(); } : null,
-    "forward": routeShortcutEnabled ? () => { window.history.forward(); } : null,
-    "zoom-in": () => { zoomInterfaceFromMenu(1); },
-    "zoom-out": () => { zoomInterfaceFromMenu(-1); },
-    "actual-size": () => { zoomInterfaceFromMenu(0); },
-    "help-documentation": helpAction("help-documentation"),
-    "help-keyboard-shortcuts": helpAction("help-keyboard-shortcuts"),
-    "help-whats-new": helpAction("help-whats-new"),
-    "help-troubleshooting": helpAction("help-troubleshooting"),
-    "help-system-status": helpAction("help-system-status"),
-    "help-send-feedback": helpAction("help-send-feedback"),
-    "go-chat": goAction(
-      routeShortcutEnabled,
-      () => {
-        navigate({ to: "/chat", search: chatSearch }).catch((error: unknown) => {
-          console.error("Background chat operation failed", error);
-        });
+      "new-temporary-chat": routeShortcutEnabled
+        ? () => {
+            startNewChat({ incognito: true, standalone: true });
+          }
+        : null,
+      "open-folder":
+        routeShortcutEnabled &&
+        pathLeasesSupported &&
+        !ragUnavailable &&
+        !openingFolder
+          ? () => {
+              openFolderAsProject()
+                .then((project) => {
+                  if (!project) return;
+                  const chatRuntime = useChatRuntimeStore.getState();
+                  chatRuntime.setActiveThreadId(null);
+                  chatRuntime.setActiveProjectId(project.id);
+                  navigate({
+                    to: "/chat",
+                    search: { project: project.id },
+                  }).catch((error: unknown) => {
+                    console.error("Background chat operation failed", error);
+                  });
+                })
+                .catch((error: unknown) => {
+                  console.error("Background chat operation failed", error);
+                });
+            }
+          : null,
+      "toggle-sidebar": viaShortcut("toggleSidebar", sidebarMounted),
+      find: viaShortcut("findInPage", findMounted),
+      "previous-chat": viaShortcut("previousChat", previousChatMounted),
+      "next-chat": viaShortcut("nextChat", nextChatMounted),
+      back: routeShortcutEnabled
+        ? () => {
+            window.history.back();
+          }
+        : null,
+      forward: routeShortcutEnabled
+        ? () => {
+            window.history.forward();
+          }
+        : null,
+      "zoom-in": () => {
+        zoomInterfaceFromMenu(1);
       },
-    ),
-    "go-projects": goAction(routeShortcutEnabled, goTo("/projects")),
-    "go-library": goAction(routeShortcutEnabled, goTo("/library")),
-    "go-hub": goAction(routeShortcutEnabled, goTo("/hub")),
-    "go-train": goAction(routeShortcutEnabled && !chatOnlyMeasured, goTo("/studio")),
-    "go-recipes": goAction(routeShortcutEnabled, goTo("/data-recipes")),
-    "go-images": goAction(routeShortcutEnabled, goTo("/images")),
-    "go-video": goAction(routeShortcutEnabled && !videoDisabled, goTo("/video")),
-    "go-audio": goAction(routeShortcutEnabled, goTo("/audio")),
-    "go-export": goAction(routeShortcutEnabled, goTo("/export")),
-    ...settingsActions,
-  }, desktopShellReady);
+      "zoom-out": () => {
+        zoomInterfaceFromMenu(-1);
+      },
+      "actual-size": () => {
+        zoomInterfaceFromMenu(0);
+      },
+      "help-documentation": helpAction("help-documentation"),
+      "help-keyboard-shortcuts": helpAction("help-keyboard-shortcuts"),
+      "help-whats-new": helpAction("help-whats-new"),
+      "help-troubleshooting": helpAction("help-troubleshooting"),
+      "help-system-status": helpAction("help-system-status"),
+      "help-send-feedback": helpAction("help-send-feedback"),
+      "go-chat": goAction(routeShortcutEnabled, () => {
+        navigate({ to: "/chat", search: chatSearch }).catch(
+          (error: unknown) => {
+            console.error("Background chat operation failed", error);
+          },
+        );
+      }),
+      "go-projects": goAction(routeShortcutEnabled, goTo("/projects")),
+      "go-library": goAction(routeShortcutEnabled, goTo("/library")),
+      "go-hub": goAction(routeShortcutEnabled, goTo("/hub")),
+      "go-train": goAction(
+        routeShortcutEnabled && !chatOnlyMeasured,
+        goTo("/studio"),
+      ),
+      "go-recipes": goAction(routeShortcutEnabled, goTo("/data-recipes")),
+      "go-images": goAction(routeShortcutEnabled, goTo("/images")),
+      "go-video": goAction(
+        routeShortcutEnabled && !videoDisabled,
+        goTo("/video"),
+      ),
+      "go-audio": goAction(routeShortcutEnabled, goTo("/audio")),
+      "go-export": goAction(routeShortcutEnabled, goTo("/export")),
+      ...settingsActions,
+    },
+    desktopShellReady,
+  );
 
   // Carry the frozen search back: a bare /chat is a fresh chat and would drop the thread.
   useShortcut(
@@ -767,8 +829,7 @@ function RootLayout() {
             className={
               isChatLike
                 ? "overflow-hidden"
-                :
-                  isLibraryRoute
+                : isLibraryRoute
                   ? "mt-(--studio-non-chat-scroller-top,0) overflow-y-auto scrollbar-gutter-stable"
                   : "mt-(--studio-non-chat-scroller-top,0) overflow-y-auto"
             }
@@ -811,7 +872,10 @@ function RootLayout() {
                   <Suspense fallback={<RouteFallback />}>
                     <InitialReadyPage>
                       {(signalReady) => (
-                        <ImagesPage active={isImagesRoute} onInitialReady={signalReady} />
+                        <ImagesPage
+                          active={isImagesRoute}
+                          onInitialReady={signalReady}
+                        />
                       )}
                     </InitialReadyPage>
                   </Suspense>
@@ -829,7 +893,10 @@ function RootLayout() {
                   <Suspense fallback={<RouteFallback />}>
                     <InitialReadyPage>
                       {(signalReady) => (
-                        <VideoPage active={isVideoRoute} onInitialReady={signalReady} />
+                        <VideoPage
+                          active={isVideoRoute}
+                          onInitialReady={signalReady}
+                        />
                       )}
                     </InitialReadyPage>
                   </Suspense>
@@ -847,7 +914,10 @@ function RootLayout() {
                   <Suspense fallback={<RouteFallback />}>
                     <InitialReadyPage>
                       {(signalReady) => (
-                        <AudioPage active={isAudioRoute} onInitialReady={signalReady} />
+                        <AudioPage
+                          active={isAudioRoute}
+                          onInitialReady={signalReady}
+                        />
                       )}
                     </InitialReadyPage>
                   </Suspense>
@@ -858,22 +928,27 @@ function RootLayout() {
                   "popLayout" allows the new route to mount immediately while the
                   old one animates out, avoiding blocking on expensive exit renders.
                   See issue #5850. */}
-              {!isChatRoute && !isImagesRoute && !isVideoRoute && !isAudioRoute && (
-                <AnimatePresence initial={false} mode="popLayout">
-                  <motion.div
-                    key={pathname}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.06 }}
-                    className="flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-visible"
-                  >
-                    <RouteBoundary readyWhenCommitted={!routeOwnsReloadReadiness}>
-                      <Outlet />
-                    </RouteBoundary>
-                  </motion.div>
-                </AnimatePresence>
-              )}
+              {!isChatRoute &&
+                !isImagesRoute &&
+                !isVideoRoute &&
+                !isAudioRoute && (
+                  <AnimatePresence initial={false} mode="popLayout">
+                    <motion.div
+                      key={pathname}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.06 }}
+                      className="flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-visible"
+                    >
+                      <RouteBoundary
+                        readyWhenCommitted={!routeOwnsReloadReadiness}
+                      >
+                        <Outlet />
+                      </RouteBoundary>
+                    </motion.div>
+                  </AnimatePresence>
+                )}
             </div>
           </SidebarInset>
         </SidebarProvider>

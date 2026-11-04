@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
+import { resyncInferenceStatusAfterServerModelChange } from "@/features/chat";
 import {
   type ModelCachePin,
   type TransformersUpgradeCheck,
@@ -137,10 +138,7 @@ export async function confirmTrainingTransformersUpgrade({
   if (
     useTransformersUpgradeDialogStore.getState().consumeServerUnloadedChat()
   ) {
-    // The install unloads the active chat model, so resync chat.
-    void import("@/features/chat")
-      .then((chat) => chat.resyncInferenceStatusAfterServerModelChange())
-      .catch(() => undefined);
+    resyncInferenceStatusAfterServerModelChange().catch(() => undefined);
   }
   if (!upgraded) {
     // "Start again to install it" only means something when there is something to install.

@@ -5,6 +5,7 @@ import { resolve as resolveBundler } from "./bundler-resolver.mjs";
 
 const STUBS = new Map([
   ["@/features/auth", "./helpers/store-stubs/auth.ts"],
+  ["@/features/auth/api", "./helpers/store-stubs/auth.ts"],
   ["@/features/hub", "./helpers/store-stubs/hub.ts"],
   [
     "@/features/hub/download-manager",
@@ -15,6 +16,12 @@ const STUBS = new Map([
 ]);
 
 export function resolve(specifier, context, next) {
+  if (
+    specifier.startsWith(".") &&
+    context.parentURL?.includes("/node_modules/")
+  ) {
+    return next(specifier, context);
+  }
   const stub = STUBS.get(specifier);
   if (stub) {
     return next(new URL(stub, import.meta.url).href, context);

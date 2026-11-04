@@ -5,6 +5,7 @@
 // function so a top-level `return` is legal, with the scope object as globals.
 import { runInNewContext } from "node:vm";
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- callers choose the shape.
 export function runSource<T = unknown>(
   code: string,
   context: object = {},

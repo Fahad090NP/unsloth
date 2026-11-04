@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const SRC = fileURLToPath(new URL("../../src/", import.meta.url));
 const STUB = new URL("./transformers-upgrade-stub.mjs", import.meta.url).href;
+const CHAT_STUB = new URL("./chat-barrel-stub.mjs", import.meta.url).href;
 
 function firstExisting(base) {
   for (const candidate of [`${base}.ts`, `${base}/index.ts`, base]) {
@@ -22,6 +23,7 @@ export function resolve(specifier, context, next) {
   ) {
     return next(STUB, context);
   }
+  if (specifier === "@/features/chat") return next(CHAT_STUB, context);
   if (specifier.startsWith("@/")) {
     const resolved = firstExisting(SRC + specifier.slice(2));
     return next(resolved ?? specifier, context);

@@ -6,7 +6,7 @@ import {
   getDiffusionDownloadPlan,
   type DiffusionDownloadPlan,
 } from "@/features/images";
-import { getVideoDownloadPlan } from "@/features/video";
+import { getVideoDownloadPlan } from "@/features/video/api";
 import { getAudioDownloadPlan } from "@/features/audio";
 import { toast } from "@/lib/toast";
 import { useInventoryVersion } from "../stores/inventory-events";
@@ -93,9 +93,15 @@ export function useRequiredAssetsDownload({
   useEffect(() => {
     if (!runtime) return;
     const timer = window.setTimeout(() => {
-      resolvePlan().catch(() => { /* noop */ }).catch(() => undefined);
+      resolvePlan()
+        .catch(() => {
+          /* noop */
+        })
+        .catch(() => undefined);
     }, 200);
-    return () => { window.clearTimeout(timer); };
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [resolvePlan, runtime]);
   useEffect(() => {
     const seq = sequence;

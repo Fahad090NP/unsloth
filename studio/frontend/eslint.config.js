@@ -197,10 +197,6 @@ export default defineConfig([
         {
           patterns: [
             {
-              group: ["@/features/*/*"],
-              message: "Import from feature index only: @/features/[name]",
-            },
-            {
               group: ["../features/*/**"],
               message: "Use absolute imports: @/features/[name]",
             },
@@ -245,8 +241,8 @@ export default defineConfig([
     },
   },
   {
-    // Tests import this wiring module directly, so it avoids the settings barrel.
-    files: ["src/app/app-menu-chords.ts"],
+    // These modules import deep paths so lazy routes stay out of the startup chunk.
+    files: ["src/app/app-menu-chords.ts", "src/app/routes/__root.tsx"],
     rules: { "no-restricted-imports": "off" },
   },
   {
