@@ -10,6 +10,8 @@ import test from "node:test";
 import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
 
+import ts from "@typescript/typescript6";
+
 const source = readFileSync(
   fileURLToPath(
     new URL("../src/features/chat/api/chat-adapter.ts", import.meta.url),
@@ -97,18 +99,22 @@ interface CascadeState {
   validateFailures: number;
 }
 
+const budgetHelperStart = source.indexOf("const autoLoadBudgetSpent");
+assert.ok(budgetHelperStart >= 0, "autoLoadBudgetSpent is no longer defined");
+const budgetHelper = ts.transpileModule(
+  source.slice(budgetHelperStart, source.indexOf(";", budgetHelperStart) + 1),
+  { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
+).outputText;
+
 function predicate(condition: string): (state: CascadeState) => boolean {
   return (state) =>
-    runInNewContext(
-      `Boolean(${condition});`,
-      {
-        MAX_AUTO_LOAD_ATTEMPTS,
-        [VALIDATE_CAP_NAME]: MAX_AUTO_VALIDATE_FAILURES,
-        autoLoadCancelled: state.autoLoadCancelled,
-        loadAttempts: state.loadAttempts,
-        [COUNTER_NAME]: state.validateFailures,
-      },
-    ) as boolean;
+    runInNewContext(`${budgetHelper}\nBoolean(${condition});`, {
+      MAX_AUTO_LOAD_ATTEMPTS,
+      [VALIDATE_CAP_NAME]: MAX_AUTO_VALIDATE_FAILURES,
+      autoLoadCancelled: state.autoLoadCancelled,
+      loadAttempts: state.loadAttempts,
+      [COUNTER_NAME]: state.validateFailures,
+    }) as boolean;
 }
 
 const sourceLoopStart = source.indexOf("for (const source of sources) {");
@@ -141,7 +147,10 @@ interface CascadeResult {
 
 type SweepStatus = "next-source" | "aborted" | "loaded";
 
-interface ValidateBudget { validates: number; abortAt: number }
+interface ValidateBudget {
+  validates: number;
+  abortAt: number;
+}
 
 function sweepSource(
   quants: readonly Outcome[],

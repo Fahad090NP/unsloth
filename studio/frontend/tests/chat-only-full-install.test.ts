@@ -6,29 +6,49 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
 
+import { runSource } from "./helpers/eval-source.ts";
 import { readSrcAsync, registerBundlerResolver } from "./helpers/kit.ts";
 
 registerBundlerResolver();
 
-const { canUpgradeToFullInstall } = await import("../src/hooks/tauri-repair-context.ts");
-const { SETTINGS_SEARCH_KEYWORDS, createSettingsSearchIndex, renderedSearchEntries } =
-  await import("../src/features/settings/settings-search.ts");
+const { canUpgradeToFullInstall } =
+  await import("../src/hooks/tauri-repair-context.ts");
+const {
+  SETTINGS_SEARCH_KEYWORDS,
+  createSettingsSearchIndex,
+  renderedSearchEntries,
+} = await import("../src/features/settings/settings-search.ts");
 const { en } = await import("../src/i18n/locales/en.ts");
 
-const managed = { repairInstall: () => Promise.resolve(), isExternalServer: false };
-const external = { repairInstall: () => Promise.resolve(), isExternalServer: true };
+const managed = {
+  repairInstall: () => Promise.resolve(),
+  isExternalServer: false,
+};
+const external = {
+  repairInstall: () => Promise.resolve(),
+  isExternalServer: true,
+};
 
-const MAC_HINT = "Training on this Mac needs MLX, which requires macOS 14 or later.";
+const MAC_HINT =
+  "Training on this Mac needs MLX, which requires macOS 14 or later.";
 
 test("only a measured no_torch verdict with a managed repair can be upgraded", () => {
   assert.equal(canUpgradeToFullInstall("no_torch", null, true, managed), true);
-  assert.equal(canUpgradeToFullInstall("no_torch", null, false, managed), false);
+  assert.equal(
+    canUpgradeToFullInstall("no_torch", null, false, managed),
+    false,
+  );
   assert.equal(canUpgradeToFullInstall("no_torch", null, true, null), false);
-  assert.equal(canUpgradeToFullInstall("no_torch", null, true, external), false);
+  assert.equal(
+    canUpgradeToFullInstall("no_torch", null, true, external),
+    false,
+  );
   // A Mac the MLX wheels skip.
-  assert.equal(canUpgradeToFullInstall("no_torch", MAC_HINT, true, managed), false);
+  assert.equal(
+    canUpgradeToFullInstall("no_torch", MAC_HINT, true, managed),
+    false,
+  );
   for (const reason of [
     "no_gpu",
     "intel_mac",
@@ -39,25 +59,58 @@ test("only a measured no_torch verdict with a managed repair can be upgraded", (
     "detection_failed",
     null,
   ]) {
-    assert.equal(canUpgradeToFullInstall(reason, null, true, managed), false, String(reason));
+    assert.equal(
+      canUpgradeToFullInstall(reason, null, true, managed),
+      false,
+      String(reason),
+    );
   }
 });
 
 test("Settings search finds the row by what a Chat only user would type", () => {
-  const index = createSettingsSearchIndex({ desktop: true, closeToTray: true, menuBarIcon: false });
+  const index = createSettingsSearchIndex({
+    desktop: true,
+    closeToTray: true,
+    menuBarIcon: false,
+  });
   const entry = "settings.general.fullInstall.label";
   assert.ok(index.general.includes(entry));
-  assert.ok(renderedSearchEntries(index, "general", "huggingface", true, true).includes(entry));
-  // The row renders nothing on a full install, so search must not scroll to it there.
-  assert.ok(!renderedSearchEntries(index, "general", "huggingface", true, false).includes(entry));
   assert.ok(
-    !createSettingsSearchIndex({ desktop: false, closeToTray: false, menuBarIcon: false }).general.includes(entry),
+    renderedSearchEntries(index, "general", "huggingface", true, true).includes(
+      entry,
+    ),
+  );
+  // The row renders nothing on a full install, so search must not scroll to it there.
+  assert.ok(
+    !renderedSearchEntries(
+      index,
+      "general",
+      "huggingface",
+      true,
+      false,
+    ).includes(entry),
+  );
+  assert.ok(
+    !createSettingsSearchIndex({
+      desktop: false,
+      closeToTray: false,
+      menuBarIcon: false,
+    }).general.includes(entry),
   );
 
   const keywordsKey = SETTINGS_SEARCH_KEYWORDS[entry];
   assert.equal(keywordsKey, "settings.general.fullInstall.keywords");
   const keywords = en.settings.general.fullInstall.keywords;
-  for (const query of ["full install", "upgrade", "add training", "train", "pytorch", "chat only", "export", "video"]) {
+  for (const query of [
+    "full install",
+    "upgrade",
+    "add training",
+    "train",
+    "pytorch",
+    "chat only",
+    "export",
+    "video",
+  ]) {
     assert.ok(keywords.includes(query), query);
   }
 });
@@ -66,29 +119,38 @@ test("the Chat only confirm copy states the download and does not claim a reinst
   const full = en.settings.general.fullInstall;
   assert.match(full.confirmDescription, /gigabytes/);
   assert.doesNotMatch(full.confirmDescription, /reinstall/i);
-  for (const unlocked of ["training", "export", "video", "safetensors", "image generation"]) {
+  for (const unlocked of [
+    "training",
+    "export",
+    "video",
+    "safetensors",
+    "image generation",
+  ]) {
     assert.match(full.confirmDescription, new RegExp(unlocked));
   }
   const repair = en.settings.general.repairInstall;
-  assert.match(repair.confirmDescriptionChatOnly, /upgrades it to the full install with PyTorch/);
+  assert.match(
+    repair.confirmDescriptionChatOnly,
+    /upgrades it to the full install with PyTorch/,
+  );
   assert.doesNotMatch(repair.confirmDescriptionChatOnly, /reinstalls/);
 });
 
 test("the greyed Train row points at the Install type row, not at Danger zone", async () => {
   const source = await readSrcAsync("components/app-sidebar.tsx");
-  const hint = /const trainDisabledHint: string \| undefined = ([\s\S]*?\n\s*: undefined);/.exec(source);
+  const hint =
+    /const trainDisabledHint: string \| undefined = ([\s\S]*?\n\s*: undefined);/.exec(
+      source,
+    );
   assert.ok(hint, "could not find trainDisabledHint");
   const forNoTorch = (canRepair: boolean, chatOnlyHint: string | null = null) =>
-    runInNewContext(
-      `return ${hint[1]};`,
-      {
-        chatOnlyMeasured: true,
-        chatOnlyReason: "no_torch",
-        chatOnlyDetail: null,
-        chatOnlyHint,
-        canRepair,
-      },
-    ) as string;
+    runSource(`return ${hint[1]};`, {
+      chatOnlyMeasured: true,
+      chatOnlyReason: "no_torch",
+      chatOnlyDetail: null,
+      chatOnlyHint,
+      canRepair,
+    }) as string;
   assert.match(forNoTorch(true), /Use Upgrade to full install in Settings/);
   assert.doesNotMatch(forNoTorch(true), /Repair installation/);
   assert.match(forNoTorch(false), /--no-torch/);
@@ -106,10 +168,19 @@ test("the greyed Train row opens the full install dialog when the upgrade is off
   assert.match(row[0], /setFullInstallOpen\(true\)/);
   assert.match(row[0], /5 GB/);
   // Never navigates or preloads Train on a Chat only install.
-  assert.match(row[0], /if \(chatOnlyMeasured\) \{[\s\S]*?return;\n {8}\}\n {8}navigateFromRow/);
-  assert.match(row[0], /onIntent: \(\) => \{\n {8}if \(chatOnlyMeasured\) return;/);
+  assert.match(
+    row[0],
+    /if \(chatOnlyMeasured\) \{[\s\S]*?return;\n {8}\}\n {8}navigateFromRow/,
+  );
+  assert.match(
+    row[0],
+    /onIntent: \(\) => \{\n {8}if \(chatOnlyMeasured\) return;/,
+  );
   assert.match(source, /<FullInstallDialog\s+open=\{fullInstallOpen\}/);
-  assert.match(en.settings.general.fullInstall.confirmDescription, /at least 5 GB of disk space/);
+  assert.match(
+    en.settings.general.fullInstall.confirmDescription,
+    /at least 5 GB of disk space/,
+  );
 });
 
 test("the Train hint and the Export banner both carry an Install Training button", async () => {
@@ -118,19 +189,37 @@ test("the Train hint and the Export banner both carry an Install Training button
   assert.ok(row, "could not find the train nav row");
   assert.match(
     row[0],
-    /tooltipAction: fullInstall\s*\? \{ label: "Install Training", onClick: \(\) => setFullInstallOpen\(true\) \}\s*: undefined,/,
+    /tooltipAction: fullInstall\s*\? \{ label: "Install Training", onClick: \(\) => \{ setFullInstallOpen\(true\); \} \}\s*: undefined,/,
   );
   // The inline row renders it, and a still-spinning row never offers it.
-  assert.match(sidebar, /tooltipAction=\{rowState\.pending \? undefined : row\.tooltipAction\}/);
-  assert.match(sidebar, /<Button size="xs" onClick=\{tooltipAction\.onClick\}>/);
+  assert.match(
+    sidebar,
+    /tooltipAction=\{rowState\.pending \? undefined : row\.tooltipAction\}/,
+  );
+  assert.match(
+    sidebar,
+    /<Button size="xs" onClick=\{tooltipAction\.onClick\}>/,
+  );
   // The More flyout renders no button, so its title keeps the click guidance.
-  assert.match(sidebar, /row\.tooltipAction && !rowState\.pending\s*\? `\$\{rowState\.tooltip\} Click to install it\.`/);
+  assert.match(
+    sidebar,
+    /row\.tooltipAction &&\s*!rowState\.pending\s*&&\s*rowState\.tooltip\s*\? `\$\{rowState\.tooltip\} Click to install it\.`/,
+  );
   // The nav provider disables hoverable tooltips; a tooltip with a button must opt back in.
-  assert.match(sidebar, /interactiveTooltip=\{Boolean\(tooltip && tooltipAction\)\}/);
+  assert.match(
+    sidebar,
+    /interactiveTooltip=\{Boolean\(tooltip && tooltipAction\)\}/,
+  );
 
   const exportPage = await readSrcAsync("features/export/export-page.tsx");
-  const banner = /<AlertTitle>Export unavailable<\/AlertTitle>[\s\S]*?<\/Alert>/.exec(exportPage);
+  const banner =
+    /<AlertTitle>Export unavailable<\/AlertTitle>[\s\S]*?<\/Alert>/.exec(
+      exportPage,
+    );
   assert.ok(banner, "could not find the Export unavailable banner");
-  assert.match(banner[0], /\{fullInstall && \([\s\S]*?setFullInstallOpen\(true\)[\s\S]*?Install Training/);
+  assert.match(
+    banner[0],
+    /\{fullInstall && \([\s\S]*?setFullInstallOpen\(true\)[\s\S]*?Install Training/,
+  );
   assert.match(exportPage, /<FullInstallDialog\s+open=\{fullInstallOpen\}/);
 });

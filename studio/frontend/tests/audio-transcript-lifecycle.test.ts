@@ -3,12 +3,15 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
+import { runSource } from "./helpers/eval-source.ts";
 import { readSrc, readText } from "./helpers/kit.ts";
 import { readAudioWorkspaceSource } from "./helpers/audio-workspace.ts";
 import { AUTH_SESSION_ENDING_EVENT } from "../src/features/auth/session-events.ts";
-import { readTranscriptDraft, writeTranscriptDraft } from "../src/features/audio/transcript-draft.ts";
+import {
+  readTranscriptDraft,
+  writeTranscriptDraft,
+} from "../src/features/audio/transcript-draft.ts";
 
 const source = readAudioWorkspaceSource();
 const draftDetails = {
@@ -70,7 +73,7 @@ function callback(name: string, scope: Record<string, unknown>) {
       compilerOptions: { target: ts.ScriptTarget.ES2022 },
     },
   );
-  return runInNewContext(outputText, scope) as unknown;
+  return runSource(outputText, scope);
 }
 
 test("a run applies a confirmation once and only to the transcript it covered", async () => {
@@ -89,7 +92,9 @@ test("a run applies a confirmation once and only to the transcript it covered", 
         events.push("prepare");
         return null;
       },
-      setBusy: () => { /* empty */ },
+      setBusy: () => {
+        /* empty */
+      },
       AbortController,
     }) as (...args: unknown[]) => Promise<unknown>;
     await run(
@@ -153,7 +158,11 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
   const sidebar = readSrc("components/app-sidebar.tsx");
   const parse = (text: string) =>
     ts.createSourceFile(
-      "component.tsx", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX,
+      "component.tsx",
+      text,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
     );
   const audioTree = parse(source);
   let protection: string | undefined;
@@ -175,7 +184,9 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
   function findLogout(node: ts.Node) {
     if (
       (ts.isArrowFunction(node) || ts.isFunctionDeclaration(node)) &&
-      node.modifiers?.some((item) => item.kind === ts.SyntaxKind.AsyncKeyword) &&
+      node.modifiers?.some(
+        (item) => item.kind === ts.SyntaxKind.AsyncKeyword,
+      ) &&
       node.body?.getText(sidebarTree).includes("await logout()")
     ) {
       handlers.push(node.getText(sidebarTree));
@@ -184,15 +195,21 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
   }
   findLogout(sidebarTree);
   assert.equal(handlers.length, 1);
-  assert.equal((sidebar.match(/void signOut\(\)/g) ?? []).length, 2);
+  assert.equal((sidebar.match(/signOut\(\)\.catch/g) ?? []).length, 2);
   const execute = (expression: string, scope: Record<string, unknown>) => {
     const { outputText } = ts.transpileModule(`return (${expression});`, {
       compilerOptions: { target: ts.ScriptTarget.ES2022 },
     });
-    return runInNewContext(outputText, scope) as unknown;
+    return runSource(outputText, scope);
   };
   for (const handler of handlers) {
-    for (const scenario of ["decline", "accept", "saved", "exported", "unmounted"]) {
+    for (const scenario of [
+      "decline",
+      "accept",
+      "saved",
+      "exported",
+      "unmounted",
+    ]) {
       const events: string[] = [];
       const drafts = new Map<string, string>();
       Object.defineProperty(globalThis, "sessionStorage", {
@@ -210,37 +227,42 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
           return scenario === "accept";
         },
       });
-      const cleanup = execute(protection, {
-        transcript: "unsaved text",
-        transcriptRecord: scenario === "saved" ? { id: "saved" } : null,
-        transcriptExported: scenario === "exported",
-        draftKey: "test-draft",
-        transcribedName: "speech.wav",
-        transcriptModel: "tiny",
-        transcriptDetails: draftDetails,
-        speakerNames: { S01: "Ada" },
-        writeTranscriptDraft,
-        isTauri: false,
-        window,
-        AUTH_SESSION_ENDING_EVENT: eventName,
-      }) as (() => void) | undefined;
+      const cleanup = (
+        execute(protection, {
+          transcript: "unsaved text",
+          transcriptRecord: scenario === "saved" ? { id: "saved" } : null,
+          transcriptExported: scenario === "exported",
+          draftKey: "test-draft",
+          transcribedName: "speech.wav",
+          transcriptModel: "tiny",
+          transcriptDetails: draftDetails,
+          speakerNames: { S01: "Ada" },
+          writeTranscriptDraft,
+          isTauri: false,
+          window,
+          AUTH_SESSION_ENDING_EVENT: eventName,
+        }) as () => (() => void) | undefined
+      )();
       if (scenario === "unmounted") cleanup?.();
-      await (execute(handler, {
-        window,
-        Event,
-        AUTH_SESSION_ENDING_EVENT: eventName,
-        isTauri: false,
-        isOwner: true,
-        logout: () => {
-          events.push("logout");
-        },
-        clearAuthTokens: () => {
-          events.push("clear");
-        },
-        navigate: () => {
-          events.push("navigate");
-        },
-      }) as () => Promise<void>)();
+      await (
+        execute(handler, {
+          window,
+          Event,
+          AUTH_SESSION_ENDING_EVENT: eventName,
+          isTauri: false,
+          isOwner: true,
+          logout: () => {
+            events.push("logout");
+          },
+          clearAuthTokens: () => {
+            events.push("clear");
+          },
+          navigate: () => {
+            events.push("navigate");
+            return Promise.resolve();
+          },
+        }) as () => Promise<void>
+      )();
       assert.deepEqual(
         events,
         scenario === "decline"
@@ -253,7 +275,13 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
       assert.deepEqual(
         readTranscriptDraft("test-draft"),
         scenario === "decline" || scenario === "unmounted"
-          ? { text: "unsaved text", title: "speech.wav", model: "tiny", details: draftDetails, speakerNames: { S01: "Ada" } }
+          ? {
+              text: "unsaved text",
+              title: "speech.wav",
+              model: "tiny",
+              details: draftDetails,
+              speakerNames: { S01: "Ada" },
+            }
           : null,
       );
     }
@@ -261,29 +289,52 @@ test("logout checks unsaved transcripts before revoking the session or navigatin
 });
 
 test("remounting audio restores the unsaved transcript and its origin", () => {
-  const tree = ts.createSourceFile("audio-page.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-  const names = new Set(["draftKey", "recoveredTranscript", "transcript", "transcribedName", "transcriptModel"]);
+  const tree = ts.createSourceFile(
+    "audio-page.tsx",
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  const names = new Set([
+    "draftKey",
+    "recoveredTranscript",
+    "transcript",
+    "transcribedName",
+    "transcriptModel",
+  ]);
   const declarations: string[] = [];
   function visit(node: ts.Node) {
     if (ts.isVariableDeclaration(node) && ts.isArrayBindingPattern(node.name)) {
       const name = node.name.elements[0].getText(tree);
-      if (name && names.has(name)) declarations.push(`const ${node.getText(tree)};`);
+      if (name && names.has(name))
+        declarations.push(`const ${node.getText(tree)};`);
     }
     ts.forEachChild(node, visit);
   }
   visit(tree);
-  const draft = { text: "recovered speech", title: "speech.wav", model: "tiny" };
+  const draft = {
+    text: "recovered speech",
+    title: "speech.wav",
+    model: "tiny",
+  };
   const { outputText } = ts.transpileModule(
-    declarations.join("\n") + "\nreturn {text: transcript, title: transcribedName, model: transcriptModel};",
+    declarations.join("\n") +
+      "\nreturn {text: transcript, title: transcribedName, model: transcriptModel};",
     { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
   );
   const scope = {
-    useState: (initial: unknown) => [typeof initial === "function" ? (initial as () => unknown)() : initial, () => { /* empty */ }],
+    useState: (initial: unknown) => [
+      typeof initial === "function" ? (initial as () => unknown)() : initial,
+      () => {
+        /* empty */
+      },
+    ],
     transcriptDraftKey: () => "test-draft",
     readTranscriptDraft: () => draft,
   };
-  const restored = runInNewContext(outputText, scope) as unknown;
-  assert.deepEqual(restored, draft);
+  const restored = runSource(outputText, scope);
+  assert.deepEqual({ ...(restored as object) }, draft);
 });
 
 test("a draft restores with or without timing details", () => {
@@ -296,20 +347,41 @@ test("a draft restores with or without timing details", () => {
       removeItem: (key: string) => drafts.delete(key),
     },
   });
-  drafts.set("old-draft", JSON.stringify({ text: "hello", title: "a.wav", model: "tiny" }));
-  assert.deepEqual(readTranscriptDraft("old-draft"), { text: "hello", title: "a.wav", model: "tiny" });
+  drafts.set(
+    "old-draft",
+    JSON.stringify({ text: "hello", title: "a.wav", model: "tiny" }),
+  );
+  assert.deepEqual(readTranscriptDraft("old-draft"), {
+    text: "hello",
+    title: "a.wav",
+    model: "tiny",
+  });
 
-  const draft = { text: "hi", title: "b.wav", model: "moss", details: draftDetails };
+  const draft = {
+    text: "hi",
+    title: "b.wav",
+    model: "moss",
+    details: draftDetails,
+  };
   drafts.set(
     "new-draft",
-    JSON.stringify({ ...draft, speakerNames: { S01: "  Ada  ", S99: "ghost", S02: 4 } }),
+    JSON.stringify({
+      ...draft,
+      speakerNames: { S01: "  Ada  ", S99: "ghost", S02: 4 },
+    }),
   );
-  assert.deepEqual(readTranscriptDraft("new-draft"), { ...draft, speakerNames: { S01: "Ada" } });
+  assert.deepEqual(readTranscriptDraft("new-draft"), {
+    ...draft,
+    speakerNames: { S01: "Ada" },
+  });
 });
 
 test("a failed speaker rename rolls back only that speaker, on the same transcript", () => {
   const rename = section("const renameSpeaker", "const handleCopyTranscript");
   assert.match(rename, /if \(transcriptVersion\.current !== version\) return;/);
-  assert.match(rename, /\(current\[id\] \?\? ""\) === name \? withName\(current, id, previous\) : current/);
+  assert.match(
+    rename,
+    /\(current\[id\] \?\? ""\) === name \? withName\(current, id, previous\) : current/,
+  );
   assert.doesNotMatch(rename, /setSpeakerNames\(previous\)/);
 });

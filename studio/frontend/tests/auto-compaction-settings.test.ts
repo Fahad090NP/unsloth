@@ -55,7 +55,10 @@ test("a managed vLLM or SGLang model compacts like a local GGUF", () => {
   assert.match(adapter, /runtime\.loadedEngine !== "auto"/);
   assert.match(adapter, /isManagedEngine: state\.loadedEngine !== "auto"/);
   // A queued turn keeps the engine it was queued against, like loadedIsGguf / loadedIsMlx.
-  assert.match(readSrc("features/chat/utils/queued-chat-run-settings.ts"), /"loadedEngine",/);
+  assert.match(
+    readSrc("features/chat/utils/queued-chat-run-settings.ts"),
+    /"loadedEngine",/,
+  );
   assert.match(adapter, /isManagedEngine: isManagedEngineForCompaction/);
 });
 
@@ -87,25 +90,65 @@ test("the chat adapter sends compaction fields through the shared helper", () =>
   assert.match(adapter, /loadedIsGguf: runtime\.loadedIsGguf/);
   assert.match(adapter, /isServedByLlamaCpp\(/);
   // The value must derive from THIS turn's messages only (durable-gate.ts).
-  assert.match(adapter, /image_base64: findLatestUserImageBase64\(currentTurnMessages\)/);
+  assert.match(
+    adapter,
+    /image_base64: findLatestUserImageBase64\(currentTurnMessages\)/,
+  );
 });
 
 test("a queued run keeps its own model's llama.cpp verdict after the picker moves on", async () => {
-  const { registerBundlerResolver, installLocalStorageFake } = await import(
-    "./helpers/kit.ts"
-  );
-  registerBundlerResolver();
+  const { registerStoreStubResolver, installLocalStorageFake } =
+    await import("./helpers/kit.ts");
+  registerStoreStubResolver();
   installLocalStorageFake();
-  const { snapshotQueuedChatRunSettings } = await import(
-    "../src/features/chat/utils/queued-chat-run-settings.ts"
+  const { snapshotQueuedChatRunSettings } =
+    await import("../src/features/chat/utils/queued-chat-run-settings.ts");
+  const perModelConfig = readSrc(
+    "features/model-picker/model-config/per-model-config.ts",
   );
-  const { isServedByLlamaCpp, loadedContextFields } = await import(
-    "../src/features/model-picker/model-config/per-model-config.ts"
+  const tree = ts.createSourceFile(
+    "per-model-config.ts",
+    perModelConfig,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
   );
+  const declarations: string[] = [];
+  function visit(node: ts.Node) {
+    if (ts.isFunctionDeclaration(node) && node.name) {
+      const name = node.name.getText(tree);
+      if (name === "isServedByLlamaCpp" || name === "loadedContextFields") {
+        declarations.push(node.getText(tree).replace(/^export\s+/, ""));
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(tree);
+  assert.equal(
+    declarations.length,
+    2,
+    "per-model-config helpers are no longer defined",
+  );
+  const { isServedByLlamaCpp, loadedContextFields } = runInNewContext(
+    `${
+      ts.transpileModule(declarations.join("\n"), {
+        compilerOptions: { target: ts.ScriptTarget.ES2022 },
+      }).outputText
+    }\n({ isServedByLlamaCpp, loadedContextFields });`,
+    {
+      isExternalModelId: (value: unknown) =>
+        typeof value === "string" && value.startsWith("external::"),
+    },
+  ) as {
+    isServedByLlamaCpp: (input: Record<string, unknown>) => boolean;
+    loadedContextFields: (resp: null) => Record<string, unknown>;
+  };
 
   // An Ollama GGUF has no .gguf suffix and no quant, so loadedIsGguf is the only evidence.
   const resident = {
-    params: { checkpoint: "ollama-manifest:%2Fhome%2Fu%2F.ollama%2Fmanifests%2Fq" },
+    params: {
+      checkpoint: "ollama-manifest:%2Fhome%2Fu%2F.ollama%2Fmanifests%2Fq",
+    },
     activeGgufVariant: null,
     activeNativePathToken: null,
     loadedIsGguf: true,
@@ -161,7 +204,10 @@ test("MLX chats opt in on the backend's own report and honor disabling auto comp
 
 test("an API model compacts a quarter short of its published window and sends that window", () => {
   assert.deepEqual(
-    apiCompactionRequestFields({ autoCompactEnabled: true, contextLength: 200_000 }),
+    apiCompactionRequestFields({
+      autoCompactEnabled: true,
+      contextLength: 200_000,
+    }),
     {
       context_overflow: "truncate_oldest",
       compaction_threshold: 150_000,
@@ -172,7 +218,10 @@ test("an API model compacts a quarter short of its published window and sends th
 
 test("a window past the request ceiling still sends a threshold the server accepts", () => {
   assert.deepEqual(
-    apiCompactionRequestFields({ autoCompactEnabled: true, contextLength: 10_000_000 }),
+    apiCompactionRequestFields({
+      autoCompactEnabled: true,
+      contextLength: 10_000_000,
+    }),
     {
       context_overflow: "truncate_oldest",
       compaction_threshold: 2_000_000,
@@ -183,26 +232,33 @@ test("a window past the request ceiling still sends a threshold the server accep
 
 test("an API model sends nothing with auto-compact off", () => {
   assert.deepEqual(
-    apiCompactionRequestFields({ autoCompactEnabled: false, contextLength: 200_000 }),
+    apiCompactionRequestFields({
+      autoCompactEnabled: false,
+      contextLength: 200_000,
+    }),
     {},
   );
   assert.deepEqual(
-    apiCompactionRequestFields({ autoCompactEnabled: false, contextLength: null }),
+    apiCompactionRequestFields({
+      autoCompactEnabled: false,
+      contextLength: null,
+    }),
     {},
   );
 });
 
 test("a self-hosted connection with no catalogued window still asks the server to compact", async () => {
-  const { registerBundlerResolver, installLocalStorageFake } = await import(
-    "./helpers/kit.ts"
-  );
+  const { registerBundlerResolver, installLocalStorageFake } =
+    await import("./helpers/kit.ts");
   registerBundlerResolver();
   installLocalStorageFake();
-  const { resolveModelCatalogEntry } = await import(
-    "../src/features/chat/model-catalog.ts"
-  );
+  const { resolveModelCatalogEntry } =
+    await import("../src/features/chat/model-catalog.ts");
   for (const providerType of ["custom", "llama_cpp", "vllm"]) {
-    const contextLength = resolveModelCatalogEntry(providerType, "qwen3-next")?.contextLength;
+    const contextLength = resolveModelCatalogEntry(
+      providerType,
+      "qwen3-next",
+    )?.contextLength;
     assert.equal(contextLength ?? null, null, providerType);
     // the backend derives the threshold from the self-hosted server's reported window
     assert.deepEqual(
@@ -214,15 +270,16 @@ test("a self-hosted connection with no catalogued window still asks the server t
 });
 
 test("the external request carries the window the model catalog publishes", async () => {
-  const { registerBundlerResolver, installLocalStorageFake } = await import(
-    "./helpers/kit.ts"
-  );
+  const { registerBundlerResolver, installLocalStorageFake } =
+    await import("./helpers/kit.ts");
   registerBundlerResolver();
   installLocalStorageFake();
-  const { resolveModelCatalogEntry } = await import(
-    "../src/features/chat/model-catalog.ts"
-  );
-  const window = resolveModelCatalogEntry("anthropic", "claude-haiku-4-5")?.contextLength;
+  const { resolveModelCatalogEntry } =
+    await import("../src/features/chat/model-catalog.ts");
+  const window = resolveModelCatalogEntry(
+    "anthropic",
+    "claude-haiku-4-5",
+  )?.contextLength;
   assert.equal(window, 200_000);
 
   const adapter = readSrc("features/chat/api/chat-adapter.ts");
@@ -238,7 +295,7 @@ test("a provider compaction is kept on the turn and replayed only to API models"
   assert.match(adapter, /providerCompaction,\n/);
   assert.match(
     adapter,
-    /isExternalRequest\s*\?\s*withProviderCompaction\(message, serialized, \{[\s\S]*providerType: toExternalBackendProviderType\([\s\S]*externalProvider\?\.providerType,[\s\S]*modelId: externalSelection\?\.modelId,/,
+    /isExternalRequest\s*\?\s*withProviderCompaction\(message, serialized, \{[\s\S]*providerType: toExternalBackendProviderType\([\s\S]*externalProvider\?\.providerType,[\s\S]*modelId: externalSelection\.modelId,/,
   );
 });
 
@@ -247,8 +304,7 @@ test("provider compaction persistence keeps summary and encrypted state together
     providerCompactionConnectionKey,
     providerCompactionForTarget,
     providerCompactionPart,
-  } =
-    await import("../src/features/chat/utils/provider-compaction.ts");
+  } = await import("../src/features/chat/utils/provider-compaction.ts");
 
   assert.deepEqual(
     providerCompactionPart({
@@ -343,9 +399,11 @@ test("provider compaction replay stays on the tool-loop subturn that produced it
   assert.ok(start >= 0);
   const declaration = adapter.slice(start, adapter.indexOf("\n}", start) + 2);
   const providerCompactionAssistant = runInNewContext(
-    `${ts.transpileModule(declaration, {
-      compilerOptions: { target: ts.ScriptTarget.ES2022 },
-    }).outputText}; providerCompactionAssistant;`,
+    `${
+      ts.transpileModule(declaration, {
+        compilerOptions: { target: ts.ScriptTarget.ES2022 },
+      }).outputText
+    }; providerCompactionAssistant;`,
     {},
   ) as (
     messages: Record<string, unknown>[],

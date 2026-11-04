@@ -295,7 +295,7 @@ let testsOk = true;
 let testsDetail = "no test references the changed modules";
 if (selected.length > 0) {
   const result = run(
-    process.execPath,
+    "node",
     [
       "--experimental-strip-types",
       "--test",

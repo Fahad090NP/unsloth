@@ -15,7 +15,12 @@ interface AutoLoadSource {
 
 interface AutoLoadHelpers {
   buildAutoLoadSources: (
-    rows: { repo_id: string; load_id?: string; cache_path?: string; size_bytes?: number }[],
+    rows: {
+      repo_id: string;
+      load_id?: string;
+      cache_path?: string;
+      size_bytes?: number;
+    }[],
     empty: unknown[],
     localRows: unknown[],
     limit: number,
@@ -33,19 +38,27 @@ const adapterPath = fileURLToPath(
 );
 const source = readFileSync(adapterPath, "utf8");
 const start = source.indexOf("function normalizeTarget(");
-assert.ok(start >= 0, "normalizeTarget is no longer defined in chat-adapter.ts");
+assert.ok(
+  start >= 0,
+  "normalizeTarget is no longer defined in chat-adapter.ts",
+);
 const declaration = source.slice(start, source.indexOf("\n}", start) + 2);
 const normalizeTarget = runInNewContext(
-  `${ts.transpileModule(declaration, {
-    compilerOptions: { target: ts.ScriptTarget.ES2020 },
-  }).outputText}; normalizeTarget;`,
+  `${
+    ts.transpileModule(declaration, {
+      compilerOptions: { target: ts.ScriptTarget.ES2020 },
+    }).outputText
+  }; normalizeTarget;`,
   {},
 ) as (value: string) => string;
 
-const sameKey = (a: string, b: string) => normalizeTarget(a) === normalizeTarget(b);
+const sameKey = (a: string, b: string) =>
+  normalizeTarget(a) === normalizeTarget(b);
 
 test("one Windows file spelled with either separator is one candidate", () => {
-  assert.ok(sameKey("C:\\Users\\a\\models\\M.gguf", "C:/Users/a/models/M.gguf"));
+  assert.ok(
+    sameKey("C:\\Users\\a\\models\\M.gguf", "C:/Users/a/models/M.gguf"),
+  );
 });
 
 test("Windows and UNC paths still fold case", () => {
@@ -55,9 +68,14 @@ test("Windows and UNC paths still fold case", () => {
 
 test("WSL UNC paths keep their case, because they address ext4", () => {
   assert.ok(
-    !sameKey("\\\\wsl$\\Ubuntu\\home\\a\\M.gguf", "\\\\wsl$\\Ubuntu\\home\\a\\m.gguf"),
+    !sameKey(
+      "\\\\wsl$\\Ubuntu\\home\\a\\M.gguf",
+      "\\\\wsl$\\Ubuntu\\home\\a\\m.gguf",
+    ),
   );
-  assert.ok(sameKey("\\\\wsl$\\Ubuntu\\home\\a\\M.gguf", "//wsl$/Ubuntu/home/a/M.gguf"));
+  assert.ok(
+    sameKey("\\\\wsl$\\Ubuntu\\home\\a\\M.gguf", "//wsl$/Ubuntu/home/a/M.gguf"),
+  );
 });
 
 test("POSIX paths keep their case", () => {
@@ -73,14 +91,17 @@ test("repo ids still fold case", () => {
   assert.ok(sameKey("unsloth/Qwen3-0.6B-GGUF", "UNSLOTH/qwen3-0.6b-gguf"));
 });
 
-
 test("startup remembers an inactive quant through the logical chat inventory target", async () => {
-  const declarations = ["buildAutoLoadSources", "resolveAutoLoadCandidate"].map((name) => {
-    const begin = source.indexOf(`function ${name}(`);
-    assert.ok(begin >= 0);
-    const asyncPrefix = name === "resolveAutoLoadCandidate" ? "async " : "";
-    return asyncPrefix + source.slice(begin, source.indexOf("\n}", begin) + 2);
-  }).join("\n");
+  const declarations = ["buildAutoLoadSources", "resolveAutoLoadCandidate"]
+    .map((name) => {
+      const begin = source.indexOf(`function ${name}(`);
+      assert.ok(begin >= 0);
+      const asyncPrefix = name === "resolveAutoLoadCandidate" ? "async " : "";
+      return (
+        asyncPrefix + source.slice(begin, source.indexOf("\n}", begin) + 2)
+      );
+    })
+    .join("\n");
   const compile = (
     listGgufVariants: unknown,
     isGgufLocalRow: unknown,
@@ -95,35 +116,74 @@ test("startup remembers an inactive quant through the logical chat inventory tar
   const repoId = "Org/Model";
   const cachePath = "/cache/default/models--Org--Model";
   const scopes: (string | undefined)[] = [];
+  const listGgufVariants = (
+    _id: string,
+    _token: undefined,
+    options: { localPath?: string },
+  ) => {
+    scopes.push(options.localPath);
+    const quants = options.localPath === repoId ? ["Q6_K", "Q8_0"] : ["Q6_K"];
+    return Promise.resolve({
+      variants: quants.map((quant, i) => ({
+        quant,
+        downloaded: true,
+        size_bytes: 100 + i,
+      })),
+    });
+  };
   const helpers = compile(
-    (_id: string, _token: undefined, options: { localPath?: string }) => {
-      scopes.push(options.localPath);
-      const quants = options.localPath === repoId ? ["Q6_K", "Q8_0"] : ["Q6_K"];
-      return { variants: quants.map((quant, i) => ({
-        quant, downloaded: true, size_bytes: 100 + i,
-      })) };
-    },
+    listGgufVariants,
     () => true,
     () => true,
   );
-  const rows = [{ repo_id: repoId, load_id: repoId, cache_path: cachePath, size_bytes: 300 }];
+  const rows = [
+    {
+      repo_id: repoId,
+      load_id: repoId,
+      cache_path: cachePath,
+      size_bytes: 300,
+    },
+  ];
   const [logical] = helpers.buildAutoLoadSources(rows, [], [], 8192);
-  const candidate = await helpers.resolveAutoLoadCandidate(logical, "Q8_0", () => false);
+  const candidate = await helpers.resolveAutoLoadCandidate(
+    logical,
+    "Q8_0",
+    () => false,
+  );
   assert.equal(candidate.ggufVariant, "Q8_0");
   assert.equal(candidate.loadId, repoId);
   assert.deepEqual(scopes, [repoId]);
 
   const snapshot = cachePath + "/snapshots/revision";
-  const [explicit] = helpers.buildAutoLoadSources([{ ...rows[0], load_id: snapshot }], [], [], 8192);
+  const [explicit] = helpers.buildAutoLoadSources(
+    [{ ...rows[0], load_id: snapshot }],
+    [],
+    [],
+    8192,
+  );
   await explicit.listVariants();
   assert.equal(scopes.at(-1), snapshot);
-  const [legacy] = helpers.buildAutoLoadSources([{ ...rows[0], load_id: undefined }], [], [], 8192);
+  const [legacy] = helpers.buildAutoLoadSources(
+    [{ ...rows[0], load_id: undefined }],
+    [],
+    [],
+    8192,
+  );
   await legacy.listVariants();
   assert.equal(scopes.at(-1), cachePath);
   const localPath = "/models/local";
-  const [local] = helpers.buildAutoLoadSources([], [], [{
-    id: localPath, path: localPath, capabilities: { requires_variant: true },
-  }], 8192);
+  const [local] = helpers.buildAutoLoadSources(
+    [],
+    [],
+    [
+      {
+        id: localPath,
+        path: localPath,
+        capabilities: { requires_variant: true },
+      },
+    ],
+    8192,
+  );
   await local.listVariants();
   assert.equal(scopes.at(-1), localPath);
 });
