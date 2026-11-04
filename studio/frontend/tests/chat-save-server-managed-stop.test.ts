@@ -42,7 +42,7 @@ function harness(options: { rejectIds?: Set<string>; failWith?: Error } = {}) {
           _threadId: string,
           messages: unknown[],
         ) => messages,
-        getChatThread: () => ({ id: "t1" }),
+        getChatThread: () => Promise.resolve({ id: "t1" }),
         saveChatThread: async () => { /* empty */ },
       },
       "../db": { DEXIE_DB_NAME: "test", db: {} },

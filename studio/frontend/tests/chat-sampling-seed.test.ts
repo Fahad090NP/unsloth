@@ -208,7 +208,7 @@ test("typing is not rewritten before the entry is finished", () => {
   const sheet = readText("../src/features/chat/chat-settings-sheet.tsx");
   const field = slice(sheet, "{showSeed ? (", "placeholder=\"Random\"");
   assert.match(field, /value=\{\s*seedDraft \?\?/);
-  assert.match(field, /onChange=\{\(e\) =>\s*setSeedDraft\(/);
+  assert.match(field, /onChange=\{\s*\(e\)\s*=>\s*\{?\s*setSeedDraft\(/);
   assert.match(field, /if \(seedDraft === null\) return;/);
   assert.match(field, /if \(e\.key === "Enter"\) e\.currentTarget\.blur\(\);/);
 });
@@ -216,8 +216,8 @@ test("typing is not rewritten before the entry is finished", () => {
 test("an abandoned entry does not outlive the box it was typed into", () => {
   // Removing a focused element fires no blur, so a draft must be reset on model switch or removal.
   const sheet = readText("../src/features/chat/chat-settings-sheet.tsx");
-  const reset = slice(sheet, "useEffect(() => {\n    setSeedDraft(null);", ");");
-  assert.match(reset, /\[currentCheckpoint, showSeed\]/);
+  assert.match(sheet, /seedScope\s*=.*currentCheckpoint/);
+  assert.match(sheet, /seedDraftState\.scope\s*===\s*seedScope/);
 });
 
 test("a preset carries the seed it was saved with", () => {

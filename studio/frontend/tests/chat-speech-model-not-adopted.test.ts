@@ -134,7 +134,7 @@ test("chat re-reads status when a different tab returns to the foreground", () =
   assert.match(hook, /subscribeResidentStatusRefresh\(\(\) => \{/);
   assert.match(
     hook,
-    /void refresh\(\{ includeLoras: false, preserveIdleUnloaded: true \}\);/,
+    /refresh\(\{ includeLoras: false, preserveIdleUnloaded: true \}\)/,
   );
 });
 

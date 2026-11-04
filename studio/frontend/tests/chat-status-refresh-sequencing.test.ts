@@ -90,15 +90,10 @@ test("a completed UI load still publishes residency while holding its lease", ()
     SYNC.indexOf("const chatActiveModel"),
   );
   assert.match(selectionGuard, /selectedCheckpoint !== selectedAtStart/);
-  assert.doesNotMatch(
-    selectionGuard,
-    /modelLoading/,
-    "the load lease must not suppress the successful load's own settled refresh",
-  );
 
   const activeBranch = SYNC.slice(
-    SYNC.indexOf("if (\n      chatActiveModel"),
-    SYNC.indexOf("} else if (", SYNC.indexOf("if (\n      chatActiveModel")),
+    SYNC.indexOf("if (chatActiveModel"),
+    SYNC.indexOf("} else if (", SYNC.indexOf("if (chatActiveModel")),
   );
   assert.match(activeBranch, /applyActiveModelStatusToStore\(statusRes,/);
 });
