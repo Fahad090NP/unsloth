@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-// Commit gate: formats and lints only the staged code, enforces the comment and
-// file-size policy, typechecks the frontend, and runs the tests that touch the
-// changed modules. Any warning, error or policy hit blocks the commit.
+// Staged-only commit gate: format, lint, policy, typecheck, affected tests.
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -21,7 +19,6 @@ import {
 const CODE = /\.(?:ts|tsx|js|jsx|mjs|cjs|mts|cts)$/;
 const MAX_TESTS = 25;
 const TEST_TIMEOUT_MS = 15 * 60 * 1000;
-const BAR = "\u2500".repeat(64);
 
 const ROOT = execFileSync("git", ["rev-parse", "--show-toplevel"], {
   encoding: "utf8",
@@ -76,9 +73,7 @@ const stagedFiles = git([
 const codeFiles = stagedFiles.filter((file) => CODE.test(file));
 
 if (codeFiles.length === 0) {
-  console.log(
-    dim(`pre-commit: no staged JavaScript/TypeScript changes (${BAR})`),
-  );
+  console.log(dim("pre-commit: no staged JavaScript/TypeScript changes"));
   process.exit(0);
 }
 
@@ -91,9 +86,7 @@ const added = new Set(
 const checks = [];
 const record = (name, ok, detail) => checks.push({ name, ok, detail });
 
-// ---------------------------------------------------------------------------
 // Format with Bun before linting so the fixers and the formatter agree.
-// ---------------------------------------------------------------------------
 const bunVersion = run("bun", ["--version"]);
 if (bunVersion.status !== 0) {
   record(
@@ -119,9 +112,7 @@ if (bunVersion.status !== 0) {
   );
 }
 
-// ---------------------------------------------------------------------------
 // Lint each staged file with the config that owns its directory.
-// ---------------------------------------------------------------------------
 const eslintBin = path.join(
   FRONTEND,
   "node_modules",
@@ -139,7 +130,7 @@ const externalFiles = codeFiles.filter(
 function lint(files, cwd, extraArgs = []) {
   if (files.length === 0) return { ok: true, output: "no matching files" };
   const result = run(
-    process.execPath,
+    "bun",
     [eslintBin, ...extraArgs, "--fix", "--max-warnings=0", "--", ...files],
     { cwd },
   );
@@ -165,11 +156,8 @@ record(
   externalLint.ok ? `${externalFiles.length} file(s)` : externalLint.output,
 );
 
-// ---------------------------------------------------------------------------
 // Comment and file-size policy.
-// ---------------------------------------------------------------------------
-// Only lines introduced by this commit are held to the trailing-comment rule,
-// so touching a legacy file never forces a drive-by cleanup.
+// Only lines added by this commit are checked for trailing comments.
 const addedLines = new Map();
 const diffText = git(["diff", "--cached", "-U0", "--", ...codeFiles]);
 let currentFile = null;
@@ -251,20 +239,14 @@ record(
     : policy.slice(0, 10).join("\n"),
 );
 
-// ---------------------------------------------------------------------------
 // Typecheck the frontend project, including the test project.
-// ---------------------------------------------------------------------------
 const touchesFrontend = codeFiles.some((file) =>
   file.startsWith("studio/frontend/"),
 );
 const typecheck = touchesFrontend
-  ? run(
-      process.execPath,
-      [path.join(FRONTEND, "scripts", "typecheck.mjs"), "--tests"],
-      {
-        cwd: FRONTEND,
-      },
-    )
+  ? run("bun", [path.join(FRONTEND, "scripts", "typecheck.mjs"), "--tests"], {
+      cwd: FRONTEND,
+    })
   : { status: 0, output: "skipped: no frontend files staged" };
 record(
   "Typecheck",
@@ -272,9 +254,7 @@ record(
   typecheck.status === 0 ? typecheck.output || "src + tests" : typecheck.output,
 );
 
-// ---------------------------------------------------------------------------
 // Tests that reference a changed module, capped so the hook stays usable.
-// ---------------------------------------------------------------------------
 function collectTests(directory) {
   const found = [];
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -331,10 +311,8 @@ if (selected.length > 0) {
 }
 record("Affected tests", testsOk, testsDetail);
 
-// ---------------------------------------------------------------------------
 // Report.
-// ---------------------------------------------------------------------------
-console.log(`\n${bold("Commit gate")}  ${dim(BAR)}`);
+console.log(`\n${bold("Commit gate")}`);
 for (const check of checks) {
   const mark = check.ok ? green("PASS") : red("FAIL");
   const label = check.name.padEnd(26);
@@ -349,7 +327,6 @@ for (const check of checks) {
     }
   }
 }
-console.log(dim(BAR));
 
 const failed = checks.filter((check) => !check.ok);
 if (failed.length > 0) {
