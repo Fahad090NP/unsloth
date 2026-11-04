@@ -19,21 +19,37 @@ function lift(pattern: RegExp, what: string): string {
 
 // The predicate signatures are stripped by hand; a changed signature fails to parse below.
 const declarations = [
-  lift(/const CHAT_ONLY_ALLOWED = new Set\(\[[\s\S]*?\n\]\);/, "CHAT_ONLY_ALLOWED"),
-  lift(/const SELF_GATED_WHILE_UNKNOWN = \[[^\]]*\];/, "SELF_GATED_WHILE_UNKNOWN"),
-  lift(/function waitsOutUnknownVerdict\([\s\S]*?\n\}/, "waitsOutUnknownVerdict"),
+  lift(
+    /const CHAT_ONLY_ALLOWED = new Set\(\[[\s\S]*?\n\]\);/,
+    "CHAT_ONLY_ALLOWED",
+  ),
+  lift(
+    /const SELF_GATED_WHILE_UNKNOWN = \[[^\]]*\];/,
+    "SELF_GATED_WHILE_UNKNOWN",
+  ),
+  lift(
+    /function waitsOutUnknownVerdict\([\s\S]*?\n\}/,
+    "waitsOutUnknownVerdict",
+  ),
   lift(/function isChatOnlyAllowed\([\s\S]*?\n\}/, "isChatOnlyAllowed"),
 ]
   .join("\n")
   .replaceAll("(pathname: string): boolean", "(pathname)");
 
-const guard = /if \(\s*isChatOnly\(\) &&([\s\S]*?)\)\s*\{\s*throw redirect/.exec(src);
+const guard =
+  /if \(\s*isChatOnly\(\) &&([\s\S]*?)\)\s*\{\s*return redirect/.exec(src);
 assert.ok(guard, "could not find the chat-only redirect in beforeLoad");
 const condition = `isChatOnly() &&${guard[1]}`
   .replaceAll("isChatOnly()", "chatOnly")
   .replaceAll("location.pathname", "pathname");
-assert.ok(!condition.includes("location."), "the guard reads a location this test cannot set");
-assert.ok(!condition.includes("isChatOnly()"), "the guard reads a verdict this test cannot set");
+assert.ok(
+  !condition.includes("location."),
+  "the guard reads a location this test cannot set",
+);
+assert.ok(
+  !condition.includes("isChatOnly()"),
+  "the guard reads a verdict this test cannot set",
+);
 
 const guardSource = `${declarations}\nBoolean(${condition});`;
 const redirectsToChat = (
@@ -47,7 +63,8 @@ const redirectsToChat = (
     unmeasured,
   }) as boolean;
 
-const measuredChatOnly = (pathname: string) => redirectsToChat(pathname, true, false);
+const measuredChatOnly = (pathname: string) =>
+  redirectsToChat(pathname, true, false);
 
 test("a measured chat-only host reaches /video and its own explanation", () => {
   assert.equal(
@@ -80,11 +97,25 @@ test("an unmeasured verdict still lets both pages wait it out", () => {
 });
 
 test("the pages that self-gate are unaffected, and everything else still redirects", () => {
-  for (const path of ["/chat", "/export", "/images", "/api-monitor", "/data-recipes"]) {
-    assert.equal(measuredChatOnly(path), false, `${path} no longer survives the guard`);
+  for (const path of [
+    "/chat",
+    "/export",
+    "/images",
+    "/api-monitor",
+    "/data-recipes",
+  ]) {
+    assert.equal(
+      measuredChatOnly(path),
+      false,
+      `${path} no longer survives the guard`,
+    );
   }
   for (const path of ["/settings", "/videos", "/videoish"]) {
-    assert.equal(measuredChatOnly(path), true, `${path} slipped through the chat-only guard`);
+    assert.equal(
+      measuredChatOnly(path),
+      true,
+      `${path} slipped through the chat-only guard`,
+    );
   }
 });
 

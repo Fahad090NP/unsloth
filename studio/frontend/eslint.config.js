@@ -162,7 +162,7 @@ export default defineConfig([
       "@typescript-eslint/no-implied-eval": "error",
       // `== null` is the idiomatic null-or-undefined check; forcing `=== null`
       // silently changes behaviour for optional values.
-      "eqeqeq": ["error", "smart"],
+      eqeqeq: ["error", "smart"],
       "no-constant-binary-expression": "error",
       "no-else-return": "error",
       "no-implicit-coercion": "error",
@@ -245,6 +245,11 @@ export default defineConfig([
     },
   },
   {
+    // Tests import this wiring module directly, so it avoids the settings barrel.
+    files: ["src/app/app-menu-chords.ts"],
+    rules: { "no-restricted-imports": "off" },
+  },
+  {
     files: ["**/*.{js,jsx,mjs,cjs}"],
     extends: [js.configs.recommended],
     languageOptions: {
@@ -256,7 +261,7 @@ export default defineConfig([
       },
     },
     rules: {
-      "eqeqeq": ["error", "smart"],
+      eqeqeq: ["error", "smart"],
       "no-console": "warn",
       "no-implicit-coercion": "error",
       "no-var": "error",

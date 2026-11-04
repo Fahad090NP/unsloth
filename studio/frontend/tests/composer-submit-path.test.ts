@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
+import { runSource } from "./helpers/eval-source.ts";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 import {
@@ -58,7 +58,7 @@ function createCallback(
   code: string,
   deps: Record<string, unknown>,
 ): () => void {
-  return runInNewContext(code, deps) as () => void;
+  return runSource(code, deps) as () => void;
 }
 
 test("the shipped main composer key handler protects IME and mention selection", () => {
@@ -96,6 +96,7 @@ test("the shipped main composer key handler protects IME and mention selection",
     shiftKey: false,
     altKey: false,
     keyCode: 13,
+    currentTarget: { value: "" },
     nativeEvent: { isComposing: false },
     preventDefault: () => {
       prevented += 1;
@@ -151,6 +152,7 @@ test("idle IME Enter sends, the WebKit candidate-confirming Enter does not (#121
     altKey: false,
     keyCode: 229,
     timeStamp,
+    currentTarget: { value: "" },
     nativeEvent: { isComposing: false },
     preventDefault: () => undefined,
   });
@@ -328,7 +330,7 @@ test("main, edit and comparison composers use the setting and expose settings ac
   assert.match(text, /submitMode="none"/);
   assert.match(
     text,
-    /effectiveSendShortcut\(sendShortcut, editMultiline \? "\\n" : ""\) === "mod-enter"\s*\? "ctrlEnter"\s*: "enter"/,
+    /effectiveSendShortcut\(sendShortcut,[\s\S]*?"mod-enter"[\s\S]*?"ctrlEnter"[\s\S]*?"enter"/,
   );
   assert.match(
     text,

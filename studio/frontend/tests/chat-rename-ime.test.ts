@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
+import { runSource } from "./helpers/eval-source.ts";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 import {
@@ -61,9 +61,7 @@ function handler(
       module: ts.ModuleKind.Preserve,
     },
   }).outputText;
-  return runInNewContext(code, deps) as (
-    event: object,
-  ) => void;
+  return runSource(code, deps) as (event: object) => void;
 }
 
 function fixture(file: string, inline: boolean, dirty = true) {
@@ -75,9 +73,13 @@ function fixture(file: string, inline: boolean, dirty = true) {
   const onKey = handler(file, inline, {
     imeOwnsInputKeydown,
     renameImeRef,
+    renameIme: renameImeRef.current,
     renameDirty: dirty,
     skipRenameBlurRef,
-    commitRename: () => effects.push("save"),
+    commitRename: () => {
+      effects.push("save");
+      return Promise.resolve();
+    },
     setRenamingTarget: () => effects.push("close"),
   });
   function key(
@@ -156,19 +158,19 @@ for (const [name, file] of [
   test(`${name}: candidate Escape does not close the dialog`, () => {
     // Radix fires this before the input's onKeyDown, so the input guard alone is not enough.
     const onEscape = handler(file, "escape", {});
-    const press = (isComposing: boolean, keyCode: number) => {
+    const press = (isComposing: boolean, key: string, keyCode = 27) => {
       let prevented = false;
       onEscape({
-        key: "Escape",
+        key,
         isComposing,
         keyCode,
         preventDefault: () => (prevented = true),
       });
       return prevented;
     };
-    assert.equal(press(true, 27), true);
-    assert.equal(press(false, 229), true);
-    assert.equal(press(false, 27), false);
+    assert.equal(press(true, "Escape", 27), true);
+    assert.equal(press(false, "Process", 229), true);
+    assert.equal(press(false, "Escape", 27), false);
   });
 }
 

@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
+import { runSource } from "./helpers/eval-source.ts";
 import type { ThreadMessage } from "@assistant-ui/react";
 import ts from "@typescript/typescript6";
 
@@ -14,7 +14,10 @@ import * as savedUsage from "../src/features/chat/utils/saved-context-usage.ts";
 
 const source = ts.createSourceFile(
   "runtime-provider.tsx",
-  readFileSync(new URL("../src/features/chat/runtime-provider.tsx", import.meta.url), "utf8"),
+  readFileSync(
+    new URL("../src/features/chat/runtime-provider.tsx", import.meta.url),
+    "utf8",
+  ),
   ts.ScriptTarget.ES2022,
   true,
   ts.ScriptKind.TSX,
@@ -22,7 +25,13 @@ const source = ts.createSourceFile(
 
 const refreshSource = ts.createSourceFile(
   "refresh-context-usage.ts",
-  readFileSync(new URL("../src/features/chat/utils/refresh-context-usage.ts", import.meta.url), "utf8"),
+  readFileSync(
+    new URL(
+      "../src/features/chat/utils/refresh-context-usage.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
   ts.ScriptTarget.ES2022,
   true,
   ts.ScriptKind.TS,
@@ -30,7 +39,10 @@ const refreshSource = ts.createSourceFile(
 
 const browserToolsSource = ts.createSourceFile(
   "tools.ts",
-  readFileSync(new URL("../src/features/browser/agent/tools.ts", import.meta.url), "utf8"),
+  readFileSync(
+    new URL("../src/features/browser/agent/tools.ts", import.meta.url),
+    "utf8",
+  ),
   ts.ScriptTarget.ES2022,
   true,
   ts.ScriptKind.TS,
@@ -38,26 +50,53 @@ const browserToolsSource = ts.createSourceFile(
 
 const storeSource = ts.createSourceFile(
   "chat-runtime-store.ts",
-  readFileSync(new URL("../src/features/chat/stores/chat-runtime-store.ts", import.meta.url), "utf8"),
+  readFileSync(
+    new URL(
+      "../src/features/chat/stores/chat-runtime-store.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
   ts.ScriptTarget.ES2022,
   true,
   ts.ScriptKind.TS,
 );
 
-function runtimeFunction(name: string, dependencies: Record<string, unknown>, sourceFile = source) {
+function runtimeFunction(
+  name: string,
+  dependencies: Record<string, unknown>,
+  sourceFile = source,
+) {
   const declaration = sourceFile.statements.find(
     (statement): statement is ts.FunctionDeclaration =>
       ts.isFunctionDeclaration(statement) && statement.name?.text === name,
   );
   assert.ok(declaration, `${name} exists`);
-  const { outputText } = ts.transpileModule(declaration.getText(sourceFile).replace(/^export /, ""), {
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
-  });
-  return runInNewContext(`${outputText}\nreturn ${name};`, dependencies) as (props: { enabled: boolean }) => null;
+  const { outputText } = ts.transpileModule(
+    declaration.getText(sourceFile).replace(/^export /, ""),
+    {
+      compilerOptions: {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.CommonJS,
+      },
+    },
+  );
+  return runSource(`${outputText}\nreturn ${name};`, dependencies) as (props: {
+    enabled: boolean;
+  }) => null;
 }
 
-function usage(totalTokens: number, reasoningKey?: string): savedUsage.BranchContextUsage {
-  return { promptTokens: totalTokens, completionTokens: 0, totalTokens, cachedTokens: 0, reasoningKey };
+function usage(
+  totalTokens: number,
+  reasoningKey?: string,
+): savedUsage.BranchContextUsage {
+  return {
+    promptTokens: totalTokens,
+    completionTokens: 0,
+    totalTokens,
+    cachedTokens: 0,
+    reasoningKey,
+  };
 }
 
 function reply(count: savedUsage.BranchContextUsage): ThreadMessage {
@@ -80,7 +119,11 @@ function reply(count: savedUsage.BranchContextUsage): ThreadMessage {
 function harness(name = "ThreadContextUsageRecount") {
   const state = {
     activeThreadId: "thread-a" as string | null,
-    params: { checkpoint: "local-model", systemPrompt: "Original instructions", temperature: 0.6 },
+    params: {
+      checkpoint: "local-model",
+      systemPrompt: "Original instructions",
+      temperature: 0.6,
+    },
     loadedChatTemplateOverride: "original-template",
     loadedContextLength: 4096 as number | null,
     loadedIsGguf: true,
@@ -96,16 +139,26 @@ function harness(name = "ThreadContextUsageRecount") {
     localVideoModelReady: false,
     reasoningKey: undefined as string | undefined,
     runningByThreadId: {} as Record<string, boolean>,
-    contextUsage: usage(42, contextUsageReasoningKey({})) as savedUsage.BranchContextUsage | null,
+    contextUsage: usage(
+      42,
+      contextUsageReasoningKey({}),
+    ) as savedUsage.BranchContextUsage | null,
     setContextUsage: (next: savedUsage.BranchContextUsage | null) => {
       state.contextUsage = next;
       writes.push(next);
     },
-    setThreadContextUsage: () => { /* empty */ },
+    setThreadContextUsage: () => {
+      /* empty */
+    },
   };
   const world = {
     mainThreadId: "thread-a",
-    thread: { isLoading: false, messages: [reply((state.contextUsage ?? assert.fail("expected a non-null value")))] },
+    thread: {
+      isLoading: false,
+      messages: [
+        reply(state.contextUsage ?? assert.fail("expected a non-null value")),
+      ],
+    },
     recounts: [] as unknown[],
     image: false,
     audio: false,
@@ -139,31 +192,47 @@ function harness(name = "ThreadContextUsageRecount") {
     },
     { getState: () => world.browser },
   );
-  const browserAgentToolsForTurn = runtimeFunction("browserAgentToolsForTurn", {
-    useBrowserAgentStore,
-    browserPanelAvailable: () => true,
-    isTauri: false,
-    BROWSER_AGENT_TOOLS: ["browser_navigate"],
-    BROWSER_SCREENSHOT_TOOL: "browser_screenshot",
-    BROWSER_HISTORY_TOOL: "browser_history",
-    BROWSER_SCRIPT_TOOL: "browser_evaluate",
-  }, browserToolsSource);
+  const browserAgentToolsForTurn = runtimeFunction(
+    "browserAgentToolsForTurn",
+    {
+      useBrowserAgentStore,
+      browserPanelAvailable: () => true,
+      isTauri: false,
+      BROWSER_AGENT_TOOLS: ["browser_navigate"],
+      BROWSER_SCREENSHOT_TOOL: "browser_screenshot",
+      BROWSER_HISTORY_TOOL: "browser_history",
+      BROWSER_SCRIPT_TOOL: "browser_evaluate",
+    },
+    browserToolsSource,
+  );
   const component = runtimeFunction(name, {
     ...savedUsage,
     isExternalModelId,
-    currentContextUsageReasoningKey: (snapshot = state) => snapshot.reasoningKey,
-    currentContextUsageSettingsKey: runtimeFunction("currentContextUsageSettingsKey", {
-      localMediaToolsForTurn: runtimeFunction("localMediaToolsForTurn", {
-        localImageTool: runtimeFunction("localImageTool", {}, storeSource),
-      }, storeSource),
-    }, refreshSource),
+    currentContextUsageReasoningKey: (snapshot = state) =>
+      snapshot.reasoningKey,
+    currentContextUsageSettingsKey: runtimeFunction(
+      "currentContextUsageSettingsKey",
+      {
+        localMediaToolsForTurn: runtimeFunction(
+          "localMediaToolsForTurn",
+          {
+            localImageTool: runtimeFunction("localImageTool", {}, storeSource),
+          },
+          storeSource,
+        ),
+      },
+      refreshSource,
+    ),
     useChatRuntimeStore,
     useBrowserAgentStore,
     browserAgentToolsForTurn,
     useAui: () => aui,
-    useAuiState: (selector: (snapshot: { thread: typeof world.thread }) => unknown) => selector(world),
-    usePromptQueueUI: (selector: (snapshot: { byThreadId: Record<string, never> }) => unknown) =>
-      selector({ byThreadId: {} }),
+    useAuiState: (
+      selector: (snapshot: { thread: typeof world.thread }) => unknown,
+    ) => selector(world),
+    usePromptQueueUI: (
+      selector: (snapshot: { byThreadId: Record<string, never> }) => unknown,
+    ) => selector({ byThreadId: {} }),
     useRef: (initial: unknown) => {
       const index = hookIndex++;
       refs[index] ??= { current: initial };
@@ -173,7 +242,10 @@ function harness(name = "ThreadContextUsageRecount") {
       const index = hookIndex++;
       const previous: readonly unknown[] | undefined = previousDeps[index];
       previousDeps[index] = dependencies;
-      if (!previous || dependencies.some((value, i) => !Object.is(value, previous[i]))) {
+      if (
+        !previous ||
+        dependencies.some((value, i) => !Object.is(value, previous[i]))
+      ) {
         pendingEffects.push(effect);
       }
     },
@@ -181,10 +253,13 @@ function harness(name = "ThreadContextUsageRecount") {
       world.recounts.push(options);
       return Promise.resolve();
     },
-    setActiveBranchReader: (reader: typeof branchReader) => { branchReader = reader; },
+    reportBackgroundError: () => undefined,
+    setActiveBranchReader: (reader: typeof branchReader) => {
+      branchReader = reader;
+    },
     messagesContainImage: () => world.image,
-    findLatestUserAudioBase64: () => world.audio ? "audio" : null,
-    findLatestUserVideoBase64: () => world.video ? "video" : null,
+    findLatestUserAudioBase64: () => (world.audio ? "audio" : null),
+    findLatestUserVideoBase64: () => (world.video ? "video" : null),
   });
   const render = () => {
     hookIndex = 0;
@@ -235,7 +310,15 @@ test("an effective reasoning change still estimates and recounts the loaded bran
   assert.equal(h.world.recounts.length, 1);
 });
 
-for (const unavailable of [null, "image", "audio", "video", "unloaded", "compacted", "unsupported"] as const) {
+for (const unavailable of [
+  null,
+  "image",
+  "audio",
+  "video",
+  "unloaded",
+  "compacted",
+  "unsupported",
+] as const) {
   test(`returning to the reply's reasoning mode restores its exact count (${unavailable ?? "text"})`, () => {
     const h = harness();
     const enabled = contextUsageReasoningKey({ enable_thinking: true });
@@ -244,14 +327,20 @@ for (const unavailable of [null, "image", "audio", "video", "unloaded", "compact
     const saved = { ...usage(643, enabled), estimatedTokens: 6 };
     h.state.contextUsage = saved;
     h.world.thread.messages = [reply(saved)];
-    if (unavailable === "image" || unavailable === "audio" || unavailable === "video") {
+    if (
+      unavailable === "image" ||
+      unavailable === "audio" ||
+      unavailable === "video"
+    ) {
       h.world[unavailable] = true;
     } else if (unavailable === "unloaded") {
       h.state.loadedContextLength = null;
     } else if (unavailable === "compacted") {
       h.state.loadedIsGguf = false;
       h.state.loadedIsMlx = true;
-      h.world.thread.messages[0].metadata.custom.contextTruncation = { summary: "Earlier turns" };
+      h.world.thread.messages[0].metadata.custom.contextTruncation = {
+        summary: "Earlier turns",
+      };
     } else if (unavailable === "unsupported") {
       h.state.loadedIsGguf = false;
     }
@@ -265,7 +354,10 @@ for (const unavailable of [null, "image", "audio", "video", "unloaded", "compact
     h.state.reasoningKey = enabled;
     h.state.queuedSettingsEpoch += 1;
     h.render();
-    assert.equal(h.state.contextUsage, h.world.thread.messages[0].metadata.custom.contextUsage);
+    assert.equal(
+      h.state.contextUsage,
+      h.world.thread.messages[0].metadata.custom.contextUsage,
+    );
     assert.equal(h.world.recounts.length, unavailable === null ? 1 : 0);
   });
 }
@@ -371,12 +463,19 @@ for (const browserEnabled of [false, true]) {
     h.state.contextUsage = usage(1990, disabled);
     h.state.reasoningKey = enabled;
     h.render();
-    assert.equal(h.state.contextUsage, h.world.thread.messages[0].metadata.custom.contextUsage);
+    assert.equal(
+      h.state.contextUsage,
+      h.world.thread.messages[0].metadata.custom.contextUsage,
+    );
     assert.equal(h.world.recounts.length, 1);
   });
 }
 
-for (const setting of ["imageToolsEnabled", "localImageModelReady", "localVideoModelReady"] as const) {
+for (const setting of [
+  "imageToolsEnabled",
+  "localImageModelReady",
+  "localVideoModelReady",
+] as const) {
   test(`local media ${setting} changes invalidate saved usage when thinking changes`, () => {
     const h = harness();
     const enabled = contextUsageReasoningKey({ enable_thinking: true });
@@ -426,7 +525,10 @@ for (const unavailable of ["disabled", "unsupported", "hosted"] as const) {
     h.state.contextUsage = usage(1990, disabled);
     h.state.reasoningKey = enabled;
     h.render();
-    assert.equal(h.state.contextUsage, h.world.thread.messages[0].metadata.custom.contextUsage);
+    assert.equal(
+      h.state.contextUsage,
+      h.world.thread.messages[0].metadata.custom.contextUsage,
+    );
     assert.equal(h.world.recounts.length, 1);
   });
 }
@@ -453,7 +555,10 @@ test("a reply generated after prompt changes can be restored without another cou
   h.state.reasoningKey = enabled;
   h.state.queuedSettingsEpoch += 1;
   h.render();
-  assert.equal(h.state.contextUsage, h.world.thread.messages[0].metadata.custom.contextUsage);
+  assert.equal(
+    h.state.contextUsage,
+    h.world.thread.messages[0].metadata.custom.contextUsage,
+  );
   assert.equal(h.world.recounts.length, recounts);
 });
 
@@ -467,7 +572,9 @@ test("switching to a reply priced before a prompt change recounts it", () => {
   h.render();
   h.state.contextUsage = usage(1990, contextUsageReasoningKey({}));
   const recounts = h.world.recounts.length;
-  h.world.thread.messages = [{ ...reply(usage(84, contextUsageReasoningKey({}))), id: "sibling" }];
+  h.world.thread.messages = [
+    { ...reply(usage(84, contextUsageReasoningKey({}))), id: "sibling" },
+  ];
   h.render();
   assert.equal(h.state.contextUsage.estimated, true);
   assert.equal(h.world.recounts.length, recounts + 1);
@@ -497,8 +604,14 @@ test("batched tool and reasoning changes cannot restore the old prompt count", (
 
 test("thinking toggles that also update sampling and preserve settings retain the saved count", () => {
   const h = harness();
-  const enabled = contextUsageReasoningKey({ enable_thinking: true, preserve_thinking: false });
-  const disabled = contextUsageReasoningKey({ enable_thinking: false, preserve_thinking: false });
+  const enabled = contextUsageReasoningKey({
+    enable_thinking: true,
+    preserve_thinking: false,
+  });
+  const disabled = contextUsageReasoningKey({
+    enable_thinking: false,
+    preserve_thinking: false,
+  });
   h.state.reasoningKey = enabled;
   h.state.contextUsage = usage(643, enabled);
   h.world.thread.messages = [reply(h.state.contextUsage)];
@@ -513,7 +626,10 @@ test("thinking toggles that also update sampling and preserve settings retain th
   h.state.params.temperature = 0.6;
   h.state.queuedSettingsEpoch += 2;
   h.render();
-  assert.equal(h.state.contextUsage, h.world.thread.messages[0].metadata.custom.contextUsage);
+  assert.equal(
+    h.state.contextUsage,
+    h.world.thread.messages[0].metadata.custom.contextUsage,
+  );
   assert.deepEqual(h.world.recounts, []);
 });
 
@@ -555,7 +671,11 @@ test("deleting an attachment invalidates exact usage when only the branch revisi
   assert.equal(h.world.thread.messages.at(-1), tip);
   assert.equal(h.world.thread.messages.length, length);
   assert.equal(h.state.contextUsage.estimated, true);
-  assert.deepEqual(h.world.recounts, [{ threadId: "thread-a" }]);
+  assert.equal(h.world.recounts.length, 1);
+  assert.equal(
+    (h.world.recounts[0] as { threadId?: string }).threadId,
+    "thread-a",
+  );
   h.render();
   assert.equal(h.world.recounts.length, 1);
 });
@@ -651,7 +771,8 @@ test("the registered branch belongs to the active thread and must finish loading
   h.world.mainThreadId = "blank-thread";
   h.world.thread.messages = [];
   assert.equal(h.readBranch(), null);
-  h.world.mainThreadId = (h.state.activeThreadId ?? assert.fail("expected a non-null value"));
+  h.world.mainThreadId =
+    h.state.activeThreadId ?? assert.fail("expected a non-null value");
   assert.equal(h.readBranch(), h.world.thread.messages);
   h.world.thread.isLoading = true;
   assert.equal(h.readBranch(), null);

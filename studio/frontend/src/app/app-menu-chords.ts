@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
+import type { ShortcutId } from "@/features/settings/lib/keyboard-shortcuts";
 import {
   formatBindingValue,
   parseBinding,
   SHORTCUT_SLOTS,
-  type ShortcutId,
-} from "@/features/settings";
+} from "@/features/settings/lib/keyboard-shortcuts";
 import {
   resolveBinding,
   shortcutOwningBinding,
-} from "@/features/settings";
+} from "@/features/settings/stores/keyboard-shortcuts-store";
 import type { HelpAction } from "@/components/help-actions";
-import type { SettingsTab } from "@/features/settings";
+import type { SettingsTab } from "@/features/settings/stores/settings-dialog-store";
 
 export type SettingsMenuAction = `settings-${SettingsTab}`;
 
@@ -50,14 +50,17 @@ export const MENU_CHORDS: Partial<
   Record<AppMenuAction, { shortcut?: ShortcutId; chord?: string }>
 > = {
   "new-chat": { shortcut: "newChat", chord: "Mod+KeyN" },
-  "new-temporary-chat": { shortcut: "newTemporaryChat", chord: "Mod+Shift+KeyN" },
+  "new-temporary-chat": {
+    shortcut: "newTemporaryChat",
+    chord: "Mod+Shift+KeyN",
+  },
   "open-folder": { chord: "Mod+KeyO" },
   "toggle-sidebar": { shortcut: "toggleSidebar", chord: "Mod+KeyB" },
-  "find": { shortcut: "findInPage", chord: "Mod+KeyF" },
+  find: { shortcut: "findInPage", chord: "Mod+KeyF" },
   "previous-chat": { shortcut: "previousChat", chord: "Mod+Shift+BracketLeft" },
   "next-chat": { shortcut: "nextChat", chord: "Mod+Shift+BracketRight" },
-  "back": { chord: "Mod+BracketLeft" },
-  "forward": { chord: "Mod+BracketRight" },
+  back: { chord: "Mod+BracketLeft" },
+  forward: { chord: "Mod+BracketRight" },
   "zoom-in": { chord: "Mod+Equal" },
   "zoom-out": { chord: "Mod+Minus" },
   "actual-size": { chord: "Mod+Digit0" },
@@ -72,7 +75,10 @@ export const MENU_CHORDS: Partial<
   "go-audio": { shortcut: "switchToAudio", chord: "Ctrl+Digit8" },
   "go-export": { shortcut: "switchToExport", chord: "Ctrl+Digit9" },
   "help-documentation": {},
-  "help-keyboard-shortcuts": { shortcut: "openKeyboardShortcuts", chord: "Mod+Slash" },
+  "help-keyboard-shortcuts": {
+    shortcut: "openKeyboardShortcuts",
+    chord: "Mod+Slash",
+  },
   "help-whats-new": {},
   "help-troubleshooting": {},
   "help-system-status": {},
@@ -121,14 +127,21 @@ export function menuAccelerators(
   ][]) {
     if (!shortcut) {
       out[action] =
-        !chord || shortcutOwningBinding(overrides, chord) ? null : toAccelerator(chord);
+        !chord || shortcutOwningBinding(overrides, chord)
+          ? null
+          : toAccelerator(chord);
       continue;
     }
-    const owned = SHORTCUT_SLOTS.map((slot) => resolveBinding(overrides, shortcut, slot)).filter(
+    const owned = SHORTCUT_SLOTS.map((slot) =>
+      resolveBinding(overrides, shortcut, slot),
+    ).filter(
       (value): value is string =>
         Boolean(value) && shortcutOwningBinding(overrides, value) === shortcut,
     );
-    const shown = chord && owned.includes(chord) ? chord : owned.find((value) => toAccelerator(value));
+    const shown =
+      chord && owned.includes(chord)
+        ? chord
+        : owned.find((value) => toAccelerator(value));
     out[action] = toAccelerator(shown ?? null);
   }
   return out;

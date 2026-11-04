@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
+import { runSource } from "./helpers/eval-source.ts";
 import ts from "@typescript/typescript6";
 import { readSrc } from "./helpers/kit.ts";
 import {
@@ -57,6 +57,8 @@ const names = [
   "advancePromptQueue",
   "handlePromptQueueRunFailed",
   "retainPendingPromptQueueItemsAfterFailure",
+  "setPromptQueueRunFields",
+  "setPromptQueueItemFields",
 ];
 const declarations = names
   .map((name) => {
@@ -75,7 +77,12 @@ const js = ts.transpileModule(declarations, {
 }).outputText;
 
 type Target = ReturnType<typeof makeTarget>;
-interface Item { id: string; prompt: string; target: Target; dispatched: boolean }
+interface Item {
+  id: string;
+  prompt: string;
+  target: Target;
+  dispatched: boolean;
+}
 interface Run {
   id: string;
   items: Item[];
@@ -116,7 +123,10 @@ function world() {
   let serial = 0;
   let modelLoading = false;
   let dispatchRetries = 0;
-  let indexing: () => Promise<boolean> = async () => { await Promise.resolve(); return false; };
+  let indexing: () => Promise<boolean> = async () => {
+    await Promise.resolve();
+    return false;
+  };
   const noop = () => undefined;
   const deps = {
     normalizeQueuedPrompt,
@@ -156,7 +166,7 @@ function world() {
       queued.dispatched = true;
     },
   };
-  const engine = runInNewContext(
+  const engine = runSource(
     `${js}\nreturn {startPromptQueue, steerPromptQueueItem, dispatchQueuedPrompt, isPromptQueueRunReadyToDispatch, handlePromptQueueRunState, handlePromptQueueRunFailed, resumePromptQueueRun};`,
     deps,
   ) as {
@@ -271,7 +281,10 @@ test("an in-flight indexing probe cannot dispatch the old item after a steer", a
     run.items.map((i) => i.prompt),
     ["urgent", "old first", "old second"],
   );
-  w.setIndexing(async () => { await Promise.resolve(); return false; });
+  w.setIndexing(async () => {
+    await Promise.resolve();
+    return false;
+  });
   await w.dispatchQueuedPrompt(run, run.items[0]);
   assert.deepEqual(w.appended, ["urgent"]);
 });
@@ -396,7 +409,10 @@ test("row steer invalidates an in-flight document probe and waits for model load
   resolve(false);
   await staleDispatch;
   assert.deepEqual(w.appended, []);
-  w.setIndexing(async () => { await Promise.resolve(); return false; });
+  w.setIndexing(async () => {
+    await Promise.resolve();
+    return false;
+  });
   await w.dispatchQueuedPrompt(run, selected);
   assert.deepEqual(w.appended, []);
   assert.equal(selected.dispatched, false);
@@ -418,10 +434,9 @@ test("a new steering queue waits for cancellation and rejects an unidentified ta
   assert.equal(target.cancels, 1);
   await w.dispatchQueuedPrompt(w.run(), w.run().items[0]);
   assert.deepEqual(w.appended, []);
-  assert.throws(
-    () => { w.startPromptQueue(["wrong chat"], makeTarget(""), true, "steer"); },
-    /no longer available/,
-  );
+  assert.throws(() => {
+    w.startPromptQueue(["wrong chat"], makeTarget(""), true, "steer");
+  }, /no longer available/);
   assert.equal(w.runs.size, 1);
   assert.deepEqual(w.scopedCancels, [["chat"]]);
 });
@@ -454,7 +469,7 @@ const targetFactoryJs = composerCallbackJs("createPromptQueueTarget");
 test("queued files use resolved model capabilities before append", () => {
   assert.match(
     targetFactoryJs,
-    /const resolvedRunSettings = deferModelResolution[\s\S]*?resolveDeferredQueuedModelSettings\([\s\S]*?useChatRuntimeStore\.getState\(\)[\s\S]*?pythonToolRunsInStudio\([\s\S]*?prepareQueuedPromptFiles\([\s\S]*?withAttachmentOriginal\([\s\S]*?keepQueuedFilesForPython[\s\S]*?queuedPromptMessage\(readyPrompt\)/,
+    /const resolvedRunSettings = deferModelResolution[\s\S]*?resolveDeferredQueuedModelSettings\([\s\S]*?useChatRuntimeStore\.getState\(\)[\s\S]*?pythonToolRunsInStudio\([\s\S]*?prepareQueuedPromptFiles\([\s\S]*?withAttachmentOriginal\([\s\S]*?keepQueuedFilesForPython[\s\S]*?queuedPromptMessage\(promptWithFiles\)/,
   );
 });
 
@@ -474,12 +489,17 @@ async function targetForSelection(
     toolsEnabled: true,
     ragEnabled: false,
     incognito: false,
-    hydratePersistedSettings: async () => { await Promise.resolve(); return undefined; },
+    hydratePersistedSettings: async () => {
+      await Promise.resolve();
+      return undefined;
+    },
   };
   const deps = {
     aui: {
       threads: () => ({}),
-      threadListItem: () => ({ getState: () => ({ id: "chat", remoteId: "chat" }) }),
+      threadListItem: () => ({
+        getState: () => ({ id: "chat", remoteId: "chat" }),
+      }),
     },
     referenceThreadId: "chat",
     chatHistoryClearBoundary: { capture: () => 0 },
@@ -487,19 +507,27 @@ async function targetForSelection(
     indexingActiveRef: { current: false },
     useChatRuntimeStore: { getState: () => runtime },
     compactIds: (ids: unknown[]) => [...new Set(ids.filter(Boolean))],
-    snapshotQueuedChatRunSettings: (...args: Parameters<typeof snapshotQueuedChatRunSettings>) => {
+    snapshotQueuedChatRunSettings: (
+      ...args: Parameters<typeof snapshotQueuedChatRunSettings>
+    ) => {
       settings = snapshotQueuedChatRunSettings(...args);
       return settings;
     },
     parseExternalModelId,
     pythonToolRunsInStudio: () => false,
-    prepareQueuedPromptFiles: async (prompt: unknown) => { await Promise.resolve(); return prompt; },
+    prepareQueuedPromptFiles: async (prompt: unknown) => {
+      await Promise.resolve();
+      return prompt;
+    },
     resolveDeferredQueuedModelSettings,
-    withAttachmentOriginal: async (_pending: unknown, complete: unknown) => { await Promise.resolve(); return complete; },
+    withAttachmentOriginal: async (_pending: unknown, complete: unknown) => {
+      await Promise.resolve();
+      return complete;
+    },
     getAuthSessionEpoch: () => 0,
     hasPreStreamRunReservation: () => false,
   };
-  const create = runInNewContext(targetFactoryJs, deps) as () => Promise<Target>;
+  const create = runSource(targetFactoryJs, deps) as () => Promise<Target>;
   return {
     target: Object.assign(makeTarget("chat", false), await create()),
     settings,
@@ -532,7 +560,7 @@ function hydratedFactory(
     startPromptQueue: w.startPromptQueue,
     toast: { error: (message: string) => assert.fail(message) },
   };
-  return runInNewContext(factoryJs, deps) as (
+  return runSource(factoryJs, deps) as (
     prompts: string[],
     wait: boolean,
     onStarted?: () => void,
@@ -576,14 +604,9 @@ test("an aborted hydrated queue leaves the composer audio upload active", async 
     },
   );
   assert.equal(
-    accept(
-      ["queued draft"],
-      true,
-      undefined,
-      () => {
-        aborted += 1;
-      },
-    ),
+    accept(["queued draft"], true, undefined, () => {
+      aborted += 1;
+    }),
     true,
   );
   await Promise.resolve();
@@ -629,7 +652,11 @@ for (const firstBehavior of ["queue", "steer"] as const) {
           w.run().items.map((item) => item.prompt),
           ["same draft"],
         );
-        assert.equal(resolves.length, 1, "hydrate the same pending draft only once");
+        assert.equal(
+          resolves.length,
+          1,
+          "hydrate the same pending draft only once",
+        );
         assert.equal(cleared, 1);
         assert.equal(target.cancels, Number(latestBehavior === "steer"));
         if (latestBehavior === "queue") {
@@ -861,7 +888,10 @@ test("resuming a blocked local follow-up preserves the pending external document
   w.handlePromptQueueRunState(run, {});
   external.running = false;
   w.handlePromptQueueRunState(run, {});
-  w.setIndexing(async () => { await Promise.resolve(); return false; });
+  w.setIndexing(async () => {
+    await Promise.resolve();
+    return false;
+  });
   await w.dispatchQueuedPrompt(run, run.items[1]);
   assert.deepEqual(w.appended, ["external response", "local follow-up"]);
 });
@@ -881,7 +911,10 @@ test("load failure invalidates a local document probe without duplicate dispatch
   const pending = w.dispatchQueuedPrompt(run, run.items[0]);
   w.handlePromptQueueRunFailed(undefined, true);
   w.resumePromptQueueRun(["chat"]);
-  w.setIndexing(async () => { await Promise.resolve(); return false; });
+  w.setIndexing(async () => {
+    await Promise.resolve();
+    return false;
+  });
   await w.dispatchQueuedPrompt(run, run.items[0]);
   resolve(false);
   await pending;
@@ -1061,12 +1094,23 @@ for (const behavior of ["queue", "steer"] as const) {
       const w = world();
       w.setModelLoading(true);
       const { target, settings } = await targetForSelection(
-        "external::provider::hosted-model", true, "incoming-local",
+        "external::provider::hosted-model",
+        true,
+        "incoming-local",
       );
-      w.startPromptQueue(["wait for the selected model"], target, false, behavior);
+      w.startPromptQueue(
+        ["wait for the selected model"],
+        target,
+        false,
+        behavior,
+      );
       const run = w.run();
       await w.dispatchQueuedPrompt(run, run.items[0]);
-      assert.deepEqual(w.appended, [], "never send to the outgoing hosted provider");
+      assert.deepEqual(
+        w.appended,
+        [],
+        "never send to the outgoing hosted provider",
+      );
       assert.equal(target.usesLocalModel, true);
       assert.equal(settings.params.checkpoint, "");
       assert.equal(settings.activeGgufVariant, null);
@@ -1095,10 +1139,14 @@ test("an external-to-local preparation keeps the follow-up in the composer", asy
   try {
     const w = world();
     const { target } = await targetForSelection(
-      "external::provider::hosted-model", true, "incoming-local",
+      "external::provider::hosted-model",
+      true,
+      "incoming-local",
     );
     let cleared = false;
-    hydratedFactory(w, target)(["keep this draft"], false, () => { cleared = true; });
+    hydratedFactory(w, target)(["keep this draft"], false, () => {
+      cleared = true;
+    });
     await Promise.resolve();
     assert.equal(cleared, false);
     assert.equal(w.runs.size, 0);
@@ -1172,7 +1220,10 @@ for (const behavior of ["queue", "steer"] as const) {
     w.setModelLoading(true);
     const selected = "external::new-provider::selected-model";
     const { target, settings } = await targetForSelection(
-      selected, true, "incoming-local", true,
+      selected,
+      true,
+      "incoming-local",
+      true,
     );
     assert.equal(target.usesLocalModel, false);
     assert.equal(settings.params.checkpoint, selected);
