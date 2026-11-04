@@ -388,7 +388,7 @@ export function SeparateOutput({
   // biome-ignore lint/correctness/useExhaustiveDependencies: each loaded page re-checks, in case the run is still cut.
   useEffect(() => {
     if (tailHidden) {
-      void loadMore();
+      loadMore().catch(() => undefined);
     }
   }, [tailHidden, clips, loadMore]);
   const selected =

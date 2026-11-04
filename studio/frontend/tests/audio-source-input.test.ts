@@ -295,7 +295,7 @@ test("recording uses the Settings → Voice microphone and falls back when it is
   );
   assert.match(
     hook,
-    /if \(deviceId === "default" \|\| !isMissingDeviceError\(error\)\) throw error;\s*return navigator\.mediaDevices\.getUserMedia\(\{\s*audio: micAudioConstraints\(null\),/,
+    /if \(deviceId === "default" \|\| !isMissingDeviceError\(error\)\) throw error;\s*return await navigator\.mediaDevices\.getUserMedia\(\{\s*audio: micAudioConstraints\(null\),/,
   );
   assert.match(hook, /message: micErrorMessage\(error, isTauri\)/);
   // A failed recording never picked a file, so its way out is uploading one.

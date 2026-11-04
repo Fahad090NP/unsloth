@@ -6,8 +6,6 @@ import test from "node:test";
 
 import { atDefaultUiScale, readSrcAsync } from "./helpers/kit.ts";
 
-const DOCK_INSETS =
-  /aui-thread-composer-dock[^"]*md:left-\[var\(--thread-scrollbar-gutter,10px\)\] md:right-\[var\(--thread-scrollbar-gutter,10px\)\]/;
 const DOCK_ONE_SIDED =
   /aui-thread-composer-dock[^"]*right-0 md:right-\[var\(--thread-scrollbar-gutter,10px\)\]"/;
 const SCALED_GUTTER_INSET =

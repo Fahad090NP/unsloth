@@ -77,7 +77,7 @@ export function pinnedReasoningEffort(): unknown {
 export const useModelReasoningEffortStore = {
   getState: () => ({
     effortByModel: {} as Record<string, unknown>,
-    setModelReasoningEffort: () => {},
-    syncFromStorage: () => {},
+    setModelReasoningEffort: () => { /* noop */ },
+    syncFromStorage: () => { /* noop */ },
   }),
 };

@@ -277,7 +277,6 @@ export function ChatSearchDialog() {
       );
     }
     const activityAt = (project: (typeof projects)[number]) =>
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- older rows can omit updatedAt.
       Math.max(project.updatedAt ?? project.createdAt, newestChat.get(project.id) ?? 0);
     return {
       projects: projects

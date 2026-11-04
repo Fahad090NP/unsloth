@@ -18,6 +18,7 @@ class NativeXHR extends EventTarget {
   get readyState() {
     return this.state;
   }
+  // eslint-disable-next-line @typescript-eslint/class-literal-property-style -- a getter keeps the override working.
   get status() {
     return 0;
   }

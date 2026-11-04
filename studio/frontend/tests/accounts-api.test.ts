@@ -21,8 +21,9 @@ function client(response: () => Response) {
         },
       },
       "@/features/auth/login-client": {
-        fetchAuthStatus: async () => {
+        fetchAuthStatus: () => {
           refreshed++;
+          return Promise.resolve();
         },
       },
       "@/lib/account-transition": { normalizeAccountUsername },

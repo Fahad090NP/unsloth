@@ -109,10 +109,8 @@ export default defineConfig([
       "@typescript-eslint/no-import-type-side-effects": "error",
       "@typescript-eslint/no-meaningless-void-operator": "error",
       "@typescript-eslint/no-redundant-type-constituents": "error",
-      "@typescript-eslint/no-unnecessary-condition": [
-        "error",
-        { allowConstantLoopConditions: false },
-      ],
+      // Runtime payloads are untrusted; guards are intentional.
+      "@typescript-eslint/no-unnecessary-condition": "off",
       // These two stylistic fixers remove assertions/interfaces that carry
       // type information; keep them off so `--fix` cannot break the build.
       "@typescript-eslint/no-unnecessary-type-assertion": "off",
