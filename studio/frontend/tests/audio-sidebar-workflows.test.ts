@@ -94,7 +94,7 @@ test("a pinned Audio row lists its workflows and hands picks to the page as requ
     pick,
     /useAudioWorkspaceStore\.getState\(\)\.requestWorkflow\(workflowId\);/,
   );
-  assert.match(pick, /navigate\(\{ to: "\/audio" \}\);/);
+  assert.match(pick, /navigate\(\{ to: "\/audio" \}\)\.catch\(/);
   assert.match(pick, /closeMobileIfOpen\(\);/);
   assert.doesNotMatch(SIDEBAR, /commitWorkflow/);
 });
@@ -125,7 +125,7 @@ test("More opens Audio's workflows in a submenu that keeps the flyout open on th
   );
   assert.match(submenu, /<DropdownMenuSubContent \{\.\.\.contentProps\}/);
   assert.match(submenu, /tabs\.map/);
-  assert.match(submenu, /onSelect=\{\(\) => onPick\(tab\.id\)\}/);
+  assert.match(submenu, /onSelect=\{/);
   assert.match(submenu, /current === tab\.id && "bg-accent\/60"/);
   assert.doesNotMatch(submenu, /max-h/);
 

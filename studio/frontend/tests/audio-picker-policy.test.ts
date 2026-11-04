@@ -952,7 +952,7 @@ test("the search placeholder names community models only when they are searched"
 test("task pickers offer MLX only on a Mac and coerce a stale filter", () => {
   assert.match(
     pickerSource,
-    /formatFilterValues\(\{ npu: !!npuCatalog, mlx: isMac \|\| !task \}\)/,
+    /formatFilterValues\(\{ npu: Boolean\(npuCatalog\), mlx: isMac \|\| !task \}\)/,
   );
   assert.match(
     pickerSource,

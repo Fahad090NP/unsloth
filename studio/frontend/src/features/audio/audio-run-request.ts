@@ -275,10 +275,15 @@ export function buildAudioRunBody(
   return body;
 }
 
+const EDIT_MODES = new Set(["words", "delivery"]);
+
 function cleanEdit(
   edit: AudioRunEditPart | null | undefined,
 ): Record<string, unknown> | null {
   if (!edit) return null;
+  if (typeof edit.mode !== "string" || !EDIT_MODES.has(edit.mode)) {
+    return null;
+  }
   const out: Record<string, unknown> = { mode: edit.mode };
   if (typeof edit.markup === "string" && edit.markup.trim())
     out.markup = edit.markup;

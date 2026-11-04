@@ -127,7 +127,7 @@ test("a group cut by the page boundary waits for the next page, which the page l
   );
   assert.match(
     page,
-    /if \(tailHidden\) void loadMore\(\);\s*\}, \[tailHidden, clips, loadMore\]\)/,
+    /if \(tailHidden\) \{\s*void loadMore\(\);\s*\}\s*\}, \[tailHidden, clips, loadMore\]\)/,
   );
 });
 

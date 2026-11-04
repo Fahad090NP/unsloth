@@ -68,7 +68,7 @@ async function openMicrophone(deviceId: string): Promise<MediaStream> {
   } catch (error) {
     // Saved mic may be unplugged; fall back to the default, as dictation does.
     if (deviceId === "default" || !isMissingDeviceError(error)) throw error;
-    return await navigator.mediaDevices.getUserMedia({
+    return navigator.mediaDevices.getUserMedia({
       audio: micAudioConstraints(null),
     });
   }
