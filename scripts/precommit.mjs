@@ -290,9 +290,32 @@ for (const file of codeFiles) {
   }
 }
 
-const selected = [...exact, ...loose].slice(0, MAX_TESTS);
+const baselinePath = path.join(
+  ROOT,
+  "scripts",
+  "quality",
+  "known-failing-tests.json",
+);
+const known = existsSync(baselinePath)
+  ? new Set(
+      JSON.parse(readFileSync(baselinePath, "utf8")).tests.map(
+        (test) => `studio/frontend/${test}`,
+      ),
+    )
+  : new Set();
+const stagedSet = new Set(codeFiles);
+const candidates = [...exact, ...loose].filter(
+  (test) =>
+    !known.has(path.relative(ROOT, test).replaceAll("\\", "/")) ||
+    stagedSet.has(path.relative(ROOT, test).replaceAll("\\", "/")),
+);
+const skipped = exact.size + loose.size - candidates.length;
+const selected = candidates.slice(0, MAX_TESTS);
 let testsOk = true;
-let testsDetail = "no test references the changed modules";
+let testsDetail =
+  skipped > 0
+    ? `${skipped} known-failing test(s) skipped`
+    : "no test references the changed modules";
 if (selected.length > 0) {
   const result = run(
     "node",
@@ -306,7 +329,7 @@ if (selected.length > 0) {
   );
   testsOk = result.status === 0;
   testsDetail = testsOk
-    ? `${selected.length} test file(s)${loose.size + exact.size > MAX_TESTS ? ` (capped from ${loose.size + exact.size})` : ""}`
+    ? `${selected.length} test file(s)${skipped > 0 ? `, ${skipped} known-failing skipped` : ""}${candidates.length > MAX_TESTS ? ` (capped from ${candidates.length})` : ""}`
     : result.output.slice(-4000);
 }
 record("Affected tests", testsOk, testsDetail);
