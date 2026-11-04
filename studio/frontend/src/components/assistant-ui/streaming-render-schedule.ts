@@ -54,7 +54,11 @@ function hasLinkDefinition(text: string): boolean {
   let nextBracket = bracket < 0 ? -1 : text.indexOf("[", bracket + 1);
   let close = -1;
   let nextClose = text.indexOf("]");
-  for (let end = text.indexOf("]:"); end >= 0; end = text.indexOf("]:", end + 1)) {
+  for (
+    let end = text.indexOf("]:");
+    end >= 0;
+    end = text.indexOf("]:", end + 1)
+  ) {
     while (nextBracket >= 0 && nextBracket <= end) {
       bracket = nextBracket;
       nextBracket = text.indexOf("[", bracket + 1);
@@ -78,7 +82,8 @@ function hasLinkDefinition(text: string): boolean {
   return false;
 }
 // A list marker needs trailing whitespace: `-[label]:` is prose, not a bullet.
-const CONTAINER_PREFIX = "[ \t]*(?:(?:>[ \t]*)|(?:(?:[-*+]|\\d{1,9}[.)])[ \t]+))*";
+const CONTAINER_PREFIX =
+  "[ \t]*(?:(?:>[ \t]*)|(?:(?:[-*+]|\\d{1,9}[.)])[ \t]+))*";
 const LINK_DEFINITION_LINE_RE = new RegExp(
   `^${CONTAINER_PREFIX}${LINK_DEFINITION_RE.source}`,
   `m${LINK_DEFINITION_RE.flags}`,
@@ -93,7 +98,8 @@ const LINK_DEFINITION_KEY_RE = new RegExp(
   `g${LINK_DEFINITION_LINE_RE.flags}`,
 );
 // Literal code bodies: an opening fence, or an indent reaching column four (spaces or a tab).
-const CODE_BLOCK_RE = /^(?: {0,3}(?:`{3,}|~{3,})|(?: {4,}| {0,3}\t)[ \t]*[^ \t\r\n])/;
+const CODE_BLOCK_RE =
+  /^(?: {0,3}(?:`{3,}|~{3,})|(?: {4,}| {0,3}\t)[ \t]*[^ \t\r\n])/;
 // A backtick opener with a backtick in its info string is not a fence; tildes have no such rule.
 const BACKTICK_OPENER_RE = /^ {0,3}`{3,}([^\n]*)/;
 
@@ -127,7 +133,11 @@ function hasLinkReference(text: string): boolean {
   let close = -1;
   let nextClose = text.indexOf("]");
   let after = -1;
-  for (let mid = text.indexOf("]["); mid >= 0; mid = text.indexOf("][", mid + 1)) {
+  for (
+    let mid = text.indexOf("][");
+    mid >= 0;
+    mid = text.indexOf("][", mid + 1)
+  ) {
     // No empty label, so the opener is at `mid - 2` or earlier. Forward: `lastIndexOf` is not.
     while (nextBracket >= 0 && nextBracket <= mid - 2) {
       bracket = nextBracket;
@@ -203,10 +213,7 @@ function hasShortcutReference(
   // Marked's definitions, not a regex: `[1]: <broken` is prose whose `[1]` is a reference.
   const uses = normalizeLineEndings(references);
   for (const match of uses.matchAll(SHORTCUT_REFERENCE_RE)) {
-    if (
-      !isEscaped(uses, match.index) &&
-      labels.has(normalizeLabel(match[1]))
-    ) {
+    if (!isEscaped(uses, match.index) && labels.has(normalizeLabel(match[1]))) {
       return true;
     }
   }
@@ -242,29 +249,7 @@ function definitionsOf(markdown: string): readonly string[] {
   return splitDefinitions;
 }
 
-// Which replies have to be lexed in one piece.
-//
-// marked keeps link reference definitions in one document-wide map and emits no token for a
-// label it has already seen, so a `[label][ref]` and its `[ref]: url` must reach the lexer
-// together or the reference survives as literal text. The question is therefore whether a real
-// definition exists outside code -- and the earlier answer, a hand-rolled scan for fences,
-// containers and raw HTML, kept disagreeing with marked at the seams: nested fences, the seven
-// HTML block shapes, list continuation indentation, lone-CR line endings.
-//
-// marked has already resolved every one of those by the time it hands back blocks, so the split
-// is the answer rather than something to re-derive. A fenced or indented block is code; anything
-// else is prose, and a definition line anywhere in the prose counts.
-//
-// Being wrong is not symmetric, which is why the residual imprecision sits where it does. Saying
-// `blocks` when the reply needed one document splits the pair apart and loses content. Saying
-// `document` when blocks would have done only costs that reply its per-code-block Copy and
-// Download controls -- which is what this path did for EVERY reply containing a `]:` substring
-// before. See tests/link-definition-oracle.test.ts, which pins the first case exhaustively.
-// Normalised because `\r` counts against `{1,999}` and the `\n` it replaces does
-// not, so the scope would otherwise follow the reply's line ending. NOT for
-// `blocksOf`, whose one memo slot is shared with `parseMarkdownIntoRenderableBlocks`:
-// a normalised copy misses it and costs a CRLF reply two splits per render.
-// A shortcut reference can be any `[label]`, so a definition alone is enough to pay for the split.
+// Split only when a link definition outside code needs the whole reply.
 function documentProse(markdown: string): string | null {
   if (!hasLinkDefinition(normalizeLineEndings(markdown))) {
     return null;
@@ -305,11 +290,7 @@ export function parseMarkdownIntoRenderableBlocks(markdown: string): string[] {
 
 // Mirrors remend 1.3.1's five-state math machine, since `RepairParity` hand-copies its marker rules.
 type EmphasisMathState =
-  | "none"
-  | "inlineLatex"
-  | "blockLatex"
-  | "inlineDollar"
-  | "blockDollar";
+  "none" | "inlineLatex" | "blockLatex" | "inlineDollar" | "blockDollar";
 
 interface RepairParity {
   bold: boolean;
@@ -675,7 +656,10 @@ function recordBoldMarker(
 }
 
 // remend completes a dangling link at the document end, so an unmatched bracket blocks retention.
-function updateBracketDepth(parityInput: RepairParity, character: string): void {
+function updateBracketDepth(
+  parityInput: RepairParity,
+  character: string,
+): void {
   const parity = parityInput;
   if (character === "[") {
     parity.bracketDepth += 1;
@@ -712,10 +696,7 @@ function clearInWordAsteriskChain(
   }
 }
 
-function updateEmphasisParity(
-  parityInput: RepairParity,
-  text: string,
-): void {
+function updateEmphasisParity(parityInput: RepairParity, text: string): void {
   const parity = parityInput;
   for (let index = 0; index < text.length; index += 1) {
     // Cleared before the multi-character skips: they all start on non-word characters.
@@ -774,10 +755,7 @@ function updateTripleAsteriskParity(
   finishRun();
 }
 
-function updateInlineCodeParity(
-  parityInput: RepairParity,
-  text: string,
-): void {
+function updateInlineCodeParity(parityInput: RepairParity, text: string): void {
   const parity = parityInput;
   for (let index = 0; index < text.length; index += 1) {
     if (text[index] === "\\" && text[index + 1] === "`") {
@@ -823,10 +801,7 @@ function updateDisplayMathParity(
   }
 }
 
-function updateInlineMathParity(
-  parityInput: RepairParity,
-  text: string,
-): void {
+function updateInlineMathParity(parityInput: RepairParity, text: string): void {
   const parity = parityInput;
   for (let index = 0; index < text.length; index += 1) {
     if (text[index] === "\\") {
@@ -1508,11 +1483,11 @@ const samePluginEntry = (
   a: RehypePluginList[number],
   b: RehypePluginList[number],
 ): boolean =>
-  a === b
-  || (Array.isArray(a)
-    && Array.isArray(b)
-    && a.length === b.length
-    && a.every((value, index) => value === b[index]));
+  a === b ||
+  (Array.isArray(a) &&
+    Array.isArray(b) &&
+    a.length === b.length &&
+    a.every((value, index) => value === b[index]));
 
 const filteredPluginLists = new WeakMap<RehypePluginList, RehypePluginList>();
 let lastFilteredPluginList: RehypePluginList | null = null;
@@ -1533,9 +1508,9 @@ export function withoutStreamdownAnimationPlugin(
   });
   const previous = lastFilteredPluginList;
   const stable =
-    previous !== null
-    && previous.length === filtered.length
-    && previous.every((plugin, index) => samePluginEntry(plugin, filtered[index]))
+    previous !== null &&
+    previous.length === filtered.length &&
+    previous.every((plugin, index) => samePluginEntry(plugin, filtered[index]))
       ? previous
       : filtered;
   filteredPluginLists.set(rehypePlugins, stable);

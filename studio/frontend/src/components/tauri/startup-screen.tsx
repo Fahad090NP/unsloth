@@ -46,8 +46,6 @@ interface StartupScreenProps {
 
 const EASE_OUT_QUART: [number, number, number, number] = [0.165, 0.84, 0.44, 1];
 
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
 function Logo() {
   return (
     <div className="flex items-center justify-center gap-3">
@@ -66,8 +64,6 @@ function Logo() {
     </div>
   );
 }
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
 
 function CheckingContent() {
   const t = useT();
@@ -78,13 +74,18 @@ function CheckingContent() {
       </div>
       <div className="mb-10 flex flex-col items-center gap-2">
         <Spinner className="size-6 text-primary" />
-        <p className="text-sm text-muted-foreground">{t("desktopStartup.checking")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("desktopStartup.checking")}
+        </p>
       </div>
     </div>
   );
 }
 
-interface InstallOptions { skipLongPaths?: boolean; chatOnly?: boolean }
+interface InstallOptions {
+  skipLongPaths?: boolean;
+  chatOnly?: boolean;
+}
 
 function NotInstalledContent({
   onInstall,
@@ -179,7 +180,9 @@ function NotInstalledContent({
             id="install-chat-only"
             checked={chatOnly}
             disabled={phase !== "idle"}
-            onCheckedChange={(checked) => { setChatOnly(checked === true); }}
+            onCheckedChange={(checked) => {
+              setChatOnly(checked === true);
+            }}
           />
           <Label
             htmlFor="install-chat-only"
@@ -204,7 +207,9 @@ function LongPathsExplainer({
   onSkip: () => void;
 }) {
   const t = useT();
-  const [approveBefore, approveAfter] = t("desktopStartup.longPaths.approve").split("{tool}");
+  const [approveBefore, approveAfter] = t(
+    "desktopStartup.longPaths.approve",
+  ).split("{tool}");
   return (
     <>
       <Logo />
@@ -214,7 +219,9 @@ function LongPathsExplainer({
         </p>
         <p className="text-xs text-muted-foreground">
           {approveBefore}
-          <span className="font-medium text-foreground">Registry Console Tool</span>
+          <span className="font-medium text-foreground">
+            Registry Console Tool
+          </span>
           {approveAfter}
         </p>
         {waiting ? (
@@ -243,11 +250,12 @@ function useRotatingMessageIndex(): number {
   const [messageIndex, setMessageIndex] = useState(0);
 
   useEffect(() => {
-    const interval = window.setInterval(
-      () => { setMessageIndex((current) => current + 1); },
-      STATUS_MESSAGE_ROTATION_MS,
-    );
-    return () => { window.clearInterval(interval); };
+    const interval = window.setInterval(() => {
+      setMessageIndex((current) => current + 1);
+    }, STATUS_MESSAGE_ROTATION_MS);
+    return () => {
+      window.clearInterval(interval);
+    };
   }, []);
 
   return messageIndex;
@@ -265,9 +273,7 @@ function InstallingContent({
   const t = useT();
   const messageIndex = useRotatingMessageIndex();
   const message = installProgressMessage(currentStepIndex, messageIndex);
-  const detailLines = progressDetail
-    ? [...logs, progressDetail]
-    : logs;
+  const detailLines = progressDetail ? [...logs, progressDetail] : logs;
 
   return (
     <div className="flex size-full flex-col items-center">
@@ -300,9 +306,7 @@ function RepairingContent({
   upgradingToFull: boolean;
 }) {
   const t = useT();
-  const detailLines = progressDetail
-    ? [...logs, progressDetail]
-    : logs;
+  const detailLines = progressDetail ? [...logs, progressDetail] : logs;
 
   return (
     <div className="flex size-full flex-col items-center">
@@ -343,7 +347,9 @@ function ClosingContent() {
         <p className="text-sm font-bold text-foreground" aria-live="polite">
           {t("desktopStartup.closing")}
         </p>
-        <p className="text-sm text-muted-foreground">{t("desktopStartup.closingDetail")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("desktopStartup.closingDetail")}
+        </p>
       </div>
     </div>
   );
@@ -366,10 +372,14 @@ function InstallErrorContent({
       <Logo />
       <div className="mt-8 flex flex-col items-center gap-2">
         <p className="text-sm font-medium text-destructive">
-          {diskFull ? t("desktopStartup.diskFull") : t("desktopStartup.setupFailed")}
+          {diskFull
+            ? t("desktopStartup.diskFull")
+            : t("desktopStartup.setupFailed")}
         </p>
         {error && (
-          <p className="max-w-xs text-center text-xs text-muted-foreground">{error}</p>
+          <p className="max-w-xs text-center text-xs text-muted-foreground">
+            {error}
+          </p>
         )}
         <DiagnosticsCopyActions onCopyDiagnostics={onCopyDiagnostics}>
           <Button variant="dark" size="hero" onClick={onRetryInstall}>
@@ -403,7 +413,9 @@ function RepairErrorContent({
             : t("desktopStartup.repair.updateFailed")}
         </p>
         {error && (
-          <p className="max-w-md text-center text-xs text-muted-foreground">{error}</p>
+          <p className="max-w-md text-center text-xs text-muted-foreground">
+            {error}
+          </p>
         )}
         <DiagnosticsCopyActions onCopyDiagnostics={onCopyDiagnostics}>
           <Button variant="dark" size="hero" onClick={onRetry}>
@@ -477,7 +489,9 @@ function StoppedContent({ onStartServer }: { onStartServer: () => void }) {
     <>
       <Logo />
       <div className="mt-8 flex flex-col items-center gap-2">
-        <p className="text-sm font-medium text-foreground">{t("desktopStartup.serverStopped")}</p>
+        <p className="text-sm font-medium text-foreground">
+          {t("desktopStartup.serverStopped")}
+        </p>
         <div className="mt-4">
           <Button variant="dark" size="hero" onClick={onStartServer}>
             {t("desktopStartup.startServer")}
@@ -502,9 +516,13 @@ function ErrorContent({
     <>
       <Logo />
       <div className="mt-8 flex flex-col items-center gap-2">
-        <p className="text-sm font-medium text-destructive">{t("desktopStartup.somethingWrong")}</p>
+        <p className="text-sm font-medium text-destructive">
+          {t("desktopStartup.somethingWrong")}
+        </p>
         {error && (
-          <p className="max-w-md text-center text-xs text-muted-foreground">{error}</p>
+          <p className="max-w-md text-center text-xs text-muted-foreground">
+            {error}
+          </p>
         )}
         <DiagnosticsCopyActions onCopyDiagnostics={onCopyDiagnostics}>
           <Button variant="dark" size="hero" onClick={onRetry}>
@@ -516,8 +534,6 @@ function ErrorContent({
   );
 }
 
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
 export function StartupScreen({
   status,
   logs,
@@ -584,7 +600,9 @@ export function StartupScreen({
           />
         );
       case "starting":
-        return <StartingContent key={startupMessage} message={startupMessage} />;
+        return (
+          <StartingContent key={startupMessage} message={startupMessage} />
+        );
       case "running":
         return null;
       case "stopped":

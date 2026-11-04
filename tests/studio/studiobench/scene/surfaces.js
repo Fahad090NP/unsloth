@@ -1,23 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
-// The selector adapter for Unsloth's surfaces OUTSIDE the chat thread: the other routes, the
-// settings dialog's twelve tabs, the sidebar and its menus, the hub, the media pages.
-// Separate from dom.js on purpose: dom.js is the chat thread's adapter that all eighteen film
-// actions read, while this is read only by the surface sweep, so a selector added for a route
-// cannot break an action.
-// THE TRAP THIS FILE EXISTS TO GUARD. ChatPage, ImagesPage, VideoPage and AudioPage are mounted
-// PERSISTENTLY by the root layout so an in-flight generation survives leaving the tab; off-route
-// they are `class="hidden"` and `inert` but still in the document. So on /hub,
-// `document.querySelector(".aui-thread-root")` still returns the chat thread, and a digest taken
-// with parity.js's default root would digest the HIDDEN CHAT THREAD on every route: forty
-// surfaces reporting one identical digest, every one reading as a pass. Every surface therefore
-// names its own root.
-// HOW THE SCOPING IS DONE, and why it is not a second digest implementation: surface digests are
-// only worth taking if they are comparable with the film's action digests, which means the same
-// normalisation and hash, so this calls `window.__sb.parity.capture()` rather than walking the
-// DOM. parity.js reads its root from `window.__sb.dom.threadRoot()`, so the root is moved for one
-// capture and put back. `probeScoping()` checks the move is observed, because a future parity.js
-// that stopped reading threadRoot would silently go back to digesting the thread everywhere.
+// Selector adapter for surfaces outside the chat thread.
 
 (() => {
   if (window.__sb && window.__sb.surfaces) return;

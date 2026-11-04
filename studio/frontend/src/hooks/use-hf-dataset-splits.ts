@@ -21,8 +21,6 @@ import {
 
 export type { HfSplitEntry } from "./hf-dataset-split-sources";
 
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
 export interface HfSplitsResponse {
   splits: HfSplitEntry[];
   pending: unknown[];
@@ -154,8 +152,6 @@ const DEFAULT_FETCHERS: DatasetSplitFetchers = {
   hub: fetchHubSplits,
 };
 
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
 export function useHfDatasetSplits(
   datasetName: string | null,
   selectedSubset: string | null,
@@ -251,8 +247,19 @@ export function useHfDatasetSplits(
         }
       });
 
-    return () => { controller.abort(); };
-  }, [accessToken, datasetName, localPath, online, preferLocalCache, hfDatasetsServer, hubSource, hfEndpoint]);
+    return () => {
+      controller.abort();
+    };
+  }, [
+    accessToken,
+    datasetName,
+    localPath,
+    online,
+    preferLocalCache,
+    hfDatasetsServer,
+    hubSource,
+    hfEndpoint,
+  ]);
 
   const subsets = Array.from(new Set(entries.map((e) => e.config)));
 

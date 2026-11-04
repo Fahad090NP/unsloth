@@ -3,21 +3,7 @@
 
 import { prefersReducedMotion } from "@/features/settings";
 
-// Slides a segmented control's selected pill from the old segment to the new one
-// without running script per frame or forcing layout during the click:
-// - geometry is read once per switch, in the first ResizeObserver callback for
-//   the new pill's segment, after the browser has laid out the frame anyway.
-//   Both the old and the new segment are measured then, so nothing is cached
-//   that could go stale;
-// - the slide is transform-only Web Animations on both axes (tracks can wrap),
-//   which every engine's compositor runs off the main thread. When the two
-//   segments differ in width, the pill is drawn as two round caps and a middle
-//   strip: the end cap moves and the strip stretches with scaleX, so the ends
-//   stay round (a scaleX of the whole pill would squash them). The move and
-//   the resize are then both transforms on one clock, so a busy main thread
-//   (a list re-rendering after the click) cannot hold the width back while the
-//   pill moves. A clip-path resize could: Chromium repaints it on the main thread.
-// At rest the pill paints itself and the caps, strip and shadow are hidden.
+// Slide the selected pill with transforms; read geometry once per switch.
 
 /** Spring the design system gives segmented controls (design.md, 2.5 Motion). */
 const SPRING = { stiffness: 500, damping: 35, mass: 0.5 };
@@ -156,8 +142,7 @@ function slide(
   // would poke out past the curve. Every width involved must leave it room.
   const r = h / 2;
   const inner = w - 2 * r + 2;
-  const resize =
-    Math.abs(dw) >= 0.5 && Math.min(w, w + dw) > 2 * r + 1;
+  const resize = Math.abs(dw) >= 0.5 && Math.min(w, w + dw) > 2 * r + 1;
   // Held until the cleanup below, so the pieces never show their rest state
   // between the end of the slide and the cleanup.
   const timing = {
@@ -221,7 +206,9 @@ function slide(
       }
       for (const animation of animations) animation.cancel();
     },
-    () => { /* no-op */ },
+    () => {
+      /* no-op */
+    },
   );
 }
 
@@ -263,5 +250,7 @@ export function watchSegmentedPill(group: string, root: HTMLElement) {
     place(group, root, segment);
   });
   observer.observe(segment);
-  return () => { observer.disconnect(); };
+  return () => {
+    observer.disconnect();
+  };
 }

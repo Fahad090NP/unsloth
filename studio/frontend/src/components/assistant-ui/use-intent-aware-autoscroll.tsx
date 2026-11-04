@@ -94,7 +94,9 @@ export function useScrollThreadToBottom(): ScrollToBottom {
 }
 
 /** See AutoScrollContextValue.adjustForContentInsertedAbove. */
-export function useAdjustForContentInsertedAbove(): (deltaPx: number) => boolean {
+export function useAdjustForContentInsertedAbove(): (
+  deltaPx: number,
+) => boolean {
   return useContext(AutoScrollContext).adjustForContentInsertedAbove;
 }
 
@@ -402,19 +404,7 @@ export function useIntentAwareAutoScroll(): {
         requestTick();
       };
 
-      // Content inserted above the viewport by a progressive-mount widening. THIS HOOK OWNS
-      // scrollTop; the progressive mount only reports the height it put above the fold, so the two
-      // never both write. While the user is FOLLOWING there is deliberately nothing to do: the
-      // MutationObserver below already requests the tick, which pins in the same frame before
-      // paint, and since widening only prepends, "pin to the bottom" and "shift by the
-      // height inserted above" are the same pixel. Correcting here too would double the forced
-      // layouts per frame and its scroll event could re-attach a user who deliberately detached
-      // within RE_ATTACH_THRESHOLD_PX of the bottom. While the user is DETACHED nothing else moves
-      // the viewport: extendFollow early-returns, stabilize only rebases its high-water mark, and
-      // pinIfFollowing returns without scrolling. So this is the only actor, and without it the
-      // page slides down under the reader every widening frame. `behavior: "instant"` is required:
-      // the viewport carries `scroll-smooth`, so an animated write would still be in flight at the
-      // next frame's write.
+      // This hook owns scrollTop when content is prepended above the viewport.
       adjustImplRef.current = (deltaPx: number) => {
         if (!userDetachedRef.current) {
           return;
@@ -513,8 +503,7 @@ export function useIntentAwareAutoScroll(): {
         } else if (delta < 0 && !userDetachedRef.current) {
           // Count distance-from-bottom growth, not scrollTop: anchoring moves scrollTop, distance stays put.
           const distanceDelta = distanceNow - lastDistanceFromBottom;
-          const keyed =
-            performance.now() - scrollKeyAt < SCROLL_KEY_WINDOW_MS;
+          const keyed = performance.now() - scrollKeyAt < SCROLL_KEY_WINDOW_MS;
           // Leaving a pinned bottom in the same event the content changed, with no key or pointer
           // behind it, is a clamp (something below shrank as a new row landed), not the user.
           const clamped =
@@ -699,7 +688,11 @@ export function useIntentAwareAutoScroll(): {
         el.ownerDocument.removeEventListener("keydown", onKeyDown);
         el.removeEventListener("pointerdown", onPointerDown);
         el.ownerDocument.removeEventListener("pointerup", onPointerUp, true);
-        el.ownerDocument.removeEventListener("pointercancel", onPointerUp, true);
+        el.ownerDocument.removeEventListener(
+          "pointercancel",
+          onPointerUp,
+          true,
+        );
         window.visualViewport?.removeEventListener("resize", onViewportResize);
         scrollImplRef.current = () => {
           /* no viewport mounted */

@@ -26,17 +26,7 @@ const SERVER_MANAGED_LINK_KEYS = new Set<string>([
   "generationSettled",
 ]);
 
-// A backup is a file that arrived from somewhere, so its settings snapshot is
-// untrusted input, not a saved preference. These are the only keys a restored chat
-// carries. Everything else in ThreadScopedSettings either turns a capability on
-// (toolsEnabled, codeToolsEnabled, mcpEnabledForChat, webFetchToolsEnabled,
-// deepResearchEnabled, the rag* group), silences the approval
-// prompt (permissionMode "off" sets confirm_tool_calls false and never pauses) or
-// injects text the sender chose (systemPrompt, systemVariables). Restoring those
-// together lets a sent backup arm a chat that runs tools unattended under the
-// importer's account on their first message.
-// An ALLOWLIST, so a setting added later is dropped until someone decides it is
-// safe to restore, rather than shipping restorable by default.
+// Only these settings may be restored from an untrusted backup.
 const RESTORABLE_SETTING_KEYS = new Set<string>([
   "temperature",
   "topP",
@@ -74,7 +64,9 @@ function restorableRole(role: string): MessageRecord["role"] {
 
 function restorableSettings(settings: Dict): Dict {
   return Object.fromEntries(
-    Object.entries(settings).filter(([key]) => RESTORABLE_SETTING_KEYS.has(key)),
+    Object.entries(settings).filter(([key]) =>
+      RESTORABLE_SETTING_KEYS.has(key),
+    ),
   );
 }
 
@@ -94,7 +86,8 @@ function withoutServerLinks(value: Dict): Dict {
 
 function detachMetadata(metadata: Dict): Dict {
   const detached = withoutServerLinks(metadata);
-  if (isDict(detached.custom)) detached.custom = withoutServerLinks(detached.custom);
+  if (isDict(detached.custom))
+    detached.custom = withoutServerLinks(detached.custom);
   return detached;
 }
 
@@ -142,7 +135,8 @@ export function studioBackupToConversations(
   for (const thread of threads) {
     threadIds.set(thread.id as string, crypto.randomUUID());
     const pairId = str(thread.pairId);
-    if (pairId && !pairIds.has(pairId)) pairIds.set(pairId, crypto.randomUUID());
+    if (pairId && !pairIds.has(pairId))
+      pairIds.set(pairId, crypto.randomUUID());
   }
 
   const messageIds = new Map<string, string>();
@@ -151,7 +145,8 @@ export function studioBackupToConversations(
     if (!isDict(message)) continue;
     const id = str(message.id);
     const threadId = str(message.threadId);
-    if (!id || !threadId || !threadIds.has(threadId) || messageIds.has(id)) continue;
+    if (!id || !threadId || !threadIds.has(threadId) || messageIds.has(id))
+      continue;
     if (!str(message.role)) continue;
     messageIds.set(id, crypto.randomUUID());
     const bucket = messagesByThread.get(threadId);
@@ -199,7 +194,9 @@ export function studioBackupToConversations(
       return record;
     });
 
-    const forkedFromThreadId = threadIds.get(str(thread.forkedFromThreadId) ?? "");
+    const forkedFromThreadId = threadIds.get(
+      str(thread.forkedFromThreadId) ?? "",
+    );
     const forkedFromMessageId = messageIds.get(
       str(thread.forkedFromMessageId) ?? "",
     );
@@ -212,7 +209,8 @@ export function studioBackupToConversations(
     const projectId = str(thread.projectId);
     const pairId = str(thread.pairId);
     const modelId = str(thread.modelId);
-    const createdAt = num(thread.createdAt) ?? messages.at(0)?.createdAt ?? Date.now();
+    const createdAt =
+      num(thread.createdAt) ?? messages.at(0)?.createdAt ?? Date.now();
     conversations.push({
       title: str(thread.title) ?? `${fallbackTitle} ${index + 1}`,
       threadId,
@@ -228,7 +226,8 @@ export function studioBackupToConversations(
           ? { modelGgufVariant: thread.modelGgufVariant as string }
           : {}),
         ...(pairId ? { pairId: pairIds.get(pairId) } : {}),
-        projectId: projectId && knownProjectIds.has(projectId) ? projectId : null,
+        projectId:
+          projectId && knownProjectIds.has(projectId) ? projectId : null,
         createdAt,
         updatedAt: num(thread.updatedAt) ?? createdAt,
         ...(forkedFromThreadId
@@ -242,9 +241,7 @@ export function studioBackupToConversations(
         ...(isDict(thread.settings) &&
         Object.keys(restorableSettings(thread.settings)).length > 0
           ? {
-              settings: restorableSettings(
-                thread.settings,
-              ),
+              settings: restorableSettings(thread.settings),
             }
           : {}),
       },
