@@ -495,8 +495,8 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
       if (chat !== state.chat) {
         // Another chat's: it shows there next time, without moving this chat's panel.
         const saved = state.chats[chat];
-        const activeTabId = background && saved.activeTabId ? saved.activeTabId : owned.id;
-        return { tabs, chats: { ...state.chats, [chat]: { open: true, fullView: saved.fullView, activeTabId } } };
+        const activeTabId = background && saved?.activeTabId ? saved.activeTabId : owned.id;
+        return { tabs, chats: { ...state.chats, [chat]: { open: true, fullView: saved?.fullView ?? false, activeTabId } } };
       }
       return {
         open: true,
@@ -567,7 +567,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
         return;
       }
       set((state) => ({
-        chats: { ...state.chats, [chat]: { open: true, fullView: state.chats[chat].fullView, activeTabId: tabId } },
+        chats: { ...state.chats, [chat]: { open: true, fullView: state.chats[chat]?.fullView ?? false, activeTabId: tabId } },
       }));
     },
     openTabIn: (chat, url, options) => {
@@ -756,7 +756,7 @@ export const useBrowserStore = create<BrowserState>((set, get) => {
     leaveDownload: (tabId, entry) =>
       { set((state) => ({
         tabs: patchTab(state.tabs, tabId, (tab) => {
-          const previous = tab.history.at(tab.index - 1);
+          const previous = tab.history[tab.index - 1];
           if (currentEntry(tab) !== entry || !previous || sentFrom.get(entry) !== previous) return tab;
           const history = tab.history.filter((candidate) => candidate !== entry);
           pageCache.delete(entry);

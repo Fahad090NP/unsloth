@@ -18,7 +18,9 @@ class NativeXHR extends EventTarget {
   get readyState() {
     return this.state;
   }
-  readonly status = 0;
+  get status() {
+    return 0;
+  }
   open(...args: unknown[]) {
     this.calls.push(["open", ...args]);
     this.state = 1;

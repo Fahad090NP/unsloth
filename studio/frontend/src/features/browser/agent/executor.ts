@@ -805,7 +805,7 @@ async function perform(action: BrowserAction, context: Run): Promise<Result> {
     const store = useBrowserStore.getState();
     const nativeMove = native && action.op !== "reload" && Boolean(tab.nativeHistory?.[action.op]);
     const step = action.op === "back" ? -1 : action.op === "forward" ? 1 : 0;
-    const entry = tab.history.at(tab.index + step);
+    const entry = tab.history[tab.index + step];
     const destination =
       action.op === "reload"
         ? before

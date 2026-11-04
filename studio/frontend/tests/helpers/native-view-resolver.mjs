@@ -14,6 +14,10 @@ const STUBS = {
   ),
   "@/lib/open-link": stub("export const openExternalLink = () => {};"),
   // globalThis.nativeViewZoom is the applied interface zoom; nativeViewZoomChanged announces a change.
+  "@/features/settings": stub(
+    "export const getAppliedInterfaceZoom = () => globalThis.nativeViewZoom ?? 1;" +
+      " export const subscribeAppliedInterfaceZoom = (listener) => { globalThis.nativeViewZoomChanged = listener; return () => {}; };",
+  ),
   "@/features/settings/lib/interface-scale-runtime": stub(
     "export const getAppliedInterfaceZoom = () => globalThis.nativeViewZoom ?? 1;" +
       " export const subscribeAppliedInterfaceZoom = (listener) => { globalThis.nativeViewZoomChanged = listener; return () => {}; };",

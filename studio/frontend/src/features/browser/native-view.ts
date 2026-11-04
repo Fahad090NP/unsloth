@@ -607,7 +607,7 @@ function markHole(): boolean {
   for (let node: HTMLElement | null = element; node; node = node.parentElement) chain.push(node);
   // Theme: html classes, palette and inline color vars, minus our own.
   const root = document.documentElement;
-  const theme = root.style.cssText.replace(/--native-hole-[^;]*;?/g, "");
+  const theme = (root.style.cssText ?? "").replace(/--native-hole-[^;]*;?/g, "");
   const signature = `${root.dataset.palette ?? ""}|${theme}|${chain.map((node) => node.className).join("|")}`;
   if (signature === holeSignature && holed.every((node) => node.isConnected)) return false;
   unmarkHole();
