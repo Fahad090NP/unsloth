@@ -16,50 +16,93 @@ const storage = readSrc("features/chat/utils/chat-history-storage.ts");
 const button = readSrc("features/chat/components/temporary-chat-save.tsx");
 const page = readSrc("features/chat/chat-page.tsx");
 
-interface Item { parentId: string | null; message: { id: string } }
+interface Item {
+  parentId: string | null;
+  message: { id: string };
+}
 // parentsFirst delegates to dependency-free orderParentsFirst so the isolated scope can use it directly.
 const parentsFirst = runInNewContext(
   `${stripTypeScriptTypes(provider.slice(provider.indexOf("function parentsFirst("), provider.indexOf("/** Save a temporary chat to history")))}\nparentsFirst;`,
   { orderParentsFirst },
 ) as (items: Item[]) => Item[];
 
-const item = (id: string, parentId: string | null = null): Item => ({ parentId, message: { id } });
+const item = (id: string, parentId: string | null = null): Item => ({
+  parentId,
+  message: { id },
+});
 const ids = (items: Item[]) => items.map((i) => i.message.id);
 
 function persistBody(): string {
-  const start = provider.indexOf("export async function persistTemporaryThread(");
+  const start = provider.indexOf(
+    "export async function persistTemporaryThread(",
+  );
   assert.ok(start > 0, "persistTemporaryThread not found");
-  return provider.slice(start, provider.indexOf("function createStudioDbAdapter(", start));
+  return provider.slice(
+    start,
+    provider.indexOf("function createStudioDbAdapter(", start),
+  );
 }
 
 test("every message is saved after its parent, on every branch", () => {
   // the input covers a regenerated reply and a child listed before its parent.
   const ordered = ids(
-    parentsFirst([item("a2", "u2"), item("u1"), item("a1", "u1"), item("u2", "a1"), item("b1", "u1")]),
+    parentsFirst([
+      item("a2", "u2"),
+      item("u1"),
+      item("a1", "u1"),
+      item("u2", "a1"),
+      item("b1", "u1"),
+    ]),
   );
   assert.deepEqual([...ordered].sort(), ["a1", "a2", "b1", "u1", "u2"]);
-  for (const [child, parent] of [["a1", "u1"], ["b1", "u1"], ["u2", "a1"], ["a2", "u2"]]) {
-    assert.ok(ordered.indexOf(parent) < ordered.indexOf(child), `${parent} before ${child}`);
+  for (const [child, parent] of [
+    ["a1", "u1"],
+    ["b1", "u1"],
+    ["u2", "a1"],
+    ["a2", "u2"],
+  ]) {
+    assert.ok(
+      ordered.indexOf(parent) < ordered.indexOf(child),
+      `${parent} before ${child}`,
+    );
   }
 });
 
 test("a parent missing from the export does not drop the message", () => {
-  assert.deepEqual(ids(parentsFirst([item("x", "gone"), item("y")])), ["x", "y"]);
+  assert.deepEqual(ids(parentsFirst([item("x", "gone"), item("y")])), [
+    "x",
+    "y",
+  ]);
 });
 
 test("the thread stops being temporary before writing, and goes back if the save fails", () => {
   const body = persistBody();
-  assert.match(storage, /export function unmarkThreadIncognito\(threadId: string\): void \{\s*incognitoThreadIds\.delete\(threadId\);/);
-  assert.ok(body.indexOf("unmarkThreadIncognito(threadId)") < body.indexOf("await ensureThreadRecord("));
-  assert.match(body, /\} catch \(error\) \{\s*markThreadIncognito\(threadId\);\s*throw error;/);
+  assert.match(
+    storage,
+    /export function unmarkThreadIncognito\(threadId: string\): void \{\s*incognitoThreadIds\.delete\(threadId\);/,
+  );
+  assert.ok(
+    body.indexOf("unmarkThreadIncognito(threadId)") <
+      body.indexOf("await ensureThreadRecord("),
+  );
+  assert.match(
+    body,
+    /\} catch \(error\) \{\s*markThreadIncognito\(threadId\);\s*throw error;/,
+  );
   assert.match(body, /incognito: false,/);
 });
 
 test("messages are written in one batch, so a failure cannot leave a truncated chat", () => {
   const body = persistBody();
-  assert.match(body, /await syncStoredChatMessages\(threadId, records, \{ pruneMissing: false \}\);/);
+  assert.match(
+    body,
+    /await syncStoredChatMessages\(threadId, records, \{ pruneMissing: false \}\);/,
+  );
   assert.doesNotMatch(body, /saveStoredChatMessage\(/);
-  assert.ok(body.indexOf("await ensureThreadRecord(") < body.indexOf("await syncStoredChatMessages("));
+  assert.ok(
+    body.indexOf("await ensureThreadRecord(") <
+      body.indexOf("await syncStoredChatMessages("),
+  );
 });
 
 test("the saved chat keeps the model it started on, not the one loaded at save time", () => {
@@ -67,16 +110,33 @@ test("the saved chat keeps the model it started on, not the one loaded at save t
     provider.indexOf("export async function ensureThreadRecord({"),
     provider.indexOf("/** Parents before children"),
   );
-  assert.equal(ensure.match(/markThreadIncognito\(threadId\);\s*temporaryThreadCreation\.set\(threadId, creation\);/g)?.length, 2);
+  assert.equal(
+    ensure.match(
+      /markThreadIncognito\(threadId\);\s*temporaryThreadCreation\.set\(threadId, creation\);/g,
+    )?.length,
+    2,
+  );
   const body = persistBody();
-  assert.match(body, /const creation = temporaryThreadCreation\.get\(threadId\);/);
-  assert.match(body, /modelId: creation\.modelId,\s*modelGgufVariant: creation\.modelGgufVariant,/);
+  assert.match(
+    body,
+    /const creation = temporaryThreadCreation\.get\(threadId\);/,
+  );
+  assert.match(
+    body,
+    /modelId: creation\.modelId,\s*modelGgufVariant: creation\.modelGgufVariant,/,
+  );
   assert.match(body, /createdAt:\s*creation\?\.createdAt \?\?/);
 });
 
 test("saving waits for queued prompts, whose temporary tag would still discard them", () => {
-  assert.match(button, /Object\.values\(s\.byThreadId\)\.some\(\(entry\) => entry\.temporary\)/);
-  assert.match(button, /const canSave =\s*target\.hasMessages && !target\.running && !target\.queued && !saving;/);
+  assert.match(
+    button,
+    /Object\.values\(s\.byThreadId\)\.some\(\(entry\) => entry\.temporary\)/,
+  );
+  assert.match(
+    button,
+    /const canSave =\s*target\.hasMessages && !target\.running && !target\.queued && !saving;/,
+  );
 });
 
 test("the save covers the whole branch tree, not only the visible path", () => {
@@ -85,14 +145,26 @@ test("the save covers the whole branch tree, not only the visible path", () => {
 });
 
 test("the save menu shows only in a temporary single chat with messages, and saves a finished reply", () => {
-  assert.match(page, /view\.mode === "single" && incognito \? \(\s*<SaveTemporaryChatMenu/);
+  assert.match(
+    page,
+    /view\.mode === "single" && incognito \? \(\s*<SaveTemporaryChatMenu/,
+  );
   assert.match(button, /\{target\.hasMessages \? \(\s*<DropdownMenu>/);
   assert.match(button, /\{canSave \? \(\s*<DropdownMenuItem/);
 });
 
 test("Don't show again is remembered only once a save succeeds", () => {
-  const save = button.slice(button.indexOf("const save = async () => {"), button.indexOf("return (\n"));
-  assert.ok(save.indexOf("await target.save()") < save.indexOf("if (dontShowAgain) rememberSkipConfirm()"));
+  const save = button.slice(
+    button.indexOf("const save = async () => {"),
+    button.indexOf("return (\n"),
+  );
+  assert.ok(
+    save.indexOf("await target.save()") <
+      save.indexOf("if (dontShowAgain) rememberSkipConfirm()"),
+  );
   assert.doesNotMatch(save.slice(save.indexOf("catch")), /rememberSkipConfirm/);
-  assert.match(button, /if \(skipConfirm\(\)\) void save\(\);\s*else setOpen\(true\);/);
+  assert.match(
+    button,
+    /if \(skipConfirm\(\)\) \{\s*save\(\)\.catch\([\s\S]*?\}\);\s*\} else \{\s*setOpen\(true\);\s*\}/,
+  );
 });

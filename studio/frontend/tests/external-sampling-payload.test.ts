@@ -11,12 +11,10 @@ import { readSrc, registerBundlerResolver } from "./helpers/kit.ts";
 
 registerBundlerResolver();
 
-const { getProviderCapabilities } = await import(
-  "../src/features/chat/provider-capabilities.ts"
-);
-const { minPSamplingPayload } = await import(
-  "../src/features/chat/lib/min-p-policy.ts"
-);
+const { getProviderCapabilities } =
+  await import("../src/features/chat/provider-capabilities.ts");
+const { minPSamplingPayload } =
+  await import("../src/features/chat/lib/min-p-policy.ts");
 import type { MinPMode } from "../src/features/chat/types/runtime.ts";
 
 const PARAMS = {
@@ -78,12 +76,15 @@ const buildSamplingFields = (
   externalProvider: { providerType: string },
   payload: typeof minPSamplingPayload,
 ): Record<string, number> =>
-  runInNewContext(`Object.assign({}, ${gatedSpreads.join(", ")});`, {
-    externalCapabilities: capabilities,
-    params,
-    externalProvider,
-    minPSamplingPayload: payload,
-  }) as Record<string, number>;
+  // The vm hands back foreign prototypes, so clone before deepStrictEqual.
+  structuredClone(
+    runInNewContext(`Object.assign({}, ${gatedSpreads.join(", ")});`, {
+      externalCapabilities: capabilities,
+      params,
+      externalProvider,
+      minPSamplingPayload: payload,
+    }),
+  ) as Record<string, number>;
 
 function bodyFor(
   providerType: string,
@@ -146,13 +147,28 @@ test("custom stays on the OpenAI-compatible baseline", () => {
 });
 
 test("custom Responses sends gateway sampling but omits it for managed fixed models", () => {
-  const gateway = bodyFor("custom", PARAMS, "responses", "gpt-5.5", "https://gateway.example/v1");
+  const gateway = bodyFor(
+    "custom",
+    PARAMS,
+    "responses",
+    "gpt-5.5",
+    "https://gateway.example/v1",
+  );
   assert.equal(gateway.temperature, PARAMS.temperature);
   assert.equal(gateway.top_p, PARAMS.topP);
-  const managed = bodyFor("custom", PARAMS, "responses", "gpt-5.5", "https://api.openai.com/v1");
+  const managed = bodyFor(
+    "custom",
+    PARAMS,
+    "responses",
+    "gpt-5.5",
+    "https://api.openai.com/v1",
+  );
   assert.ok(!("temperature" in managed));
   assert.ok(!("top_p" in managed));
-  assert.match(source, /getProviderCapabilities\(\s*externalProvider\?\.providerType,\s*externalProvider\?\.apiType,\s*externalSelection\?\.modelId,\s*externalProvider\?\.baseUrl/);
+  assert.match(
+    source,
+    /getProviderCapabilities\(\s*externalProvider\?\.providerType,\s*externalProvider\?\.apiType,\s*externalSelection\?\.modelId,\s*externalProvider\?\.baseUrl/,
+  );
 });
 
 test("ollama is sent none of the three its /v1 layer drops", () => {
@@ -210,9 +226,10 @@ test("the external body opts into the stream usage chunk", () => {
       property.name.getText() === "stream_options",
   );
   assert.ok(optIn && ts.isPropertyAssignment(optIn), "stream_options missing");
-  assert.deepEqual(runInNewContext(`(${optIn.initializer.getText()});`, {}), {
-    include_usage: true,
-  });
+  assert.deepEqual(
+    structuredClone(runInNewContext(`(${optIn.initializer.getText()});`, {})),
+    { include_usage: true },
+  );
 });
 
 const {
@@ -230,19 +247,21 @@ const buildCacheFields = (
   supportsProviderPromptCacheTtl: unknown,
   isPromptCacheTtl: unknown,
 ): Record<string, unknown> =>
-  runInNewContext(
-    `Object.assign({}, ${externalBodyLiteral()
-      .properties.filter(ts.isSpreadAssignment)
-      .map((property) => property.expression.getText())
-      .filter((text) => /PromptCach|^\(resolvedThreadId/.test(text))
-      .join(", ")});`,
-    {
-      externalProvider,
-      resolvedThreadId,
-      supportsProviderPromptCaching,
-      supportsProviderPromptCacheTtl,
-      isPromptCacheTtl,
-    },
+  structuredClone(
+    runInNewContext(
+      `Object.assign({}, ${externalBodyLiteral()
+        .properties.filter(ts.isSpreadAssignment)
+        .map((property) => property.expression.getText())
+        .filter((text) => /PromptCach|^\(resolvedThreadId/.test(text))
+        .join(", ")});`,
+      {
+        externalProvider,
+        resolvedThreadId,
+        supportsProviderPromptCaching,
+        supportsProviderPromptCacheTtl,
+        isPromptCacheTtl,
+      },
+    ),
   ) as Record<string, unknown>;
 
 function cacheFieldsFor(provider: Record<string, unknown>, threadId?: string) {
@@ -265,13 +284,20 @@ test("OpenRouter sends the caching toggle, its TTL and the thread on every exter
     { enable_prompt_caching: true, prompt_cache_ttl: "1h" },
   );
   assert.deepEqual(
-    cacheFieldsFor({ providerType: "openrouter", enablePromptCaching: false, promptCacheTtl: "1h" }),
+    cacheFieldsFor({
+      providerType: "openrouter",
+      enablePromptCaching: false,
+      promptCacheTtl: "1h",
+    }),
     { enable_prompt_caching: false },
   );
 });
 
 test("the cache controls show for OpenRouter only on Claude models", () => {
-  for (const applies of [promptCachingAppliesToModel, promptCacheTtlAppliesToModel]) {
+  for (const applies of [
+    promptCachingAppliesToModel,
+    promptCacheTtlAppliesToModel,
+  ]) {
     assert.equal(applies("anthropic", "claude-opus-5"), true);
     assert.equal(applies("openrouter", "anthropic/claude-sonnet-4.6"), true);
     assert.equal(applies("openrouter", "~anthropic/claude-opus-latest"), true);
@@ -282,14 +308,22 @@ test("the cache controls show for OpenRouter only on Claude models", () => {
   assert.equal(promptCachingAppliesToModel("openai", "gpt-5.5"), true);
   assert.equal(promptCacheTtlAppliesToModel("openai", "gpt-5.5"), false);
   const sheet = readSrc("features/chat/chat-settings-sheet.tsx");
-  for (const name of ["promptCachingAppliesToModel", "promptCacheTtlAppliesToModel"]) {
+  for (const name of [
+    "promptCachingAppliesToModel",
+    "promptCacheTtlAppliesToModel",
+  ]) {
     assert.match(
       sheet,
-      new RegExp(`${name}\\(\\s*activeExternalProvider\\.providerType,\\s*externalSelection\\?\\.modelId,?\\s*\\)`),
+      new RegExp(
+        `${name}\\(\\s*activeExternalProvider\\.providerType,\\s*externalSelection\\?\\.modelId,?\\s*\\)`,
+      ),
     );
   }
 });
 
 test("the live stream reads cache writes through the shared usage rule", () => {
-  assert.match(source, /const cacheWriteTokens = usageCacheWriteTokens\(meta\?\.usage\);/);
+  assert.match(
+    source,
+    /const cacheWriteTokens = usageCacheWriteTokens\(meta\?\.usage\);/,
+  );
 });

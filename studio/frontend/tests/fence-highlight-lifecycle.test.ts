@@ -3,18 +3,34 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
 
 import { createFenceHighlightQueue } from "../src/components/assistant-ui/fence-highlight-queue.ts";
+import { runSource } from "./helpers/eval-source.ts";
 import { readSrc } from "./helpers/kit.ts";
 
 const source = readSrc("components/assistant-ui/code-fence-defer.tsx");
-const declarations = source.slice(source.indexOf("let highlightWatching ="), source.indexOf("const highlightQuietIn ="));
-const lifecycle = source.slice(source.indexOf("const watchHighlighting ="), source.indexOf("const visibleHighlightLine ="));
-const compiled = ts.transpileModule(declarations + lifecycle.replace("export function queueFenceWork", "function queueFenceWork"), {
-  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.Preserve },
-}).outputText;
+const declarations = source.slice(
+  source.indexOf("let highlightWatching ="),
+  source.indexOf("const highlightQuietIn ="),
+);
+const lifecycle = source.slice(
+  source.indexOf("const watchHighlighting ="),
+  source.indexOf("const visibleHighlightLine ="),
+);
+const compiled = ts.transpileModule(
+  declarations +
+    lifecycle.replace(
+      "export function queueFenceWork",
+      "function queueFenceWork",
+    ),
+  {
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.Preserve,
+    },
+  },
+).outputText;
 
 function harness() {
   const scheduled = new Set<() => void>();
@@ -29,10 +45,14 @@ function harness() {
   const queue = createFenceHighlightQueue({
     schedule: (callback) => {
       scheduled.add(callback);
-      return () => { scheduled.delete(callback); };
+      return () => {
+        scheduled.delete(callback);
+      };
     },
     blocked: () => blocked,
-    commit: (callback) => { callback(); },
+    commit: (callback) => {
+      callback();
+    },
   });
   class Observer {
     connected = false;
@@ -44,7 +64,11 @@ function harness() {
     }
     observe(target: unknown, options: unknown) {
       assert.equal(target, element);
-      assert.deepEqual(options, { attributes: true, attributeFilter: ["data-find-bar-open"] });
+      // The vm hands back foreign prototypes, so clone before deepStrictEqual.
+      assert.deepEqual(structuredClone(options), {
+        attributes: true,
+        attributeFilter: ["data-find-bar-open"],
+      });
       this.connected = true;
     }
     disconnect() {
@@ -71,19 +95,25 @@ function harness() {
     findBarOpen: () => find,
     highlightQueue: queue,
     printing: false,
-    queueMicrotask: (callback: () => void) => { microtasks.push(callback); },
+    queueMicrotask: (callback: () => void) => {
+      microtasks.push(callback);
+    },
   };
-  const api = runInNewContext(compiled + `
+  const api = runSource<{
+    queue: (work: () => void) => () => void;
+    resizedAt: () => number;
+    setPrinting: (value: boolean) => void;
+  }>(
+    compiled +
+      `
     return {
       queue: queueFenceWork,
       resizedAt: () => highlightResizedAt,
       setPrinting: value => { printing = value; },
     };
-  `, context) as {
-    queue: (work: () => void) => () => void;
-    resizedAt: () => number;
-    setPrinting: (value: boolean) => void;
-  };
+  `,
+    context,
+  );
   const flushMicrotasks = () => {
     let count = 0;
     while (microtasks.length > 0) {
@@ -99,7 +129,9 @@ function harness() {
     resizeListeners,
     pending: queue.pending,
     removals: () => removals,
-    block: (value: boolean) => { blocked = value; },
+    block: (value: boolean) => {
+      blocked = value;
+    },
     resize: (at: number) => {
       clock = at;
       for (const callback of resizeListeners) callback();
@@ -107,7 +139,8 @@ function harness() {
     setFind: (value: boolean) => {
       find = value;
       microtasks.push(() => {
-        for (const observer of observers) if (observer.connected) observer.callback();
+        for (const observer of observers)
+          if (observer.connected) observer.callback();
       });
     },
     flushMicrotasks,
@@ -127,7 +160,9 @@ test("replacement work survives the last-entry teardown and remains findable", (
   cancel();
   assert.equal(h.microtasks.length, 1);
   let finished = false;
-  h.queue(() => { finished = true; });
+  h.queue(() => {
+    finished = true;
+  });
   h.resize(123);
   assert.equal(h.resizedAt(), 123);
   assert.equal(h.observers.length, 1);
@@ -147,7 +182,9 @@ test("a commit registering its successor keeps the existing observers alive", ()
   const finished: string[] = [];
   h.queue(() => {
     finished.push("first");
-    h.queue(() => { finished.push("second"); });
+    h.queue(() => {
+      finished.push("second");
+    });
     h.block(true);
   });
   h.run();
@@ -178,7 +215,9 @@ test("repeated cancellation coalesces teardown and a later subscription starts c
   assert.equal(h.removals(), 1);
   assert.equal(h.observers[0].disconnects, 1);
   let finished = false;
-  h.queue(() => { finished = true; });
+  h.queue(() => {
+    finished = true;
+  });
   assert.equal(h.observers.length, 2);
   h.run();
   h.flushMicrotasks();
@@ -194,7 +233,9 @@ test("closing find keeps blocked work pending and opening it flushes nested work
   h.block(true);
   h.queue(() => {
     finished.push("first");
-    h.queue(() => { finished.push("nested"); });
+    h.queue(() => {
+      finished.push("nested");
+    });
   });
   h.setFind(false);
   h.flushMicrotasks();
@@ -217,7 +258,9 @@ test("print and an already open find bypass subscriptions and run work synchrono
     if (force === "print") h.setPrinting(true);
     else h.setFind(true);
     let finished = false;
-    const cancel = h.queue(() => { finished = true; });
+    const cancel = h.queue(() => {
+      finished = true;
+    });
     assert.equal(finished, true);
     cancel();
     h.flushMicrotasks();

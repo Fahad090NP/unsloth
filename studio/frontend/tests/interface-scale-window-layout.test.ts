@@ -16,7 +16,9 @@ import {
 import { readSrc } from "./helpers/kit.ts";
 
 const provider = readSrc("app/provider.tsx");
-const ratioFunction = (/function logicalPerCssPx\([\s\S]*?\n\}/.exec(provider))?.[0];
+const ratioFunction = /function logicalPerCssPx\([\s\S]*?\n\}/.exec(
+  provider,
+)?.[0];
 assert.ok(ratioFunction);
 const windowStub = { devicePixelRatio: 2 };
 const providerScope = {
@@ -78,9 +80,10 @@ test("applied zoom refreshes live constraints with unchanged DPR and stops on un
     subscribeAppliedInterfaceZoom,
     appliedWindowModeRef: mode,
     windowLayoutGenerationRef: { current: 1 },
-    reapplyWindowSizeConstraints: async (isCurrent: () => boolean) => {
-      await Promise.resolve();
+    // Pushes on the call: the assertion below runs before microtasks.
+    reapplyWindowSizeConstraints: (isCurrent: () => boolean) => {
       if (isCurrent()) minimums.push(bounds());
+      return Promise.resolve();
     },
   };
   runInNewContext(stripTypeScriptTypes(effect), scope);

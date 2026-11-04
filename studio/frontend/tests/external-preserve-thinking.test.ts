@@ -4,21 +4,38 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
+import { runSource } from "./helpers/eval-source.ts";
 import { registerBundlerResolver } from "./helpers/kit.ts";
 
 registerBundlerResolver();
-const { providerModelReplaysReasoning, providerSupportsPreserveThinking } = await import("../src/features/chat/provider-capabilities.ts");
-const source = readFileSync(new URL("../src/features/chat/api/chat-adapter.ts", import.meta.url), "utf8");
-const tree = ts.createSourceFile("adapter.ts", source, ts.ScriptTarget.Latest, true);
+const { providerModelReplaysReasoning, providerSupportsPreserveThinking } =
+  await import("../src/features/chat/provider-capabilities.ts");
+const source = readFileSync(
+  new URL("../src/features/chat/api/chat-adapter.ts", import.meta.url),
+  "utf8",
+);
+const tree = ts.createSourceFile(
+  "adapter.ts",
+  source,
+  ts.ScriptTarget.Latest,
+  true,
+);
 let replayExpression = "";
 let payloadExpression = "";
 function visit(node: ts.Node): void {
-  if (ts.isVariableDeclaration(node) && node.name.getText(tree) === "replayReasoning") {
-    replayExpression = (node.initializer ?? assert.fail("expected a non-null value")).getText(tree);
+  if (
+    ts.isVariableDeclaration(node) &&
+    node.name.getText(tree) === "replayReasoning"
+  ) {
+    replayExpression = (
+      node.initializer ?? assert.fail("expected a non-null value")
+    ).getText(tree);
   }
-  if (ts.isSpreadAssignment(node) && node.getText(tree).includes("providerSupportsPreserveThinking")) {
+  if (
+    ts.isSpreadAssignment(node) &&
+    node.getText(tree).includes("providerSupportsPreserveThinking")
+  ) {
     payloadExpression = node.expression.getText(tree);
   }
   ts.forEachChild(node, visit);
@@ -34,30 +51,49 @@ const evaluateWithModel = (
   replays: typeof providerModelReplaysReasoning,
   selection: { modelId: string },
 ) =>
-  runInNewContext(
-    `return { replay: ${replayExpression}, fields: ${payloadExpression} };`,
-    {
-      providerSupportsPreserveThinking: supports,
-      externalProvider: provider,
-      runtime,
-      isExternalRequest: external,
-      providerModelReplaysReasoning: replays,
-      externalSelection: selection,
-    },
-  ) as { replay: boolean; fields: { preserve_thinking?: boolean } };
+  // The vm hands back foreign prototypes, so clone before deepStrictEqual.
+  structuredClone(
+    runSource<{ replay: boolean; fields: { preserve_thinking?: boolean } }>(
+      `return { replay: ${replayExpression}, fields: ${payloadExpression} };`,
+      {
+        providerSupportsPreserveThinking: supports,
+        externalProvider: provider,
+        runtime,
+        isExternalRequest: external,
+        providerModelReplaysReasoning: replays,
+        externalSelection: selection,
+      },
+    ),
+  );
 const evaluate = (
   supports: typeof providerSupportsPreserveThinking,
-  provider: {providerType: string},
-  runtime: {preserveThinking: boolean},
+  provider: { providerType: string },
+  runtime: { preserveThinking: boolean },
   external: boolean,
   modelId = "m",
-) => evaluateWithModel(supports, provider, runtime, external, providerModelReplaysReasoning, {modelId});
+) =>
+  evaluateWithModel(
+    supports,
+    provider,
+    runtime,
+    external,
+    providerModelReplaysReasoning,
+    { modelId },
+  );
 
 test("llama.cpp and vLLM send the selected value and replay reasoning only when enabled", () => {
   for (const providerType of ["llama_cpp", "vllm"]) {
     for (const enabled of [true, false]) {
-      const result = evaluate(providerSupportsPreserveThinking, {providerType}, {preserveThinking: enabled}, true);
-      assert.deepEqual(result, {replay: enabled, fields: {preserve_thinking: enabled}});
+      const result = evaluate(
+        providerSupportsPreserveThinking,
+        { providerType },
+        { preserveThinking: enabled },
+        true,
+      );
+      assert.deepEqual(result, {
+        replay: enabled,
+        fields: { preserve_thinking: enabled },
+      });
     }
   }
   assert.match(source, /pruneOutboundHistory\(messages, replayReasoning\)/);
@@ -66,20 +102,47 @@ test("llama.cpp and vLLM send the selected value and replay reasoning only when 
 
 test("switching providers never leaks a retained enabled preference", () => {
   for (const providerType of ["custom", "openai", "ollama", "anthropic"]) {
-    assert.deepEqual(evaluate(providerSupportsPreserveThinking, {providerType}, {preserveThinking: true}, true),
-      {replay: false, fields: {}});
+    assert.deepEqual(
+      evaluate(
+        providerSupportsPreserveThinking,
+        { providerType },
+        { preserveThinking: true },
+        true,
+      ),
+      { replay: false, fields: {} },
+    );
   }
-  assert.equal(evaluate(providerSupportsPreserveThinking, {providerType: ""}, {preserveThinking: false}, false).replay, true);
+  assert.equal(
+    evaluate(
+      providerSupportsPreserveThinking,
+      { providerType: "" },
+      { preserveThinking: false },
+      false,
+    ).replay,
+    true,
+  );
 });
 
 test("kimi-k3 replays reasoning whatever the preserve toggle says; k2.6 does not", () => {
   for (const enabled of [true, false]) {
     assert.deepEqual(
-      evaluate(providerSupportsPreserveThinking, {providerType: "kimi"}, {preserveThinking: enabled}, true, "kimi-k3"),
-      {replay: true, fields: {}},
+      evaluate(
+        providerSupportsPreserveThinking,
+        { providerType: "kimi" },
+        { preserveThinking: enabled },
+        true,
+        "kimi-k3",
+      ),
+      { replay: true, fields: {} },
     );
     assert.equal(
-      evaluate(providerSupportsPreserveThinking, {providerType: "kimi"}, {preserveThinking: enabled}, true, "kimi-k2.6").replay,
+      evaluate(
+        providerSupportsPreserveThinking,
+        { providerType: "kimi" },
+        { preserveThinking: enabled },
+        true,
+        "kimi-k2.6",
+      ).replay,
       false,
     );
   }
@@ -88,8 +151,14 @@ test("kimi-k3 replays reasoning whatever the preserve toggle says; k2.6 does not
 test("minimax replays reasoning whatever the preserve toggle says", () => {
   for (const enabled of [true, false]) {
     assert.deepEqual(
-      evaluate(providerSupportsPreserveThinking, {providerType: "minimax"}, {preserveThinking: enabled}, true, "MiniMax-M3.1-Flash"),
-      {replay: true, fields: {}},
+      evaluate(
+        providerSupportsPreserveThinking,
+        { providerType: "minimax" },
+        { preserveThinking: enabled },
+        true,
+        "MiniMax-M3.1-Flash",
+      ),
+      { replay: true, fields: {} },
     );
   }
 });

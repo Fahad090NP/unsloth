@@ -7,7 +7,6 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { runInNewContext } from "node:vm";
 
 import ts from "@typescript/typescript6";
 
@@ -29,6 +28,7 @@ import {
   audioCppDisplayName,
   isAudioCppFolderId,
 } from "../src/features/audio/audio-cpp-catalog.ts";
+import { runSource } from "./helpers/eval-source.ts";
 
 const H3_GGUF = "unsloth/MiniMax-H3-GGUF";
 const H3_BF16 = "MiniMaxAI/MiniMax-H3";
@@ -38,9 +38,13 @@ const WAN_BF16 = "Wan-AI/Wan2.2-TI2V-5B-Diffusers";
 // ── search: a downloaded curated row stays findable ───────────────────────────
 
 test("a bundled folder is searched on the folder name its row shows", () => {
-  const folders = AUDIO_CPP_MODELS.filter((model) => isAudioCppFolderId(model.id));
+  const folders = AUDIO_CPP_MODELS.filter((model) =>
+    isAudioCppFolderId(model.id),
+  );
   const hits = (query: string) =>
-    folders.filter((model) => pickerSearchMatches(model.id, [model.id], null, query));
+    folders.filter((model) =>
+      pickerSearchMatches(model.id, [model.id], null, query),
+    );
   const audioNamed = folders.filter((model) =>
     audioCppDisplayName(model.id).toLowerCase().includes("audio"),
   );
@@ -58,7 +62,10 @@ test("a bundled folder is searched on the folder name its row shows", () => {
 
 test("any other row is searched on its aliases and label", () => {
   const id = "unsloth/Qwen3-8B-GGUF";
-  assert.equal(pickerSearchMatches(id, [id], "Qwen3 8B", "unsloth/qwen3"), true);
+  assert.equal(
+    pickerSearchMatches(id, [id], "Qwen3 8B", "unsloth/qwen3"),
+    true,
+  );
   assert.equal(pickerSearchMatches(id, [id], "Qwen3 8B", "qwen3 8b"), true);
   assert.equal(pickerSearchMatches(id, [id], null, "gguf"), true);
   assert.equal(pickerSearchMatches(id, [id], "Qwen3 8B", "llama"), false);
@@ -130,7 +137,10 @@ test("curated capabilities claim nothing they were not given, beyond the scope",
     imageGen: false,
     videoGen: true,
   });
-  assert.equal(curatedCapabilitiesFor("someone/not-curated", VIDEO_CATALOG), undefined);
+  assert.equal(
+    curatedCapabilitiesFor("someone/not-curated", VIDEO_CATALOG),
+    undefined,
+  );
 });
 
 test("an image group reports image generation, not video", () => {
@@ -240,7 +250,10 @@ test("a family name is not read out of a longer word", () => {
     assert.equal(caps.videoGen, false, `${id} read as a video generator`);
   }
   assert.equal(detectCapabilities({ id: "org/flux1-dev-fp8" }).imageGen, true);
-  assert.equal(detectCapabilities({ id: "stabilityai/sd3.5-large" }).imageGen, true);
+  assert.equal(
+    detectCapabilities({ id: "stabilityai/sd3.5-large" }).imageGen,
+    true,
+  );
   assert.equal(detectCapabilities({ id: "THUDM/CogVideoX-5b" }).videoGen, true);
   assert.equal(detectCapabilities({ id: "stabilityai/svd-xt" }).videoGen, true);
 });
@@ -252,7 +265,8 @@ test("every pipeline tag the Video picker lists reads as video generation", () =
   for (const quoted of tags) {
     const tag = quoted.slice(1, -1);
     assert.equal(
-      detectCapabilities({ id: "someone/unfamiliar-name", pipelineTag: tag }).videoGen,
+      detectCapabilities({ id: "someone/unfamiliar-name", pipelineTag: tag })
+        .videoGen,
       true,
       `${tag} is listed by the Video picker but does not read as video generation`,
     );
@@ -266,7 +280,8 @@ test("every pipeline tag the Images picker lists reads as image generation", () 
   for (const quoted of tags) {
     const tag = quoted.slice(1, -1);
     assert.equal(
-      detectCapabilities({ id: "someone/unfamiliar-name", pipelineTag: tag }).imageGen,
+      detectCapabilities({ id: "someone/unfamiliar-name", pipelineTag: tag })
+        .imageGen,
       true,
       `${tag} is listed by the Images picker but does not read as image generation`,
     );
@@ -280,7 +295,10 @@ for (const declaration of ["recommendedMeta", "recommendedVramMap"]) {
     const curatedAt = text.indexOf("catalogFit(");
     const estimatorAt = text.indexOf("estimateLoadingVram");
     assert.ok(curatedAt >= 0, `${declaration} ignores the curated fit`);
-    assert.ok(estimatorAt >= 0, `${declaration} no longer estimates VRAM at all`);
+    assert.ok(
+      estimatorAt >= 0,
+      `${declaration} no longer estimates VRAM at all`,
+    );
     assert.ok(curatedAt < estimatorAt, "the QLoRA estimator runs first");
     // A task load uses one device and torch's inventory, so the budget must go through loadScopedGpu.
     assert.match(
@@ -338,7 +356,6 @@ test("seed rows carry the curated param count", () => {
   );
 });
 
-
 interface RowElement {
   props: {
     className?: unknown;
@@ -352,17 +369,26 @@ type RowFactory = (id: string, label: string) => RowElement;
 test("Hub settings configure the cached alias and share the row selection", () => {
   const compiled = ts.transpileModule(
     `const render = ${declarationText("renderHubModelRow")};`,
-    { compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022 } },
+    {
+      compilerOptions: {
+        jsx: ts.JsxEmit.React,
+        target: ts.ScriptTarget.ES2022,
+      },
+    },
   ).outputText;
   const calls: unknown[][] = [];
   const React = {
-    createElement: (type: unknown, props: Record<string, unknown>, ...children: unknown[]) =>
-      ({ type, props, children }),
+    createElement: (
+      type: unknown,
+      props: Record<string, unknown>,
+      ...children: unknown[]
+    ) => ({ type, props, children }),
   };
-  const render = runInNewContext(`${compiled}; return render;`, {
+  // The vm hands back foreign prototypes, so clone what the render passes on.
+  const render = runSource<RowFactory>(`${compiled}; return render;`, {
     React,
     isKnownGgufRepo: () => false,
-    onConfigure: (...args: unknown[]) => calls.push(args),
+    onConfigure: (...args: unknown[]) => calls.push(structuredClone(args)),
     downloadedRowShellClassName: (selected: boolean) =>
       selected ? "selected" : "idle",
     isValueRow: () => true,
@@ -371,16 +397,29 @@ test("Hub settings configure the cached alias and share the row selection", () =
     cachedIdFor: (id: string) =>
       id === "mirror/model" ? "vendor/model" : null,
     pipelineTagById: new Map([["mirror/model", "text-generation"]]),
-  }) as RowFactory;
+  });
   const row = render("mirror/model", "model row");
   assert.equal(row.props.className, "selected");
   row.children[1].children[0].props.onConfigure();
-  assert.deepEqual(calls[0], ["vendor/model", {
-    source: "hub", isLora: false, isGguf: false, isDownloaded: true,
-    pipelineTag: "text-generation",
-  }]);
+  assert.deepEqual(calls[0], [
+    "vendor/model",
+    {
+      source: "hub",
+      isLora: false,
+      isGguf: false,
+      isDownloaded: true,
+      pipelineTag: "text-generation",
+    },
+  ]);
   render("new/model", "model row").children[1].children[0].props.onConfigure();
-  assert.deepEqual(calls[1], ["new/model", {
-    source: "hub", isLora: false, isGguf: false, isDownloaded: false, pipelineTag: null,
-  }]);
+  assert.deepEqual(calls[1], [
+    "new/model",
+    {
+      source: "hub",
+      isLora: false,
+      isGguf: false,
+      isDownloaded: false,
+      pipelineTag: null,
+    },
+  ]);
 });

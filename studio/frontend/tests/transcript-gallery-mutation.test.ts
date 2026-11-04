@@ -3,8 +3,8 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
 import ts from "@typescript/typescript6";
+import { runSource } from "./helpers/eval-source.ts";
 import { readSrc } from "./helpers/kit.ts";
 
 interface RenderedGallery {
@@ -46,71 +46,77 @@ test("pending transcript mutations use the current view and deletion callback", 
       { initialView: false, nextView: false, removed: ["deleted"] },
       { initialView: false, nextView: true, removed: null },
     ] as const
-  ).reduce<Promise<void>>(async (previous, { initialView, nextView, removed }) => {
-    await previous;
-    const state: unknown[] = [];
-    const refs: { current: unknown }[] = [];
-    const requests: boolean[] = [];
-    const deletions: unknown[] = [];
-    let stateIndex = 0;
-    let refIndex = 0;
-    const scope = {
-      active: true,
-      currentId: "deleted",
-      latest: null,
-      autoSelect: false,
-      onSelect: () => undefined,
-      onDelete: (ids: unknown) => deletions.push(["stale", ids]),
-      useState: (initial: unknown) => {
-        const index = stateIndex++;
-        if (!(index in state)) state[index] = initial;
-        return [
-          state[index],
-          (value: unknown) => {
-            state[index] = value;
-          },
-        ];
-      },
-      useRef: (initial: unknown) => {
-        const index = refIndex++;
-        refs[index] ??= { current: initial };
-        return refs[index];
-      },
-      useCallback: (callback: unknown) => callback,
-      useLayoutEffect: (effect: () => void) => { effect(); },
-      useEffect: () => undefined,
-      listTranscripts: (archived: boolean) => {
-        requests.push(archived);
-        return Promise.resolve({
-          transcripts: [{ id: String(archived) }],
-          next_cursor: null,
-        });
-      },
-      toast: { error: (message: string) => assert.fail(message) },
-    };
-    const render = () => {
-      stateIndex = 0;
-      refIndex = 0;
-      return runInNewContext(outputText, { ...scope }) as RenderedGallery;
-    };
-    render().setArchived(initialView);
-    const before = render();
-    let finish!: () => void;
-    const request = new Promise<void>((resolve) => {
-      finish = resolve;
-    });
-    const mutation = before.mutate(() => request, removed);
-    before.setArchived(nextView);
-    scope.onDelete = (ids: unknown) => deletions.push(["current", ids]);
-    if (removed === null) scope.currentId = "retained-archived";
-    const after = render();
-    await after.refresh();
-    finish();
-    await mutation;
-    assert.deepEqual(requests, [nextView, nextView]);
-    assert.deepEqual(state[0], [{ id: String(nextView) }]);
-    assert.deepEqual(deletions, [["current", removed]]);
-  }, Promise.resolve());
+  ).reduce<Promise<void>>(
+    async (previous, { initialView, nextView, removed }) => {
+      await previous;
+      const state: unknown[] = [];
+      const refs: { current: unknown }[] = [];
+      const requests: boolean[] = [];
+      const deletions: unknown[] = [];
+      let stateIndex = 0;
+      let refIndex = 0;
+      const scope = {
+        active: true,
+        currentId: "deleted",
+        latest: null,
+        autoSelect: false,
+        onSelect: () => undefined,
+        onDelete: (ids: unknown) => deletions.push(["stale", ids]),
+        useState: (initial: unknown) => {
+          const index = stateIndex++;
+          if (!(index in state)) state[index] = initial;
+          return [
+            state[index],
+            (value: unknown) => {
+              state[index] = value;
+            },
+          ];
+        },
+        useRef: (initial: unknown) => {
+          const index = refIndex++;
+          refs[index] ??= { current: initial };
+          return refs[index];
+        },
+        useCallback: (callback: unknown) => callback,
+        useLayoutEffect: (effect: () => void) => {
+          effect();
+        },
+        useEffect: () => undefined,
+        listTranscripts: (archived: boolean) => {
+          requests.push(archived);
+          return Promise.resolve({
+            transcripts: [{ id: String(archived) }],
+            next_cursor: null,
+          });
+        },
+        toast: { error: (message: string) => assert.fail(message) },
+      };
+      const render = () => {
+        stateIndex = 0;
+        refIndex = 0;
+        return runSource<RenderedGallery>(outputText, { ...scope });
+      };
+      render().setArchived(initialView);
+      const before = render();
+      let finish!: () => void;
+      const request = new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+      const mutation = before.mutate(() => request, removed);
+      before.setArchived(nextView);
+      scope.onDelete = (ids: unknown) => deletions.push(["current", ids]);
+      if (removed === null) scope.currentId = "retained-archived";
+      const after = render();
+      await after.refresh();
+      finish();
+      await mutation;
+      assert.deepEqual(requests, [nextView, nextView]);
+      // The vm hands back foreign prototypes, so clone before deepStrictEqual.
+      assert.deepEqual(structuredClone(state[0]), [{ id: String(nextView) }]);
+      assert.deepEqual(structuredClone(deletions), [["current", removed]]);
+    },
+    Promise.resolve(),
+  );
 });
 
 test("a failed view switch does not leave the other view's rows on screen", async () => {
@@ -167,7 +173,9 @@ test("a failed view switch does not leave the other view's rows on screen", asyn
       return refs[index];
     },
     useCallback: (callback: unknown) => callback,
-    useLayoutEffect: (effect: () => void) => { effect(); },
+    useLayoutEffect: (effect: () => void) => {
+      effect();
+    },
     useEffect: () => undefined,
     listTranscripts: (archived: boolean) => {
       if (failNext) {
@@ -183,12 +191,17 @@ test("a failed view switch does not leave the other view's rows on screen", asyn
   const render = () => {
     stateIndex = 0;
     refIndex = 0;
-    return runInNewContext(outputText, { ...scope }) as RenderedGallery;
+    return runSource<RenderedGallery>(outputText, { ...scope });
   };
 
   render().setArchived(false);
   await render().refresh();
-  assert.deepEqual(state[0], [{ id: "false" }], "History rows should be loaded");
+  // The vm hands back foreign prototypes, so clone before deepStrictEqual.
+  assert.deepEqual(
+    structuredClone(state[0]),
+    [{ id: "false" }],
+    "History rows should be loaded",
+  );
   assert.equal(state[2], "cursor-false");
 
   failNext = true;
@@ -197,7 +210,7 @@ test("a failed view switch does not leave the other view's rows on screen", asyn
 
   assert.deepEqual(errors, ["Could not load transcripts."]);
   assert.deepEqual(
-    state[0],
+    structuredClone(state[0]),
     [],
     "the Archived view must not render the History rows it failed to replace",
   );
