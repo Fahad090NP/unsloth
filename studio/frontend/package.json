@@ -32,7 +32,8 @@
     "check:comments": "bun ../../scripts/quality/fix-comments.ts",
     "precommit": "bun ../../scripts/precommit.ts",
     "format:changed": "bun fmt --changed",
-    "format:check:changed": "bun fmt --check --changed"
+    "format:check:changed": "bun fmt --check --changed",
+    "test:baseline": "bun ../../scripts/quality/baseline-tests.ts"
   },
   "dependencies": {
     "@assistant-ui/core": "0.1.17",
