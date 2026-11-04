@@ -1,14 +1,11 @@
-# Bun configuration for the Unsloth frontend.
-# Bun owns local installs, script running and formatting. npm stays available
-# for CI and for the release tooling that still consumes package-lock.json.
+# Bun configuration for the frontend.
 
 [install]
 # Node tooling in this repository expects a hoisted tree.
 linker = "hoisted"
 
 [fmt]
-# Matches the formatting the frontend has always used, so `bun fmt` is a
-# drop-in replacement for Prettier without a second configuration file.
+# Matches the previous Prettier output.
 printWidth = 80
 tabWidth = 2
 useTabs = false

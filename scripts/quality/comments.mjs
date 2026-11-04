@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-// Comment policy shared by the pre-commit gate and the repo-wide fixer: join
-// wrapped line comments, reject trailing comments, and require a file summary.
+// Comment rules shared by the commit gate and the repo-wide fixer.
 
 const COMMENT = /^\s*\/\/\s?(.*)$/;
 const DIRECTIVE =

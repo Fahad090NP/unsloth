@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-// Repository-wide ESLint config for every JS/TS file outside studio/frontend.
-// The frontend keeps its typed config; this one is syntax-only because those
-// projects do not share the frontend tsconfig or its dependencies.
-// First, before typescript-eslint loads: it needs the TypeScript 6 API (see the script).
+// Syntax-only config for every JS/TS file outside studio/frontend.
 import "./scripts/eslint-typescript6.cjs";
 
 import js from "@eslint/js";
@@ -16,9 +13,7 @@ import tseslint from "typescript-eslint";
 export default defineConfig([
   gitignore(),
   {
-    // Every TS/JS file in the repository is covered by exactly one config:
-    // the frontend owns its tree, this config owns everything else. New files
-    // anywhere outside `studio/frontend` are picked up automatically.
+    // The frontend owns its tree; this config owns everything else.
     ignores: ["studio/frontend/**", "studio/backend/assets/docs_ui/**"],
   },
   {

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-// Husky installs relative to the git root, but this package lives in a
-// subdirectory. Run the installer from the root so `core.hooksPath` and the
-// hook shims are created in the repository.
+// Run Husky from the git root, not this subdirectory.
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -13,8 +11,7 @@ const frontend = path.resolve(here, "..");
 const root = path.resolve(frontend, "..", "..");
 const huskyEntry = path.join(frontend, "node_modules", "husky", "index.js");
 
-// A source archive or a wheel build may install dependencies without a Git
-// checkout. Hooks are only meaningful in a working tree.
+// Skip when the install is not a Git working tree.
 const probe = spawnSync("git", ["rev-parse", "--is-inside-work-tree"], {
   cwd: root,
   stdio: "ignore",

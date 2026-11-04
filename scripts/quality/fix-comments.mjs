@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-// Repo-wide comment policy CLI. `--write` joins wrapped comments in place;
-// `--check` reports wrapped comments, trailing comments and oversized files.
+// Repo-wide comment CLI: --write joins, --check reports.
 
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
