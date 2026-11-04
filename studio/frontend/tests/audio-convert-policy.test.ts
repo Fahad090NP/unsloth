@@ -289,7 +289,7 @@ test("only the expired-upload 404 expires uploads, and a re-upload clears it", (
   );
   assert.match(
     hook,
-    /for \(const id of \[sourceId, targetId\]\) \{\s*if \(id\) \{\s*next\.delete\(id\);/,
+    /for \(const id of \[sourceId, targetId\]\) \{\s*if \(id !== null\) \{\s*next\.delete\(id\);/,
   );
 });
 
@@ -300,9 +300,9 @@ const CLONE_REFRESHES_AFTER_STOP =
 const CONVERT_REFRESHES_AFTER_STOPPED_SWITCH =
   /\} else if \(switchNotice\) \{\s*(?:\/\/[^\n]*\n\s*)*await refreshStatus\(\);\s*\}\s*\} finally/;
 const CONVERT_REFRESHES_ON_ARRIVAL =
-  /useEffect\(\(\) => \{\s*if \(active && ttsWorkflow === "convert" && initialReadySent\.current\) \{\s*void refreshStatus\(\);\s*\}\s*\}, \[active, ttsWorkflow, refreshStatus\]\);/;
+  /useEffect\(\(\) => \{\s*if \(active && ttsWorkflow === "convert" && initialReadySent\.current\) \{\s*\(refreshStatus\(\)\)\.catch\(\(\) => \{ \/\* noop \*\/ \}\);\s*\}\s*\}, \[active, ttsWorkflow, refreshStatus\]\);/;
 const CONVERTS_ONLY =
-  /const loadedConvertsOnly =\s*!!status\?\.audio_workflows\?\.includes\("convert"\) &&\s*!status\.audio_workflows\.includes\("clone"\);/;
+  /const loadedConvertsOnly =\s*status\?\.audio_workflows\?\.includes\("convert"\) === true &&\s*!status\.audio_workflows\.includes\("clone"\);/;
 const SPEAK_BLOCKER_OPENS_CONVERT =
   /ttsWorkflow === "speak" && loadedConvertsOnly\s*\?\s*\{\s*reason: "The loaded model converts recordings\.",[\s\S]*?label: "open Convert",\s*onClick: \(\) => transitionWorkflow\("convert"\)/;
 const SPEAK_STATUS_LINE_CONVERTS =
@@ -346,10 +346,10 @@ test("Use again re-uploads a conversion's kept source instead of its expiring up
     page,
     /\/source\/file`,\s*\)\s*\.then\(\(blob\) => uploadAudioInput\(blob, name\)\)/,
   );
-  assert.match(page, /store\.setSource\(null\);\s*void fetchAudioBlob\(/);
+  assert.match(page, /store\.setSource\(null\);\s*fetchAudioBlob\(/);
   assert.match(
     page,
-    /if \(!untouched\(\) \|\| !kept\) return;\s*void audioInputAlive\(kept\.id\)\.then\(\(alive\) => \{\s*if \(untouched\(\)\)\s*store\.setSource\(alive \? kept : \{ \.\.\.kept, expiresAt: EXPIRED_AT \}\);/,
+    /if \(!untouched\(\) \|\| !kept\) return;\s*audioInputAlive\(kept\.id\)\.then\(\(alive\) => \{\s*if \(untouched\(\)\)\s*store\.setSource\(alive \? kept : \{ \.\.\.kept, expiresAt: EXPIRED_AT \}\);/,
   );
   assert.match(
     page,
@@ -367,7 +367,7 @@ test("Use again re-uploads a conversion's kept source instead of its expiring up
   assert.doesNotMatch(api, /method: "HEAD"/);
 });
 
-const SEND_TO_HAS_CONVERT = /convert: \(\) => handleSendToConvert\(clip\),/;
+const SEND_TO_HAS_CONVERT = /convert: \(\) => \{\s*handleSendToConvert\(clip\);\s*\},/;
 const SEND_TO_CLONE_KEEPS_LABELS_OUT =
   /const reference = \(\) =>\s*clipReference\(\{ \.\.\.clip, workflow: clipWorkflow\(clip\) \}\);\s*const handlers: ClipSendHandlers = \{\s*clone: \(\) => \{\s*if \(transitionWorkflow\("clone"\)\) adoptReference\(reference\(\)\);/;
 const WORKSPACE_FOCUSES_A_FRESH_CUSTOM_PLAYER =

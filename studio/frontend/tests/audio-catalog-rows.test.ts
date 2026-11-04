@@ -264,8 +264,8 @@ test("a catalog ASR pick carries the speech-recognition tag so it loads on Trans
 
 test("the persistent Audio page keeps retrying and refreshing the catalog while it is active", () => {
   const hook = readSrc("features/audio/hooks/use-audio-catalog.ts");
-  assert.match(hook, /setInterval\(\(\) => void store\.refresh\(\), CATALOG_POLL_MS\)/);
-  assert.match(hook, /return \(\) => clearInterval\(timer\)/);
+  assert.match(hook, /setInterval\(\(\) => \{ \(store\.refresh\(\)\)\.catch\(\(\) => \{ \/\* noop \*\/ \}\); \}, CATALOG_POLL_MS\)/);
+  assert.match(hook, /return \(\) => \{ clearInterval\(timer\); \}/);
   assert.match(readSrc("features/audio/audio-page.tsx"), /useAudioCatalog\(active\)/);
 });
 

@@ -42,7 +42,7 @@ test("a required transcript fills itself once per usable reference", () => {
 test("the clone hook runs the gate with the page's downloaded STT model", () => {
   assert.match(
     readSrc("features/audio/hooks/use-clone-generation.ts"),
-    /busy !== null \|\|\s*!shouldAutoTranscribeReference\(\{[\s\S]*doneFor: autoTranscribed\.current[\s\S]*autoTranscribed\.current = reference\.id;\s*void transcribeOnce\(reference\)/,
+    /busy !== null \|\|\s*!shouldAutoTranscribeReference\(\{[\s\S]*doneFor: autoTranscribed\.current[\s\S]*autoTranscribed\.current = reference\.id;\s*\(transcribeOnce\(reference\)\)\.catch\(\(\) => \{ \/\* noop \*\/ \}\)/,
   );
   assert.match(
     readSrc("features/audio/audio-page.tsx"),

@@ -263,8 +263,8 @@ export function voiceOptionName(
   const declared = VOICE_OPTION_NAMES.map((name) =>
     specs.find((spec) => spec.name === name),
   ).filter((spec) => spec !== undefined);
-  return (
-    ((declared.find((spec) => spec.type === "enum") ?? declared[0]).name)  );
+  const chosen = declared.find((spec) => spec.type === "enum") ?? declared[0];
+  return chosen?.name ?? null;
 }
 
 /** The kept picker value; one saved before the picker held built-in voices takes the voice

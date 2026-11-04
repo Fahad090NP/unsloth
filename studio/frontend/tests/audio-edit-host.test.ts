@@ -81,7 +81,7 @@ test("the A/B player is one keyboard-operable slider over a single audio element
     assert.ok(compare.includes(`event.key === ${key}`), key);
   }
   assert.equal(compare.match(/<audio\b/g)?.length, 1);
-  assert.match(compare, /\}, \[originalKey, editedKey\]\);/);
+  assert.match(compare, /\}, \[pairKey\]\);/);
 });
 
 test("the bars come from the server's file, since the CSP blocks fetching object URLs", () => {

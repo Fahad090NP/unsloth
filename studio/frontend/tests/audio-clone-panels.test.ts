@@ -570,7 +570,7 @@ test("deleting the selected saved voice clears Speak's pick", () => {
   const speak = readSrc("features/audio/tools/speak-panels.tsx");
   assert.match(
     speak,
-    /onDeselect=\{\(\) => onChange\(\{ \.\.\.value, voiceId: null \}\)\}/,
+    /onDeselect=\{\(\) => \{ onChange\(\{ \.\.\.value, voiceId: null \}\); \}\}/,
   );
 });
 
@@ -599,7 +599,7 @@ test("transcribing the reference holds the page busy until it ends", () => {
   const hook = readSrc("features/audio/hooks/use-clone-generation.ts");
   const body = hook.slice(hook.indexOf("const transcribeReference = useCallback("));
   assert.match(body, /if \(!source \|\| busyRef\.current\) return;\s*busyRef\.current = "transcribing";\s*setBusy\("transcribing"\);/);
-  assert.match(body, /finally \{\s*if \(busyRef\.current === "transcribing"\) \{\s*busyRef\.current = null;\s*setBusy\(null\);/);
+  assert.match(body, /finally \{\s*if \(readRef\(busyRef\) === "transcribing"\) \{\s*clearBusy\(\);/);
   assert.match(body, /transcribe: transcribeReference/);
 });
 

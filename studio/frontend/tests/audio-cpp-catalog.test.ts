@@ -613,7 +613,7 @@ test("every Settings dictation path carries the saved quant", () => {
 
   const voiceTab = readSrc("features/settings/tabs/voice-tab.tsx");
   assert.match(voiceTab, /await loadSttModel\(sttModel, undefined, undefined, undefined, sttVariant\);/);
-  assert.match(voiceTab, /void autoLoadSttModel\(sttModel, sttVariant\);/);
+  assert.match(voiceTab, /autoLoadSttModel\(sttModel, sttVariant\)\.catch\(\(\) => \{ \/\* noop \*\/ \}\);/);
   // ready requires the pinned quant to be resident, not merely its row.
   assert.match(voiceTab, /\(!sttVariant \|\| engineStatus\.loaded_variant === sttVariant\)/);
   // status is row-level; the listing shows whether the pinned quant is cached.

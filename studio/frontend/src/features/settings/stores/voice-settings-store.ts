@@ -65,7 +65,7 @@ export function isSttModelLanguageCompatible(
 ): boolean {
   const allowed =
     STT_MODEL_LANGUAGES.get(model) ??
-    (getSttModelRepo(model).toLowerCase().endsWith(".en") ? ["en"] : null);
+    (getSttModelRepo(model)?.toLowerCase().endsWith(".en") ? ["en"] : null);
   if (!allowed) {
     return true;
   }
