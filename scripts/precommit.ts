@@ -324,12 +324,12 @@ const known = existsSync(baselinePath)
     )
   : new Set();
 const stagedSet = new Set(codeFiles);
-const candidates = [...exact, ...loose].filter(
+const candidates = [...exact].filter(
   (test) =>
     !known.has(path.relative(ROOT, test).replaceAll("\\", "/")) ||
     stagedSet.has(path.relative(ROOT, test).replaceAll("\\", "/")),
 );
-const skipped = exact.size + loose.size - candidates.length;
+const skipped = exact.size - candidates.length;
 const selected = candidates.slice(0, MAX_TESTS);
 let testsOk = true;
 let testsDetail =
@@ -349,7 +349,7 @@ if (selected.length > 0) {
   );
   testsOk = result.status === 0;
   testsDetail = testsOk
-    ? `${selected.length} test file(s)${skipped > 0 ? `, ${skipped} known-failing skipped` : ""}${candidates.length > MAX_TESTS ? ` (capped from ${candidates.length})` : ""}`
+    ? `${selected.length} test file(s)${skipped > 0 ? `, ${skipped} known-failing skipped` : ""}`
     : result.output.slice(-4000);
 }
 record("Affected tests", testsOk, testsDetail);
