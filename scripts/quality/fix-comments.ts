@@ -12,7 +12,7 @@ import {
   findTrailingComments,
   joinWrappedComments,
   splitLines,
-} from "./comments.mjs";
+} from "./comments.ts";
 
 const CODE = /\.(?:ts|tsx|js|jsx|mjs|cjs|mts|cts)$/;
 const args = process.argv.slice(2);

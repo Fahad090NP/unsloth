@@ -28,9 +28,9 @@
     "biome:check": "biome check",
     "biome:fix": "biome check --write",
     "format:staged": "bun fmt --staged",
-    "fix:comments": "bun ../../scripts/quality/fix-comments.mjs --write",
-    "check:comments": "bun ../../scripts/quality/fix-comments.mjs",
-    "precommit": "bun ../../scripts/precommit.mjs",
+    "fix:comments": "bun ../../scripts/quality/fix-comments.ts --write",
+    "check:comments": "bun ../../scripts/quality/fix-comments.ts",
+    "precommit": "bun ../../scripts/precommit.ts",
     "format:changed": "bun fmt --changed",
     "format:check:changed": "bun fmt --check --changed"
   },

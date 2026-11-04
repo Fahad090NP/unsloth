@@ -14,7 +14,7 @@ import {
   hasFileSummary,
   joinWrappedComments,
   splitLines,
-} from "./quality/comments.mjs";
+} from "./quality/comments.ts";
 
 const CODE = /\.(?:ts|tsx|js|jsx|mjs|cjs|mts|cts)$/;
 const MAX_TESTS = 25;
@@ -199,9 +199,7 @@ for (const file of codeFiles) {
 
   const lines = splitLines(joined.text);
   if (lines.length > MAX_FILE_LINES) {
-    // Files already over the limit are grandfathered: a formatter or a comment
-    // fix must stay committable. Only new files and files that newly cross the
-    // limit are blocked.
+    // Grandfather existing oversized files; block new ones and crossings.
     let before = 0;
     try {
       before = splitLines(git(["show", `HEAD:${file}`])).length;
@@ -224,6 +222,24 @@ for (const file of codeFiles) {
     );
   }
 
+  const introducedLines = (addedLines.get(file) ?? []).map((item) => item.text);
+  let commentRun = 0;
+  for (const line of introducedLines) {
+    if (/^\s*\/\//.test(line)) {
+      commentRun += 1;
+      if (commentRun > 2) {
+        policy.push(
+          `${yellow(file)}  comment runs over two lines; keep one short line.`,
+        );
+        break;
+      }
+    } else {
+      commentRun = 0;
+    }
+  }
+  if (introducedLines.some((line) => /^\s*\/\/\s*[-=*#]{6,}/.test(line))) {
+    policy.push(`${yellow(file)}  banner comment; remove the separator.`);
+  }
   if (added.has(file) && !hasFileSummary(lines)) {
     policy.push(
       `${yellow(file)}  add a one-line // summary under the license header.`,

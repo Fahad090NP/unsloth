@@ -4,4 +4,4 @@ command -v bun >/dev/null 2>&1 || {
   echo "bun is required for the commit gate" >&2
   exit 1
 }
-exec bun scripts/precommit.mjs
+exec bun scripts/precommit.ts
