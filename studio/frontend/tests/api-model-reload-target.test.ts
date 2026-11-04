@@ -24,9 +24,9 @@ test("the Context fact finds requests logged as <id>:<quant>, and shows chat's p
 
 test("an MLX precision folder reloads as a model with its folder, not as a GGUF quant", () => {
   assert.match(hook, /const variant = model\.quant \?\? ggufVariant;/);
-  assert.match(hook, /kind: variant != null && !mlxFolder \? "gguf" : "model",/);
+  assert.match(hook, /kind: variant !== null && !mlxFolder \? "gguf" : "model",/);
   // A kept row has no backend flag: a precision folder name on a non-GGUF repo is MLX too.
-  assert.match(hook, /model\.isMlx \|\|\s*\(variant != null && isPrecisionFolderName\(variant\) && !\/gguf\/i\.test\(target\)\)/);
+  assert.match(hook, /model\.isMlx \?\?\s*\(variant !== null && isPrecisionFolderName\(variant\) && !\/gguf\/i\.test\(target\)\)/);
   assert.match(page, /const loadedIsMlx = useChatRuntimeStore\(\(s\) => s\.loadedIsMlx\);/);
   assert.match(page, /isMlx: index === activeIndex && loadedIsMlx === true,/);
 });

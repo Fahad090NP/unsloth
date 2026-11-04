@@ -11,12 +11,12 @@ test("the API page's model picker sits in the titlebar row, where Chat's does", 
   const root = readSrc("app/routes/__root.tsx");
   assert.match(
     root,
-    /const isChatLike = isChatRoute \|\| isImagesRoute \|\| isVideoRoute \|\| isAudioRoute;/,
+    /const isChatLike =\s*isChatRoute \|\| isImagesRoute \|\| isVideoRoute \|\| isAudioRoute;/,
   );
   assert.match(root, /--studio-non-chat-content-top-inset/);
   assert.match(
     page,
-    /!isMobileShell &&\s*"-mt-\[calc\(var\(--studio-non-chat-content-top-inset,var\(--studio-content-top-inset,0px\)\)-var\(--studio-content-top-inset,0px\)\)\]"/,
+    /!isMobileShell &&\s*"-mt-\[calc\(var\(--studio-non-chat-content-top-inset,var\(--studio-content-top-inset,0\)\)-var\(--studio-content-top-inset,0\)\)\]"/,
   );
   assert.match(page, /"pointer-events-none sticky top-0 z-40 flex/);
   assert.match(

@@ -13,7 +13,7 @@ import {
   normalizeModelIdentity,
   publicModelId,
 } from "./model-identity";
-import { isExternalModelId } from "@/features/chat";
+import { isExternalModelId } from "@/features/chat/external-providers";
 import {
   DRAFT_N_MAX_SPEC_TYPES,
   DRAFTER_MODEL_SPEC_TYPES,
@@ -1015,7 +1015,7 @@ function warnDroppedFields(
   raw: Record<string, unknown>,
   version: number,
 ): void {
-  if (!import.meta.env.DEV) {
+  if (!import.meta.env?.DEV) {
     return;
   }
   const dropped = Object.keys(raw).filter(

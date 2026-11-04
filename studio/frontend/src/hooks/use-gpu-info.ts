@@ -116,7 +116,7 @@ function appleUnifiedLoadBudgetGb(
   if (device.shared_memory !== true || workingSetGb === null) return null;
   let freeGb =
     finiteNonNegative(device.vram_free_gb) ??
-    finiteNonNegative(data.memory.available_gb);
+    finiteNonNegative(data.memory?.available_gb);
   if (afterUnload) {
     // The AGX in-use figure holds the resident model's Metal buffers, which the loader frees first;
     // other apps' memory stays counted. Unknown usage leaves only the working-set ceiling.
@@ -168,7 +168,7 @@ function toGpuInfo(
   source: "gpu" | "inference_gpu" = "gpu",
 ): GpuInfo {
   // CPU/RAM exist on GPU-less hosts too, and unified-memory math needs a RAM budget.
-  const availableGb = data?.memory.available_gb;
+  const availableGb = data?.memory?.available_gb;
   const base = {
     backend: data?.device_backend ?? "",
     denseQuantSupported: data?.dense_quant_supported === true,
@@ -181,15 +181,15 @@ function toGpuInfo(
     extraOffloadFitTiers: normalizeReportedOffloadFitTiers(
       data?.diffusers_offload_tiers,
     ),
-    cpuCore: data?.cpu.physical_count ?? 0,
-    cpuThread: data?.cpu.logical_count ?? 0,
+    cpuCore: data?.cpu?.physical_count ?? 0,
+    cpuThread: data?.cpu?.logical_count ?? 0,
     systemRamAvailableGb: availableGb ?? 0,
     systemRamAvailableHostGb: availableGb ?? 0,
     systemRamAvailableKnown:
       typeof availableGb === "number" &&
       Number.isFinite(availableGb) &&
       availableGb >= 0,
-    systemRamTotalGb: data?.memory.total_gb ?? 0,
+    systemRamTotalGb: data?.memory?.total_gb ?? 0,
   };
   const gpuData =
     source === "inference_gpu" ? (data?.inference_gpu ?? data?.gpu) : data?.gpu;

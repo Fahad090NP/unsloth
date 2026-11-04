@@ -12,7 +12,7 @@ test("the API tab's monitor card gets its own heading row", () => {
     /\{hideHeading \? \(\s*<SettingsRow\s*label=\{t\("settings\.resources\.liveMonitor\.apiTitle"\)\}\s*description=\{t\("settings\.resources\.liveMonitor\.apiDescription"\)\}/,
   );
   // The heading row sits above the card's button.
-  assert.ok(src.indexOf("liveMonitor.apiDescription") < src.indexOf('void navigate({ to: "/api-monitor" })'));
+  assert.ok(src.indexOf("liveMonitor.apiDescription") < src.indexOf('navigate({ to: "/api-monitor" })'));
   assert.match(readSrc("features/settings/tabs/api-keys-tab.tsx"), /<MonitorLink hideHeading=\{true\} \/>/);
 });
 

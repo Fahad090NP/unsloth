@@ -4,7 +4,7 @@
 // Server mirror of per-model config (otherwise browser-only) so API auto-switch loads get it.
 
 import { normalizeTensorSplit, reconcileTensorSplit } from "@/hooks/gpu-tensor-split";
-import { authFetch } from "@/features/auth";
+import { authFetch } from "@/features/auth/api";
 import type { GpuIndexKind } from "@/hooks/gpu-selection";
 import { readFastApiError } from "@/lib/format-fastapi-error";
 import {

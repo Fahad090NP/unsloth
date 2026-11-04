@@ -49,7 +49,7 @@ test("each code setting drives one root attribute the stylesheet keys on", () =>
 
 test("API examples drop their no-wrap overrides while Word wrap is on", () => {
   const source = readSrc("features/settings/components/api-example-parts.tsx");
-  for (const utility of ["!whitespace-pre", "!break-normal", "!min-w-max"]) {
+  for (const utility of ["whitespace-pre!", "break-normal!", "min-w-max!"]) {
     const uses = source.match(new RegExp(`\\S*:${utility.replace("!", "\\!")}(?=\\s|")`, "g")) ?? [];
     assert.ok(uses.length > 0, utility);
     for (const use of uses) assert.ok(use.startsWith("[html:not([data-code-wrap])_&"), use);
