@@ -364,7 +364,7 @@ test("the URL keeps the page after a handoff instead of clearing it", () => {
   // A model handoff leaves its page in the URL, so a reload reopens it.
   assert.match(
     handoff,
-    /const settledWorkflow = routedWorkflow \?\? committedWorkflow;\s*lastSyncedWorkflow\.current = settledWorkflow;\s*void navigateSelf\(\{\s*to: "\/audio",\s*search: \{ workflow: settledWorkflow \},\s*replace: true,\s*\}\);/,
+    /const settledWorkflow = routedWorkflow \?\? committedWorkflow;\s*lastSyncedWorkflow\.current = settledWorkflow;\s*\(navigateSelf\(\{\s*to: "\/audio",\s*search: \{ workflow: settledWorkflow \},\s*replace: true,\s*\}\)\)\.catch\(\(\) => \{ \/\* noop \*\/ \}\);/,
   );
   assert.doesNotMatch(handoff, /search: \{\}/);
   // Every write the handoff makes replaces the entry, so syncing never stacks history.

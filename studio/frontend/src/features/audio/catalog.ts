@@ -5,8 +5,8 @@ import {
   AUDIO_CATALOG,
   catalogToModelOptions,
   groupForRepoId,
-} from "@/features/model-picker";
-import type { ModelOption } from "@/features/model-picker";
+} from "@/features/model-picker/components/model-selector/model-catalog";
+import type { ModelOption } from "@/features/model-picker/components/model-selector/types";
 import {
   AUDIO_CPP_AUDIO_TYPES,
   AUDIO_CPP_MODELS,

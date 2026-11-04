@@ -77,7 +77,7 @@ test("generation progress follows the request-owned lifecycle", () => {
   );
   assert.match(
     generation,
-    /generateAbort\.current = controller;\s*updateGenerationPhase\("generating"\);\s*try \{\s*const generated = await generateAudio/,
+    /generateAbortRef\.current = controller;\s*updateGenerationPhase\("generating"\);\s*try \{\s*const generated = await generateAudio/,
   );
   assert.match(
     generation,
@@ -89,7 +89,7 @@ test("generation progress follows the request-owned lifecycle", () => {
   );
   assert.match(
     generation,
-    /finally \{\s*generateAbort\.current = null;\s*updateGenerationPhase\(null\);\s*busyRef\.current = null;\s*setBusy\(null\)/,
+    /finally \{\s*generateAbortRef\.current = null;\s*updateGenerationPhase\(null\);\s*clearBusy\(\)/,
   );
 });
 
@@ -108,11 +108,11 @@ test("leaving the audio page does NOT abort an in-flight generation", () => {
   // RootLayout keeps this page mounted so synthesis survives tab switches; only unmount aborts.
   assert.doesNotMatch(
     source,
-    /if \(!active\) generateAbort\.current\?\.abort\(\)/,
+    /if \(!active\) generateAbortRef?\.current\?\.abort\(\)/,
   );
   assert.match(
     source,
-    /useEffect\(\(\) => \(\) => generateAbort\.current\?\.abort\(\), \[\]\)/,
+    /useEffect\(\(\) => \(\) => generateAbortRef\.current\?\.abort\(\), \[generateAbortRef\]\)/,
   );
 });
 

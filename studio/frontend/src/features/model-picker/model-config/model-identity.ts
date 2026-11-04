@@ -138,10 +138,10 @@ export function ggufQuantLabel(filename: string): string {
       fallback ??= match;
       continue;
     }
-    return `${(match[1])}${match[2]}`;
+    return `${match[1] ?? ""}${match[2]}`;
   }
   if (fallback) {
-    return `${(fallback[1])}${fallback[2]}`;
+    return `${fallback[1] ?? ""}${fallback[2]}`;
   }
   return stem || "gguf";
 }

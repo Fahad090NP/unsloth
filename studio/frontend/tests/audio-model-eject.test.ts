@@ -42,7 +42,7 @@ test("Speak eject asks about running chats before tearing anything down", () => 
   );
   assert.match(
     source,
-    /if \(!stopDecision\.proceed\) \{\s*setBusy\(null\);\s*return;\s*\}\s*\n\s*\/\/ An old managed completion[\s\S]*invalidatePendingStagedTts\(\);/,
+    /if \(!stopDecision\.proceed\) \{\s*markBusy\(null\);\s*return;\s*\}\s*\n\s*\/\/ An old managed completion[\s\S]*invalidatePendingStagedTts\(\);/,
   );
   assert.match(
     source,
@@ -62,11 +62,11 @@ test("a Speak load asks the same question and forces from the answer", () => {
   );
   assert.match(
     source,
-    /if \(ttsLoadInFlight\.current \|\| busyRef\.current === "generating"\) \{\s*pendingRoutedTtsPick\.current = \{\s*repoId,\s*ggufFilename,\s*loadId,\s*audioType,\s*remoteCodeApproval,\s*isGguf,\s*deviceOverride,\s*\};\s*return;\s*\}[\s\S]{0,400}?ttsLoadInFlight\.current = true;/,
+    /if \(ttsLoadInFlight\.current \|\| busyRef\.current === "generating"\) \{\s*pendingRoutedTtsPick\.current = \{\s*repoId,\s*ggufFilename,\s*loadId,\s*audioType,\s*remoteCodeApproval,\s*isGguf,\s*deviceOverride,\s*\};\s*return;\s*\}[\s\S]{0,400}?setTtsLoadInFlight\(true\);/,
   );
   assert.match(
     source,
-    /if \(!stopDecision\.proceed\) \{\s*releaseLifecycle\(\);\s*ttsLoadInFlight\.current = false;[\s\S]*?pendingRoutedTtsPick\.current = null;\s*return;\s*\}/,
+    /if \(!stopDecision\.proceed\) \{\s*releaseLifecycle\(\);\s*setTtsLoadInFlight\(false\);[\s\S]*?pendingRoutedTtsPick\.current = null;\s*return;\s*\}/,
   );
   assert.match(
     source,
@@ -89,15 +89,15 @@ test("a Speak load stops local queues only once /load is going out", () => {
 test("a model swap holds Chat's lifecycle gate across the question", () => {
   assert.match(
     source,
-    /ttsLoadInFlight\.current = true;[\s\S]{0,400}?const lifecycleLease = useChatRuntimeStore\.getState\(\)\.beginModelLoading\(\);\s*if \(lifecycleLease === null\) \{[\s\S]*?return;\s*\}[\s\S]{0,500}?const stopDecision = keepsChat[\s\S]{0,300}?: await confirmStopRunningChatsIfNeeded\(\);/,
+    /setTtsLoadInFlight\(true\);[\s\S]{0,400}?const lifecycleLease = useChatRuntimeStore\.getState\(\)\.beginModelLoading\(\);\s*if \(lifecycleLease === null\) \{[\s\S]*?return;\s*\}[\s\S]{0,500}?const stopDecision = keepsChat[\s\S]{0,300}?: await confirmStopRunningChatsIfNeeded\(\);/,
   );
   assert.match(
     source,
-    /if \(activeRef\.current\) await refreshStatus\(\);\s*ttsLoadInFlight\.current = false;[\s\S]{0,120}?releaseLifecycle\(\);[\s\S]*?replayQueuedTtsPick\(\);/,
+    /if \(pageVisible\(\)\) await refreshStatus\(\);\s*setTtsLoadInFlight\(false\);[\s\S]{0,120}?releaseLifecycle\(\);[\s\S]*?replayQueuedTtsPickRef\.current\(\);/,
   );
   assert.match(
     source,
-    /const lifecycleLease = useChatRuntimeStore\.getState\(\)\.beginModelLoading\(\);[\s\S]{0,300}?setBusy\("unloading"\);[\s\S]{0,800}?confirmStopRunningChatsIfNeeded\(\s*"Unloading the model",/,
+    /const lifecycleLease = useChatRuntimeStore\.getState\(\)\.beginModelLoading\(\);[\s\S]{0,300}?markBusy\("unloading"\);[\s\S]{0,800}?confirmStopRunningChatsIfNeeded\(\s*"Unloading the model",/,
   );
   assert.match(
     source,
@@ -108,7 +108,7 @@ test("a model swap holds Chat's lifecycle gate across the question", () => {
 test("a load confirmed after Audio is hidden is deferred, not sent", () => {
   assert.match(
     source,
-    /if \(!activeRef\.current\) \{\s*releaseLifecycle\(\);\s*ttsLoadInFlight\.current = false;\s*pendingRoutedTtsPick\.current = \{\s*repoId,\s*ggufFilename,\s*loadId,\s*audioType,\s*remoteCodeApproval,\s*isGguf,\s*\};\s*return;\s*\}/,
+    /if \(!activeRef\.current\) \{\s*releaseLifecycle\(\);\s*setTtsLoadInFlight\(false\);\s*pendingRoutedTtsPick\.current = \{\s*repoId,\s*ggufFilename,\s*loadId,\s*audioType,\s*remoteCodeApproval,\s*isGguf,\s*\};\s*return;\s*\}/,
   );
   assert.match(
     source,
@@ -136,7 +136,7 @@ test("the Generate-mode release only unloads a sidecar owned by the current sele
   );
   assert.match(
     source,
-    /if \(!sttReady\) \{[\s\S]*sttStatusRefreshGeneration\.current \+= 1;[\s\S]*void releaseTranscribeSelection\(\)/,
+    /if \(!sttReady\) \{[\s\S]*sttStatusRefreshGenerationRef\.current \+= 1;[\s\S]*releaseTranscribeSelection\(\)\.catch\(\(\) => undefined\)/,
   );
 });
 
@@ -171,7 +171,7 @@ test("Transcribe re-reads STT status while a model shows as loaded", () => {
     source,
     /if \(!active \|\| mode !== "transcribe" \|\| busy !== null \|\| !sttLoadedModel\)\s*return;[\s\S]*?window\.setInterval\(refresh, STT_STATUS_POLL_MS\);[\s\S]*?return \(\) => \{\s*window\.clearInterval\(interval\);\s*window\.removeEventListener\("focus", refresh\);\s*document\.removeEventListener\("visibilitychange", refresh\);/,
   );
-  assert.match(source, /if \(!document\.hidden\) void refreshSttStatus\(\);/);
+  assert.match(source, /if \(!document\.hidden\) refreshSttStatus\(\)\.catch\(\(\) => undefined\);/);
 });
 
 test("leaving Transcribe releases the sidecar it loaded", () => {
@@ -191,7 +191,7 @@ test("selected and fallback clip actions remain named and downloadable", () => {
   assert.match(source, /aria-label="Download audio clip"/);
   assert.match(
     source,
-    /onDelete=\{\(\) => void handleDeleteClip\(clip\.id\)\}/,
+    /onDelete=\{\(\) => \{ \(handleDeleteClip\(clip\.id\)\)\.catch\(\(\) => \{ \/\* noop \*\/ \}\); \}\}/,
   );
   assert.match(source, /menu=\{clipMenu\(selectedClip, "row"\)\}/);
   assert.match(
@@ -248,7 +248,7 @@ test("Transcribe reuses a resident model that a legacy key or other casing names
   // An exact compare reloaded it on every run and took over dictation's model.
   assert.match(
     source,
-    /const resident = await readSttResidency\(engine\)[\s\S]*?if \(\s*!resident \|\|\s*resident\.engine !== engine \|\|\s*!sttSameModel\(\s*repo,\s*resident\.model,\s*sttSidecarKeyFor,\s*engine,\s*sttRepoIdForSidecarKey,\s*\)\s*\) \{\s*if \(!\(await ensureSttLoaded\(repo, model, engine\)\)\) return null;/,
+    /const resident = await readSttResidency\(engine\)[\s\S]*?if \(\s*resident\?\.engine !== engine \|\|\s*!sttSameModel\(\s*repo,\s*resident\.model,\s*sttSidecarKeyFor,\s*engine,\s*sttRepoIdForSidecarKey,\s*\)\s*\) \{\s*if \(!\(await ensureSttLoaded\(repo, model, engine\)\)\) return null;/,
   );
 });
 
@@ -272,7 +272,7 @@ test("the resident engine is adopted even when the repo id is unchanged", () => 
 test("a pick made while Transcribe reads residency is not overridden by the old run", () => {
   assert.match(
     source,
-    /const generation = sttLoadGeneration\.current;[\s\S]*?await readSttResidency\(engine\)[\s\S]*?if \(sttLoadGeneration\.current !== generation \|\| !activeRef\.current\) return null;\s*const current = selectedSttRepoRef\.current;\s*if \(current !== null && current !== repo\) return null;\s*if \(current === null\) \{\s*selectedSttRepoRef\.current = repo;\s*setSelectedSttRepo\(repo\);\s*\}/,
+    /const generation = sttLoadGeneration\.current;[\s\S]*?await readSttResidency\(engine\)[\s\S]*?if \(sttLoadGeneration\.current !== generation \|\| !activeRef\.current\) return null;\s*const current[^=]*= \(repoRef as \{ current: string \| null \}\)\.current;\s*if \(current != null && current !== repo\) return null;\s*if \(current == null\) \{\s*repoRef\.current = repo;\s*setSelectedSttRepo\(repo\);\s*\}/,
   );
 });
 

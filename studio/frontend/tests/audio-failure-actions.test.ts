@@ -122,7 +122,7 @@ test("generation hooks report failures and the page uses them only for the error
   assert.match(page, /useLlamaUpdateCheck\(\{ enabled: active \}\)/);
   const slot = readSrc("features/audio/hooks/use-audio-model-slot.ts");
   assert.match(slot, /res\.audio_device_fallback === "cpu" && !wantsCpu/);
-  assert.match(slot, /duration: 12000,\s*action: action &&/);
+  assert.match(slot, /duration: 12000,\s*action: \{ label: action\.label,/);
   assert.match(slot, /queued\.isGguf,\s*queued\.deviceOverride,/);
 });
 
@@ -136,5 +136,5 @@ test("CPU recovery after a generation failure reloads the resident model, not a 
   assert.equal(records.length, 1);
   assert.ok(records[0] > success && records[0] < failure);
   // The failed load's own toast still retries that attempt.
-  assert.match(slot, /handlers\.selectCpuDevice\(\);\s*void retryLoad\("cpu"\);/);
+  assert.match(slot, /handlers\.selectCpuDevice\(\);\s*retryLoad\("cpu"\)\.catch\(\(\) => undefined\);/);
 });
