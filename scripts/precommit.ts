@@ -95,12 +95,16 @@ if (bunVersion.status !== 0) {
     "Bun is required for the commit gate. Install Bun from https://bun.com and retry.",
   );
 } else {
+  const generated = [/model-catalog-snapshot\.ts$/];
+  const formatFiles = codeFiles.filter(
+    (file) => !generated.some((pattern) => pattern.test(file)),
+  );
   const config = path.join(FRONTEND, "bunfig.toml");
   const formatted = run("bun", [
     "fmt",
     ...(existsSync(config) ? [`--config=${config}`] : []),
     "--no-error-on-unmatched-pattern",
-    ...codeFiles,
+    ...formatFiles,
   ]);
   stage(codeFiles);
   record(
