@@ -55,7 +55,7 @@ export function exportedItemToRecord(
   const content = snapshotContent(message.content);
   if (message.role === "user") {
     const attachments = snapshotAttachments(message.attachments);
-    const custom = message.metadata.custom;
+    const custom = (message.metadata as any)?.custom ?? {};
     return {
       id: message.id,
       threadId,
@@ -63,11 +63,11 @@ export function exportedItemToRecord(
       role: "user",
       content: content as Extract<ThreadMessage, { role: "user" }>["content"],
       ...(attachments.length > 0 && { attachments }),
-      ...(Object.keys(custom).length > 0 && { metadata: custom }),
+      ...(custom && typeof custom === "object" && Object.keys(custom).length > 0 && { metadata: custom }),
       createdAt: toEpochMillis(message.createdAt),
     };
   }
-  const custom = message.metadata.custom;
+  const custom = (message.metadata as any)?.custom ?? {};
   const metadata = custom;
   return {
     id: message.id,
@@ -78,7 +78,7 @@ export function exportedItemToRecord(
       ThreadMessage,
       { role: "assistant" }
     >["content"],
-    ...(Object.keys(metadata).length > 0 && { metadata }),
+    ...(metadata && typeof metadata === "object" && Object.keys(metadata).length > 0 && { metadata }),
     createdAt: toEpochMillis(message.createdAt),
   };
 }
