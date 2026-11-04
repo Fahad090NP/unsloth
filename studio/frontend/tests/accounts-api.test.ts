@@ -21,7 +21,7 @@ function client(response: () => Response) {
         },
       },
       "@/features/auth/login-client": {
-        fetchAuthStatus: () => {
+        fetchAuthStatus: async () => {
           refreshed++;
         },
       },

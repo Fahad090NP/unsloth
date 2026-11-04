@@ -2,24 +2,63 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import test from "node:test";
+import { after, before, test } from "node:test";
+import { createServer, type ViteDevServer } from "vite";
 
-import {
-  installLocalStorageFake,
-  registerBundlerResolver,
-} from "./helpers/kit.ts";
+import { installLocalStorageFake } from "./helpers/kit.ts";
 
-registerBundlerResolver();
 const { store } = installLocalStorageFake();
+const styleElement = {
+  style: { setProperty: () => undefined, ...{} },
+  currentStyle: {},
+  setAttribute: () => undefined,
+  appendChild: () => undefined,
+  append: () => undefined,
+  parentNode: null,
+  scrollHeight: 0,
+};
+Object.assign(globalThis.document, {
+  documentElement: { currentStyle: {}, style: { setProperty: () => undefined } },
+  getElementsByTagName: () => [{ appendChild: () => undefined }],
+  createElement: () => styleElement,
+  createTextNode: () => ({}),
+  head: { appendChild: () => undefined, childNodes: [] },
+});
 
-const {
-  adoptLegacyConfigKey,
-  listPerModelConfigs,
-  resolveInitialConfig,
-  savePerModelConfig,
-} = await import(
-  "../src/features/model-picker/model-config/per-model-config.ts"
-);
+let vite: ViteDevServer;
+let adoptLegacyConfigKey: (modelId: string, legacyId: string, quant: string) => boolean;
+let listPerModelConfigs: () => unknown[];
+let resolveInitialConfig: (
+  modelId: string,
+  quant: string,
+) => { remembered: boolean; config: { maxSeqLength: number; kvCacheDtype: string; chatTemplateOverride?: string } };
+let savePerModelConfig: (
+  legacyId: string,
+  quant: string,
+  config: unknown,
+) => boolean;
+
+before(async () => {
+  vite = await createServer({ appType: "custom", server: { middlewareMode: true } });
+  // The chat runtime store owns the modules below, so evaluate it before its importers.
+  await vite.ssrLoadModule("/src/features/chat/stores/chat-runtime-store.ts");
+  const loaded = (await vite.ssrLoadModule(
+    "/src/features/model-picker/model-config/per-model-config.ts",
+  )) as {
+    adoptLegacyConfigKey: typeof adoptLegacyConfigKey;
+    listPerModelConfigs: typeof listPerModelConfigs;
+    resolveInitialConfig: typeof resolveInitialConfig;
+    savePerModelConfig: typeof savePerModelConfig;
+  };
+  adoptLegacyConfigKey = loaded.adoptLegacyConfigKey;
+  listPerModelConfigs = loaded.listPerModelConfigs;
+  resolveInitialConfig = loaded.resolveInitialConfig;
+  savePerModelConfig = loaded.savePerModelConfig;
+});
+
+after(async () => {
+  await vite.close();
+});
 
 // Older releases keyed repos cached outside the active HF cache by snapshot path.
 const LEGACY_ID = "/home/u/.cache/models/snapshots/2f1c9ab";

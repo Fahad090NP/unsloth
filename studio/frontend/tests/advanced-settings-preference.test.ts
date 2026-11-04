@@ -2,16 +2,29 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import test from "node:test";
+import { after, before, test } from "node:test";
+import { createServer, type ViteDevServer } from "vite";
 
-import {
-  installLocalStorageFake,
-  readSrcAsync,
-  registerBundlerResolver,
-} from "./helpers/kit.ts";
+import { installLocalStorageFake, readSrcAsync } from "./helpers/kit.ts";
 
-registerBundlerResolver();
+let vite: ViteDevServer;
 const { store, storage } = installLocalStorageFake();
+const styleElement = {
+  style: { setProperty: () => undefined },
+  currentStyle: {},
+  setAttribute: () => undefined,
+  appendChild: () => undefined,
+  append: () => undefined,
+  parentNode: null,
+  scrollHeight: 0,
+};
+Object.assign(globalThis.document, {
+  documentElement: { currentStyle: {}, style: { setProperty: () => undefined } },
+  getElementsByTagName: () => [{ appendChild: () => undefined }],
+  createElement: () => styleElement,
+  createTextNode: () => ({}),
+  head: { appendChild: () => undefined, childNodes: [] },
+});
 
 const storageHandlers = new Set<(event: StorageEvent) => void>();
 Object.assign(globalThis.window, {
@@ -32,14 +45,32 @@ const fromAnotherTab = (key: string | null) => {
   }
 };
 
-const {
-  ADVANCED_SETTINGS_OPEN_KEY,
-  readAdvancedSettingsOpen,
-  saveAdvancedSettingsOpen,
-  subscribeAdvancedSettingsOpen,
-} = await import(
-  "../src/features/model-picker/model-config/per-model-config.ts"
-);
+let ADVANCED_SETTINGS_OPEN_KEY: string;
+let readAdvancedSettingsOpen: () => boolean | null;
+let saveAdvancedSettingsOpen: (value: boolean) => void;
+let subscribeAdvancedSettingsOpen: (listener: () => void) => () => void;
+
+before(async () => {
+  vite = await createServer({ appType: "custom", server: { middlewareMode: true } });
+  // The chat runtime store owns the modules below, so evaluate it before its importers.
+  await vite.ssrLoadModule("/src/features/chat/stores/chat-runtime-store.ts");
+  const loaded = (await vite.ssrLoadModule(
+    "/src/features/model-picker/model-config/per-model-config.ts",
+  )) as {
+    ADVANCED_SETTINGS_OPEN_KEY: string;
+    readAdvancedSettingsOpen: () => boolean | null;
+    saveAdvancedSettingsOpen: (value: boolean) => void;
+    subscribeAdvancedSettingsOpen: (listener: () => void) => () => void;
+  };
+  ADVANCED_SETTINGS_OPEN_KEY = loaded.ADVANCED_SETTINGS_OPEN_KEY;
+  readAdvancedSettingsOpen = loaded.readAdvancedSettingsOpen;
+  saveAdvancedSettingsOpen = loaded.saveAdvancedSettingsOpen;
+  subscribeAdvancedSettingsOpen = loaded.subscribeAdvancedSettingsOpen;
+});
+
+after(async () => {
+  await vite.close();
+});
 
 function mounted(): { changes: () => number; unmount: () => void } {
   let seen = 0;

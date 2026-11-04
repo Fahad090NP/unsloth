@@ -32,6 +32,6 @@ test("a new key opens showing its start, fully selected", () => {
   );
   assert.match(
     REVEAL,
-    /onFocus=\{\(event\) => selectToken\(event\.currentTarget\)\}/,
+    /onFocus=\{\(event\) => \{ selectToken\(event\.currentTarget\); \}\}/,
   );
 });

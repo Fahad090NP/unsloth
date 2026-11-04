@@ -41,8 +41,8 @@ function permissionUi(
   const opened: [string, unknown][] = [];
   const links: string[] = [];
   const capabilityStub = {
-    loadSandboxCapability: () => capability,
-    loadSettledSandboxCapability: () => capability,
+    loadSandboxCapability: () => Promise.resolve(capability),
+    loadSettledSandboxCapability: () => Promise.resolve(capability),
     cachedSandboxCapability: () => null,
     onSandboxCapabilityChange: () => () => { /* empty */ },
     sandboxReady: (value: NonNullable<Capability>) =>

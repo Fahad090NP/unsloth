@@ -2,18 +2,32 @@
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
 import assert from "node:assert/strict";
-import test from "node:test";
+import { after, before, test } from "node:test";
+import { createServer, type ViteDevServer } from "vite";
 
-import { registerBundlerResolver } from "./helpers/kit.ts";
+import { CPT_TARGET_MODULES, DEFAULT_HYPERPARAMS } from "../src/config/training.ts";
 
-registerBundlerResolver();
+let vite: ViteDevServer;
+let countNonDefaultAdvancedSettings: (
+  state: Record<string, unknown>,
+  baseline?: unknown,
+) => number;
 
-const { CPT_TARGET_MODULES, DEFAULT_HYPERPARAMS } = await import(
-  "../src/config/training.ts"
-);
-const { countNonDefaultAdvancedSettings } = await import(
-  "../src/features/studio/wizard/advanced-settings-summary.ts"
-);
+before(async () => {
+  vite = await createServer({ appType: "custom", server: { middlewareMode: true } });
+  // The chat runtime store owns the modules below, so evaluate it before its importers.
+  await vite.ssrLoadModule("/src/features/chat/stores/chat-runtime-store.ts");
+  const loaded = (await vite.ssrLoadModule(
+    "/src/features/studio/wizard/advanced-settings-summary.ts",
+  )) as {
+    countNonDefaultAdvancedSettings: typeof countNonDefaultAdvancedSettings;
+  };
+  countNonDefaultAdvancedSettings = loaded.countNonDefaultAdvancedSettings;
+});
+
+after(async () => {
+  await vite.close();
+});
 
 const defaultState = {
   trainingMethod: "qlora" as const,

@@ -149,7 +149,7 @@ function tab(
     "@/lib/copy-to-clipboard": {
       copyToClipboard: (value: string) => {
         calls.push(`copy:${value}`);
-        return true;
+        return Promise.resolve(true);
       },
     },
     "@/i18n": { useT: () => translate, useLocale: () => "en" },
