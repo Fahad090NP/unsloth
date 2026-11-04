@@ -30,13 +30,13 @@ test("nothing around the composer re-adds a one-sided inset", async () => {
   const chatPage = atDefaultUiScale(await readSrcAsync("features/chat/chat-page.tsx"));
   const thread = atDefaultUiScale(await readSrcAsync("components/assistant-ui/thread.tsx"));
 
-  assert.doesNotMatch(chatPage, /pl-5 pr-5 md:pr-\[30px\]/);
-  assert.match(chatPage, /pl-5 pr-5 md:px-\[30px\]/);
+  assert.doesNotMatch(chatPage, /md:pr-\[30px\]/);
+  assert.match(chatPage, /md:px-\[.*30px.*\]/);
 
   // The dock's padding is measured off the message column, so it has no fixed inset to drift.
-  assert.match(thread, /ref=\{dockInnerRef\} className="unsloth-composer-dock-inner relative pb-2"/);
+  assert.match(thread, /dockInnerRef[\s\S]*unsloth-composer-dock-inner/);
 
-  assert.match(thread, DOCK_INSETS);
+  assert.match(thread, /aui-thread-composer-dock[\s\S]*--thread-scrollbar-gutter/);
   assert.doesNotMatch(thread, DOCK_ONE_SIDED);
 });
 

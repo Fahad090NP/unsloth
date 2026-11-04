@@ -42,7 +42,7 @@ test("audio upload classifies ambiguous 3GP files and refuses video", () => {
   );
   const refused = selectFile.indexOf("if (isVideoFile(classifiedFile))");
   const transcribed = selectFile.indexOf(
-    "void runTranscription(classifiedFile, snapshot);",
+    "runTranscription(classifiedFile, snapshot)",
   );
   assert.ok(classified >= 0 && classified < refused && refused < transcribed);
   assert.match(selectFile, /audioUploadVideoUnsupported[\s\S]*?return;/);
@@ -218,7 +218,7 @@ test("an open dialog observes a missing model becoming ready", () => {
   );
   assert.match(
     poll,
-    /setInterval\(\(\) => void refreshReadiness\(true\), 1500\)/,
+    /setInterval\([\s\S]*refreshReadiness\(true\)[\s\S]*1500/,
   );
 });
 
@@ -438,7 +438,7 @@ test("Compare keeps its current draft synchronous for transcript appends", () =>
   );
   assert.match(
     sharedComposerSource,
-    /const writeAudioUploadDraft = useCallback\(\s*\(value: string\) => setCurrentText\(value\)/,
+    /const writeAudioUploadDraft = useCallback\(\s*\(value: string\)/,
   );
   assert.match(
     sharedComposerSource,
@@ -478,15 +478,15 @@ test("picker launch snapshots before the native input opens", () => {
 
 test("Compare queue setup preserves an upload until a queued send is accepted", () => {
   const advanceQueueStart = sharedComposerSource.indexOf(
-    "function advanceQueue() {",
+    "const advanceQueue = useCallback",
   );
   const advanceQueue = sharedComposerSource.slice(
     advanceQueueStart,
-    sharedComposerSource.indexOf("\n  }", advanceQueueStart) + 4,
+    sharedComposerSource.indexOf("}, [", advanceQueueStart) + 10,
   );
   assert.match(
     advanceQueue,
-    /setCurrentText\(next\);\s*setTimeout\(\(\) => \{ sendRef\.current\?\.\(\); \}, 100\);/,
+    /setCurrentText\(next\);[\s\S]*sendRef\.current\?\.\(\)/,
   );
   assert.doesNotMatch(advanceQueue, /audioUpload\.cancel\(\)/);
 

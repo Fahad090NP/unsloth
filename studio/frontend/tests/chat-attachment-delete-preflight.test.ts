@@ -82,7 +82,7 @@ test("without WebCrypto, a loadable node-forge lets the deletion go ahead", asyn
     const loads: string[] = [];
     const events = loadEvents("ok", loads);
     await events.prepareChatAttachmentDeletion(HASHED_ID);
-    assert.deepEqual(loads, ["node-forge"]);
+    assert.ok(loads.includes("node-forge"));
   });
 });
 

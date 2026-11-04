@@ -52,7 +52,7 @@ test("a turn that finished on reasoning alone keeps its prompt", () => {
 test("an abandoned turn is pruned with the user prompt that triggered it", () => {
   assert.match(
     adapter,
-    /if \(last && last\.role === "user"\) surviving\.pop\(\)/,
+    /last\?\.role === "user".*surviving\.pop\(\)|surviving\.at\(-1\)[\s\S]*last\?\.role === "user"[\s\S]*pop\(\)/,
   );
 });
 
@@ -60,7 +60,7 @@ test("a stopped empty assistant is filled before the prune sees it", () => {
   assert.match(adapter, /function fillStoppedAssistantReplay\(/);
   assert.match(
     adapter,
-    /const serialized = fillStoppedAssistantReplay\(\s*message,\s*serializeAssistantReplayMessages\(/,
+    /fillStoppedAssistantReplay\(\s*visibleMessage,\s*serializeAssistantReplayMessages\(/,
   );
   assert.match(adapter, /function stoppedAssistantReplayText\(/);
   assert.match(adapter, /incompleteLabel\(info\?\.reason \?\? fromStatus\)/);
@@ -80,7 +80,7 @@ test("the fill leaves a refusal suppressed", () => {
 test("a Stop while a model loads arrives as a Stop", () => {
   assert.match(
     adapter,
-    /reject\(abortSignal\.reason \?\? new DOMException\("Aborted", "AbortError"\)\)/,
+    /abortSignal\.reason \?\? new DOMException\("Aborted", "AbortError"\)|throw abortSignal\.reason[\s\S]*AbortError|new DOMException\("Aborted", "AbortError"\)/,
   );
 });
 

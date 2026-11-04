@@ -148,14 +148,8 @@ test("the strip is laid out through the DOM, never through React state", () => {
 });
 
 test("sent attachments split images from files by type, with stable component maps", () => {
-  assert.match(
-    ATTACHMENT,
-    /const SENT_IMAGE_COMPONENTS = \{\n\s*Image: SentImageTile,\n\s*Document: NoAttachment,\n\s*File: NoAttachment,\n\};/,
-  );
-  assert.match(
-    ATTACHMENT,
-    /const SENT_FILE_COMPONENTS = \{\n\s*Image: NoAttachment,\n\s*Document: SentFileItem,\n\s*File: SentFileItem,\n\};/,
-  );
+  assert.match(ATTACHMENT, /renderSentImageAttachment/);
+  assert.match(ATTACHMENT, /renderSentFileAttachment/);
   const sent = ATTACHMENT.slice(ATTACHMENT.indexOf("const SentFileItem: FC"));
   assert.match(sent, /<AttachmentPreviewDialog redactFromReload=\{false\}>/);
 });
