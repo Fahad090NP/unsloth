@@ -251,10 +251,7 @@ function PersonalizationSyncMount() {
   return null;
 }
 
-// A full disk is not a training problem, so the warning cannot live on the
-// training route: it belongs to whichever route the user happens to be on when
-// space runs out. Mounted here it subscribes once for the session, and stays
-// subscribed across navigation, instead of coming and going with /studio.
+// Mounted here so the warning survives navigation.
 function LowDiskNoticeMount() {
   useLowDiskNotice();
   return null;
@@ -354,11 +351,7 @@ const CHAT_ONLY_ALLOWED = new Set([
   "/api-monitor",
 ]);
 
-// Paths that render their own "still checking" state and self-gate once the verdict lands.
-// The redirect below is one-way, so acting on the pre-measurement guess strands a healthy host
-// on /chat; these two wait it out instead. Everything else keeps the old behaviour.
-// /video is allowed outright below, so this is in practice what keeps /studio off the guess. It
-// stays listed so that admission is the only thing /video depends on, not both.
+// Routes that render their own pending state instead of redirecting.
 const SELF_GATED_WHILE_UNKNOWN = ["/studio", "/video"];
 
 function waitsOutUnknownVerdict(pathname: string): boolean {
@@ -449,11 +442,7 @@ function RootLayout() {
     }),
     [rawThread, rawCompare, rawNew, rawProject],
   );
-  // Freeze the last /chat search and latch "mounted" via render-phase setState (React's "adjust
-  // state during render" pattern), avoiding effects/refs. Empty until /chat is visited:
-  // location.search is the raw URL's, not the matched route's, so seeding it would let another
-  // route's ?project= stand in for a chat the user has never opened. The adjustment below fills it
-  // on the first /chat render, so landing straight on /chat loses nothing.
+  // Frozen /chat search, seeded on the first chat render.
   const [frozenChatSearch, setFrozenChatSearch] = useState<ChatSearch>({});
   const [chatMounted, setChatMounted] = useState(isChatRoute);
   if (isChatRoute && frozenChatSearch !== liveChatSearch) {
@@ -560,12 +549,7 @@ function RootLayout() {
     standalone?: boolean;
   }) => {
     const chatRuntime = useChatRuntimeStore.getState();
-    // The project on screen, which on Chat is the runtime's. The page keeps that in step with the
-    // route, the inferred ones included: a thread or a compare pair opened without ?project= still
-    // belongs to its project, and the page's own New chat button starts the next chat there.
-    // Reading the search param instead would leave that project without being asked to. Off Chat
-    // the page is hidden rather than unmounted, so its project is one the user cannot see and a new
-    // chat belongs to none.
+    // The project on screen; on Chat it comes from the runtime.
     const openProjectId = isChatRoute ? chatRuntime.activeProjectId : null;
     const projectId = options?.standalone ? null : openProjectId;
     chatRuntime.setActiveThreadId(null);
