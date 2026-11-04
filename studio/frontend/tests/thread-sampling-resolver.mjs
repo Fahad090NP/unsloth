@@ -29,6 +29,9 @@ function firstExisting(base) {
 }
 
 export function resolve(specifier, context, next) {
+  if (specifier.startsWith(".") && context.parentURL?.includes("/node_modules/")) {
+    return next(specifier, context);
+  }
   if (specifier.endsWith("utils/chat-history-storage")) {
     return next(ROW_STUB, context);
   }

@@ -27,9 +27,10 @@ function shortcutCase(): string {
 
 test("a relayed shortcut leaves full screen before acting, and acts at once otherwise", () => {
   const clause = shortcutCase();
-  assert.match(clause, /if \(document\.fullscreenElement\) void document\.exitFullscreen\(\)\.catch\(\(\) => undefined\)\.then\(run\);\s*else run\(\);/);
+  assert.match(clause, /if \(document\.fullscreenElement\)\s*{\s*document\s*\.exitFullscreen\(\)\s*\.catch\(\(\) => undefined\)\s*\.then\(run\)/);
+  assert.match(clause, /}\s*else\s*{\s*run\(\);\s*}/);
   for (const action of ["store.focusAddress()", "requestFind(BROWSER_FIND_TARGET)", "store.bookmarkPage()", "store.newTab()"]) {
     const at = clause.indexOf(action);
-    assert.ok(at > clause.indexOf("const run = () =>") && at < clause.indexOf("document.exitFullscreen()"), `${action} runs inside run()`);
+    assert.ok(at > clause.indexOf("const run = () =>") && at < clause.indexOf(".exitFullscreen()"), `${action} runs inside run()`);
   }
 });

@@ -333,7 +333,7 @@ test("a file opened at a page asks for it again on every reopen, and a reopen wi
     { store.openFile({ blob: new Blob(["%PDF"]), name: "guide.pdf", key: "rag:doc-1", ...(page ? { page } : {}) }); };
   const target = () => {
     const state = useBrowserStore.getState();
-    return state.fileViews[state.activeTabId ?? ""].pageTarget ?? null;
+    return state.fileViews[state.activeTabId ?? ""]?.pageTarget ?? null;
   };
   open(3);
   const first = target();

@@ -112,7 +112,7 @@ test("a session reset drops a staged plan so Transcribe is not left blocked", ()
   assert.ok(start > 0 && subscriber.length > 0);
   // Opt-in, and never onCancelled: Images and the Hub queue start their next plan there.
   assert.match(subscriber, /!onResetRef\.current\s*\)\s*\{\s*return;/);
-  assert.match(subscriber, /setQueue\(null\);\s*onResetRef\.current\?\.\(\);/);
+  assert.match(subscriber, /setQueue\(null\);\s*onResetRef\.current\(\);/);
   assert.doesNotMatch(subscriber, /onCancelled/);
   const hook = readSrc("features/audio/hooks/use-aligner-download.ts");
   assert.match(hook, /onReset: \(\) => \{\s*pendingRun\.current = null;\s*\}/);

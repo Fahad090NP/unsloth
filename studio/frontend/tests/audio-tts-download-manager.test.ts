@@ -62,7 +62,7 @@ test("cached and local TTS picks keep the direct load path and supersede stale s
   assert.match(
     source,
     // Replay only while visible: a hidden page's load could replace Chat's model.
-    /if \(activeRef\.current\) replayQueuedTtsPick\(\);/,
+    /if \(pageVisible\(\)\) replayQueuedTtsPickRef\.current\(\);/,
   );
 });
 
@@ -73,7 +73,7 @@ test("a preflight that loses to generation queues its load until generation ends
   );
   assert.match(
     source,
-    /generateAbort\.current = null;\s*updateGenerationPhase\(null\);\s*busyRef\.current = null;\s*setBusy\(null\);\s*if \(activeRef\.current && modeRef\.current === "speak"\)\s*replayQueuedTtsPick\(\)/,
+    /generateAbortRef\.current = null;\s*updateGenerationPhase\(null\);\s*clearBusy\(\);\s*if \(activeRef\.current && modeRef\.current === "speak"\)\s*replayQueuedTtsPick\(\)/,
   );
 });
 
@@ -83,7 +83,7 @@ test("a completed load keeps controls disabled until status catches up", () => {
   const loadFlow = source.slice(start, end);
   assert.match(
     loadFlow,
-    /if \(activeRef\.current\) await refreshStatus\(\);[\s\S]*busyRef\.current = null;[\s\S]*setBusy\(null\)/,
+    /if \(pageVisible\(\)\) await refreshStatus\(\);[\s\S]*markBusy\(null\)/,
   );
 });
 
@@ -134,7 +134,7 @@ test("a GGUF forwarded from Chat enters the managed staging path", () => {
 test("Mac sibling inspection reserves the lifecycle slot before awaiting inventory", () => {
   assert.match(
     source,
-    /ttsInspectionGeneration\.current = selectionGeneration;[\s\S]*busyRef\.current = "loading";[\s\S]*setBusy\("loading"\);[\s\S]*await listGgufVariants/,
+    /ttsInspectionGeneration\.current = selectionGeneration;[\s\S]*markBusy\("loading"\);[\s\S]*await listGgufVariants/,
   );
 });
 

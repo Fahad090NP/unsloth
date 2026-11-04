@@ -39,11 +39,11 @@ test("cancelling the shared STT download never loads a partial checkpoint", () =
 test("hidden STT preparation resumes once only for the same selected repo", () => {
   assert.match(
     source,
-    /deferredSttLoad\.current = repoId[\s\S]*sttLoadGeneration\.current \+= 1/,
+    /deferredSttLoadRef\.current = repoId[\s\S]*sttLoadGenerationRef\.current \+= 1/,
   );
   assert.match(
     source,
-    /const deferred = deferredSttLoad\.current;[\s\S]*deferredSttLoad\.current = null;[\s\S]*selectedSttRepoRef\.current === deferred\.repoId[\s\S]*ensureSttLoaded\([\s\S]*deferred\.repoId,[\s\S]*deferred\.sidecarKey,[\s\S]*deferred\.engine/,
+    /const deferred = deferredSttLoadRef\.current;[\s\S]*deferredSttLoadRef\.current = null;[\s\S]*selectedSttRepoRef\.current === deferred\.repoId[\s\S]*ensureSttLoaded\([\s\S]*deferred\.repoId,[\s\S]*deferred\.sidecarKey,[\s\S]*deferred\.engine/,
   );
 });
 
@@ -65,7 +65,7 @@ test("resolved Transformers transfers share one tracker identity", () => {
 test("hidden Audio cancels only an active sidecar load", () => {
   assert.match(
     source,
-    /if \(sttLoadingGeneration\.current !== null\)[\s\S]*sttLoadAbort\.current\?\.abort\(\)/,
+    /if \(sttLoadingGenerationRef\.current !== null\)[\s\S]*sttLoadAbortRef\.current\?\.abort\(\)/,
   );
   assert.doesNotMatch(source, /cancelSttLoad/);
 });
@@ -73,7 +73,7 @@ test("hidden Audio cancels only an active sidecar load", () => {
 test("STT loading stays busy until authoritative residency refresh completes", () => {
   assert.match(
     source,
-    /if \(sttLoadingGeneration\.current === generation\) \{[\s\S]*sttLoadingGeneration\.current = null;[\s\S]*await refreshSttStatus\(\);[\s\S]*generation === sttLoadGeneration\.current[\s\S]*sttLoadingGeneration\.current === null[\s\S]*setBusy\(null\)/,
+    /if \(sttLoadingGeneration\.current === generation\) \{[\s\S]*sttLoadingGeneration\.current = null;[\s\S]*await refreshSttStatus\(\);[\s\S]*generation === sttLoadGeneration\.current[\s\S]*setBusy\(null\)/,
   );
 });
 

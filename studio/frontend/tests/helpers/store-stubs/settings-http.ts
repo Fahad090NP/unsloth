@@ -170,3 +170,9 @@ export async function authFetch(
 export function getAuthSessionEpoch(): number {
   return 0;
 }
+
+export const AUTH_SESSION_CLEARED_EVENT = "auth:session-cleared";
+export const AUTH_SESSION_STORED_EVENT = "auth:session-stored";
+export const AUTH_SESSION_MARK_KEY = "auth:session-mark";
+export const AUTH_TOKEN_KEY = "auth:token";
+export const AUTH_SESSION_ENDING_EVENT = "auth:session-ending";

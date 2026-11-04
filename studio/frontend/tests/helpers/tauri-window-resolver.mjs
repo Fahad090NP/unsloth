@@ -23,7 +23,7 @@ export function resolve(specifier, context, next) {
     const resolved = firstExisting(SRC + specifier.slice(2));
     return next(resolved ?? specifier, context);
   }
-  if (specifier.startsWith(".") && context.parentURL?.startsWith("file:")) {
+  if (specifier.startsWith(".") && context.parentURL?.startsWith("file:") && !context.parentURL.includes("/node_modules/")) {
     const resolved = firstExisting(
       fileURLToPath(new URL(specifier, context.parentURL)),
     );

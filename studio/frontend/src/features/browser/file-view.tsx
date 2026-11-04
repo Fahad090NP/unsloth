@@ -230,7 +230,7 @@ export function FileView({
   const svg = media === "image" && (/^image\/svg\+xml\b/i.test(contentType) || /\.svg$/i.test(name));
   const src = useObjectUrl(blob, media !== null, svg);
   const [failed, setFailed] = useState(false);
-  const pageTarget = useBrowserStore((state) => (tabId ? state.fileViews[tabId].pageTarget : undefined));
+  const pageTarget = useBrowserStore((state) => (tabId ? state.fileViews[tabId]?.pageTarget : undefined));
   const dropPageTarget = useCallback(
     () => {
       if (tabId) {

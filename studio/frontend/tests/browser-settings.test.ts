@@ -947,7 +947,7 @@ test("browser saves keep the approved name without MIME inference, including age
   const prefs = useBrowserPrefsStore.getState();
   const previous = { ...prefs };
   const oldDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
-  const oldTimer = window.setTimeout.bind(window);
+  const oldTimer = Object.getOwnPropertyDescriptor(window, "setTimeout");
   const create = URL.createObjectURL.bind(URL);
   const revoke = URL.revokeObjectURL.bind(URL);
   let transport: Blob | undefined;
@@ -999,7 +999,7 @@ test("browser saves keep the approved name without MIME inference, including age
         const saving = saveBrowserDownload({ blob, name, contentType, url: "https://a.example/download", temporary: false, agentRule: mode === "agent" ? "allow" : null });
         const asked = useApprovalStore.getState().queue[0];
         assert.equal(Boolean(asked), dangerous, `${mode}: ${name} (${contentType})`);
-        {
+        if (asked) {
           assert.deepEqual([asked.name, asked.dangerous], [expected, true]);
           assert.equal(saved.length, count);
           answerDownload(asked, true, false);
@@ -1019,7 +1019,8 @@ test("browser saves keep the approved name without MIME inference, including age
   } finally {
     if (oldDocument) Object.defineProperty(globalThis, "document", oldDocument);
     else Reflect.deleteProperty(globalThis, "document");
-    window.setTimeout = oldTimer;
+    if (oldTimer) Object.defineProperty(window, "setTimeout", oldTimer);
+    else Reflect.deleteProperty(window, "setTimeout");
     URL.createObjectURL = create;
     URL.revokeObjectURL = revoke;
     prefs.setAskWhereToSave(previous.askWhereToSave);

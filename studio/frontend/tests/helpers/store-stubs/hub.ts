@@ -7,6 +7,7 @@ export { EMBEDDING_TAGS } from "../../../src/features/hub/lib/hf-model-meta.ts";
 export { normalizeModelIdentity } from "../../../src/features/hub/lib/model-identity.ts";
 export { isGgufLike } from "../../../src/features/hub/lib/model-identifiers.ts";
 export { classifyUnslothSupport } from "../../../src/features/hub/lib/unsloth-support.ts";
+export { disposableTimeoutSignal } from "../../../src/features/hub/lib/abort-signals.ts";
 
 let token = "";
 

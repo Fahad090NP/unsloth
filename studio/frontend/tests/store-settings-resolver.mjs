@@ -13,6 +13,9 @@ const STUBS = new Map([
 ]);
 
 export function resolve(specifier, context, next) {
+  if (specifier.startsWith(".") && context.parentURL?.includes("/node_modules/")) {
+    return next(specifier, context);
+  }
   const stub = STUBS.get(specifier);
   if (stub) {
     return next(new URL(stub, import.meta.url).href, context);
