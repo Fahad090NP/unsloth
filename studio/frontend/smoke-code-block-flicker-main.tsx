@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-// Harness for tests/studio/playwright_code_block_flicker.py: samples code block heights per frame
-// to catch the 200px contain-intrinsic-size fallback flicker at stream finalization.
+// Samples code block heights per frame to catch the fallback flicker.
 
-/* eslint-disable no-restricted-imports -- a measurement entry point, not app code. */
 // Import this store first: entering the import cycle from the renderer leaves a constant in TDZ.
 import "@/features/chat/stores/sidebar-organization-store";
-/* eslint-enable no-restricted-imports */
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { TooltipProvider } from "@/components/ui/tooltip";
