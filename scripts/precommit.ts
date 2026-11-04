@@ -226,11 +226,14 @@ for (const file of codeFiles) {
     );
   }
 
-  const introducedLines = (addedLines.get(file) ?? []).map((item) => item.text);
+  const introducedItems = addedLines.get(file) ?? [];
   let commentRun = 0;
-  for (const line of introducedLines) {
-    if (/^\s*\/\//.test(line)) {
-      commentRun += 1;
+  let previousLine = -2;
+  for (const item of introducedItems) {
+    const contiguous = item.line === previousLine + 1;
+    previousLine = item.line;
+    if (/^\s*\/\//.test(item.text)) {
+      commentRun = contiguous ? commentRun + 1 : 1;
       if (commentRun > 2) {
         policy.push(
           `${yellow(file)}  comment runs over two lines; keep one short line.`,
@@ -241,6 +244,7 @@ for (const file of codeFiles) {
       commentRun = 0;
     }
   }
+  const introducedLines = introducedItems.map((item) => item.text);
   if (introducedLines.some((line) => /^\s*\/\/\s*[-=*#]{6,}/.test(line))) {
     policy.push(`${yellow(file)}  banner comment; remove the separator.`);
   }
