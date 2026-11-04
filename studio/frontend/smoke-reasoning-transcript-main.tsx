@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2026-present the Unsloth AI Inc. team. All rights reserved. See /studio/LICENSE.AGPL-3.0
 
-/* eslint-disable no-restricted-imports -- Match the app's entry order through the chat cycle. */
 import "@/features/chat/stores/sidebar-organization-store";
 import { useChatPreferencesStore } from "@/features/chat";
-/* eslint-enable no-restricted-imports */
 import { Thread } from "@/components/assistant-ui/thread";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {

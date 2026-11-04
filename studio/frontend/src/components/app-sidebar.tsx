@@ -83,7 +83,6 @@ import {
   shouldUseNativeMacWindowTitlebar,
 } from "@/components/tauri/window-titlebar";
 // deep imports avoid the Images index because its ImagesPage re-export would undo the code split.
-/* eslint-disable no-restricted-imports */
 import {
   isWorkflowEnabled,
   useImageWorkflowStore,
@@ -94,7 +93,6 @@ import {
   AUDIO_WORKFLOWS,
   type AudioWorkflowId,
 } from "@/features/audio/workflows";
-/* eslint-enable no-restricted-imports */
 import { cn } from "@/lib/utils";
 import {
   hideTrickOrTreatRow,

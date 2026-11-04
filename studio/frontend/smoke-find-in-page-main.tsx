@@ -3,7 +3,6 @@
 
 // Harness for the find bar: real bar, index and CSS Custom Highlight API; no backend.
 
-/* eslint-disable no-restricted-imports -- a harness entry point, not app code. */
 import {
   Popover,
   PopoverContent,
@@ -15,7 +14,6 @@ import {
   type FindElementLike,
   buildTextIndex,
 } from "@/features/find-in-page/lib/find-text-index.ts";
-/* eslint-enable no-restricted-imports */
 import "@/index.css";
 import { StrictMode, useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";

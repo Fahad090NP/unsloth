@@ -3,9 +3,7 @@
 
 // Harness for tests/studio/playwright_link_definition_probe.py, selected by ?case=.
 
-/* eslint-disable no-restricted-imports -- a measurement entry point, not app code. */
 import "@/features/chat/stores/sidebar-organization-store";
-/* eslint-enable no-restricted-imports */
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { TooltipProvider } from "@/components/ui/tooltip";

@@ -5,8 +5,6 @@
 
 import { MarkdownPreview } from "@/components/markdown/markdown-preview";
 import { ResearchActivityPanel } from "@/features/chat";
-/* eslint-disable no-restricted-imports -- a measurement entry point, not app code: it drives the
-   research store directly, which the chat barrel does not export. */
 import {
   ingestResearchUpdate,
   useResearchRunStore,
@@ -16,7 +14,6 @@ import type {
   ResearchEventType,
   ResearchRun,
 } from "@/features/chat/types/research";
-/* eslint-enable no-restricted-imports */
 import { type ReactElement, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./src/index.css";

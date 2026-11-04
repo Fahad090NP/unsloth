@@ -3,7 +3,6 @@
 
 // Harness for tests/studio/playwright_keyboard_shortcuts.py; real registry and listener.
 
-/* eslint-disable no-restricted-imports -- a harness entry point, not app code. */
 import { useChatNavigationStore } from "@/features/chat/stores/chat-navigation-store";
 import {
   COMPOSER_INPUT_SELECTOR,
@@ -11,7 +10,6 @@ import {
 } from "@/features/settings/hooks/use-shortcut";
 import * as registry from "@/features/settings/lib/keyboard-shortcuts";
 import * as shortcutStore from "@/features/settings/stores/keyboard-shortcuts-store";
-/* eslint-enable no-restricted-imports */
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 

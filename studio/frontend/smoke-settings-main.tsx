@@ -4,7 +4,6 @@
 // Harness for tests/studio/playwright_settings_tabs.py; no backend, no auth.
 
 import { TooltipProvider } from "@/components/ui/tooltip";
-/* eslint-disable no-restricted-imports -- a harness entry point, not app code. */
 import { SettingsDialogMount } from "@/features/settings/settings-dialog-mount";
 import { useMonitorOverlayStore } from "@/features/settings/stores/monitor-overlay-store";
 
@@ -12,7 +11,6 @@ import {
   type SettingsTab,
   useSettingsDialogStore,
 } from "@/features/settings/stores/settings-dialog-store";
-/* eslint-enable no-restricted-imports */
 import { initializeLocale } from "@/i18n";
 import {
   RouterProvider,

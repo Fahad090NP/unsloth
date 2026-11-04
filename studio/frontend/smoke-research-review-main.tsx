@@ -6,7 +6,6 @@ import {
   useLocalRuntime,
 } from "@assistant-ui/react";
 import { createRoot } from "react-dom/client";
-/* eslint-disable no-restricted-imports -- Regression harness drives the real research UI/store. */
 import { ResearchActivityPanel } from "@/features/chat";
 import { ResearchMessage } from "@/features/chat/components/research-message";
 import {
@@ -14,7 +13,6 @@ import {
   useResearchRunStore,
 } from "@/features/chat/stores/research-run-store";
 import type { ResearchRun } from "@/features/chat/types/research";
-/* eslint-enable no-restricted-imports */
 import "./src/index.css";
 
 const run: ResearchRun = {

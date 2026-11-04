@@ -4,12 +4,10 @@
 // Harness for tests/studio/playwright_stream_pacing.py: real MarkdownText in a local runtime fed
 // a fixed reply at a fixed rate; reports longestStallMs. Fixed text since cost is superlinear.
 
-/* eslint-disable no-restricted-imports -- a measurement entry point, not app code. */
 // Import this store first: entering the cycle from the renderer leaves a constant in TDZ.
 import "@/features/chat/stores/sidebar-organization-store";
 // Then the chat barrel, else MarkdownText is read in TDZ by thread.tsx.
 import "@/features/chat";
-/* eslint-enable no-restricted-imports */
 
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
 import {
